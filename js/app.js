@@ -855,8 +855,6 @@ const App = {
     excluir: async (ep, id) => { if(confirm("Excluir?")) { await App.api(`/${ep}/${id}`, 'DELETE'); App.renderizarLista(App.entidadeAtual); } }
 };
 
-document.addEventListener('DOMContentLoaded', App.init);
-
 // =========================================================
 // MÓDULO DE CADASTRO DE NOVAS INSTITUIÇÕES (SAAS)
 // =========================================================
@@ -914,3 +912,16 @@ App.validarCadastroInst = () => {
     // Dispara chuva de confetes no navegador (opcional e divertido!)
     if(typeof confetti === 'function') confetti();
 };
+
+// =========================================================
+// INICIALIZAÇÃO DO SISTEMA (SEMPRE A ÚLTIMA LINHA)
+// =========================================================
+document.addEventListener('DOMContentLoaded', App.init);
+
+// Fechar modais com a tecla ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        App.fecharModal();
+        if(typeof App.fecharModalInst === 'function') App.fecharModalInst();
+    }
+});
