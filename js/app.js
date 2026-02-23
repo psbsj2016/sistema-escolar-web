@@ -856,3 +856,61 @@ const App = {
 };
 
 document.addEventListener('DOMContentLoaded', App.init);
+
+// =========================================================
+// MÓDULO DE CADASTRO DE NOVAS INSTITUIÇÕES (SAAS)
+// =========================================================
+
+App.abrirTelaCadastroInst = () => {
+    document.getElementById('modal-cadastro-inst').style.display = 'flex';
+    App.voltarEtapa1(); // Garante que sempre abra na etapa 1
+};
+
+App.fecharModalInst = () => {
+    document.getElementById('modal-cadastro-inst').style.display = 'none';
+};
+
+App.voltarEtapa1 = () => {
+    document.getElementById('etapa-1-email').style.display = 'block';
+    document.getElementById('etapa-2-validacao').style.display = 'none';
+    document.getElementById('etapa-3-sucesso').style.display = 'none';
+};
+
+App.enviarCodigoInst = () => {
+    const email = document.getElementById('novo-inst-email').value;
+    
+    if(!email || !email.includes('@')) {
+        App.showToast('Por favor, digite um e-mail válido.', 'error');
+        return;
+    }
+
+    // AQUI ENTRA A MÁGICA FUTURA: 
+    // Em breve, chamaremos a API aqui para disparar o e-mail real.
+    // Por enquanto, vamos simular o envio para testar o visual:
+    
+    App.showToast('Código enviado! Verifique sua caixa de entrada.', 'success');
+    
+    // Esconde a etapa 1 e mostra a etapa 2
+    document.getElementById('etapa-1-email').style.display = 'none';
+    document.getElementById('etapa-2-validacao').style.display = 'block';
+};
+
+App.validarCadastroInst = () => {
+    const codigo = document.getElementById('novo-inst-codigo').value;
+    const pin = document.getElementById('novo-inst-pin').value;
+
+    if(!codigo || !pin) {
+        App.showToast('Preencha o Código e o PIN exclusivo.', 'error');
+        return;
+    }
+
+    // AQUI ENTRA A VALIDAÇÃO DO PIN FUTURA.
+    // Simulando sucesso imediato para ver a tela linda:
+    
+    // Esconde a etapa 2 e mostra a tela de Boas-Vindas
+    document.getElementById('etapa-2-validacao').style.display = 'none';
+    document.getElementById('etapa-3-sucesso').style.display = 'block';
+    
+    // Dispara chuva de confetes no navegador (opcional e divertido!)
+    if(typeof confetti === 'function') confetti();
+};
