@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Escolar - Gestão</title>
+    <link rel="stylesheet" href="css/site.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div id="tela-login" class="login-wrapper">
+        <div class="login-box">
+            <h1>🎓 Portal Escolar</h1>
+            <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
+            <div class="input-group">
+                <label>Login de Acesso</label>
+                <input type="text" id="login-user" placeholder="Digite seu usuário">
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" id="login-pass" placeholder="Digite sua senha">
+            </div>
+            <button class="btn-primary" onclick="App.fazerLogin()">ENTRAR NO SISTEMA</button>
+        </div>
+    </div>
+
+    <div id="tela-sistema" style="display: none;">
+        
+        <nav class="sidebar">
+            <div class="logo-area">
+                <h2>Gestão Escolar</h2>
+                <small id="user-name">Usuário</small>
+            </div>
+            
+            <div class="menu-scroll" style="flex:1; overflow-y:auto;">
+                <ul class="menu-lista">
+                    <li><button onclick="App.renderizarInicio()">🏠 Visão Geral</button></li>
+                    
+                    <li><button onclick="App.toggleSub('sub-alunos')">🎓 Alunos ▼</button></li>
+                    <ul id="sub-alunos" class="submenu" style="display:none;">
+                        <li><button onclick="App.abrirModalCadastro('aluno')">➕ Novo Aluno</button></li>
+                        <li><button onclick="App.renderizarLista('aluno')">📋 Gerenciar Lista</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-turmas')">🏫 Turmas ▼</button></li>
+                    <ul id="sub-turmas" class="submenu" style="display:none;">
+                        <li><button onclick="App.abrirModalCadastro('turma')">➕ Nova Turma</button></li>
+                        <li><button onclick="App.renderizarLista('turma')">📋 Ver Turmas</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-cursos')">📚 Cursos ▼</button></li>
+                    <ul id="sub-cursos" class="submenu" style="display:none;">
+                        <li><button onclick="App.abrirModalCadastro('curso')">➕ Novo Curso</button></li>
+                        <li><button onclick="App.renderizarLista('curso')">📋 Ver Cursos</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-pedagogico')">🍎 Pedagógico ▼</button></li>
+                    <ul id="sub-pedagogico" class="submenu" style="display:none;">
+                        <li><button onclick="App.renderizarTela('planejamento')">📅 Planejamento</button></li>
+                        <li><button onclick="App.renderizarTela('calendario')">📆 Calendário Escolar</button></li>
+                        <li><button onclick="App.renderizarTela('chamada')">📝 Chamada / Frequência</button></li>
+                        <li><button onclick="App.renderizarTela('avaliacoes')">✅ Notas e Avaliações</button></li>
+                        <li><button onclick="App.renderizarTela('boletins')">📊 Emitir Boletins</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-financeiro')">💰 Financeiro ▼</button></li>
+                    <ul id="sub-financeiro" class="submenu" style="display:none;">
+                        <li><button onclick="App.renderizarTela('mensalidades')">💸 Controle de Mensalidades</button></li>
+                        <li><button onclick="App.renderizarLista('financeiro')">🔍 Consultar Lançamentos</button></li>
+                        <li><button onclick="App.renderizarTela('inadimplencia')">⚠️ Relatório Inadimplência</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-relatorios')">🖨️ Documentos ▼</button></li>
+                    <ul id="sub-relatorios" class="submenu" style="display:none;">
+                        <li><button onclick="App.renderizarRelatorio('fin_detalhado')">📈 Relatório Financeiro</button></li>
+                        <li><button onclick="App.renderizarRelatorio('dossie')">📁 Dossiê Executivo</button></li>
+                        <li><button onclick="App.renderizarRelatorio('ficha')">📄 Ficha de Matrícula</button></li>
+                    </ul>
+
+                    <li><button onclick="App.toggleSub('sub-config')">⚙️ Configurações ▼</button></li>
+                    <ul id="sub-config" class="submenu" style="display:none;">
+                        <li><button onclick="App.renderizarConfig('perfil')">🏢 Perfil da Escola</button></li>
+                        <li><button onclick="App.renderizarConfig('aparencia')">🎨 Aparência do Sistema</button></li>
+                        <li><button onclick="App.renderizarConfig('backup')">💾 Backup e Segurança</button></li>
+                    </ul>
+
+                    <li><button onclick="App.renderizarMinhaConta()">🔒 Minha Conta</button></li>
+                </ul>
+            </div>
+
+            <button class="btn-sair" onclick="App.logout()">Sair do Sistema</button>
+        </nav>
+
+        <main class="content">
+            <header>
+                <h2 id="titulo-pagina">Painel Geral</h2>
+                <div id="data-hoje"></div>
+            </header>
+            <div id="app-content">
+                </div>
+        </main>
+
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Formulário</h2>
+            </div>
+            
+            <div id="modal-form-content" class="modal-body">
+                </div>
+            
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="App.fecharModal()">Cancelar</button>
+                <button class="btn-confirm" onclick="App.salvarCadastro()">Salvar Registro</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/modulos/financeiro.js"></script>
+    <script src="js/modulos/pedagogico.js"></script>
+    <script src="js/modulos/relatorios.js"></script>
+    <script src="js/modulos/cadastros.js"></script>
+</body>
+</html>
