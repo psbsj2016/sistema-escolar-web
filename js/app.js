@@ -874,42 +874,83 @@ App.voltarEtapa1 = () => {
     document.getElementById('etapa-3-sucesso').style.display = 'none';
 };
 
-App.enviarCodigoInst = () => {
+// =========================================================
+// MOTOR DE E-MAILS (SAAS) - VERSÃO REAL
+// =========================================================
+
+// Variável invisível para guardar o código gerado pelo servidor
+App.codigoGeradoInst = null;
+
+App.enviarCodigoInst = async () => {
     const email = document.getElementById('novo-inst-email').value;
+    const btn = document.querySelector('#etapa-1-email button');
     
     if(!email || !email.includes('@')) {
         App.showToast('Por favor, digite um e-mail válido.', 'error');
         return;
     }
 
-    // AQUI ENTRA A MÁGICA FUTURA: 
-    // Em breve, chamaremos a API aqui para disparar o e-mail real.
-    // Por enquanto, vamos simular o envio para testar o visual:
-    
-    App.showToast('Código enviado! Verifique sua caixa de entrada.', 'success');
-    
-    // Esconde a etapa 1 e mostra a etapa 2
-    document.getElementById('etapa-1-email').style.display = 'none';
-    document.getElementById('etapa-2-validacao').style.display = 'block';
+    // Efeito visual: Muda o texto do botão e bloqueia para não clicarem 2 vezes
+    const textoOriginal = btn.innerText;
+    btn.innerText = "Enviando E-mail... ⏳";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+    try {
+        // Chama a sua API no Render de verdade!
+        const response = await App.api('/auth/enviar-codigo', 'POST', { email: email });
+        
+        if (response && response.success) {
+            // Guarda o código na memória do navegador para comparar depois
+            App.codigoGeradoInst = response.codigo;
+            
+            App.showToast('Código enviado! Verifique sua caixa de entrada.', 'success');
+            
+            // Avança para a tela do PIN
+            document.getElementById('etapa-1-email').style.display = 'none';
+            document.getElementById('etapa-2-validacao').style.display = 'block';
+        } else {
+            App.showToast('Erro ao enviar e-mail. Verifique o servidor.', 'error');
+        }
+    } catch (error) {
+        App.showToast('Erro de conexão com o servidor.', 'error');
+    } finally {
+        // Restaura o botão ao normal
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
 };
 
 App.validarCadastroInst = () => {
-    const codigo = document.getElementById('novo-inst-codigo').value;
-    const pin = document.getElementById('novo-inst-pin').value;
+    const codigoDigitado = document.getElementById('novo-inst-codigo').value.trim();
+    const pinDigitado = document.getElementById('novo-inst-pin').value.trim();
 
-    if(!codigo || !pin) {
+    // 🔐 PIN MESTRE PROVISÓRIO (Depois criamos uma tela para você mudar isso)
+    const PIN_MESTRE = "7777";
+
+    if(!codigoDigitado || !pinDigitado) {
         App.showToast('Preencha o Código e o PIN exclusivo.', 'error');
         return;
     }
 
-    // AQUI ENTRA A VALIDAÇÃO DO PIN FUTURA.
-    // Simulando sucesso imediato para ver a tela linda:
-    
-    // Esconde a etapa 2 e mostra a tela de Boas-Vindas
+    // 1. O código bate com o que o e-mail mandou?
+    if (codigoDigitado !== App.codigoGeradoInst) {
+        App.showToast('Código de e-mail incorreto!', 'error');
+        return;
+    }
+
+    // 2. O PIN de liberação é o seu PIN de Dono?
+    if (pinDigitado !== PIN_MESTRE) {
+        App.showToast('PIN Exclusivo de Gestor incorreto!', 'error');
+        return;
+    }
+
+    // TUDO CERTO! A MÁGICA ACONTECE:
     document.getElementById('etapa-2-validacao').style.display = 'none';
     document.getElementById('etapa-3-sucesso').style.display = 'block';
     
-    // Dispara chuva de confetes no navegador (opcional e divertido!)
+    // Chuva de confetes!
     if(typeof confetti === 'function') confetti();
 };
 
