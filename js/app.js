@@ -955,6 +955,83 @@ App.validarCadastroInst = () => {
 };
 
 // =========================================================
+// SISTEMA DE AUTENTICAÇÃO E LOGIN
+// =========================================================
+
+// Variável para saber quem está logado no momento
+App.usuarioLogado = null;
+
+App.fazerLogin = async () => {
+    const userStr = document.getElementById('login-user').value.trim();
+    const passStr = document.getElementById('login-pass').value.trim();
+    const btnLogin = document.querySelector('#tela-login button[type="submit"]');
+
+    if (!userStr || !passStr) {
+        App.showToast('Por favor, preencha o usuário e a senha.', 'error');
+        return;
+    }
+
+    // Efeito de carregamento no botão
+    const textoOriginal = btnLogin.innerText;
+    btnLogin.innerText = "Autenticando... ⏳";
+    btnLogin.disabled = true;
+
+    try {
+        // Vai até o servidor e busca a lista de usuários cadastrados
+        // (Lembra que o servidor cria o admin/123 automaticamente no 1º acesso?)
+        const usuarios = await App.api('/usuarios', 'GET');
+
+        // Procura se existe algum usuário com esse login e senha exatos
+        const usuarioEncontrado = usuarios.find(u => u.login === userStr && u.senha === passStr);
+
+        if (usuarioEncontrado) {
+            // BINGO! A senha bateu. Guarda o usuário na memória do sistema.
+            App.usuarioLogado = usuarioEncontrado;
+
+            // Transição de Telas (Esconde o Login e mostra o Painel)
+            document.getElementById('tela-login').style.display = 'none';
+            document.getElementById('tela-sistema').style.display = 'flex'; 
+
+            // Atualiza o nome da pessoa na barra lateral
+            document.getElementById('user-name').innerText = usuarioEncontrado.nome;
+
+            // Renderiza o painel inicial de estatísticas/visão geral
+            if (typeof App.renderizarInicio === 'function') {
+                App.renderizarInicio();
+            }
+
+            App.showToast('Bem-vindo ao sistema!', 'success');
+        } else {
+            // Acesso negado
+            App.showToast('Usuário ou senha incorretos. Tente novamente.', 'error');
+        }
+    } catch (error) {
+        console.error("Erro no login:", error);
+        App.showToast('Erro de conexão com o banco de dados.', 'error');
+    } finally {
+        // Restaura o botão ao normal
+        btnLogin.innerText = textoOriginal;
+        btnLogin.disabled = false;
+    }
+};
+
+App.logout = () => {
+    // Limpa a memória
+    App.usuarioLogado = null;
+    
+    // Limpa os campos digitados
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+
+    // Volta para a tela de Login
+    document.getElementById('tela-sistema').style.display = 'none';
+    
+    // Mostra a tela de login (usando o display original que costuma ser flex ou block)
+    const telaLogin = document.getElementById('tela-login');
+    telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+};
+
+// =========================================================
 // INICIALIZAÇÃO DO SISTEMA (SEMPRE A ÚLTIMA LINHA)
 // =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
