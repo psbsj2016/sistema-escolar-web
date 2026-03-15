@@ -1,12 +1,12 @@
 // =========================================================
-// MÓDULO FINANCEIRO V107 (COM BARRA DE PESQUISA)
+// MÓDULO FINANCEIRO V107 (BLINDADO COM JWT)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
 App.renderizarFinanceiroPro = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
     try {
-        const [turmas, financeiro, alunos] = await Promise.all([fetch(`${API_URL}/turmas`).then(r=>r.json()), fetch(`${API_URL}/financeiro`).then(r=>r.json()), fetch(`${API_URL}/alunos`).then(r=>r.json())]);
+        const [turmas, financeiro, alunos] = await Promise.all([App.api('/turmas'), App.api('/financeiro'), App.api('/alunos')]);
         App.financeiroCache = financeiro.sort((a,b) => { if(a.status===b.status) return new Date(a.vencimento)-new Date(b.vencimento); return a.status==='Pendente'?-1:1; });
         
         div.innerHTML = `
@@ -49,11 +49,11 @@ App.filtrarFinanceiro = (termo) => {
     document.getElementById('fin-lista-area').innerHTML = App.gerarTabelaFinanceira(filtrados);
 };
 
-// --- 2. GERAÇÃO DE CARNÊS (MANTIDO V102 - LAYOUT PREMIUM) ---
+// --- 2. GERAÇÃO DE CARNÊS ---
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content'); div.innerHTML = 'Gerando Carnês...';
     try {
-        const [financeiro, alunos, escola] = await Promise.all([fetch(`${API_URL}/financeiro`).then(r=>r.json()), fetch(`${API_URL}/alunos`).then(r=>r.json()), fetch(`${API_URL}/escola`).then(r=>r.json())]);
+        const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const parcelas = financeiro.filter(x => x.idCarne === idLote).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         if(parcelas.length === 0) return alert("Carnê não encontrado.");
         const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: parcelas[0].alunoNome, cpf: '', rua: '', bairro: '', cidade: '' };
@@ -64,24 +64,18 @@ App.abrirCarneExistente = async (idLote) => {
     } catch(e) { alert("Erro."); }
 };
 
-// --- 3. RELATÓRIO DE INADIMPLÊNCIA (CORRIGIDO WHATSAPP) ---
+// --- 3. RELATÓRIO DE INADIMPLÊNCIA ---
 App.renderizarInadimplencia = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'Calculando...';
     try {
-        const [financeiro, alunos, escola] = await Promise.all([fetch(`${API_URL}/financeiro`).then(r=>r.json()), fetch(`${API_URL}/alunos`).then(r=>r.json()), fetch(`${API_URL}/escola`).then(r=>r.json())]);
+        const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const hoje = new Date(); const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
         let totalAtraso = 0; const devedoresMap = {};
         
         vencidos.forEach(f => { 
             if(!devedoresMap[f.idAluno]) { 
                 const aluno = alunos.find(a => a.id == f.idAluno); 
-                devedoresMap[f.idAluno] = { 
-                    idAluno: f.idAluno, // <-- SALVAMOS O ID DO ALUNO AQUI
-                    nome: f.alunoNome, 
-                    curso: aluno ? aluno.curso : '-', 
-                    total: 0, 
-                    detalhes: [] 
-                }; 
+                devedoresMap[f.idAluno] = { idAluno: f.idAluno, nome: f.alunoNome, curso: aluno ? aluno.curso : '-', total: 0, detalhes: [] }; 
             } 
             devedoresMap[f.idAluno].total += parseFloat(f.valor); 
             devedoresMap[f.idAluno].detalhes.push(`${f.vencimento.split('-').reverse().join('/')} (R$ ${parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})})`); 
@@ -95,16 +89,15 @@ App.renderizarInadimplencia = async () => {
     } catch(e) { div.innerHTML = "Erro ao calcular."; }
 };
   
-
 // --- OUTRAS ---
-App.gerarCarnes=async()=>{const idA=document.getElementById('fin-aluno').value;const val=document.getElementById('fin-valor').value;const parc=document.getElementById('fin-parcelas').value;const dataIni=document.getElementById('fin-vencimento').value;if(!idA||!val||!parc||!dataIni)return alert("Preencha todos os campos.");const alunoNome=document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;let db=new Date(dataIni+'T00:00:00');const idLote=Date.now().toString();const dataGeracao=new Date().toLocaleDateString('pt-BR');for(let i=1;i<=parc;i++){const vencUS=db.toISOString().split('T')[0];await fetch(`${API_URL}/financeiro`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:idLote+"_"+i,idCarne:idLote,dataGeracao,idAluno:idA,alunoNome,valor:val,vencimento:vencUS,status:'Pendente',descricao:`Mensalidade ${i}/${parc}`,tipo:'Receita'})});db.setMonth(db.getMonth()+1);}App.abrirCarneExistente(idLote);};
+App.gerarCarnes=async()=>{const idA=document.getElementById('fin-aluno').value;const val=document.getElementById('fin-valor').value;const parc=document.getElementById('fin-parcelas').value;const dataIni=document.getElementById('fin-vencimento').value;if(!idA||!val||!parc||!dataIni)return alert("Preencha todos os campos.");const alunoNome=document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;let db=new Date(dataIni+'T00:00:00');const idLote=Date.now().toString();const dataGeracao=new Date().toLocaleDateString('pt-BR');for(let i=1;i<=parc;i++){const vencUS=db.toISOString().split('T')[0];await App.api('/financeiro','POST',{id:idLote+"_"+i,idCarne:idLote,dataGeracao,idAluno:idA,alunoNome,valor:val,vencimento:vencUS,status:'Pendente',descricao:`Mensalidade ${i}/${parc}`,tipo:'Receita'});db.setMonth(db.getMonth()+1);}App.abrirCarneExistente(idLote);};
 App.toggleCheck=(s)=>{document.querySelectorAll('.fin-check').forEach(c=>c.checked=s.checked);};
-App.acaoLote=async(a)=>{const c=document.querySelectorAll('.fin-check:checked');if(c.length===0)return alert("Selecione.");if(!confirm("Confirmar?"))return;for(const x of c){if(a==='excluir')await fetch(`${API_URL}/financeiro/${x.value}`,{method:'DELETE'});else{const i=await fetch(`${API_URL}/financeiro/${x.value}`).then(r=>r.json());await fetch(`${API_URL}/financeiro/${x.value}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...i,status:(a==='baixar'?'Pago':'Pendente')})});}}App.renderizarFinanceiroPro();};
-App.editarParcela=async(id)=>{const v=prompt("Novo Valor:");if(v){const i=await fetch(`${API_URL}/financeiro/${id}`).then(r=>r.json());await fetch(`${API_URL}/financeiro/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...i,valor:v})});App.renderizarFinanceiroPro();}};
+App.acaoLote=async(a)=>{const c=document.querySelectorAll('.fin-check:checked');if(c.length===0)return alert("Selecione.");if(!confirm("Confirmar?"))return;for(const x of c){if(a==='excluir')await App.api(`/financeiro/${x.value}`,'DELETE');else{const i=await App.api(`/financeiro/${x.value}`);await App.api(`/financeiro/${x.value}`,'PUT',{...i,status:(a==='baixar'?'Pago':'Pendente')});}}App.renderizarFinanceiroPro();};
+App.editarParcela=async(id)=>{const v=prompt("Novo Valor:");if(v){const i=await App.api(`/financeiro/${id}`);await App.api(`/financeiro/${id}`,'PUT',{...i,valor:v});App.renderizarFinanceiroPro();}};
 
 App.cobrarWhatsApp = async (idAluno, valorTotal, idFinanceiro = null) => { 
     try {
-        const aluno = await fetch(`${API_URL}/alunos/${idAluno}`).then(r => r.json());
+        const aluno = await App.api(`/alunos/${idAluno}`);
         const zap = aluno.whatsapp;
 
         if(!zap || zap.length < 8 || zap === 'undefined') {
@@ -112,14 +105,9 @@ App.cobrarWhatsApp = async (idAluno, valorTotal, idFinanceiro = null) => {
             return; 
         }
         
-        // Marca como cobrado no banco de dados se tivermos o ID da parcela
         if(idFinanceiro) {
-            const item = await fetch(`${API_URL}/financeiro/${idFinanceiro}`).then(r => r.json());
-            await fetch(`${API_URL}/financeiro/${idFinanceiro}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({...item, cobradoZap: true})
-            });
+            const item = await App.api(`/financeiro/${idFinanceiro}`);
+            await App.api(`/financeiro/${idFinanceiro}`, 'PUT', {...item, cobradoZap: true});
         }
         
         let numero = zap.replace(/\D/g, '');
@@ -127,41 +115,23 @@ App.cobrarWhatsApp = async (idAluno, valorTotal, idFinanceiro = null) => {
         
         const msg = `Olá, ${aluno.nome.split(' ')[0]}! Tudo bem?\n\nConsta uma pendência no valor total de R$ ${valorTotal} na escola. Podemos ajudar a regularizar?\n\nQualquer dúvida, estamos à disposição!`;
         window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank'); 
-        
-    } catch (e) {
-        App.showToast("Erro ao processar cobrança.", "error");
-    }
+    } catch (e) { App.showToast("Erro ao processar cobrança.", "error"); }
 };
 
-// --- INTEGRAÇÃO WHATSAPP (COBRANÇAS E RECIBOS) ---
 App.enviarWhatsApp = async (idFinanceiro) => {
     try {
-        // 1. Vai buscar os dados da transação
-        const item = await fetch(`${API_URL}/financeiro/${idFinanceiro}`).then(r => r.json());
-        if (!item.idAluno) {
-            App.showToast("Este registo não está vinculado a um aluno.", "error");
-            return;
-        }
+        const item = await App.api(`/financeiro/${idFinanceiro}`);
+        if (!item.idAluno) return App.showToast("Este registo não está vinculado a um aluno.", "error");
 
-        // 2. Vai buscar os dados do aluno para apanhar o número
-        const aluno = await fetch(`${API_URL}/alunos/${item.idAluno}`).then(r => r.json());
-        if (!aluno.whatsapp) {
-            App.showToast("O aluno não tem número de WhatsApp registado.", "warning");
-            return;
-        }
+        const aluno = await App.api(`/alunos/${item.idAluno}`);
+        if (!aluno.whatsapp) return App.showToast("O aluno não tem número de WhatsApp registado.", "warning");
 
-        // 3. Formata o número (remove traços e parênteses)
         let numero = aluno.whatsapp.replace(/\D/g, '');
-        // Adiciona o indicativo do Brasil (55) se o número tiver 10 ou 11 dígitos
-        if (numero.length === 10 || numero.length === 11) {
-            numero = '55' + numero; 
-        }
+        if (numero.length === 10 || numero.length === 11) numero = '55' + numero; 
 
-        // 4. Formata o valor e a data
         const valorFmt = parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         const dataFmt = item.vencimento.split('-').reverse().join('/');
         
-        // 5. Constrói a mensagem dependendo do Status
         let mensagem = "";
         const saudacao = `Olá, ${aluno.nome.split(' ')[0]}! Tudo bem?`;
 
@@ -171,25 +141,14 @@ App.enviarWhatsApp = async (idFinanceiro) => {
             mensagem = `${saudacao}\n\nEste é um lembrete amigável sobre o vencimento referente a *${item.descricao}*, no valor de R$ ${valorFmt}. A data de vencimento está registada para ${dataFmt}.\n\nQualquer dúvida ou se já efetuaste o pagamento, por favor avisa-nos. Estamos à disposição! 🤝`;
         }
 
-        // 6. Abre o WhatsApp Web ou App
-        const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-        window.open(url, '_blank');
-        
-    } catch (e) {
-        console.error(e);
-        App.showToast("Erro ao processar o WhatsApp. Verifica a ligação.", "error");
-    }
+        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+    } catch (e) { App.showToast("Erro ao processar o WhatsApp.", "error"); }
 };
 
-// --- 4. BAIXA DE MENSALIDADES (NOVO MODAL) ---
 App.abrirModalBaixa = () => {
     const checks = document.querySelectorAll('.fin-check:checked');
-    if(checks.length === 0) {
-        App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
-        return;
-    }
+    if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
 
-    // Calcula o total selecionado
     let total = 0;
     for(const c of checks) {
         const item = App.financeiroCache.find(f => f.id == c.value);
@@ -198,67 +157,21 @@ App.abrirModalBaixa = () => {
 
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
-    
     document.getElementById('modal-titulo').innerText = `Confirmar Pagamento (${checks.length} item/ns)`;
     
     const hoje = new Date().toISOString().split('T')[0];
-    
     const html = `
         <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
             <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
                 <span style="font-weight:bold; color:#2c3e50;">Total Selecionado:</span>
                 <span style="font-weight:bold; color:#27ae60; font-size:20px;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
             </div>
-            
-            <div class="input-group">
-                <label>Data do Pagamento</label>
-                <input type="date" id="baixa-data" value="${hoje}">
-            </div>
-            
-            <div class="input-group">
-                <label>Quantidade de Formas de Pagamento</label>
-                <select id="baixa-qtd" onchange="App.mudarQtdFormasBaixa()">
-                    <option value="1">1 Forma de Pagamento</option>
-                    <option value="2">2 Formas de Pagamento (Dividir Valor)</option>
-                </select>
-            </div>
-
-            <div id="forma-1-container" style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
-                <div class="input-group" style="margin:0;">
-                    <label>Forma 1</label>
-                    <select id="baixa-forma-1">
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin:0;">
-                    <label>Valor (R$)</label>
-                    <input type="number" id="baixa-valor-1" step="0.01" value="${total.toFixed(2)}" oninput="App.calcValorBaixa()">
-                </div>
-            </div>
-
-            <div id="forma-2-container" style="display:none; grid-template-columns: 2fr 1fr; gap:10px;">
-                <div class="input-group" style="margin:0;">
-                    <label>Forma 2</label>
-                    <select id="baixa-forma-2">
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                    </select>
-                </div>
-                <div class="input-group" style="margin:0;">
-                    <label>Valor (R$)</label>
-                    <input type="number" id="baixa-valor-2" step="0.01" value="0.00" readonly style="background:#eee;">
-                </div>
-            </div>
-            
+            <div class="input-group"><label>Data do Pagamento</label><input type="date" id="baixa-data" value="${hoje}"></div>
+            <div class="input-group"><label>Quantidade de Formas de Pagamento</label><select id="baixa-qtd" onchange="App.mudarQtdFormasBaixa()"><option value="1">1 Forma de Pagamento</option><option value="2">2 Formas de Pagamento (Dividir Valor)</option></select></div>
+            <div id="forma-1-container" style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;"><div class="input-group" style="margin:0;"><label>Forma 1</label><select id="baixa-forma-1"><option value="PIX">PIX</option><option value="Cartão de Crédito">Cartão de Crédito</option><option value="Cartão de Débito">Cartão de Débito</option><option value="Dinheiro">Dinheiro</option></select></div><div class="input-group" style="margin:0;"><label>Valor (R$)</label><input type="number" id="baixa-valor-1" step="0.01" value="${total.toFixed(2)}" oninput="App.calcValorBaixa()"></div></div>
+            <div id="forma-2-container" style="display:none; grid-template-columns: 2fr 1fr; gap:10px;"><div class="input-group" style="margin:0;"><label>Forma 2</label><select id="baixa-forma-2"><option value="Dinheiro">Dinheiro</option><option value="PIX">PIX</option><option value="Cartão de Crédito">Cartão de Crédito</option><option value="Cartão de Débito">Cartão de Débito</option></select></div><div class="input-group" style="margin:0;"><label>Valor (R$)</label><input type="number" id="baixa-valor-2" step="0.01" value="0.00" readonly style="background:#eee;"></div></div>
             <input type="hidden" id="baixa-total" value="${total}">
-        </div>
-    `;
-    
+        </div>`;
     document.getElementById('modal-form-content').innerHTML = html;
     
     const btnConfirm = document.querySelector('.btn-confirm');
@@ -273,13 +186,8 @@ App.mudarQtdFormasBaixa = () => {
     const total = parseFloat(document.getElementById('baixa-total').value);
 
     if(qtd === '2') {
-        container2.style.display = 'grid';
-        valor1.value = (total / 2).toFixed(2); // Divide 50/50 inicialmente
-        App.calcValorBaixa();
-    } else {
-        container2.style.display = 'none';
-        valor1.value = total.toFixed(2);
-    }
+        container2.style.display = 'grid'; valor1.value = (total / 2).toFixed(2); App.calcValorBaixa();
+    } else { container2.style.display = 'none'; valor1.value = total.toFixed(2); }
 };
 
 App.calcValorBaixa = () => {
@@ -313,33 +221,16 @@ App.confirmarBaixa = async () => {
         for(const c of checks) {
             const item = App.financeiroCache.find(f => f.id == c.value);
             if(item) {
-                // Matemática de Proporção: Para garantir que os valores fiquem certos se tiver baixado várias parcelas juntas
                 const proportion = parseFloat(item.valor) / totalSelected;
                 const itemV1 = (parseFloat(v1) * proportion).toFixed(2);
                 const itemV2 = qtd === '2' ? (parseFloat(v2) * proportion).toFixed(2) : null;
 
-                const payload = {
-                    ...item,
-                    status: 'Pago',
-                    dataPagamento: dataPagamento,
-                    formaPagamento: f1,
-                    valorPago1: itemV1,
-                    formaPagamento2: f2,
-                    valorPago2: itemV2
-                };
-                
-                await fetch(`${API_URL}/financeiro/${item.id}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
+                const payload = { ...item, status: 'Pago', dataPagamento: dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
+                await App.api(`/financeiro/${item.id}`, 'PUT', payload);
             }
         }
-        
         App.showToast("Pagamento registrado com sucesso!", "success");
         App.fecharModal();
         App.renderizarFinanceiroPro();
-    } catch(e) {
-        App.showToast("Erro ao processar baixa.", "error");
-    }
+    } catch(e) { App.showToast("Erro ao processar baixa.", "error"); }
 };

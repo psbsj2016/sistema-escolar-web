@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO RELATÓRIOS V100 (FINAL E INTEGRADO)
+// MÓDULO RELATÓRIOS V100 (FINAL, INTEGRADO E BLINDADO)
 // =========================================================
 
 App.renderizarRelatorioModulo = async (tipo) => {
@@ -8,7 +8,7 @@ App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
 };
 
-// 1. RELATÓRIO FINANCEIRO (LAYOUT V99)
+// 1. RELATÓRIO FINANCEIRO
 App.renderizarSelecaoRelatorio = () => {
     const div = document.getElementById('app-content');
     div.innerHTML = `<div class="card" style="max-width: 600px; margin: 40px auto; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);"><div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;"><span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2></div><p style="color:#666; margin-bottom:20px;">Selecione o ano para ver as opções.</p><label style="font-weight:bold; color:#333; display:block; margin-bottom:5px;">Selecione o Ano Base:</label><select id="rel-ano" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px; margin-bottom:25px; background:white;"><option value="${new Date().getFullYear()+1}">${new Date().getFullYear()+1}</option><option value="${new Date().getFullYear()}" selected>${new Date().getFullYear()}</option><option value="${new Date().getFullYear()-1}">${new Date().getFullYear()-1}</option></select><button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);">📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span></button><div style="text-align:center; margin: 25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS</div><div style="display:flex; gap:10px;"><select id="rel-mes" style="flex:2; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; background:white;">${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('')}</select><button onclick="App.gerarRelatorioMensal()" style="flex:1; background: #2980b9; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(41, 128, 185, 0.3);">VER MÊS</button></div></div>`;
@@ -18,7 +18,7 @@ App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
     const div = document.getElementById('app-content'); div.innerHTML = 'Gerando...';
     try {
-        const financeiro = await fetch(`${API_URL}/financeiro`).then(r => r.json());
+        const financeiro = await App.api('/financeiro');
         const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
@@ -50,43 +50,21 @@ App.gerarRelatorioAnual = async () => {
                 </div>
                 <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
                     <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
-                        <tr>
-                            <th style="padding:10px; text-align:left;">VENCIMENTO</th>
-                            <th style="padding:10px; text-align:left;">ALUNO</th>
-                            <th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th>
-                            <th style="padding:10px; text-align:center;">STATUS / FORMA</th>
-                            <th style="padding:10px; text-align:right;">RECEBIDO</th>
-                            <th style="padding:10px; text-align:right;">PENDENTE</th>
-                        </tr>
+                        <tr><th style="padding:10px; text-align:left;">VENCIMENTO</th><th style="padding:10px; text-align:left;">ALUNO</th><th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center;">STATUS / FORMA</th><th style="padding:10px; text-align:right;">RECEBIDO</th><th style="padding:10px; text-align:right;">PENDENTE</th></tr>
                     </thead>
                     <tbody>
                         ${dados.map(f => { 
                             const isPago = f.status === 'Pago'; 
                             let textoStatus = isPago ? 'PAGO' : 'ABERTO';
-                            if(isPago && f.formaPagamento) {
-                                textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`;
-                            }
-                            return `<tr style="border-bottom:1px solid #eee;">
-                                <td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td>
-                                <td style="padding:10px;">${f.alunoNome || 'Não informado'}</td>
-                                <td style="padding:10px;">${f.descricao}</td>
-                                <td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td>
-                                <td style="padding:10px; text-align:right;">${isPago ? fmt(parseFloat(f.valor)) : '-'}</td>
-                                <td style="padding:10px; text-align:right;">${!isPago ? fmt(parseFloat(f.valor)) : '-'}</td>
-                            </tr>`; 
+                            if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right;">${isPago ? fmt(parseFloat(f.valor)) : '-'}</td><td style="padding:10px; text-align:right;">${!isPago ? fmt(parseFloat(f.valor)) : '-'}</td></tr>`; 
                         }).join('')}
                     </tbody>
                     <tfoot>
-                        <tr style="background:#f9f9f9; font-weight:bold;">
-                            <td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td>
-                            <td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td>
-                            <td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td>
-                        </tr>
+                        <tr style="background:#f9f9f9; font-weight:bold;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td></tr>
                     </tfoot>
                 </table>
-                <div class="no-print" style="margin-top:30px;">
-                    <button onclick="window.print()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR EXTRATO</button>
-                </div>
+                <div class="no-print" style="margin-top:30px;"><button onclick="window.print()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR EXTRATO</button></div>
             </div>`;
     } catch(e) { alert("Erro ao gerar relatório."); }
 };
@@ -99,7 +77,7 @@ App.gerarRelatorioMensal = async () => {
     const mesNome = meses[mesIdx - 1];
 
     try {
-        const financeiro = await fetch(`${API_URL}/financeiro`).then(r => r.json());
+        const financeiro = await App.api('/financeiro');
         const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
@@ -109,17 +87,11 @@ App.gerarRelatorioMensal = async () => {
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
-            <div class="no-print" style="margin-bottom:20px;">
-                <button onclick="App.renderizarSelecaoRelatorio()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button>
-            </div>
+            <div class="no-print" style="margin-bottom:20px;"><button onclick="App.renderizarSelecaoRelatorio()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button></div>
             <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                    <div style="display:flex; gap:15px; align-items:center;">
-                        ${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
-                    </div>
-                    <div style="text-align:right;">
-                        <h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2><div style="font-size:10px; color:#999;">Relatório Mensal<br>Emissão: ${new Date().toLocaleString('pt-BR')}</div>
-                    </div>
+                    <div style="display:flex; gap:15px; align-items:center;">${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="text-align:right;"><h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2><div style="font-size:10px; color:#999;">Relatório Mensal<br>Emissão: ${new Date().toLocaleString('pt-BR')}</div></div>
                 </div>
                 <div style="display:flex; gap:15px; margin-bottom:30px;">
                     <div style="flex:1; background:#34495e; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PREVISÃO</div><div style="font-size:20px; font-weight:bold;">${fmt(previsao)}</div></div>
@@ -127,35 +99,17 @@ App.gerarRelatorioMensal = async () => {
                     <div style="flex:1; background:#e74c3c; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PENDENTE</div><div style="font-size:20px; font-weight:bold;">${fmt(pendente)}</div></div>
                 </div>
                 <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
-                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
-                        <tr>
-                            <th style="padding:10px; text-align:left;">VENCIMENTO</th>
-                            <th style="padding:10px; text-align:left;">ALUNO</th>
-                            <th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th>
-                            <th style="padding:10px; text-align:center;">STATUS / FORMA</th>
-                            <th style="padding:10px; text-align:right;">VALOR</th>
-                        </tr>
-                    </thead>
+                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;"><tr><th style="padding:10px; text-align:left;">VENCIMENTO</th><th style="padding:10px; text-align:left;">ALUNO</th><th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center;">STATUS / FORMA</th><th style="padding:10px; text-align:right;">VALOR</th></tr></thead>
                     <tbody>
                         ${dados.map(f => { 
                             const isPago = f.status === 'Pago'; 
                             let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
-                            if(isPago && f.formaPagamento) {
-                                textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`;
-                            }
-                            return `<tr style="border-bottom:1px solid #eee;">
-                                <td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td>
-                                <td style="padding:10px;">${f.alunoNome || 'Não informado'}</td>
-                                <td style="padding:10px;">${f.descricao}</td>
-                                <td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td>
-                                <td style="padding:10px; text-align:right;">${fmt(parseFloat(f.valor))}</td>
-                            </tr>`; 
+                            if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right;">${fmt(parseFloat(f.valor))}</td></tr>`; 
                         }).join('')}
                     </tbody>
                 </table>
-                <div class="no-print" style="margin-top:30px;">
-                    <button onclick="window.print()" style="width:100%; padding:15px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR</button>
-                </div>
+                <div class="no-print" style="margin-top:30px;"><button onclick="window.print()" style="width:100%; padding:15px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR</button></div>
             </div>`;
     } catch(e) { alert("Erro ao gerar relatório mensal."); }
 };
@@ -164,7 +118,6 @@ App.gerarRelatorioMensal = async () => {
 // 2. SUPER DOSSIÊ EXECUTIVO (BI)
 // =========================================================
 
-// Função 1: Abre a tela para escolher Mês e Ano
 App.renderizarDossie = () => {
     App.setTitulo("Dossiê Executivo BI");
     const div = document.getElementById('app-content');
@@ -283,17 +236,12 @@ App.gerarDossie = async () => {
                 .d-table { width:100%; border-collapse:collapse; font-size:12px; }
                 .d-table th { background:#f4f6f7; padding:10px; text-align:left; border-bottom:2px solid #ddd; }
                 .d-table td { padding:10px; border-bottom:1px solid #eee; }
-                
-                /* Listas Bonitas para Cursos e Turmas */
                 .list-card { background:#f8f9fa; border:1px solid #e9ecef; padding:10px 15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
                 .list-card span:first-child { font-size:13px; font-weight:500; color:#333; }
                 .badge-curso { background:#3498db; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
                 .badge-turma { background:#2ecc71; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
-
-                /* Utilizando Flex em vez de Grid para evitar overlap */
                 .flex-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: center; justify-content: space-between; }
                 .flex-item { flex: 1; min-width: 300px; }
-                
                 @media print { .no-print { display: none !important; } .print-sheet { width: 100%; font-size:11px; } .d-box { page-break-inside: avoid; border:1px solid #000; } }
             </style>
 
@@ -324,7 +272,6 @@ App.gerarDossie = async () => {
                 <div class="d-box">
                     <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">📊 Resultados Financeiros: ${nomeMes} / ${ano}</h3>
                     <div class="flex-container">
-                        
                         <div class="flex-item">
                             <table class="d-table">
                                 <tr><td><strong>Entradas em Mensalidades:</strong></td><td style="text-align:right; font-size:16px; color:#2980b9; font-weight:bold;">${fmt(entradaMesMensalidade)}</td></tr>
@@ -332,22 +279,16 @@ App.gerarDossie = async () => {
                                 <tr style="background:#f9f9f9;"><td><strong>TOTAL ARRECADADO NO MÊS:</strong></td><td style="text-align:right; font-size:18px; color:#27ae60; font-weight:bold;">${fmt(entradaMesTotal)}</td></tr>
                             </table>
                         </div>
-                        
                         <div class="flex-item" style="display:flex; justify-content:space-evenly; gap:10px; align-items:center;">
                             <div style="text-align:center;">
                                 <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (MENSALIDADES)</div>
-                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;">
-                                    <canvas id="grafMensalidade"></canvas>
-                                </div>
+                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;"><canvas id="grafMensalidade"></canvas></div>
                             </div>
                             <div style="text-align:center;">
                                 <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (VENDAS)</div>
-                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;">
-                                    <canvas id="grafVenda"></canvas>
-                                </div>
+                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;"><canvas id="grafVenda"></canvas></div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
@@ -356,12 +297,7 @@ App.gerarDossie = async () => {
                     <table class="d-table">
                         <thead><tr><th>Mês</th><th style="text-align:right;">Mensalidades</th><th style="text-align:right;">Vendas</th><th style="text-align:right;">Total do Mês</th></tr></thead>
                         <tbody>${linhasHistorico}</tbody>
-                        <tfoot>
-                            <tr style="background:#e8f6f3; font-weight:bold; font-size:14px;">
-                                <td colspan="3" style="text-align:right;">TOTAL BRUTO (JAN ATÉ ${nomeMes.toUpperCase()}):</td>
-                                <td style="text-align:right; color:#27ae60;">${fmt(acumuladoHistorico)}</td>
-                            </tr>
-                        </tfoot>
+                        <tfoot><tr style="background:#e8f6f3; font-weight:bold; font-size:14px;"><td colspan="3" style="text-align:right;">TOTAL BRUTO (JAN ATÉ ${nomeMes.toUpperCase()}):</td><td style="text-align:right; color:#27ae60;">${fmt(acumuladoHistorico)}</td></tr></tfoot>
                     </table>
                 </div>
 
@@ -369,25 +305,11 @@ App.gerarDossie = async () => {
                     <div class="flex-container">
                         <div class="flex-item">
                             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">📚 Cursos (${cursos.length})</h3>
-                            <div>
-                                ${cursos.length ? cursos.map(c => `
-                                    <div class="list-card">
-                                        <span>${c.nome}</span>
-                                        <span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span>
-                                    </div>
-                                `).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}
-                            </div>
+                            <div>${cursos.length ? cursos.map(c => `<div class="list-card"><span>${c.nome}</span><span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}</div>
                         </div>
                         <div class="flex-item">
                             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">🏫 Turmas (${turmas.length})</h3>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
-                                ${turmas.length ? turmas.map(t => `
-                                    <div class="list-card" style="margin-bottom:0;">
-                                        <span>${t.nome}</span>
-                                        <span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span>
-                                    </div>
-                                `).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}
-                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${t.nome}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
                         </div>
                     </div>
                 </div>
@@ -395,33 +317,12 @@ App.gerarDossie = async () => {
                 <div class="d-box">
                     <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">👥 Demografia dos Alunos</h3>
                     <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; gap:30px;">
-                        
-                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 150px;">
-                            <div style="font-size:32px; font-weight:bold; color:#2c3e50; line-height:1; margin-bottom:5px;">${alunos.length}</div>
-                            <div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">Alunos Ativos</div>
-                        </div>
-
-                        <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;">
-                            <canvas id="grafDemografia"></canvas>
-                        </div>
-
+                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 150px;"><div style="font-size:32px; font-weight:bold; color:#2c3e50; line-height:1; margin-bottom:5px;">${alunos.length}</div><div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">Alunos Ativos</div></div>
+                        <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
                         <div style="display:flex; flex-direction:column; gap:10px; min-width:200px;">
-                            <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div>
-                                    <div style="font-size:18px; font-weight:bold; color:#3498db;">${masc}</div>
-                                </div>
-                                <div style="font-size:16px; color:#999; font-weight:bold;">${percMasc}%</div>
-                            </div>
-                            <div style="background:#fdedec; border-left:4px solid #e74c3c; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👩 Feminino</div>
-                                    <div style="font-size:18px; font-weight:bold; color:#e74c3c;">${fem}</div>
-                                </div>
-                                <div style="font-size:16px; color:#999; font-weight:bold;">${percFem}%</div>
-                            </div>
+                            <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:18px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:16px; color:#999; font-weight:bold;">${percMasc}%</div></div>
+                            <div style="background:#fdedec; border-left:4px solid #e74c3c; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👩 Feminino</div><div style="font-size:18px; font-weight:bold; color:#e74c3c;">${fem}</div></div><div style="font-size:16px; color:#999; font-weight:bold;">${percFem}%</div></div>
                         </div>
-
                     </div>
                 </div>
 
@@ -436,27 +337,82 @@ App.gerarDossie = async () => {
 
         // --- INICIALIZA OS GRÁFICOS ---
         setTimeout(() => {
-            const chartOptions = { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
-                cutout: '65%'
-            };
+            const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' };
             const bgColors = ['#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22', '#95a5a6'];
 
-            if(Object.keys(formasMensalidade).length > 0 && document.getElementById('grafMensalidade')) {
-                new Chart(document.getElementById('grafMensalidade'), { type: 'doughnut', data: { labels: Object.keys(formasMensalidade), datasets: [{ data: Object.values(formasMensalidade), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions });
-            }
-            if(Object.keys(formasVenda).length > 0 && document.getElementById('grafVenda')) {
-                new Chart(document.getElementById('grafVenda'), { type: 'doughnut', data: { labels: Object.keys(formasVenda), datasets: [{ data: Object.values(formasVenda), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions });
-            }
-            if(alunos.length > 0 && document.getElementById('grafDemografia')) {
-                new Chart(document.getElementById('grafDemografia'), { type: 'doughnut', data: { labels: ['Masculino','Feminino'], datasets: [{ data: [masc, fem], backgroundColor: ['#3498db', '#e74c3c'], borderWidth: 0 }] }, options: chartOptions });
-            }
+            if(Object.keys(formasMensalidade).length > 0 && document.getElementById('grafMensalidade')) { new Chart(document.getElementById('grafMensalidade'), { type: 'doughnut', data: { labels: Object.keys(formasMensalidade), datasets: [{ data: Object.values(formasMensalidade), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
+            if(Object.keys(formasVenda).length > 0 && document.getElementById('grafVenda')) { new Chart(document.getElementById('grafVenda'), { type: 'doughnut', data: { labels: Object.keys(formasVenda), datasets: [{ data: Object.values(formasVenda), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
+            if(alunos.length > 0 && document.getElementById('grafDemografia')) { new Chart(document.getElementById('grafDemografia'), { type: 'doughnut', data: { labels: ['Masculino','Feminino'], datasets: [{ data: [masc, fem], backgroundColor: ['#3498db', '#e74c3c'], borderWidth: 0 }] }, options: chartOptions }); }
         }, 300);
 
-    } catch(e) { 
-        console.error(e);
-        div.innerHTML = "<p style='text-align:center; color:red;'>Erro ao gerar dossiê. Verifique a base de dados.</p>"; 
-    }
+    } catch(e) { console.error(e); div.innerHTML = "<p style='text-align:center; color:red;'>Erro ao gerar dossiê. Verifique a base de dados.</p>"; }
+};
+
+// =========================================================
+// 3. A FUNÇÃO DA FICHA DE MATRÍCULA (RESTAURADA)
+// =========================================================
+
+App.gerarFichaSetup = async () => {
+    App.setTitulo("Ficha de Matrícula");
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    try {
+        const alunos = await App.api('/alunos');
+        div.innerHTML = `
+            <div class="card" style="padding: 30px; max-width: 800px; margin: 0 auto;">
+                <h3 style="margin-top:0; color:#2c3e50;">📄 Imprimir Ficha de Matrícula</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <select id="ficha-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">
+                        <option value="">-- Selecione o Aluno --</option>
+                        ${alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('')}
+                    </select>
+                    <button onclick="App.gerarFichaImprimir()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR FICHA</button>
+                </div>
+            </div>
+            <div id="ficha-area" style="margin-top:30px;"></div>`;
+    } catch(e) { div.innerHTML = "Erro ao carregar os alunos."; }
+};
+
+App.gerarFichaImprimir = async () => {
+    const idAluno = document.getElementById('ficha-aluno').value;
+    if(!idAluno) return alert("Por favor, selecione um aluno.");
+    const divArea = document.getElementById('ficha-area'); divArea.innerHTML = 'Gerando ficha...';
+    try {
+        const [aluno, escola] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api('/escola') ]);
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        divArea.innerHTML = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR FICHA</button></div>
+            <div class="print-sheet" style="padding:40px;">
+                <div class="doc-header">
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="text-align:right;"><div><b>FICHA DE MATRÍCULA</b></div><div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
+                </div>
+                <div style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; background:#fafafa;">
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50;">1. DADOS DO ALUNO</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div><b>Nome:</b> ${aluno.nome || '-'}</div>
+                        <div><b>Data Nasc:</b> ${aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-'}</div>
+                        <div><b>CPF:</b> ${aluno.cpf || '-'}</div>
+                        <div><b>RG:</b> ${aluno.rg || '-'}</div>
+                        <div><b>Sexo:</b> ${aluno.sexo || '-'}</div>
+                        <div><b>WhatsApp:</b> ${aluno.whatsapp || '-'}</div>
+                    </div>
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50;">2. CURSO E MATRÍCULA</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div><b>Curso:</b> ${aluno.curso || '-'}</div>
+                        <div><b>Turma:</b> ${aluno.turma || '-'}</div>
+                    </div>
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50;">3. ENDEREÇO</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="grid-column: span 2;"><b>Logradouro:</b> ${aluno.rua || '-'}, ${aluno.numero || '-'}</div>
+                        <div><b>Bairro:</b> ${aluno.bairro || '-'}</div>
+                        <div><b>Cidade/UF:</b> ${aluno.cidade || '-'}/${aluno.estado || '-'}</div>
+                    </div>
+                </div>
+                <div style="margin-top:50px; display:flex; justify-content:space-between; text-align:center;">
+                    <div style="width:40%; border-top:1px solid #000; padding-top:5px; font-weight:bold;">Assinatura do Aluno / Responsável</div>
+                    <div style="width:40%; border-top:1px solid #000; padding-top:5px; font-weight:bold;">Direção da Escola</div>
+                </div>
+            </div>
+        `;
+    } catch(e) { divArea.innerHTML = "Erro ao gerar ficha. O aluno não foi encontrado."; }
 };

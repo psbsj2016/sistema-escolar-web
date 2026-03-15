@@ -24,16 +24,18 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     try {
         if (id) {
             const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
-            dados = await fetch(`${API_URL}/${endpoint}/${id}`).then(r => r.json());
+            // AGORA USA A API BLINDADA
+            dados = await App.api(`/${endpoint}/${id}`);
         }
         
         if (tipo === 'aluno' || tipo === 'turma') {
+            // AGORA USA A API BLINDADA
             const [c, t] = await Promise.all([
-                fetch(`${API_URL}/cursos`).then(r => r.json()),
-                fetch(`${API_URL}/turmas`).then(r => r.json())
+                App.api('/cursos'),
+                App.api('/turmas')
             ]);
-            listas.cursos = c;
-            listas.turmas = t;
+            listas.cursos = Array.isArray(c) ? c : [];
+            listas.turmas = Array.isArray(t) ? t : [];
         }
     } catch (e) { console.error("Erro ao carregar dados:", e); }
 
@@ -128,12 +130,11 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
 
 // Função de Salvar (Atualizada para a Nuvem Multi-Tenant)
 App.salvarCadastro = async () => {
-    const t = App.entidadeAtual; // 'aluno', 'turma', etc.
-    const ep = t === 'financeiro' ? 'financeiro' : t + 's'; // endpoint da API
-    const p = {}; // Objeto payload
+    const t = App.entidadeAtual; 
+    const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
+    const p = {}; 
 
     try {
-        // --- COLETA DE DADOS DO ALUNO ---
         if (t === 'aluno') {
             p.nome = document.getElementById('a-nome').value;
             p.cpf = document.getElementById('a-cpf').value;
@@ -157,52 +158,32 @@ App.salvarCadastro = async () => {
             p.resp_cpf = document.getElementById('r-cpf').value;
             p.resp_zap = document.getElementById('r-zap').value;
             
-            if(!p.nome) {
-                // ERRO SE NOME VAZIO
-                App.showToast("O nome do aluno é obrigatório!", "error");
-                return; 
-            }
+            if(!p.nome) { App.showToast("O nome do aluno é obrigatório!", "error"); return; }
         } 
-        // --- COLETA DE DADOS DA TURMA ---
         else if (t === 'turma') {
             p.nome = document.getElementById('t-nome').value;
             p.curso = document.getElementById('t-curso').value;
             p.dia = document.getElementById('t-dia').value;
             p.horario = document.getElementById('t-horario').value;
             
-            if(!p.nome) {
-                App.showToast("Nome da turma é obrigatório!", "error");
-                return;
-            }
+            if(!p.nome) { App.showToast("Nome da turma é obrigatório!", "error"); return; }
         } 
-        // --- COLETA DE DADOS DO CURSO ---
         else if (t === 'curso') {
             p.nome = document.getElementById('c-nome').value;
             p.carga = document.getElementById('c-carga').value;
             
-            if(!p.nome) {
-                App.showToast("Nome do curso é obrigatório!", "error");
-                return;
-            }
+            if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); return; }
         }
 
-        // --- ENVIO PARA A API (BLINDADA COM RENDER/MONGODB) ---
-        // Aqui está a mudança: construímos o endpoint correto e usamos o App.api
         const endpoint = App.idEdicao ? `/${ep}/${App.idEdicao}` : `/${ep}`;
         const method = App.idEdicao ? 'PUT' : 'POST';
 
-        // Usa o NOSSO motor em vez do fetch padrão para garantir o isolamento de dados
         const resultado = await App.api(endpoint, method, p);
-
-        // Se o servidor retornou null, é porque deu algum erro na conexão
         if (!resultado) throw new Error("Erro de comunicação com a API");
 
-        // --- SUCESSO! AQUI ESTÁ A MÁGICA ---
         App.showToast('Registro salvo com sucesso!', 'success');
-        
         App.fecharModal();
         
-        // Atualiza a lista atrás do modal
         if(typeof App.renderizarLista === 'function' && document.getElementById('container-tabela')) {
             App.renderizarLista(t);
         } else {
@@ -211,7 +192,6 @@ App.salvarCadastro = async () => {
 
     } catch (err) {
         console.error(err);
-        // --- ERRO GENÉRICO ---
         App.showToast("Erro ao salvar dados. Verifique a conexão.", "error");
     }
 };
