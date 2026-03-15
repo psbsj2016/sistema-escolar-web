@@ -590,11 +590,19 @@ const App = {
         return dados.length ? html + '</tbody></table>' : '<p style="text-align:center; padding:20px; opacity:0.6;">Sem resultados.</p>';
     },
 
-    // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA) ---
+  // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO) ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
         App.idEdicaoUsuario = null; 
+
+        // Função rápida para criar campos de senha com o "olhinho"
+        const campoSenha = (id, label) => `
+            <div class="input-group" style="position:relative;">
+                <label>${label}</label>
+                <input type="password" id="${id}" style="width:100%; padding-right:40px;">
+                <span onclick="App.toggleSenhaVisibilidade('${id}')" style="position:absolute; right:12px; top:32px; cursor:pointer; font-size:16px; opacity:0.6; user-select:none;" title="Mostrar/Ocultar Senha">👁️</span>
+            </div>`;
 
         try { 
             const usuarios = await App.api('/usuarios'); 
@@ -603,9 +611,9 @@ const App = {
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
                         <h3>Alterar Minha Senha</h3>
-                        <div class="input-group"><label>Senha Atual</label><input type="password" id="user-senha-atual"></div>
-                        <div class="input-group"><label>Nova Senha</label><input type="password" id="user-nova-senha"></div>
-                        <div class="input-group"><label>Confirmar Senha</label><input type="password" id="user-conf-senha"></div>
+                        ${campoSenha('user-senha-atual', 'Senha Atual')}
+                        ${campoSenha('user-nova-senha', 'Nova Senha')}
+                        ${campoSenha('user-conf-senha', 'Confirmar Senha')}
                         <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.alterarMinhaSenha()">ATUALIZAR SENHA</button>
                     </div>
                     <div class="card" style="flex:2; min-width:400px;">
@@ -634,11 +642,107 @@ const App = {
                 </div>`; 
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
-    alterarMinhaSenha: async () => { const atual = document.getElementById('user-senha-atual').value; const nova = document.getElementById('user-nova-senha').value; const conf = document.getElementById('user-conf-senha').value; if (!atual || !nova) return alert("Preencha todos os campos."); if (atual !== App.usuario.senha) return alert("Senha atual incorreta."); if (nova !== conf) return alert("A nova senha e a confirmação não conferem."); const u = {...App.usuario, senha: nova}; await App.api(`/usuarios/${App.usuario.id}`, 'PUT', u); alert("Senha alterada com sucesso! Faça login novamente."); App.logout(); },
-    salvarNovoUsuario: async () => { const n = document.getElementById('new-nome').value; const l = document.getElementById('new-login').value; const s = document.getElementById('new-senha').value; const t = document.getElementById('new-tipo').value; if (!n || !l) return alert("Nome e Login são obrigatórios."); if (App.idEdicaoUsuario) { const userOriginal = await App.api(`/usuarios/${App.idEdicaoUsuario}`); const payload = { nome: n, login: l, tipo: t, senha: s ? s : userOriginal.senha }; await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); alert("Usuário atualizado!"); } else { if (!s) return alert("Senha é obrigatória para novos usuários."); await App.api('/usuarios', 'POST', {nome:n, login:l, senha:s, tipo:t}); alert("Usuário criado!"); } App.renderizarMinhaConta(); },
-    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-tipo').value = tipo; document.getElementById('new-senha').value = ""; document.getElementById('new-senha').placeholder = "(Deixe em branco para manter)"; document.getElementById('btn-save-user').innerText = "SALVAR ALTERAÇÕES"; document.getElementById('btn-save-user').style.background = "#f39c12"; document.getElementById('btn-cancel-user').style.display = "block"; document.querySelector('.card:nth-child(2)').scrollIntoView({behavior: 'smooth'}); },
-    cancelarEdicaoUsuario: () => { App.renderizarMinhaConta(); },
-    excluirUsuario: async (id) => { if(confirm("Tem certeza que deseja excluir este usuário?")) { await App.api(`/usuarios/${id}`, 'DELETE'); App.renderizarMinhaConta(); } },
+
+    // A mágica que faz o olhinho funcionar!
+    toggleSenhaVisibilidade: (id) => {
+        const input = document.getElementById(id);
+        if (input.type === 'password') {
+            input.type = 'text';
+        } else {
+            input.type = 'password';
+        }
+    },
+
+    // Função refatorada para bater na rota segura do servidor
+    alterarMinhaSenha: async () => { 
+        const atual = document.getElementById('user-senha-atual').value; 
+        const nova = document.getElementById('user-nova-senha').value; 
+        const conf = document.getElementById('user-conf-senha').value; 
+
+        if (!atual || !nova) return App.showToast("Preencha a senha atual e a nova.", "error"); 
+        if (nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
+        
+        const btn = document.querySelector('button[onclick="App.alterarMinhaSenha()"]');
+        const textoOriginal = btn.innerText;
+        btn.innerText = "Atualizando... ⏳";
+        btn.disabled = true;
+
+        try {
+            // Enviamos a ordem direta para o novo segurança do servidor!
+            const resposta = await App.api('/usuarios/mudar-senha', 'PUT', { senhaAtual: atual, novaSenha: nova });
+            
+            if (resposta && resposta.success) {
+                App.showToast("Senha alterada com sucesso! Faça login novamente.", "success"); 
+                setTimeout(() => App.logout(), 2000);
+            } else {
+                App.showToast(resposta.error || "Erro ao alterar a senha.", "error");
+            }
+        } catch (e) {
+            App.showToast("Erro de conexão.", "error");
+        } finally {
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
+        }
+    },
+
+    // --- FUNÇÕES DE GESTÃO DE USUÁRIOS (RESTAURADAS) ---
+    salvarNovoUsuario: async () => {
+        const nome = document.getElementById('new-nome').value;
+        const login = document.getElementById('new-login').value;
+        const senha = document.getElementById('new-senha').value;
+        const tipo = document.getElementById('new-tipo').value;
+
+        if(!nome || !login) return App.showToast("Preencha nome e login.", "error");
+        if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha para o novo usuário.", "error");
+
+        const payload = { nome, login, tipo };
+        if(senha) payload.senha = senha; // Só envia a senha se foi digitada (útil na edição)
+
+        try {
+            if(App.idEdicaoUsuario) {
+                await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload);
+                App.showToast("Usuário atualizado com sucesso!", "success");
+            } else {
+                await App.api('/usuarios', 'POST', payload);
+                App.showToast("Usuário criado com sucesso!", "success");
+            }
+            App.renderizarMinhaConta();
+        } catch(e) {
+            App.showToast("Erro ao salvar usuário.", "error");
+        }
+    },
+
+    preencherEdicaoUsuario: (id, nome, login, tipo) => {
+        App.idEdicaoUsuario = id;
+        document.getElementById('new-nome').value = nome;
+        document.getElementById('new-login').value = login;
+        document.getElementById('new-senha').value = ''; // Deixa em branco, só altera se digitar algo
+        document.getElementById('new-tipo').value = tipo;
+        
+        document.getElementById('titulo-form-user').innerText = "Editar Usuário";
+        document.getElementById('btn-save-user').innerText = "ATUALIZAR";
+        document.getElementById('btn-cancel-user').style.display = "inline-block";
+    },
+
+    cancelarEdicaoUsuario: () => {
+        App.idEdicaoUsuario = null;
+        document.getElementById('new-nome').value = '';
+        document.getElementById('new-login').value = '';
+        document.getElementById('new-senha').value = '';
+        document.getElementById('new-tipo').value = 'Gestor';
+        
+        document.getElementById('titulo-form-user').innerText = "Novo Usuário";
+        document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO";
+        document.getElementById('btn-cancel-user').style.display = "none";
+    },
+
+    excluirUsuario: async (id) => {
+        if(confirm("Tem certeza que deseja excluir este usuário? Ele perderá o acesso ao sistema imediatamente.")) {
+            await App.api(`/usuarios/${id}`, 'DELETE');
+            App.showToast("Usuário excluído com sucesso.", "success");
+            App.renderizarMinhaConta();
+        }
+    },
 
 // --- NOVO CÓDIGO PARA CONFIGURAÇÕES (Correção de Imagem) ---
     
