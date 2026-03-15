@@ -27,18 +27,28 @@ const App = {
     listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // --- NÚCLEO DE COMUNICAÇÃO (API CENTRALIZADA) ---
+    // --- NÚCLEO DE COMUNICAÇÃO (API CENTRALIZADA E BLINDADA) ---
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
-        if (App.usuario && App.usuario.id) {
-            headers['X-User-ID'] = App.usuario.id; 
+        
+        // Em vez de enviar apenas o ID, enviamos o Token inviolável!
+        const token = sessionStorage.getItem('token_acesso');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`; 
         }
+
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
 
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
-            if (!response.ok) throw new Error(`Erro API: ${response.status}`);
+            if (!response.ok) {
+                // Se o servidor recusar a pulseira (ex: expirou), forçamos o logout
+                if (response.status === 401 || response.status === 403) {
+                    App.logout();
+                }
+                throw new Error(`Erro API: ${response.status}`);
+            }
             return await response.json();
         } catch (error) {
             console.error("Erro conexão:", error);
@@ -63,7 +73,6 @@ const App = {
             btn.innerText = "Salvar Registro";
         }
     },
-    logout: () => { sessionStorage.removeItem('usuario_logado'); location.reload(); },
 
     // --- 1. INICIALIZAÇÃO ---
     init: async () => {
@@ -193,25 +202,6 @@ const App = {
     carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; }; },
     
-    fazerLogin: async () => { 
-        const login = document.getElementById('login-user').value; 
-        const pass = document.getElementById('login-pass').value; 
-        try { 
-            const usuarios = await App.api('/usuarios'); 
-            const user = usuarios.find(u => u.login === login && u.senha === pass); 
-            if(user) { 
-                App.usuario = user; 
-                sessionStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); 
-                App.entrarNoSistema(); 
-            } else { App.showToast("Usuário ou senha inválidos.", "error"); } 
-        } catch (e) { alert("Erro de conexão com o servidor."); } 
-    },
-    entrarNoSistema: () => { 
-        document.getElementById('tela-login').style.display = 'none'; 
-        document.getElementById('tela-sistema').style.display = 'flex'; 
-        document.getElementById('user-name').innerText = App.usuario.nome; 
-        App.renderizarInicio(); 
-    },
 
 // --- 2. DASHBOARD COM GRÁFICO E FORMATO BRASILEIRO ---
     renderizarInicio: async () => {
@@ -890,68 +880,71 @@ App.enviarCodigoInst = async () => {
         return;
     }
 
-    // Efeito visual: Muda o texto do botão e bloqueia para não clicarem 2 vezes
     const textoOriginal = btn.innerText;
     btn.innerText = "Enviando E-mail... ⏳";
     btn.disabled = true;
     btn.style.opacity = "0.7";
 
     try {
-        // Chama a sua API no Render de verdade!
+        // Envia apenas a ordem para o servidor criar e enviar o e-mail
         const response = await App.api('/auth/enviar-codigo', 'POST', { email: email });
         
         if (response && response.success) {
-            // Guarda o código na memória do navegador para comparar depois
-            App.codigoGeradoInst = response.codigo;
+            App.showToast('Código enviado! Verifique a sua caixa de entrada.', 'success');
             
-            App.showToast('Código enviado! Verifique sua caixa de entrada.', 'success');
-            
-            // Avança para a tela do PIN
             document.getElementById('etapa-1-email').style.display = 'none';
             document.getElementById('etapa-2-validacao').style.display = 'block';
         } else {
             App.showToast('Erro ao enviar e-mail. Verifique o servidor.', 'error');
         }
     } catch (error) {
-        App.showToast('Erro de conexão com o servidor.', 'error');
+        App.showToast('Erro de ligação ao servidor.', 'error');
     } finally {
-        // Restaura o botão ao normal
         btn.innerText = textoOriginal;
         btn.disabled = false;
         btn.style.opacity = "1";
     }
 };
 
-App.validarCadastroInst = () => {
+App.validarCadastroInst = async () => {
+    const emailDigitado = document.getElementById('novo-inst-email').value; 
     const codigoDigitado = document.getElementById('novo-inst-codigo').value.trim();
     const pinDigitado = document.getElementById('novo-inst-pin').value.trim();
-
-    // 🔐 PIN MESTRE PROVISÓRIO (Depois criamos uma tela para você mudar isso)
-    const PIN_MESTRE = "7777";
+    const btn = document.querySelector('#etapa-2-validacao button');
 
     if(!codigoDigitado || !pinDigitado) {
         App.showToast('Preencha o Código e o PIN exclusivo.', 'error');
         return;
     }
 
-    // 1. O código bate com o que o e-mail mandou?
-    if (codigoDigitado !== App.codigoGeradoInst) {
-        App.showToast('Código de e-mail incorreto!', 'error');
-        return;
-    }
+    const textoOriginal = btn.innerText;
+    btn.innerText = "A Validar... ⏳";
+    btn.disabled = true;
 
-    // 2. O PIN de liberação é o seu PIN de Dono?
-    if (pinDigitado !== PIN_MESTRE) {
-        App.showToast('PIN Exclusivo de Gestor incorreto!', 'error');
-        return;
-    }
+    try {
+        // Agora, em vez de validar no navegador, mandamos para o segurança à porta do servidor!
+        const response = await App.api('/auth/validar-cadastro', 'POST', { 
+            email: emailDigitado, 
+            codigo: codigoDigitado, 
+            pin: pinDigitado 
+        });
 
-    // TUDO CERTO! A MÁGICA ACONTECE:
-    document.getElementById('etapa-2-validacao').style.display = 'none';
-    document.getElementById('etapa-3-sucesso').style.display = 'block';
-    
-    // Chuva de confetes!
-    if(typeof confetti === 'function') confetti();
+        if (response && response.success) {
+            // TUDO CERTO! A MÁGICA ACONTECE:
+            document.getElementById('etapa-2-validacao').style.display = 'none';
+            document.getElementById('etapa-3-sucesso').style.display = 'block';
+            
+            if(typeof confetti === 'function') confetti();
+        } else {
+            // O servidor negou (Código errado ou PIN errado)
+            App.showToast(response.error || 'Dados incorretos.', 'error');
+        }
+    } catch (error) {
+        App.showToast('Erro ao validar com o servidor.', 'error');
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
 };
 
 // =========================================================
@@ -961,55 +954,48 @@ App.validarCadastroInst = () => {
 // Variável para saber quem está logado no momento
 App.usuarioLogado = null;
 
+App.entrarNoSistema = () => { 
+    document.getElementById('tela-login').style.display = 'none'; 
+    document.getElementById('tela-sistema').style.display = 'flex'; 
+    if(App.usuario && App.usuario.nome) {
+        document.getElementById('user-name').innerText = App.usuario.nome; 
+    }
+    App.renderizarInicio(); 
+};
+
 App.fazerLogin = async () => {
     const userStr = document.getElementById('login-user').value.trim();
     const passStr = document.getElementById('login-pass').value.trim();
     const btnLogin = document.querySelector('#tela-login button[type="submit"]');
 
     if (!userStr || !passStr) {
-        App.showToast('Por favor, preencha o usuário e a senha.', 'error');
+        App.showToast('Por favor, preencha o utilizador e a senha.', 'error');
         return;
     }
 
-    // Efeito de carregamento no botão
     const textoOriginal = btnLogin.innerText;
     btnLogin.innerText = "Autenticando... ⏳";
     btnLogin.disabled = true;
 
     try {
-        // Vai até o servidor e busca a lista de usuários cadastrados
-        // (Lembra que o servidor cria o admin/123 automaticamente no 1º acesso?)
-        const usuarios = await App.api('/usuarios', 'GET');
+        // Agora nós batemos na porta segura do servidor!
+        const response = await App.api('/auth/login', 'POST', { login: userStr, senha: passStr });
 
-        // Procura se existe algum usuário com esse login e senha exatos
-        const usuarioEncontrado = usuarios.find(u => u.login === userStr && u.senha === passStr);
-
-        if (usuarioEncontrado) {
-            // BINGO! A senha bateu. Guarda o usuário na memória do sistema.
-            App.usuarioLogado = usuarioEncontrado;
-
-            // Transição de Telas (Esconde o Login e mostra o Painel)
-            document.getElementById('tela-login').style.display = 'none';
-            document.getElementById('tela-sistema').style.display = 'flex'; 
-
-            // Atualiza o nome da pessoa na barra lateral
-            document.getElementById('user-name').innerText = usuarioEncontrado.nome;
-
-            // Renderiza o painel inicial de estatísticas/visão geral
-            if (typeof App.renderizarInicio === 'function') {
-                App.renderizarInicio();
-            }
-
+        if (response && response.success) {
+            App.usuario = response.usuario; 
+            sessionStorage.setItem('usuario_logado', JSON.stringify(App.usuario));
+            sessionStorage.setItem('token_acesso', response.token); // <--- SALVA A PULSEIRA!
+            
+            App.entrarNoSistema();
             App.showToast('Bem-vindo ao sistema!', 'success');
         } else {
-            // Acesso negado
-            App.showToast('Usuário ou senha incorretos. Tente novamente.', 'error');
+            // O servidor negou o acesso
+            App.showToast('Utilizador ou senha incorretos.', 'error');
         }
     } catch (error) {
         console.error("Erro no login:", error);
-        App.showToast('Erro de conexão com o banco de dados.', 'error');
+        App.showToast('Erro de conexão. Tente novamente.', 'error');
     } finally {
-        // Restaura o botão ao normal
         btnLogin.innerText = textoOriginal;
         btnLogin.disabled = false;
     }
@@ -1018,7 +1004,9 @@ App.fazerLogin = async () => {
 App.logout = () => {
     // Limpa a memória
     App.usuarioLogado = null;
-    
+    sessionStorage.removeItem('usuario_logado');
+    sessionStorage.removeItem('token_acesso'); // <--- DESTRÓI A PULSEIRA!
+
     // Limpa os campos digitados
     document.getElementById('login-user').value = '';
     document.getElementById('login-pass').value = '';
