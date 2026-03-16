@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V121 - GOLDEN MASTER)
+// SISTEMA ESCOLAR - APP.JS (V125 - GOLDEN MASTER SAAS)
 // =========================================================
 
 // ATENÇÃO: Quando publicar, altere esta URL para o endereço do seu servidor na nuvem
@@ -94,7 +94,7 @@ const App = {
         App.setupMobileMenu();
         await App.carregarDadosEscola();
 
-        // --- NOVO: LOGIN COM ENTER (AGORA NO LUGAR CERTO) ---
+        // --- NOVO: LOGIN COM ENTER ---
         const passInput = document.getElementById('login-pass');
         if(passInput) {
             passInput.addEventListener('keypress', function (e) {
@@ -103,16 +103,16 @@ const App = {
                 }
             });
         }
-    },
-          
-         // --- GATILHO SECRETO DO PAINEL MASTER ---
+
+        // --- GATILHO SECRETO DO PAINEL MASTER (NO LUGAR CORRETO) ---
         const tituloPortal = document.querySelector('.login-box h1');
         if (tituloPortal) {
             tituloPortal.style.cursor = 'pointer';
             tituloPortal.style.userSelect = 'none';
             tituloPortal.addEventListener('click', App.verificarCliqueMaster);
         }
- 
+    },
+
     // --- LÓGICA MOBILE ---
     setupMobileMenu: () => {
         const header = document.querySelector('header');
@@ -210,7 +210,6 @@ const App = {
     carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; }; },
     
-
 // --- 2. DASHBOARD COM GRÁFICO E FORMATO BRASILEIRO ---
     renderizarInicio: async () => {
         App.setTitulo("Visão Geral");
@@ -324,7 +323,6 @@ const App = {
                             tooltip: {
                                 callbacks: {
                                     label: function(context) {
-                                        // Formatação com vírgula dentro do balãozinho do gráfico
                                         return ' R$ ' + formatarMoeda(context.raw);
                                     }
                                 }
@@ -360,7 +358,7 @@ const App = {
         toast.className = `toast ${tipo}`;
         
         const icon = tipo === 'success' ? '✅' : (tipo === 'error' ? '❌' : 'ℹ️');
-        toast.innerHTML = `<span>${icon}</span> <span>${mensagem}</span>`;
+        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${mensagem}</span>`;
 
         container.appendChild(toast);
 
@@ -398,9 +396,8 @@ const App = {
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
     
-       // --- FUNÇÃO DE PONTE PARA CADASTROS (ADICIONE ISTO) ---
+       // --- FUNÇÃO DE PONTE PARA CADASTROS ---
     abrirModalCadastro: (tipo, id) => {
-        // Verifica se o arquivo cadastros.js carregou e injetou a função
         if (typeof App.abrirModalCadastroModulo === 'function') {
             App.abrirModalCadastroModulo(tipo, id);
         } else {
@@ -409,7 +406,7 @@ const App = {
         }
     },
 
-    // --- MÓDULO DE VENDAS (NOVO) ---
+    // --- MÓDULO DE VENDAS ---
     abrirModalVenda: (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay');
         if(modal) modal.style.display = 'flex';
@@ -456,7 +453,6 @@ const App = {
         
         document.getElementById('modal-form-content').innerHTML = html;
         
-        // Altera o botão de Salvar para registrar a venda
         const btnConfirm = document.querySelector('.btn-confirm');
         btnConfirm.setAttribute('onclick', 'App.salvarVenda()');
         btnConfirm.innerText = "Registrar Venda";
@@ -476,20 +472,19 @@ const App = {
             return;
         }
 
-        // Se for fiado, cai nos "Inadimplentes" e Contas a Receber
         const status = forma === 'Pendente (Fiado)' ? 'Pendente' : 'Pago';
         const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
 
         const payload = {
             id: Date.now().toString(),
-            idCarne: `VENDA_${Date.now()}`, // Para não dar erro caso o sistema procure um carnê
+            idCarne: `VENDA_${Date.now()}`,
             idAluno: idAluno,
             alunoNome: alunoNome,
             valor: valor,
             vencimento: data,
             status: status,
             descricao: descricaoFinal,
-            tipo: 'Receita', // Garante que entra como Receita nos Dossiês!
+            tipo: 'Receita',
             dataGeracao: new Date().toLocaleDateString('pt-BR')
         };
 
@@ -497,7 +492,6 @@ const App = {
             await App.api('/financeiro', 'POST', payload);
             App.showToast("Venda registrada com sucesso!", "success");
             App.fecharModal();
-            // Ao salvar no financeiro, todos os relatórios puxam automaticamente!
         } catch (e) {
             App.showToast("Erro ao registrar venda.", "error");
         }
@@ -505,7 +499,6 @@ const App = {
 
     // --- 4. LISTAS (LAYOUT MODERNO RESTAURADO) ---
     renderizarLista: async (tipo) => {
-        // 1. BLINDAGEM DE SEGURANÇA (NOVO)
         if (!App.usuario) {
             App.logout();
             return;
@@ -579,14 +572,12 @@ const App = {
             let btnVenda = '';
             let btnWhats = '';
 
-            // Botões de ação
             if(tipo === 'aluno') {
                 btnVenda = `<button class="btn-edit" style="background:#27ae60;" onclick="App.abrirModalVenda('${item.id}', \`${item.nome}\`)" title="Registrar Nova Venda">🛒</button>`;
             } else if(tipo === 'financeiro') {
                 btnWhats = `<button class="btn-edit" style="background:#25D366; color:white; border-color:#25D366;" onclick="App.enviarWhatsApp('${item.id}')" title="Avisar por WhatsApp">💬</button>`;
             }
 
-            // A Mágica do Layout: div com display:flex e flex-wrap:nowrap para não espremer os botões
             html += `<td style="text-align:right; width: 150px;">
                         <div style="display:flex; gap:5px; justify-content:flex-end; align-items:center; flex-wrap:nowrap;">
                             ${btnVenda}${btnWhats}
@@ -604,11 +595,9 @@ const App = {
         const div = document.getElementById('app-content'); 
         App.idEdicaoUsuario = null; 
 
-        // Descobre o login e e-mail atuais do usuário logado
         const meuLogin = App.usuario ? App.usuario.login : '';
         const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
 
-        // Função rápida para criar campos de senha com o "olhinho"
         const campoSenha = (id, label) => `
             <div class="input-group" style="position:relative;">
                 <label>${label}</label>
@@ -667,7 +656,6 @@ const App = {
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
 
-    // A mágica que faz o olhinho funcionar!
     toggleSenhaVisibilidade: (id) => {
         const input = document.getElementById(id);
         if (input.type === 'password') {
@@ -677,7 +665,6 @@ const App = {
         }
     },
 
-    // Função refatorada para bater na rota segura do servidor e aceitar mudança de login e e-mail
     atualizarMeusDados: async () => { 
         const novoLogin = document.getElementById('user-novo-login').value.trim();
         const novoEmail = document.getElementById('user-novo-email').value.trim();
@@ -695,16 +682,13 @@ const App = {
         btn.disabled = true;
 
         try {
-            // Prepara a sacola de dados
             const payload = { novoLogin: novoLogin, novoEmail: novoEmail, senhaAtual: atual };
-            if (nova) payload.novaSenha = nova; // Só envia a nova se o usuário tiver digitado
+            if (nova) payload.novaSenha = nova; 
 
-            // Batemos na nova porta do servidor
             const resposta = await App.api('/usuarios/atualizar-conta', 'PUT', payload);
             
             if (resposta && resposta.success) {
                 App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); 
-                // Exige login de novo para atualizar as variáveis de sessão com o novo login/email
                 setTimeout(() => App.logout(), 2500);
             } else {
                 App.showToast(resposta.error || "Erro ao atualizar os dados.", "error");
@@ -728,7 +712,7 @@ const App = {
         if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha para o novo usuário.", "error");
 
         const payload = { nome, login, tipo };
-        if(senha) payload.senha = senha; // Só envia a senha se foi digitada (útil na edição)
+        if(senha) payload.senha = senha;
 
         try {
             if(App.idEdicaoUsuario) {
@@ -748,7 +732,7 @@ const App = {
         App.idEdicaoUsuario = id;
         document.getElementById('new-nome').value = nome;
         document.getElementById('new-login').value = login;
-        document.getElementById('new-senha').value = ''; // Deixa em branco, só altera se digitar algo
+        document.getElementById('new-senha').value = ''; 
         document.getElementById('new-tipo').value = tipo;
         
         document.getElementById('titulo-form-user').innerText = "Editar Usuário";
@@ -777,7 +761,6 @@ const App = {
     },
 
 // --- NOVO CÓDIGO PARA CONFIGURAÇÕES (Correção de Imagem) ---
-    
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); 
         const div = document.getElementById('app-content'); 
@@ -785,7 +768,6 @@ const App = {
         
         try { 
             const escola = await App.api('/escola'); 
-            // CORREÇÃO AQUI: Trocamos via.placeholder.com por placehold.co
             const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
             const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
             
@@ -828,13 +810,11 @@ const App = {
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
     },
 
-    // Correção também nas funções de remover:
     removerLogo: async () => { 
         if(confirm("Apagar logotipo?")){
             const s=JSON.parse(localStorage.getItem('escola_perfil')); 
             await App.api('/escola','PUT',{...s,foto:""}); 
             App.carregarDadosEscola(); 
-            // CORREÇÃO AQUI
             document.getElementById('conf-preview').src="https://placehold.co/100?text=LOGO";
         } 
     },
@@ -844,25 +824,21 @@ const App = {
             const s=JSON.parse(localStorage.getItem('escola_perfil')); 
             await App.api('/escola','PUT',{...s,qrCodeImagem:""}); 
             localStorage.setItem('escola_perfil', JSON.stringify({...s,qrCodeImagem:""})); 
-            // CORREÇÃO AQUI
             document.getElementById('conf-qr-preview').src="https://placehold.co/100?text=QR+CODE";
         } 
     },
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
     salvarConfiguracoes: async () => { const s=JSON.parse(localStorage.getItem('escola_perfil')); const p={...s, nome:document.getElementById('conf-nome').value, cnpj:document.getElementById('conf-cnpj').value, banco:document.getElementById('conf-banco').value, chavePix:document.getElementById('conf-pix').value}; await App.api('/escola','PUT',p); App.showToast("Configurações atualizadas!", "success"); App.carregarDadosEscola(); },
     
-// --- MÁSCARAS DE INPUT (ADICIONE ESTE BLOCO) ---
-    
-    // Formata CPF: 000.000.000-00
+// --- MÁSCARAS DE INPUT ---
     mascaraCPF: (i) => {
-        let v = i.value.replace(/\D/g, ""); // Remove tudo que não é dígito
+        let v = i.value.replace(/\D/g, ""); 
         v = v.replace(/(\d{3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d)/, "$1.$2");
         v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
         i.value = v;
     },
 
-    // Formata Celular: (00) 00000-0000
     mascaraCelular: (i) => {
         let v = i.value.replace(/\D/g, "");
         v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
@@ -870,54 +846,16 @@ const App = {
         i.value = v;
     },
 
-    // Formata CEP: 00000-000
     mascaraCEP: (i) => {
         let v = i.value.replace(/\D/g, "");
         v = v.replace(/^(\d{5})(\d)/, "$1-$2");
         i.value = v;
     },
     
-    // Formata Moeda simples: 0.00 (Permite apenas numeros e um ponto)
     mascaraValor: (i) => {
-        let v = i.value.replace(/\D/g, ""); // Remove não dígitos
-        v = (v / 100).toFixed(2) + ""; // Divide por 100 para ter os centavos
+        let v = i.value.replace(/\D/g, ""); 
+        v = (v / 100).toFixed(2) + ""; 
         i.value = v;
-    },
-
-    // --- NOTIFICAÇÕES TOAST ---
-    showToast: (mensagem, tipo = 'info') => {
-        // 1. Cria o container se não existir
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        // 2. Define ícone baseando no tipo
-        const icones = {
-            'success': '✅',
-            'error': '❌',
-            'info': 'ℹ️'
-        };
-        const icone = icones[tipo] || 'ℹ️';
-
-        // 3. Cria o elemento do Toast
-        const toast = document.createElement('div');
-        toast.className = `toast ${tipo}`;
-        toast.innerHTML = `<span class="toast-icon">${icone}</span> <span>${mensagem}</span>`;
-
-        // 4. Adiciona na tela
-        container.appendChild(toast);
-
-        // 5. Remove automaticamente após 3 segundos
-        setTimeout(() => {
-            toast.style.animation = 'fadeOut 0.5s ease forwards';
-            // Espera a animação terminar para remover do HTML
-            setTimeout(() => {
-                if(toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 500);
-        }, 3000);
     },
 
     // --- BACKUP & SEGURANÇA (ROBUSTO + ESCOLA RESET) ---
@@ -956,7 +894,6 @@ const App = {
         document.body.style.cursor = 'wait';
         
         try {
-            // Apaga dados das tabelas
             const entidades = ['alunos', 'turmas', 'cursos', 'financeiro', 'eventos', 'chamadas', 'avaliacoes', 'planejamentos'];
             for (const ent of entidades) {
                 const dados = await App.api(`/${ent}`);
@@ -964,7 +901,6 @@ const App = {
                     await Promise.all(dados.map(item => App.api(`/${ent}/${item.id}`, 'DELETE')));
                 }
             }
-            // Reseta Perfil da Escola
             await App.api('/escola', 'PUT', { nome: 'Nome da Escola', cnpj: '', foto: '', qrCodeImagem: '', banco: '', chavePix: '' });
             localStorage.removeItem('escola_perfil');
 
@@ -978,8 +914,168 @@ const App = {
 
     realizarDownloadBackup: async () => { try { const e=['escola','usuarios','alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamento']; const d={}; for(const ep of e){const r=await App.api(`/${ep}`); d[ep]=r;} const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`backup_${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); } catch(x){alert("Erro backup");} },
     processarRestauracao: async () => { const f=document.getElementById('input-backup-file'); if(!f.files.length)return alert("Selecione arquivo."); if(!confirm("Substituir dados?"))return; const r=new FileReader(); r.onload=async(e)=>{try{const d=JSON.parse(e.target.result); const t=['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamento','usuarios','escola']; for(const k of t){if(d[k]){if(Array.isArray(d[k])){for(const i of d[k])await App.api(`/${k}`,'POST',i)}else{await App.api('/escola','PUT',d[k])}}} alert("Restaurado!"); location.reload();}catch(x){alert("Arquivo inválido.");}}; r.readAsText(f.files[0]); },
-    excluir: async (ep, id) => { if(confirm("Excluir?")) { await App.api(`/${ep}/${id}`, 'DELETE'); App.renderizarLista(App.entidadeAtual); } }
-};
+    excluir: async (ep, id) => { if(confirm("Excluir?")) { await App.api(`/${ep}/${id}`, 'DELETE'); App.renderizarLista(App.entidadeAtual); } },
+
+    // =========================================================
+    // 👑 MÓDULO SECRETO DO DONO (LICENÇAS E ATIVAÇÕES)
+    // =========================================================
+    clicksMaster: 0,
+
+    verificarCliqueMaster: () => {
+        App.clicksMaster++;
+        if (App.clicksMaster >= 5) {
+            App.clicksMaster = 0; // Reseta o contador
+            App.abrirModalMasterLogin();
+        }
+    },
+
+    abrirModalMasterLogin: () => {
+        const senha = prompt("👑 ÁREA RESTRITA DO DONO\n\nDigite a Senha Mestra do Sistema:");
+        if (senha) {
+            App.fazerLoginMaster(senha);
+        }
+    },
+
+    fazerLoginMaster: async (senha) => {
+        try {
+            const response = await fetch(`${API_URL}/master/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senha })
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                sessionStorage.setItem('token_master', data.token);
+                App.renderizarPainelMaster();
+                App.showToast("Bem-vindo ao Painel do Dono!", "success");
+            } else {
+                App.showToast("Senha Mestra Incorreta!", "error");
+            }
+        } catch(e) {
+            App.showToast("Erro de conexão com o servidor.", "error");
+        }
+    },
+
+    renderizarPainelMaster: async () => {
+        const token = sessionStorage.getItem('token_master');
+        if (!token) return;
+
+        const modal = document.getElementById('modal-overlay');
+        if(modal) modal.style.display = 'flex';
+        
+        document.getElementById('modal-titulo').innerText = "👑 PAINEL DO DONO (Gerador de Licenças)";
+        document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center; padding:30px;'>Carregando banco de licenças...</p>";
+        
+        // Customiza o botão de fechar
+        document.querySelector('.modal-footer').innerHTML = `<button class="btn-cancel" style="width:100%; background:#2c3e50;" onclick="App.fecharModal()">Encerrar Sessão do Dono</button>`;
+
+        try {
+            const res = await fetch(`${API_URL}/master/ativacoes`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const lista = await res.json();
+            
+            const total = lista.length;
+            const verificados = lista.filter(l => l.status === 'Verificado').length;
+            const pendentes = lista.filter(l => l.status === 'Pendente').length;
+            const bloqueados = lista.filter(l => l.status === 'Bloqueado').length;
+
+            let html = `
+                <div style="display:flex; gap:10px; margin-bottom:20px; text-align:center; flex-wrap:wrap;">
+                    <div style="flex:1; background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; min-width:100px;">
+                        <h4 style="margin:0; font-size:11px; color:#666; text-transform:uppercase;">Total Cadastros</h4><span style="font-size:26px; font-weight:bold; color:#2c3e50;">${total}</span>
+                    </div>
+                    <div style="flex:1; background:#eafaf1; padding:15px; border-radius:8px; border:1px solid #2ecc71; min-width:100px;">
+                        <h4 style="margin:0; font-size:11px; color:#27ae60; text-transform:uppercase;">Ativos 🟢</h4><span style="font-size:26px; font-weight:bold; color:#27ae60;">${verificados}</span>
+                    </div>
+                    <div style="flex:1; background:#fef5e7; padding:15px; border-radius:8px; border:1px solid #f1c40f; min-width:100px;">
+                        <h4 style="margin:0; font-size:11px; color:#f39c12; text-transform:uppercase;">Pendentes 🟡</h4><span style="font-size:26px; font-weight:bold; color:#f39c12;">${pendentes}</span>
+                    </div>
+                    <div style="flex:1; background:#fdedec; padding:15px; border-radius:8px; border:1px solid #e74c3c; min-width:100px;">
+                        <h4 style="margin:0; font-size:11px; color:#c0392b; text-transform:uppercase;">Bloqueados 🔴</h4><span style="font-size:26px; font-weight:bold; color:#c0392b;">${bloqueados}</span>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                        <thead style="background:#2c3e50; color:white;">
+                            <tr>
+                                <th style="padding:12px;">E-mail do Cliente</th>
+                                <th style="padding:12px;">Status</th>
+                                <th style="padding:12px;">PIN Único</th>
+                                <th style="padding:12px; text-align:right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if(lista.length === 0) {
+                html += `<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Ainda não há solicitações de escolas.</td></tr>`;
+            } else {
+                lista.forEach(item => {
+                    let cor = item.status === 'Verificado' ? 'green' : (item.status === 'Pendente' ? '#f39c12' : 'red');
+                    let bolinha = item.status === 'Verificado' ? '🟢' : (item.status === 'Pendente' ? '🟡' : '🔴');
+                    
+                    html += `
+                        <tr style="border-bottom:1px solid #eee; background:${item.status === 'Verificado' ? '#f9fff9' : '#fff'};">
+                            <td style="padding:12px; font-weight:bold; color:#333;">${item.email}</td>
+                            <td style="padding:12px; color:${cor}; font-weight:bold;">${bolinha} ${item.status}</td>
+                            <td style="padding:12px; font-family:monospace; font-size:16px; font-weight:bold; color:#8e44ad; letter-spacing:2px;">
+                                ${item.pinAtivacao || '<span style="font-size:11px; font-weight:normal; letter-spacing:normal; color:#999;">Aguardando geração...</span>'}
+                            </td>
+                            <td style="padding:12px; text-align:right; display:flex; gap:5px; justify-content:flex-end;">
+                                ${item.status === 'Pendente' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#3498db; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔑 Gerar PIN</button> <button onclick="App.bloquearEmailMaster('${item.email}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🚫</button>` : ''}
+                                ${item.status === 'Verificado' ? `<span style="color:green; font-weight:bold; font-size:11px;">CONTA ATIVA</span>` : ''}
+                                ${item.status === 'Bloqueado' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#f39c12; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">♻️ Reativar e Gerar PIN</button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += `</tbody></table></div>`;
+            document.getElementById('modal-form-content').innerHTML = html;
+            
+        } catch(e) {
+            document.getElementById('modal-form-content').innerHTML = "<p style='color:red;'>Erro ao carregar dados do banco.</p>";
+        }
+    },
+
+    gerarPinMaster: async (email) => {
+        const token = sessionStorage.getItem('token_master');
+        document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Gerando Código Único...</p>";
+        try {
+            const res = await fetch(`${API_URL}/master/gerar-pin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if(data.success) {
+                App.showToast(`PIN gerado com sucesso! Envie para o cliente.`, 'success');
+                App.renderizarPainelMaster(); // Atualiza a tela
+            }
+        } catch(e) { App.showToast("Erro ao gerar PIN", "error"); }
+    },
+
+    bloquearEmailMaster: async (email) => {
+        if(!confirm(`Deseja bloquear permanentemente o cadastro de ${email}?`)) return;
+        const token = sessionStorage.getItem('token_master');
+        document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Bloqueando acesso...</p>";
+        try {
+            const res = await fetch(`${API_URL}/master/bloquear`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if(data.success) {
+                App.showToast(`E-mail bloqueado.`, 'error');
+                App.renderizarPainelMaster(); 
+            }
+        } catch(e) { App.showToast("Erro ao bloquear", "error"); }
+    }
+}; // <--- FIM DO OBJETO APP
 
 // =========================================================
 // MÓDULO DE CADASTRO DE NOVAS INSTITUIÇÕES (SAAS)
@@ -987,7 +1083,7 @@ const App = {
 
 App.abrirTelaCadastroInst = () => {
     document.getElementById('modal-cadastro-inst').style.display = 'flex';
-    App.voltarEtapa1(); // Garante que sempre abra na etapa 1
+    App.voltarEtapa1();
 };
 
 App.fecharModalInst = () => {
@@ -1001,11 +1097,8 @@ App.voltarEtapa1 = () => {
 };
 
 // =========================================================
-// MOTOR DE E-MAILS (SAAS) - VERSÃO REAL
+// MOTOR DE E-MAILS E VALIDAÇÃO DE REGISTO
 // =========================================================
-
-// Variável invisível para guardar o código gerado pelo servidor
-App.codigoGeradoInst = null;
 
 App.enviarCodigoInst = async () => {
     const email = document.getElementById('novo-inst-email').value;
@@ -1022,7 +1115,6 @@ App.enviarCodigoInst = async () => {
     btn.style.opacity = "0.7";
 
     try {
-        // Envia apenas a ordem para o servidor criar e enviar o e-mail
         const response = await App.api('/auth/enviar-codigo', 'POST', { email: email });
         
         if (response && response.success) {
@@ -1058,7 +1150,6 @@ App.validarCadastroInst = async () => {
     btn.disabled = true;
 
     try {
-        // Agora, em vez de validar no navegador, mandamos para o segurança à porta do servidor!
         const response = await App.api('/auth/validar-cadastro', 'POST', { 
             email: emailDigitado, 
             codigo: codigoDigitado, 
@@ -1066,13 +1157,11 @@ App.validarCadastroInst = async () => {
         });
 
         if (response && response.success) {
-            // TUDO CERTO! A MÁGICA ACONTECE:
             document.getElementById('etapa-2-validacao').style.display = 'none';
             document.getElementById('etapa-3-sucesso').style.display = 'block';
             
             if(typeof confetti === 'function') confetti();
         } else {
-            // O servidor negou (Código errado ou PIN errado)
             App.showToast(response.error || 'Dados incorretos.', 'error');
         }
     } catch (error) {
@@ -1087,7 +1176,6 @@ App.validarCadastroInst = async () => {
 // SISTEMA DE AUTENTICAÇÃO E LOGIN
 // =========================================================
 
-// Variável para saber quem está logado no momento
 App.usuarioLogado = null;
 
 App.entrarNoSistema = () => { 
@@ -1114,18 +1202,16 @@ App.fazerLogin = async () => {
     btnLogin.disabled = true;
 
     try {
-        // Agora nós batemos na porta segura do servidor!
         const response = await App.api('/auth/login', 'POST', { login: userStr, senha: passStr });
 
         if (response && response.success) {
             App.usuario = response.usuario; 
             sessionStorage.setItem('usuario_logado', JSON.stringify(App.usuario));
-            sessionStorage.setItem('token_acesso', response.token); // <--- SALVA A PULSEIRA!
+            sessionStorage.setItem('token_acesso', response.token);
             
             App.entrarNoSistema();
             App.showToast('Bem-vindo ao sistema!', 'success');
         } else {
-            // O servidor negou o acesso
             App.showToast('Utilizador ou senha incorretos.', 'error');
         }
     } catch (error) {
@@ -1138,182 +1224,17 @@ App.fazerLogin = async () => {
 };
 
 App.logout = () => {
-    // Limpa a memória
     App.usuarioLogado = null;
     sessionStorage.removeItem('usuario_logado');
-    sessionStorage.removeItem('token_acesso'); // <--- DESTRÓI A PULSEIRA!
+    sessionStorage.removeItem('token_acesso');
 
-    // Limpa os campos digitados
     document.getElementById('login-user').value = '';
     document.getElementById('login-pass').value = '';
 
-    // Volta para a tela de Login
     document.getElementById('tela-sistema').style.display = 'none';
     
-    // Mostra a tela de login (usando o display original que costuma ser flex ou block)
     const telaLogin = document.getElementById('tela-login');
     telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
-};
-
-// =========================================================
-// 👑 MÓDULO SECRETO DO DONO (LICENÇAS E ATIVAÇÕES)
-// =========================================================
-
-App.clicksMaster = 0;
-
-App.verificarCliqueMaster = () => {
-    App.clicksMaster++;
-    if (App.clicksMaster >= 5) {
-        App.clicksMaster = 0; // Reseta o contador
-        App.abrirModalMasterLogin();
-    }
-};
-
-App.abrirModalMasterLogin = () => {
-    const senha = prompt("👑 ÁREA RESTRITA DO DONO\n\nDigite a Senha Mestra do Sistema:");
-    if (senha) {
-        App.fazerLoginMaster(senha);
-    }
-};
-
-App.fazerLoginMaster = async (senha) => {
-    try {
-        const response = await fetch(`${API_URL}/master/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ senha })
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-            sessionStorage.setItem('token_master', data.token);
-            App.renderizarPainelMaster();
-            App.showToast("Bem-vindo ao Painel do Dono!", "success");
-        } else {
-            App.showToast("Senha Mestra Incorreta!", "error");
-        }
-    } catch(e) {
-        App.showToast("Erro de conexão com o servidor.", "error");
-    }
-};
-
-App.renderizarPainelMaster = async () => {
-    const token = sessionStorage.getItem('token_master');
-    if (!token) return;
-
-    const modal = document.getElementById('modal-overlay');
-    if(modal) modal.style.display = 'flex';
-    
-    document.getElementById('modal-titulo').innerText = "👑 PAINEL DO DONO (Gerador de Licenças)";
-    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center; padding:30px;'>Carregando banco de licenças...</p>";
-    
-    // Customiza o botão de fechar
-    document.querySelector('.modal-footer').innerHTML = `<button class="btn-cancel" style="width:100%; background:#2c3e50;" onclick="App.fecharModal()">Encerrar Sessão do Dono</button>`;
-
-    try {
-        const res = await fetch(`${API_URL}/master/ativacoes`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const lista = await res.json();
-        
-        const total = lista.length;
-        const verificados = lista.filter(l => l.status === 'Verificado').length;
-        const pendentes = lista.filter(l => l.status === 'Pendente').length;
-        const bloqueados = lista.filter(l => l.status === 'Bloqueado').length;
-
-        let html = `
-            <div style="display:flex; gap:10px; margin-bottom:20px; text-align:center; flex-wrap:wrap;">
-                <div style="flex:1; background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; min-width:100px;">
-                    <h4 style="margin:0; font-size:11px; color:#666; text-transform:uppercase;">Total Cadastros</h4><span style="font-size:26px; font-weight:bold; color:#2c3e50;">${total}</span>
-                </div>
-                <div style="flex:1; background:#eafaf1; padding:15px; border-radius:8px; border:1px solid #2ecc71; min-width:100px;">
-                    <h4 style="margin:0; font-size:11px; color:#27ae60; text-transform:uppercase;">Ativos 🟢</h4><span style="font-size:26px; font-weight:bold; color:#27ae60;">${verificados}</span>
-                </div>
-                <div style="flex:1; background:#fef5e7; padding:15px; border-radius:8px; border:1px solid #f1c40f; min-width:100px;">
-                    <h4 style="margin:0; font-size:11px; color:#f39c12; text-transform:uppercase;">Pendentes 🟡</h4><span style="font-size:26px; font-weight:bold; color:#f39c12;">${pendentes}</span>
-                </div>
-                <div style="flex:1; background:#fdedec; padding:15px; border-radius:8px; border:1px solid #e74c3c; min-width:100px;">
-                    <h4 style="margin:0; font-size:11px; color:#c0392b; text-transform:uppercase;">Bloqueados 🔴</h4><span style="font-size:26px; font-weight:bold; color:#c0392b;">${bloqueados}</span>
-                </div>
-            </div>
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
-                    <thead style="background:#2c3e50; color:white;">
-                        <tr>
-                            <th style="padding:12px;">E-mail do Cliente</th>
-                            <th style="padding:12px;">Status</th>
-                            <th style="padding:12px;">PIN Único (Para enviar ao cliente)</th>
-                            <th style="padding:12px; text-align:right;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        if(lista.length === 0) {
-            html += `<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Ainda não há solicitações de escolas.</td></tr>`;
-        } else {
-            lista.forEach(item => {
-                let cor = item.status === 'Verificado' ? 'green' : (item.status === 'Pendente' ? '#f39c12' : 'red');
-                let bolinha = item.status === 'Verificado' ? '🟢' : (item.status === 'Pendente' ? '🟡' : '🔴');
-                
-                html += `
-                    <tr style="border-bottom:1px solid #eee; background:${item.status === 'Verificado' ? '#f9fff9' : '#fff'};">
-                        <td style="padding:12px; font-weight:bold; color:#333;">${item.email}</td>
-                        <td style="padding:12px; color:${cor}; font-weight:bold;">${bolinha} ${item.status}</td>
-                        <td style="padding:12px; font-family:monospace; font-size:16px; font-weight:bold; color:#8e44ad; letter-spacing:2px;">
-                            ${item.pinAtivacao || '<span style="font-size:11px; font-weight:normal; letter-spacing:normal; color:#999;">Aguardando geração...</span>'}
-                        </td>
-                        <td style="padding:12px; text-align:right; display:flex; gap:5px; justify-content:flex-end;">
-                            ${item.status === 'Pendente' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#3498db; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔑 Gerar PIN</button> <button onclick="App.bloquearEmailMaster('${item.email}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🚫</button>` : ''}
-                            ${item.status === 'Verificado' ? `<span style="color:green; font-weight:bold; font-size:11px;">CONTA ATIVA</span>` : ''}
-                            ${item.status === 'Bloqueado' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#f39c12; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">♻️ Reativar e Gerar PIN</button>` : ''}
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        html += `</tbody></table></div>`;
-        document.getElementById('modal-form-content').innerHTML = html;
-        
-    } catch(e) {
-        document.getElementById('modal-form-content').innerHTML = "<p style='color:red;'>Erro ao carregar dados do banco.</p>";
-    }
-};
-
-App.gerarPinMaster = async (email) => {
-    const token = sessionStorage.getItem('token_master');
-    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Gerando Código Único...</p>";
-    try {
-        const res = await fetch(`${API_URL}/master/gerar-pin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if(data.success) {
-            App.showToast(`PIN gerado com sucesso! Envie para o cliente.`, 'success');
-            App.renderizarPainelMaster(); // Atualiza a tela
-        }
-    } catch(e) { App.showToast("Erro ao gerar PIN", "error"); }
-};
-
-App.bloquearEmailMaster = async (email) => {
-    if(!confirm(`Deseja bloquear permanentemente o cadastro de ${email}?`)) return;
-    const token = sessionStorage.getItem('token_master');
-    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Bloqueando acesso...</p>";
-    try {
-        const res = await fetch(`${API_URL}/master/bloquear`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if(data.success) {
-            App.showToast(`E-mail bloqueado.`, 'error');
-            App.renderizarPainelMaster(); 
-        }
-    } catch(e) { App.showToast("Erro ao bloquear", "error"); }
 };
 
 // =========================================================
