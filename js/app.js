@@ -104,7 +104,15 @@ const App = {
             });
         }
     },
-
+          
+         // --- GATILHO SECRETO DO PAINEL MASTER ---
+        const tituloPortal = document.querySelector('.login-box h1');
+        if (tituloPortal) {
+            tituloPortal.style.cursor = 'pointer';
+            tituloPortal.style.userSelect = 'none';
+            tituloPortal.addEventListener('click', App.verificarCliqueMaster);
+        }
+ 
     // --- LÓGICA MOBILE ---
     setupMobileMenu: () => {
         const header = document.querySelector('header');
@@ -1145,6 +1153,167 @@ App.logout = () => {
     // Mostra a tela de login (usando o display original que costuma ser flex ou block)
     const telaLogin = document.getElementById('tela-login');
     telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+};
+
+// =========================================================
+// 👑 MÓDULO SECRETO DO DONO (LICENÇAS E ATIVAÇÕES)
+// =========================================================
+
+App.clicksMaster = 0;
+
+App.verificarCliqueMaster = () => {
+    App.clicksMaster++;
+    if (App.clicksMaster >= 5) {
+        App.clicksMaster = 0; // Reseta o contador
+        App.abrirModalMasterLogin();
+    }
+};
+
+App.abrirModalMasterLogin = () => {
+    const senha = prompt("👑 ÁREA RESTRITA DO DONO\n\nDigite a Senha Mestra do Sistema:");
+    if (senha) {
+        App.fazerLoginMaster(senha);
+    }
+};
+
+App.fazerLoginMaster = async (senha) => {
+    try {
+        const response = await fetch(`${API_URL}/master/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ senha })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+            sessionStorage.setItem('token_master', data.token);
+            App.renderizarPainelMaster();
+            App.showToast("Bem-vindo ao Painel do Dono!", "success");
+        } else {
+            App.showToast("Senha Mestra Incorreta!", "error");
+        }
+    } catch(e) {
+        App.showToast("Erro de conexão com o servidor.", "error");
+    }
+};
+
+App.renderizarPainelMaster = async () => {
+    const token = sessionStorage.getItem('token_master');
+    if (!token) return;
+
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    document.getElementById('modal-titulo').innerText = "👑 PAINEL DO DONO (Gerador de Licenças)";
+    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center; padding:30px;'>Carregando banco de licenças...</p>";
+    
+    // Customiza o botão de fechar
+    document.querySelector('.modal-footer').innerHTML = `<button class="btn-cancel" style="width:100%; background:#2c3e50;" onclick="App.fecharModal()">Encerrar Sessão do Dono</button>`;
+
+    try {
+        const res = await fetch(`${API_URL}/master/ativacoes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const lista = await res.json();
+        
+        const total = lista.length;
+        const verificados = lista.filter(l => l.status === 'Verificado').length;
+        const pendentes = lista.filter(l => l.status === 'Pendente').length;
+        const bloqueados = lista.filter(l => l.status === 'Bloqueado').length;
+
+        let html = `
+            <div style="display:flex; gap:10px; margin-bottom:20px; text-align:center; flex-wrap:wrap;">
+                <div style="flex:1; background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; min-width:100px;">
+                    <h4 style="margin:0; font-size:11px; color:#666; text-transform:uppercase;">Total Cadastros</h4><span style="font-size:26px; font-weight:bold; color:#2c3e50;">${total}</span>
+                </div>
+                <div style="flex:1; background:#eafaf1; padding:15px; border-radius:8px; border:1px solid #2ecc71; min-width:100px;">
+                    <h4 style="margin:0; font-size:11px; color:#27ae60; text-transform:uppercase;">Ativos 🟢</h4><span style="font-size:26px; font-weight:bold; color:#27ae60;">${verificados}</span>
+                </div>
+                <div style="flex:1; background:#fef5e7; padding:15px; border-radius:8px; border:1px solid #f1c40f; min-width:100px;">
+                    <h4 style="margin:0; font-size:11px; color:#f39c12; text-transform:uppercase;">Pendentes 🟡</h4><span style="font-size:26px; font-weight:bold; color:#f39c12;">${pendentes}</span>
+                </div>
+                <div style="flex:1; background:#fdedec; padding:15px; border-radius:8px; border:1px solid #e74c3c; min-width:100px;">
+                    <h4 style="margin:0; font-size:11px; color:#c0392b; text-transform:uppercase;">Bloqueados 🔴</h4><span style="font-size:26px; font-weight:bold; color:#c0392b;">${bloqueados}</span>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                    <thead style="background:#2c3e50; color:white;">
+                        <tr>
+                            <th style="padding:12px;">E-mail do Cliente</th>
+                            <th style="padding:12px;">Status</th>
+                            <th style="padding:12px;">PIN Único (Para enviar ao cliente)</th>
+                            <th style="padding:12px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        if(lista.length === 0) {
+            html += `<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">Ainda não há solicitações de escolas.</td></tr>`;
+        } else {
+            lista.forEach(item => {
+                let cor = item.status === 'Verificado' ? 'green' : (item.status === 'Pendente' ? '#f39c12' : 'red');
+                let bolinha = item.status === 'Verificado' ? '🟢' : (item.status === 'Pendente' ? '🟡' : '🔴');
+                
+                html += `
+                    <tr style="border-bottom:1px solid #eee; background:${item.status === 'Verificado' ? '#f9fff9' : '#fff'};">
+                        <td style="padding:12px; font-weight:bold; color:#333;">${item.email}</td>
+                        <td style="padding:12px; color:${cor}; font-weight:bold;">${bolinha} ${item.status}</td>
+                        <td style="padding:12px; font-family:monospace; font-size:16px; font-weight:bold; color:#8e44ad; letter-spacing:2px;">
+                            ${item.pinAtivacao || '<span style="font-size:11px; font-weight:normal; letter-spacing:normal; color:#999;">Aguardando geração...</span>'}
+                        </td>
+                        <td style="padding:12px; text-align:right; display:flex; gap:5px; justify-content:flex-end;">
+                            ${item.status === 'Pendente' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#3498db; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🔑 Gerar PIN</button> <button onclick="App.bloquearEmailMaster('${item.email}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">🚫</button>` : ''}
+                            ${item.status === 'Verificado' ? `<span style="color:green; font-weight:bold; font-size:11px;">CONTA ATIVA</span>` : ''}
+                            ${item.status === 'Bloqueado' ? `<button onclick="App.gerarPinMaster('${item.email}')" style="background:#f39c12; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:11px;">♻️ Reativar e Gerar PIN</button>` : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `</tbody></table></div>`;
+        document.getElementById('modal-form-content').innerHTML = html;
+        
+    } catch(e) {
+        document.getElementById('modal-form-content').innerHTML = "<p style='color:red;'>Erro ao carregar dados do banco.</p>";
+    }
+};
+
+App.gerarPinMaster = async (email) => {
+    const token = sessionStorage.getItem('token_master');
+    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Gerando Código Único...</p>";
+    try {
+        const res = await fetch(`${API_URL}/master/gerar-pin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if(data.success) {
+            App.showToast(`PIN gerado com sucesso! Envie para o cliente.`, 'success');
+            App.renderizarPainelMaster(); // Atualiza a tela
+        }
+    } catch(e) { App.showToast("Erro ao gerar PIN", "error"); }
+};
+
+App.bloquearEmailMaster = async (email) => {
+    if(!confirm(`Deseja bloquear permanentemente o cadastro de ${email}?`)) return;
+    const token = sessionStorage.getItem('token_master');
+    document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center;'>Bloqueando acesso...</p>";
+    try {
+        const res = await fetch(`${API_URL}/master/bloquear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if(data.success) {
+            App.showToast(`E-mail bloqueado.`, 'error');
+            App.renderizarPainelMaster(); 
+        }
+    } catch(e) { App.showToast("Erro ao bloquear", "error"); }
 };
 
 // =========================================================
