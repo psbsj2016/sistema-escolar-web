@@ -325,3 +325,119 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 @keyframes fadeOut {
     to { transform: translateX(10px); opacity: 0; }
 }
+
+/* =========================================================
+   📱 MODO CELULAR / RESPONSIVIDADE (MOBILE FIRST)
+   ========================================================= */
+
+@media (max-width: 768px) {
+    /* 1. Ajuste do Layout Principal */
+    .content {
+        margin-left: 0 !important; /* Remove o espaço do menu lateral */
+        padding: 15px !important;
+        width: 100% !important;
+    }
+
+    /* 2. Menu Lateral (Vira uma gaveta escondida) */
+    .sidebar {
+        position: fixed;
+        left: -300px; /* Esconde o menu fora da tela */
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    }
+    .sidebar.active {
+        left: 0; /* Mostra o menu quando clica no botão ☰ */
+    }
+
+    /* 3. O Fundo escuro quando o menu abre */
+    .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+    .mobile-overlay.active {
+        display: block;
+    }
+
+    /* 4. Janelas Modais (Ocupam a tela quase toda) */
+    .modal-box {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 10px auto !important;
+        padding: 15px !important;
+    }
+
+    /* 5. Quebra de Colunas (Transforma Lado-a-Lado em Cima-e-Baixo) */
+    /* Isso arruma os formulários de cadastro e a aba "Minha Conta" */
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important; 
+        gap: 10px !important;
+    }
+
+    /* Arruma os elementos Flexbox (como os gráficos e caixas lado a lado) */
+    .card > div[style*="display:flex"], 
+    .card > div[style*="display: flex"] {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    /* Protege botões para não ficarem gigantes do nada */
+    .modal-footer {
+        flex-direction: column !important;
+    }
+    .modal-footer button {
+        width: 100% !important;
+        margin: 5px 0 !important;
+    }
+
+    /* 6. Tabelas Deslizantes (Scroll Horizontal) */
+    /* Impede que a tabela quebre o site. Cria uma barrinha de rolagem só na tabela! */
+    table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        border: 1px solid #eee;
+    }
+    
+    th, td {
+        padding: 10px !important;
+    }
+
+    /* 7. Tela de Login e Cadastro de Inst. */
+    .login-box {
+        width: 90% !important;
+        padding: 20px !important;
+    }
+    
+    /* 8. Botão de Menu (Hambúrguer) */
+    .mobile-menu-btn {
+        display: inline-block !important; /* Mostra o botão de menu */
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #2c3e50;
+        cursor: pointer;
+        padding: 5px 15px 5px 0;
+    }
+    
+    /* Ajuste do cabeçalho para acomodar o botão de menu */
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    header h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+    #data-hoje {
+        display: none; /* Esconde a data no celular para dar espaço */
+    }
+}

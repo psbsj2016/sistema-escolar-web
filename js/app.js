@@ -590,14 +590,15 @@ const App = {
         return dados.length ? html + '</tbody></table>' : '<p style="text-align:center; padding:20px; opacity:0.6;">Sem resultados.</p>';
     },
 
- // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO + MUDAR LOGIN) ---
+ // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO + MUDAR LOGIN E E-MAIL) ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
         App.idEdicaoUsuario = null; 
 
-        // Descobre o login atual do usuário logado para já vir preenchido
+        // Descobre o login e e-mail atuais do usuário logado
         const meuLogin = App.usuario ? App.usuario.login : '';
+        const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
 
         // Função rápida para criar campos de senha com o "olhinho"
         const campoSenha = (id, label) => `
@@ -614,8 +615,13 @@ const App = {
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
                         <h3>Meus Dados de Acesso</h3>
-                        <p style="font-size:12px; color:#666; margin-bottom:15px;">Altere seu login ou senha. A senha atual é sempre obrigatória.</p>
+                        <p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
                         
+                        <div class="input-group">
+                            <label>E-mail Dono da Conta</label>
+                            <input type="email" id="user-novo-email" value="${meuEmail}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;">
+                        </div>
+
                         <div class="input-group">
                             <label>Login de Acesso</label>
                             <input type="text" id="user-novo-login" value="${meuLogin}" style="width:100%; border-left: 4px solid #3498db;">
@@ -663,9 +669,10 @@ const App = {
         }
     },
 
-    // Função refatorada para bater na rota segura do servidor e aceitar mudança de login
+    // Função refatorada para bater na rota segura do servidor e aceitar mudança de login e e-mail
     atualizarMeusDados: async () => { 
         const novoLogin = document.getElementById('user-novo-login').value.trim();
+        const novoEmail = document.getElementById('user-novo-email').value.trim();
         const atual = document.getElementById('user-senha-atual').value; 
         const nova = document.getElementById('user-nova-senha').value; 
         const conf = document.getElementById('user-conf-senha').value; 
@@ -681,7 +688,7 @@ const App = {
 
         try {
             // Prepara a sacola de dados
-            const payload = { novoLogin: novoLogin, senhaAtual: atual };
+            const payload = { novoLogin: novoLogin, novoEmail: novoEmail, senhaAtual: atual };
             if (nova) payload.novaSenha = nova; // Só envia a nova se o usuário tiver digitado
 
             // Batemos na nova porta do servidor
@@ -689,7 +696,7 @@ const App = {
             
             if (resposta && resposta.success) {
                 App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); 
-                // Exige login de novo para atualizar as variáveis de sessão com o novo login
+                // Exige login de novo para atualizar as variáveis de sessão com o novo login/email
                 setTimeout(() => App.logout(), 2500);
             } else {
                 App.showToast(resposta.error || "Erro ao atualizar os dados.", "error");
