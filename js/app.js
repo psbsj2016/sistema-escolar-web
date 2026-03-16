@@ -590,11 +590,14 @@ const App = {
         return dados.length ? html + '</tbody></table>' : '<p style="text-align:center; padding:20px; opacity:0.6;">Sem resultados.</p>';
     },
 
-  // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO) ---
+ // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO + MUDAR LOGIN) ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
         App.idEdicaoUsuario = null; 
+
+        // Descobre o login atual do usuário logado para já vir preenchido
+        const meuLogin = App.usuario ? App.usuario.login : '';
 
         // Função rápida para criar campos de senha com o "olhinho"
         const campoSenha = (id, label) => `
@@ -610,11 +613,18 @@ const App = {
             div.innerHTML = `
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
-                        <h3>Alterar Minha Senha</h3>
-                        ${campoSenha('user-senha-atual', 'Senha Atual')}
-                        ${campoSenha('user-nova-senha', 'Nova Senha')}
-                        ${campoSenha('user-conf-senha', 'Confirmar Senha')}
-                        <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.alterarMinhaSenha()">ATUALIZAR SENHA</button>
+                        <h3>Meus Dados de Acesso</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:15px;">Altere seu login ou senha. A senha atual é sempre obrigatória.</p>
+                        
+                        <div class="input-group">
+                            <label>Login de Acesso</label>
+                            <input type="text" id="user-novo-login" value="${meuLogin}" style="width:100%; border-left: 4px solid #3498db;">
+                        </div>
+
+                        ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}
+                        ${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}
+                        ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
+                        <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
                     </div>
                     <div class="card" style="flex:2; min-width:400px;">
                         <h3>Acessos ao Sistema</h3>
@@ -653,29 +663,36 @@ const App = {
         }
     },
 
-    // Função refatorada para bater na rota segura do servidor
-    alterarMinhaSenha: async () => { 
+    // Função refatorada para bater na rota segura do servidor e aceitar mudança de login
+    atualizarMeusDados: async () => { 
+        const novoLogin = document.getElementById('user-novo-login').value.trim();
         const atual = document.getElementById('user-senha-atual').value; 
         const nova = document.getElementById('user-nova-senha').value; 
         const conf = document.getElementById('user-conf-senha').value; 
 
-        if (!atual || !nova) return App.showToast("Preencha a senha atual e a nova.", "error"); 
-        if (nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
+        if (!novoLogin) return App.showToast("O login não pode ficar em branco.", "error"); 
+        if (!atual) return App.showToast("Digite sua senha atual para autorizar as alterações.", "error"); 
+        if (nova && nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
         
-        const btn = document.querySelector('button[onclick="App.alterarMinhaSenha()"]');
+        const btn = document.querySelector('button[onclick="App.atualizarMeusDados()"]');
         const textoOriginal = btn.innerText;
         btn.innerText = "Atualizando... ⏳";
         btn.disabled = true;
 
         try {
-            // Enviamos a ordem direta para o novo segurança do servidor!
-            const resposta = await App.api('/usuarios/mudar-senha', 'PUT', { senhaAtual: atual, novaSenha: nova });
+            // Prepara a sacola de dados
+            const payload = { novoLogin: novoLogin, senhaAtual: atual };
+            if (nova) payload.novaSenha = nova; // Só envia a nova se o usuário tiver digitado
+
+            // Batemos na nova porta do servidor
+            const resposta = await App.api('/usuarios/atualizar-conta', 'PUT', payload);
             
             if (resposta && resposta.success) {
-                App.showToast("Senha alterada com sucesso! Faça login novamente.", "success"); 
-                setTimeout(() => App.logout(), 2000);
+                App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); 
+                // Exige login de novo para atualizar as variáveis de sessão com o novo login
+                setTimeout(() => App.logout(), 2500);
             } else {
-                App.showToast(resposta.error || "Erro ao alterar a senha.", "error");
+                App.showToast(resposta.error || "Erro ao atualizar os dados.", "error");
             }
         } catch (e) {
             App.showToast("Erro de conexão.", "error");
