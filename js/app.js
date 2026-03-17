@@ -905,26 +905,92 @@ const App = {
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
     },
 
+// --- FUNÇÕES DE PROCESSAMENTO DE IMAGENS (LOGOTIPO E QR CODE) ---
+    processarLogo: () => {
+        const fileInput = document.getElementById('conf-file');
+        if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione uma imagem do seu computador primeiro.", "warning");
+        
+        App.showToast("Processando imagem... ⏳", "info");
+        
+        // Usa a função otimizadora para não pesar o banco de dados
+        App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => {
+            document.getElementById('conf-preview').src = imgBase64;
+            const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {};
+            const novoPerfil = { ...perfilAtual, foto: imgBase64 };
+            
+            try {
+                await App.api('/escola', 'PUT', novoPerfil);
+                localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil));
+                App.carregarDadosEscola(); // Atualiza a logo no topo do menu na hora!
+                App.showToast("Logotipo salvo com sucesso! ✅", "success");
+            } catch(e) { App.showToast("Erro ao salvar no servidor.", "error"); }
+        });
+    },
+
+    processarQrCode: () => {
+        const fileInput = document.getElementById('conf-qr-file');
+        if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione a imagem do QR Code primeiro.", "warning");
+        
+        App.showToast("Processando QR Code... ⏳", "info");
+        
+        App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => {
+            document.getElementById('conf-qr-preview').src = imgBase64;
+            const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {};
+            const novoPerfil = { ...perfilAtual, qrCodeImagem: imgBase64 };
+            
+            try {
+                await App.api('/escola', 'PUT', novoPerfil);
+                localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil));
+                App.showToast("QR Code PIX salvo com sucesso! ✅", "success");
+            } catch(e) { App.showToast("Erro ao salvar no servidor.", "error"); }
+        });
+    },
+
     removerLogo: async () => { 
-        if(confirm("Apagar logotipo?")){
-            const s=JSON.parse(localStorage.getItem('escola_perfil')); 
-            await App.api('/escola','PUT',{...s,foto:""}); 
+        if(confirm("Deseja realmente apagar o logotipo da escola?")){
+            const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; 
+            await App.api('/escola','PUT',{...s, foto: ""}); 
+            localStorage.setItem('escola_perfil', JSON.stringify({...s, foto: ""}));
             App.carregarDadosEscola(); 
-            document.getElementById('conf-preview').src="https://placehold.co/100?text=LOGO";
+            document.getElementById('conf-preview').src = "https://placehold.co/100?text=LOGO";
+            App.showToast("Logotipo removido.", "info");
         } 
     },
 
     removerQrCode: async () => { 
-        if(confirm("Apagar QR Code?")){
-            const s=JSON.parse(localStorage.getItem('escola_perfil')); 
-            await App.api('/escola','PUT',{...s,qrCodeImagem:""}); 
-            localStorage.setItem('escola_perfil', JSON.stringify({...s,qrCodeImagem:""})); 
-            document.getElementById('conf-qr-preview').src="https://placehold.co/100?text=QR+CODE";
+        if(confirm("Deseja realmente apagar o QR Code PIX?")){
+            const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; 
+            await App.api('/escola','PUT',{...s, qrCodeImagem: ""}); 
+            localStorage.setItem('escola_perfil', JSON.stringify({...s, qrCodeImagem: ""})); 
+            document.getElementById('conf-qr-preview').src = "https://placehold.co/100?text=QR+CODE";
+            App.showToast("QR Code removido.", "info");
         } 
     },
+
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
-    salvarConfiguracoes: async () => { const s=JSON.parse(localStorage.getItem('escola_perfil')); const p={...s, nome:document.getElementById('conf-nome').value, cnpj:document.getElementById('conf-cnpj').value, banco:document.getElementById('conf-banco').value, chavePix:document.getElementById('conf-pix').value}; await App.api('/escola','PUT',p); App.showToast("Configurações atualizadas!", "success"); App.carregarDadosEscola(); },
     
+    salvarConfiguracoes: async () => { 
+        const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; 
+        const p = {
+            ...s, 
+            nome: document.getElementById('conf-nome').value, 
+            cnpj: document.getElementById('conf-cnpj').value, 
+            banco: document.getElementById('conf-banco').value, 
+            chavePix: document.getElementById('conf-pix').value
+        }; 
+        
+        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]');
+        const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+        
+        try {
+            await App.api('/escola','PUT',p); 
+            localStorage.setItem('escola_perfil', JSON.stringify(p));
+            App.showToast("Configurações atualizadas!", "success"); 
+            App.carregarDadosEscola(); 
+        } catch(e) { App.showToast("Erro ao salvar.", "error"); }
+        finally { btn.innerText = txt; btn.disabled = false; }
+    },   
+
 // --- MÁSCARAS DE INPUT ---
     mascaraCPF: (i) => {
         let v = i.value.replace(/\D/g, ""); 
