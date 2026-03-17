@@ -520,6 +520,7 @@ const App = {
         btnConfirm.innerText = "Registrar Venda";
     },
 
+    // 🔒 BOTÃO DE SALVAR VENDA COM PADRÃO OURO DE UX
     salvarVenda: async () => {
         const idAluno = document.getElementById('v-idaluno').value;
         const alunoNome = document.getElementById('v-nomealuno').value;
@@ -550,12 +551,20 @@ const App = {
             dataGeracao: new Date().toLocaleDateString('pt-BR')
         };
 
+        const btn = document.querySelector('.btn-confirm');
+        const txtOriginal = btn ? btn.innerText : 'Registrar Venda';
+        if(btn) { btn.innerText = "Registrando... ⏳"; btn.disabled = true; }
+        document.body.style.cursor = 'wait';
+
         try {
             await App.api('/financeiro', 'POST', payload);
             App.showToast("Venda registrada com sucesso!", "success");
             App.fecharModal();
         } catch (e) {
             App.showToast("Erro ao registrar venda.", "error");
+        } finally { 
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
         }
     },
 
@@ -796,7 +805,7 @@ const App = {
         }
     },
 
-    // --- FUNÇÕES DE GESTÃO DE USUÁRIOS (RESTAURADAS) ---
+    // 🔒 BOTÃO DE SALVAR NOVO USUÁRIO COM PADRÃO OURO DE UX
     salvarNovoUsuario: async () => {
         const nome = document.getElementById('new-nome').value;
         const login = document.getElementById('new-login').value;
@@ -809,6 +818,11 @@ const App = {
         const payload = { nome, login, tipo };
         if(senha) payload.senha = senha;
 
+        const btn = document.getElementById('btn-save-user');
+        const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
+        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+        document.body.style.cursor = 'wait';
+
         try {
             if(App.idEdicaoUsuario) {
                 await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload);
@@ -820,6 +834,9 @@ const App = {
             App.renderizarMinhaConta();
         } catch(e) {
             App.showToast("Erro ao salvar usuário.", "error");
+        } finally { 
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
         }
     },
 

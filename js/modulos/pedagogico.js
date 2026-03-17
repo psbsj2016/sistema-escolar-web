@@ -184,19 +184,27 @@ App.renderizarTelaEdicao = (plano) => {
 };
 
 App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; };
+
+// 🔒 BOTÃO SALVAR PLANEJAMENTO COM PADRÃO OURO DE UX
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
     if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
     
+    const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
+    const txtOrig = btn ? btn.innerText : '💾 SALVAR';
+    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
-    await App.api(url, met, App.planoAtual); 
-    document.body.style.cursor = 'default';
-    
-    App.showToast("Planejamento Salvo!", "success"); 
-    App.renderizarPlanejamentosSalvos(); 
+
+    try {
+        await App.api(url, met, App.planoAtual); 
+        App.showToast("Planejamento Salvo!", "success"); 
+        App.renderizarPlanejamentosSalvos(); 
+    } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
+
 App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
 
 // ---------------------------------------------------------
@@ -331,8 +339,6 @@ App.renderizarAvaliacoesPro = async () => {
             </table>
         `;
 
-        div.innerHTML = App.UI.card('📝 Lançamento de Notas', '', formPens, '100%') + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%');
-        // Fix for variable name typo in my draft:
         div.innerHTML = App.UI.card('📝 Lançamento de Notas', '', formNotas, '100%') + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
 
     } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
@@ -349,24 +355,29 @@ App.carregarCursoDoAluno = () => {
 };
 
 App.toggleTipoOutro = () => { const tipo = document.getElementById('av-tipo').value; document.getElementById('div-outro').style.display = (tipo==='Outro')?'block':'none'; };
+
+// 🔒 BOTÃO DE SALVAR NOTA COM PADRÃO OURO DE UX
 App.salvarAvaliacaoDetalhada = async () => { 
     const idA = document.getElementById('av-aluno').value; const nota = document.getElementById('av-nota').value; const max = document.getElementById('av-valor-max').value; 
     if(!idA || !nota) return App.showToast("Preencha o aluno e a nota.", "warning"); 
-    
-    let tipo = document.getElementById('av-tipo').value; 
-    if(tipo==='Outro') tipo = document.getElementById('av-outro-desc').value; 
-    
+    let tipo = document.getElementById('av-tipo').value; if(tipo==='Outro') tipo = document.getElementById('av-outro-desc').value; 
     const nomeA = document.getElementById('av-aluno').options[document.getElementById('av-aluno').selectedIndex].text; 
     const pl = { idAluno:idA, nomeAluno:nomeA, disciplina:document.getElementById('av-curso').value, tipo, valorMax:max, nota, bimestre:document.getElementById('av-bimestre').value, dataLancamento: new Date().toLocaleDateString() }; 
     
+    const btn = document.querySelector('button[onclick="App.salvarAvaliacaoDetalhada()"]');
+    const txtOrig = btn ? btn.innerText : 'LANÇAR NOTA';
+    if(btn) { btn.innerText = "Lançando... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
-    if(App.idEdicaoNota) await App.api(`/avaliacoes/${App.idEdicaoNota}`, 'PUT', pl); 
-    else await App.api('/avaliacoes', 'POST', pl); 
-    document.body.style.cursor = 'default';
-    
-    App.showToast("Nota lançada com sucesso!", "success");
-    App.idEdicaoNota=null; App.renderizarAvaliacoesPro(); 
+
+    try {
+        if(App.idEdicaoNota) await App.api(`/avaliacoes/${App.idEdicaoNota}`, 'PUT', pl); 
+        else await App.api('/avaliacoes', 'POST', pl); 
+        App.showToast("Nota lançada com sucesso!", "success");
+        App.idEdicaoNota=null; App.renderizarAvaliacoesPro(); 
+    } catch(e) { App.showToast("Erro ao lançar nota.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
+
 App.excluirAvaliacao = async (id) => { if(confirm("Excluir nota?")) { await App.api(`/avaliacoes/${id}`, 'DELETE'); App.renderizarAvaliacoesPro(); }};
 App.editarAvaliacao = async (id) => { 
     const n = await App.api(`/avaliacoes/${id}`); 
@@ -425,20 +436,27 @@ App.renderizarChamadaPro = async () => {
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
+// 🔒 BOTÃO DE SALVAR CHAMADA COM PADRÃO OURO DE UX
 App.salvarLancamentoChamada = async () => { 
     const idAluno = document.getElementById('cham-aluno').value; const data = document.getElementById('cham-data').value; const status = document.getElementById('cham-status').value; const duracao = document.getElementById('cham-duracao').value; 
     if(!idAluno || !data) return App.showToast("Selecione o aluno e a data.", "warning"); 
     const nomeAluno = document.getElementById('cham-aluno').options[document.getElementById('cham-aluno').selectedIndex].text; 
     const payload = { idAluno, nomeAluno, data, status, duracao }; 
     
+    const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]');
+    const txtOrig = btn ? btn.innerText : '💾 Salvar Lançamento';
+    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
-    if (App.idEdicaoChamada) { await App.api(`/chamadas/${App.idEdicaoChamada}`, 'PUT', payload); App.idEdicaoChamada = null; } 
-    else { await App.api('/chamadas', 'POST', payload); } 
-    document.body.style.cursor = 'default';
-    
-    App.showToast("Chamada registrada!", "success");
-    App.renderizarChamadaPro(); 
+
+    try {
+        if (App.idEdicaoChamada) { await App.api(`/chamadas/${App.idEdicaoChamada}`, 'PUT', payload); App.idEdicaoChamada = null; } 
+        else { await App.api('/chamadas', 'POST', payload); } 
+        App.showToast("Chamada registrada!", "success");
+        App.renderizarChamadaPro(); 
+    } catch(e) { App.showToast("Erro ao registrar.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
+
 App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registro?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
 App.editarLancamentoChamada = async (id) => { const registro = await App.api(`/chamadas/${id}`); document.getElementById('cham-aluno').value = registro.idAluno; document.getElementById('cham-data').value = registro.data; document.getElementById('cham-status').value = registro.status; document.getElementById('cham-duracao').value = registro.duracao; App.idEdicaoChamada = id; document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]'); btn.innerText = "💾 ATUALIZAR LANÇAMENTO"; btn.style.background = "#f39c12"; };
 
@@ -505,7 +523,25 @@ App.gerarDiasCalendario = (mes, ano, eventos) => { const startDay = new Date(ano
 App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${e.inicio||'-'}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${e.tipo}</td><td style="padding:10px;">${e.descricao}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px; border-radius:4px; margin-right:5px;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px; border-radius:4px;">🗑️</button></td></tr>`).join(''); };
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 App.selecionarDia = (dt) => { document.getElementById('evt-data').value = dt; document.getElementById('evt-desc').focus(); App.idEdicaoEvento=null; };
-App.salvarEvento = async () => { const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; if(!pl.data || !pl.descricao) return alert("Preencha data e descrição."); if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); else await App.api('/eventos', 'POST', pl); App.idEdicaoEvento=null; App.renderizarCalendarioPro(); };
+
+// 🔒 BOTÃO DE SALVAR EVENTO COM PADRÃO OURO DE UX
+App.salvarEvento = async () => { 
+    const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
+    if(!pl.data || !pl.descricao) return App.showToast("Preencha data e descrição.", "error"); 
+    
+    const btn = document.querySelector('button[onclick="App.salvarEvento()"]');
+    const txtOrig = btn ? btn.innerText : 'Salvar';
+    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); 
+        else await App.api('/eventos', 'POST', pl); 
+        App.idEdicaoEvento=null; App.renderizarCalendarioPro(); 
+    } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+};
+
 App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; };
 App.excluirEvento = async (id) => { if(confirm("Excluir?")){ await App.api(`/eventos/${id}`, 'DELETE'); App.renderizarCalendarioPro(); }};
 App.limparFormEvento = () => { document.getElementById('evt-desc').value=''; App.idEdicaoEvento=null; };
