@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V125 - GOLDEN MASTER SAAS)
+// SISTEMA ESCOLAR - APP.JS (V126 - RESPONSIVO E SEGURO)
 // =========================================================
 
 // ATENÇÃO: Quando publicar, altere esta URL para o endereço do seu servidor na nuvem
@@ -568,7 +568,7 @@ const App = {
         }
     },
 
-    // --- 4. LISTAS (REESTRUTURADO COM COMPONENTES) ---
+    // --- 4. LISTAS (REESTRUTURADO COM COMPONENTES RESPONSIVOS) ---
     renderizarLista: async (tipo) => {
         if (!App.usuario) {
             App.logout();
@@ -586,7 +586,7 @@ const App = {
             
             const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
 
-            // 1. Barra de Busca e Botão Novo (Componentizado)
+            // 1. Barra de Busca e Botão Novo
             const barraBusca = `
                 <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left;">
                     <div class="search-wrapper" style="flex: 1; position: relative;">
@@ -597,7 +597,6 @@ const App = {
                 </div>
             `;
 
-            // 2. Monta o Card Superior usando o App.UI (Fábrica Principal)
             div.innerHTML = `
                 <div style="text-align:center; margin-bottom:30px;">
                     ${App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%')}
@@ -627,10 +626,10 @@ const App = {
         const tipo = App.entidadeAtual;
         
         // =========================================================
-        // 🧱 FÁBRICA DE TABELAS (COMPONENTES LOCAIS)
+        // 🧱 FÁBRICA DE TABELAS (AGORA 100% RESPONSIVA)
         // =========================================================
         const TB = {
-            estrutura: (cabecalho, corpo) => `<table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table>`,
+            estrutura: (cabecalho, corpo) => `<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table></div>`,
             th: (texto, align = 'left') => `<th style="text-align:${align}; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee; color:#2c3e50;">${texto}</th>`,
             td: (texto, align = 'left') => `<td style="text-align:${align}; padding:15px; border-bottom:1px solid #eee; color:#333;">${texto}</td>`,
             tr: (celulas) => `<tr style="transition: background 0.2s;">${celulas}</tr>`,
@@ -638,18 +637,15 @@ const App = {
             btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>`
         };
 
-        // 1. Define o Cabeçalho (Usando a Fábrica)
         let cabecalho = '';
         if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('WhatsApp') + TB.th('Ações', 'right');
         if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
         if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
         if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
 
-        // 2. Constrói as Linhas (Usando a Fábrica)
         const corpo = dados.map(item => {
             let celulas = '';
             
-            // Preenche as colunas com dados
             if (tipo === 'aluno') {
                 celulas += TB.td(item.nome) + TB.td(item.turma || '-') + TB.td(item.whatsapp || '-');
             } 
@@ -663,37 +659,28 @@ const App = {
                 const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-';
                 const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
                 const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${item.status}</span>`;
-                
                 celulas += TB.td(item.alunoNome || 'Sem Nome') + TB.td(item.descricao) + TB.td(dataBr) + TB.td(valorFmt) + TB.td(statusFmt);
             }
 
-            // 3. Monta os Botões de Ação Dinamicamente
             const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
             const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
-            // Escapa aspas no nome para não quebrar o JS
             const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
             
             let botoes = [];
-            
-            // Botões Exclusivos
             if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${nomeSeguro}')`, 'Registrar Venda'));
             if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
-            // Botões Padrão (Editar e Excluir)
             botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
             botoes.push(TB.btn('🗑️', '#e74c3c', `App.excluir('${epExcluir}', '${item.id}')`, 'Excluir'));
 
-            // Adiciona a célula de ações alinhada à direita
             celulas += TB.td(TB.acoes(botoes), 'right');
-
             return TB.tr(celulas);
         }).join('');
 
-        // Junta Cabeçalho e Corpo na Estrutura
         return TB.estrutura(cabecalho, corpo);
     },
 
- // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO + MUDAR LOGIN E E-MAIL) ---
+ // --- 5. MINHA CONTA (TAMBÉM RESPONSIVA AGORA) ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
@@ -733,11 +720,11 @@ const App = {
                         ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
                         <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
                     </div>
-                    <div class="card" style="flex:2; min-width:400px;">
+                    <div class="card" style="flex:2; min-width:300px;">
                         <h3>Acessos ao Sistema</h3>
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
                             <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">
                                 <div class="input-group"><label>Nome Completo</label><input id="new-nome" placeholder="Ex: Maria Silva"></div>
                                 <div class="input-group"><label>Login de Acesso</label><input id="new-login" placeholder="Ex: maria.silva"></div>
                                 <div class="input-group"><label>Senha</label><input id="new-senha" type="password" placeholder="******"></div>
@@ -754,7 +741,9 @@ const App = {
                                 <button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
                             </div>
                         </div>
-                        <table><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${listaUsers.map(u => `<tr><td>${u.nome}</td><td>${u.login}</td><td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${u.tipo}</span></td><td style="text-align:right;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${u.nome}', '${u.login}', '${u.tipo}')">✏️</button>${u.id !== App.usuario.id ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody></table>
+                        <div class="table-responsive-wrapper">
+                            <table><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${listaUsers.map(u => `<tr><td>${u.nome}</td><td>${u.login}</td><td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${u.tipo}</span></td><td style="text-align:right;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${u.nome}', '${u.login}', '${u.tipo}')">✏️</button>${u.id !== App.usuario.id ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody></table>
+                        </div>
                     </div>
                 </div>`; 
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
@@ -805,7 +794,6 @@ const App = {
         }
     },
 
-    // 🔒 BOTÃO DE SALVAR NOVO USUÁRIO COM PADRÃO OURO DE UX
     salvarNovoUsuario: async () => {
         const nome = document.getElementById('new-nome').value;
         const login = document.getElementById('new-login').value;
@@ -872,7 +860,6 @@ const App = {
         }
     },
 
-// --- NOVO CÓDIGO PARA CONFIGURAÇÕES (Correção de Imagem) ---
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); 
         const div = document.getElementById('app-content'); 
@@ -885,12 +872,12 @@ const App = {
             
             div.innerHTML = `
                 <div class="card" style="max-width:850px; margin:0 auto;">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-bottom:30px;">
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
                             <img id="conf-preview" src="${imgLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
                             <div>
                                 <label style="font-weight:bold; font-size:13px;">Logotipo Oficial</label>
-                                <input type="file" id="conf-file" accept="image/*" style="font-size:12px; margin-bottom:10px;">
+                                <input type="file" id="conf-file" accept="image/*" style="font-size:12px; margin-bottom:10px; width:100%;">
                                 <div style="display:flex; gap:5px;">
                                     <button class="btn-primary" style="padding:5px 10px; font-size:11px;" onclick="App.processarLogo()">💾 Salvar</button>
                                     <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerLogo()">🗑️</button>
@@ -901,7 +888,7 @@ const App = {
                             <img id="conf-qr-preview" src="${imgQr}" style="width:100px; height:100px; object-fit:contain; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
                             <div>
                                 <label style="font-weight:bold; font-size:13px;">QR Code PIX</label>
-                                <input type="file" id="conf-qr-file" accept="image/*" style="font-size:12px; margin-bottom:10px;">
+                                <input type="file" id="conf-qr-file" accept="image/*" style="font-size:12px; margin-bottom:10px; width:100%;">
                                 <div style="display:flex; gap:5px;">
                                     <button class="btn-primary" style="padding:5px 10px; font-size:11px;" onclick="App.processarQrCode()">💾 Salvar</button>
                                     <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerQrCode()">🗑️</button>
@@ -909,11 +896,11 @@ const App = {
                             </div>
                         </div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
                         <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${escola.nome||''}"></div>
                         <div class="input-group"><label>CNPJ</label><input id="conf-cnpj" value="${escola.cnpj||''}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
                     </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
                         <div class="input-group"><label>Dados Bancários</label><input id="conf-banco" value="${escola.banco||''}"></div>
                         <div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${escola.chavePix||''}" placeholder="Ex: email@escola.com"></div>
                     </div>
@@ -922,23 +909,18 @@ const App = {
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
     },
 
-// --- FUNÇÕES DE PROCESSAMENTO DE IMAGENS (LOGOTIPO E QR CODE) ---
     processarLogo: () => {
         const fileInput = document.getElementById('conf-file');
         if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione uma imagem do seu computador primeiro.", "warning");
-        
         App.showToast("Processando imagem... ⏳", "info");
-        
-        // Usa a função otimizadora para não pesar o banco de dados
         App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => {
             document.getElementById('conf-preview').src = imgBase64;
             const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {};
             const novoPerfil = { ...perfilAtual, foto: imgBase64 };
-            
             try {
                 await App.api('/escola', 'PUT', novoPerfil);
                 localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil));
-                App.carregarDadosEscola(); // Atualiza a logo no topo do menu na hora!
+                App.carregarDadosEscola(); 
                 App.showToast("Logotipo salvo com sucesso! ✅", "success");
             } catch(e) { App.showToast("Erro ao salvar no servidor.", "error"); }
         });
@@ -947,14 +929,11 @@ const App = {
     processarQrCode: () => {
         const fileInput = document.getElementById('conf-qr-file');
         if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione a imagem do QR Code primeiro.", "warning");
-        
         App.showToast("Processando QR Code... ⏳", "info");
-        
         App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => {
             document.getElementById('conf-qr-preview').src = imgBase64;
             const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {};
             const novoPerfil = { ...perfilAtual, qrCodeImagem: imgBase64 };
-            
             try {
                 await App.api('/escola', 'PUT', novoPerfil);
                 localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil));
@@ -1174,7 +1153,7 @@ const App = {
                         <h4 style="margin:0; font-size:11px; color:#c0392b; text-transform:uppercase;">Bloqueados 🔴</h4><span style="font-size:26px; font-weight:bold; color:#c0392b;">${bloqueados}</span>
                     </div>
                 </div>
-                <div style="overflow-x:auto;">
+                <div class="table-responsive-wrapper">
                     <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
                         <thead style="background:#2c3e50; color:white;">
                             <tr>

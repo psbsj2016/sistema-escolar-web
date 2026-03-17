@@ -190,10 +190,9 @@ App.salvarCadastro = async () => {
         App.showToast('Registro salvo com sucesso!', 'success');
         App.fecharModal();
         
-        if(typeof App.renderizarLista === 'function' && document.getElementById('container-tabela')) {
+        // 🔄 NOVO COMPORTAMENTO: Vai sempre para a lista após salvar!
+        if (typeof App.renderizarLista === 'function') {
             App.renderizarLista(t);
-        } else {
-            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
         }
 
     } catch (err) {

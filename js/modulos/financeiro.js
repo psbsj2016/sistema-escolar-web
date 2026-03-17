@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO FINANCEIRO V108 (REESTRUTURADO EM COMPONENTES)
+// MÓDULO FINANCEIRO V109 (RESPONSIVO, COMPONENTIZADO E SEGURO)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
@@ -15,7 +15,6 @@ App.renderizarFinanceiroPro = async () => {
             return a.status === 'Pendente' ? -1 : 1; 
         });
         
-        // 🧱 ATALHOS DA FÁBRICA DE COMPONENTES LOCAIS
         const input = App.UI.input;
         const botao = App.UI.botao;
         const select = (label, id, options) => `
@@ -29,7 +28,6 @@ App.renderizarFinanceiroPro = async () => {
                 <input type="${tipo}" id="${id}" value="${val}" placeholder="${placeholder}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
             </div>`;
 
-        // BLOCO 1: Gerador de Mensalidades
         const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
         const formGerador = `
             <div style="display:flex; align-items:center; margin-bottom:20px;">
@@ -45,13 +43,12 @@ App.renderizarFinanceiroPro = async () => {
                 ${col('Parcelas:', 'fin-parcelas', 'number', '12')}
                 ${col('1º Vencimento:', 'fin-vencimento', 'date', new Date().toISOString().split('T')[0])}
             </div>
-            <button onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Gerar e Imprimir Carnê</button>
+            <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Gerar e Imprimir Carnê</button>
         `;
 
-        // BLOCO 2: Barra de Ferramentas da Tabela
         const barraFerramentas = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; gap:10px;">
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
                     ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
                     ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
@@ -61,12 +58,11 @@ App.renderizarFinanceiroPro = async () => {
                     <input type="text" id="fin-busca" placeholder="Pesquisar lançamentos..." oninput="App.filtrarFinanceiro(this.value)" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
                 </div>
             </div>
-            <div id="fin-lista-area" style="overflow-x:auto;">
+            <div id="fin-lista-area" class="table-responsive-wrapper">
                 ${App.gerarTabelaFinanceira(App.financeiroCache)}
             </div>
         `;
 
-        // MONTAGEM FINAL
         div.innerHTML = `
             <div style="margin-bottom:20px; text-align:right;">
                 <button onclick="App.renderizarTela('inadimplencia')" style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(192, 57, 43, 0.3);">📉 RELATÓRIO DE INADIMPLÊNCIA</button>
@@ -79,7 +75,7 @@ App.renderizarFinanceiroPro = async () => {
     } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
 };
 
-// --- HELPER: GERA TABELA FINANCEIRA (Limpa e Organizada) ---
+// --- HELPER: GERA TABELA FINANCEIRA ---
 App.gerarTabelaFinanceira = (dados) => {
     if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
     
@@ -103,9 +99,9 @@ App.gerarTabelaFinanceira = (dados) => {
             <td style="padding:12px; font-weight:bold;">${p.alunoNome}</td>
             <td style="padding:12px; text-align:center;">${parcelaStr}</td>
             <td style="padding:12px; text-align:center;">${vencStr}</td>
-            <td style="padding:12px; text-align:center;">R$ ${p.valor}</td>
+            <td style="padding:12px; text-align:center;">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
             <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
-            <td style="padding:12px; text-align:center;">
+            <td style="padding:12px; text-align:center; white-space:nowrap;">
                 <button onclick="App.abrirCarneExistente('${p.idCarne}')" style="background:#3498db; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Ver Carnê">📄</button>
                 <button onclick="App.editarParcela('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
             </td>
@@ -115,7 +111,6 @@ App.gerarTabelaFinanceira = (dados) => {
     return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
 };
 
-// --- HELPER: FILTRAR ---
 App.filtrarFinanceiro = (termo) => {
     const t = termo.toLowerCase();
     const filtrados = App.financeiroCache.filter(f => (f.alunoNome && f.alunoNome.toLowerCase().includes(t)) || (f.descricao && f.descricao.toLowerCase().includes(t)) || f.vencimento.includes(t));
@@ -137,7 +132,6 @@ App.abrirModalBaixa = () => {
     if(modal) modal.style.display = 'flex';
     document.getElementById('modal-titulo').innerText = `Confirmar Pagamento (${checks.length} item/ns)`;
     
-    // 🧱 COMPONENTES PARA O MODAL
     const input = App.UI.input;
     const select = (label, id, options, extraAttr='') => `
         <div class="input-group" style="margin:0;">
@@ -215,15 +209,13 @@ App.confirmarBaixa = async () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     const totalSelected = parseFloat(document.getElementById('baixa-total').value);
     
-    // Captura o botão e bloqueia-o contra cliques duplos
     const btn = document.querySelector('.btn-confirm');
     const textoOriginal = btn.innerText;
     btn.innerText = "Processando... ⏳"; 
     btn.disabled = true;
 
     try {
-        const promessas = []; // Fila para execução paralela super rápida
-        
+        const promessas = []; 
         for(const c of checks) {
             const item = App.financeiroCache.find(f => f.id == c.value);
             if(item) {
@@ -236,7 +228,6 @@ App.confirmarBaixa = async () => {
             }
         }
         
-        // Dispara todos os pagamentos ao mesmo tempo
         await Promise.all(promessas);
         
         App.showToast("Pagamento registrado com sucesso!", "success");
@@ -245,14 +236,12 @@ App.confirmarBaixa = async () => {
     } catch(e) { 
         App.showToast("Erro ao processar baixa.", "error"); 
     } finally {
-        // A MÁGICA ACONTECE AQUI: O botão é descongelado para o próximo uso!
         btn.innerText = textoOriginal; 
         btn.disabled = false;
     }
 };
 
-// --- 3. LÓGICAS DO BACKEND E UTILIDADES (OTIMIZADAS PARA ALTA PERFORMANCE) ---
-
+// --- 3. LÓGICAS DO BACKEND E OTIMIZAÇÕES ---
 App.gerarCarnes = async () => {
     const idA = document.getElementById('fin-aluno').value;
     const val = document.getElementById('fin-valor').value;
@@ -266,14 +255,14 @@ App.gerarCarnes = async () => {
     const idLote = Date.now().toString();
     const dataGeracao = new Date().toLocaleDateString('pt-BR');
 
-    // 1. Feedback visual para não parecer que congelou
-    App.showToast(`Gerando ${parc} parcelas... ⏳`, "info");
+    const btn = document.getElementById('btn-gerar-carne');
+    const txtOrig = btn.innerText;
+    btn.innerText = `Gerando ${parc} parcelas... ⏳`;
+    btn.disabled = true;
     document.body.style.cursor = 'wait';
 
     try {
         const promessas = [];
-        
-        // Prepara todas as parcelas
         for(let i = 1; i <= parc; i++) {
             const vencUS = db.toISOString().split('T')[0];
             const payload = {
@@ -281,12 +270,10 @@ App.gerarCarnes = async () => {
                 alunoNome, valor: val, vencimento: vencUS, status: 'Pendente', 
                 descricao: `Mensalidade ${i}/${parc}`, tipo: 'Receita'
             };
-            // Adiciona a ordem na lista de disparo
             promessas.push(App.api('/financeiro', 'POST', payload));
             db.setMonth(db.getMonth() + 1);
         }
 
-        // 2. Dispara TODAS ao mesmo tempo (É instantâneo!)
         await Promise.all(promessas);
         
         App.showToast("Carnê gerado com sucesso!", "success");
@@ -294,6 +281,8 @@ App.gerarCarnes = async () => {
     } catch(e) {
         App.showToast("Erro ao gerar parcelas.", "error");
     } finally {
+        btn.innerText = txtOrig;
+        btn.disabled = false;
         document.body.style.cursor = 'default';
     }
 };
@@ -309,12 +298,10 @@ App.acaoLote = async (acao) => {
     const acaoTexto = acao === 'excluir' ? 'EXCLUIR' : 'ALTERAR';
     if (!confirm(`Tem certeza que deseja ${acaoTexto} os ${checks.length} itens selecionados?`)) return;
 
-    // Feedback visual imediato
     App.showToast("Processando requisições em lote... ⏳", "info");
     document.body.style.cursor = 'wait';
 
     try {
-        // Cria uma chuva de requisições simultâneas em vez de fila indiana
         const operacoes = Array.from(checks).map(async (check) => {
             const id = check.value;
             if (acao === 'excluir') {
@@ -327,11 +314,9 @@ App.acaoLote = async (acao) => {
             }
         });
 
-        // Aguarda que todas as operações paralelas terminem
         await Promise.all(operacoes);
-        
         App.showToast(`Ação concluída com sucesso!`, "success");
-        App.renderizarFinanceiroPro(); // Recarrega a tela instantaneamente
+        App.renderizarFinanceiroPro(); 
     } catch (e) {
         App.showToast("Erro ao processar lote.", "error");
     } finally {
@@ -343,9 +328,12 @@ App.editarParcela = async (id) => {
     const v = prompt("Novo Valor (R$):");
     if (v) {
         App.showToast("Atualizando valor... ⏳", "info");
-        const i = await App.api(`/financeiro/${id}`);
-        await App.api(`/financeiro/${id}`, 'PUT', { ...i, valor: v });
-        App.renderizarFinanceiroPro();
+        document.body.style.cursor = 'wait';
+        try {
+            const i = await App.api(`/financeiro/${id}`);
+            await App.api(`/financeiro/${id}`, 'PUT', { ...i, valor: v });
+            App.renderizarFinanceiroPro();
+        } finally { document.body.style.cursor = 'default'; }
     }
 };
 
@@ -479,9 +467,9 @@ App.renderizarInadimplencia = async () => {
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         
-        const style = `<style>.inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; } .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; } .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } .inad-kpi-val { font-size: 24px; font-weight: bold; } .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; } .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; } @media print { .no-print { display: none !important; } .print-sheet { width: 100%; } .inad-card-top { border: 1px solid #000; box-shadow: none; } .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } }</style>`;
+        const style = `<style>.inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } .inad-kpi-val { font-size: 24px; font-weight: bold; } .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; } .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } @media print { .no-print { display: none !important; } .print-sheet { width: 100%; } .inad-card-top { border: 1px solid #000; box-shadow: none; } .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } }</style>`;
         
-        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
+        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
 
         div.innerHTML = `${style}
             <div style="margin-bottom: 20px;" class="no-print">
@@ -490,7 +478,7 @@ App.renderizarInadimplencia = async () => {
             
             <div class="print-sheet">
                 <div class="doc-header">
-                    <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                         ${logo}
                         <div><h2 style="margin:0; text-transform:uppercase; font-size:18px; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
                     </div>
@@ -515,15 +503,17 @@ App.renderizarInadimplencia = async () => {
                     </div>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:30px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:30px; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
                     <h3 class="inad-list-title">Lista de Pendências Vencidas</h3>
                     <button onclick="window.print()" class="no-print" style="background:#34495e; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR LISTA</button>
                 </div>
                 
-                <table class="inad-table">
-                    <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES (VENCIMENTOS)</th><th>TOTAL DEVIDO</th><th class="no-print" style="text-align:right;">AÇÃO</th></tr></thead>
-                    <tbody>${linhasTabela}</tbody>
-                </table>
+                <div class="table-responsive-wrapper">
+                    <table class="inad-table">
+                        <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES (VENCIMENTOS)</th><th>TOTAL DEVIDO</th><th class="no-print" style="text-align:right;">AÇÃO</th></tr></thead>
+                        <tbody>${linhasTabela}</tbody>
+                    </table>
+                </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao calcular inadimplência.", "error"); }
 };

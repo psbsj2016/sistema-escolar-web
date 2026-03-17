@@ -277,3 +277,53 @@ tr:hover td { background: rgba(0,0,0,0.01); }
     /* Tela de Login */
     .login-box { width: 90% !important; padding: 20px !important; }
 }
+
+/* =========================================================
+   BLINDAGEM RESPONSIVA MOBILE (TABELAS E CALENDÁRIO)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* 1. Otimização da Grelha do Calendário (Para não vazar do ecrã) */
+    #calendar-grid {
+        gap: 2px !important;
+    }
+    #calendar-grid > div {
+        height: 70px !important;
+        padding: 3px !important;
+    }
+    #calendar-grid > div > div:first-child {
+        font-size: 11px !important;
+        text-align: center !important;
+        margin-bottom: 3px !important;
+    }
+    #calendar-grid > div > div:not(:first-child) {
+        font-size: 9px !important;
+        padding: 2px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* 2. Caixas de Proteção para as Tabelas (Deslize Horizontal Suave) */
+    .table-responsive-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Permite deslize suave no iPhone/Android */
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    .table-responsive-wrapper table {
+        min-width: 650px; /* Força a tabela a manter o formato original, ativando o scroll por fora */
+        border: none !important;
+    }
+
+    /* 3. Ajuste da Barra de Ferramentas (Botão NOVO e Pesquisa) */
+    .toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+    .search-wrapper, .btn-new-modern {
+        width: 100% !important;
+    }
+}

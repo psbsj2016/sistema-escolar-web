@@ -18,10 +18,10 @@ const selectLocal = (label, id, options, extra='') => `
     </div>`;
 
 // ---------------------------------------------------------
-// 1. PLANEJAMENTO
+// 1. PLANEAMENTO
 // ---------------------------------------------------------
 App.renderizarPlanejamentoPro = () => {
-    App.setTitulo("Planejamento");
+    App.setTitulo("Planeamento");
     const div = document.getElementById('app-content');
     
     const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:30px; border-radius:15px; width:250px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05);`;
@@ -30,17 +30,17 @@ App.renderizarPlanejamentoPro = () => {
 
     div.innerHTML = `
         <div class="card" style="text-align:center; padding:50px;">
-            <h2 style="color:#2c3e50; margin-bottom:10px;">Planejamento Pedagógico</h2>
-            <p style="color:#7f8c8d; margin-bottom:40px;">Gerencie o conteúdo programático e controle de aulas.</p>
+            <h2 style="color:#2c3e50; margin-bottom:10px;">Planeamento Pedagógico</h2>
+            <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controlo de aulas.</p>
             <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
                 <div onclick="App.renderizarNovoPlanejamento()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📝</div>
-                    <h3 style="margin:0; color:#3498db;">Novo Planejamento</h3>
-                    <p style="font-size:13px; color:#999; margin-top:5px;">Gerar grade do zero</p>
+                    <h3 style="margin:0; color:#3498db;">Novo Planeamento</h3>
+                    <p style="font-size:13px; color:#999; margin-top:5px;">Gerar grelha do zero</p>
                 </div>
                 <div onclick="App.renderizarPlanejamentosSalvos()" style="${btnStyle('#27ae60')}" onmouseover="${hoverIn('#27ae60')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📂</div>
-                    <h3 style="margin:0; color:#27ae60;">Planejamentos Salvos</h3>
+                    <h3 style="margin:0; color:#27ae60;">Planeamentos Salvos</h3>
                     <p style="font-size:13px; color:#999; margin-top:5px;">Editar e acompanhar</p>
                 </div>
             </div>
@@ -48,7 +48,7 @@ App.renderizarPlanejamentoPro = () => {
 };
 
 App.renderizarNovoPlanejamento = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
         const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}" data-curso="${a.curso}">${a.nome}</option>`).join('');
@@ -80,11 +80,11 @@ App.renderizarNovoPlanejamento = async () => {
 };
 
 App.renderizarPlanejamentosSalvos = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const planos = await App.api('/planejamentos');
         if(planos.length === 0) { 
-            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planejamento salvo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento salvo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
             return; 
         }
         
@@ -105,7 +105,9 @@ App.renderizarPlanejamentosSalvos = async () => {
                 <h3 style="margin:0;">Salvos</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
-            <table style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+            </div>
         `);
     } catch(e) { div.innerHTML = "Erro."; }
 };
@@ -141,7 +143,6 @@ App.renderizarTelaEdicao = (plano) => {
     const totalHoras = (totalMinutos / 60).toFixed(0);
     const escola = JSON.parse(localStorage.getItem('escola_perfil')) || {}; const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
-    // O Visual de Impressão foi mantido com o HTML original para não quebrar a formatação no papel
     div.innerHTML = `
         <div class="no-print" style="margin-bottom:20px; text-align:center; background:#f4f4f4; padding:15px; border-radius:10px;">
             <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; margin-right:10px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
@@ -151,7 +152,7 @@ App.renderizarTelaEdicao = (plano) => {
         <div class="print-sheet">
             <div class="doc-header">
                 <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome||'ESCOLA'}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj||''}</div></div></div>
-                <div style="text-align:right;"><div><b>Planejamento Pedagógico</b></div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
+                <div style="text-align:right;"><div><b>Planeamento Pedagógico</b></div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
             </div>
             <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -165,27 +166,28 @@ App.renderizarTelaEdicao = (plano) => {
                     </div>
                 </div>
             </div>
-            <table class="doc-table">
-                <thead><tr><th style="width:5%;">Nº</th><th style="width:12%;">DATA</th><th style="width:10%;">HORÁRIO</th><th style="width:10%;">DURAÇÃO</th><th>CONTEÚDO / OBS</th><th style="width:5%;">OK</th></tr></thead>
-                <tbody>
-                    ${plano.aulas.map((a,i)=>`
-                    <tr>
-                        <td style="text-align:center;">${a.num}</td>
-                        <td><input class="plan-input-print" style="text-align:center;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
-                        <td><input class="plan-input-print" style="text-align:center;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
-                        <td><input class="plan-input-print" style="text-align:center;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
-                        <td><input class="plan-input-print" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
-                        <td style="text-align:center;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
-                    </tr>`).join('')}
-                    <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding-right:10px;">Carga Horária Total =</td><td style="text-align:center;">${totalHoras}H</td><td colspan="2"></td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table class="doc-table">
+                    <thead><tr><th style="width:5%;">Nº</th><th style="width:12%;">DATA</th><th style="width:10%;">HORÁRIO</th><th style="width:10%;">DURAÇÃO</th><th>CONTEÚDO / OBS</th><th style="width:5%;">OK</th></tr></thead>
+                    <tbody>
+                        ${plano.aulas.map((a,i)=>`
+                        <tr>
+                            <td style="text-align:center;">${a.num}</td>
+                            <td><input class="plan-input-print" style="text-align:center;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td><input class="plan-input-print" style="text-align:center;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
+                            <td><input class="plan-input-print" style="text-align:center;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td><input class="plan-input-print" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
+                            <td style="text-align:center;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
+                        </tr>`).join('')}
+                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding-right:10px;">Carga Horária Total =</td><td style="text-align:center;">${totalHoras}H</td><td colspan="2"></td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>`;
 };
 
 App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; };
 
-// 🔒 BOTÃO SALVAR PLANEJAMENTO COM PADRÃO OURO DE UX
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
@@ -194,12 +196,12 @@ App.salvarPlanejamentoBanco = async () => {
     
     const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
     const txtOrig = btn ? btn.innerText : '💾 SALVAR';
-    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
         await App.api(url, met, App.planoAtual); 
-        App.showToast("Planejamento Salvo!", "success"); 
+        App.showToast("Planeamento Salvo!", "success"); 
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
@@ -212,7 +214,7 @@ App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.ap
 // ---------------------------------------------------------
 App.renderizarBoletimVisual = async () => {
     App.setTitulo("Boletim Escolar");
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
         const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
@@ -230,7 +232,7 @@ App.renderizarBoletimVisual = async () => {
 
 App.gerarBoletimTela = async () => {
     const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
-    const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">Gerando boletim...</p>';
+    const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
     
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([
@@ -260,7 +262,6 @@ App.gerarBoletimTela = async () => {
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-        // Visual de impressão mantido intacto para formatação perfeita
         divArea.innerHTML = `
             <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR BOLETIM</button></div>
             <div class="print-sheet">
@@ -273,7 +274,9 @@ App.gerarBoletimTela = async () => {
                     <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${aluno.curso || '-'} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${aluno.turma || '-'}</div>
                     <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
                 </div>
-                <table class="doc-table"><thead><tr><th>DISCIPLINA</th><th>AVALIAÇÕES</th><th style="text-align:center;">NOTA</th><th style="text-align:center;">RESULTADO</th></tr></thead><tbody>${linhasHTML}</tbody></table>
+                <div class="table-responsive-wrapper">
+                    <table class="doc-table"><thead><tr><th>DISCIPLINA</th><th>AVALIAÇÕES</th><th style="text-align:center;">NOTA</th><th style="text-align:center;">RESULTADO</th></tr></thead><tbody>${linhasHTML}</tbody></table>
+                </div>
                 <div style="padding:40px 30px; text-align:center;"><div style="width:300px; margin:0 auto; border-top:1px solid #333; padding-top:5px; font-size:12px;">Coordenação Pedagógica</div></div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar boletim.", "error"); }
@@ -284,7 +287,7 @@ App.gerarBoletimTela = async () => {
 // ---------------------------------------------------------
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const [alunos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
@@ -315,28 +318,30 @@ App.renderizarAvaliacoesPro = async () => {
         `;
 
         const tabelaHistorico = `
-            <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                <thead>
-                    <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                        <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
-                    ${historico.map(h => `
-                        <tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:12px; font-weight:bold;">${h.nomeAluno}</td>
-                            <td style="padding:12px; color:#555;">${h.disciplina || '-'}</td>
-                            <td style="padding:12px;">${h.tipo} <span style="font-size:10px; color:#999;">(${h.descricao || ''})</span></td>
-                            <td style="padding:12px;">${h.bimestre}</td>
-                            <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${h.nota}</strong> <span style="color:#999; font-size:11px;">/ ${h.valorMax}</span></td>
-                            <td style="padding:12px; text-align:right;">
-                                <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;">✏️</button>
-                                <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>
-                            </td>
-                        </tr>`).join('')}
-                </tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
+                        ${historico.map(h => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px; font-weight:bold;">${h.nomeAluno}</td>
+                                <td style="padding:12px; color:#555;">${h.disciplina || '-'}</td>
+                                <td style="padding:12px;">${h.tipo} <span style="font-size:10px; color:#999;">(${h.descricao || ''})</span></td>
+                                <td style="padding:12px;">${h.bimestre}</td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${h.nota}</strong> <span style="color:#999; font-size:11px;">/ ${h.valorMax}</span></td>
+                                <td style="padding:12px; text-align:right;">
+                                    <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;">✏️</button>
+                                    <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑️</button>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
 
         div.innerHTML = App.UI.card('📝 Lançamento de Notas', '', formNotas, '100%') + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
@@ -356,7 +361,6 @@ App.carregarCursoDoAluno = () => {
 
 App.toggleTipoOutro = () => { const tipo = document.getElementById('av-tipo').value; document.getElementById('div-outro').style.display = (tipo==='Outro')?'block':'none'; };
 
-// 🔒 BOTÃO DE SALVAR NOTA COM PADRÃO OURO DE UX
 App.salvarAvaliacaoDetalhada = async () => { 
     const idA = document.getElementById('av-aluno').value; const nota = document.getElementById('av-nota').value; const max = document.getElementById('av-valor-max').value; 
     if(!idA || !nota) return App.showToast("Preencha o aluno e a nota.", "warning"); 
@@ -366,7 +370,7 @@ App.salvarAvaliacaoDetalhada = async () => {
     
     const btn = document.querySelector('button[onclick="App.salvarAvaliacaoDetalhada()"]');
     const txtOrig = btn ? btn.innerText : 'LANÇAR NOTA';
-    if(btn) { btn.innerText = "Lançando... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A lançar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
@@ -393,7 +397,7 @@ App.editarAvaliacao = async (id) => {
 // 4. CHAMADA (PRESENÇAS)
 // ---------------------------------------------------------
 App.renderizarChamadaPro = async () => { 
-    App.setTitulo("Controle de Presença");
+    App.setTitulo("Controlo de Presença");
     const div = document.getElementById('app-content'); 
     
     try { 
@@ -416,27 +420,28 @@ App.renderizarChamadaPro = async () => {
         `;
 
         const tabelaChamada = `
-            <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                <thead>
-                    <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                        <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registro encontrado.</td></tr>' : ''}
-                    ${historico.map(h => { 
-                        let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
-                        return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${h.nomeAluno}</td><td style="padding:12px; font-weight:bold; color:${color};">${h.status}</td><td style="padding:12px; color:#555;">${h.duracao}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
-                    }).join('')}
-                </tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
+                        ${historico.map(h => { 
+                            let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${h.nomeAluno}</td><td style="padding:12px; font-weight:bold; color:${color};">${h.status}</td><td style="padding:12px; color:#555;">${h.duracao}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
 
         div.innerHTML = App.UI.card('', '', formChamada, '100%') + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
-// 🔒 BOTÃO DE SALVAR CHAMADA COM PADRÃO OURO DE UX
 App.salvarLancamentoChamada = async () => { 
     const idAluno = document.getElementById('cham-aluno').value; const data = document.getElementById('cham-data').value; const status = document.getElementById('cham-status').value; const duracao = document.getElementById('cham-duracao').value; 
     if(!idAluno || !data) return App.showToast("Selecione o aluno e a data.", "warning"); 
@@ -445,19 +450,19 @@ App.salvarLancamentoChamada = async () => {
     
     const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]');
     const txtOrig = btn ? btn.innerText : '💾 Salvar Lançamento';
-    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
         if (App.idEdicaoChamada) { await App.api(`/chamadas/${App.idEdicaoChamada}`, 'PUT', payload); App.idEdicaoChamada = null; } 
         else { await App.api('/chamadas', 'POST', payload); } 
-        App.showToast("Chamada registrada!", "success");
+        App.showToast("Chamada registada!", "success");
         App.renderizarChamadaPro(); 
-    } catch(e) { App.showToast("Erro ao registrar.", "error"); } 
+    } catch(e) { App.showToast("Erro ao registar.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
-App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registro?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
+App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registo?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
 App.editarLancamentoChamada = async (id) => { const registro = await App.api(`/chamadas/${id}`); document.getElementById('cham-aluno').value = registro.idAluno; document.getElementById('cham-data').value = registro.data; document.getElementById('cham-status').value = registro.status; document.getElementById('cham-duracao').value = registro.duracao; App.idEdicaoChamada = id; document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]'); btn.innerText = "💾 ATUALIZAR LANÇAMENTO"; btn.style.background = "#f39c12"; };
 
 // ---------------------------------------------------------
@@ -465,7 +470,7 @@ App.editarLancamentoChamada = async (id) => { const registro = await App.api(`/c
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
     App.setTitulo("Calendário");
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando calendário...'; 
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar calendário...'; 
     if (!App.calendarState) App.calendarState = { month: new Date().getMonth(), year: new Date().getFullYear() }; 
     
     try { 
@@ -488,7 +493,7 @@ App.renderizarCalendarioPro = async () => {
         `;
 
         const formEvento = `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerenciar Evento</h3></div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerir Evento</h3></div>
             <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
                 ${col('Data:', 'evt-data', 'date')}
                 ${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">🟢 Evento</option><option value="Feriado">🔴 Feriado</option><option value="Prova">🔵 Prova</option><option value="Reunião">🟠 Reunião</option>')}
@@ -505,10 +510,12 @@ App.renderizarCalendarioPro = async () => {
         `;
 
         const tabelaEventos = `
-            <table style="width:100%; border-collapse:collapse; font-size:14px;">
-                <thead><tr style="background:#f8f9fa; color:#7f8c8d; text-align:left;"><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
-                <tbody>${App.gerarListaEventosHTML(App.calendarState.month, App.calendarState.year, eventos)}</tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead><tr style="background:#f8f9fa; color:#7f8c8d; text-align:left;"><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
+                    <tbody>${App.gerarListaEventosHTML(App.calendarState.month, App.calendarState.year, eventos)}</tbody>
+                </table>
+            </div>
         `;
 
         div.innerHTML = App.UI.card('', '', gridCalendario, '100%') + 
@@ -524,14 +531,13 @@ App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 App.selecionarDia = (dt) => { document.getElementById('evt-data').value = dt; document.getElementById('evt-desc').focus(); App.idEdicaoEvento=null; };
 
-// 🔒 BOTÃO DE SALVAR EVENTO COM PADRÃO OURO DE UX
 App.salvarEvento = async () => { 
     const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
     if(!pl.data || !pl.descricao) return App.showToast("Preencha data e descrição.", "error"); 
     
     const btn = document.querySelector('button[onclick="App.salvarEvento()"]');
     const txtOrig = btn ? btn.innerText : 'Salvar';
-    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
