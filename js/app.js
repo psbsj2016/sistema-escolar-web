@@ -156,10 +156,40 @@ const App = {
         }
     },
 
+    // =========================================================
+    // FÁBRICA DE COMPONENTES VISUAIS (FASE 1 - ESCALABILIDADE)
+    // =========================================================
+    UI: {
+        card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `
+            <div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">
+                ${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}
+                ${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}
+                ${conteudo}
+            </div>
+        `,
+        input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `
+            <div class="input-group">
+                <label>${label}</label>
+                <input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}>
+            </div>
+        `,
+        botao: (texto, acao, tipo = 'primary', icone = '') => {
+            const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit');
+            return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`;
+        },
+        colorPicker: (label, valor, varCss) => `
+            <div class="theme-row">
+                <label>${label}</label>
+                <input type="color" value="${valor}" oninput="App.previewCor('${varCss}', this.value)">
+            </div>
+        `
+    },
+
     renderizarConfiguracoesAparencia: () => {
         App.setTitulo("Aparência do Sistema");
         const div = document.getElementById('app-content');
         const styles = getComputedStyle(document.documentElement);
+        
         const c = {
             sbBg: styles.getPropertyValue('--sidebar-bg').trim(),
             sbTxt: styles.getPropertyValue('--sidebar-text').trim(),
@@ -170,25 +200,57 @@ const App = {
         };
         const atalhosSalvos = JSON.parse(localStorage.getItem('escola_atalhos')) || [];
 
-        div.innerHTML = `
-            <div class="card" style="max-width:800px; margin:0 auto;">
-                <h3>🎨 Personalizar Aparência</h3>
-                <p style="color:#666; margin-bottom:20px;">Personalize as cores e os atalhos da tela inicial.</p>
-                <div class="theme-section">
-                    <h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
-                        <div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div><div class="theme-row"><label>Fundo:</label><input type="color" value="${c.sbBg}" oninput="App.previewCor('--sidebar-bg', this.value)"></div><div class="theme-row"><label>Texto:</label><input type="color" value="${c.sbTxt}" oninput="App.previewCor('--sidebar-text', this.value)"></div></div>
-                        <div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div><div class="theme-row"><label>Fundo:</label><input type="color" value="${c.bdBg}" oninput="App.previewCor('--body-bg', this.value)"></div><div class="theme-row"><label>Texto:</label><input type="color" value="${c.txtMain}" oninput="App.previewCor('--text-main', this.value)"></div></div>
-                        <div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div><div class="theme-row"><label>Fundo:</label><input type="color" value="${c.cdBg}" oninput="App.previewCor('--card-bg', this.value)"></div><div class="theme-row"><label>Texto:</label><input type="color" value="${c.cdTxt}" oninput="App.previewCor('--card-text', this.value)"></div></div>
+        const blocoCores = `
+            <div class="theme-section">
+                <h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
+                    <div>
+                        <div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>
+                        ${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}
+                        ${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}
+                    </div>
+                    <div>
+                        <div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>
+                        ${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}
+                        ${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}
+                    </div>
+                    <div>
+                        <div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>
+                        ${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}
+                        ${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}
                     </div>
                 </div>
-                <div class="theme-section">
-                    <h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4>
-                    <p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p>
-                    <div class="shortcut-selector">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id)?'checked':''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div>
+            </div>
+        `;
+
+        const blocoAtalhos = `
+            <div class="theme-section">
+                <h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4>
+                <p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p>
+                <div class="shortcut-selector">
+                    ${LISTA_FUNCIONALIDADES.map(f => `
+                        <label class="shortcut-item">
+                            <input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> 
+                            ${f.icon} ${f.nome}
+                        </label>
+                    `).join('')}
                 </div>
-                <div style="display:flex; gap:10px;"><button class="btn-primary" onclick="App.salvarTema()">💾 SALVAR ALTERAÇÕES</button><button class="btn-cancel" style="margin-top:10px;" onclick="App.resetarTema()">RESTAURAR PADRÃO</button></div>
-            </div>`;
+            </div>
+        `;
+
+        const blocoBotoes = `
+            <div style="display:flex; gap:10px; margin-top: 15px;">
+                ${App.UI.botao('SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '💾')}
+                ${App.UI.botao('RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '🔄')}
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card(
+            '🎨 Personalizar Aparência', 
+            'Personalize as cores e os atalhos da tela inicial.', 
+            blocoCores + blocoAtalhos + blocoBotoes, 
+            '800px'
+        );
     },
 
     previewCor: (varName, color) => { document.documentElement.style.setProperty(varName, color); },
