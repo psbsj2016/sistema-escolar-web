@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO RELATÓRIOS V100 (FINAL, INTEGRADO E BLINDADO)
+// MÓDULO RELATÓRIOS V101 (REESTRUTURADO EM COMPONENTES)
 // =========================================================
 
 App.renderizarRelatorioModulo = async (tipo) => {
@@ -8,20 +8,62 @@ App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
 };
 
-// 1. RELATÓRIO FINANCEIRO
+// 🧱 ATALHOS GERAIS PARA O MÓDULO DE RELATÓRIOS
+const relCol = (label, id, tipo='text', val='', extra='') => `
+    <div style="flex:1; min-width:150px; text-align:left;">
+        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">${label}</label>
+        <input type="${tipo}" id="${id}" value="${val}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>
+    </div>`;
+
+const relSelect = (label, id, options, extra='') => `
+    <div style="flex:1; min-width:150px; text-align:left;">
+        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">${label}</label>
+        <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>${options}</select>
+    </div>`;
+
+// ---------------------------------------------------------
+// 1. RELATÓRIOS FINANCEIROS
+// ---------------------------------------------------------
 App.renderizarSelecaoRelatorio = () => {
     const div = document.getElementById('app-content');
-    div.innerHTML = `<div class="card" style="max-width: 600px; margin: 40px auto; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);"><div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;"><span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2></div><p style="color:#666; margin-bottom:20px;">Selecione o ano para ver as opções.</p><label style="font-weight:bold; color:#333; display:block; margin-bottom:5px;">Selecione o Ano Base:</label><select id="rel-ano" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:16px; margin-bottom:25px; background:white;"><option value="${new Date().getFullYear()+1}">${new Date().getFullYear()+1}</option><option value="${new Date().getFullYear()}" selected>${new Date().getFullYear()}</option><option value="${new Date().getFullYear()-1}">${new Date().getFullYear()-1}</option></select><button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);">📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span></button><div style="text-align:center; margin: 25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS</div><div style="display:flex; gap:10px;"><select id="rel-mes" style="flex:2; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; background:white;">${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('')}</select><button onclick="App.gerarRelatorioMensal()" style="flex:1; background: #2980b9; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(41, 128, 185, 0.3);">VER MÊS</button></div></div>`;
+    
+    const anoAtual = new Date().getFullYear();
+    const opAnos = `<option value="${anoAtual+1}">${anoAtual+1}</option><option value="${anoAtual}" selected>${anoAtual}</option><option value="${anoAtual-1}">${anoAtual-1}</option>`;
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
+
+    const formHTML = `
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+            <span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2>
+        </div>
+        <p style="color:#666; margin-bottom:20px;">Selecione o ano base para emitir os relatórios financeiros.</p>
+        
+        ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="margin-bottom:25px; background:white; padding:12px; font-size:16px;"')}
+        
+        <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
+            📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span>
+        </button>
+        
+        <div style="text-align:center; margin:25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS ESPECÍFICO</div>
+        
+        <div style="display:flex; gap:10px; align-items:flex-end;">
+            ${relSelect('Mês:', 'rel-mes', opMeses, 'style="background:white; padding:12px;"')}
+            <button onclick="App.gerarRelatorioMensal()" style="flex:1; background:#2980b9; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; height:43px; box-shadow:0 4px 10px rgba(41,128,185,0.3);">VER MÊS</button>
+        </div>
+    `;
+
+    div.innerHTML = App.UI.card('', '', formHTML, '600px');
 };
 
 App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
-    const div = document.getElementById('app-content'); div.innerHTML = 'Gerando...';
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Gerando relatório anual...</p>';
     try {
         const financeiro = await App.api('/financeiro');
         const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        
         const totalLancado = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
         const totalRecebido = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
         const totalPendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
@@ -29,7 +71,7 @@ App.gerarRelatorioAnual = async () => {
 
         div.innerHTML = `
             <div class="no-print" style="margin-bottom:20px;">
-                <button onclick="App.renderizarSelecaoRelatorio()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button>
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:8px 15px;">⬅ VOLTAR</button>
             </div>
             <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -64,15 +106,17 @@ App.gerarRelatorioAnual = async () => {
                         <tr style="background:#f9f9f9; font-weight:bold;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td></tr>
                     </tfoot>
                 </table>
-                <div class="no-print" style="margin-top:30px;"><button onclick="window.print()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR EXTRATO</button></div>
+                <div class="no-print" style="margin-top:30px;">
+                    <button onclick="window.print()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
+                </div>
             </div>`;
-    } catch(e) { alert("Erro ao gerar relatório."); }
+    } catch(e) { App.showToast("Erro ao gerar relatório.", "error"); }
 };
 
 App.gerarRelatorioMensal = async () => {
     const ano = document.getElementById('rel-ano').value;
     const mesIdx = parseInt(document.getElementById('rel-mes').value);
-    const div = document.getElementById('app-content'); div.innerHTML = 'Gerando...';
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Gerando relatório mensal...</p>';
     const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
     const mesNome = meses[mesIdx - 1];
 
@@ -81,13 +125,16 @@ App.gerarRelatorioMensal = async () => {
         const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        
         const previsao = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
         const realizado = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
         const pendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
-            <div class="no-print" style="margin-bottom:20px;"><button onclick="App.renderizarSelecaoRelatorio()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button></div>
+            <div class="no-print" style="margin-bottom:20px;">
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:8px 15px;">⬅ VOLTAR</button>
+            </div>
             <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
                     <div style="display:flex; gap:15px; align-items:center;">${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div></div>
@@ -109,43 +156,41 @@ App.gerarRelatorioMensal = async () => {
                         }).join('')}
                     </tbody>
                 </table>
-                <div class="no-print" style="margin-top:30px;"><button onclick="window.print()" style="width:100%; padding:15px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR</button></div>
+                <div class="no-print" style="margin-top:30px;">
+                    <button onclick="window.print()" style="width:100%; padding:15px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR MÊS</button>
+                </div>
             </div>`;
-    } catch(e) { alert("Erro ao gerar relatório mensal."); }
+    } catch(e) { App.showToast("Erro ao gerar relatório mensal.", "error"); }
 };
 
-// =========================================================
+// ---------------------------------------------------------
 // 2. SUPER DOSSIÊ EXECUTIVO (BI)
-// =========================================================
-
+// ---------------------------------------------------------
 App.renderizarDossie = () => {
     App.setTitulo("Dossiê Executivo BI");
     const div = document.getElementById('app-content');
     const anoAtual = new Date().getFullYear();
     const mesAtual = new Date().getMonth() + 1;
     
-    div.innerHTML = `
-        <div class="card" style="max-width: 600px; margin: 40px auto; padding: 40px; border-radius: 15px; text-align:center;">
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i+1===mesAtual?'selected':''}>${m}</option>`).join('');
+
+    const formDossie = `
+        <div style="text-align:center;">
             <div style="font-size:48px; margin-bottom:15px;">📊</div>
             <h2 style="margin:0 0 10px 0; color:#2c3e50;">Dossiê Executivo (BI)</h2>
-            <p style="color:#666; margin-bottom:25px;">Selecione o período de referência para gerar a análise profunda.</p>
+            <p style="color:#666; margin-bottom:25px;">Selecione o período de referência para gerar a análise profunda da sua escola.</p>
             
-            <div style="display:flex; gap:15px; max-width: 400px; margin: 0 auto 25px auto;">
-                <div style="flex:1; text-align:left;">
-                    <label style="font-weight:bold; color:#333; display:block; margin-bottom:5px;">Mês Vigente:</label>
-                    <select id="dossie-mes" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
-                        ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>`<option value="${i+1}" ${i+1===mesAtual?'selected':''}>${m}</option>`).join('')}
-                    </select>
-                </div>
-                <div style="flex:1; text-align:left;">
-                    <label style="font-weight:bold; color:#333; display:block; margin-bottom:5px;">Ano:</label>
-                    <input type="number" id="dossie-ano" value="${anoAtual}" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; text-align:center;">
-                </div>
+            <div style="display:flex; gap:15px; margin-bottom:25px; text-align:left;">
+                ${relSelect('Mês Vigente:', 'dossie-mes', opMeses, 'style="padding:12px;"')}
+                ${relCol('Ano:', 'dossie-ano', 'number', anoAtual, 'style="padding:12px; text-align:center;"')}
             </div>
             
-            <button onclick="App.gerarDossie()" class="btn-primary" style="padding:15px; font-size:16px; width:100%; max-width:400px;">GERAR DOSSIÊ ➜</button>
+            <button onclick="App.gerarDossie()" class="btn-primary" style="padding:15px; font-size:16px; width:100%;">GERAR DOSSIÊ ➜</button>
         </div>
     `;
+    
+    div.innerHTML = App.UI.card('', '', formDossie, '500px');
 };
 
 App.gerarDossie = async () => {
@@ -154,7 +199,8 @@ App.gerarDossie = async () => {
     const nomeMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesIdx-1];
     
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px;">Processando Inteligência de Negócios...</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px;">Processando Inteligência de Negócios... ⏳</p>';
+    document.body.style.cursor = 'wait';
     
     try {
         const [alunos, turmas, cursos, financeiro, escola] = await Promise.all([
@@ -180,7 +226,7 @@ App.gerarDossie = async () => {
         const entradaMesVenda = finMes.filter(f => f.status === 'Pago' && isVenda(f)).reduce((a, c) => a + getVal(c), 0);
         const entradaMesTotal = entradaMesMensalidade + entradaMesVenda;
 
-        // Formas de Pagamento (Mês)
+        // Formas de Pagamento
         const formasMensalidade = {}; const formasVenda = {};
         finMes.filter(f => f.status === 'Pago').forEach(p => {
             const target = isVenda(p) ? formasVenda : formasMensalidade;
@@ -190,8 +236,7 @@ App.gerarDossie = async () => {
         });
 
         // Histórico de Meses
-        let linhasHistorico = '';
-        let acumuladoHistorico = 0;
+        let linhasHistorico = ''; let acumuladoHistorico = 0;
         for(let i = 1; i <= mesIdx; i++) {
             const fM = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === i && f.status === 'Pago');
             const vM = fM.filter(f => !isVenda(f)).reduce((a,c) => a+getVal(c), 0);
@@ -201,7 +246,7 @@ App.gerarDossie = async () => {
             linhasHistorico += `<tr><td>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td><td style="text-align:right; color:#2980b9;">${fmt(vM)}</td><td style="text-align:right; color:#8e44ad;">${fmt(vV)}</td><td style="text-align:right; font-weight:bold;">${fmt(tot)}</td></tr>`;
         }
 
-        // --- DADOS PEDAGÓGICOS ---
+        // --- DADOS PEDAGÓGICOS E DEMOGRAFIA ---
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
         const alunosCurso = {}; cursos.forEach(c => alunosCurso[c.nome] = 0);
         alunos.forEach(a => { 
@@ -209,7 +254,6 @@ App.gerarDossie = async () => {
             if(a.curso && alunosCurso[a.curso] !== undefined) alunosCurso[a.curso]++;
         });
         
-        // --- DEMOGRAFIA ---
         const masc = alunos.filter(a => a.sexo === 'Masculino').length;
         const fem = alunos.filter(a => a.sexo === 'Feminino').length;
         const totalSexo = masc + fem || 1;
@@ -226,7 +270,7 @@ App.gerarDossie = async () => {
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
 
-        // --- RENDERIZAÇÃO ---
+        // Mantém-se o super HTML para a impressão perfeita
         div.innerHTML = `
             <style>
                 .d-kpi { flex:1; background:#fff; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:center; min-width:140px; }
@@ -246,7 +290,7 @@ App.gerarDossie = async () => {
             </style>
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="App.renderizarDossie()" style="background:#7f8c8d; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-right:10px;">⬅ VOLTAR</button>
+                <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px;">⬅ VOLTAR</button>
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR DOSSIÊ</button>
             </div>
             
@@ -335,7 +379,6 @@ App.gerarDossie = async () => {
                 </div>
             </div>`;
 
-        // --- INICIALIZA OS GRÁFICOS ---
         setTimeout(() => {
             const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' };
             const bgColors = ['#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22', '#95a5a6'];
@@ -345,42 +388,46 @@ App.gerarDossie = async () => {
             if(alunos.length > 0 && document.getElementById('grafDemografia')) { new Chart(document.getElementById('grafDemografia'), { type: 'doughnut', data: { labels: ['Masculino','Feminino'], datasets: [{ data: [masc, fem], backgroundColor: ['#3498db', '#e74c3c'], borderWidth: 0 }] }, options: chartOptions }); }
         }, 300);
 
-    } catch(e) { console.error(e); div.innerHTML = "<p style='text-align:center; color:red;'>Erro ao gerar dossiê. Verifique a base de dados.</p>"; }
+    } catch(e) { App.showToast("Erro ao gerar dossiê.", "error"); } finally { document.body.style.cursor = 'default'; }
 };
 
-// =========================================================
-// 3. A FUNÇÃO DA FICHA DE MATRÍCULA (RESTAURADA)
-// =========================================================
-
+// ---------------------------------------------------------
+// 3. FICHA DE MATRÍCULA
+// ---------------------------------------------------------
 App.gerarFichaSetup = async () => {
     App.setTitulo("Ficha de Matrícula");
-    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Carregando...</p>';
     try {
         const alunos = await App.api('/alunos');
-        div.innerHTML = `
-            <div class="card" style="padding: 30px; max-width: 800px; margin: 0 auto;">
-                <h3 style="margin-top:0; color:#2c3e50;">📄 Imprimir Ficha de Matrícula</h3>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <select id="ficha-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">
-                        <option value="">-- Selecione o Aluno --</option>
-                        ${alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('')}
-                    </select>
-                    <button onclick="App.gerarFichaImprimir()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR FICHA</button>
-                </div>
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        
+        const formFicha = `
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+                ${relSelect('Selecione o Aluno:', 'ficha-aluno', opAlunos)}
+                <button onclick="App.gerarFichaImprimir()" class="btn-primary" style="height:41px; padding:0 25px;">GERAR FICHA</button>
             </div>
-            <div id="ficha-area" style="margin-top:30px;"></div>`;
+        `;
+        
+        div.innerHTML = App.UI.card('📄 Imprimir Ficha de Matrícula', '', formFicha, '800px') + `<div id="ficha-area" style="margin-top:30px;"></div>`;
     } catch(e) { div.innerHTML = "Erro ao carregar os alunos."; }
 };
 
 App.gerarFichaImprimir = async () => {
     const idAluno = document.getElementById('ficha-aluno').value;
-    if(!idAluno) return alert("Por favor, selecione um aluno.");
-    const divArea = document.getElementById('ficha-area'); divArea.innerHTML = 'Gerando ficha...';
+    if(!idAluno) return App.showToast("Por favor, selecione um aluno.", "warning");
+    
+    const divArea = document.getElementById('ficha-area'); 
+    divArea.innerHTML = '<p style="text-align:center;">Gerando ficha... ⏳</p>';
+    document.body.style.cursor = 'wait';
+    
     try {
         const [aluno, escola] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api('/escola') ]);
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        
         divArea.innerHTML = `
-            <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR FICHA</button></div>
+            <div class="no-print" style="text-align:center; margin-bottom:20px;">
+                <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR FICHA</button>
+            </div>
             <div class="print-sheet" style="padding:40px;">
                 <div class="doc-header">
                     <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
@@ -414,5 +461,6 @@ App.gerarFichaImprimir = async () => {
                 </div>
             </div>
         `;
-    } catch(e) { divArea.innerHTML = "Erro ao gerar ficha. O aluno não foi encontrado."; }
+    } catch(e) { App.showToast("Erro ao gerar ficha. O aluno não foi encontrado.", "error"); }
+    finally { document.body.style.cursor = 'default'; }
 };
