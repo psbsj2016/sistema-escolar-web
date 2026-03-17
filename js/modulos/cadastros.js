@@ -1,8 +1,7 @@
 // =========================================================
-// MÓDULO DE CADASTROS V100 (FICHA DE ALUNO COMPLETA)
+// MÓDULO DE CADASTROS V100 (REESTRUTURADO EM COMPONENTES)
 // =========================================================
 
-// Função conectada ao App principal
 App.abrirModalCadastroModulo = async (tipo, id) => {
     App.entidadeAtual = tipo;
     App.idEdicao = id;
@@ -11,7 +10,6 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
     
-    // Elementos do Modal
     const titulo = document.getElementById('modal-titulo');
     const conteudo = document.getElementById('modal-form-content');
     
@@ -24,16 +22,11 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     try {
         if (id) {
             const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
-            // AGORA USA A API BLINDADA
             dados = await App.api(`/${endpoint}/${id}`);
         }
         
         if (tipo === 'aluno' || tipo === 'turma') {
-            // AGORA USA A API BLINDADA
-            const [c, t] = await Promise.all([
-                App.api('/cursos'),
-                App.api('/turmas')
-            ]);
+            const [c, t] = await Promise.all([ App.api('/cursos'), App.api('/turmas') ]);
             listas.cursos = Array.isArray(c) ? c : [];
             listas.turmas = Array.isArray(t) ? t : [];
         }
@@ -42,93 +35,100 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     const v = (val) => val || '';
     let html = '';
 
-    // Estilos
-    const rowStyle = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px;';
-    const row3Style = 'display: grid; grid-template-columns: 2fr 1fr; gap: 20px;'; // Para Rua e Número
-    const titleStyle = 'color: #2c3e50; font-size: 14px; font-weight: 600; margin: 25px 0 10px 0; border-bottom: 1px solid #eee; padding-bottom: 5px;';
+    // =========================================================
+    // 🧱 ATALHOS DA FÁBRICA DE COMPONENTES LOCAIS
+    // =========================================================
+    const input = App.UI.input; // Importa a fábrica principal do app.js
+    
+    const select = (label, id, options) => `
+        <div class="input-group">
+            <label>${label}</label>
+            <select id="${id}">${options}</select>
+        </div>
+    `;
+    
+    const row = (conteudo) => `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">${conteudo}</div>`;
+    const row3 = (conteudo) => `<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">${conteudo}</div>`;
+    const section = (title, margin = '25px') => `<div style="color:#2c3e50; font-size:14px; font-weight:600; margin:${margin} 0 10px 0; border-bottom:1px solid #eee; padding-bottom:5px;">${title}</div>`;
 
-    // --- FORMULÁRIO DE ALUNO (COMPLETO) ---
+    // =========================================================
+    // 📋 MONTAGEM DOS FORMULÁRIOS (ESTILO LEGO)
+    // =========================================================
+    
     if (tipo === 'aluno') {
         const opTurma = `<option value="">-- Selecione --</option>` + listas.turmas.map(t => `<option value="${t.nome}" ${v(dados.turma)===t.nome?'selected':''}>${t.nome}</option>`).join('');
         const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
-        
-        html = `
-        <div style="${titleStyle} margin-top:0;">1. Dados Pessoais</div>
-        <div class="input-group"><label>Nome Completo</label><input id="a-nome" value="${v(dados.nome)}" placeholder="Ex: João da Silva"></div>
-        
-        <div style="${rowStyle}">
-            <div class="input-group"><label>CPF</label><input id="a-cpf" value="${v(dados.cpf)}" placeholder="000.000.000-00" oninput="App.mascaraCPF(this)" maxlength="14"></div>
-            <div class="input-group"><label>RG</label><input id="a-rg" value="${v(dados.rg)}"></div>
-        </div>
-
-        <div style="${rowStyle}">
-            <div class="input-group"><label>Data Nascimento</label><input type="date" id="a-nasc" value="${v(dados.nascimento)}"></div>
-            <div class="input-group">
-                <label>Sexo</label>
-                <select id="a-sexo" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; background:#fafafa;">
-                    <option value="">-- Selecione --</option>
-                    <option value="Masculino" ${v(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
-                    <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
-                </select>
-            </div>
-        </div>
-
-        <div style="${rowStyle}">
-            <div class="input-group"><label>WhatsApp/Celular</label><input id="a-zap" value="${v(dados.whatsapp)}" placeholder="(00) 00000-0000" oninput="App.mascaraCelular(this)" maxlength="15"></div>
-            <div class="input-group"><label>Profissão / Ocupação</label><input id="a-prof" value="${v(dados.profissao)}" placeholder="Ex: Estudante"></div>
-        </div>
-
-        <div style="${titleStyle}">2. Matrícula</div>
-        <div style="${rowStyle}">
-            <div class="input-group"><label>Curso</label><select id="a-curso">${opCurso}</select></div>
-            <div class="input-group"><label>Turma</label><select id="a-turma">${opTurma}</select></div>
-        </div>
-
-        <div style="${titleStyle}">3. Endereço Completo</div>
-        <div style="${row3Style}">
-            <div class="input-group"><label>Logradouro (Rua/Av)</label><input id="a-rua" value="${v(dados.rua)}" placeholder="Ex: Rua das Flores"></div>
-            <div class="input-group"><label>Número</label><input id="a-num" value="${v(dados.numero)}" placeholder="123"></div>
-        </div>
-        <div style="${rowStyle}">
-            <div class="input-group"><label>Bairro</label><input id="a-bairro" value="${v(dados.bairro)}"></div>
-            <div class="input-group"><label>Cidade</label><input id="a-cidade" value="${v(dados.cidade)}"></div>
-        </div>
-        <div style="${rowStyle}">
-            <div class="input-group"><label>Estado (UF)</label><input id="a-uf" value="${v(dados.estado)}" placeholder="Ex: SP" maxlength="2"></div>
-            <div class="input-group"><label>País</label><input id="a-pais" value="${v(dados.pais) || 'Brasil'}"></div>
-        </div>
-
-        <div style="${titleStyle}">4. Dados do Responsável (Se menor)</div>
-        <div class="input-group"><label>Nome do Responsável</label><input id="r-nome" value="${v(dados.resp_nome)}"></div>
-        <div style="${rowStyle}">
-            <div class="input-group"><label>CPF do Responsável</label><input id="r-cpf" value="${v(dados.resp_cpf)}" placeholder="000.000.000-00" oninput="App.mascaraCPF(this)" maxlength="14"></div>
-            <div class="input-group"><label>WhatsApp do Responsável</label><input id="r-zap" value="${v(dados.resp_zap)}" placeholder="(00) 00000-0000" oninput="App.mascaraCelular(this)" maxlength="15"></div>
-        </div>
+        const opSexo = `
+            <option value="">-- Selecione --</option>
+            <option value="Masculino" ${v(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
+            <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
         `;
+        
+        // A Mágica Acontece Aqui: Olha como fica fácil de ler e modificar!
+        html = 
+            section('1. Dados Pessoais', '0') +
+            input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
+            row(
+                input('CPF', 'a-cpf', v(dados.cpf), '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
+                input('RG', 'a-rg', v(dados.rg))
+            ) +
+            row(
+                input('Data Nascimento', 'a-nasc', v(dados.nascimento), '', 'date') +
+                select('Sexo', 'a-sexo', opSexo)
+            ) +
+            row(
+                input('WhatsApp/Celular', 'a-zap', v(dados.whatsapp), '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)" maxlength="15"') +
+                input('Profissão / Ocupação', 'a-prof', v(dados.profissao), 'Ex: Estudante')
+            ) +
+
+            section('2. Matrícula') +
+            row(
+                select('Curso', 'a-curso', opCurso) +
+                select('Turma', 'a-turma', opTurma)
+            ) +
+
+            section('3. Endereço Completo') +
+            row3(
+                input('Logradouro (Rua/Av)', 'a-rua', v(dados.rua), 'Ex: Rua das Flores') +
+                input('Número', 'a-num', v(dados.numero), '123')
+            ) +
+            row(
+                input('Bairro', 'a-bairro', v(dados.bairro)) +
+                input('Cidade', 'a-cidade', v(dados.cidade))
+            ) +
+            row(
+                input('Estado (UF)', 'a-uf', v(dados.estado), 'Ex: SP', 'text', 'maxlength="2"') +
+                input('País', 'a-pais', v(dados.pais) || 'Brasil')
+            ) +
+
+            section('4. Dados do Responsável (Se menor)') +
+            input('Nome do Responsável', 'r-nome', v(dados.resp_nome)) +
+            row(
+                input('CPF do Responsável', 'r-cpf', v(dados.resp_cpf), '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
+                input('WhatsApp do Responsável', 'r-zap', v(dados.resp_zap), '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)" maxlength="15"')
+            );
     } 
-    // --- FORMULÁRIO DE TURMA ---
     else if (tipo === 'turma') {
         const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
-        html = `
-        <div class="input-group"><label>Nome da Turma</label><input id="t-nome" value="${v(dados.nome)}" placeholder="Ex: Turma A - Manhã"></div>
-        <div class="input-group"><label>Curso Vinculado</label><select id="t-curso">${opCurso}</select></div>
-        <div style="${rowStyle}">
-            <div class="input-group"><label>Dias de Aula</label><input id="t-dia" value="${v(dados.dia)}" placeholder="Ex: Seg e Qua"></div>
-            <div class="input-group"><label>Horário</label><input id="t-horario" value="${v(dados.horario)}" type="time"></div>
-        </div>`;
+        
+        html = 
+            input('Nome da Turma', 't-nome', v(dados.nome), 'Ex: Turma A - Manhã') +
+            select('Curso Vinculado', 't-curso', opCurso) +
+            row(
+                input('Dias de Aula', 't-dia', v(dados.dia), 'Ex: Seg e Qua') +
+                input('Horário', 't-horario', v(dados.horario), '', 'time')
+            );
     }
-    // --- FORMULÁRIO DE CURSO ---
     else if (tipo === 'curso') {
-        html = `
-        <div class="input-group"><label>Nome do Curso</label><input id="c-nome" value="${v(dados.nome)}" placeholder="Ex: Inglês Básico"></div>
-        <div class="input-group"><label>Carga Horária (Horas)</label><input id="c-carga" value="${v(dados.carga)}" placeholder="Ex: 40h"></div>
-        `;
+        html = 
+            input('Nome do Curso', 'c-nome', v(dados.nome), 'Ex: Inglês Básico') +
+            input('Carga Horária (Horas)', 'c-carga', v(dados.carga), 'Ex: 40h');
     }
 
     if(conteudo) conteudo.innerHTML = html;
 };
 
-// Função de Salvar (Atualizada para a Nuvem Multi-Tenant)
+// Função de Salvar
 App.salvarCadastro = async () => {
     const t = App.entidadeAtual; 
     const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
