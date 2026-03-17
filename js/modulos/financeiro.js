@@ -236,11 +236,103 @@ App.confirmarBaixa = async () => {
     } catch(e) { App.showToast("Erro ao processar baixa.", "error"); }
 };
 
-// --- 3. LÓGICAS DO BACKEND E UTILIDADES (MANTIDAS) ---
-App.gerarCarnes=async()=>{const idA=document.getElementById('fin-aluno').value;const val=document.getElementById('fin-valor').value;const parc=document.getElementById('fin-parcelas').value;const dataIni=document.getElementById('fin-vencimento').value;if(!idA||!val||!parc||!dataIni)return alert("Preencha todos os campos.");const alunoNome=document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;let db=new Date(dataIni+'T00:00:00');const idLote=Date.now().toString();const dataGeracao=new Date().toLocaleDateString('pt-BR');for(let i=1;i<=parc;i++){const vencUS=db.toISOString().split('T')[0];await App.api('/financeiro','POST',{id:idLote+"_"+i,idCarne:idLote,dataGeracao,idAluno:idA,alunoNome,valor:val,vencimento:vencUS,status:'Pendente',descricao:`Mensalidade ${i}/${parc}`,tipo:'Receita'});db.setMonth(db.getMonth()+1);}App.abrirCarneExistente(idLote);};
-App.toggleCheck=(s)=>{document.querySelectorAll('.fin-check').forEach(c=>c.checked=s.checked);};
-App.acaoLote=async(a)=>{const c=document.querySelectorAll('.fin-check:checked');if(c.length===0)return alert("Selecione.");if(!confirm("Confirmar?"))return;for(const x of c){if(a==='excluir')await App.api(`/financeiro/${x.value}`,'DELETE');else{const i=await App.api(`/financeiro/${x.value}`);await App.api(`/financeiro/${x.value}`,'PUT',{...i,status:(a==='baixar'?'Pago':'Pendente')});}}App.renderizarFinanceiroPro();};
-App.editarParcela=async(id)=>{const v=prompt("Novo Valor:");if(v){const i=await App.api(`/financeiro/${id}`);await App.api(`/financeiro/${id}`,'PUT',{...i,valor:v});App.renderizarFinanceiroPro();}};
+// --- 3. LÓGICAS DO BACKEND E UTILIDADES (OTIMIZADAS PARA ALTA PERFORMANCE) ---
+
+App.gerarCarnes = async () => {
+    const idA = document.getElementById('fin-aluno').value;
+    const val = document.getElementById('fin-valor').value;
+    const parc = parseInt(document.getElementById('fin-parcelas').value);
+    const dataIni = document.getElementById('fin-vencimento').value;
+    
+    if(!idA || !val || !parc || !dataIni) return App.showToast("Preencha todos os campos do gerador.", "error");
+    
+    const alunoNome = document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;
+    let db = new Date(dataIni + 'T00:00:00');
+    const idLote = Date.now().toString();
+    const dataGeracao = new Date().toLocaleDateString('pt-BR');
+
+    // 1. Feedback visual para não parecer que congelou
+    App.showToast(`Gerando ${parc} parcelas... ⏳`, "info");
+    document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = [];
+        
+        // Prepara todas as parcelas
+        for(let i = 1; i <= parc; i++) {
+            const vencUS = db.toISOString().split('T')[0];
+            const payload = {
+                id: idLote + "_" + i, idCarne: idLote, dataGeracao, idAluno: idA, 
+                alunoNome, valor: val, vencimento: vencUS, status: 'Pendente', 
+                descricao: `Mensalidade ${i}/${parc}`, tipo: 'Receita'
+            };
+            // Adiciona a ordem na lista de disparo
+            promessas.push(App.api('/financeiro', 'POST', payload));
+            db.setMonth(db.getMonth() + 1);
+        }
+
+        // 2. Dispara TODAS ao mesmo tempo (É instantâneo!)
+        await Promise.all(promessas);
+        
+        App.showToast("Carnê gerado com sucesso!", "success");
+        App.abrirCarneExistente(idLote);
+    } catch(e) {
+        App.showToast("Erro ao gerar parcelas.", "error");
+    } finally {
+        document.body.style.cursor = 'default';
+    }
+};
+
+App.toggleCheck = (s) => { 
+    document.querySelectorAll('.fin-check').forEach(c => c.checked = s.checked); 
+};
+
+App.acaoLote = async (acao) => {
+    const checks = document.querySelectorAll('.fin-check:checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um lançamento.", "warning");
+    
+    const acaoTexto = acao === 'excluir' ? 'EXCLUIR' : 'ALTERAR';
+    if (!confirm(`Tem certeza que deseja ${acaoTexto} os ${checks.length} itens selecionados?`)) return;
+
+    // Feedback visual imediato
+    App.showToast("Processando requisições em lote... ⏳", "info");
+    document.body.style.cursor = 'wait';
+
+    try {
+        // Cria uma chuva de requisições simultâneas em vez de fila indiana
+        const operacoes = Array.from(checks).map(async (check) => {
+            const id = check.value;
+            if (acao === 'excluir') {
+                return App.api(`/financeiro/${id}`, 'DELETE');
+            } else {
+                const item = App.financeiroCache.find(f => f.id == id);
+                if (item) {
+                    return App.api(`/financeiro/${id}`, 'PUT', { ...item, status: (acao === 'baixar' ? 'Pago' : 'Pendente') });
+                }
+            }
+        });
+
+        // Aguarda que todas as operações paralelas terminem
+        await Promise.all(operacoes);
+        
+        App.showToast(`Ação concluída com sucesso!`, "success");
+        App.renderizarFinanceiroPro(); // Recarrega a tela instantaneamente
+    } catch (e) {
+        App.showToast("Erro ao processar lote.", "error");
+    } finally {
+        document.body.style.cursor = 'default';
+    }
+};
+
+App.editarParcela = async (id) => {
+    const v = prompt("Novo Valor (R$):");
+    if (v) {
+        App.showToast("Atualizando valor... ⏳", "info");
+        const i = await App.api(`/financeiro/${id}`);
+        await App.api(`/financeiro/${id}`, 'PUT', { ...i, valor: v });
+        App.renderizarFinanceiroPro();
+    }
+};
 
 App.cobrarWhatsApp = async (idAluno, valorTotal, idFinanceiro = null) => { 
     try {
