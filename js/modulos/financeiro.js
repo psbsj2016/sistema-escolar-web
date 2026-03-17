@@ -215,10 +215,15 @@ App.confirmarBaixa = async () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     const totalSelected = parseFloat(document.getElementById('baixa-total').value);
     
-    try {
-        const btn = document.querySelector('.btn-confirm');
-        btn.innerText = "Processando..."; btn.disabled = true;
+    // Captura o botão e bloqueia-o contra cliques duplos
+    const btn = document.querySelector('.btn-confirm');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "Processando... ⏳"; 
+    btn.disabled = true;
 
+    try {
+        const promessas = []; // Fila para execução paralela super rápida
+        
         for(const c of checks) {
             const item = App.financeiroCache.find(f => f.id == c.value);
             if(item) {
@@ -227,13 +232,23 @@ App.confirmarBaixa = async () => {
                 const itemV2 = qtd === '2' ? (parseFloat(v2) * proportion).toFixed(2) : null;
 
                 const payload = { ...item, status: 'Pago', dataPagamento: dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
-                await App.api(`/financeiro/${item.id}`, 'PUT', payload);
+                promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
             }
         }
+        
+        // Dispara todos os pagamentos ao mesmo tempo
+        await Promise.all(promessas);
+        
         App.showToast("Pagamento registrado com sucesso!", "success");
         App.fecharModal();
         App.renderizarFinanceiroPro();
-    } catch(e) { App.showToast("Erro ao processar baixa.", "error"); }
+    } catch(e) { 
+        App.showToast("Erro ao processar baixa.", "error"); 
+    } finally {
+        // A MÁGICA ACONTECE AQUI: O botão é descongelado para o próximo uso!
+        btn.innerText = textoOriginal; 
+        btn.disabled = false;
+    }
 };
 
 // --- 3. LÓGICAS DO BACKEND E UTILIDADES (OTIMIZADAS PARA ALTA PERFORMANCE) ---

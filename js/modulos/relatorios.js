@@ -306,11 +306,26 @@ App.gerarDossie = async () => {
                 </div>
                 
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-                    <div class="d-kpi" style="border-bottom:3px solid #27ae60;"><div class="d-kpi-tit">Entrada Bruta Ano<br>(Mens + Vendas)</div><div class="d-kpi-val" style="color:#27ae60;">${fmt(entradaBrutaAno)}</div></div>
-                    <div class="d-kpi" style="border-bottom:3px solid #34495e;"><div class="d-kpi-tit">Esperado do Ano<br>(Só Mensalidades)</div><div class="d-kpi-val" style="color:#34495e;">${fmt(esperadoAnoMensalidade)}</div></div>
-                    <div class="d-kpi" style="border-bottom:3px solid #f39c12;"><div class="d-kpi-tit">Esperado Mês Vigente<br>(${nomeMes})</div><div class="d-kpi-val" style="color:#f39c12;">${fmt(esperadoMesMensalidade)}</div></div>
-                    <div class="d-kpi" style="border-bottom:3px solid #3498db;"><div class="d-kpi-tit">Entrada Mês Vigente<br>(Mens + Vendas)</div><div class="d-kpi-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div></div>
-                    <div class="d-kpi" style="border-bottom:3px solid #e74c3c;"><div class="d-kpi-tit">Total Inadimplência<br>(Geral)</div><div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div></div>
+                    <div class="d-kpi" style="border-bottom:3px solid #34495e;">
+                        <div class="d-kpi-tit">Esperado do Ano<br>(Só Mensalidades)</div>
+                        <div class="d-kpi-val" style="color:#34495e;">${fmt(esperadoAnoMensalidade)}</div>
+                    </div>
+                    <div class="d-kpi" style="border-bottom:3px solid #f39c12;">
+                        <div class="d-kpi-tit">Esperado no Mês Vigente<br>(Mensalidades)</div>
+                        <div class="d-kpi-val" style="color:#f39c12;">${fmt(esperadoMesMensalidade)}</div>
+                    </div>
+                    <div class="d-kpi" style="border-bottom:3px solid #27ae60;">
+                        <div class="d-kpi-tit">Entrada Bruta Ano<br>(Mensalidades + Vendas)</div>
+                        <div class="d-kpi-val" style="color:#27ae60;">${fmt(entradaBrutaAno)}</div>
+                    </div>
+                    <div class="d-kpi" style="border-bottom:3px solid #3498db;">
+                        <div class="d-kpi-tit">Entrada Mês Vigente<br>(Mensalidades + Vendas)</div>
+                        <div class="d-kpi-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div>
+                    </div>
+                    <div class="d-kpi" style="border-bottom:3px solid #e74c3c;">
+                        <div class="d-kpi-tit">Total Inadimplência<br>(Geral)</div>
+                        <div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div>
+                    </div>
                 </div>
 
                 <div class="d-box">
