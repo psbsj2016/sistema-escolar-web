@@ -559,7 +559,7 @@ const App = {
         }
     },
 
-    // --- 4. LISTAS (LAYOUT MODERNO RESTAURADO) ---
+    // --- 4. LISTAS (REESTRUTURADO COM COMPONENTES) ---
     renderizarLista: async (tipo) => {
         if (!App.usuario) {
             App.logout();
@@ -574,81 +574,114 @@ const App = {
 
         try {
             App.listaCache = await App.api(`/${endpoint}`);
-            div.innerHTML = `
-                <div class="card" style="text-align:center; padding: 40px; margin-bottom: 30px;">
-                    <h3 style="border:none; margin-bottom:10px; color:var(--card-text);">Consultar ${titulo}</h3>
-                    <p style="opacity:0.7; margin-bottom:30px;">Utilize o campo abaixo para localizar registros.</p>
-                    <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px;">
-                        <div class="search-wrapper" style="flex: 1; position: relative;">
-                            <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
-                            <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
-                        </div>
-                        <button class="btn-new-modern" onclick="${tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`}"><span>＋</span> NOVO REGISTRO</button>
+            
+            const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
+
+            // 1. Barra de Busca e Botão Novo (Componentizado)
+            const barraBusca = `
+                <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left;">
+                    <div class="search-wrapper" style="flex: 1; position: relative;">
+                        <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
+                        <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
                     </div>
+                    <button class="btn-new-modern" onclick="${acaoNovo}"><span>＋</span> NOVO REGISTRO</button>
+                </div>
+            `;
+
+            // 2. Monta o Card Superior usando o App.UI (Fábrica Principal)
+            div.innerHTML = `
+                <div style="text-align:center; margin-bottom:30px;">
+                    ${App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%')}
                 </div>
                 <div id="container-tabela"></div>
             `;
             App.filtrarTabelaReativa();
-        } catch(e) { div.innerHTML = "Erro."; }
+        } catch(e) { div.innerHTML = "Erro ao carregar lista."; }
     },
 
     filtrarTabelaReativa: () => {
         const termo = document.getElementById('input-busca').value.trim().toLowerCase();
         const container = document.getElementById('container-tabela');
         if (!Array.isArray(App.listaCache)) { container.innerHTML = ''; return; }
+        
         const filtrados = termo.length === 0 ? App.listaCache : App.listaCache.filter(item => {
             const nome = (item.nome || item.alunoNome || item.descricao || "").toLowerCase();
             return nome.includes(termo);
         });
-        container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease;">${App.gerarTabelaHTML(filtrados)}</div>`;
+        
+        container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
-   gerarTabelaHTML: (dados) => {
+    gerarTabelaHTML: (dados) => {
+        if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
+
         const tipo = App.entidadeAtual;
-        let thead = '';
-        if(tipo === 'aluno') { thead = `<th>Nome</th><th>Turma</th><th>WhatsApp</th><th style="text-align:right;">Ações</th>`; }
-        else if(tipo === 'turma') { thead = `<th>Turma</th><th>Dia</th><th>Horário</th><th>Curso</th><th style="text-align:right;">Ações</th>`; }
-        else if(tipo === 'curso') { thead = `<th>Curso</th><th>Carga</th><th style="text-align:right;">Ações</th>`; }
-        else if(tipo === 'financeiro') { thead = `<th>Ref (Aluno)</th><th>Descrição do Produto</th><th>Vencimento</th><th>Valor</th><th>Status</th><th style="text-align:right;">Ações</th>`; }
+        
+        // =========================================================
+        // 🧱 FÁBRICA DE TABELAS (COMPONENTES LOCAIS)
+        // =========================================================
+        const TB = {
+            estrutura: (cabecalho, corpo) => `<table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table>`,
+            th: (texto, align = 'left') => `<th style="text-align:${align}; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee; color:#2c3e50;">${texto}</th>`,
+            td: (texto, align = 'left') => `<td style="text-align:${align}; padding:15px; border-bottom:1px solid #eee; color:#333;">${texto}</td>`,
+            tr: (celulas) => `<tr style="transition: background 0.2s;">${celulas}</tr>`,
+            acoes: (botoes) => `<div style="display:flex; gap:5px; justify-content:flex-end; align-items:center;">${botoes.join('')}</div>`,
+            btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>`
+        };
 
-        let html = `<table><thead><tr>${thead}</tr></thead><tbody>`;
-        dados.forEach(item => {
-            html += `<tr>`;
-            if(tipo === 'aluno') {
-                html += `<td>${item.nome}</td><td>${item.turma||'-'}</td><td>${item.whatsapp||'-'}</td>`;
-            } else if(tipo === 'turma') {
-                html += `<td>${item.nome}</td><td>${item.dia||'-'}</td><td>${item.horario||'-'}</td><td>${item.curso||'-'}</td>`;
-            } else if(tipo === 'curso') {
-                html += `<td>${item.nome}</td><td>${item.carga||'-'}</td>`;
-            } else if(tipo === 'financeiro') {
+        // 1. Define o Cabeçalho (Usando a Fábrica)
+        let cabecalho = '';
+        if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('WhatsApp') + TB.th('Ações', 'right');
+        if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
+        if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
+        if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
+
+        // 2. Constrói as Linhas (Usando a Fábrica)
+        const corpo = dados.map(item => {
+            let celulas = '';
+            
+            // Preenche as colunas com dados
+            if (tipo === 'aluno') {
+                celulas += TB.td(item.nome) + TB.td(item.turma || '-') + TB.td(item.whatsapp || '-');
+            } 
+            else if (tipo === 'turma') {
+                celulas += TB.td(item.nome) + TB.td(item.dia || '-') + TB.td(item.horario || '-') + TB.td(item.curso || '-');
+            } 
+            else if (tipo === 'curso') {
+                celulas += TB.td(item.nome) + TB.td(item.carga || '-');
+            } 
+            else if (tipo === 'financeiro') {
                 const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-';
-                html += `<td>${item.alunoNome || 'Não informado'}</td>
-                         <td>${item.descricao}</td>
-                         <td style="white-space:nowrap;">${dataBr}</td>
-                         <td style="white-space:nowrap;">R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                         <td><span style="color:${item.status === 'Pago' ? 'green' : 'red'}; font-weight:bold;">${item.status}</span></td>`;
+                const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${item.status}</span>`;
+                
+                celulas += TB.td(item.alunoNome || 'Sem Nome') + TB.td(item.descricao) + TB.td(dataBr) + TB.td(valorFmt) + TB.td(statusFmt);
             }
-            
+
+            // 3. Monta os Botões de Ação Dinamicamente
+            const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
             const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
+            // Escapa aspas no nome para não quebrar o JS
+            const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
             
-            let btnVenda = '';
-            let btnWhats = '';
+            let botoes = [];
+            
+            // Botões Exclusivos
+            if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${nomeSeguro}')`, 'Registrar Venda'));
+            if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
+            
+            // Botões Padrão (Editar e Excluir)
+            botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
+            botoes.push(TB.btn('🗑️', '#e74c3c', `App.excluir('${epExcluir}', '${item.id}')`, 'Excluir'));
 
-            if(tipo === 'aluno') {
-                btnVenda = `<button class="btn-edit" style="background:#27ae60;" onclick="App.abrirModalVenda('${item.id}', \`${item.nome}\`)" title="Registrar Nova Venda">🛒</button>`;
-            } else if(tipo === 'financeiro') {
-                btnWhats = `<button class="btn-edit" style="background:#25D366; color:white; border-color:#25D366;" onclick="App.enviarWhatsApp('${item.id}')" title="Avisar por WhatsApp">💬</button>`;
-            }
+            // Adiciona a célula de ações alinhada à direita
+            celulas += TB.td(TB.acoes(botoes), 'right');
 
-            html += `<td style="text-align:right; width: 150px;">
-                        <div style="display:flex; gap:5px; justify-content:flex-end; align-items:center; flex-wrap:nowrap;">
-                            ${btnVenda}${btnWhats}
-                            <button class="btn-edit" onclick="${acaoEdit}" title="Editar">✏️</button>
-                            <button class="btn-del" onclick="App.excluir('${tipo==='financeiro'?'financeiro':tipo+'s'}', '${item.id}')" title="Excluir">🗑️</button>
-                        </div>
-                     </td></tr>`;
-        });
-        return dados.length ? html + '</tbody></table>' : '<p style="text-align:center; padding:20px; opacity:0.6;">Sem resultados.</p>';
+            return TB.tr(celulas);
+        }).join('');
+
+        // Junta Cabeçalho e Corpo na Estrutura
+        return TB.estrutura(cabecalho, corpo);
     },
 
  // --- 5. MINHA CONTA (LAYOUT PREMIUM + API SEGURA + OLHINHO + MUDAR LOGIN E E-MAIL) ---
