@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V130 - SAAS PLG / ASSINATURAS)
+// SISTEMA ESCOLAR - APP.JS (V131 - ACESSIBILIDADE E UX)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -83,7 +83,13 @@ const App = {
         const tema = JSON.parse(localStorage.getItem('escola_tema'));
         if (tema) {
             const root = document.documentElement;
-            root.style.setProperty('--sidebar-bg', tema.sidebarBg); root.style.setProperty('--sidebar-text', tema.sidebarText); root.style.setProperty('--body-bg', tema.bodyBg); root.style.setProperty('--text-main', tema.textMain); root.style.setProperty('--card-bg', tema.cardBg); root.style.setProperty('--card-text', tema.cardText);
+            if(tema.sidebarBg) root.style.setProperty('--sidebar-bg', tema.sidebarBg); 
+            if(tema.sidebarText) root.style.setProperty('--sidebar-text', tema.sidebarText); 
+            if(tema.bodyBg) root.style.setProperty('--body-bg', tema.bodyBg); 
+            if(tema.textMain) root.style.setProperty('--text-main', tema.textMain); 
+            if(tema.cardBg) root.style.setProperty('--card-bg', tema.cardBg); 
+            if(tema.cardText) root.style.setProperty('--card-text', tema.cardText);
+            if(tema.zoomLevel) root.style.setProperty('--zoom-level', tema.zoomLevel);
         }
     },
 
@@ -96,24 +102,73 @@ const App = {
 
     renderizarConfiguracoesAparencia: () => {
         App.setTitulo("Aparência do Sistema"); const div = document.getElementById('app-content'); const styles = getComputedStyle(document.documentElement);
-        const c = { sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim() };
+        const temaSalvo = JSON.parse(localStorage.getItem('escola_tema')) || {};
+        
+        const c = { 
+            sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim(),
+            zoomAtual: temaSalvo.zoomLevel || '1'
+        };
         const atalhosSalvos = JSON.parse(localStorage.getItem('escola_atalhos')) || [];
+
         const blocoCores = `<div class="theme-section"><h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;"><div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}</div></div></div>`;
         const blocoAtalhos = `<div class="theme-section"><h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p><div class="shortcut-selector">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div></div>`;
+        
+        const blocoFonte = `
+            <div class="theme-section">
+                <h4 style="margin:0 0 5px 0;">3. Tamanho da Fonte (Zoom)</h4>
+                <p style="font-size:12px; color:#666; margin-bottom:15px;">Ajuste o tamanho geral para facilitar a leitura.</p>
+                <div class="input-group" style="max-width: 300px;">
+                    <select id="theme-zoom" style="font-weight:bold; cursor:pointer;" onchange="App.previewZoom(this.value)">
+                        <option value="0.9" ${c.zoomAtual === '0.9' ? 'selected' : ''}>Pequena (90%)</option>
+                        <option value="1" ${c.zoomAtual === '1' ? 'selected' : ''}>Padrão (100%)</option>
+                        <option value="1.1" ${c.zoomAtual === '1.1' ? 'selected' : ''}>Maior (110%)</option>
+                    </select>
+                </div>
+            </div>`;
+
         const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 15px;">${App.UI.botao('SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '💾')}${App.UI.botao('RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '🔄')}</div>`;
-        div.innerHTML = App.UI.card('🎨 Personalizar Aparência', 'Personalize as cores e os atalhos da tela inicial.', blocoCores + blocoAtalhos + blocoBotoes, '800px');
+        div.innerHTML = App.UI.card('🎨 Personalizar Aparência', 'Personalize as cores, zoom e atalhos da tela inicial.', blocoCores + blocoFonte + blocoAtalhos + blocoBotoes, '800px');
     },
 
     previewCor: (varName, color) => { document.documentElement.style.setProperty(varName, color); },
-    validarLimiteAtalhos: (checkbox) => { const checked = document.querySelectorAll('.sc-check:checked'); if (checked.length > 8) { checkbox.checked = false; alert("O limite máximo é de 8 atalhos."); } },
+    previewZoom: (valor) => { document.documentElement.style.setProperty('--zoom-level', valor); },
+    
+    validarLimiteAtalhos: (checkbox) => { 
+        const checked = document.querySelectorAll('.sc-check:checked'); 
+        if (checked.length > 8) { 
+            checkbox.checked = false; 
+            App.showToast("O limite máximo é de 8 atalhos.", "warning"); 
+        } 
+    },
+
     salvarTema: () => {
         const root = getComputedStyle(document.documentElement);
-        const tema = { sidebarBg: root.getPropertyValue('--sidebar-bg').trim(), sidebarText: root.getPropertyValue('--sidebar-text').trim(), bodyBg: root.getPropertyValue('--body-bg').trim(), textMain: root.getPropertyValue('--text-main').trim(), cardBg: root.getPropertyValue('--card-bg').trim(), cardText: root.getPropertyValue('--card-text').trim() };
+        const tema = { 
+            sidebarBg: root.getPropertyValue('--sidebar-bg').trim(), sidebarText: root.getPropertyValue('--sidebar-text').trim(), bodyBg: root.getPropertyValue('--body-bg').trim(), textMain: root.getPropertyValue('--text-main').trim(), cardBg: root.getPropertyValue('--card-bg').trim(), cardText: root.getPropertyValue('--card-text').trim(),
+            zoomLevel: document.getElementById('theme-zoom').value
+        };
         const atalhos = Array.from(document.querySelectorAll('.sc-check:checked')).map(cb => cb.value);
-        if(atalhos.length === 0) return alert("Selecione pelo menos 1 atalho."); if(atalhos.length > 8) return alert("Máximo de 8 atalhos permitidos.");
-        localStorage.setItem('escola_tema', JSON.stringify(tema)); localStorage.setItem('escola_atalhos', JSON.stringify(atalhos)); alert("Configurações salvas com sucesso!"); App.renderizarInicio();
+        
+        if(atalhos.length === 0) return App.showToast("Selecione pelo menos 1 atalho.", "warning"); 
+        if(atalhos.length > 8) return App.showToast("Máximo de 8 atalhos permitidos.", "warning");
+        
+        localStorage.setItem('escola_tema', JSON.stringify(tema)); 
+        localStorage.setItem('escola_atalhos', JSON.stringify(atalhos)); 
+        
+        App.aplicarTemaSalvo();
+        App.showToast("Configurações salvas com sucesso! 🎉", "success");
+        
+        setTimeout(() => { App.renderizarInicio(); }, 800);
     },
-    resetarTema: () => { if(!confirm("Restaurar padrão?")) return; localStorage.removeItem('escola_tema'); localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); location.reload(); },
+
+    resetarTema: () => { 
+        if(!confirm("Deseja restaurar as cores e fontes padrão?")) return; 
+        localStorage.removeItem('escola_tema'); 
+        localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
+        document.documentElement.style.setProperty('--zoom-level', '1');
+        App.showToast("Aparência restaurada com sucesso! 🔄", "success");
+        setTimeout(() => { location.reload(); }, 1000);
+    },
 
     carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
@@ -198,20 +253,15 @@ const App = {
         else if (tela === 'configuracoes') { App.setTitulo("Configurações"); App.renderizarConfiguracoes(); }
         else if (tela === 'aparencia') { App.renderizarConfiguracoesAparencia(); } 
         else if (tela === 'backup') { App.renderizarBackup(); }
-        else if (tela === 'plano') { App.renderizarMeuPlano(); } // ROTA DO NOVO PLANO
+        else if (tela === 'plano') { App.renderizarMeuPlano(); } 
         else { App.renderizarInicio(); }
     },
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
     
-    // =========================================================
-    // NOVO: MÓDULO DE GESTÃO DE PLANOS (SAAS PLG)
-    // =========================================================
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
-        
-        // Simulamos que a escola está no período de teste
         const diasRestantes = 7; 
         
         div.innerHTML = `
@@ -237,12 +287,7 @@ const App = {
                     <div class="pricing-price">R$ 97<span>/mês</span></div>
                     <p class="pricing-desc">Para pequenos cursos e professores particulares.</p>
                     <ul class="pricing-features">
-                        <li>Até 100 Alunos Ativos</li>
-                        <li>2 Acessos (Gestor + Secretaria)</li>
-                        <li>Gestão Pedagógica Completa</li>
-                        <li>Controlo Financeiro Básico</li>
-                        <li class="disabled">Cobrança WhatsApp (1 Clique)</li>
-                        <li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
                 </div>
@@ -253,11 +298,7 @@ const App = {
                     <div class="pricing-price">R$ 147<span>/mês</span></div>
                     <p class="pricing-desc">A solução completa para acabar com a inadimplência.</p>
                     <ul class="pricing-features">
-                        <li>Até 300 Alunos Ativos</li>
-                        <li>5 Acessos (Equipa Completa)</li>
-                        <li>Gestão Pedagógica + Financeira</li>
-                        <li><strong>Cobrança WhatsApp (1 Clique)</strong></li>
-                        <li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 300 Alunos Ativos</li><li>5 Acessos (Equipa Completa)</li><li>Gestão Pedagógica + Financeira</li><li><strong>Cobrança WhatsApp (1 Clique)</strong></li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-solid" onclick="App.comprarPlano('Profissional', 'https://seulink.com/profissional')">Assinar Profissional</button>
                 </div>
@@ -267,11 +308,7 @@ const App = {
                     <div class="pricing-price">R$ 297<span>/mês</span></div>
                     <p class="pricing-desc">Para escolas estruturadas e sem limites operacionais.</p>
                     <ul class="pricing-features">
-                        <li>Alunos Ilimitados</li>
-                        <li>Acessos Ilimitados</li>
-                        <li>Todas as Funcionalidades</li>
-                        <li>Cobrança WhatsApp (1 Clique)</li>
-                        <li><strong>Dossiê Executivo Avançado</strong></li>
+                        <li>Alunos Ilimitados</li><li>Acessos Ilimitados</li><li>Todas as Funcionalidades</li><li>Cobrança WhatsApp (1 Clique)</li><li><strong>Dossiê Executivo Avançado</strong></li>
                     </ul>
                     <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Premium', 'https://seulink.com/premium')">Assinar Premium</button>
                 </div>
@@ -281,11 +318,7 @@ const App = {
 
     comprarPlano: (nomePlano, linkCheckout) => {
         App.showToast(`A redirecionar para o pagamento seguro do plano ${nomePlano}...`, "info");
-        // Aqui, quando tiver as suas contas criadas na Eduzz/Hotmart/MercadoPago, 
-        // basta substituir a variável linkCheckout na chamada do botão acima.
-        setTimeout(() => {
-            window.open(linkCheckout, '_blank');
-        }, 1500);
+        setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
     ativarNovoPlano: async () => {
@@ -293,28 +326,15 @@ const App = {
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
 
         const btn = document.querySelector('button[onclick="App.ativarNovoPlano()"]');
-        const txt = btn.innerText;
-        btn.innerText = "A validar... ⏳";
-        btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "A validar... ⏳"; btn.disabled = true;
 
         try {
-            // Aqui conectaremos à sua API para validar o PIN na base de dados
-            // Por agora, simulamos um sucesso de validação
             await new Promise(r => setTimeout(r, 1500)); 
-            
             App.showToast("🎉 PIN validado com sucesso! Bem-vindo ao novo plano.", "success");
             document.getElementById('input-novo-pin').value = '';
-            
-            // Recarrega a tela para mostrar o novo status
             setTimeout(() => { App.renderizarInicio(); }, 2000);
-        } catch(e) {
-            App.showToast("PIN inválido ou já utilizado.", "error");
-        } finally {
-            btn.innerText = txt;
-            btn.disabled = false;
-        }
+        } catch(e) { App.showToast("PIN inválido ou já utilizado.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
-    // =========================================================
 
     abrirModalCadastro: (tipo, id) => {
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 

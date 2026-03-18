@@ -360,3 +360,10 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 .btn-buy-outline:hover { background: var(--accent); color: white; }
 .btn-buy-solid { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
 .btn-buy-solid:hover { background: #2980b9; }
+
+/* =========================================================
+   CONTROLO DE TAMANHO DA FONTE E ZOOM GERAL
+   ========================================================= */
+html {
+    zoom: var(--zoom-level, 1);
+}
