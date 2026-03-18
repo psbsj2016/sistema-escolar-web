@@ -2,7 +2,7 @@
 // SERVICE WORKER - MOTOR DO PWA (APP INSTALÁVEL)
 // =========================================================
 
-const CACHE_NAME = 'escola-pwa-v2';
+const CACHE_NAME = 'escola-pwa-v3'; // Aumentamos para v3 para forçar a atualização de hoje
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,26 +14,20 @@ const ASSETS_TO_CACHE = [
   './js/modulos/relatorios.js'
 ];
 
-// Instalação do Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache PWA aberto com sucesso');
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+      .then(cache => cache.addAll(ASSETS_TO_CACHE))
   );
-  self.skipWaiting();
 });
 
-// Ativação e Limpeza de caches antigos
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
+            return caches.delete(cacheName); // Limpa o lixo antigo
           }
         })
       );
@@ -42,20 +36,19 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Interceção de pedidos (Network-first para os dados, Cache-first para ficheiros)
 self.addEventListener('fetch', event => {
-  // Ignora chamadas para a API (para os dados estarem sempre atualizados)
-  if (event.request.url.includes('onrender.com')) {
-    return;
-  }
+  if (event.request.url.includes('onrender.com')) return;
   
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response; // Devolve do cache (Super rápido)
-        }
-        return fetch(event.request); // Vai buscar à internet
-      })
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
+});
+
+// A MAGIA ANTI-CACHE ACONTECE AQUI
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting(); // Força a nova versão a assumir o controlo e matar a antiga
+  }
 });

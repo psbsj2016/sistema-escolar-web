@@ -20,7 +20,7 @@
 
     <div id="tela-login" class="login-wrapper">
         <div class="login-box">
-            <h1>🎓 Portal Escolar</h1>
+            <h1>🎓 Sistema PTT</h1>
             <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
             <form onsubmit="event.preventDefault(); App.fazerLogin();">
                 <div class="input-group">
@@ -199,8 +199,33 @@
 
     <script>
         if ('serviceWorker' in navigator) {
+            let refreshing = false;
+
+            // 1. Quando o novo Service Worker assumir o controlo, recarrega a página sozinho
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    window.location.reload();
+                    refreshing = true;
+                }
+            });
+
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => console.log('✅ Service Worker OK.')).catch(err => console.log('❌ Erro SW.', err));
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('✅ Service Worker OK.');
+
+                    // 2. Fica à escuta de novas atualizações na nuvem
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // 3. Encontrou versão nova! Dá a ordem para limpar o cache e atualizar
+                                console.log('🔄 Atualização detetada! A aplicar a nova versão...');
+                                newWorker.postMessage({ action: 'skipWaiting' });
+                            }
+                        });
+                    });
+
+                }).catch(err => console.log('❌ Erro SW.', err));
             });
         }
     </script>
