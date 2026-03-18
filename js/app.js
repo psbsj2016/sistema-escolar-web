@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V134 - ISOLAMENTO MULTI-TENANT)
+// SISTEMA ESCOLAR - APP.JS (V135 - FEATURE TOGGLES E LIMITES SAAS)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -21,12 +21,37 @@ const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // --- NOVA BLINDAGEM DE DADOS (MULTI-TENANT) ---
+    // --- IDENTIDADE E PLANOS (MULTI-TENANT) ---
     getTenantKey: (chaveBase) => {
-        // Cria uma chave única para o cliente logado (ex: escola_tema_12345)
         const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
         return `${chaveBase}_${tenantId}`;
     },
+
+    getPlanoAtual: () => {
+        return localStorage.getItem(App.getTenantKey('escola_plano')) || 'Teste';
+    },
+
+    verificarPermissao: (funcionalidade) => {
+        const plano = App.getPlanoAtual();
+        if (plano === 'Premium') return true; // Premium tem acesso a tudo
+        
+        if (funcionalidade === 'whatsapp') {
+            if (plano === 'Essencial' || plano === 'Teste') {
+                App.showToast("💎 Funcionalidade Premium. Faça o upgrade para cobrar via WhatsApp num clique!", "warning");
+                setTimeout(() => App.renderizarMeuPlano(), 1500);
+                return false;
+            }
+        }
+        if (funcionalidade === 'dossie') {
+            if (plano !== 'Premium') {
+                App.showToast("💎 Exclusivo do Plano Premium. Faça o upgrade para aceder ao Dossiê Executivo!", "warning");
+                setTimeout(() => App.renderizarMeuPlano(), 1500);
+                return false;
+            }
+        }
+        return true;
+    },
+    // ------------------------------------------
 
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
@@ -58,10 +83,7 @@ const App = {
     },
 
     init: async () => {
-        // 1. Limpeza de Segurança: Destrói chaves genéricas da versão antiga que causam contaminação
-        localStorage.removeItem('escola_tema');
-        localStorage.removeItem('escola_atalhos');
-        localStorage.removeItem('escola_perfil');
+        localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
 
         const salvo = localStorage.getItem('usuario_logado');
         const token = localStorage.getItem('token_acesso');
@@ -69,13 +91,9 @@ const App = {
 
         if (salvo && token) { 
             App.usuario = JSON.parse(salvo); 
-            
-            // 2. Aplica as configurações ISOLADAS deste utilizador
             App.aplicarTemaSalvo();
             const keyAtalhos = App.getTenantKey('escola_atalhos');
-            if (!localStorage.getItem(keyAtalhos)) { 
-                localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
-            }
+            if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
             if (bioId && window.PublicKeyCredential) {
                 document.getElementById('tela-login').style.display = 'flex'; 
@@ -87,16 +105,13 @@ const App = {
             }
         } 
         else { 
-            // Limpa qualquer tema visual se for a tela de login
             document.documentElement.removeAttribute('style');
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
         }
         
         const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
-        App.setupMobileMenu(); 
-        
-        if (App.usuario) { await App.carregarDadosEscola(); }
+        App.setupMobileMenu(); if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass');
         if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
@@ -163,7 +178,6 @@ const App = {
     },
 
     aplicarTemaSalvo: () => {
-        // Puxa o tema blindado para este cliente específico
         const tema = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema')));
         if (tema) {
             const root = document.documentElement;
@@ -174,10 +188,7 @@ const App = {
             if(tema.cardBg) root.style.setProperty('--card-bg', tema.cardBg); 
             if(tema.cardText) root.style.setProperty('--card-text', tema.cardText);
             if(tema.zoomLevel) root.style.setProperty('--zoom-level', tema.zoomLevel);
-        } else {
-            // Se não tem tema, limpa as variáveis injetadas para usar o default do CSS
-            document.documentElement.removeAttribute('style');
-        }
+        } else { document.documentElement.removeAttribute('style'); }
     },
 
     UI: {
@@ -191,28 +202,12 @@ const App = {
         App.setTitulo("Aparência do Sistema"); const div = document.getElementById('app-content'); const styles = getComputedStyle(document.documentElement);
         const temaSalvo = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema'))) || {};
         
-        const c = { 
-            sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim(),
-            zoomAtual: temaSalvo.zoomLevel || '1'
-        };
+        const c = { sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim(), zoomAtual: temaSalvo.zoomLevel || '1' };
         const atalhosSalvos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos'))) || [];
 
         const blocoCores = `<div class="theme-section"><h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;"><div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}</div></div></div>`;
         const blocoAtalhos = `<div class="theme-section"><h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p><div class="shortcut-selector">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div></div>`;
-        
-        const blocoFonte = `
-            <div class="theme-section">
-                <h4 style="margin:0 0 5px 0;">3. Tamanho da Fonte (Zoom)</h4>
-                <p style="font-size:12px; color:#666; margin-bottom:15px;">Ajuste o tamanho geral para facilitar a leitura.</p>
-                <div class="input-group" style="max-width: 300px;">
-                    <select id="theme-zoom" style="font-weight:bold; cursor:pointer;" onchange="App.previewZoom(this.value)">
-                        <option value="0.9" ${c.zoomAtual === '0.9' ? 'selected' : ''}>Pequena (90%)</option>
-                        <option value="1" ${c.zoomAtual === '1' ? 'selected' : ''}>Padrão (100%)</option>
-                        <option value="1.1" ${c.zoomAtual === '1.1' ? 'selected' : ''}>Maior (110%)</option>
-                    </select>
-                </div>
-            </div>`;
-
+        const blocoFonte = `<div class="theme-section"><h4 style="margin:0 0 5px 0;">3. Tamanho da Fonte (Zoom)</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Ajuste o tamanho geral para facilitar a leitura.</p><div class="input-group" style="max-width: 300px;"><select id="theme-zoom" style="font-weight:bold; cursor:pointer;" onchange="App.previewZoom(this.value)"><option value="0.9" ${c.zoomAtual === '0.9' ? 'selected' : ''}>Pequena (90%)</option><option value="1" ${c.zoomAtual === '1' ? 'selected' : ''}>Padrão (100%)</option><option value="1.1" ${c.zoomAtual === '1.1' ? 'selected' : ''}>Maior (110%)</option></select></div></div>`;
         const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 15px;">${App.UI.botao('💾 SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '')}${App.UI.botao('✖️ RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '')}</div>`;
         div.innerHTML = App.UI.card('🎨 Personalizar Aparência', 'Personalize as cores, zoom e atalhos da tela inicial.', blocoCores + blocoFonte + blocoAtalhos + blocoBotoes, '800px');
     },
@@ -220,57 +215,35 @@ const App = {
     previewCor: (varName, color) => { document.documentElement.style.setProperty(varName, color); },
     previewZoom: (valor) => { document.documentElement.style.setProperty('--zoom-level', valor); },
     
-    validarLimiteAtalhos: (checkbox) => { 
-        const checked = document.querySelectorAll('.sc-check:checked'); 
-        if (checked.length > 8) { checkbox.checked = false; App.showToast("O limite máximo é de 8 atalhos.", "warning"); } 
-    },
+    validarLimiteAtalhos: (checkbox) => { const checked = document.querySelectorAll('.sc-check:checked'); if (checked.length > 8) { checkbox.checked = false; App.showToast("O limite máximo é de 8 atalhos.", "warning"); } },
 
     salvarTema: () => {
         const root = getComputedStyle(document.documentElement);
-        const tema = { 
-            sidebarBg: root.getPropertyValue('--sidebar-bg').trim(), sidebarText: root.getPropertyValue('--sidebar-text').trim(), bodyBg: root.getPropertyValue('--body-bg').trim(), textMain: root.getPropertyValue('--text-main').trim(), cardBg: root.getPropertyValue('--card-bg').trim(), cardText: root.getPropertyValue('--card-text').trim(),
-            zoomLevel: document.getElementById('theme-zoom').value
-        };
+        const tema = { sidebarBg: root.getPropertyValue('--sidebar-bg').trim(), sidebarText: root.getPropertyValue('--sidebar-text').trim(), bodyBg: root.getPropertyValue('--body-bg').trim(), textMain: root.getPropertyValue('--text-main').trim(), cardBg: root.getPropertyValue('--card-bg').trim(), cardText: root.getPropertyValue('--card-text').trim(), zoomLevel: document.getElementById('theme-zoom').value };
         const atalhos = Array.from(document.querySelectorAll('.sc-check:checked')).map(cb => cb.value);
         if(atalhos.length === 0) return App.showToast("Selecione pelo menos 1 atalho.", "warning"); 
         if(atalhos.length > 8) return App.showToast("Máximo de 8 atalhos permitidos.", "warning");
-        
-        localStorage.setItem(App.getTenantKey('escola_tema'), JSON.stringify(tema)); 
-        localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(atalhos)); 
-        
-        App.aplicarTemaSalvo(); App.showToast("Configurações salvas com sucesso! 🎉", "success");
-        setTimeout(() => { App.renderizarInicio(); }, 800);
+        localStorage.setItem(App.getTenantKey('escola_tema'), JSON.stringify(tema)); localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(atalhos)); 
+        App.aplicarTemaSalvo(); App.showToast("Configurações salvas com sucesso! 🎉", "success"); setTimeout(() => { App.renderizarInicio(); }, 800);
     },
 
     resetarTema: () => { 
         if(!confirm("Deseja restaurar as cores e fontes padrão?")) return; 
-        localStorage.removeItem(App.getTenantKey('escola_tema')); 
-        localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
-        document.documentElement.removeAttribute('style'); // Força a lavagem do visual
-        App.showToast("Aparência restaurada com sucesso! 🔄", "success");
-        setTimeout(() => { location.reload(); }, 1000);
+        localStorage.removeItem(App.getTenantKey('escola_tema')); localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
+        document.documentElement.removeAttribute('style'); App.showToast("Aparência restaurada com sucesso! 🔄", "success"); setTimeout(() => { location.reload(); }, 1000);
     },
 
     carregarDadosEscola: async () => { 
         try { 
-            // Agora lê SEMPRE da API fresca, e salva num cofre isolado
-            const escola = await App.api('/escola'); 
-            if(!escola) return;
+            const escola = await App.api('/escola'); if(!escola) return;
             const logoTitle = document.querySelector('.logo-area h2'); 
             if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; 
             const logoContainer = document.querySelector('.logo-area'); 
             let img = logoContainer.querySelector('img'); 
-            
             if(escola.foto && escola.foto.length > 50) { 
-                if(!img) { 
-                    img = document.createElement('img'); 
-                    img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; 
-                    logoContainer.insertBefore(img, logoContainer.firstChild); 
-                } 
+                if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
                 img.src = escola.foto; 
-            } else if(img) {
-                img.remove();
-            }
+            } else if(img) { img.remove(); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola)); 
         } catch(e) { console.log("Carregando perfil..."); } 
     },
@@ -329,6 +302,9 @@ const App = {
     },
 
     cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
+        // CADEADO DO PLANO
+        if (!App.verificarPermissao('whatsapp')) return;
+
         if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
         let numero = telefone.replace(/\D/g, ''); if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
         const msg = `🔔 LEMBRETE\nHello! Are you ok?\n\nVenceu em ${dataVencimento} a mensalidade do seu curso de inglês. Para realizar o pagamento, basta enviar o valor de R$ ${valorFmt} para o PIX CELULAR abaixo:\n\n(73) 98890-9273\nPTT CURSOS\nPaulo Sérgio Bispo Santana Júnior\nCORA\n\nObs.: Após o pagamento, por favor, enviar o comprovante para baixa no sistema.\n\n🙏 Agradeço desde já e desejo a você uma excelente dia! 😉✅`;
@@ -361,17 +337,23 @@ const App = {
         else { App.renderizarInicio(); }
     },
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
-    renderizarRelatorio: (t) => { if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
+    renderizarRelatorio: (t) => { 
+        // CADEADO DO PLANO
+        if (t === 'dossie' && !App.verificarPermissao('dossie')) return;
+        if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); 
+    },
     
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
-        const diasRestantes = 7; 
+        
+        const planoAtual = App.getPlanoAtual();
+        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:var(--success); background:rgba(39,174,96,0.1); padding:4px 10px; border-radius:20px;">Plano ${planoAtual} Ativo</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
                 <h2 style="margin: 0 0 10px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
-                <p style="font-size: 15px; color: #666; margin: 0 0 25px 0;">O seu plano atual é: <strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (${diasRestantes} dias restantes)</strong></p>
+                <p style="font-size: 15px; color: #666; margin: 0 0 25px 0;">O seu plano atual é: ${infoPlano}</p>
                 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
                     <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
@@ -391,7 +373,7 @@ const App = {
                     <div class="pricing-price">R$ 97<span>/mês</span></div>
                     <p class="pricing-desc">Para pequenos cursos e professores particulares.</p>
                     <ul class="pricing-features">
-                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 60 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
                 </div>
@@ -402,7 +384,7 @@ const App = {
                     <div class="pricing-price">R$ 147<span>/mês</span></div>
                     <p class="pricing-desc">A solução completa para acabar com a inadimplência.</p>
                     <ul class="pricing-features">
-                        <li>Até 300 Alunos Ativos</li><li>5 Acessos (Equipa Completa)</li><li>Gestão Pedagógica + Financeira</li><li><strong>Cobrança WhatsApp (1 Clique)</strong></li><li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 200 Alunos Ativos</li><li>5 Acessos (Equipa Completa)</li><li>Gestão Pedagógica + Financeira</li><li><strong>Cobrança WhatsApp (1 Clique)</strong></li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-solid" onclick="App.comprarPlano('Profissional', 'https://seulink.com/profissional')">Assinar Profissional</button>
                 </div>
@@ -426,7 +408,7 @@ const App = {
     },
 
     ativarNovoPlano: async () => {
-        const pin = document.getElementById('input-novo-pin').value.trim();
+        const pin = document.getElementById('input-novo-pin').value.trim().toUpperCase();
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
 
         const btn = document.querySelector('button[onclick="App.ativarNovoPlano()"]');
@@ -434,13 +416,45 @@ const App = {
 
         try {
             await new Promise(r => setTimeout(r, 1500)); 
-            App.showToast("🎉 PIN validado com sucesso! Bem-vindo ao novo plano.", "success");
+            
+            // INTELIGÊNCIA DO PIN: Deteta o plano com base na etiqueta do PIN gerado pelo CEO
+            let novoPlano = 'Profissional'; // Default se não conseguir detetar
+            if (pin.includes('PRE')) novoPlano = 'Premium';
+            else if (pin.includes('ESS')) novoPlano = 'Essencial';
+            else if (pin.includes('PRO')) novoPlano = 'Profissional';
+            
+            // Grava a licença no cofre blindado do cliente
+            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+
+            App.showToast(`🎉 PIN validado! O seu novo plano é: ${novoPlano}.`, "success");
             document.getElementById('input-novo-pin').value = '';
-            setTimeout(() => { App.renderizarInicio(); }, 2000);
+            setTimeout(() => { App.renderizarMeuPlano(); }, 2000);
         } catch(e) { App.showToast("PIN inválido ou já utilizado.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    abrirModalCadastro: (tipo, id) => {
+    abrirModalCadastro: async (tipo, id) => {
+        // CADEADO DE LIMITE DE ALUNOS
+        if (tipo === 'aluno' && !id) {
+            const plano = App.getPlanoAtual();
+            if (plano !== 'Premium') {
+                document.body.style.cursor = 'wait';
+                const alunos = await App.api('/alunos');
+                document.body.style.cursor = 'default';
+                const totalAlunos = Array.isArray(alunos) ? alunos.length : 0;
+                
+                if ((plano === 'Essencial' || plano === 'Teste') && totalAlunos >= 60) {
+                    App.showToast("⚠️ Limite de 60 alunos atingido! Faça o upgrade para o plano Profissional para continuar a crescer.", "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 1500);
+                    return;
+                }
+                if (plano === 'Profissional' && totalAlunos >= 200) {
+                    App.showToast("⚠️ Limite de 200 alunos atingido! Faça o upgrade para o plano Premium para ter alunos ilimitados.", "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 1500);
+                    return;
+                }
+            }
+        }
+
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
         else { alert("O módulo de cadastros ainda não foi carregado. Tente recarregar a página."); }
     },
@@ -527,7 +541,9 @@ const App = {
             
             let botoes = [];
             if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${nomeSeguro}')`, 'Registrar Venda'));
-            if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
+            
+            // CADEADO WHATSAPP NA TABELA DE FINANCEIRO
+            if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
             botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
             botoes.push(TB.btn('🗑️', '#e74c3c', `App.excluir('${epExcluir}', '${item.id}')`, 'Excluir'));
@@ -620,7 +636,6 @@ const App = {
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...'; 
         try { 
-            // LER DIRETAMENTE DA API PARA EVITAR CONTAMINAÇÃO
             const escola = await App.api('/escola'); 
             if(!escola) return;
             const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
@@ -756,7 +771,6 @@ const App = {
                 localStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); 
                 localStorage.setItem('token_acesso', response.token); 
                 
-                // NOVO: Carrega as preferências ISOLADAS antes de renderizar
                 App.aplicarTemaSalvo();
                 const keyAtalhos = App.getTenantKey('escola_atalhos');
                 if (!localStorage.getItem(keyAtalhos)) {
@@ -771,7 +785,6 @@ const App = {
     },
 
     logout: () => {
-        // Varredura de Segurança: Reseta o tema para o padrão do CSS
         document.documentElement.removeAttribute('style');
 
         App.usuario = null; 
