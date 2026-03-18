@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V135 - FEATURE TOGGLES E LIMITES SAAS)
+// SISTEMA ESCOLAR - APP.JS (V136 - ISOLAMENTO DE USUÁRIOS)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -33,7 +33,7 @@ const App = {
 
     verificarPermissao: (funcionalidade) => {
         const plano = App.getPlanoAtual();
-        if (plano === 'Premium') return true; // Premium tem acesso a tudo
+        if (plano === 'Premium') return true; 
         
         if (funcionalidade === 'whatsapp') {
             if (plano === 'Essencial' || plano === 'Teste') {
@@ -302,7 +302,6 @@ const App = {
     },
 
     cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
-        // CADEADO DO PLANO
         if (!App.verificarPermissao('whatsapp')) return;
 
         if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
@@ -338,7 +337,6 @@ const App = {
     },
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { 
-        // CADEADO DO PLANO
         if (t === 'dossie' && !App.verificarPermissao('dossie')) return;
         if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); 
     },
@@ -417,13 +415,11 @@ const App = {
         try {
             await new Promise(r => setTimeout(r, 1500)); 
             
-            // INTELIGÊNCIA DO PIN: Deteta o plano com base na etiqueta do PIN gerado pelo CEO
-            let novoPlano = 'Profissional'; // Default se não conseguir detetar
+            let novoPlano = 'Profissional';
             if (pin.includes('PRE')) novoPlano = 'Premium';
             else if (pin.includes('ESS')) novoPlano = 'Essencial';
             else if (pin.includes('PRO')) novoPlano = 'Profissional';
             
-            // Grava a licença no cofre blindado do cliente
             localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
 
             App.showToast(`🎉 PIN validado! O seu novo plano é: ${novoPlano}.`, "success");
@@ -433,7 +429,6 @@ const App = {
     },
 
     abrirModalCadastro: async (tipo, id) => {
-        // CADEADO DE LIMITE DE ALUNOS
         if (tipo === 'aluno' && !id) {
             const plano = App.getPlanoAtual();
             if (plano !== 'Premium') {
@@ -542,7 +537,6 @@ const App = {
             let botoes = [];
             if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${nomeSeguro}')`, 'Registrar Venda'));
             
-            // CADEADO WHATSAPP NA TABELA DE FINANCEIRO
             if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
             botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
@@ -559,7 +553,13 @@ const App = {
         const campoSenha = (id, label) => `<div class="input-group" style="position:relative;"><label>${label}</label><input type="password" id="${id}" style="width:100%; padding-right:40px;"><span onclick="App.toggleSenhaVisibilidade('${id}')" style="position:absolute; right:12px; top:32px; cursor:pointer; font-size:16px; opacity:0.6; user-select:none;" title="Mostrar/Ocultar Senha">👁️</span></div>`;
 
         try { 
-            const usuarios = await App.api('/usuarios'); const listaUsers = Array.isArray(usuarios) ? usuarios : []; 
+            const usuariosResponse = await App.api('/usuarios'); 
+            const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
+            
+            // 🛡️ PENEIRA DE SEGURANÇA (MULTI-TENANT):
+            // Filtra para mostrar apenas o dono da conta E os funcionários que ELE criou.
+            const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
+
             div.innerHTML = `
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
@@ -619,6 +619,12 @@ const App = {
         if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha para o novo usuário.", "error");
 
         const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
+        
+        // 🛡️ CARIMBO DE PROPRIEDADE: Amarra o novo funcionário ao Dono atual
+        if (!App.idEdicaoUsuario) {
+            payload.donoId = App.usuario.id;
+        }
+
         const btn = document.getElementById('btn-save-user'); const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
         if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } document.body.style.cursor = 'wait';
 
