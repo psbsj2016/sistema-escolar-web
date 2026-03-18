@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V132 - AUTO-LOGIN E BIOMETRIA)
+// SISTEMA ESCOLAR - APP.JS (V134 - ISOLAMENTO MULTI-TENANT)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -21,9 +21,16 @@ const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
+    // --- NOVA BLINDAGEM DE DADOS (MULTI-TENANT) ---
+    getTenantKey: (chaveBase) => {
+        // Cria uma chave única para o cliente logado (ex: escola_tema_12345)
+        const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
+        return `${chaveBase}_${tenantId}`;
+    },
+
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
-        const token = localStorage.getItem('token_acesso'); // Agora usa localStorage
+        const token = localStorage.getItem('token_acesso');
         if (token) { headers['Authorization'] = `Bearer ${token}`; }
 
         const options = { method, headers };
@@ -47,14 +54,15 @@ const App = {
     fecharModal: () => {
         document.getElementById('modal-overlay').style.display = 'none';
         const btn = document.querySelector('.btn-confirm');
-        if(btn) { btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerText = "Salvar Registro"; }
+        if(btn) { btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
     },
 
     init: async () => {
-        App.aplicarTemaSalvo();
-        if (!localStorage.getItem('escola_atalhos')) { localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
-        
-        // AUTO-LOGIN E VERIFICAÇÃO DE BIOMETRIA
+        // 1. Limpeza de Segurança: Destrói chaves genéricas da versão antiga que causam contaminação
+        localStorage.removeItem('escola_tema');
+        localStorage.removeItem('escola_atalhos');
+        localStorage.removeItem('escola_perfil');
+
         const salvo = localStorage.getItem('usuario_logado');
         const token = localStorage.getItem('token_acesso');
         const bioId = localStorage.getItem('escola_bio_id');
@@ -62,30 +70,38 @@ const App = {
         if (salvo && token) { 
             App.usuario = JSON.parse(salvo); 
             
+            // 2. Aplica as configurações ISOLADAS deste utilizador
+            App.aplicarTemaSalvo();
+            const keyAtalhos = App.getTenantKey('escola_atalhos');
+            if (!localStorage.getItem(keyAtalhos)) { 
+                localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
+            }
+
             if (bioId && window.PublicKeyCredential) {
-                // Se tem biometria ativada, mostra a tela de login mas exige a digital
                 document.getElementById('tela-login').style.display = 'flex'; 
                 document.getElementById('tela-sistema').style.display = 'none';
                 document.getElementById('btn-biometria').style.display = 'block';
-                App.entrarComBiometria(); // Dispara o pedido de rosto/digital na hora
+                App.entrarComBiometria(); 
             } else {
-                // Se não tem biometria, entra direto automaticamente
                 App.entrarNoSistema(); 
             }
         } 
         else { 
+            // Limpa qualquer tema visual se for a tela de login
+            document.documentElement.removeAttribute('style');
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
         }
         
         const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
-        App.setupMobileMenu(); await App.carregarDadosEscola();
+        App.setupMobileMenu(); 
+        
+        if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass');
         if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
     },
 
-    // --- FUNÇÕES DE SEGURANÇA BIOMÉTRICA (WebAuthn) ---
     bufferToBase64: (buf) => {
         const bytes = new Uint8Array(buf); let str = '';
         for (let i = 0; i < bytes.byteLength; i++) { str += String.fromCharCode(bytes[i]); }
@@ -115,10 +131,7 @@ const App = {
             localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
             App.showToast("✅ Biometria ativada com sucesso!", "success");
             App.renderizarMinhaConta();
-        } catch (e) {
-            console.error(e);
-            App.showToast("Erro ao configurar. Verifique se tem FaceID/Digital ativo no dispositivo.", "error");
-        }
+        } catch (e) { console.error(e); App.showToast("Erro ao configurar. Verifique se tem FaceID/Digital ativo.", "error"); }
     },
 
     entrarComBiometria: async () => {
@@ -130,16 +143,9 @@ const App = {
             const assertion = await navigator.credentials.get({
                 publicKey: { challenge: challenge, allowCredentials: [{ type: "public-key", id: rawId }], userVerification: "required" }
             });
-            if (assertion) {
-                App.showToast("🔓 Identidade confirmada!", "success");
-                App.entrarNoSistema();
-            }
-        } catch (e) {
-            console.error(e);
-            App.showToast("Falha na validação. Por favor, insira a sua senha.", "error");
-        }
+            if (assertion) { App.showToast("🔓 Identidade confirmada!", "success"); App.entrarNoSistema(); }
+        } catch (e) { console.error(e); App.showToast("Falha na validação. Por favor, insira a sua senha.", "error"); }
     },
-    // --------------------------------------------------
 
     setupMobileMenu: () => {
         const header = document.querySelector('header');
@@ -157,7 +163,8 @@ const App = {
     },
 
     aplicarTemaSalvo: () => {
-        const tema = JSON.parse(localStorage.getItem('escola_tema'));
+        // Puxa o tema blindado para este cliente específico
+        const tema = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema')));
         if (tema) {
             const root = document.documentElement;
             if(tema.sidebarBg) root.style.setProperty('--sidebar-bg', tema.sidebarBg); 
@@ -167,6 +174,9 @@ const App = {
             if(tema.cardBg) root.style.setProperty('--card-bg', tema.cardBg); 
             if(tema.cardText) root.style.setProperty('--card-text', tema.cardText);
             if(tema.zoomLevel) root.style.setProperty('--zoom-level', tema.zoomLevel);
+        } else {
+            // Se não tem tema, limpa as variáveis injetadas para usar o default do CSS
+            document.documentElement.removeAttribute('style');
         }
     },
 
@@ -179,13 +189,13 @@ const App = {
 
     renderizarConfiguracoesAparencia: () => {
         App.setTitulo("Aparência do Sistema"); const div = document.getElementById('app-content'); const styles = getComputedStyle(document.documentElement);
-        const temaSalvo = JSON.parse(localStorage.getItem('escola_tema')) || {};
+        const temaSalvo = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema'))) || {};
         
         const c = { 
             sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim(),
             zoomAtual: temaSalvo.zoomLevel || '1'
         };
-        const atalhosSalvos = JSON.parse(localStorage.getItem('escola_atalhos')) || [];
+        const atalhosSalvos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos'))) || [];
 
         const blocoCores = `<div class="theme-section"><h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;"><div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}</div></div></div>`;
         const blocoAtalhos = `<div class="theme-section"><h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p><div class="shortcut-selector">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div></div>`;
@@ -203,7 +213,7 @@ const App = {
                 </div>
             </div>`;
 
-        const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 15px;">${App.UI.botao('SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '💾')}${App.UI.botao('RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '🔄')}</div>`;
+        const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 15px;">${App.UI.botao('💾 SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '')}${App.UI.botao('✖️ RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '')}</div>`;
         div.innerHTML = App.UI.card('🎨 Personalizar Aparência', 'Personalize as cores, zoom e atalhos da tela inicial.', blocoCores + blocoFonte + blocoAtalhos + blocoBotoes, '800px');
     },
 
@@ -212,10 +222,7 @@ const App = {
     
     validarLimiteAtalhos: (checkbox) => { 
         const checked = document.querySelectorAll('.sc-check:checked'); 
-        if (checked.length > 8) { 
-            checkbox.checked = false; 
-            App.showToast("O limite máximo é de 8 atalhos.", "warning"); 
-        } 
+        if (checked.length > 8) { checkbox.checked = false; App.showToast("O limite máximo é de 8 atalhos.", "warning"); } 
     },
 
     salvarTema: () => {
@@ -225,29 +232,49 @@ const App = {
             zoomLevel: document.getElementById('theme-zoom').value
         };
         const atalhos = Array.from(document.querySelectorAll('.sc-check:checked')).map(cb => cb.value);
-        
         if(atalhos.length === 0) return App.showToast("Selecione pelo menos 1 atalho.", "warning"); 
         if(atalhos.length > 8) return App.showToast("Máximo de 8 atalhos permitidos.", "warning");
         
-        localStorage.setItem('escola_tema', JSON.stringify(tema)); 
-        localStorage.setItem('escola_atalhos', JSON.stringify(atalhos)); 
+        localStorage.setItem(App.getTenantKey('escola_tema'), JSON.stringify(tema)); 
+        localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(atalhos)); 
         
-        App.aplicarTemaSalvo();
-        App.showToast("Configurações salvas com sucesso! 🎉", "success");
-        
+        App.aplicarTemaSalvo(); App.showToast("Configurações salvas com sucesso! 🎉", "success");
         setTimeout(() => { App.renderizarInicio(); }, 800);
     },
 
     resetarTema: () => { 
         if(!confirm("Deseja restaurar as cores e fontes padrão?")) return; 
-        localStorage.removeItem('escola_tema'); 
-        localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
-        document.documentElement.style.setProperty('--zoom-level', '1');
+        localStorage.removeItem(App.getTenantKey('escola_tema')); 
+        localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
+        document.documentElement.removeAttribute('style'); // Força a lavagem do visual
         App.showToast("Aparência restaurada com sucesso! 🔄", "success");
         setTimeout(() => { location.reload(); }, 1000);
     },
 
-    carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
+    carregarDadosEscola: async () => { 
+        try { 
+            // Agora lê SEMPRE da API fresca, e salva num cofre isolado
+            const escola = await App.api('/escola'); 
+            if(!escola) return;
+            const logoTitle = document.querySelector('.logo-area h2'); 
+            if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; 
+            const logoContainer = document.querySelector('.logo-area'); 
+            let img = logoContainer.querySelector('img'); 
+            
+            if(escola.foto && escola.foto.length > 50) { 
+                if(!img) { 
+                    img = document.createElement('img'); 
+                    img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; 
+                    logoContainer.insertBefore(img, logoContainer.firstChild); 
+                } 
+                img.src = escola.foto; 
+            } else if(img) {
+                img.remove();
+            }
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola)); 
+        } catch(e) { console.log("Carregando perfil..."); } 
+    },
+    
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
     
     renderizarInicio: async () => {
@@ -262,7 +289,7 @@ const App = {
             const inadimplentesList = listaFin.filter(f => f.status === 'Pendente' && new Date(f.vencimento + 'T00:00:00') < dataHoje).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
             const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            let idsAtalhos = JSON.parse(localStorage.getItem('escola_atalhos'));
+            let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
             if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
             const htmlAtalhos = idsAtalhos.map(id => { const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); return func ? `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>` : ''; }).join('');
 
@@ -439,7 +466,7 @@ const App = {
             </div>`;
         
         document.getElementById('modal-form-content').innerHTML = html;
-        const btnConfirm = document.querySelector('.btn-confirm'); btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); btnConfirm.innerText = "Registrar Venda";
+        const btnConfirm = document.querySelector('.btn-confirm'); btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); btnConfirm.innerHTML = "💾 Registrar Venda";
     },
 
     salvarVenda: async () => {
@@ -450,10 +477,10 @@ const App = {
         const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
         const payload = { id: Date.now().toString(), idCarne: `VENDA_${Date.now()}`, idAluno: idAluno, alunoNome: alunoNome, valor: valor, vencimento: data, status: status, descricao: descricaoFinal, tipo: 'Receita', dataGeracao: new Date().toLocaleDateString('pt-BR') };
 
-        const btn = document.querySelector('.btn-confirm'); const txtOriginal = btn ? btn.innerText : 'Registrar Venda';
-        if(btn) { btn.innerText = "Registrando... ⏳"; btn.disabled = true; } document.body.style.cursor = 'wait';
+        const btn = document.querySelector('.btn-confirm'); const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
+        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } document.body.style.cursor = 'wait';
 
-        try { await App.api('/financeiro', 'POST', payload); App.showToast("Venda registrada com sucesso!", "success"); App.fecharModal(); } catch (e) { App.showToast("Erro ao registrar venda.", "error"); } finally { if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
+        try { await App.api('/financeiro', 'POST', payload); App.showToast("Venda registrada com sucesso!", "success"); App.fecharModal(); } catch (e) { App.showToast("Erro ao registrar venda.", "error"); } finally { if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
     },
 
     renderizarLista: async (tipo) => {
@@ -543,7 +570,8 @@ const App = {
                                 <div class="input-group"><label>Tipo de Permissão</label><select id="new-tipo"><option value="Gestor">Gestor (Acesso Total)</option><option value="Secretaria">Secretaria (Sem Financeiro)</option><option value="Professor">Professor (Só Pedagógico)</option></select></div>
                             </div>
                             <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
-                                <button id="btn-cancel-user" onclick="App.cancelarEdicaoUsuario()" style="display:none; background:#95a5a6; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer;">CANCELAR</button><button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
+                                <button id="btn-cancel-user" class="btn-cancel" onclick="App.cancelarEdicaoUsuario()" style="display:none; margin-top:0;">✖️ CANCELAR</button>
+                                <button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
                             </div>
                         </div>
                         <div class="table-responsive-wrapper">
@@ -585,14 +613,18 @@ const App = {
         } catch(e) { App.showToast("Erro ao salvar usuário.", "error"); } finally { if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
     },
 
-    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-block"; },
+    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     excluirUsuario: async (id) => { if(confirm("Tem certeza que deseja excluir este usuário?")) { await App.api(`/usuarios/${id}`, 'DELETE'); App.showToast("Usuário excluído com sucesso.", "success"); App.renderizarMinhaConta(); } },
 
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...'; 
         try { 
-            const escola = await App.api('/escola'); const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
+            // LER DIRETAMENTE DA API PARA EVITAR CONTAMINAÇÃO
+            const escola = await App.api('/escola'); 
+            if(!escola) return;
+            const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
+            const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
             
             div.innerHTML = `
                 <div class="card" style="max-width:850px; margin:0 auto;">
@@ -617,13 +649,22 @@ const App = {
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
     },
 
-    processarLogo: () => { const fileInput = document.getElementById('conf-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione uma imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-preview').src = imgBase64; const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {}; const novoPerfil = { ...perfilAtual, foto: imgBase64 }; try { await App.api('/escola', 'PUT', novoPerfil); localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil)); App.carregarDadosEscola(); App.showToast("Logotipo salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
-    processarQrCode: () => { const fileInput = document.getElementById('conf-qr-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione a imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-qr-preview').src = imgBase64; const perfilAtual = JSON.parse(localStorage.getItem('escola_perfil')) || {}; const novoPerfil = { ...perfilAtual, qrCodeImagem: imgBase64 }; try { await App.api('/escola', 'PUT', novoPerfil); localStorage.setItem('escola_perfil', JSON.stringify(novoPerfil)); App.showToast("QR Code PIX salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
-    removerLogo: async () => { if(confirm("Apagar o logotipo?")){ const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; await App.api('/escola','PUT',{...s, foto: ""}); localStorage.setItem('escola_perfil', JSON.stringify({...s, foto: ""})); App.carregarDadosEscola(); document.getElementById('conf-preview').src = "https://placehold.co/100?text=LOGO"; App.showToast("Logotipo removido.", "info"); } },
-    removerQrCode: async () => { if(confirm("Apagar o QR Code?")){ const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; await App.api('/escola','PUT',{...s, qrCodeImagem: ""}); localStorage.setItem('escola_perfil', JSON.stringify({...s, qrCodeImagem: ""})); document.getElementById('conf-qr-preview').src = "https://placehold.co/100?text=QR+CODE"; App.showToast("QR Code removido.", "info"); } },
+    processarLogo: () => { const fileInput = document.getElementById('conf-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione uma imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-preview').src = imgBase64; try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola', 'PUT', { ...escolaAtual, foto: imgBase64 }); App.carregarDadosEscola(); App.showToast("Logotipo salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
+    processarQrCode: () => { const fileInput = document.getElementById('conf-qr-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione a imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-qr-preview').src = imgBase64; try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola', 'PUT', { ...escolaAtual, qrCodeImagem: imgBase64 }); App.showToast("QR Code PIX salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
+    removerLogo: async () => { if(confirm("Apagar o logotipo?")){ try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola','PUT',{ ...escolaAtual, foto: "" }); App.carregarDadosEscola(); document.getElementById('conf-preview').src = "https://placehold.co/100?text=LOGO"; App.showToast("Logotipo removido.", "info"); } catch(e) {} } },
+    removerQrCode: async () => { if(confirm("Apagar o QR Code?")){ try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola','PUT',{ ...escolaAtual, qrCodeImagem: "" }); document.getElementById('conf-qr-preview').src = "https://placehold.co/100?text=QR+CODE"; App.showToast("QR Code removido.", "info"); } catch(e) {} } },
 
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
-    salvarConfiguracoes: async () => { const s = JSON.parse(localStorage.getItem('escola_perfil')) || {}; const p = { ...s, nome: document.getElementById('conf-nome').value, cnpj: document.getElementById('conf-cnpj').value, banco: document.getElementById('conf-banco').value, chavePix: document.getElementById('conf-pix').value }; const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true; try { await App.api('/escola','PUT',p); localStorage.setItem('escola_perfil', JSON.stringify(p)); App.showToast("Configurações atualizadas!", "success"); App.carregarDadosEscola(); } catch(e) { App.showToast("Erro ao salvar.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } },   
+    salvarConfiguracoes: async () => { 
+        const p = { nome: document.getElementById('conf-nome').value, cnpj: document.getElementById('conf-cnpj').value, banco: document.getElementById('conf-banco').value, chavePix: document.getElementById('conf-pix').value }; 
+        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true; 
+        try { 
+            const escolaAtual = await App.api('/escola') || {};
+            await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
+            App.carregarDadosEscola();
+            App.showToast("Configurações atualizadas!", "success"); 
+        } catch(e) { App.showToast("Erro ao salvar.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
+    },   
 
     mascaraCPF: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; },
     mascaraCelular: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d)(\d{4})$/, "$1-$2"); i.value = v; },
@@ -668,7 +709,7 @@ const App = {
             const entidades = ['alunos', 'turmas', 'cursos', 'financeiro', 'eventos', 'chamadas', 'avaliacoes', 'planejamentos'];
             for (const ent of entidades) { const dados = await App.api(`/${ent}`); if (Array.isArray(dados) && dados.length > 0) { await Promise.all(dados.map(item => App.api(`/${ent}/${item.id}`, 'DELETE'))); } }
             await App.api('/escola', 'PUT', { nome: 'Nome da Escola', cnpj: '', foto: '', qrCodeImagem: '', banco: '', chavePix: '' });
-            localStorage.removeItem('escola_perfil'); alert("✅ Sistema resetado com sucesso!"); location.reload();
+            localStorage.removeItem(App.getTenantKey('escola_perfil')); alert("✅ Sistema resetado com sucesso!"); location.reload();
         } catch (e) { alert("Erro ao limpar dados."); if(btn) { btn.disabled = false; btn.innerText = "🗑️ RESETAR TUDO"; } } finally { document.body.style.cursor = 'default'; }
     },
 
@@ -712,8 +753,16 @@ const App = {
             const response = await App.api('/auth/login', 'POST', { login: userStr, senha: passStr });
             if (response && response.success) { 
                 App.usuario = response.usuario; 
-                localStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); // Agora usa localStorage
+                localStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); 
                 localStorage.setItem('token_acesso', response.token); 
+                
+                // NOVO: Carrega as preferências ISOLADAS antes de renderizar
+                App.aplicarTemaSalvo();
+                const keyAtalhos = App.getTenantKey('escola_atalhos');
+                if (!localStorage.getItem(keyAtalhos)) {
+                    localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']));
+                }
+
                 App.entrarNoSistema(); 
                 App.showToast('Bem-vindo ao sistema!', 'success'); 
             } 
@@ -722,10 +771,12 @@ const App = {
     },
 
     logout: () => {
+        // Varredura de Segurança: Reseta o tema para o padrão do CSS
+        document.documentElement.removeAttribute('style');
+
         App.usuario = null; 
-        localStorage.removeItem('usuario_logado'); // Remove o login
-        localStorage.removeItem('token_acesso'); // Remove a chave de segurança
-        // Não removemos o 'escola_bio_id' para que a opção da biometria continue visível se ele quiser entrar depois
+        localStorage.removeItem('usuario_logado'); 
+        localStorage.removeItem('token_acesso'); 
         
         document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
         document.getElementById('tela-sistema').style.display = 'none';
