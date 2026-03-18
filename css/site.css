@@ -1,19 +1,16 @@
 /* =========================================================
-   SISTEMA ESCOLAR - DESIGN V119 (UX PREMIUM E BOTÕES)
+   SISTEMA ESCOLAR - DESIGN V138 (UX PREMIUM E BOLETOS)
    ========================================================= */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 :root {
-    /* --- VARIÁVEIS DO TEMA --- */
     --sidebar-bg: #2c3e50;
     --sidebar-text: #ffffff;
     --body-bg: #f0f2f5;
     --text-main: #333333;
     --card-bg: #ffffff;
     --card-text: #333333;
-    
-    /* Cores de Estado */
     --accent: #3498db;
     --success: #27ae60;
     --warning: #f39c12;
@@ -24,11 +21,7 @@
 }
 
 * { box-sizing: border-box; outline: none; }
-
-/* ZOOM GLOBAL */
 html { zoom: var(--zoom-level, 1); }
-
-/* LAYOUT TELA */
 body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-color: var(--body-bg); color: var(--text-main); height: 100vh; width: 100vw; overflow: hidden; }
 
 /* MENU LATERAL */
@@ -45,7 +38,6 @@ body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background-col
 .submenu { list-style: none; padding: 0; background: rgba(0,0,0,0.2); }
 .submenu button { opacity: 0.7; font-size: 14px !important; padding: 12px 25px 12px 45px !important; }
 .submenu button:hover { opacity: 1; padding-left: 50px !important; }
-
 .btn-sair { padding: 15px; background: var(--danger); color: white; border: none; font-weight: 600; cursor: pointer; flex-shrink: 0; font-size: 15px; }
 
 /* ÁREA PRINCIPAL */
@@ -55,7 +47,6 @@ header h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--accent); 
 
 .mobile-menu-btn { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--card-text); margin-right: 15px; }
 .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 900; }
-
 #app-content { flex: 1; padding: 40px; overflow-y: auto; height: 100%; scroll-behavior: smooth; }
 
 /* UI ELEMENTS */
@@ -89,15 +80,10 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 .btn-new-modern { background: var(--success); color: white; border: none; padding: 0 25px; height: 52px; border-radius: 8px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; }
 .btn-primary { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: 600; margin-top: 10px; }
 
-/* NOVOS ESTILOS DE BOTÕES DE CONFIRMAÇÃO E CANCELAMENTO */
-.btn-confirm { 
-    background: var(--success); color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; margin-left: 10px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; 
-}
+.btn-confirm { background: var(--success); color: white; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600; margin-left: 10px; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
 .btn-confirm:hover { background: #219a52; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
 
-.btn-cancel { 
-    background: transparent; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
-}
+.btn-cancel { background: transparent; color: #64748b; border: 1px solid #cbd5e1; padding: 10px 20px; border-radius: 6px; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-cancel:hover { background: #f8fafc; border-color: #94a3b8; color: #334155; transform: translateY(-1px); }
 
 /* MODAL */
@@ -145,7 +131,7 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 .btn-buy-solid { background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
 .btn-buy-solid:hover { background: #2980b9; }
 
-/* --- NOTIFICAÇÕES TOAST --- */
+/* TOAST */
 #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
 .toast { min-width: 280px; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; animation: slideIn 0.3s ease forwards; border-left: 5px solid #333; font-size: 14px; font-weight: 500; opacity: 0; }
 .toast.success { border-left-color: #27ae60; color: #2c3e50; } 
@@ -156,7 +142,7 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 @keyframes fadeOut { to { transform: translateX(10px); opacity: 0; } }
 
 /* =========================================================
-   🖨️ ESTILOS DE IMPRESSÃO
+   🖨️ ESTILOS DE IMPRESSÃO (RELATÓRIOS GERAIS E DOSSIÊ)
    ========================================================= */
 @media print {
     @page { size: A4; margin: 10mm; }
@@ -165,48 +151,19 @@ tr:hover td { background: rgba(0,0,0,0.01); }
     .sidebar, header, .no-print, .modal-overlay, button, .toolbar, .card:not(.print-mode), .mobile-menu-btn, #toast-container, #pwa-install-banner { display: none !important; }
     .content, #app-content { margin: 0 !important; padding: 0 !important; overflow: visible !important; height: auto !important; display: block !important; }
     .print-sheet { position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; }
-    .carne-row, tr, .kpi-card, .inad-card-top, .doc-section, .dossie-section-title { page-break-inside: avoid !important; break-inside: avoid !important; }
+    tr, .kpi-card, .doc-section, .dossie-section-title { page-break-inside: avoid !important; break-inside: avoid !important; }
     table { page-break-inside: auto; }
     thead { display: table-header-group; }
     tfoot { display: table-footer-group; }
-    .doc-table th { background-color: #eee !important; color: #000 !important; }
-    .carne-row { height: auto !important; min-height: 68mm; border: 2px solid #000 !important; margin-bottom: 5mm !important; }
-    .carne-instructions, .doc-section, .dossie-section-title, .progress-bg { background-color: #eee !important; color: #000 !important; }
-    .badge-recibo { background-color: #000 !important; color: #fff !important; }
-    .progress-fill { background-color: var(--accent) !important; }
 }
 
-/* =========================================================
-   VISUAL DOCS TELA
-   ========================================================= */
 .print-sheet { background: white; width: 210mm; min-height: 297mm; padding: 10mm; margin: 20px auto; box-shadow: 0 0 15px rgba(0,0,0,0.1); font-family: 'Roboto', 'Arial', sans-serif; color: black; box-sizing: border-box; border: 1px solid #eee; }
-.carne-row { display: flex; width: 100%; height: 260px; border: 1px solid #000; margin-bottom: 10px; color: black; }
-.carne-canhoto { width: 30%; border-right: 1px dashed #000; padding: 5px; font-size: 9px; display: flex; flex-direction: column; justify-content: space-between; }
-.carne-recibo { width: 70%; padding: 5px 8px; display: flex; flex-direction: column; position: relative; }
 .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
 .doc-table td, .doc-table th { border: 1px solid #000; padding: 6px; font-size: 12px; color: #000; }
 .doc-table th { background-color: #eee; font-weight: bold; }
 .doc-section { background: #eee; border: 1px solid #000; padding: 5px; font-weight: bold; font-size: 13px; margin-top: 15px; text-transform: uppercase; }
-.plan-input-print { border: none; width: 100%; font-family: inherit; font-size: 12px; background: transparent; }
-.dossie-section-title { background: #f4f6f7; border-left: 5px solid #2c3e50; padding: 10px; font-weight: bold; color: #2c3e50; text-transform: uppercase; margin: 25px 0 15px 0; font-size: 14px; }
-.kpi-container { display: flex; gap: 15px; margin-bottom: 30px; }
-.kpi-card { flex: 1; border: 1px solid #ddd; border-radius: 5px; padding: 15px; text-align: center; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-.carne-logo-img { height: 25px; object-fit: contain; }
-.carne-header-box { text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 2px; }
-.carne-inst-name { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-.carne-inst-cnpj { font-size: 8px; }
-.carne-label { font-size: 7px; color: #555; text-transform: uppercase; display: block; line-height: 1; margin-bottom: 1px; }
-.carne-value { font-size: 10px; font-weight: bold; color: #000; display: block; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.carne-instructions { background: #f9f9f9; border: 1px solid #ddd; padding: 4px; font-size: 9px; height: 40px; margin-bottom: 2px; line-height: 1.2; }
-.carne-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; }
-.carne-payer { width: 65%; font-size: 9px; }
-.carne-qr { width: 30%; text-align: center; }
-.badge-recibo { background: #000; color: #fff; font-size: 8px; font-weight: bold; padding: 2px 6px; border-radius: 2px; position: absolute; top: 5px; right: 5px; }
-.doc-header { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
 
-/* =========================================================
-   VISUAL DO CALENDÁRIO (ESTILO GOOGLE AGENDA)
-   ========================================================= */
+/* CALENDÁRIO */
 #calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px !important; background-color: #ecf0f1; border: 1px solid #ecf0f1; border-radius: 8px; overflow: hidden; }
 .cal-day { background: #ffffff; min-height: 100px; padding: 5px; cursor: pointer; transition: background 0.2s; display: flex; flex-direction: column; gap: 3px; }
 .cal-day:hover { background: #f9f9f9; }
