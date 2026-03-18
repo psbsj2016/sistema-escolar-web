@@ -2,15 +2,19 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistema Escolar - Gestão</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gestão Escolar">
     <link rel="apple-touch-icon" href="assets/favicon.jpg?v=2">
-<link rel="icon" href="assets/favicon.jpg?v=2" type="image/jpeg">
+    <link rel="icon" href="assets/favicon.jpg?v=2" type="image/jpeg">
 
     <link rel="stylesheet" href="css/site.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    
 </head>
 <body>
 
@@ -31,10 +35,10 @@
             </form>
         
         <p style="text-align: center; margin-top: 20px; font-size: 14px;">
-    Nova instituição? <a href="#" onclick="event.preventDefault(); App.abrirTelaCadastroInst()" style="color: var(--accent); text-decoration: none; font-weight: bold;">Criar Cadastro no Sistema</a>
-</p>
+            Nova instituição? <a href="#" onclick="event.preventDefault(); App.abrirTelaCadastroInst()" style="color: var(--accent); text-decoration: none; font-weight: bold;">Criar Cadastro no Sistema</a>
+        </p>
+        </div>
     </div>
-</div>
 
     <div id="tela-sistema" style="display: none;">
         
@@ -130,58 +134,77 @@
         </div>
     </div>
 
-<div id="modal-cadastro-inst" class="modal-overlay" style="display: none;">
-    <div class="modal-box" style="max-width: 400px; margin: 5% auto; text-align: center; padding: 30px; position: relative;">
-        <span onclick="App.fecharModalInst()" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #888;">&times;</span>
-        
-        <div id="etapa-1-email">
-            <h2 style="color: var(--accent); margin-bottom: 10px;">🏢 Nova Instituição</h2>
-            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Insira o e-mail oficial da escola para receber o código de verificação.</p>
+    <div id="modal-cadastro-inst" class="modal-overlay" style="display: none;">
+        <div class="modal-box" style="max-width: 400px; margin: 5% auto; text-align: center; padding: 30px; position: relative;">
+            <span onclick="App.fecharModalInst()" style="position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #888;">&times;</span>
             
-            <div class="input-group" style="text-align: left;">
-                <label>E-mail da Instituição</label>
-                <input type="email" id="novo-inst-email" placeholder="escola@email.com">
+            <div id="etapa-1-email">
+                <h2 style="color: var(--accent); margin-bottom: 10px;">🏢 Nova Instituição</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Insira o e-mail oficial da escola para receber o código de verificação.</p>
+                
+                <div class="input-group" style="text-align: left;">
+                    <label>E-mail da Instituição</label>
+                    <input type="email" id="novo-inst-email" placeholder="escola@email.com">
+                </div>
+                
+                <button onclick="App.enviarCodigoInst()" class="btn-primary" style="width: 100%; margin-top: 15px;">Enviar Código</button>
             </div>
-            
-            <button onclick="App.enviarCodigoInst()" class="btn-primary" style="width: 100%; margin-top: 15px;">Enviar Código</button>
-        </div>
 
-        <div id="etapa-2-validacao" style="display: none;">
-            <h2 style="color: var(--accent); margin-bottom: 10px;">🔐 Verificação</h2>
-            <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Enviamos um código para o seu e-mail. Digite-o abaixo junto com o seu PIN Exclusivo de liberação.</p>
-            
-            <div class="input-group" style="text-align: left;">
-                <label>Código recebido no E-mail</label>
-                <input type="text" id="novo-inst-codigo" placeholder="Ex: 845921" style="text-align: center; font-size: 18px; letter-spacing: 2px;">
+            <div id="etapa-2-validacao" style="display: none;">
+                <h2 style="color: var(--accent); margin-bottom: 10px;">🔐 Verificação</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Enviamos um código para o seu e-mail. Digite-o abaixo junto com o seu PIN Exclusivo de liberação.</p>
+                
+                <div class="input-group" style="text-align: left;">
+                    <label>Código recebido no E-mail</label>
+                    <input type="text" id="novo-inst-codigo" placeholder="Ex: 845921" style="text-align: center; font-size: 18px; letter-spacing: 2px;">
+                </div>
+                
+                <div class="input-group" style="text-align: left; margin-top: 15px;">
+                    <label>PIN Exclusivo do Gestor</label>
+                    <input type="password" id="novo-inst-pin" placeholder="****" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
+                </div>
+                
+                <button onclick="App.validarCadastroInst()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" style="width: 100%; margin-top: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
+        🚀 Validar e Ativar Sistema
+    </button>
+                <p style="margin-top: 15px; font-size: 12px;"><a href="#" onclick="App.voltarEtapa1()" style="color: #888;">Voltar e corrigir e-mail</a></p>
             </div>
-            
-            <div class="input-group" style="text-align: left; margin-top: 15px;">
-                <label>PIN Exclusivo do Gestor</label>
-                <input type="password" id="novo-inst-pin" placeholder="****" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
+
+            <div id="etapa-3-sucesso" style="display: none;">
+                <img src="https://cdn-icons-png.flaticon.com/512/1903/1903112.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
+                <h2 style="color: #27ae60; margin-bottom: 10px;">🎉 Bem-vindo(a)!</h2>
+                <p style="color: #444; margin-bottom: 20px; font-size: 15px; line-height: 1.5;">
+                    O seu sistema escolar está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
+                </p>
+                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
+                    Seu usuário de acesso inicial é: <strong>admin</strong><br>
+                    Sua senha temporária é: <strong>123</strong>
+                </p>
+                
+                <button onclick="App.fecharModalInst(); document.getElementById('login-user').focus();" class="btn-primary" style="width: 100%;">Fazer meu Primeiro Login</button>
             </div>
-            
-            <button onclick="App.validarCadastroInst()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" style="width: 100%; margin-top: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
-    🚀 Validar e Ativar Sistema
-</button>
-            <p style="margin-top: 15px; font-size: 12px;"><a href="#" onclick="App.voltarEtapa1()" style="color: #888;">Voltar e corrigir e-mail</a></p>
-        </div>
 
-        <div id="etapa-3-sucesso" style="display: none;">
-            <img src="https://cdn-icons-png.flaticon.com/512/1903/1903112.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
-            <h2 style="color: #27ae60; margin-bottom: 10px;">🎉 Bem-vindo(a)!</h2>
-            <p style="color: #444; margin-bottom: 20px; font-size: 15px; line-height: 1.5;">
-                O seu sistema escolar está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
-            </p>
-            <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
-                Seu usuário de acesso inicial é: <strong>admin</strong><br>
-                Sua senha temporária é: <strong>123</strong>
-            </p>
-            
-            <button onclick="App.fecharModalInst(); document.getElementById('login-user').focus();" class="btn-primary" style="width: 100%;">Fazer meu Primeiro Login</button>
         </div>
-
     </div>
-</div>
+
+    <div id="pwa-install-banner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999; text-align: center; border-left: 5px solid #3498db; font-family: 'Poppins', sans-serif;">
+        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📲 Instalar a App</h3>
+        <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Deseja instalar o sistema no seu telemóvel para um acesso rápido e em ecrã inteiro?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="pwa-btn-cancel" style="padding: 10px 15px; border: none; background: #ecf0f1; color: #7f8c8d; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Agora Não</button>
+            <button id="pwa-btn-install" style="padding: 10px 15px; border: none; background: #3498db; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Instalar App</button>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('✅ Service Worker registado com sucesso.'))
+                    .catch(err => console.log('❌ Erro ao registar o Service Worker.', err));
+            });
+        }
+    </script>
 
     <script src="js/app.js?v=2"></script>
     <script src="js/modulos/financeiro.js"></script>
