@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V113 (REESTRUTURADO EM COMPONENTES)
+// MÓDULO PEDAGÓGICO V114 (RESPONSIVO + CALENDÁRIO GOOGLE UX)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -466,7 +466,7 @@ App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registo?
 App.editarLancamentoChamada = async (id) => { const registro = await App.api(`/chamadas/${id}`); document.getElementById('cham-aluno').value = registro.idAluno; document.getElementById('cham-data').value = registro.data; document.getElementById('cham-status').value = registro.status; document.getElementById('cham-duracao').value = registro.duracao; App.idEdicaoChamada = id; document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]'); btn.innerText = "💾 ATUALIZAR LANÇAMENTO"; btn.style.background = "#f39c12"; };
 
 // ---------------------------------------------------------
-// 5. CALENDÁRIO
+// 5. CALENDÁRIO (NOVO ESTILO GOOGLE AGENDA)
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
     App.setTitulo("Calendário");
@@ -478,22 +478,23 @@ App.renderizarCalendarioPro = async () => {
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; 
         const mesNome = meses[App.calendarState.month]; const ano = App.calendarState.year; 
         
+        // NOVA ESTRUTURA DO CALENDÁRIO COM CLASSES CSS LIMPAS
         const gridCalendario = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer;">◀</button>
-                <h2 style="margin:0; color:#2c3e50; text-transform:uppercase;">${mesNome} ${ano}</h2>
-                <button onclick="App.mudarMes(1)" style="background:none; border:none; font-size:24px; cursor:pointer;">▶</button>
+                <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
+                <h2 style="margin:0; color:#2c3e50; text-transform:uppercase; font-size:22px;">${mesNome} ${ano}</h2>
+                <button onclick="App.mudarMes(1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">▶</button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #e74c3c; margin-bottom: 10px;">
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; font-size:12px; text-transform:uppercase;">
                 <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
             </div>
-            <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+            <div id="calendar-grid">
                 ${App.gerarDiasCalendario(App.calendarState.month, App.calendarState.year, eventos)}
             </div>
         `;
 
         const formEvento = `
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerir Evento</h3></div>
+            <div id="box-gerir-evento" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerir Evento</h3></div>
             <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
                 ${col('Data:', 'evt-data', 'date')}
                 ${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">🟢 Evento</option><option value="Feriado">🔴 Feriado</option><option value="Prova">🔵 Prova</option><option value="Reunião">🟠 Reunião</option>')}
@@ -526,10 +527,66 @@ App.renderizarCalendarioPro = async () => {
     } catch(e) { div.innerHTML = "Erro ao carregar calendário."; } 
 };
 
-App.gerarDiasCalendario = (mes, ano, eventos) => { const startDay = new Date(ano, mes, 1).getDay(); const daysInMonth = new Date(ano, mes + 1, 0).getDate(); let html = ''; for(let i=0; i<startDay; i++) html += `<div style="height:100px; border:1px solid #eee; background:#fdfdfd;"></div>`; for(let d=1; d<=daysInMonth; d++){ const dataISO = new Date(ano, mes, d).toISOString().split('T')[0]; const isHoje = (d === new Date().getDate() && mes === new Date().getMonth() && ano === new Date().getFullYear()); const evs = eventos.filter(e => e.data === dataISO); const tags = evs.map(e => `<div style="background:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}; color:white; font-size:10px; padding:2px 4px; border-radius:3px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.descricao}</div>`).join(''); html += `<div onclick="App.selecionarDia('${dataISO}')" style="${isHoje?'border:2px solid #2ecc71; background:#eafaf1;':'border:1px solid #eee; background:white;'} height:100px; padding:5px; cursor:pointer;"><div style="text-align:right; font-weight:bold; color:#555;">${d}</div>${tags}</div>`; } return html; };
+// NOVA LÓGICA DE DESENHO DOS DIAS (LIMPO E ARREDONDADO)
+App.gerarDiasCalendario = (mes, ano, eventos) => { 
+    const startDay = new Date(ano, mes, 1).getDay(); 
+    const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
+    let html = ''; 
+    
+    // Espaços vazios antes do dia 1
+    for(let i=0; i<startDay; i++) {
+        html += `<div style="background:#f8f9fa;"></div>`; 
+    }
+    
+    // Desenha os dias
+    for(let d=1; d<=daysInMonth; d++){ 
+        // Formata data ISO com segurança (ex: 2026-03-05)
+        const dataISO = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
+        
+        // Verifica se é o dia de hoje para colocar o Círculo Azul
+        const hojeObj = new Date();
+        const isHoje = (d === hojeObj.getDate() && mes === hojeObj.getMonth() && ano === hojeObj.getFullYear()); 
+        
+        // Busca eventos do dia e cria as pílulas arredondadas
+        const evs = eventos.filter(e => e.data === dataISO); 
+        const tags = evs.map(e => `<div class="cal-event-pill" style="background:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">${e.descricao}</div>`).join(''); 
+        
+        // Monta o quadrado do dia
+        html += `<div id="cal-day-${dataISO}" class="cal-day ${isHoje?'today':''}" onclick="App.selecionarDia('${dataISO}')">
+                    <div class="cal-day-num">${d}</div>
+                    ${tags}
+                 </div>`; 
+    } 
+    return html; 
+};
+
 App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${e.inicio||'-'}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${e.tipo}</td><td style="padding:10px;">${e.descricao}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px; border-radius:4px; margin-right:5px;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px; border-radius:4px;">🗑️</button></td></tr>`).join(''); };
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
-App.selecionarDia = (dt) => { document.getElementById('evt-data').value = dt; document.getElementById('evt-desc').focus(); App.idEdicaoEvento=null; };
+
+// NOVA LÓGICA DE UX DE CLIQUE (SELECIONAR E DESLIZAR)
+App.selecionarDia = (dt) => { 
+    // 1. Remove o foco de todos os dias
+    document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
+    
+    // 2. Adiciona borda verde bonita no dia que o utilizador clicou
+    const diaAtivo = document.getElementById(`cal-day-${dt}`);
+    if(diaAtivo) diaAtivo.classList.add('selected');
+    
+    // 3. Preenche a data no formulário
+    const dataInput = document.getElementById('evt-data');
+    dataInput.value = dt; 
+    
+    // 4. Limpa edição anterior e foca na descrição
+    const descInput = document.getElementById('evt-desc');
+    descInput.value = '';
+    App.idEdicaoEvento = null; 
+    
+    // 5. A MAGIA: Desliza o ecrã suavemente até ao formulário!
+    setTimeout(() => {
+        document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        descInput.focus();
+    }, 100);
+};
 
 App.salvarEvento = async () => { 
     const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
@@ -548,6 +605,6 @@ App.salvarEvento = async () => {
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
-App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; };
+App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 App.excluirEvento = async (id) => { if(confirm("Excluir?")){ await App.api(`/eventos/${id}`, 'DELETE'); App.renderizarCalendarioPro(); }};
 App.limparFormEvento = () => { document.getElementById('evt-desc').value=''; App.idEdicaoEvento=null; };
