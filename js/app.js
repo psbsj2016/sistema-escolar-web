@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V126 - RESPONSIVO E SEGURO)
+// SISTEMA ESCOLAR - APP.JS (V127 - DASHBOARD INTERATIVO)
 // =========================================================
 
 // ATENÇÃO: Quando publicar, altere esta URL para o endereço do seu servidor na nuvem
@@ -104,7 +104,7 @@ const App = {
             });
         }
 
-        // --- GATILHO SECRETO DO PAINEL MASTER (NO LUGAR CORRETO) ---
+        // --- GATILHO SECRETO DO PAINEL MASTER ---
         const tituloPortal = document.querySelector('.login-box h1');
         if (tituloPortal) {
             tituloPortal.style.cursor = 'pointer';
@@ -156,9 +156,6 @@ const App = {
         }
     },
 
-    // =========================================================
-    // FÁBRICA DE COMPONENTES VISUAIS (FASE 1 - ESCALABILIDADE)
-    // =========================================================
     UI: {
         card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `
             <div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">
@@ -268,53 +265,49 @@ const App = {
     },
     resetarTema: () => { if(!confirm("Restaurar padrão?")) return; localStorage.removeItem('escola_tema'); localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); location.reload(); },
 
-    // --- CARREGAMENTO DE DADOS ---
     carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; }; },
     
-// --- 2. DASHBOARD COM GRÁFICO E FORMATO BRASILEIRO ---
+    // =========================================================
+    // 2. DASHBOARD COM GRÁFICO, MÉTRICAS E WHATSAPP COBRANÇA
+    // =========================================================
     renderizarInicio: async () => {
         App.setTitulo("Visão Geral");
         const div = document.getElementById('app-content'); 
-        div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel...</p>';
+        div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         
         try {
-            // 1. Busca dados
-            const [alunos, financeiro] = await Promise.all([
+            // 1. Busca todos os dados para o Dashboard
+            const [alunos, financeiro, turmas, cursos] = await Promise.all([
                 App.api('/alunos'), 
-                App.api('/financeiro')
+                App.api('/financeiro'),
+                App.api('/turmas'),
+                App.api('/cursos')
             ]);
             
             const listaAlunos = Array.isArray(alunos) ? alunos : [];
             const listaFin = Array.isArray(financeiro) ? financeiro : [];
+            const listaTurmas = Array.isArray(turmas) ? turmas : [];
+            const listaCursos = Array.isArray(cursos) ? cursos : [];
             
             // 2. Cálculos Financeiros (Mês Atual)
             const dataHoje = new Date(); 
             const mesAtual = dataHoje.getMonth() + 1; 
             const anoAtual = dataHoje.getFullYear();
             
-            // Filtra só o que vence neste mês/ano
             const financasMes = listaFin.filter(f => { 
                 if(!f.vencimento) return false;
                 const parts = f.vencimento.split('-'); 
                 return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual; 
             });
             
-            // Soma Recebido vs Pendente
-            const totalRecebido = financasMes
-                .filter(f => f.status === 'Pago')
-                .reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
-                
-            const totalPendente = financasMes
-                .filter(f => f.status !== 'Pago')
-                .reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
+            const totalRecebido = financasMes.filter(f => f.status === 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
+            const totalPendente = financasMes.filter(f => f.status !== 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
 
-            const inadimplentes = listaFin.filter(f => f.status === 'Pendente' && new Date(f.vencimento) < new Date()).length;
+            // Filtra os inadimplentes (Antes de hoje e status Pendente) e ordena do mais antigo ao mais recente
+            const inadimplentesList = listaFin.filter(f => f.status === 'Pendente' && new Date(f.vencimento + 'T00:00:00') < dataHoje).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
             
-            // Função rápida para formatar R$ no padrão BR
-            const formatarMoeda = (valor) => {
-                return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            };
+            const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             // 3. Monta Atalhos
             let idsAtalhos = JSON.parse(localStorage.getItem('escola_atalhos'));
@@ -326,14 +319,54 @@ const App = {
                 return func ? `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>` : ''; 
             }).join('');
 
-            // 4. Renderiza HTML
+            // 4. HTML DO TERCEIRO CARD (Lista de Inadimplentes c/ Cobrança WhatsApp)
+            const htmlInadimplentes = inadimplentesList.length === 0 
+                ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
+                : inadimplentesList.map(f => {
+                    const alunoInfo = listaAlunos.find(a => a.id === f.idAluno) || {};
+                    const zap = alunoInfo.whatsapp || '';
+                    const dataBr = f.vencimento.split('-').reverse().join('/');
+                    const valFmt = formatarMoeda(parseFloat(f.valor));
+                    
+                    return `
+                        <div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                            <div>
+                                <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${f.alunoNome || 'Desconhecido'}</div>
+                                <div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div>
+                            </div>
+                            <button onclick="App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button>
+                        </div>
+                    `;
+                }).join('');
+
+            // 5. Renderiza a Tela Principal
             div.innerHTML = `
                 <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${App.usuario ? App.usuario.nome : 'Gestor'}! 👋</h3>
                 
                 <div class="dashboard-grid">
-                    <div class="stat-card card-blue">
-                        <div class="stat-info"><h4>Total Alunos</h4><p>${listaAlunos.length}</p></div>
-                        <div class="stat-icon">🎓</div>
+                    
+                    <div class="stat-card card-blue" style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:15px; padding:20px;">
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:24px;">🎓</span>
+                                <span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Alunos</span>
+                            </div>
+                            <span style="font-size:20px; font-weight:bold; color:#3498db;">${listaAlunos.length}</span>
+                        </div>
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:24px;">🏫</span>
+                                <span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Turmas</span>
+                            </div>
+                            <span style="font-size:20px; font-weight:bold; color:#3498db;">${listaTurmas.length}</span>
+                        </div>
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:24px;">📚</span>
+                                <span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Cursos</span>
+                            </div>
+                            <span style="font-size:20px; font-weight:bold; color:#3498db;">${listaCursos.length}</span>
+                        </div>
                     </div>
                     
                     <div class="stat-card card-green" style="display:block; position:relative;">
@@ -344,54 +377,38 @@ const App = {
                             </div>
                             <div class="stat-icon" style="font-size:24px;">💰</div>
                         </div>
-                        
                         <div style="height:140px; width:100%; display:flex; justify-content:center; align-items:center;">
                             <canvas id="graficoFinanceiro"></canvas>
                         </div>
-                        
                         <div style="text-align:center; font-size:11px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:5px;">
                             Pendente no mês: <span style="color:#e74c3c; font-weight:bold;">R$ ${formatarMoeda(totalPendente)}</span>
                         </div>
                     </div>
 
-                    <div class="stat-card card-red">
-                        <div class="stat-info"><h4>Títulos em Atraso</h4><p style="color:#e74c3c;">${inadimplentes}</p></div>
-                        <div class="stat-icon">⚠️</div>
+                    <div class="stat-card card-red" style="display:flex; flex-direction:column; align-items:stretch; padding:15px; max-height:260px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fdedec; padding-bottom:8px;">
+                            <h4 style="margin:0; font-size:14px; color:#e74c3c; text-transform:uppercase; font-weight:bold;">⚠️ Títulos em Atraso (${inadimplentesList.length})</h4>
+                        </div>
+                        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:5px;">
+                            ${htmlInadimplentes}
+                        </div>
                     </div>
+
                 </div>
 
                 <h3 style="color:var(--card-text); font-size:16px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Acesso Rápido</h3>
                 <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado.</p>'}</div>`;
 
-            // 5. Inicializa o Gráfico (Chart.js)
+            // 6. Inicializa o Gráfico (Chart.js)
             const ctx = document.getElementById('graficoFinanceiro');
             if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: ['Recebido', 'Pendente'],
-                        datasets: [{
-                            data: [totalRecebido, totalPendente],
-                            backgroundColor: ['#27ae60', '#e74c3c'],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
+                        datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return ' R$ ' + formatarMoeda(context.raw);
-                                    }
-                                }
-                            }
-                        },
-                        cutout: '75%'
-                    }
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ' R$ ' + formatarMoeda(context.raw); } } } }, cutout: '75%' }
                 });
             } else if (ctx) {
                 new Chart(ctx, {
@@ -407,7 +424,23 @@ const App = {
         }
     },
 
-     // --- NOVO: SISTEMA DE NOTIFICAÇÃO ---
+    // FUNÇÃO EXCLUSIVA DE COBRANÇA PARA O DASHBOARD (COM MENSAGEM PERSONALIZADA PTT CURSOS)
+    cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
+        if (!telefone || telefone.trim() === '' || telefone === 'undefined') {
+            App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error");
+            return;
+        }
+        
+        let numero = telefone.replace(/\D/g, '');
+        if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
+        
+        // Mensagem Exata e Estruturada
+        const msg = `🔔 LEMBRETE\nHello! Are you ok?\n\nVenceu em ${dataVencimento} a mensalidade do seu curso de inglês. Para realizar o pagamento, basta enviar o valor de R$ ${valorFmt} para o PIX CELULAR abaixo:\n\n(73) 98890-9273\nPTT CURSOS\nPaulo Sérgio Bispo Santana Júnior\nCORA\n\nObs.: Após o pagamento, por favor, enviar o comprovante para baixa no sistema.\n\n🙏 Agradeço desde já e desejo a você uma excelente dia! 😉✅`;
+        
+        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
+    },
+
+     // --- SISTEMA DE NOTIFICAÇÃO ---
     showToast: (mensagem, tipo = 'info') => {
         let container = document.getElementById('toast-container');
         if (!container) {
@@ -424,7 +457,6 @@ const App = {
 
         container.appendChild(toast);
 
-        // Remove após 3 segundos
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.5s ease forwards';
             setTimeout(() => toast.remove(), 500);
@@ -433,7 +465,6 @@ const App = {
 
    // --- ROTEAMENTO ---
     renderizarTela: async (tela) => {
-        // BLINDAGEM DE SEGURANÇA
         if (!App.usuario && tela !== 'login') {
             App.showToast("Sessão expirada. Faça login novamente.", "error");
             App.logout();
@@ -458,7 +489,6 @@ const App = {
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
     
-       // --- FUNÇÃO DE PONTE PARA CADASTROS ---
     abrirModalCadastro: (tipo, id) => {
         if (typeof App.abrirModalCadastroModulo === 'function') {
             App.abrirModalCadastroModulo(tipo, id);
@@ -520,7 +550,6 @@ const App = {
         btnConfirm.innerText = "Registrar Venda";
     },
 
-    // 🔒 BOTÃO DE SALVAR VENDA COM PADRÃO OURO DE UX
     salvarVenda: async () => {
         const idAluno = document.getElementById('v-idaluno').value;
         const alunoNome = document.getElementById('v-nomealuno').value;
@@ -568,7 +597,7 @@ const App = {
         }
     },
 
-    // --- 4. LISTAS (REESTRUTURADO COM COMPONENTES RESPONSIVOS) ---
+    // --- 4. LISTAS ---
     renderizarLista: async (tipo) => {
         if (!App.usuario) {
             App.logout();
@@ -586,7 +615,6 @@ const App = {
             
             const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
 
-            // 1. Barra de Busca e Botão Novo
             const barraBusca = `
                 <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left;">
                     <div class="search-wrapper" style="flex: 1; position: relative;">
@@ -625,9 +653,6 @@ const App = {
 
         const tipo = App.entidadeAtual;
         
-        // =========================================================
-        // 🧱 FÁBRICA DE TABELAS (AGORA 100% RESPONSIVA)
-        // =========================================================
         const TB = {
             estrutura: (cabecalho, corpo) => `<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table></div>`,
             th: (texto, align = 'left') => `<th style="text-align:${align}; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee; color:#2c3e50;">${texto}</th>`,
@@ -680,7 +705,7 @@ const App = {
         return TB.estrutura(cabecalho, corpo);
     },
 
- // --- 5. MINHA CONTA (TAMBÉM RESPONSIVA AGORA) ---
+ // --- 5. MINHA CONTA ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
@@ -1015,7 +1040,7 @@ const App = {
         i.value = v;
     },
 
-    // --- BACKUP & SEGURANÇA (ROBUSTO + ESCOLA RESET) ---
+    // --- BACKUP & SEGURANÇA ---
     renderizarBackup: () => { 
         App.setTitulo("Backup de Dados"); 
         const div = document.getElementById('app-content');
@@ -1081,7 +1106,7 @@ const App = {
     verificarCliqueMaster: () => {
         App.clicksMaster++;
         if (App.clicksMaster >= 5) {
-            App.clicksMaster = 0; // Reseta o contador
+            App.clicksMaster = 0;
             App.abrirModalMasterLogin();
         }
     },
@@ -1124,7 +1149,6 @@ const App = {
         document.getElementById('modal-titulo').innerText = "👑 PAINEL DO DONO (Gerador de Licenças)";
         document.getElementById('modal-form-content').innerHTML = "<p style='text-align:center; padding:30px;'>Carregando banco de licenças...</p>";
         
-        // Customiza o botão de fechar
         document.querySelector('.modal-footer').innerHTML = `<button class="btn-cancel" style="width:100%; background:#2c3e50;" onclick="App.fecharModal()">Encerrar Sessão do Dono</button>`;
 
         try {
@@ -1210,7 +1234,7 @@ const App = {
             const data = await res.json();
             if(data.success) {
                 App.showToast(`PIN gerado com sucesso! Envie para o cliente.`, 'success');
-                App.renderizarPainelMaster(); // Atualiza a tela
+                App.renderizarPainelMaster();
             }
         } catch(e) { App.showToast("Erro ao gerar PIN", "error"); }
     },
@@ -1232,7 +1256,7 @@ const App = {
             }
         } catch(e) { App.showToast("Erro ao bloquear", "error"); }
     }
-}; // <--- FIM DO OBJETO APP
+}; 
 
 // =========================================================
 // MÓDULO DE CADASTRO DE NOVAS INSTITUIÇÕES (SAAS)
@@ -1395,11 +1419,10 @@ App.logout = () => {
 };
 
 // =========================================================
-// INICIALIZAÇÃO DO SISTEMA (SEMPRE A ÚLTIMA LINHA)
+// INICIALIZAÇÃO DO SISTEMA
 // =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
 
-// Fechar modais com a tecla ESC
 document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         App.fecharModal();

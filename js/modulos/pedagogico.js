@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V114 (RESPONSIVO + CALENDÁRIO GOOGLE UX)
+// MÓDULO PEDAGÓGICO V115 (RESPONSIVO + CALENDÁRIO GOOGLE UX)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -480,12 +480,12 @@ App.renderizarCalendarioPro = async () => {
         
         // NOVA ESTRUTURA DO CALENDÁRIO COM CLASSES CSS LIMPAS
         const gridCalendario = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div class="cal-header-nav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
                 <h2 style="margin:0; color:#2c3e50; text-transform:uppercase; font-size:22px;">${mesNome} ${ano}</h2>
                 <button onclick="App.mudarMes(1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">▶</button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; font-size:12px; text-transform:uppercase;">
+            <div class="cal-weekdays-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; font-size:12px; text-transform:uppercase;">
                 <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
             </div>
             <div id="calendar-grid">
