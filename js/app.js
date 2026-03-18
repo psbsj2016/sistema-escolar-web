@@ -287,7 +287,7 @@ const App = {
                     <div class="pricing-price">R$ 97<span>/mês</span></div>
                     <p class="pricing-desc">Para pequenos cursos e professores particulares.</p>
                     <ul class="pricing-features">
-                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controle Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
                 </div>

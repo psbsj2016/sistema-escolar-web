@@ -16,8 +16,10 @@
         .login-box h1 { margin: 0 0 10px 0; color: var(--warning); font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
         .input-group { text-align: left; margin-bottom: 20px; margin-top: 30px; }
         .input-group label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .input-group input { width: 100%; padding: 15px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 16px; font-family: monospace; letter-spacing: 3px; text-align: center; }
-        .input-group input:focus { border-color: var(--warning); }
+        .input-group input, .input-group select { width: 100%; padding: 15px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; font-size: 16px; }
+        .input-group input[type="password"] { font-family: monospace; letter-spacing: 3px; text-align: center; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--warning); }
+        
         .btn-gold { width: 100%; padding: 15px; background: var(--warning); color: #0f172a; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
         .btn-gold:hover { background: #fbbf24; transform: translateY(-2px); }
 
@@ -34,24 +36,38 @@
         .kpi-card .val { font-size: 32px; font-weight: bold; }
 
         .table-container { background: var(--card); border-radius: 12px; border: 1px solid #334155; overflow-x: auto; flex: 1; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th { background: #0f172a; padding: 15px; text-align: left; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #334155; }
         td { padding: 15px; border-bottom: 1px solid #334155; font-size: 14px; }
         tr:hover { background: rgba(255,255,255,0.02); }
 
+        /* Badges de Status e Plano */
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .bg-green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
         .bg-yellow { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
         .bg-red { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-
-        .pin-text { font-family: monospace; font-size: 18px; color: var(--accent); letter-spacing: 2px; font-weight: bold; }
+        .bg-gray { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
         
-        .action-btn { border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .plan-essencial { border: 1px solid #94a3b8; color: #cbd5e1; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .plan-profissional { border: 1px solid #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .plan-premium { border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+        .pin-container { display: flex; align-items: center; gap: 10px; }
+        .pin-text { font-family: monospace; font-size: 18px; color: var(--accent); letter-spacing: 2px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 6px; border: 1px dashed #334155; }
+        
+        .action-btn { border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
         .btn-gen { background: var(--accent); color: white; }
         .btn-gen:hover { background: #2563eb; }
         .btn-block { background: var(--danger); color: white; margin-left: 5px; }
         .btn-block:hover { background: #dc2626; }
+        .btn-copy { background: #10b981; color: white; padding: 6px 10px; font-size: 10px; }
+        .btn-copy:hover { background: #059669; }
 
+        /* MODAL GERAR PIN */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(5px); }
+        .modal-box { background: var(--card); border-radius: 12px; width: 400px; padding: 30px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-box h3 { margin-top: 0; color: white; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        
         /* TOAST */
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast { background: var(--card); border-left: 4px solid var(--warning); padding: 15px 20px; border-radius: 6px; box-shadow: 0 10px 15px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; font-size: 14px; animation: slideIn 0.3s ease; }
@@ -76,7 +92,7 @@
 
     <div id="dashboard-screen">
         <header>
-            <h2>👑 Painel do CEO <span style="font-size: 14px; font-weight: normal; color: #64748b; margin-left: 10px;">| Gestor de Ativações</span></h2>
+            <h2>👑 Painel do CEO <span style="font-size: 14px; font-weight: normal; color: #64748b; margin-left: 10px;">| Gestor de Assinaturas</span></h2>
             <button class="btn-logout" onclick="Admin.logout()">Sair</button>
         </header>
 
@@ -92,15 +108,39 @@
                 <thead>
                     <tr>
                         <th>E-mail do Cliente</th>
+                        <th>Plano Atual</th>
                         <th>Estado</th>
                         <th>PIN Exclusivo (Acesso)</th>
                         <th style="text-align: right;">Gestão</th>
                     </tr>
                 </thead>
                 <tbody id="lista-escolas">
-                    <tr><td colspan="4" style="text-align: center; color: #64748b;">A carregar dados...</td></tr>
+                    <tr><td colspan="5" style="text-align: center; color: #64748b;">A carregar dados...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <div id="modal-pin" class="modal-overlay">
+        <div class="modal-box">
+            <h3>🔑 Gerar PIN de Acesso</h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 20px;">Selecione o plano que o cliente contratou para gerar a chave correta.</p>
+            
+            <input type="hidden" id="modal-email-cliente">
+            
+            <div class="input-group">
+                <label>Plano Contratado</label>
+                <select id="modal-plano-select">
+                    <option value="Essencial">Essencial (Até 100 Alunos)</option>
+                    <option value="Profissional" selected>Profissional (Mais Vendido)</option>
+                    <option value="Premium">Premium (Ilimitado)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button class="btn-gold" style="background: transparent; border: 1px solid #334155; color: #94a3b8;" onclick="Admin.fecharModal()">Cancelar</button>
+                <button class="btn-gold" style="background: var(--accent); color: white;" onclick="Admin.confirmarGeracaoPin()">Gerar e Salvar</button>
+            </div>
         </div>
     </div>
 
@@ -124,11 +164,12 @@
                 });
             },
 
-            showToast: (msg) => {
+            showToast: (msg, tipo="info") => {
                 const container = document.getElementById('toast-container');
                 const toast = document.createElement('div');
                 toast.className = 'toast';
-                toast.innerHTML = `<span>ℹ️</span> <span>${msg}</span>`;
+                const icon = tipo === 'success' ? '✅' : 'ℹ️';
+                toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
                 container.appendChild(toast);
                 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
             },
@@ -150,7 +191,7 @@
                         sessionStorage.setItem('token_master', data.token);
                         document.getElementById('login-screen').style.display = 'none';
                         document.getElementById('dashboard-screen').style.display = 'flex';
-                        Admin.showToast("Acesso Autorizado.");
+                        Admin.showToast("Acesso Autorizado.", "success");
                         Admin.carregarDados();
                     } else {
                         Admin.showToast("Senha incorreta.");
@@ -188,27 +229,48 @@
                     document.getElementById('kpi-bloqueados').innerText = lista.filter(l => l.status === 'Bloqueado').length;
 
                     if(lista.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Nenhuma escola registada ainda.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">Nenhuma escola registada ainda.</td></tr>`;
                         return;
                     }
 
                     tbody.innerHTML = lista.map(item => {
                         let badgeClass = item.status === 'Verificado' ? 'bg-green' : (item.status === 'Pendente' ? 'bg-yellow' : 'bg-red');
                         
+                        // Lógica de exibição do Plano
+                        let planoNome = item.plano || 'Teste/Aguardando';
+                        let planoClass = 'bg-gray';
+                        if(planoNome === 'Essencial') planoClass = 'plan-essencial';
+                        if(planoNome === 'Profissional') planoClass = 'plan-profissional';
+                        if(planoNome === 'Premium') planoClass = 'plan-premium';
+                        
+                        let planoDisplay = `<span class="${planoClass}">${planoNome}</span>`;
+
+                        // Botões de Ação
                         let botoes = '';
                         if(item.status === 'Pendente') {
-                            botoes = `<button class="action-btn btn-gen" onclick="Admin.gerarPin('${item.email}')">🔑 Gerar PIN</button> <button class="action-btn btn-block" onclick="Admin.bloquear('${item.email}')">🚫 Bloquear</button>`;
+                            botoes = `<button class="action-btn btn-gen" onclick="Admin.abrirModalGerarPin('${item.email}')">🔑 Gerar PIN</button> <button class="action-btn btn-block" onclick="Admin.bloquear('${item.email}')">🚫</button>`;
                         } else if(item.status === 'Bloqueado') {
-                            botoes = `<button class="action-btn btn-gen" style="background:#f59e0b;" onclick="Admin.gerarPin('${item.email}')">♻️ Reativar</button>`;
+                            botoes = `<button class="action-btn btn-gen" style="background:#f59e0b;" onclick="Admin.abrirModalGerarPin('${item.email}')">♻️ Reativar</button>`;
                         } else {
-                            botoes = `<span style="color:#34d399; font-size:12px; font-weight:bold;">TUDO OK ✅</span>`;
+                            botoes = `<button class="action-btn btn-gen" style="background:#f59e0b; padding: 4px 8px; font-size:10px;" onclick="Admin.abrirModalGerarPin('${item.email}')" title="Alterar Plano/PIN">✏️ Upgrade</button>`;
                         }
 
-                        let pinDisplay = item.pinAtivacao ? `<span class="pin-text">${item.pinAtivacao}</span>` : `<span style="color:#64748b; font-size:12px;">Aguardando...</span>`;
+                        // PIN e Botão Copiar WhatsApp
+                        let pinDisplay = '';
+                        if(item.pinAtivacao) {
+                            pinDisplay = `
+                                <div class="pin-container">
+                                    <span class="pin-text">${item.pinAtivacao}</span>
+                                    <button class="action-btn btn-copy" onclick="Admin.copiarWhatsApp('${item.email}', '${item.pinAtivacao}', '${planoNome}')">💬 Copiar (Zap)</button>
+                                </div>`;
+                        } else {
+                            pinDisplay = `<span style="color:#64748b; font-size:12px;">Aguardando...</span>`;
+                        }
 
                         return `
                             <tr>
                                 <td style="font-weight:bold; color:white;">${item.email}</td>
+                                <td>${planoDisplay}</td>
                                 <td><span class="badge ${badgeClass}">${item.status}</span></td>
                                 <td>${pinDisplay}</td>
                                 <td style="text-align:right;">${botoes}</td>
@@ -217,25 +279,60 @@
                     }).join('');
 
                 } catch(e) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#ef4444;">Erro ao carregar dados.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#ef4444;">Erro ao carregar dados.</td></tr>`;
                 }
             },
 
-            gerarPin: async (email) => {
+            // --- LÓGICA DO NOVO MODAL DE PLANOS ---
+            abrirModalGerarPin: (email) => {
+                document.getElementById('modal-email-cliente').value = email;
+                document.getElementById('modal-pin').style.display = 'flex';
+            },
+
+            fecharModal: () => {
+                document.getElementById('modal-pin').style.display = 'none';
+            },
+
+            confirmarGeracaoPin: async () => {
+                const email = document.getElementById('modal-email-cliente').value;
+                const plano = document.getElementById('modal-plano-select').value;
                 const token = sessionStorage.getItem('token_master');
+                
+                Admin.fecharModal();
+                Admin.showToast('A gerar PIN e a atribuir plano...', 'info');
+
                 try {
+                    // Nota: Se a API backend não estiver a gravar o "plano" ainda, ele vai enviar na mesma
+                    // sem quebrar o sistema. Quando o backend for evoluído, já estará preparado.
                     const res = await fetch(`${API_URL}/master/gerar-pin`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ email })
+                        body: JSON.stringify({ email: email, plano: plano }) 
                     });
                     const data = await res.json();
-                    if(data.success) { Admin.showToast('PIN Gerado!'); Admin.carregarDados(); }
-                } catch(e) { Admin.showToast('Erro ao gerar PIN.'); }
+                    if(data.success) { 
+                        Admin.showToast(`PIN Gerado para o plano ${plano}!`, 'success'); 
+                        Admin.carregarDados(); 
+                    }
+                } catch(e) { 
+                    Admin.showToast('Erro ao gerar PIN e Plano.'); 
+                }
+            },
+
+            copiarWhatsApp: (email, pin, plano) => {
+                const urlSistema = window.location.origin + window.location.pathname.replace('/admin.html', '/');
+                
+                const mensagem = `Olá! 🎉\nO seu pagamento foi confirmado com sucesso. \n\nO seu sistema escolar acabou de ser atualizado para o *${plano}*!\n\n🔑 *O seu PIN de Ativação é:* \`${pin}\`\n\n*Como ativar:*\n1. Aceda ao sistema: ${urlSistema}\n2. Vá ao menu "💎 Meu Plano"\n3. Insira o PIN e clique em Validar.\n\nQualquer dúvida, a nossa equipa de suporte está à disposição. Boa gestão! 🚀`;
+
+                navigator.clipboard.writeText(mensagem).then(() => {
+                    Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
+                }).catch(err => {
+                    Admin.showToast("Erro ao copiar. Tente selecionar o texto.", "error");
+                });
             },
 
             bloquear: async (email) => {
-                if(!confirm(`Bloquear o acesso de ${email}?`)) return;
+                if(!confirm(`Tem a certeza que deseja bloquear o acesso de ${email}?`)) return;
                 const token = sessionStorage.getItem('token_master');
                 try {
                     const res = await fetch(`${API_URL}/master/bloquear`, {
@@ -244,7 +341,7 @@
                         body: JSON.stringify({ email })
                     });
                     const data = await res.json();
-                    if(data.success) { Admin.showToast('Conta bloqueada.'); Admin.carregarDados(); }
+                    if(data.success) { Admin.showToast('Conta bloqueada.', 'success'); Admin.carregarDados(); }
                 } catch(e) { Admin.showToast('Erro ao bloquear.'); }
             }
         };
