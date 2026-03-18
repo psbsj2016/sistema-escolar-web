@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V131 - ACESSIBILIDADE E UX)
+// SISTEMA ESCOLAR - APP.JS (V132 - AUTO-LOGIN E BIOMETRIA)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -23,7 +23,7 @@ const App = {
 
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
-        const token = sessionStorage.getItem('token_acesso');
+        const token = localStorage.getItem('token_acesso'); // Agora usa localStorage
         if (token) { headers['Authorization'] = `Bearer ${token}`; }
 
         const options = { method, headers };
@@ -53,9 +53,30 @@ const App = {
     init: async () => {
         App.aplicarTemaSalvo();
         if (!localStorage.getItem('escola_atalhos')) { localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
-        const salvo = sessionStorage.getItem('usuario_logado');
-        if (salvo) { App.usuario = JSON.parse(salvo); App.entrarNoSistema(); } 
-        else { document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none'; }
+        
+        // AUTO-LOGIN E VERIFICAÇÃO DE BIOMETRIA
+        const salvo = localStorage.getItem('usuario_logado');
+        const token = localStorage.getItem('token_acesso');
+        const bioId = localStorage.getItem('escola_bio_id');
+
+        if (salvo && token) { 
+            App.usuario = JSON.parse(salvo); 
+            
+            if (bioId && window.PublicKeyCredential) {
+                // Se tem biometria ativada, mostra a tela de login mas exige a digital
+                document.getElementById('tela-login').style.display = 'flex'; 
+                document.getElementById('tela-sistema').style.display = 'none';
+                document.getElementById('btn-biometria').style.display = 'block';
+                App.entrarComBiometria(); // Dispara o pedido de rosto/digital na hora
+            } else {
+                // Se não tem biometria, entra direto automaticamente
+                App.entrarNoSistema(); 
+            }
+        } 
+        else { 
+            document.getElementById('tela-login').style.display = 'flex'; 
+            document.getElementById('tela-sistema').style.display = 'none'; 
+        }
         
         const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
         App.setupMobileMenu(); await App.carregarDadosEscola();
@@ -63,6 +84,62 @@ const App = {
         const passInput = document.getElementById('login-pass');
         if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
     },
+
+    // --- FUNÇÕES DE SEGURANÇA BIOMÉTRICA (WebAuthn) ---
+    bufferToBase64: (buf) => {
+        const bytes = new Uint8Array(buf); let str = '';
+        for (let i = 0; i < bytes.byteLength; i++) { str += String.fromCharCode(bytes[i]); }
+        return btoa(str);
+    },
+    base64ToBuffer: (b64) => {
+        const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
+        return bytes;
+    },
+
+    configurarBiometria: async () => {
+        if (!window.PublicKeyCredential) return App.showToast("O seu dispositivo não suporta biometria na Web.", "error");
+        try {
+            App.showToast("Aguardando verificação biométrica...", "info");
+            const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
+            const userId = new Uint8Array(16); window.crypto.getRandomValues(userId);
+            const cred = await navigator.credentials.create({
+                publicKey: {
+                    challenge: challenge, rp: { name: "Sistema Escolar" },
+                    user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
+                    pubKeyCredParams: [{type: "public-key", alg: -7}, {type: "public-key", alg: -257}],
+                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                    timeout: 60000
+                }
+            });
+            localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
+            App.showToast("✅ Biometria ativada com sucesso!", "success");
+            App.renderizarMinhaConta();
+        } catch (e) {
+            console.error(e);
+            App.showToast("Erro ao configurar. Verifique se tem FaceID/Digital ativo no dispositivo.", "error");
+        }
+    },
+
+    entrarComBiometria: async () => {
+        const bioId = localStorage.getItem('escola_bio_id');
+        if (!bioId) return App.showToast("Biometria não configurada para este utilizador.", "warning");
+        try {
+            const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
+            const rawId = App.base64ToBuffer(bioId);
+            const assertion = await navigator.credentials.get({
+                publicKey: { challenge: challenge, allowCredentials: [{ type: "public-key", id: rawId }], userVerification: "required" }
+            });
+            if (assertion) {
+                App.showToast("🔓 Identidade confirmada!", "success");
+                App.entrarNoSistema();
+            }
+        } catch (e) {
+            console.error(e);
+            App.showToast("Falha na validação. Por favor, insira a sua senha.", "error");
+        }
+    },
+    // --------------------------------------------------
 
     setupMobileMenu: () => {
         const header = document.querySelector('header');
@@ -287,7 +364,7 @@ const App = {
                     <div class="pricing-price">R$ 97<span>/mês</span></div>
                     <p class="pricing-desc">Para pequenos cursos e professores particulares.</p>
                     <ul class="pricing-features">
-                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controle Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
+                        <li>Até 100 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
                     <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
                 </div>
@@ -448,6 +525,12 @@ const App = {
                         <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${meuLogin}" style="width:100%; border-left: 4px solid #3498db;"></div>
                         ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
                         <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
+
+                        <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">🔒 Segurança Avançada</h4>
+                            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Use o sensor de rosto (FaceID) ou impressão digital do seu telemóvel para entrar mais rápido no sistema.</p>
+                            <button class="btn-primary" style="background: #27ae60; width: 100%;" onclick="App.configurarBiometria()">👆 Ativar Biometria</button>
+                        </div>
                     </div>
                     <div class="card" style="flex:2; min-width:300px;">
                         <h3>Acessos ao Sistema</h3>
@@ -619,7 +702,6 @@ const App = {
         } catch (error) { App.showToast('Erro ao validar com o servidor.', 'error'); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
     },
 
-    usuarioLogado: null,
     entrarNoSistema: () => { document.getElementById('tela-login').style.display = 'none'; document.getElementById('tela-sistema').style.display = 'flex'; if(App.usuario && App.usuario.nome) { document.getElementById('user-name').innerText = App.usuario.nome; } App.renderizarInicio(); },
 
     fazerLogin: async () => {
@@ -628,13 +710,23 @@ const App = {
         const textoOriginal = btnLogin.innerText; btnLogin.innerText = "Autenticando... ⏳"; btnLogin.disabled = true;
         try {
             const response = await App.api('/auth/login', 'POST', { login: userStr, senha: passStr });
-            if (response && response.success) { App.usuario = response.usuario; sessionStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); sessionStorage.setItem('token_acesso', response.token); App.entrarNoSistema(); App.showToast('Bem-vindo ao sistema!', 'success'); } 
+            if (response && response.success) { 
+                App.usuario = response.usuario; 
+                localStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); // Agora usa localStorage
+                localStorage.setItem('token_acesso', response.token); 
+                App.entrarNoSistema(); 
+                App.showToast('Bem-vindo ao sistema!', 'success'); 
+            } 
             else { App.showToast('Utilizador ou senha incorretos.', 'error'); }
         } catch (error) { console.error("Erro no login:", error); App.showToast('Erro de conexão. Tente novamente.', 'error'); } finally { btnLogin.innerText = textoOriginal; btnLogin.disabled = false; }
     },
 
     logout: () => {
-        App.usuarioLogado = null; sessionStorage.removeItem('usuario_logado'); sessionStorage.removeItem('token_acesso');
+        App.usuario = null; 
+        localStorage.removeItem('usuario_logado'); // Remove o login
+        localStorage.removeItem('token_acesso'); // Remove a chave de segurança
+        // Não removemos o 'escola_bio_id' para que a opção da biometria continue visível se ele quiser entrar depois
+        
         document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
         document.getElementById('tela-sistema').style.display = 'none';
         const telaLogin = document.getElementById('tela-login'); telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';

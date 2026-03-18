@@ -20,7 +20,7 @@
 
     <div id="tela-login" class="login-wrapper">
         <div class="login-box">
-            <h1>🎓 Sistema PTT</h1>
+            <h1>🎓 Portal Escolar</h1>
             <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
             <form onsubmit="event.preventDefault(); App.fazerLogin();">
                 <div class="input-group">
@@ -32,6 +32,8 @@
                     <input type="password" id="login-pass" placeholder="Digite sua senha" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 16px;">Entrar no Sistema</button>
+                
+                <button type="button" id="btn-biometria" class="btn-primary" style="display:none; width: 100%; margin-top: 10px; padding: 12px; font-size: 16px; background: #27ae60;" onclick="App.entrarComBiometria()">👆 Entrar com FaceID / Digital</button>
             </form>
         
         <p style="text-align: center; margin-top: 20px; font-size: 14px;">
