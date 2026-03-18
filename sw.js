@@ -2,7 +2,7 @@
 // SERVICE WORKER - MOTOR DO PWA (APP INSTALÁVEL)
 // =========================================================
 
-const CACHE_NAME = 'escola-pwa-v4'; // Aumentamos para v4 para forçar a atualização de hoje
+const CACHE_NAME = 'escola-pwa-v5'; // Subimos para v5 para os novos botões aparecerem
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -27,7 +27,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName); // Limpa o lixo antigo
+            return caches.delete(cacheName); 
           }
         })
       );
@@ -38,7 +38,6 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.url.includes('onrender.com')) return;
-  
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
@@ -46,9 +45,8 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// A MAGIA ANTI-CACHE ACONTECE AQUI
 self.addEventListener('message', (event) => {
   if (event.data && event.data.action === 'skipWaiting') {
-    self.skipWaiting(); // Força a nova versão a assumir o controlo e matar a antiga
+    self.skipWaiting(); 
   }
 });

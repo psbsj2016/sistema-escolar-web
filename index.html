@@ -131,8 +131,8 @@
                 </div>
             
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="App.fecharModal()">Cancelar</button>
-                <button class="btn-confirm" onclick="App.salvarCadastro()">Salvar Registro</button>
+                <button class="btn-cancel" onclick="App.fecharModal()">✖️ Cancelar</button>
+                <button class="btn-confirm" onclick="App.salvarCadastro()">💾 Salvar Registro</button>
             </div>
         </div>
     </div>
@@ -168,9 +168,10 @@
                 </div>
                 
                 <button onclick="App.validarCadastroInst()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" style="width: 100%; margin-top: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
-        🚀 Validar e Ativar Sistema
-    </button>
-                <p style="margin-top: 15px; font-size: 12px;"><a href="#" onclick="App.voltarEtapa1()" style="color: #888;">Voltar e corrigir e-mail</a></p>
+                    🚀 Validar e Ativar Sistema
+                </button>
+                
+                <button onclick="App.voltarEtapa1()" class="btn-cancel" style="width: 100%; margin-top: 15px;">⬅️ Voltar e corrigir e-mail</button>
             </div>
 
             <div id="etapa-3-sucesso" style="display: none;">
@@ -186,7 +187,6 @@
                 
                 <button onclick="App.fecharModalInst(); document.getElementById('login-user').focus();" class="btn-primary" style="width: 100%;">Fazer meu Primeiro Login</button>
             </div>
-
         </div>
     </div>
 
@@ -194,7 +194,7 @@
         <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📲 Instalar a App</h3>
         <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Deseja instalar o sistema no seu telemóvel para um acesso rápido e em ecrã inteiro?</p>
         <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="pwa-btn-cancel" style="padding: 10px 15px; border: none; background: #ecf0f1; color: #7f8c8d; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Agora Não</button>
+            <button id="pwa-btn-cancel" class="btn-cancel" style="flex: 1; padding: 10px 15px;">✖️ Agora Não</button>
             <button id="pwa-btn-install" style="padding: 10px 15px; border: none; background: #3498db; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Instalar App</button>
         </div>
     </div>
@@ -202,8 +202,6 @@
     <script>
         if ('serviceWorker' in navigator) {
             let refreshing = false;
-
-            // 1. Quando o novo Service Worker assumir o controlo, recarrega a página sozinho
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (!refreshing) {
                     window.location.reload();
@@ -214,25 +212,21 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
                     console.log('✅ Service Worker OK.');
-
-                    // 2. Fica à escuta de novas atualizações na nuvem
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // 3. Encontrou versão nova! Dá a ordem para limpar o cache e atualizar
                                 console.log('🔄 Atualização detetada! A aplicar a nova versão...');
                                 newWorker.postMessage({ action: 'skipWaiting' });
                             }
                         });
                     });
-
                 }).catch(err => console.log('❌ Erro SW.', err));
             });
         }
     </script>
 
-    <script src="js/app.js?v=3"></script>
+    <script src="js/app.js?v=5"></script>
     <script src="js/modulos/financeiro.js"></script>
     <script src="js/modulos/pedagogico.js"></script>
     <script src="js/modulos/relatorios.js"></script>
