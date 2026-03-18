@@ -1,11 +1,9 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V129 - CLIENT CLIENT-SIDE ONLY + PWA)
+// SISTEMA ESCOLAR - APP.JS (V130 - SAAS PLG / ASSINATURAS)
 // =========================================================
 
-// ATENÇÃO: Quando publicar, altere esta URL para o endereço do seu servidor na nuvem
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
 
-// LISTA MESTRA DE FUNCIONALIDADES
 const LISTA_FUNCIONALIDADES = [
     { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')" },
     { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')" },
@@ -20,14 +18,9 @@ const LISTA_FUNCIONALIDADES = [
 ];
 
 const App = {
-    usuario: null,
-    entidadeAtual: null,
-    idEdicao: null,
-    idEdicaoUsuario: null, 
-    listaCache: [], 
+    usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // --- NÚCLEO DE COMUNICAÇÃO (API CENTRALIZADA E BLINDADA) ---
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
         const token = sessionStorage.getItem('token_acesso');
@@ -39,19 +32,13 @@ const App = {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
             if (!response.ok) {
-                if (response.status === 401 || response.status === 403) {
-                    App.logout();
-                }
+                if (response.status === 401 || response.status === 403) { App.logout(); }
                 throw new Error(`Erro API: ${response.status}`);
             }
             return await response.json();
-        } catch (error) {
-            console.error("Erro conexão:", error);
-            return method === 'GET' ? [] : null;
-        }
+        } catch (error) { console.error("Erro conexão:", error); return method === 'GET' ? [] : null; }
     },
 
-    // --- UTILS ---
     setTitulo: (texto) => { const el = document.getElementById('titulo-pagina'); if(el) el.innerText = texto; },
     toggleSub: (id) => { 
         document.querySelectorAll('.submenu').forEach(el => { if (el.id !== id) el.style.display = 'none'; });
@@ -63,99 +50,54 @@ const App = {
         if(btn) { btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerText = "Salvar Registro"; }
     },
 
-    // --- 1. INICIALIZAÇÃO ---
     init: async () => {
         App.aplicarTemaSalvo();
-        if (!localStorage.getItem('escola_atalhos')) {
-            const padrao = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'];
-            localStorage.setItem('escola_atalhos', JSON.stringify(padrao));
-        }
+        if (!localStorage.getItem('escola_atalhos')) { localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
         const salvo = sessionStorage.getItem('usuario_logado');
-        if (salvo) { 
-            App.usuario = JSON.parse(salvo); 
-            App.entrarNoSistema(); 
-        } else {
-            document.getElementById('tela-login').style.display = 'flex';
-            document.getElementById('tela-sistema').style.display = 'none';
-        }
-        const dataEl = document.getElementById('data-hoje');
-        if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
-        App.setupMobileMenu();
-        await App.carregarDadosEscola();
+        if (salvo) { App.usuario = JSON.parse(salvo); App.entrarNoSistema(); } 
+        else { document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none'; }
+        
+        const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
+        App.setupMobileMenu(); await App.carregarDadosEscola();
 
         const passInput = document.getElementById('login-pass');
-        if(passInput) {
-            passInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') { App.fazerLogin(); }
-            });
-        }
+        if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
     },
 
-    // --- LÓGICA MOBILE ---
     setupMobileMenu: () => {
         const header = document.querySelector('header');
         if(header && !document.getElementById('btn-mobile-menu')) {
-            const btn = document.createElement('button');
-            btn.id = 'btn-mobile-menu';
-            btn.className = 'mobile-menu-btn';
-            btn.innerHTML = '☰';
-            btn.onclick = () => {
-                document.querySelector('.sidebar').classList.toggle('active');
-                const overlay = document.querySelector('.mobile-overlay') || App.criarOverlay();
-                overlay.classList.toggle('active');
-            };
-            header.insertBefore(btn, header.firstChild);
-            App.criarOverlay();
+            const btn = document.createElement('button'); btn.id = 'btn-mobile-menu'; btn.className = 'mobile-menu-btn'; btn.innerHTML = '☰';
+            btn.onclick = () => { document.querySelector('.sidebar').classList.toggle('active'); const overlay = document.querySelector('.mobile-overlay') || App.criarOverlay(); overlay.classList.toggle('active'); };
+            header.insertBefore(btn, header.firstChild); App.criarOverlay();
         }
     },
     criarOverlay: () => {
         if(document.querySelector('.mobile-overlay')) return document.querySelector('.mobile-overlay');
-        const overlay = document.createElement('div');
-        overlay.className = 'mobile-overlay';
+        const overlay = document.createElement('div'); overlay.className = 'mobile-overlay';
         overlay.onclick = () => { document.querySelector('.sidebar').classList.remove('active'); overlay.classList.remove('active'); };
-        document.body.appendChild(overlay);
-        return overlay;
+        document.body.appendChild(overlay); return overlay;
     },
 
-    // --- TEMA E APARÊNCIA ---
     aplicarTemaSalvo: () => {
         const tema = JSON.parse(localStorage.getItem('escola_tema'));
         if (tema) {
             const root = document.documentElement;
-            root.style.setProperty('--sidebar-bg', tema.sidebarBg);
-            root.style.setProperty('--sidebar-text', tema.sidebarText);
-            root.style.setProperty('--body-bg', tema.bodyBg);
-            root.style.setProperty('--text-main', tema.textMain);
-            root.style.setProperty('--card-bg', tema.cardBg);
-            root.style.setProperty('--card-text', tema.cardText);
+            root.style.setProperty('--sidebar-bg', tema.sidebarBg); root.style.setProperty('--sidebar-text', tema.sidebarText); root.style.setProperty('--body-bg', tema.bodyBg); root.style.setProperty('--text-main', tema.textMain); root.style.setProperty('--card-bg', tema.cardBg); root.style.setProperty('--card-text', tema.cardText);
         }
     },
 
     UI: {
-        card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `
-            <div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">
-                ${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}
-                ${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}
-                ${conteudo}
-            </div>
-        `,
-        input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `
-            <div class="input-group"><label>${label}</label><input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}></div>
-        `,
-        botao: (texto, acao, tipo = 'primary', icone = '') => {
-            const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit');
-            return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`;
-        },
-        colorPicker: (label, valor, varCss) => `
-            <div class="theme-row"><label>${label}</label><input type="color" value="${valor}" oninput="App.previewCor('${varCss}', this.value)"></div>
-        `
+        card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `<div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}${conteudo}</div>`,
+        input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `<div class="input-group"><label>${label}</label><input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}></div>`,
+        botao: (texto, acao, tipo = 'primary', icone = '') => { const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit'); return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`; },
+        colorPicker: (label, valor, varCss) => `<div class="theme-row"><label>${label}</label><input type="color" value="${valor}" oninput="App.previewCor('${varCss}', this.value)"></div>`
     },
 
     renderizarConfiguracoesAparencia: () => {
         App.setTitulo("Aparência do Sistema"); const div = document.getElementById('app-content'); const styles = getComputedStyle(document.documentElement);
         const c = { sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim() };
         const atalhosSalvos = JSON.parse(localStorage.getItem('escola_atalhos')) || [];
-
         const blocoCores = `<div class="theme-section"><h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4><div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;"><div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}</div></div></div>`;
         const blocoAtalhos = `<div class="theme-section"><h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p><div class="shortcut-selector">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div></div>`;
         const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 15px;">${App.UI.botao('SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '💾')}${App.UI.botao('RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '🔄')}</div>`;
@@ -174,11 +116,8 @@ const App = {
     resetarTema: () => { if(!confirm("Restaurar padrão?")) return; localStorage.removeItem('escola_tema'); localStorage.setItem('escola_atalhos', JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); location.reload(); },
 
     carregarDadosEscola: async () => { try { const escola = await App.api('/escola'); const logoTitle = document.querySelector('.logo-area h2'); if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); if(escola.foto && escola.foto.length > 50) { if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } img.src = escola.foto; } localStorage.setItem('escola_perfil', JSON.stringify(escola)); } catch(e) { console.log("Carregando perfil..."); } },
-    otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.7)); }; }; },
+    otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
     
-    // =========================================================
-    // 2. DASHBOARD COM GRÁFICO E COBRANÇA
-    // =========================================================
     renderizarInicio: async () => {
         App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         try {
@@ -199,12 +138,7 @@ const App = {
                 ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
                 : inadimplentesList.map(f => {
                     const alunoInfo = listaAlunos.find(a => a.id === f.idAluno) || {}; const zap = alunoInfo.whatsapp || ''; const dataBr = f.vencimento.split('-').reverse().join('/'); const valFmt = formatarMoeda(parseFloat(f.valor));
-                    return `
-                        <div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                            <div><div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${f.alunoNome || 'Desconhecido'}</div><div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div></div>
-                            <button onclick="App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button>
-                        </div>
-                    `;
+                    return `<div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div><div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${f.alunoNome || 'Desconhecido'}</div><div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div></div><button onclick="App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button></div>`;
                 }).join('');
 
             div.innerHTML = `
@@ -264,17 +198,129 @@ const App = {
         else if (tela === 'configuracoes') { App.setTitulo("Configurações"); App.renderizarConfiguracoes(); }
         else if (tela === 'aparencia') { App.renderizarConfiguracoesAparencia(); } 
         else if (tela === 'backup') { App.renderizarBackup(); }
+        else if (tela === 'plano') { App.renderizarMeuPlano(); } // ROTA DO NOVO PLANO
         else { App.renderizarInicio(); }
     },
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
     
+    // =========================================================
+    // NOVO: MÓDULO DE GESTÃO DE PLANOS (SAAS PLG)
+    // =========================================================
+    renderizarMeuPlano: () => {
+        App.setTitulo("Gerenciar Assinatura");
+        const div = document.getElementById('app-content');
+        
+        // Simulamos que a escola está no período de teste
+        const diasRestantes = 7; 
+        
+        div.innerHTML = `
+            <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
+                <h2 style="margin: 0 0 10px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
+                <p style="font-size: 15px; color: #666; margin: 0 0 25px 0;">O seu plano atual é: <strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (${diasRestantes} dias restantes)</strong></p>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
+                    <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="input-novo-pin" placeholder="Insira a sua Chave de Ativação (PIN)" style="flex:1; min-width: 200px; padding:12px; border-radius:6px; border:1px solid #ccc; text-align:center; letter-spacing:2px; font-weight:bold; font-size:16px;">
+                        <button class="btn-primary" style="width:auto; margin:0;" onclick="App.ativarNovoPlano()">Validar PIN</button>
+                    </div>
+                    <p style="font-size:11px; color:#999; margin: 10px 0 0 0;">O PIN é enviado para o seu e-mail imediatamente após a confirmação do pagamento.</p>
+                </div>
+            </div>
+
+            <h3 style="text-align: center; color: var(--card-text); margin-top: 40px;">Escolha o pacote ideal para a sua escola</h3>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3 class="pricing-title">Essencial</h3>
+                    <div class="pricing-price">R$ 97<span>/mês</span></div>
+                    <p class="pricing-desc">Para pequenos cursos e professores particulares.</p>
+                    <ul class="pricing-features">
+                        <li>Até 100 Alunos Ativos</li>
+                        <li>2 Acessos (Gestor + Secretaria)</li>
+                        <li>Gestão Pedagógica Completa</li>
+                        <li>Controlo Financeiro Básico</li>
+                        <li class="disabled">Cobrança WhatsApp (1 Clique)</li>
+                        <li class="disabled">Dossiê Executivo Avançado</li>
+                    </ul>
+                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
+                </div>
+
+                <div class="pricing-card featured">
+                    <div class="pricing-badge">Mais Vendido</div>
+                    <h3 class="pricing-title">Profissional</h3>
+                    <div class="pricing-price">R$ 147<span>/mês</span></div>
+                    <p class="pricing-desc">A solução completa para acabar com a inadimplência.</p>
+                    <ul class="pricing-features">
+                        <li>Até 300 Alunos Ativos</li>
+                        <li>5 Acessos (Equipa Completa)</li>
+                        <li>Gestão Pedagógica + Financeira</li>
+                        <li><strong>Cobrança WhatsApp (1 Clique)</strong></li>
+                        <li class="disabled">Dossiê Executivo Avançado</li>
+                    </ul>
+                    <button class="btn-buy btn-buy-solid" onclick="App.comprarPlano('Profissional', 'https://seulink.com/profissional')">Assinar Profissional</button>
+                </div>
+
+                <div class="pricing-card">
+                    <h3 class="pricing-title">Premium</h3>
+                    <div class="pricing-price">R$ 297<span>/mês</span></div>
+                    <p class="pricing-desc">Para escolas estruturadas e sem limites operacionais.</p>
+                    <ul class="pricing-features">
+                        <li>Alunos Ilimitados</li>
+                        <li>Acessos Ilimitados</li>
+                        <li>Todas as Funcionalidades</li>
+                        <li>Cobrança WhatsApp (1 Clique)</li>
+                        <li><strong>Dossiê Executivo Avançado</strong></li>
+                    </ul>
+                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Premium', 'https://seulink.com/premium')">Assinar Premium</button>
+                </div>
+            </div>
+        `;
+    },
+
+    comprarPlano: (nomePlano, linkCheckout) => {
+        App.showToast(`A redirecionar para o pagamento seguro do plano ${nomePlano}...`, "info");
+        // Aqui, quando tiver as suas contas criadas na Eduzz/Hotmart/MercadoPago, 
+        // basta substituir a variável linkCheckout na chamada do botão acima.
+        setTimeout(() => {
+            window.open(linkCheckout, '_blank');
+        }, 1500);
+    },
+
+    ativarNovoPlano: async () => {
+        const pin = document.getElementById('input-novo-pin').value.trim();
+        if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
+
+        const btn = document.querySelector('button[onclick="App.ativarNovoPlano()"]');
+        const txt = btn.innerText;
+        btn.innerText = "A validar... ⏳";
+        btn.disabled = true;
+
+        try {
+            // Aqui conectaremos à sua API para validar o PIN na base de dados
+            // Por agora, simulamos um sucesso de validação
+            await new Promise(r => setTimeout(r, 1500)); 
+            
+            App.showToast("🎉 PIN validado com sucesso! Bem-vindo ao novo plano.", "success");
+            document.getElementById('input-novo-pin').value = '';
+            
+            // Recarrega a tela para mostrar o novo status
+            setTimeout(() => { App.renderizarInicio(); }, 2000);
+        } catch(e) {
+            App.showToast("PIN inválido ou já utilizado.", "error");
+        } finally {
+            btn.innerText = txt;
+            btn.disabled = false;
+        }
+    },
+    // =========================================================
+
     abrirModalCadastro: (tipo, id) => {
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
         else { alert("O módulo de cadastros ainda não foi carregado. Tente recarregar a página."); }
     },
 
-    // --- MÓDULO DE VENDAS ---
     abrirModalVenda: (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Registrar Venda - ${nomeAluno}`;
@@ -313,7 +359,6 @@ const App = {
         try { await App.api('/financeiro', 'POST', payload); App.showToast("Venda registrada com sucesso!", "success"); App.fecharModal(); } catch (e) { App.showToast("Erro ao registrar venda.", "error"); } finally { if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
     },
 
-    // --- 4. LISTAS ---
     renderizarLista: async (tipo) => {
         if (!App.usuario) { App.logout(); return; }
         App.entidadeAtual = tipo; const titulo = tipo.charAt(0).toUpperCase() + tipo.slice(1) + 's'; App.setTitulo(`Gerenciar ${titulo}`); const div = document.getElementById('app-content'); const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
@@ -337,7 +382,6 @@ const App = {
     gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
-        
         const TB = { estrutura: (cabecalho, corpo) => `<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table></div>`, th: (texto, align = 'left') => `<th style="text-align:${align}; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee; color:#2c3e50;">${texto}</th>`, td: (texto, align = 'left') => `<td style="text-align:${align}; padding:15px; border-bottom:1px solid #eee; color:#333;">${texto}</td>`, tr: (celulas) => `<tr style="transition: background 0.2s;">${celulas}</tr>`, acoes: (botoes) => `<div style="display:flex; gap:5px; justify-content:flex-end; align-items:center;">${botoes.join('')}</div>`, btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>` };
 
         let cabecalho = '';
@@ -366,11 +410,9 @@ const App = {
 
             celulas += TB.td(TB.acoes(botoes), 'right'); return TB.tr(celulas);
         }).join('');
-
         return TB.estrutura(cabecalho, corpo);
     },
 
-    // --- 5. MINHA CONTA ---
     renderizarMinhaConta: async () => { 
         App.setTitulo("Gestão de Usuários"); const div = document.getElementById('app-content'); App.idEdicaoUsuario = null; 
         const meuLogin = App.usuario ? App.usuario.login : ''; const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
@@ -531,9 +573,6 @@ const App = {
     processarRestauracao: async () => { const f=document.getElementById('input-backup-file'); if(!f.files.length)return alert("Selecione arquivo."); if(!confirm("Substituir dados?"))return; const r=new FileReader(); r.onload=async(e)=>{try{const d=JSON.parse(e.target.result); const t=['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamento','usuarios','escola']; for(const k of t){if(d[k]){if(Array.isArray(d[k])){for(const i of d[k])await App.api(`/${k}`,'POST',i)}else{await App.api('/escola','PUT',d[k])}}} alert("Restaurado!"); location.reload();}catch(x){alert("Arquivo inválido.");}}; r.readAsText(f.files[0]); },
     excluir: async (ep, id) => { if(confirm("Excluir?")) { await App.api(`/${ep}/${id}`, 'DELETE'); App.renderizarLista(App.entidadeAtual); } },
 
-    // =========================================================
-    // MÓDULO DE CADASTRO DE NOVAS INSTITUIÇÕES (SAAS)
-    // =========================================================
     abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
     fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; },
     voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
@@ -560,11 +599,7 @@ const App = {
         } catch (error) { App.showToast('Erro ao validar com o servidor.', 'error'); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
     },
 
-    // =========================================================
-    // SISTEMA DE AUTENTICAÇÃO E LOGIN (ESCOLAS)
-    // =========================================================
     usuarioLogado: null,
-
     entrarNoSistema: () => { document.getElementById('tela-login').style.display = 'none'; document.getElementById('tela-sistema').style.display = 'flex'; if(App.usuario && App.usuario.nome) { document.getElementById('user-name').innerText = App.usuario.nome; } App.renderizarInicio(); },
 
     fazerLogin: async () => {
@@ -586,55 +621,27 @@ const App = {
     }
 };
 
-// =========================================================
-// INICIALIZAÇÃO DO SISTEMA (SEMPRE A ÚLTIMA LINHA)
-// =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
+document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
 
-// Fechar modais com a tecla ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); }
-});
-
-// =========================================================
-// INSTALAÇÃO PWA (PROGRESSIVE WEB APP) - MOTOR MÁGICO
-// =========================================================
 let deferredPrompt;
-
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    const installBanner = document.getElementById('pwa-install-banner');
-    if (installBanner) { installBanner.style.display = 'block'; }
+    e.preventDefault(); deferredPrompt = e;
+    const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) { installBanner.style.display = 'block'; }
 });
 
 const btnInstall = document.getElementById('pwa-btn-install');
 if (btnInstall) {
     btnInstall.addEventListener('click', async () => {
-        const installBanner = document.getElementById('pwa-install-banner');
-        installBanner.style.display = 'none';
-        
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`Escolha do utilizador para instalação: ${outcome}`);
-            deferredPrompt = null;
-        }
+        const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none';
+        if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; console.log(`Escolha do utilizador para instalação: ${outcome}`); deferredPrompt = null; }
     });
 }
 
 const btnCancel = document.getElementById('pwa-btn-cancel');
-if (btnCancel) {
-    btnCancel.addEventListener('click', () => {
-        const installBanner = document.getElementById('pwa-install-banner');
-        installBanner.style.display = 'none';
-    });
-}
+if (btnCancel) { btnCancel.addEventListener('click', () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; }); }
 
 window.addEventListener('appinstalled', () => {
-    const installBanner = document.getElementById('pwa-install-banner');
-    if (installBanner) installBanner.style.display = 'none';
-    deferredPrompt = null;
-    App.showToast('App instalada com sucesso! 🎉', 'success');
+    const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) installBanner.style.display = 'none';
+    deferredPrompt = null; App.showToast('App instalada com sucesso! 🎉', 'success');
 });
