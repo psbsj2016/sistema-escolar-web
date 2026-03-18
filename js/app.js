@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V136 - ISOLAMENTO DE USUÁRIOS)
+// SISTEMA ESCOLAR - APP.JS (V137 - LINKS DE PAGAMENTO MERCADO PAGO)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -373,7 +373,7 @@ const App = {
                     <ul class="pricing-features">
                         <li>Até 60 Alunos Ativos</li><li>2 Acessos (Gestor + Secretaria)</li><li>Gestão Pedagógica Completa</li><li>Controlo Financeiro Básico</li><li class="disabled">Cobrança WhatsApp (1 Clique)</li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
-                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://seulink.com/essencial')">Assinar Essencial</button>
+                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Essencial', 'https://mpago.la/2LcgaA1')">Assinar Essencial</button>
                 </div>
 
                 <div class="pricing-card featured">
@@ -384,7 +384,7 @@ const App = {
                     <ul class="pricing-features">
                         <li>Até 200 Alunos Ativos</li><li>5 Acessos (Equipa Completa)</li><li>Gestão Pedagógica + Financeira</li><li><strong>Cobrança WhatsApp (1 Clique)</strong></li><li class="disabled">Dossiê Executivo Avançado</li>
                     </ul>
-                    <button class="btn-buy btn-buy-solid" onclick="App.comprarPlano('Profissional', 'https://seulink.com/profissional')">Assinar Profissional</button>
+                    <button class="btn-buy btn-buy-solid" onclick="App.comprarPlano('Profissional', 'https://mpago.la/1KmmwZf')">Assinar Profissional</button>
                 </div>
 
                 <div class="pricing-card">
@@ -394,7 +394,7 @@ const App = {
                     <ul class="pricing-features">
                         <li>Alunos Ilimitados</li><li>Acessos Ilimitados</li><li>Todas as Funcionalidades</li><li>Cobrança WhatsApp (1 Clique)</li><li><strong>Dossiê Executivo Avançado</strong></li>
                     </ul>
-                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Premium', 'https://seulink.com/premium')">Assinar Premium</button>
+                    <button class="btn-buy btn-buy-outline" onclick="App.comprarPlano('Premium', 'https://mpago.la/1DNyscL')">Assinar Premium</button>
                 </div>
             </div>
         `;
@@ -555,9 +555,6 @@ const App = {
         try { 
             const usuariosResponse = await App.api('/usuarios'); 
             const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
-            
-            // 🛡️ PENEIRA DE SEGURANÇA (MULTI-TENANT):
-            // Filtra para mostrar apenas o dono da conta E os funcionários que ELE criou.
             const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
 
             div.innerHTML = `
@@ -619,11 +616,7 @@ const App = {
         if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha para o novo usuário.", "error");
 
         const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
-        
-        // 🛡️ CARIMBO DE PROPRIEDADE: Amarra o novo funcionário ao Dono atual
-        if (!App.idEdicaoUsuario) {
-            payload.donoId = App.usuario.id;
-        }
+        if (!App.idEdicaoUsuario) { payload.donoId = App.usuario.id; }
 
         const btn = document.getElementById('btn-save-user'); const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
         if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } document.body.style.cursor = 'wait';
