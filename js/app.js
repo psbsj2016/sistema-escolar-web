@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V137 - LINKS DE PAGAMENTO MERCADO PAGO)
+// SISTEMA ESCOLAR - APP.JS (V138 - UPGRADE AUTOMÁTICO E CRACHÁS VIP)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -237,7 +237,14 @@ const App = {
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
             const logoTitle = document.querySelector('.logo-area h2'); 
-            if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small>${escola.cnpj || ''}</small>`; 
+            
+            // 💎 CRACHÁ DO PLANO NO MENU LATERAL
+            const planoAtual = App.getPlanoAtual();
+            let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+            const badgeHtml = `<div style="margin-top:8px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 ${planoAtual}</span></div>`;
+
+            if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small style="color:#aaa;">${escola.cnpj || ''}</small>${badgeHtml}`; 
+            
             const logoContainer = document.querySelector('.logo-area'); 
             let img = logoContainer.querySelector('img'); 
             if(escola.foto && escola.foto.length > 50) { 
@@ -345,13 +352,15 @@ const App = {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
         
+        // 💎 CRACHÁ DE PLANO VISUALMENTE DESTACADO
         const planoAtual = App.getPlanoAtual();
-        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:var(--success); background:rgba(39,174,96,0.1); padding:4px 10px; border-radius:20px;">Plano ${planoAtual} Ativo</strong>`;
+        let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${planoAtual.toUpperCase()}</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
-                <h2 style="margin: 0 0 10px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
-                <p style="font-size: 15px; color: #666; margin: 0 0 25px 0;">O seu plano atual é: ${infoPlano}</p>
+                <h2 style="margin: 0 0 15px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
+                <div style="margin-bottom: 30px;">${infoPlano}</div>
                 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
                     <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
@@ -422,9 +431,11 @@ const App = {
             
             localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
 
-            App.showToast(`🎉 PIN validado! O seu novo plano é: ${novoPlano}.`, "success");
+            App.showToast(`🎉 PIN validado! O seu novo plano é: ${novoPlano}. O sistema vai reiniciar...`, "success");
             document.getElementById('input-novo-pin').value = '';
-            setTimeout(() => { App.renderizarMeuPlano(); }, 2000);
+            
+            // 🔄 A MAGIA: Recarregar a página para o menu ler o plano atualizado na hora!
+            setTimeout(() => { window.location.reload(); }, 2000);
         } catch(e) { App.showToast("PIN inválido ou já utilizado.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
