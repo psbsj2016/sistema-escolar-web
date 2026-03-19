@@ -26,6 +26,12 @@
         
         /* ANIMAÇÕES */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Badges de Status e Plano */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .plan-essencial { border: 1px solid #94a3b8; color: #cbd5e1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-profissional { border: 1px solid #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-premium { border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -168,7 +174,6 @@
                     });
                     const data = await res.json();
                     
-                    // Verificação original restaurada
                     if(data.success && data.token) {
                         sessionStorage.setItem('token_master', data.token);
                         document.getElementById('login-error').style.display = 'none';
@@ -187,14 +192,12 @@
             carregarDados: async () => {
                 const token = sessionStorage.getItem('token_master');
                 try {
-                    // Endpoint original restaurado
                     const res = await fetch(`${API_URL}/master/ativacoes`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
                     
                     if(res.status === 401 || res.status === 403) return Admin.logout();
                     
-                    // A API devolve um Array diretamente
                     const lista = await res.json();
                     cacheClientes = lista;
                     
@@ -214,19 +217,39 @@
                 tbody.innerHTML = lista.map(c => {
                     let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
                     let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao || '<span style="color:#64748b;">Aguardando...</span>');
-                    let plano = c.plano || 'Aguardando';
+                    
+                    // 🧠 INTELIGÊNCIA VISUAL: Lê o plano a partir do PIN (se a base de dados falhar)
+                    let planoNome = c.plano;
+                    if (!planoNome || planoNome === 'Aguardando' || planoNome === 'Teste') {
+                        if (c.pinAtivacao) {
+                            if (c.pinAtivacao.includes('PRE')) planoNome = 'Premium';
+                            else if (c.pinAtivacao.includes('PRO')) planoNome = 'Profissional';
+                            else if (c.pinAtivacao.includes('ESS')) planoNome = 'Essencial';
+                            else planoNome = 'Aguardando';
+                        } else {
+                            planoNome = 'Pendente';
+                        }
+                    }
+
+                    // Define a classe CSS do plano
+                    let planoClass = 'bg-gray';
+                    if(planoNome === 'Essencial') planoClass = 'plan-essencial';
+                    if(planoNome === 'Profissional') planoClass = 'plan-profissional';
+                    if(planoNome === 'Premium') planoClass = 'plan-premium';
 
                     return `
                     <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
                         <td style="padding:15px; font-weight:bold;">${c.email}</td>
-                        <td style="padding:15px; color:var(--accent); text-transform:uppercase; font-size:12px; font-weight:bold; letter-spacing:1px;">${plano}</td>
+                        <td style="padding:15px;">
+                            <span class="${planoClass}">${planoNome}</span>
+                        </td>
                         <td style="padding:15px; font-family:monospace;">
                             <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-right: 10px; ${badgeClass}">${c.status}</span>
                             ${statusPin}
                         </td>
                         <td style="padding:15px; text-align:right;">
                             ${c.pinAtivacao ? `<button onclick="window.open('https://wa.me/?text=Olá! O seu PIN de acesso ao sistema escolar é: ${c.pinAtivacao}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
-                            <button onclick="Admin.copiarAcesso('${c.email}', '${c.pinAtivacao}', '${plano}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
+                            <button onclick="Admin.copiarAcesso('${c.email}', '${c.pinAtivacao}', '${planoNome}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
                             <button onclick="Admin.bloquear('${c.email}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloquear</button>
                         </td>
                     </tr>
@@ -235,7 +258,7 @@
 
             filtrarTabela: (termo) => {
                 const t = termo.toLowerCase();
-                const filtrados = cacheClientes.filter(c => c.email.toLowerCase().includes(t) || (c.plano && c.plano.toLowerCase().includes(t)) || c.status.toLowerCase().includes(t));
+                const filtrados = cacheClientes.filter(c => c.email.toLowerCase().includes(t) || (c.plano && c.plano.toLowerCase().includes(t)) || c.status.toLowerCase().includes(t) || (c.pinAtivacao && c.pinAtivacao.toLowerCase().includes(t)));
                 Admin.desenharTabela(filtrados);
             },
 
