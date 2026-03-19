@@ -2,7 +2,7 @@
 // SERVICE WORKER - MOTOR DO PWA (APP INSTALÁVEL)
 // =========================================================
 
-const CACHE_NAME = 'escola-pwa-v9.1';
+const CACHE_NAME = 'escola-pwa-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
