@@ -2,7 +2,7 @@
 // SERVICE WORKER - MOTOR DO PWA (APP INSTALÁVEL)
 // =========================================================
 
-const CACHE_NAME = 'escola-pwa-v6'; // Subimos para v6 para os novos botões aparecerem
+const CACHE_NAME = 'escola-pwa-v7'; // Subimos para v7 para os novos botões aparecerem
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
