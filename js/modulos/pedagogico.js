@@ -287,7 +287,7 @@ App.gerarBoletimTela = async () => {
 };
 
 // ---------------------------------------------------------
-// 3. AVALIAÇÕES (NOTAS)
+// 3. AVALIAÇÕES (NOTAS) - COM CAMPO DE DATA
 // ---------------------------------------------------------
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
@@ -305,6 +305,7 @@ App.renderizarAvaliacoesPro = async () => {
             <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; margin-bottom: 15px;">
                 ${selectLocal('Selecione o Aluno:', 'av-aluno', opAlunos, 'onchange="App.carregarCursoDoAluno()"')}
                 ${selectLocal('Curso / Disciplina:', 'av-curso', '<option value="">(Selecione o aluno primeiro)</option>', 'style="background:#f9f9f9;"')}
+                ${col('Data da Avaliação:', 'av-data', 'date', new Date().toISOString().split('T')[0])}
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; margin-bottom: 15px;">
                 ${selectLocal('Tipo de Avaliação:', 'av-tipo', opTipos, 'onchange="App.toggleTipoOutro()"')}
@@ -326,15 +327,16 @@ App.renderizarAvaliacoesPro = async () => {
                 <table style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
+                        ${historico.length === 0 ? '<tr><td colspan="7" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
                         ${historico.map(h => `
                             <tr style="border-bottom:1px solid #eee;">
                                 <td style="padding:12px; font-weight:bold;">${h.nomeAluno}</td>
                                 <td style="padding:12px; color:#555;">${h.disciplina || '-'}</td>
+                                <td style="padding:12px;">${h.data ? h.data.split('-').reverse().join('/') : '-'}</td>
                                 <td style="padding:12px;">${h.tipo} <span style="font-size:10px; color:#999;">(${h.descricao || ''})</span></td>
                                 <td style="padding:12px;">${h.bimestre}</td>
                                 <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${h.nota}</strong> <span style="color:#999; font-size:11px;">/ ${h.valorMax}</span></td>
@@ -366,11 +368,11 @@ App.carregarCursoDoAluno = () => {
 App.toggleTipoOutro = () => { const tipo = document.getElementById('av-tipo').value; document.getElementById('div-outro').style.display = (tipo==='Outro')?'block':'none'; };
 
 App.salvarAvaliacaoDetalhada = async () => { 
-    const idA = document.getElementById('av-aluno').value; const nota = document.getElementById('av-nota').value; const max = document.getElementById('av-valor-max').value; 
-    if(!idA || !nota) return App.showToast("Preencha o aluno e a nota.", "warning"); 
+    const idA = document.getElementById('av-aluno').value; const nota = document.getElementById('av-nota').value; const max = document.getElementById('av-valor-max').value; const dataAv = document.getElementById('av-data').value;
+    if(!idA || !nota || !dataAv) return App.showToast("Preencha aluno, data e nota.", "warning"); 
     let tipo = document.getElementById('av-tipo').value; if(tipo==='Outro') tipo = document.getElementById('av-outro-desc').value; 
     const nomeA = document.getElementById('av-aluno').options[document.getElementById('av-aluno').selectedIndex].text; 
-    const pl = { idAluno:idA, nomeAluno:nomeA, disciplina:document.getElementById('av-curso').value, tipo, valorMax:max, nota, bimestre:document.getElementById('av-bimestre').value, dataLancamento: new Date().toLocaleDateString() }; 
+    const pl = { idAluno:idA, nomeAluno:nomeA, disciplina:document.getElementById('av-curso').value, data: dataAv, tipo, valorMax:max, nota, bimestre:document.getElementById('av-bimestre').value, dataLancamento: new Date().toLocaleDateString() }; 
     
     const btn = document.querySelector('button[onclick="App.salvarAvaliacaoDetalhada()"]');
     const txtOrig = btn ? btn.innerText : 'LANÇAR NOTA';
@@ -394,6 +396,7 @@ App.editarAvaliacao = async (id) => {
     if(["Teste","Prova","Pesquisa","Trabalho"].includes(n.tipo)) document.getElementById('av-tipo').value=n.tipo; 
     else { document.getElementById('av-tipo').value='Outro'; App.toggleTipoOutro(); document.getElementById('av-outro-desc').value=n.tipo; } 
     document.getElementById('av-valor-max').value=n.valorMax; document.getElementById('av-nota').value=n.nota; document.getElementById('av-bimestre').value=n.bimestre; 
+    document.getElementById('av-data').value=n.data || new Date().toISOString().split('T')[0];
     App.idEdicaoNota=id; document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
 };
 
