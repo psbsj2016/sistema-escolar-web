@@ -243,3 +243,34 @@ tr:hover td { background: rgba(0,0,0,0.01); }
     .carne-header-box { border-bottom-color: #000; }
     .carne-instructions { border-color: #000; background: #eee !important; color: #000; -webkit-print-color-adjust: exact; }
 }
+
+/* =========================================================
+   📝 ESTILOS DA PLANILHA DE PLANEJAMENTO (V115)
+   ========================================================= */
+.plan-input-print {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: #333;
+    padding: 8px 5px;
+    box-sizing: border-box;
+    outline: none;
+    transition: background 0.2s;
+}
+
+.plan-input-print:focus {
+    background: #f4f6f7;
+    border-radius: 4px;
+}
+
+@media print {
+    .plan-input-print {
+        background: transparent !important;
+        color: #000 !important;
+        padding: 4px !important;
+        font-size: 12px !important;
+        -webkit-print-color-adjust: exact;
+    }
+}
