@@ -138,6 +138,27 @@
         </div>
     </div>
 
+    <div id="modal-mudar-plano" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:400px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; color:var(--warning); border-bottom:1px solid #334155; padding-bottom:15px;">🔄 Atualizar Plano</h3>
+            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Selecione o novo pacote. Isto irá gerar um novo PIN de ativação para a escola.</p>
+            
+            <input type="hidden" id="mp-email">
+            
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Novo Plano Contratado:</label>
+            <select id="mp-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <option value="Essencial">🟢 Essencial</option>
+                <option value="Profissional">🔵 Profissional</option>
+                <option value="Premium">🟡 Premium</option>
+            </select>
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="Admin.fecharModalMudarPlano()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
+                <button id="btn-confirmar-mp" onclick="Admin.confirmarMudancaPlano()" style="flex:1; padding:12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Atualizar Plano</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
     <script>
@@ -219,7 +240,7 @@
                     let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
                     let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao || '<span style="color:#64748b;">Aguardando...</span>');
                     
-                    // 🧠 INTELIGÊNCIA VISUAL 2.0: Filtro à prova de falhas (Maiúsculas e Fallback)
+                    // 🧠 INTELIGÊNCIA VISUAL 2.0
                     let planoNome = c.plano;
                     if (!planoNome || planoNome === 'Aguardando' || planoNome === 'Teste') {
                         if (c.pinAtivacao) {
@@ -227,23 +248,19 @@
                             if (pinUpper.includes('PRE')) planoNome = 'Premium';
                             else if (pinUpper.includes('PRO')) planoNome = 'Profissional';
                             else if (pinUpper.includes('ESS')) planoNome = 'Essencial';
-                            else planoNome = 'Liberado'; // Fallback se o PIN não tiver sigla!
+                            else planoNome = 'Liberado'; 
                         } else {
                             planoNome = 'Pendente';
                         }
                     }
 
-                    // Define a classe CSS do plano e o texto a exibir
                     let planoClass = 'bg-gray';
                     let planoDisplay = planoNome;
                     
                     if(planoNome === 'Essencial') planoClass = 'plan-essencial';
                     else if(planoNome === 'Profissional') planoClass = 'plan-profissional';
                     else if(planoNome === 'Premium') planoClass = 'plan-premium';
-                    else if(planoNome === 'Liberado') {
-                        planoClass = 'plan-liberado';
-                        planoDisplay = '💎 Liberado'; // Remove de vez a palavra Aguardando
-                    }
+                    else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
 
                     return `
                     <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
@@ -256,9 +273,12 @@
                             ${statusPin}
                         </td>
                         <td style="padding:15px; text-align:right;">
+                            <button onclick="Admin.abrirModalMudarPlano('${c.email}', '${planoNome}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
+                            
                             ${c.pinAtivacao ? `<button onclick="window.open('https://wa.me/?text=Olá! O seu PIN de acesso ao sistema escolar é: ${c.pinAtivacao}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
                             <button onclick="Admin.copiarAcesso('${c.email}', '${c.pinAtivacao}', '${planoNome === 'Liberado' ? 'VIP' : planoNome}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
-                            <button onclick="Admin.bloquear('${c.email}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloquear</button>
+                            
+                            <button onclick="Admin.bloquear('${c.email}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
                         </td>
                     </tr>
                 `}).join('');
@@ -268,6 +288,55 @@
                 const t = termo.toLowerCase();
                 const filtrados = cacheClientes.filter(c => c.email.toLowerCase().includes(t) || (c.plano && c.plano.toLowerCase().includes(t)) || c.status.toLowerCase().includes(t) || (c.pinAtivacao && c.pinAtivacao.toLowerCase().includes(t)));
                 Admin.desenharTabela(filtrados);
+            },
+
+            // --- LÓGICA DO MUDAR PLANO (NOVO) ---
+            abrirModalMudarPlano: (email, planoAtual) => {
+                document.getElementById('mp-email').value = email;
+                
+                const select = document.getElementById('mp-plano');
+                for(let i = 0; i < select.options.length; i++) {
+                    if(select.options[i].value === planoAtual) {
+                        select.selectedIndex = i;
+                    }
+                }
+                
+                document.getElementById('modal-mudar-plano').style.display = 'flex';
+            },
+
+            fecharModalMudarPlano: () => {
+                document.getElementById('modal-mudar-plano').style.display = 'none';
+            },
+
+            confirmarMudancaPlano: async () => {
+                const email = document.getElementById('mp-email').value;
+                const plano = document.getElementById('mp-plano').value;
+                const token = sessionStorage.getItem('token_master');
+                
+                const btn = document.getElementById('btn-confirmar-mp');
+                btn.innerText = "A atualizar... ⏳"; btn.disabled = true;
+                
+                try {
+                    // Reutilizamos a rota gerar-pin, pois ela já cadastra/atualiza o PIN no banco
+                    const res = await fetch(`${API_URL}/master/gerar-pin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ email, plano })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        Admin.showToast(`Plano atualizado para ${plano}! Novo PIN gerado.`, 'success');
+                        Admin.fecharModalMudarPlano();
+                        Admin.carregarDados(); // Recarrega a tabela e a inteligência visual faz o resto!
+                    } else {
+                        Admin.showToast("Erro ao gerar novo PIN da API.", "error");
+                    }
+                } catch(e) {
+                    Admin.showToast("Erro de comunicação com o servidor.", "error");
+                } finally {
+                    btn.innerText = "Atualizar Plano"; btn.disabled = false;
+                }
             },
 
             // --- LÓGICA DO CADASTRO VIP ---
