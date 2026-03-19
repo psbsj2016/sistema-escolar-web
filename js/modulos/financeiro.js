@@ -397,7 +397,8 @@ App.abrirCarneExistente = async (idLote) => {
         
         const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: parcelas[0].alunoNome, cpf: '', rua: '', bairro: '', cidade: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" class="carne-logo-img">` : '';
-        let qrCodeImg = escola.qrCodeImagem ? `<img src="${escola.qrCodeImagem}" style="width:60px; height:60px; object-fit:contain;">` : (escola.chavePix ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(escola.chavePix)}" style="width:60px; height:60px;">` : '<div style="font-size:8px;">Sem PIX</div>');
+        // QR Code ampliado para 120x120 para melhor acessibilidade do utilizador
+        let qrCodeImg = escola.qrCodeImagem ? `<img src="${escola.qrCodeImagem}" style="width:120px; height:120px; object-fit:contain;">` : (escola.chavePix ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(escola.chavePix)}" style="width:120px; height:120px;">` : '<div style="font-size:8px;">Sem PIX</div>');
         
         const carnesHTML = parcelas.map((p, index) => { 
             const numParcela = p.descricao.includes('/') ? p.descricao.split(' ')[1] : `${index+1}/${parcelas.length}`; 
@@ -427,7 +428,7 @@ App.abrirCarneExistente = async (idLote) => {
                         <div class="carne-data-box"><span class="carne-label">Valor</span><span class="carne-value">R$ ${valorF}</span></div>
                     </div>
                     <div class="carne-instructions">
-                        <span class="carne-label">Instruções</span>Ref: ${p.descricao} - Curso: ${aluno.curso || 'Geral'}<br><i>Após vencimento, multa de 2% e juros de 1%.</i>
+                        <span class="carne-label">Instruções</span>Ref: ${p.descricao} - Curso: ${aluno.curso || 'Geral'}<br><i>Após vencimento, perda de descontos e benefícios.</i>
                     </div>
                     <div class="carne-footer">
                         <div class="carne-payer"><span class="carne-label">Pagador</span><b class="carne-value">${aluno.nome}</b><span style="font-size:8px;">CPF: ${aluno.cpf || '-'}</span><br><span style="font-size:8px;">${aluno.rua||''}, ${aluno.bairro||''}</span></div>
@@ -469,7 +470,8 @@ App.renderizarInadimplencia = async () => {
         
         const style = `<style>.inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } .inad-kpi-val { font-size: 24px; font-weight: bold; } .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; } .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } @media print { .no-print { display: none !important; } .print-sheet { width: 100%; } .inad-card-top { border: 1px solid #000; box-shadow: none; } .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } }</style>`;
         
-        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
+        // CADEADO PREMIUM: O botão agora verifica a permissão do WhatsApp antes de executar
+        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
 
         div.innerHTML = `${style}
             <div style="margin-bottom: 20px;" class="no-print">
