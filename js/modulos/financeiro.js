@@ -1,76 +1,119 @@
 // =========================================================
-// MÓDULO FINANCEIRO - V138 (CARNÊS PREMIUM & GATILHOS MENTAIS)
+// MÓDULO FINANCEIRO - V139 (LAYOUT PREMIUM RESTAURADO + BOLETOS SAAS)
 // =========================================================
 
 App.renderizarFinanceiroPro = async () => {
     App.setTitulo("Gestão Financeira");
     const div = document.getElementById('app-content');
-    div.innerHTML = 'Carregando...';
+    div.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A carregar módulo financeiro... ⏳</p>';
 
     try {
         const alunos = await App.api('/alunos');
         const financeiro = await App.api('/financeiro');
         App.listaCache = financeiro;
 
+        const dataHoje = new Date();
+        const mesAtual = dataHoje.getMonth() + 1;
+        const anoAtual = dataHoje.getFullYear();
+
+        // --- CÁLCULO DOS KPIS DO MÊS ---
+        const finMes = financeiro.filter(f => {
+            if(!f.vencimento) return false;
+            const parts = f.vencimento.split('-');
+            return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual;
+        });
+
+        const recebido = finMes.filter(f => f.status === 'Pago').reduce((a,c) => a + parseFloat(c.valor), 0);
+        const pendente = finMes.filter(f => f.status === 'Pendente').reduce((a,c) => a + parseFloat(c.valor), 0);
+        const atrasado = financeiro.filter(f => f.status === 'Pendente' && new Date(f.vencimento + 'T00:00:00') < dataHoje).reduce((a,c) => a + parseFloat(c.valor), 0);
+        
+        const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         const htmlAlunos = alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
 
+        // --- LAYOUT PREMIUM RESTAURADO ---
         div.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
-                <div class="card" style="flex:1; min-width:300px; border-left: 5px solid var(--accent);">
-                    <h3>💸 Lançar Mensalidade</h3>
-                    <div class="input-group"><label>Aluno</label><select id="fin-aluno"><option value="">Selecione um aluno...</option>${htmlAlunos}</select></div>
-                    <div style="display:flex; gap:10px;">
-                        <div class="input-group" style="flex:1;"><label>Valor (R$)</label><input type="number" id="fin-valor" step="0.01" placeholder="0.00"></div>
-                        <div class="input-group" style="flex:1;"><label>1º Vencimento</label><input type="date" id="fin-data"></div>
-                    </div>
-                    <div class="input-group"><label>Quantidade de Parcelas</label><input type="number" id="fin-parcelas" value="1" min="1" max="12"></div>
-                    <div class="input-group"><label>Descrição / Referência</label><input type="text" id="fin-desc" placeholder="Ex: Mensalidade Referente a..."></div>
-                    <button class="btn-primary" onclick="App.salvarFinanceiro()">💾 GERAR LANÇAMENTOS</button>
+            <div class="dashboard-grid" style="margin-bottom: 25px;">
+                <div class="stat-card card-green" style="padding: 20px;">
+                    <div class="stat-info"><h4>Recebido (Mês)</h4><p style="color:#27ae60;">${fmt(recebido)}</p></div><div class="stat-icon">💰</div>
                 </div>
-                <div class="card" style="flex:2; min-width:300px; display:flex; flex-direction:column;">
-                    <h3>📋 Gerenciar Títulos e Carnês</h3>
-                    <div class="toolbar" style="display:flex; gap:10px; margin-bottom:15px;">
-                        <div class="search-wrapper" style="flex:1;">
-                            <input type="text" id="busca-fin" class="search-input-modern" placeholder="Pesquisar por aluno..." oninput="App.filtrarFinanceiro()">
-                        </div>
-                        <button class="btn-new-modern" style="height:auto; padding:10px 15px; background: #2c3e50;" onclick="App.imprimirCarneSelecionados()">🖨️ IMPRIMIR CARNÊS</button>
-                    </div>
-                    <div id="fin-lista-area" style="flex:1; overflow-y:auto;">
-                        </div>
+                <div class="stat-card card-orange" style="padding: 20px;">
+                    <div class="stat-info"><h4>A Receber (Mês)</h4><p style="color:#f39c12;">${fmt(pendente)}</p></div><div class="stat-icon">⏳</div>
                 </div>
+                <div class="stat-card card-red" style="padding: 20px;">
+                    <div class="stat-info"><h4>Em Atraso (Geral)</h4><p style="color:#e74c3c;">${fmt(atrasado)}</p></div><div class="stat-icon">⚠️</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 25px; border-left: 5px solid var(--accent); padding: 25px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                    <h3 style="margin:0; font-size:18px; color:var(--card-text);">💸 Lançar Nova Mensalidade / Taxa</h3>
+                </div>
+                <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                    <div class="input-group" style="flex:2; min-width:200px; margin-bottom:0;"><label>Aluno</label><select id="fin-aluno" style="background:#f9f9f9;"><option value="">Selecione um aluno...</option>${htmlAlunos}</select></div>
+                    <div class="input-group" style="flex:1; min-width:120px; margin-bottom:0;"><label>Valor (R$)</label><input type="number" id="fin-valor" step="0.01" placeholder="0.00" style="border-bottom: 2px solid #27ae60;"></div>
+                    <div class="input-group" style="flex:1; min-width:140px; margin-bottom:0;"><label>1º Vencimento</label><input type="date" id="fin-data"></div>
+                    <div class="input-group" style="flex:1; min-width:100px; margin-bottom:0;"><label>Parcelas</label><input type="number" id="fin-parcelas" value="1" min="1" max="12"></div>
+                    <div class="input-group" style="flex:2; min-width:200px; margin-bottom:0;"><label>Descrição</label><input type="text" id="fin-desc" placeholder="Ex: Mensalidade..."></div>
+                    <button class="btn-primary" style="width:auto; padding:12px 25px; margin-bottom:0; font-size:14px; display:flex; align-items:center; gap:8px;" onclick="App.salvarFinanceiro()"><span>➕</span> Lançar</button>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 25px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+                    <h3 style="margin:0; font-size:18px; color:var(--card-text);">📋 Gerir Títulos e Imprimir Carnês</h3>
+                    <div style="display:flex; gap:10px; flex:1; max-width:550px;">
+                        <input type="text" id="busca-fin" class="search-input-modern" placeholder="🔍 Buscar por aluno ou descrição..." oninput="App.filtrarFinanceiro()" style="flex:1;">
+                        <select id="filtro-status-fin" onchange="App.filtrarFinanceiro()" style="width:160px; padding:10px; border-radius:6px; border:1px solid #ddd; background:#f9f9f9; font-weight:500;">
+                            <option value="">Todos os Status</option>
+                            <option value="Pendente">Apenas Pendentes</option>
+                            <option value="Pago">Apenas Pagos</option>
+                        </select>
+                    </div>
+                    <button class="btn-new-modern" style="height:auto; padding:10px 20px; background: #2c3e50; border-radius:6px;" onclick="App.imprimirCarneSelecionados()">🖨️ IMPRIMIR CARNÊS</button>
+                </div>
+                <div id="fin-lista-area" style="overflow-x:auto;"></div>
             </div>
         `;
         App.filtrarFinanceiro();
     } catch (e) {
-        div.innerHTML = "Erro ao carregar dados.";
+        div.innerHTML = '<p style="text-align:center; color:#e74c3c;">Erro ao carregar dados financeiros.</p>';
     }
 };
 
 App.filtrarFinanceiro = () => {
     const termo = document.getElementById('busca-fin').value.trim().toLowerCase();
+    const statusFiltro = document.getElementById('filtro-status-fin') ? document.getElementById('filtro-status-fin').value : '';
     const container = document.getElementById('fin-lista-area');
     let lista = App.listaCache || [];
     
-    if(termo) lista = lista.filter(i => (i.alunoNome || '').toLowerCase().includes(termo));
+    if(termo) lista = lista.filter(i => (i.alunoNome || '').toLowerCase().includes(termo) || (i.descricao || '').toLowerCase().includes(termo));
+    if(statusFiltro) lista = lista.filter(i => i.status === statusFiltro);
     
-    if(!lista.length) { container.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Nenhum lançamento encontrado.</p>'; return; }
+    if(!lista.length) { container.innerHTML = '<p style="text-align:center; color:#999; padding:40px; background:#f9f9f9; border-radius:8px; border:1px dashed #ddd;">Nenhum lançamento encontrado com estes filtros.</p>'; return; }
 
-    let html = '<div class="table-responsive-wrapper"><table style="width:100%; font-size:13px; border-collapse: collapse;"><thead><tr><th style="padding:10px; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleAllFin(this)"></th><th style="padding:10px; border-bottom:2px solid #eee; text-align:left;">Aluno</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:left;">Descrição</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:left;">Vencimento</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:left;">Valor</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:left;">Status</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:right;">Ações</th></tr></thead><tbody>';
+    let html = '<div class="table-responsive-wrapper"><table style="width:100%; font-size:13px; border-collapse: collapse;"><thead><tr style="background:#f4f6f7; color:#555; text-transform:uppercase; font-size:11px;"><th style="padding:15px; border-bottom:2px solid #eee; width:40px; text-align:center;"><input type="checkbox" onchange="App.toggleAllFin(this)"></th><th style="padding:15px; border-bottom:2px solid #eee; text-align:left;">Aluno</th><th style="padding:15px; border-bottom:2px solid #eee; text-align:left;">Descrição</th><th style="padding:15px; border-bottom:2px solid #eee; text-align:center;">Vencimento</th><th style="padding:15px; border-bottom:2px solid #eee; text-align:center;">Valor</th><th style="padding:15px; border-bottom:2px solid #eee; text-align:center;">Status</th><th style="padding:15px; border-bottom:2px solid #eee; text-align:right;">Ações</th></tr></thead><tbody>';
     
-    lista.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento)).forEach(f => {
+    lista.sort((a,b) => new Date(b.vencimento) - new Date(a.vencimento)).forEach(f => {
         const dataBr = f.vencimento ? f.vencimento.split('-').reverse().join('/') : '-';
         const val = parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits:2});
-        let st = f.status === 'Pago' ? '<span style="color:#27ae60; font-weight:bold; background:#eafaf1; padding:3px 8px; border-radius:4px;">Pago</span>' : '<span style="color:#e74c3c; font-weight:bold; background:#fdedec; padding:3px 8px; border-radius:4px;">Pendente</span>';
-        let btnAcao = f.status === 'Pendente' ? `<button class="btn-edit" style="background:#27ae60; font-size:11px; padding:6px 10px;" onclick="App.baixarFinanceiro('${f.id}')">✔️ Dar Baixa</button>` : '';
         
-        html += `<tr style="border-bottom: 1px solid #eee;">
-            <td style="padding:10px;"><input type="checkbox" class="chk-fin" value="${f.id}"></td>
-            <td style="padding:10px; font-weight:600;">${f.alunoNome || ''}</td>
-            <td style="padding:10px; color:#555;">${f.descricao || ''}</td>
-            <td style="padding:10px; font-weight:bold; color:${f.status === 'Pendente' && new Date(f.vencimento+'T00:00:00') < new Date() ? '#e74c3c' : '#333'};">${dataBr}</td>
-            <td style="padding:10px;">R$ ${val}</td>
-            <td style="padding:10px;">${st}</td>
-            <td style="padding:10px; text-align:right;">${btnAcao} <button class="btn-del" style="font-size:11px; padding:6px 10px;" onclick="App.excluir('financeiro', '${f.id}')">🗑️</button></td>
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const dataVenc = new Date(f.vencimento + 'T00:00:00');
+        const isAtrasado = f.status === 'Pendente' && dataVenc < hoje;
+
+        let st = f.status === 'Pago' ? '<span style="color:#27ae60; font-weight:bold; background:#eafaf1; padding:4px 10px; border-radius:12px; font-size:11px;">PAGO</span>' : 
+                 (isAtrasado ? '<span style="color:#e74c3c; font-weight:bold; background:#fdedec; padding:4px 10px; border-radius:12px; font-size:11px;">ATRASADO</span>' : '<span style="color:#f39c12; font-weight:bold; background:#fef5e7; padding:4px 10px; border-radius:12px; font-size:11px;">PENDENTE</span>');
+        
+        let btnAcao = f.status === 'Pendente' ? `<button class="btn-edit" style="background:#27ae60; font-size:11px; padding:6px 12px; border-radius:4px;" onclick="App.baixarFinanceiro('${f.id}')">✔️ Dar Baixa</button>` : '';
+        
+        html += `<tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#fdfdfd'" onmouseout="this.style.background='transparent'">
+            <td style="padding:15px; text-align:center;"><input type="checkbox" class="chk-fin" value="${f.id}"></td>
+            <td style="padding:15px; font-weight:600; color:#2c3e50;">${f.alunoNome || ''}</td>
+            <td style="padding:15px; color:#666;">${f.descricao || ''}</td>
+            <td style="padding:15px; text-align:center; font-weight:bold; color:${isAtrasado ? '#e74c3c' : '#333'};">${dataBr}</td>
+            <td style="padding:15px; text-align:center; font-weight:bold; color:#2c3e50;">R$ ${val}</td>
+            <td style="padding:15px; text-align:center;">${st}</td>
+            <td style="padding:15px; text-align:right;">${btnAcao} <button class="btn-del" style="font-size:11px; padding:6px 10px; border-radius:4px;" onclick="App.excluir('financeiro', '${f.id}')">🗑️</button></td>
         </tr>`;
     });
     html += '</tbody></table></div>';
@@ -90,10 +133,11 @@ App.salvarFinanceiro = async () => {
     const parcelas = parseInt(document.getElementById('fin-parcelas').value) || 1;
     const descBase = document.getElementById('fin-desc').value;
 
-    if(!idAluno || !valor || !dataStr) return App.showToast('Preencha Aluno, Valor e Data.', 'error');
+    if(!idAluno || !valor || !dataStr) return App.showToast('Preencha Aluno, Valor e Data.', 'warning');
     
     const btn = document.querySelector('button[onclick="App.salvarFinanceiro()"]');
-    btn.innerHTML = 'Gerando... ⏳'; btn.disabled = true;
+    const txtOrig = btn.innerHTML;
+    btn.innerHTML = '⏳ Gerando...'; btn.disabled = true;
 
     try {
         const baseDate = new Date(dataStr + 'T12:00:00');
@@ -123,7 +167,7 @@ App.salvarFinanceiro = async () => {
     } catch(e) {
         App.showToast('Erro ao gerar lançamentos.', 'error');
     } finally {
-        btn.innerHTML = '💾 GERAR LANÇAMENTOS'; btn.disabled = false;
+        btn.innerHTML = txtOrig; btn.disabled = false;
     }
 };
 
@@ -146,7 +190,7 @@ App.baixarFinanceiro = async (id) => {
 
 App.gerarCarneHTML = (f, escola) => {
     const logo = escola.foto ? `<img src="${escola.foto}" class="carne-logo-img">` : '';
-    // Aumentamos a caixa do QR Code para 120x120 para melhor leitura
+    // Ampliação do QR Code (Acessibilidade)
     const qrCode = escola.qrCodeImagem ? `<img src="${escola.qrCodeImagem}" class="carne-qr-img">` : '<div style="width:120px; height:120px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; font-size:10px; color:#999; text-align:center;">Nenhum<br>QR Code</div>';
     
     const valorFmt = parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -215,6 +259,7 @@ App.imprimirCarneSelecionados = () => {
     const marcados = Array.from(document.querySelectorAll('.chk-fin:checked')).map(c => c.value);
     if(!marcados.length) return App.showToast('Selecione pelo menos um lançamento para imprimir.', 'warning');
     
+    // Lê o perfil blindado do Inquilino atual
     const perfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
     const itens = App.listaCache.filter(i => marcados.includes(i.id)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
     
@@ -275,10 +320,13 @@ App.imprimirCarneSelecionados = () => {
     `);
 };
 
+// ---------------------------------------------------------
+// RELATÓRIO DE INADIMPLÊNCIA (COM CADEADO WHATSAPP)
+// ---------------------------------------------------------
 App.renderizarInadimplencia = async () => {
     App.setTitulo("Relatório de Inadimplência");
     const div = document.getElementById('app-content');
-    div.innerHTML = 'Carregando...';
+    div.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A analisar dados... ⏳</p>';
     
     try {
         const alunos = await App.api('/alunos');
@@ -296,14 +344,17 @@ App.renderizarInadimplencia = async () => {
         
         let html = `
             <div class="card" style="border-left: 5px solid #e74c3c;">
-                <h3>⚠️ Visão Geral da Inadimplência</h3>
+                <h3 style="margin-top:0;">⚠️ Visão Geral da Inadimplência</h3>
                 <div style="display:flex; gap:20px; align-items:center;">
-                    <div style="font-size:24px; font-weight:bold; color:#e74c3c;">R$ ${totalAtraso.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
-                    <div style="font-size:14px; color:#666;">Total em Atraso (${inadimplentes.length} títulos)</div>
+                    <div style="font-size:28px; font-weight:bold; color:#e74c3c;">R$ ${totalAtraso.toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+                    <div style="font-size:14px; color:#666; font-weight:500;">Total em Atraso (${inadimplentes.length} títulos)</div>
                 </div>
             </div>
-            <div class="table-responsive-wrapper">
-            <table class="doc-table" style="width:100%;"><thead><tr><th style="text-align:left;">Aluno</th><th style="text-align:left;">Descrição</th><th style="text-align:left;">Vencimento</th><th style="text-align:left;">Valor</th><th style="text-align:right;">Ação</th></tr></thead><tbody>
+            <div class="card">
+                <div class="table-responsive-wrapper">
+                    <table class="doc-table" style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead><tr style="background:#f4f6f7; color:#555; text-transform:uppercase; font-size:11px;"><th style="padding:12px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; text-align:left; border-bottom:2px solid #eee;">Descrição</th><th style="padding:12px; text-align:center; border-bottom:2px solid #eee;">Vencimento</th><th style="padding:12px; text-align:center; border-bottom:2px solid #eee;">Valor</th><th style="padding:12px; text-align:right; border-bottom:2px solid #eee;">Ação</th></tr></thead>
+                        <tbody>
         `;
         
         inadimplentes.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento)).forEach(f => {
@@ -312,16 +363,16 @@ App.renderizarInadimplencia = async () => {
             const alunoInfo = alunos.find(a => a.id === f.idAluno) || {};
             const zap = alunoInfo.whatsapp || '';
             
-            html += `<tr style="border-bottom: 1px solid #eee;">
-                <td style="padding:12px;"><strong>${f.alunoNome || ''}</strong></td>
-                <td style="padding:12px;">${f.descricao || ''}</td>
-                <td style="padding:12px; color:#e74c3c; font-weight:bold;">${dataBr}</td>
-                <td style="padding:12px;">R$ ${valFmt}</td>
-                <td style="padding:12px; text-align:right;"><button class="btn-primary" style="background:#25D366; padding:6px 12px; margin:0; width:auto;" onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')">💬 Cobrar</button></td>
+            html += `<tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#fdfdfd'" onmouseout="this.style.background='transparent'">
+                <td style="padding:15px; color:#2c3e50;"><strong>${f.alunoNome || ''}</strong></td>
+                <td style="padding:15px; color:#666;">${f.descricao || ''}</td>
+                <td style="padding:15px; text-align:center; color:#e74c3c; font-weight:bold;">${dataBr}</td>
+                <td style="padding:15px; text-align:center; font-weight:bold;">R$ ${valFmt}</td>
+                <td style="padding:15px; text-align:right;"><button class="btn-primary" style="background:#25D366; padding:8px 15px; margin:0; width:auto; display:inline-flex; align-items:center; gap:5px;" onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')"><span>💬</span> Cobrar</button></td>
             </tr>`;
         });
-        html += '</tbody></table></div>';
+        html += '</tbody></table></div></div>';
         div.innerHTML = html;
 
-    } catch (e) { div.innerHTML = 'Erro ao carregar inadimplência.'; }
+    } catch (e) { div.innerHTML = '<p style="text-align:center; color:#e74c3c;">Erro ao carregar dados de inadimplência.</p>'; }
 };
