@@ -141,7 +141,10 @@ App.renderizarTelaEdicao = (plano) => {
     let totalMinutos = 0;
     plano.aulas.forEach(aula => { const [h, m] = aula.duracao.split(':').map(Number); totalMinutos += (h * 60) + m; });
     const totalHoras = (totalMinutos / 60).toFixed(0);
-    const escola = JSON.parse(localStorage.getItem('escola_perfil')) || {}; const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+    
+    // 🛡️ A CADEADO SaaS AQUI: getTenantKey garante que busca o perfil da escola certa!
+    const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {}; 
+    const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
     div.innerHTML = `
         <div class="no-print" style="margin-bottom:20px; text-align:center; background:#f4f4f4; padding:15px; border-radius:10px;">
@@ -259,6 +262,7 @@ App.gerarBoletimTela = async () => {
             linhasHTML += `<tr><td>${d.nome}</td><td>${detalhe}</td><td style="text-align:center;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center;">${situacao}</td></tr>`;
         });
 
+        // 🛡️ A CADEADO SaaS AQUI: Usa a Cerca de Segurança no Boletim também!
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const dataHoje = new Date().toLocaleDateString('pt-BR');
 
