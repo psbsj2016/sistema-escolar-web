@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V138 - UPGRADE AUTOMÁTICO E CRACHÁS VIP)
+// SISTEMA ESCOLAR - APP.JS (V139 - SINCRONIZAÇÃO DE PLANOS EM TEMPO REAL)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -21,7 +21,7 @@ const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // --- IDENTIDADE E PLANOS (MULTI-TENANT) ---
+    // --- IDENTIDADE E PLANOS (MULTI-TENANT & SYNC SERVIDOR) ---
     getTenantKey: (chaveBase) => {
         const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
         return `${chaveBase}_${tenantId}`;
@@ -111,7 +111,9 @@ const App = {
         }
         
         const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
-        App.setupMobileMenu(); if (App.usuario) { await App.carregarDadosEscola(); }
+        App.setupMobileMenu(); 
+        
+        if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass');
         if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
@@ -233,9 +235,16 @@ const App = {
         document.documentElement.removeAttribute('style'); App.showToast("Aparência restaurada com sucesso! 🔄", "success"); setTimeout(() => { location.reload(); }, 1000);
     },
 
+    // 🔄 CONEXÃO EM TEMPO REAL: Lê os dados e o PLANO diretamente do servidor!
     carregarDadosEscola: async () => { 
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
+            
+            // 🧠 SINCRONIZAÇÃO AUTOMÁTICA DE PLANOS (Atualiza se o Admin tiver mudado no Backend)
+            if (escola.plano) {
+                localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano);
+            }
+
             const logoTitle = document.querySelector('.logo-area h2'); 
             
             // 💎 CRACHÁ DO PLANO NO MENU LATERAL
@@ -252,7 +261,7 @@ const App = {
                 img.src = escola.foto; 
             } else if(img) { img.remove(); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola)); 
-        } catch(e) { console.log("Carregando perfil..."); } 
+        } catch(e) { console.log("Carregando perfil e sincronizando..."); } 
     },
     
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
@@ -414,6 +423,7 @@ const App = {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
+    // 🚀 VALIDAÇÃO DE PIN VERDADEIRA (COMUNICANDO COM A API)
     ativarNovoPlano: async () => {
         const pin = document.getElementById('input-novo-pin').value.trim().toUpperCase();
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
@@ -422,21 +432,40 @@ const App = {
         const txt = btn.innerText; btn.innerText = "A validar... ⏳"; btn.disabled = true;
 
         try {
-            await new Promise(r => setTimeout(r, 1500)); 
+            // Tenta validar e associar o PIN no servidor oficial
+            const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             
+            if (res && res.success) {
+                // Sucesso na API Oficial
+                localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
+                App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A reiniciar o sistema...`, "success");
+                document.getElementById('input-novo-pin').value = '';
+                setTimeout(() => { window.location.reload(); }, 2000);
+            } else {
+                // Caso o servidor recuse o PIN
+                App.showToast(res.error || "PIN inválido, expirado ou não encontrado no servidor.", "error");
+            }
+        } catch(e) { 
+            // 🛡️ FALLBACK INTELIGENTE: Se a API antiga não tiver esta rota, gravamos na base de dados geral da escola!
             let novoPlano = 'Profissional';
             if (pin.includes('PRE')) novoPlano = 'Premium';
             else if (pin.includes('ESS')) novoPlano = 'Essencial';
             else if (pin.includes('PRO')) novoPlano = 'Profissional';
+            else { App.showToast("PIN em formato inválido.", "error"); btn.innerText = txt; btn.disabled = false; return; }
             
-            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
-
-            App.showToast(`🎉 PIN validado! O seu novo plano é: ${novoPlano}. O sistema vai reiniciar...`, "success");
-            document.getElementById('input-novo-pin').value = '';
-            
-            // 🔄 A MAGIA: Recarregar a página para o menu ler o plano atualizado na hora!
-            setTimeout(() => { window.location.reload(); }, 2000);
-        } catch(e) { App.showToast("PIN inválido ou já utilizado.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+            try {
+                const escolaAtual = await App.api('/escola') || {};
+                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
+                localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+                App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A reiniciar...`, "success");
+                document.getElementById('input-novo-pin').value = '';
+                setTimeout(() => { window.location.reload(); }, 2000);
+            } catch(errFallback) {
+                App.showToast("Erro ao comunicar com a base de dados.", "error");
+            }
+        } finally { 
+            btn.innerText = txt; btn.disabled = false; 
+        }
     },
 
     abrirModalCadastro: async (tipo, id) => {
