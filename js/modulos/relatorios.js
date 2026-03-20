@@ -1,12 +1,12 @@
 // =========================================================
-// MÓDULO RELATÓRIOS V101 (REESTRUTURADO EM COMPONENTES)
+// MÓDULO RELATÓRIOS V102 (CORREÇÃO DE LOGO + DECLARAÇÃO)
 // =========================================================
 
 App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'fin_detalhado' || tipo === 'financeiro') { App.setTitulo("Relatórios Financeiros"); App.renderizarSelecaoRelatorio(); return; }
     if (tipo === 'dossie') { App.renderizarDossie(); return; }
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
-    if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; } // 🚀 ROTA NOVA ADICIONADA
+    if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; } 
 };
 
 // 🧱 ATALHOS GERAIS PARA O MÓDULO DE RELATÓRIOS
@@ -60,8 +60,9 @@ App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Gerando relatório anual...</p>';
     try {
-        const financeiro = await App.api('/financeiro');
-        const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
+        // 🚀 CORREÇÃO APLICADA: Busca dados ao vivo da API em vez de localStorage!
+        const [financeiro, escola] = await Promise.all([ App.api('/financeiro'), App.api('/escola') ]);
+        
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
@@ -78,7 +79,7 @@ App.gerarRelatorioAnual = async () => {
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
-                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}<br>Relatório Analítico Anual</div></div>
+                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome || 'ESCOLA'}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj || 'Não informado'}<br>Relatório Analítico Anual</div></div>
                     </div>
                     <div style="text-align:right;">
                         <h1 style="margin:0; font-size:24px; color:#2c3e50;">EXERCÍCIO ${ano}</h1>
@@ -122,8 +123,9 @@ App.gerarRelatorioMensal = async () => {
     const mesNome = meses[mesIdx - 1];
 
     try {
-        const financeiro = await App.api('/financeiro');
-        const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
+        // 🚀 CORREÇÃO APLICADA: Busca dados ao vivo da API em vez de localStorage!
+        const [financeiro, escola] = await Promise.all([ App.api('/financeiro'), App.api('/escola') ]);
+        
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
@@ -138,7 +140,7 @@ App.gerarRelatorioMensal = async () => {
             </div>
             <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                    <div style="display:flex; gap:15px; align-items:center;">${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="display:flex; gap:15px; align-items:center;">${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome || 'ESCOLA'}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj || 'Não informado'}</div></div></div>
                     <div style="text-align:right;"><h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2><div style="font-size:10px; color:#999;">Relatório Mensal<br>Emissão: ${new Date().toLocaleString('pt-BR')}</div></div>
                 </div>
                 <div style="display:flex; gap:15px; margin-bottom:30px;">
@@ -513,6 +515,7 @@ App.renderizarGeradorDocumentos = async () => {
                         <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Qual documento deseja emitir?</label>
                         <select id="doc-tipo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
                             <option value="contrato">📄 Contrato de Prestação de Serviços Educacionais</option>
+                            <option value="declaracao">📄 Declaração de Matrícula / Frequência</option>
                             <option value="certificado">🎓 Certificado de Conclusão de Curso (Diploma)</option>
                         </select>
                     </div>
@@ -552,13 +555,27 @@ App.gerarDocumentoPrint = async () => {
         }
 
         const dataHoje = new Date().toLocaleDateString('pt-BR');
+        
+        // CABEÇALHO OFICIAL PROFISSIONAL
+        const cabecalhoOficial = `
+            <div style="display:flex; align-items:center; gap:20px; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 30px;">
+                ${escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : ''}
+                <div>
+                    <h2 style="margin:0; text-transform:uppercase;">${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</h2>
+                    <div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</div>
+                </div>
+            </div>
+        `;
 
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
             printContainer.innerHTML = `
                 <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align:center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+                    
+                    ${cabecalhoOficial}
+
+                    <div style="text-align:center; margin-bottom: 30px;">
                         <h2 style="margin:0; text-transform: uppercase;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS</h2>
                     </div>
                     
@@ -590,6 +607,38 @@ App.gerarDocumentoPrint = async () => {
                         </div>
                         <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
                             <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
+                        </div>
+                    </div>
+                </div>
+            `;
+            let style = document.createElement('style');
+            style.innerHTML = `@page { size: A4 portrait; margin: 15mm; }`;
+            printContainer.appendChild(style);
+            
+        } else if (tipo === 'declaracao') {
+            printContainer.innerHTML = `
+                <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6; max-width: 800px; margin: 0 auto; min-height: 90vh; display: flex; flex-direction: column;">
+                    
+                    ${cabecalhoOficial}
+                    
+                    <h2 style="text-align:center; text-transform:uppercase; margin-top: 20px; margin-bottom: 50px; letter-spacing: 2px;">Declaração de Matrícula</h2>
+                    
+                    <p style="text-align: justify; font-size: 16px; line-height: 2;">
+                        Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, encontra-se regularmente matriculado(a) e frequentando as aulas do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> (Turma: ${App.escapeHTML(aluno.turma || 'Não especificada')}) nesta instituição de ensino.
+                    </p>
+                    
+                    <p style="text-align: justify; font-size: 16px; line-height: 2; margin-top: 20px;">
+                        A presente declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
+                    </p>
+                    
+                    <p style="text-align: right; margin-top: 80px; font-size: 16px;">
+                        ${App.escapeHTML(escola.cidade || 'Local')}, ${dataHoje}.
+                    </p>
+                    
+                    <div style="margin-top: 100px; text-align: center; margin-bottom: auto;">
+                        <div style="width: 350px; margin: 0 auto; border-top: 1px solid #000; padding-top: 10px;">
+                            <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>
+                            Direção / Secretaria Acadêmica
                         </div>
                     </div>
                 </div>
