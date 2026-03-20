@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V143 - FÁBRICA DE DOCUMENTOS)
+// SISTEMA ESCOLAR - APP.JS (V144 - CORREÇÃO PERFIL E COMPRESSÃO)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
@@ -15,7 +15,6 @@ const LISTA_FUNCIONALIDADES = [
     { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')" },
     { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')" },
     { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')" },
-    // 🎓 NOVO BOTÃO DE DOCUMENTOS:
     { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')" } 
 ];
 
@@ -23,7 +22,6 @@ const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // 🛡️ ESCUDO ANTI-XSS (Tratamento de Dados de Saída)
     escapeHTML: (str) => {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -34,7 +32,6 @@ const App = {
             .replace(/'/g, '&#039;');
     },
 
-    // --- IDENTIDADE E PLANOS (MULTI-TENANT & SYNC SERVIDOR) ---
     getTenantKey: (chaveBase) => {
         const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
         return `${chaveBase}_${tenantId}`;
@@ -64,7 +61,6 @@ const App = {
         }
         return true;
     },
-    // ------------------------------------------
 
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
@@ -248,7 +244,6 @@ const App = {
         document.documentElement.removeAttribute('style'); App.showToast("Aparência restaurada com sucesso! 🔄", "success"); setTimeout(() => { location.reload(); }, 1000);
     },
 
-    // 🔄 CONEXÃO EM TEMPO REAL: Lê os dados e o PLANO diretamente do servidor!
     carregarDadosEscola: async () => { 
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
@@ -275,11 +270,12 @@ const App = {
         } catch(e) { console.log("Carregando perfil e sincronizando..."); } 
     },
     
-    otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
+    // 🛡️ NOVO MOTOR DE COMPRESSÃO (JPEG para máxima velocidade e leveza)
+    otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.8)); }; }; },
     
     renderizarInicio: async () => {
-    App.verificarNotificacoes(); // 🚀 ISTO ATIVA O MOTOR DE ALERTAS!    
-App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
+        App.verificarNotificacoes(); 
+        App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         try {
             const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
             const listaAlunos = Array.isArray(alunos) ? alunos : []; const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
@@ -558,7 +554,6 @@ App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
-    // 🛡️ APLICANDO A PROTEÇÃO NA TABELA
     gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
@@ -679,6 +674,7 @@ App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     excluirUsuario: async (id) => { if(confirm("Tem certeza que deseja excluir este usuário?")) { await App.api(`/usuarios/${id}`, 'DELETE'); App.showToast("Usuário excluído com sucesso.", "success"); App.renderizarMinhaConta(); } },
 
+    // 🛡️ NOVO ECRÃ DE CONFIGURAÇÕES UNIFICADO
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...'; 
         try { 
@@ -691,12 +687,24 @@ App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'
                 <div class="card" style="max-width:850px; margin:0 auto;">
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-bottom:30px;">
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
-                            <img id="conf-preview" src="${imgLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                            <div><label style="font-weight:bold; font-size:13px;">Logotipo Oficial</label><input type="file" id="conf-file" accept="image/*" style="font-size:12px; margin-bottom:10px; width:100%;"><div style="display:flex; gap:5px;"><button class="btn-primary" style="padding:5px 10px; font-size:11px;" onclick="App.processarLogo()">💾 Salvar</button><button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerLogo()">🗑️</button></div></div>
+                            <img id="conf-preview" src="${imgLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
+                            <div>
+                                <label style="font-weight:bold; font-size:13px;">Logotipo Oficial</label>
+                                <input type="file" id="conf-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-preview')">🗑️ Remover Imagem</button>
+                                </div>
+                            </div>
                         </div>
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
                             <img id="conf-qr-preview" src="${imgQr}" style="width:100px; height:100px; object-fit:contain; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
-                            <div><label style="font-weight:bold; font-size:13px;">QR Code PIX</label><input type="file" id="conf-qr-file" accept="image/*" style="font-size:12px; margin-bottom:10px; width:100%;"><div style="display:flex; gap:5px;"><button class="btn-primary" style="padding:5px 10px; font-size:11px;" onclick="App.processarQrCode()">💾 Salvar</button><button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerQrCode()">🗑️</button></div></div>
+                            <div>
+                                <label style="font-weight:bold; font-size:13px;">QR Code PIX</label>
+                                <input type="file" id="conf-qr-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-qr-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-qr-preview')">🗑️ Remover Imagem</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
@@ -705,26 +713,67 @@ App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
                         <div class="input-group"><label>Dados Bancários</label><input id="conf-banco" value="${App.escapeHTML(escola.banco||'')}"></div><div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${App.escapeHTML(escola.chavePix||'')}" placeholder="Ex: email@escola.com"></div>
                     </div>
-                    <button class="btn-primary" style="width:100%; margin-top:20px; padding:15px;" onclick="App.salvarConfiguracoes()">ATUALIZAR DADOS</button>
+                    <button class="btn-primary" style="width:100%; margin-top:20px; padding:15px;" onclick="App.salvarConfiguracoes()">ATUALIZAR DADOS DA ESCOLA</button>
                 </div>`; 
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
     },
 
-    processarLogo: () => { const fileInput = document.getElementById('conf-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione uma imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-preview').src = imgBase64; try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola', 'PUT', { ...escolaAtual, foto: imgBase64 }); App.carregarDadosEscola(); App.showToast("Logotipo salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
-    processarQrCode: () => { const fileInput = document.getElementById('conf-qr-file'); if (!fileInput.files || fileInput.files.length === 0) return App.showToast("Selecione a imagem primeiro.", "warning"); App.showToast("Processando... ⏳", "info"); App.otimizarImagem(fileInput.files[0], 400, async (imgBase64) => { document.getElementById('conf-qr-preview').src = imgBase64; try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola', 'PUT', { ...escolaAtual, qrCodeImagem: imgBase64 }); App.showToast("QR Code PIX salvo!", "success"); } catch(e) { App.showToast("Erro ao salvar.", "error"); } }); },
-    removerLogo: async () => { if(confirm("Apagar o logotipo?")){ try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola','PUT',{ ...escolaAtual, foto: "" }); App.carregarDadosEscola(); document.getElementById('conf-preview').src = "https://placehold.co/100?text=LOGO"; App.showToast("Logotipo removido.", "info"); } catch(e) {} } },
-    removerQrCode: async () => { if(confirm("Apagar o QR Code?")){ try { const escolaAtual = await App.api('/escola') || {}; await App.api('/escola','PUT',{ ...escolaAtual, qrCodeImagem: "" }); document.getElementById('conf-qr-preview').src = "https://placehold.co/100?text=QR+CODE"; App.showToast("QR Code removido.", "info"); } catch(e) {} } },
+    previewImagemLocal: (input, imgId) => {
+        if (!input.files || input.files.length === 0) return;
+        App.otimizarImagem(input.files[0], 400, (imgBase64) => {
+            const img = document.getElementById(imgId);
+            img.src = imgBase64;
+            img.setAttribute('data-nova', 'true'); // Marca que houve alteração local
+        });
+    },
+
+    removerImagemLocal: (imgId) => {
+        const img = document.getElementById(imgId);
+        img.src = imgId === 'conf-preview' ? "https://placehold.co/100?text=LOGO" : "https://placehold.co/100?text=QR+CODE";
+        img.setAttribute('data-nova', 'true');
+        const fileInput = document.getElementById(imgId === 'conf-preview' ? 'conf-file' : 'conf-qr-file');
+        if(fileInput) fileInput.value = '';
+    },
 
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
+    
     salvarConfiguracoes: async () => { 
-        const p = { nome: document.getElementById('conf-nome').value, cnpj: document.getElementById('conf-cnpj').value, banco: document.getElementById('conf-banco').value, chavePix: document.getElementById('conf-pix').value }; 
-        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true; 
+        const p = { 
+            nome: document.getElementById('conf-nome').value, 
+            cnpj: document.getElementById('conf-cnpj').value, 
+            banco: document.getElementById('conf-banco').value, 
+            chavePix: document.getElementById('conf-pix').value 
+        }; 
+        
+        // Verifica se a logo mudou e envia
+        const imgLogo = document.getElementById('conf-preview');
+        if (imgLogo && imgLogo.hasAttribute('data-nova')) {
+            p.foto = imgLogo.src.includes('placehold') ? "" : imgLogo.src;
+        }
+
+        // Verifica se o QR Code mudou e envia
+        const imgQr = document.getElementById('conf-qr-preview');
+        if (imgQr && imgQr.hasAttribute('data-nova')) {
+            p.qrCodeImagem = imgQr.src.includes('placehold') ? "" : imgQr.src;
+        }
+
+        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); 
+        const txt = btn.innerText; btn.innerText = "A atualizar... ⏳"; btn.disabled = true; 
+        
         try { 
             const escolaAtual = await App.api('/escola') || {};
             await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
-            App.carregarDadosEscola();
-            App.showToast("Configurações atualizadas!", "success"); 
-        } catch(e) { App.showToast("Erro ao salvar.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
+            await App.carregarDadosEscola(); // Atualiza a logo no Menu Lateral na hora!
+            
+            if (imgLogo) imgLogo.removeAttribute('data-nova');
+            if (imgQr) imgQr.removeAttribute('data-nova');
+            
+            App.showToast("Configurações atualizadas com sucesso!", "success"); 
+        } catch(e) { 
+            App.showToast("Erro ao salvar perfil da escola.", "error"); 
+        } finally { 
+            btn.innerText = txt; btn.disabled = false; 
+        } 
     },   
 
     mascaraCPF: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; },
@@ -852,7 +901,6 @@ App.toggleNotificacoes = () => {
     if (dropdown) dropdown.classList.toggle('active');
 };
 
-// Fechar o painel de alertas se o utilizador clicar fora dele
 document.addEventListener('click', (e) => {
     const container = document.querySelector('.notification-container');
     if (container && !container.contains(e.target)) {
@@ -863,7 +911,6 @@ document.addEventListener('click', (e) => {
 
 App.verificarNotificacoes = async () => {
     try {
-        // Vai buscar todos os dados necessários em simultâneo (Alta Performance)
         const [alunos, eventos, financeiro] = await Promise.all([
             App.api('/alunos'), App.api('/eventos'), App.api('/financeiro')
         ]);
@@ -879,7 +926,6 @@ App.verificarNotificacoes = async () => {
         amanha.setDate(amanha.getDate() + 1);
         const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
 
-        // 🎂 1. Aniversariantes do Dia
         if (Array.isArray(alunos)) {
             alunos.forEach(a => {
                 if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
@@ -888,7 +934,6 @@ App.verificarNotificacoes = async () => {
             });
         }
 
-        // 📅 2. Eventos / Feriados / Reuniões (Hoje e Amanhã)
         if (Array.isArray(eventos)) {
             eventos.forEach(e => {
                 if (e.data === hojeStr) alertas.push({ icon: '🚨', texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
@@ -896,9 +941,8 @@ App.verificarNotificacoes = async () => {
             });
         }
 
-        // 🎓 3. Fim de Curso (Último mês de faturação do aluno)
         if (Array.isArray(financeiro) && Array.isArray(alunos)) {
-            const maxVenc = {}; // Vai guardar a última data de vencimento de cada aluno
+            const maxVenc = {}; 
             financeiro.forEach(f => {
                 if (f.status !== 'Cancelado') {
                     if (!maxVenc[f.idAluno] || f.vencimento > maxVenc[f.idAluno]) {
@@ -907,7 +951,6 @@ App.verificarNotificacoes = async () => {
                 }
             });
             Object.entries(maxVenc).forEach(([id, dataVenc]) => {
-                // Se a ÚLTIMA prestação registada do aluno for no mês/ano atual:
                 if (dataVenc && dataVenc.startsWith(`${ano}-${mes}`)) {
                     const al = alunos.find(x => x.id === id);
                     if (al) alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(al.nome)}</b> vence este mês. Hora de oferecer a renovação de curso!` });
@@ -915,7 +958,6 @@ App.verificarNotificacoes = async () => {
             });
         }
 
-        // 🎨 Renderizar no Painel
         const badge = document.getElementById('noti-badge');
         const list = document.getElementById('noti-list');
         
