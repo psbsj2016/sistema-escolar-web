@@ -278,7 +278,8 @@ const App = {
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/png', 0.7)); }; }; },
     
     renderizarInicio: async () => {
-        App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
+    App.verificarNotificacoes(); // 🚀 ISTO ATIVA O MOTOR DE ALERTAS!    
+App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         try {
             const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
             const listaAlunos = Array.isArray(alunos) ? alunos : []; const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
@@ -840,6 +841,92 @@ const App = {
         document.getElementById('tela-sistema').style.display = 'none';
         const telaLogin = document.getElementById('tela-login'); telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
     }
+};
+
+// =========================================================
+// 🔔 MOTOR DE INTELIGÊNCIA: CENTRAL DE NOTIFICAÇÕES
+// =========================================================
+
+App.toggleNotificacoes = () => {
+    const dropdown = document.getElementById('noti-dropdown');
+    if (dropdown) dropdown.classList.toggle('active');
+};
+
+// Fechar o painel de alertas se o utilizador clicar fora dele
+document.addEventListener('click', (e) => {
+    const container = document.querySelector('.notification-container');
+    if (container && !container.contains(e.target)) {
+        const dropdown = document.getElementById('noti-dropdown');
+        if (dropdown) dropdown.classList.remove('active');
+    }
+});
+
+App.verificarNotificacoes = async () => {
+    try {
+        // Vai buscar todos os dados necessários em simultâneo (Alta Performance)
+        const [alunos, eventos, financeiro] = await Promise.all([
+            App.api('/alunos'), App.api('/eventos'), App.api('/financeiro')
+        ]);
+        
+        let alertas = [];
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+        const dia = String(hoje.getDate()).padStart(2, '0');
+        const hojeStr = `${ano}-${mes}-${dia}`;
+        
+        const amanha = new Date(hoje);
+        amanha.setDate(amanha.getDate() + 1);
+        const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
+
+        // 🎂 1. Aniversariantes do Dia
+        if (Array.isArray(alunos)) {
+            alunos.forEach(a => {
+                if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
+                    alertas.push({ icon: '🎂', texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Envie uma mensagem de parabéns.` });
+                }
+            });
+        }
+
+        // 📅 2. Eventos / Feriados / Reuniões (Hoje e Amanhã)
+        if (Array.isArray(eventos)) {
+            eventos.forEach(e => {
+                if (e.data === hojeStr) alertas.push({ icon: '🚨', texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
+                else if (e.data === amanhaStr) alertas.push({ icon: '⏳', texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
+            });
+        }
+
+        // 🎓 3. Fim de Curso (Último mês de faturação do aluno)
+        if (Array.isArray(financeiro) && Array.isArray(alunos)) {
+            const maxVenc = {}; // Vai guardar a última data de vencimento de cada aluno
+            financeiro.forEach(f => {
+                if (f.status !== 'Cancelado') {
+                    if (!maxVenc[f.idAluno] || f.vencimento > maxVenc[f.idAluno]) {
+                        maxVenc[f.idAluno] = f.vencimento;
+                    }
+                }
+            });
+            Object.entries(maxVenc).forEach(([id, dataVenc]) => {
+                // Se a ÚLTIMA prestação registada do aluno for no mês/ano atual:
+                if (dataVenc && dataVenc.startsWith(`${ano}-${mes}`)) {
+                    const al = alunos.find(x => x.id === id);
+                    if (al) alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(al.nome)}</b> vence este mês. Hora de oferecer a renovação de curso!` });
+                }
+            });
+        }
+
+        // 🎨 Renderizar no Painel
+        const badge = document.getElementById('noti-badge');
+        const list = document.getElementById('noti-list');
+        
+        if (alertas.length > 0) {
+            if (badge) { badge.innerText = alertas.length; badge.style.display = 'block'; }
+            if (list) list.innerHTML = alertas.map(a => `<div class="noti-item"><span class="noti-icon">${a.icon}</span><div>${a.texto}</div></div>`).join('');
+        } else {
+            if (badge) badge.style.display = 'none';
+            if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
+        }
+    } catch (e) { console.error("Erro nas notificações", e); }
 };
 
 document.addEventListener('DOMContentLoaded', App.init);
