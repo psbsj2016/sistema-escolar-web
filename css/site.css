@@ -281,3 +281,31 @@ tr:hover td { background: rgba(0,0,0,0.01); }
 button, input[type="checkbox"], input[type="radio"], label {
     cursor: pointer !important;
 }
+
+/* =========================================================
+   🖨️ ÁREA DE IMPRESSÃO DE DOCUMENTOS (CONTRATOS E CERTIFICADOS)
+   ========================================================= */
+#print-area { display: none; }
+
+@media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        display: block !important;
+        background: white;
+    }
+    .sidebar, header, .mobile-overlay, #toast-container, .mobile-menu-btn { 
+        display: none !important; 
+    }
+    body { background: white; margin: 0; padding: 0; }
+    
+    /* Forçar o navegador a imprimir cores de fundo e bordas */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

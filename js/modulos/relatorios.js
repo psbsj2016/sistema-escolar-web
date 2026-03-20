@@ -6,6 +6,7 @@ App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'fin_detalhado' || tipo === 'financeiro') { App.setTitulo("Relatórios Financeiros"); App.renderizarSelecaoRelatorio(); return; }
     if (tipo === 'dossie') { App.renderizarDossie(); return; }
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
+    if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; } // 🚀 ROTA NOVA ADICIONADA
 };
 
 // 🧱 ATALHOS GERAIS PARA O MÓDULO DE RELATÓRIOS
@@ -478,4 +479,168 @@ App.gerarFichaImprimir = async () => {
         `;
     } catch(e) { App.showToast("Erro ao gerar ficha. O aluno não foi encontrado.", "error"); }
     finally { document.body.style.cursor = 'default'; }
+};
+
+// =========================================================
+// 🎓 FÁBRICA DE DOCUMENTOS (CONTRATOS E CERTIFICADOS)
+// =========================================================
+
+App.renderizarGeradorDocumentos = async () => {
+    App.setTitulo("Gerador de Documentos");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando base de alunos...</p>';
+    
+    try {
+        const alunos = await App.api('/alunos');
+        const alunosOptions = alunos.length > 0 
+            ? `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Turma: ${App.escapeHTML(a.turma || '-')})</option>`).join('')
+            : `<option value="">Nenhum aluno encontrado</option>`;
+
+        const formHTML = `
+            <div class="card" style="max-width: 600px; margin: 0 auto; border-top: 4px solid var(--accent);">
+                <h3 style="color:var(--card-text); margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
+                    🎓 Emissão de Documentos Oficiais
+                </h3>
+                <p style="font-size:13px; color:#666; margin-bottom:25px;">O sistema irá preencher os dados automaticamente para impressão profissional.</p>
+                
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    <div style="flex:1; min-width:150px; text-align:left;">
+                        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">1. Selecione o Aluno:</label>
+                        <select id="doc-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">${alunosOptions}</select>
+                    </div>
+                    
+                    <div style="flex:1; min-width:150px; text-align:left;">
+                        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Qual documento deseja emitir?</label>
+                        <select id="doc-tipo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
+                            <option value="contrato">📄 Contrato de Prestação de Serviços Educacionais</option>
+                            <option value="certificado">🎓 Certificado de Conclusão de Curso (Diploma)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:30px; display:flex; gap:10px;">
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3);" onclick="App.gerarDocumentoPrint()">🖨️ GERAR E IMPRIMIR DOCUMENTO</button>
+                </div>
+            </div>
+        `;
+        div.innerHTML = formHTML;
+    } catch (e) {
+        div.innerHTML = '<p>Erro ao carregar dados.</p>';
+    }
+};
+
+App.gerarDocumentoPrint = async () => {
+    const idAluno = document.getElementById('doc-aluno').value;
+    const tipo = document.getElementById('doc-tipo').value;
+    
+    if (!idAluno) return App.showToast("Selecione um aluno na lista.", "warning");
+
+    const btn = document.querySelector('button[onclick="App.gerarDocumentoPrint()"]');
+    const txtOriginal = btn.innerText;
+    btn.innerText = "A Processar... ⏳"; btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    try {
+        const aluno = await App.api(`/alunos/${idAluno}`);
+        const escola = await App.api('/escola');
+
+        let printContainer = document.getElementById('print-area');
+        if (!printContainer) {
+            printContainer = document.createElement('div');
+            printContainer.id = 'print-area';
+            document.body.appendChild(printContainer);
+        }
+
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+        if (tipo === 'contrato') {
+            const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            
+            printContainer.innerHTML = `
+                <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align:center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+                        <h2 style="margin:0; text-transform: uppercase;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS</h2>
+                    </div>
+                    
+                    <p style="text-align: justify; margin-top: 20px;">
+                        Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
+                        inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
+                        <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
+                        residente e domiciliado(a) na ${App.escapeHTML(aluno.rua || '')}, ${App.escapeHTML(aluno.numero || '')} - ${App.escapeHTML(aluno.bairro || '')}, 
+                        ${App.escapeHTML(aluno.cidade || '')}/${App.escapeHTML(aluno.estado || '')}, doravante denominado(a) <b>CONTRATANTE</b>.
+                    </p>
+
+                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
+                    <p style="text-align: justify; margin-top:0;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
+
+                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
+                    <p style="text-align: justify; margin-top:0;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</p>
+
+                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
+                    <p style="text-align: justify; margin-top:0;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas para ter direito ao certificado de conclusão. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
+
+                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
+                    <p style="text-align: justify; margin-top:0;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
+                    
+                    <p style="text-align: right; margin-top: 60px;">Local e Data: ____________________________, ${dataHoje}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: 80px; text-align: center;">
+                        <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
+                            <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
+                        </div>
+                        <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
+                            <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
+                        </div>
+                    </div>
+                </div>
+            `;
+            let style = document.createElement('style');
+            style.innerHTML = `@page { size: A4 portrait; margin: 15mm; }`;
+            printContainer.appendChild(style);
+
+        } else if (tipo === 'certificado') {
+            printContainer.innerHTML = `
+                <div style="padding: 50px; font-family: 'Times New Roman', serif; color: #000; text-align: center; border: 20px solid #2c3e50; outline: 6px solid #d4af37; outline-offset: -12px; height: 90vh; display: flex; flex-direction: column; justify-content: center; position:relative; box-sizing: border-box; background: #fff;">
+                    
+                    <h1 style="font-size: 55px; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 8px;">Certificado de Conclusão</h1>
+                    <p style="font-size: 24px; color: #555; margin-bottom: 50px; font-style: italic;">Certificamos que</p>
+                    
+                    <h2 style="font-size: 48px; color: #b71c1c; margin: 0 0 50px 0; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 50px; font-family: Arial, sans-serif;">
+                        ${App.escapeHTML(aluno.nome)}
+                    </h2>
+                    
+                    <p style="font-size: 22px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.6;">
+                        concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, 
+                        com a carga horária correspondente e aproveitamento plenamente satisfatório.
+                    </p>
+                    
+                    <p style="font-size: 18px; color: #555; margin-top: 50px;">
+                        Emitido por <b>${App.escapeHTML(escola.nome || 'Instituição de Ensino')}</b> em ${dataHoje}.
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-around; margin-top: auto; padding-bottom: 20px;">
+                        <div style="width: 35%; border-top: 1px solid #000; padding-top: 10px; font-size: 18px;">
+                            <b>A Direção</b>
+                        </div>
+                        <div style="width: 35%; border-top: 1px solid #000; padding-top: 10px; font-size: 18px;">
+                            <b>Instrutor / Coordenação</b>
+                        </div>
+                    </div>
+                </div>
+            `;
+            let style = document.createElement('style');
+            style.innerHTML = `@page { size: A4 landscape; margin: 10mm; }`;
+            printContainer.appendChild(style);
+        }
+
+        setTimeout(() => {
+            window.print();
+        }, 500);
+
+    } catch (e) {
+        App.showToast("Erro ao gerar o documento.", "error");
+    } finally {
+        btn.innerText = txtOriginal; btn.disabled = false;
+        document.body.style.cursor = 'default';
+    }
 };

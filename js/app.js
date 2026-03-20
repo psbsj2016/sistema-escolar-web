@@ -1,7 +1,8 @@
-// SISTEMA ESCOLAR - APP.JS (V142 - DESACOPLAMENTO DA API)
+// =========================================================
+// SISTEMA ESCOLAR - APP.JS (V143 - FÁBRICA DE DOCUMENTOS)
 // =========================================================
 
-const API_URL = CONFIG.API_URL;
+const API_URL = CONFIG.API_URL; 
 
 const LISTA_FUNCIONALIDADES = [
     { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')" },
@@ -13,7 +14,9 @@ const LISTA_FUNCIONALIDADES = [
     { id: 'fin_inad', nome: 'Inadimplência', icon: '⚠️', acao: "App.renderizarTela('inadimplencia')" },
     { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')" },
     { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')" },
-    { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')" }
+    { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')" },
+    // 🎓 NOVO BOTÃO DE DOCUMENTOS:
+    { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')" } 
 ];
 
 const App = {
