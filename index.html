@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema Gestão Escolar</title>
+    <title>Sistema de Gestão Escolar</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gestão Escolar">
     <link rel="apple-touch-icon" href="assets/icone.png">
@@ -20,7 +21,7 @@
 
     <div id="tela-login" class="login-wrapper">
         <div class="login-box">
-            <h1>🔄 Gestão de Instituição de Ensino</h1>
+            <h1>🏨 Sistema de Gestão Escolar</h1>
             <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
             <form onsubmit="event.preventDefault(); App.fazerLogin();">
                 <div class="input-group">
@@ -74,8 +75,8 @@
 
                     <li><button onclick="App.toggleSub('sub-pedagogico')">🍎 Pedagógico ▼</button></li>
                     <ul id="sub-pedagogico" class="submenu" style="display:none;">
-                        <li><button onclick="App.renderizarTela('planejamento')">📅 Planejamento</button></li>
-                        <li><button onclick="App.renderizarTela('calendario')">📆 Calendário Escolar</button></li>
+                        <li><button onclick="App.renderizarTela('planejamento')">📅 Planejamento Pedagógico</button></li>
+                        <li><button onclick="App.renderizarTela('calendario')">📆 Calendário e Agenda</button></li>
                         <li><button onclick="App.renderizarTela('chamada')">📝 Chamada / Frequência</button></li>
                         <li><button onclick="App.renderizarTela('avaliacoes')">✅ Notas e Avaliações</button></li>
                         <li><button onclick="App.renderizarTela('boletins')">📊 Emitir Boletins</button></li>
@@ -97,7 +98,7 @@
 
                     <li><button onclick="App.toggleSub('sub-config')">⚙️ Configurações ▼</button></li>
                     <ul id="sub-config" class="submenu" style="display:none;">
-                        <li><button onclick="App.renderizarConfig('perfil')">🏢 Perfil da Escola</button></li>
+                        <li><button onclick="App.renderizarConfig('perfil')">🏢 Perfil da Instituição</button></li>
                         <li><button onclick="App.renderizarConfig('aparencia')">🎨 Aparência do Sistema</button></li>
                         <li><button onclick="App.renderizarConfig('backup')">💾 Backup e Segurança</button></li>
                     </ul>
@@ -178,7 +179,7 @@
                 <img src="https://cdn-icons-png.flaticon.com/512/1903/1903112.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
                 <h2 style="color: #27ae60; margin-bottom: 10px;">🎉 Bem-vindo(a)!</h2>
                 <p style="color: #444; margin-bottom: 20px; font-size: 15px; line-height: 1.5;">
-                    O seu sistema escolar está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
+                    O seu sistema de gestão está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
                 </p>
                 <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
                     Seu usuário de acesso inicial é: <strong>Seu e-mail</strong><br>
@@ -192,7 +193,7 @@
 
     <div id="pwa-install-banner" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999; text-align: center; border-left: 5px solid #3498db; font-family: 'Poppins', sans-serif;">
         <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📲 Instalar App</h3>
-        <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Deseja instalar o sistema no seu telemóvel para um acesso rápido e em ecrã inteiro?</p>
+        <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Deseja instalar o sistema no seu telemóvel para um acesso mais prático ao seu sistema?</p>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button id="pwa-btn-cancel" class="btn-cancel" style="flex: 1; padding: 10px 15px;">✖️ Agora não</button>
             <button id="pwa-btn-install" style="padding: 10px 15px; border: none; background: #3498db; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Instalar App</button>
@@ -226,11 +227,11 @@
         }
     </script>
 
-    <script src="js/app.js?v=20"></script>
-    <script src="js/modulos/financeiro.js?v=20"></script>
-    <script src="js/modulos/pedagogico.js?v=20"></script>
-    <script src="js/modulos/relatorios.js?v=20"></script>
-    <script src="js/modulos/cadastros.js?v=20"></script>
-
+    <script src="js/config.js?v=22"></script>
+    <script src="js/app.js?v=22"></script>
+    <script src="js/modulos/financeiro.js?v=22"></script>
+    <script src="js/modulos/pedagogico.js?v=22"></script>
+    <script src="js/modulos/relatorios.js?v=22"></script>
+    <script src="js/modulos/cadastros.js?v=22"></script>
 </body>
-</html>
+</html>>

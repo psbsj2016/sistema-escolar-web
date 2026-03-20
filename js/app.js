@@ -1,8 +1,7 @@
-// =========================================================
-// SISTEMA ESCOLAR - APP.JS (V141 - BLINDAGEM XSS NO FRONTEND)
+// SISTEMA ESCOLAR - APP.JS (V142 - DESACOPLAMENTO DA API)
 // =========================================================
 
-const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
+const API_URL = CONFIG.API_URL;
 
 const LISTA_FUNCIONALIDADES = [
     { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')" },
