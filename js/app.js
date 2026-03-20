@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V140 - SAAS ISOLADO COM EMAIL LOGIN)
+// SISTEMA ESCOLAR - APP.JS (V141 - BLINDAGEM XSS NO FRONTEND)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 
@@ -20,6 +20,17 @@ const LISTA_FUNCIONALIDADES = [
 const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
+
+    // 🛡️ ESCUDO ANTI-XSS (Tratamento de Dados de Saída)
+    escapeHTML: (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
 
     // --- IDENTIDADE E PLANOS (MULTI-TENANT & SYNC SERVIDOR) ---
     getTenantKey: (chaveBase) => {
@@ -240,19 +251,17 @@ const App = {
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
             
-            // 🧠 SINCRONIZAÇÃO AUTOMÁTICA DE PLANOS (Atualiza se o Admin tiver mudado no Backend)
             if (escola.plano) {
                 localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano);
             }
 
             const logoTitle = document.querySelector('.logo-area h2'); 
             
-            // 💎 CRACHÁ DO PLANO NO MENU LATERAL
             const planoAtual = App.getPlanoAtual();
             let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
-            const badgeHtml = `<div style="margin-top:8px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 ${planoAtual}</span></div>`;
+            const badgeHtml = `<div style="margin-top:8px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 ${App.escapeHTML(planoAtual)}</span></div>`;
 
-            if(logoTitle) logoTitle.innerHTML = `${escola.nome || 'Escola'}<br><small style="color:#aaa;">${escola.cnpj || ''}</small>${badgeHtml}`; 
+            if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}`; 
             
             const logoContainer = document.querySelector('.logo-area'); 
             let img = logoContainer.querySelector('img'); 
@@ -286,11 +295,11 @@ const App = {
                 ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
                 : inadimplentesList.map(f => {
                     const alunoInfo = listaAlunos.find(a => a.id === f.idAluno) || {}; const zap = alunoInfo.whatsapp || ''; const dataBr = f.vencimento.split('-').reverse().join('/'); const valFmt = formatarMoeda(parseFloat(f.valor));
-                    return `<div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div><div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${f.alunoNome || 'Desconhecido'}</div><div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div></div><button onclick="App.cobrarWhatsAppDashboard('${f.alunoNome}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button></div>`;
+                    return `<div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div><div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${App.escapeHTML(f.alunoNome || 'Desconhecido')}</div><div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div></div><button onclick="App.cobrarWhatsAppDashboard('${App.escapeHTML(f.alunoNome)}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button></div>`;
                 }).join('');
 
             div.innerHTML = `
-                <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${App.usuario ? App.usuario.nome : 'Gestor'}! 👋</h3>
+                <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor')}! 👋</h3>
                 <div class="dashboard-grid">
                     <div class="stat-card card-blue" style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:15px; padding:20px;">
                         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">🎓</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Alunos</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaAlunos.length}</span></div>
@@ -329,7 +338,7 @@ const App = {
     showToast: (mensagem, tipo = 'info') => {
         let container = document.getElementById('toast-container'); if (!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
         const toast = document.createElement('div'); toast.className = `toast ${tipo}`; const icon = tipo === 'success' ? '✅' : (tipo === 'error' ? '❌' : 'ℹ️');
-        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${mensagem}</span>`; container.appendChild(toast);
+        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${App.escapeHTML(mensagem)}</span>`; container.appendChild(toast);
         setTimeout(() => { toast.style.animation = 'fadeOut 0.5s ease forwards'; setTimeout(() => toast.remove(), 500); }, 3000);
     },
 
@@ -361,10 +370,9 @@ const App = {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
         
-        // 💎 CRACHÁ DE PLANO VISUALMENTE DESTACADO
         const planoAtual = App.getPlanoAtual();
         let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
-        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${planoAtual.toUpperCase()}</strong>`;
+        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()}</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
@@ -423,7 +431,6 @@ const App = {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
-    // 🚀 VALIDAÇÃO DE PIN VERDADEIRA (COMUNICANDO COM A API)
     ativarNovoPlano: async () => {
         const pin = document.getElementById('input-novo-pin').value.trim().toUpperCase();
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
@@ -432,21 +439,17 @@ const App = {
         const txt = btn.innerText; btn.innerText = "A validar... ⏳"; btn.disabled = true;
 
         try {
-            // Tenta validar e associar o PIN no servidor oficial
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             
             if (res && res.success) {
-                // Sucesso na API Oficial
                 localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
                 App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A reiniciar o sistema...`, "success");
                 document.getElementById('input-novo-pin').value = '';
                 setTimeout(() => { window.location.reload(); }, 2000);
             } else {
-                // Caso o servidor recuse o PIN
                 App.showToast(res.error || "PIN inválido, expirado ou não encontrado no servidor.", "error");
             }
         } catch(e) { 
-            // 🛡️ FALLBACK INTELIGENTE: Se a API antiga não tiver esta rota, gravamos na base de dados geral da escola!
             let novoPlano = 'Profissional';
             if (pin.includes('PRE')) novoPlano = 'Premium';
             else if (pin.includes('ESS')) novoPlano = 'Essencial';
@@ -496,7 +499,7 @@ const App = {
 
     abrirModalVenda: (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
-        document.getElementById('modal-titulo').innerText = `Registrar Venda - ${nomeAluno}`;
+        document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
         
         const hoje = new Date().toISOString().split('T')[0];
         const html = `
@@ -511,7 +514,7 @@ const App = {
                     <select id="v-forma" style="font-weight:bold;"><option value="PIX">PIX</option><option value="Cartão de Crédito">💳 Cartão de Crédito</option><option value="Cartão de Débito">💳 Cartão de Débito</option><option value="Dinheiro">💵 Dinheiro</option><option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option></select>
                 </div>
                 <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..."></textarea></div>
-                <input type="hidden" id="v-idaluno" value="${idAluno}"><input type="hidden" id="v-nomealuno" value="${nomeAluno}">
+                <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}"><input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
             </div>`;
         
         document.getElementById('modal-form-content').innerHTML = html;
@@ -552,6 +555,7 @@ const App = {
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
+    // 🛡️ APLICANDO A PROTEÇÃO NA TABELA
     gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
@@ -565,17 +569,17 @@ const App = {
 
         const corpo = dados.map(item => {
             let celulas = '';
-            if (tipo === 'aluno') { celulas += TB.td(item.nome) + TB.td(item.turma || '-') + TB.td(item.whatsapp || '-'); } 
-            else if (tipo === 'turma') { celulas += TB.td(item.nome) + TB.td(item.dia || '-') + TB.td(item.horario || '-') + TB.td(item.curso || '-'); } 
-            else if (tipo === 'curso') { celulas += TB.td(item.nome) + TB.td(item.carga || '-'); } 
-            else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${item.status}</span>`; celulas += TB.td(item.alunoNome || 'Sem Nome') + TB.td(item.descricao) + TB.td(dataBr) + TB.td(valorFmt) + TB.td(statusFmt); }
+            if (tipo === 'aluno') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.turma || '-')) + TB.td(App.escapeHTML(item.whatsapp || '-')); } 
+            else if (tipo === 'turma') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); } 
+            else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
+            else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
 
             const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
             const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
             const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
             
             let botoes = [];
-            if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${nomeSeguro}')`, 'Registrar Venda'));
+            if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda'));
             
             if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
@@ -601,8 +605,8 @@ const App = {
                 <div style="display:flex; gap:30px; flex-wrap:wrap;">
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
                         <h3>Meus Dados de Acesso</h3><p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
-                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${meuEmail}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
-                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${meuLogin}" style="width:100%; border-left: 4px solid #3498db;"></div>
+                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
+                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
                         ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
                         <button class="btn-primary" style="width:100%; margin-top:10px;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
 
@@ -628,7 +632,7 @@ const App = {
                             </div>
                         </div>
                         <div class="table-responsive-wrapper">
-                            <table><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${listaUsers.map(u => `<tr><td>${u.nome}</td><td>${u.login}</td><td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${u.tipo}</span></td><td style="text-align:right;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${u.nome}', '${u.login}', '${u.tipo}')">✏️</button>${u.id !== App.usuario.id ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody></table>
+                            <table><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${listaUsers.map(u => `<tr><td>${App.escapeHTML(u.nome)}</td><td>${App.escapeHTML(u.login)}</td><td><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${u.id !== App.usuario.id ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody></table>
                         </div>
                     </div>
                 </div>`; 
@@ -693,10 +697,10 @@ const App = {
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
-                        <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${escola.nome||''}"></div><div class="input-group"><label>CNPJ</label><input id="conf-cnpj" value="${escola.cnpj||''}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
+                        <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${App.escapeHTML(escola.nome||'')}"></div><div class="input-group"><label>CNPJ</label><input id="conf-cnpj" value="${App.escapeHTML(escola.cnpj||'')}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
-                        <div class="input-group"><label>Dados Bancários</label><input id="conf-banco" value="${escola.banco||''}"></div><div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${escola.chavePix||''}" placeholder="Ex: email@escola.com"></div>
+                        <div class="input-group"><label>Dados Bancários</label><input id="conf-banco" value="${App.escapeHTML(escola.banco||'')}"></div><div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${App.escapeHTML(escola.chavePix||'')}" placeholder="Ex: email@escola.com"></div>
                     </div>
                     <button class="btn-primary" style="width:100%; margin-top:20px; padding:15px;" onclick="App.salvarConfiguracoes()">ATUALIZAR DADOS</button>
                 </div>`; 
