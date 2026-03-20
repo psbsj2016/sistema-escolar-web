@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V139 - SINCRONIZAÇÃO DE PLANOS EM TEMPO REAL)
+// SISTEMA ESCOLAR - APP.JS (V140 - SAAS ISOLADO COM EMAIL LOGIN)
 // =========================================================
 
 const API_URL = "https://sistema-escolar-api-k3o8.onrender.com"; 

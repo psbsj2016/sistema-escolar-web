@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema Escolar - Gestão</title>
+    <title>Sistema Gestão Escolar</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
@@ -20,7 +20,7 @@
 
     <div id="tela-login" class="login-wrapper">
         <div class="login-box">
-            <h1>🎓 Portal Escolar</h1>
+            <h1>🔄 Gestão de Instituição de Ensino</h1>
             <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
             <form onsubmit="event.preventDefault(); App.fazerLogin();">
                 <div class="input-group">
@@ -90,9 +90,9 @@
 
                     <li><button onclick="App.toggleSub('sub-relatorios')">🖨️ Documentos ▼</button></li>
                     <ul id="sub-relatorios" class="submenu" style="display:none;">
+                        <li><button onclick="App.renderizarRelatorio('ficha')">📄 Ficha de Matrícula</button></li>
                         <li><button onclick="App.renderizarRelatorio('fin_detalhado')">📈 Relatório Financeiro</button></li>
                         <li><button onclick="App.renderizarRelatorio('dossie')">📁 Dossiê Executivo</button></li>
-                        <li><button onclick="App.renderizarRelatorio('ficha')">📄 Ficha de Matrícula</button></li>
                     </ul>
 
                     <li><button onclick="App.toggleSub('sub-config')">⚙️ Configurações ▼</button></li>
@@ -181,7 +181,7 @@
                     O seu sistema escolar está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
                 </p>
                 <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
-                    Seu usuário de acesso inicial é: <strong>admin</strong><br>
+                    Seu usuário de acesso inicial é: <strong>Seu e-mail</strong><br>
                     Sua senha temporária é: <strong>123</strong>
                 </p>
                 
@@ -226,11 +226,11 @@
         }
     </script>
 
-    <script src="js/app.js?v=19"></script>
-    <script src="js/modulos/financeiro.js?v=19"></script>
-    <script src="js/modulos/pedagogico.js?v=19"></script>
-    <script src="js/modulos/relatorios.js?v=19"></script>
-    <script src="js/modulos/cadastros.js?v=19"></script>
+    <script src="js/app.js?v=20"></script>
+    <script src="js/modulos/financeiro.js?v=20"></script>
+    <script src="js/modulos/pedagogico.js?v=20"></script>
+    <script src="js/modulos/relatorios.js?v=20"></script>
+    <script src="js/modulos/cadastros.js?v=20"></script>
 
 </body>
 </html>
