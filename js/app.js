@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V144 - CORREÇÃO PERFIL E COMPRESSÃO)
+// SISTEMA ESCOLAR - APP.JS (V146 - RELATÓRIO DE HORAS / FREQUÊNCIA)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
@@ -76,6 +76,12 @@ const App = {
                 if (response.status === 401 || response.status === 403) { App.logout(); }
                 throw new Error(`Erro API: ${response.status}`);
             }
+            
+            // 🚀 GATILHO INVISÍVEL
+            if (method !== 'GET' && App.usuario) {
+                setTimeout(App.verificarNotificacoes, 800);
+            }
+            
             return await response.json();
         } catch (error) { console.error("Erro conexão:", error); return method === 'GET' ? [] : null; }
     },
@@ -88,7 +94,11 @@ const App = {
     fecharModal: () => {
         document.getElementById('modal-overlay').style.display = 'none';
         const btn = document.querySelector('.btn-confirm');
-        if(btn) { btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
+        if(btn) { 
+            btn.style.display = 'inline-flex'; // Garante que o botão de salvar reapareça
+            btn.setAttribute('onclick', 'App.salvarCadastro()'); 
+            btn.innerHTML = "💾 Salvar Registro"; 
+        }
     },
 
     init: async () => {
@@ -270,7 +280,6 @@ const App = {
         } catch(e) { console.log("Carregando perfil e sincronizando..."); } 
     },
     
-    // 🛡️ NOVO MOTOR DE COMPRESSÃO (JPEG para máxima velocidade e leveza)
     otimizarImagem: (file, maxWidth, callback) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.8)); }; }; },
     
     renderizarInicio: async () => {
@@ -496,6 +505,82 @@ const App = {
         else { alert("O módulo de cadastros ainda não foi carregado. Tente recarregar a página."); }
     },
 
+    // 🚀 NOVO MODAL: RELATÓRIO ANALÍTICO DE FREQUÊNCIA (HORAS TOTAIS E MENSAIS)
+    abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
+        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A calcular horas e presenças... ⏳</p>';
+        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) btnConfirm.style.display = 'none'; // Esconde botão de salvar, pois é apenas um relatório
+
+        try {
+            const chamadas = await App.api('/chamadas');
+            const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
+            
+            let minPresenca = 0; let minFalta = 0; let htmlMeses = '';
+            
+            if (historico.length === 0) {
+                htmlMeses = '<p style="text-align:center; padding:30px; color:#999; font-size:14px;">Nenhum registo de chamada encontrado para este aluno.</p>';
+            } else {
+                const agrupado = {};
+                const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                
+                // Agrupar por Mês e somar minutos
+                historico.forEach(c => {
+                    const d = new Date(c.data + 'T00:00:00');
+                    const mesAno = `${mesesNomes[d.getMonth()]} de ${d.getFullYear()}`;
+                    if (!agrupado[mesAno]) agrupado[mesAno] = [];
+                    agrupado[mesAno].push(c);
+                    
+                    let mins = 0;
+                    if (c.duracao) {
+                        const [h, m] = c.duracao.split(':');
+                        mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
+                    }
+                    
+                    if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
+                    else if (c.status === 'Falta') minFalta += mins;
+                });
+                
+                // Desenhar as tabelas separadas por mês
+                for (const mes in agrupado) {
+                    htmlMeses += `<div style="background:#f4f6f7; padding:10px 15px; margin-top:15px; border-radius:8px 8px 0 0; font-weight:bold; color:#2c3e50; border:1px solid #eee; border-bottom:none; font-size:13px; text-transform:uppercase;">📅 ${mes}</div>`;
+                    htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
+                    agrupado[mes].forEach(c => {
+                        const dataBr = c.data.split('-').reverse().join('/');
+                        const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
+                        htmlMeses += `<tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
+                                        <td style="padding:10px 15px; font-weight:bold; color:${cor};">${c.status}</td>
+                                        <td style="padding:10px 15px; text-align:right; color:#666; font-weight:500;">${c.duracao || '00:00'} h</td>
+                                      </tr>`;
+                    });
+                    htmlMeses += `</tbody></table>`;
+                }
+            }
+            
+            const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
+            
+            const kpiHTML = `
+                <div style="display:flex; gap:15px; margin-top:20px;">
+                    <div style="flex:1; background:#eafaf1; border:1px solid #27ae60; padding:15px; border-radius:8px; text-align:center;">
+                        <div style="font-size:11px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Total Presenças</div>
+                        <div style="font-size:20px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
+                    </div>
+                    <div style="flex:1; background:#fdedec; border:1px solid #e74c3c; padding:15px; border-radius:8px; text-align:center;">
+                        <div style="font-size:11px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Total Faltas</div>
+                        <div style="font-size:20px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
+                    </div>
+                </div>`;
+                
+            document.getElementById('modal-form-content').innerHTML = `
+                <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
+                ${kpiHTML}
+            `;
+        } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
+    },
+
     abrirModalVenda: (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
@@ -517,7 +602,7 @@ const App = {
             </div>`;
         
         document.getElementById('modal-form-content').innerHTML = html;
-        const btnConfirm = document.querySelector('.btn-confirm'); btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); btnConfirm.innerHTML = "💾 Registrar Venda";
+        const btnConfirm = document.querySelector('.btn-confirm'); btnConfirm.style.display = 'inline-flex'; btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); btnConfirm.innerHTML = "💾 Registrar Venda";
     },
 
     salvarVenda: async () => {
@@ -577,7 +662,11 @@ const App = {
             const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
             
             let botoes = [];
-            if (tipo === 'aluno') botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda'));
+            // 🚀 AQUI: Adicionado o novo Botão de Relatório de Horas e Frequência
+            if (tipo === 'aluno') {
+                botoes.push(TB.btn('⏱️', '#3498db', `App.abrirRelatorioFrequencia('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Ver Histórico de Horas / Frequência'));
+                botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
+            }
             
             if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
@@ -674,7 +763,6 @@ const App = {
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     excluirUsuario: async (id) => { if(confirm("Tem certeza que deseja excluir este usuário?")) { await App.api(`/usuarios/${id}`, 'DELETE'); App.showToast("Usuário excluído com sucesso.", "success"); App.renderizarMinhaConta(); } },
 
-    // 🛡️ NOVO ECRÃ DE CONFIGURAÇÕES UNIFICADO
     renderizarConfiguracoes: async () => { 
         App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...'; 
         try { 
@@ -723,7 +811,7 @@ const App = {
         App.otimizarImagem(input.files[0], 400, (imgBase64) => {
             const img = document.getElementById(imgId);
             img.src = imgBase64;
-            img.setAttribute('data-nova', 'true'); // Marca que houve alteração local
+            img.setAttribute('data-nova', 'true'); 
         });
     },
 
@@ -745,13 +833,11 @@ const App = {
             chavePix: document.getElementById('conf-pix').value 
         }; 
         
-        // Verifica se a logo mudou e envia
         const imgLogo = document.getElementById('conf-preview');
         if (imgLogo && imgLogo.hasAttribute('data-nova')) {
             p.foto = imgLogo.src.includes('placehold') ? "" : imgLogo.src;
         }
 
-        // Verifica se o QR Code mudou e envia
         const imgQr = document.getElementById('conf-qr-preview');
         if (imgQr && imgQr.hasAttribute('data-nova')) {
             p.qrCodeImagem = imgQr.src.includes('placehold') ? "" : imgQr.src;
@@ -763,7 +849,7 @@ const App = {
         try { 
             const escolaAtual = await App.api('/escola') || {};
             await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
-            await App.carregarDadosEscola(); // Atualiza a logo no Menu Lateral na hora!
+            await App.carregarDadosEscola(); 
             
             if (imgLogo) imgLogo.removeAttribute('data-nova');
             if (imgQr) imgQr.removeAttribute('data-nova');
@@ -781,7 +867,6 @@ const App = {
     mascaraCEP: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; },
     mascaraValor: (i) => { let v = i.value.replace(/\D/g, ""); v = (v / 100).toFixed(2) + ""; i.value = v; },
 
-    // --- BACKUP & SEGURANÇA ---
     renderizarBackup: () => { 
         App.setTitulo("Backup de Dados"); 
         const div = document.getElementById('app-content');
@@ -893,7 +978,7 @@ const App = {
 };
 
 // =========================================================
-// 🔔 MOTOR DE INTELIGÊNCIA: CENTRAL DE NOTIFICAÇÕES
+// 🔔 MOTOR DE INTELIGÊNCIA: CENTRAL DE NOTIFICAÇÕES (TELETRANSPORTE)
 // =========================================================
 
 App.toggleNotificacoes = () => {
@@ -911,7 +996,6 @@ document.addEventListener('click', (e) => {
 
 App.verificarNotificacoes = async () => {
     try {
-        // 🚀 O motor agora também lê os Planeamentos!
         const [alunos, eventos, financeiro, planejamentos] = await Promise.all([
             App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos')
         ]);
@@ -927,31 +1011,36 @@ App.verificarNotificacoes = async () => {
         amanha.setDate(amanha.getDate() + 1);
         const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
 
-        // 🎂 1. Aniversariantes do Dia
         if (Array.isArray(alunos)) {
             alunos.forEach(a => {
                 if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
-                    alertas.push({ icon: '🎂', texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Envie uma mensagem de parabéns.` });
+                    alertas.push({ 
+                        icon: '🎂', 
+                        texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver o perfil.`,
+                        acao: "App.renderizarLista('aluno')" 
+                    });
                 }
             });
         }
 
-        // 📅 2. Eventos / Feriados / Reuniões (Hoje e Amanhã)
         if (Array.isArray(eventos)) {
             eventos.forEach(e => {
-                if (e.data === hojeStr) alertas.push({ icon: '🚨', texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
-                else if (e.data === amanhaStr) alertas.push({ icon: '⏳', texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
+                if (e.data === hojeStr) alertas.push({ 
+                    icon: '🚨', 
+                    texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
+                    acao: "App.renderizarTela('calendario')" 
+                });
+                else if (e.data === amanhaStr) alertas.push({ 
+                    icon: '⏳', 
+                    texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
+                    acao: "App.renderizarTela('calendario')" 
+                });
             });
         }
 
-        // 🎓 3. Fim de Curso e 🧠 4. Aulas vs Faturação (Inteligência de Negócios)
         if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
-            
             alunos.forEach(aluno => {
-                // Procura o planeamento do aluno
                 const plano = planejamentos.find(p => p.idAluno === aluno.id);
-                
-                // Encontra a última mensalidade gerada
                 let parcelasFuturas = 0;
                 let dataUltimaMensalidade = null;
                 
@@ -966,35 +1055,36 @@ App.verificarNotificacoes = async () => {
                     }
                 });
 
-                // A) Alerta Padrão de Fim de Curso
                 if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
-                    alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Hora de oferecer a renovação de curso!` });
+                    alertas.push({ 
+                        icon: '🎓', 
+                        texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
+                        acao: "App.renderizarTela('mensalidades')" 
+                    });
                 }
 
-                // B) INTELIGÊNCIA: Verifica Faltas vs Parcelas
                 if (plano && plano.aulas) {
                     const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
                     
                     if (aulasPendentes > 0) {
-                        // Estima quantas aulas o aluno faz por mês (Frequência)
-                        let aulasPorMes = 4; // Padrão: 1 vez por semana
+                        let aulasPorMes = 4; 
                         if (plano.aulas.length > 1) {
                             const d1 = plano.aulas[0].data.split('/');
                             const d2 = plano.aulas[1].data.split('/');
                             const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
                             const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
                             const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
-                            if (diffDias <= 4) aulasPorMes = 8; // 2x semana
-                            else if (diffDias <= 2) aulasPorMes = 12; // 3x semana
+                            if (diffDias <= 4) aulasPorMes = 8; 
+                            else if (diffDias <= 2) aulasPorMes = 12; 
                         }
 
                         const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
 
-                        // Se o curso vai demorar mais meses do que as mensalidades geradas
                         if (mesesDeAulaRestantes > parcelasFuturas) {
                             alertas.push({ 
                                 icon: '⚠️', 
-                                texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> ainda precisa de ${aulasPendentes} aulas para concluir o curso (aprox. ${mesesDeAulaRestantes} meses), mas o sistema só encontrou ${parcelasFuturas} mensalidade(s) futura(s). Adicione parcelas no Carnê!` 
+                                texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> ainda precisa de ${aulasPendentes} aulas, mas não tem mensalidades suficientes. Clique para faturar!`,
+                                acao: "App.renderizarTela('mensalidades')"
                             });
                         }
                     }
@@ -1002,13 +1092,17 @@ App.verificarNotificacoes = async () => {
             });
         }
 
-        // 🎨 Renderizar no Painel
         const badge = document.getElementById('noti-badge');
         const list = document.getElementById('noti-list');
         
         if (alertas.length > 0) {
             if (badge) { badge.innerText = alertas.length; badge.style.display = 'block'; }
-            if (list) list.innerHTML = alertas.map(a => `<div class="noti-item"><span class="noti-icon">${a.icon}</span><div>${a.texto}</div></div>`).join('');
+            if (list) list.innerHTML = alertas.map(a => `
+                <div class="noti-item" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
+                    <span class="noti-icon">${a.icon}</span>
+                    <div>${a.texto}</div>
+                </div>
+            `).join('');
         } else {
             if (badge) badge.style.display = 'none';
             if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
@@ -1018,6 +1112,13 @@ App.verificarNotificacoes = async () => {
 
 document.addEventListener('DOMContentLoaded', App.init);
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
+
+window.addEventListener('focus', () => {
+    const telaSistema = document.getElementById('tela-sistema');
+    if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
+        App.verificarNotificacoes();
+    }
+});
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
