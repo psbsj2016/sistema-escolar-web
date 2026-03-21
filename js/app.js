@@ -911,8 +911,9 @@ document.addEventListener('click', (e) => {
 
 App.verificarNotificacoes = async () => {
     try {
-        const [alunos, eventos, financeiro] = await Promise.all([
-            App.api('/alunos'), App.api('/eventos'), App.api('/financeiro')
+        // 🚀 O motor agora também lê os Planeamentos!
+        const [alunos, eventos, financeiro, planejamentos] = await Promise.all([
+            App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos')
         ]);
         
         let alertas = [];
@@ -926,6 +927,7 @@ App.verificarNotificacoes = async () => {
         amanha.setDate(amanha.getDate() + 1);
         const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
 
+        // 🎂 1. Aniversariantes do Dia
         if (Array.isArray(alunos)) {
             alunos.forEach(a => {
                 if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
@@ -934,6 +936,7 @@ App.verificarNotificacoes = async () => {
             });
         }
 
+        // 📅 2. Eventos / Feriados / Reuniões (Hoje e Amanhã)
         if (Array.isArray(eventos)) {
             eventos.forEach(e => {
                 if (e.data === hojeStr) alertas.push({ icon: '🚨', texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}` });
@@ -941,23 +944,65 @@ App.verificarNotificacoes = async () => {
             });
         }
 
-        if (Array.isArray(financeiro) && Array.isArray(alunos)) {
-            const maxVenc = {}; 
-            financeiro.forEach(f => {
-                if (f.status !== 'Cancelado') {
-                    if (!maxVenc[f.idAluno] || f.vencimento > maxVenc[f.idAluno]) {
-                        maxVenc[f.idAluno] = f.vencimento;
+        // 🎓 3. Fim de Curso e 🧠 4. Aulas vs Faturação (Inteligência de Negócios)
+        if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
+            
+            alunos.forEach(aluno => {
+                // Procura o planeamento do aluno
+                const plano = planejamentos.find(p => p.idAluno === aluno.id);
+                
+                // Encontra a última mensalidade gerada
+                let parcelasFuturas = 0;
+                let dataUltimaMensalidade = null;
+                
+                financeiro.forEach(f => {
+                    if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
+                        if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
+                            dataUltimaMensalidade = f.vencimento;
+                        }
+                        if (f.vencimento >= hojeStr) {
+                            parcelasFuturas++;
+                        }
                     }
+                });
+
+                // A) Alerta Padrão de Fim de Curso
+                if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
+                    alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Hora de oferecer a renovação de curso!` });
                 }
-            });
-            Object.entries(maxVenc).forEach(([id, dataVenc]) => {
-                if (dataVenc && dataVenc.startsWith(`${ano}-${mes}`)) {
-                    const al = alunos.find(x => x.id === id);
-                    if (al) alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(al.nome)}</b> vence este mês. Hora de oferecer a renovação de curso!` });
+
+                // B) INTELIGÊNCIA: Verifica Faltas vs Parcelas
+                if (plano && plano.aulas) {
+                    const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
+                    
+                    if (aulasPendentes > 0) {
+                        // Estima quantas aulas o aluno faz por mês (Frequência)
+                        let aulasPorMes = 4; // Padrão: 1 vez por semana
+                        if (plano.aulas.length > 1) {
+                            const d1 = plano.aulas[0].data.split('/');
+                            const d2 = plano.aulas[1].data.split('/');
+                            const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
+                            const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
+                            const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
+                            if (diffDias <= 4) aulasPorMes = 8; // 2x semana
+                            else if (diffDias <= 2) aulasPorMes = 12; // 3x semana
+                        }
+
+                        const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
+
+                        // Se o curso vai demorar mais meses do que as mensalidades geradas
+                        if (mesesDeAulaRestantes > parcelasFuturas) {
+                            alertas.push({ 
+                                icon: '⚠️', 
+                                texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> ainda precisa de ${aulasPendentes} aulas para concluir o curso (aprox. ${mesesDeAulaRestantes} meses), mas o sistema só encontrou ${parcelasFuturas} mensalidade(s) futura(s). Adicione parcelas no Carnê!` 
+                            });
+                        }
+                    }
                 }
             });
         }
 
+        // 🎨 Renderizar no Painel
         const badge = document.getElementById('noti-badge');
         const list = document.getElementById('noti-list');
         

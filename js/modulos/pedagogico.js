@@ -450,23 +450,58 @@ App.renderizarChamadaPro = async () => {
 };
 
 App.salvarLancamentoChamada = async () => { 
-    const idAluno = document.getElementById('cham-aluno').value; const data = document.getElementById('cham-data').value; const status = document.getElementById('cham-status').value; const duracao = document.getElementById('cham-duracao').value; 
+    const idAluno = document.getElementById('cham-aluno').value; 
+    const data = document.getElementById('cham-data').value; 
+    const status = document.getElementById('cham-status').value; 
+    const duracao = document.getElementById('cham-duracao').value; 
+    
     if(!idAluno || !data) return App.showToast("Selecione o aluno e a data.", "warning"); 
+    
     const nomeAluno = document.getElementById('cham-aluno').options[document.getElementById('cham-aluno').selectedIndex].text; 
     const payload = { idAluno, nomeAluno, data, status, duracao }; 
     
     const btn = document.querySelector('button[onclick="App.salvarLancamentoChamada()"]');
     const txtOrig = btn ? btn.innerText : '💾 Salvar Lançamento';
-    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A processar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
-        if (App.idEdicaoChamada) { await App.api(`/chamadas/${App.idEdicaoChamada}`, 'PUT', payload); App.idEdicaoChamada = null; } 
-        else { await App.api('/chamadas', 'POST', payload); } 
-        App.showToast("Chamada registada!", "success");
+        if (App.idEdicaoChamada) { 
+            await App.api(`/chamadas/${App.idEdicaoChamada}`, 'PUT', payload); 
+            App.idEdicaoChamada = null; 
+        } else { 
+            await App.api('/chamadas', 'POST', payload); 
+        } 
+        
+        // 🧠 INTELIGÊNCIA ARTIFICIAL: Baixa Automática no Planejamento
+        let avisoExtra = "";
+        if (status === 'Presença' || status === 'Reposição') {
+            const planejamentos = await App.api('/planejamentos');
+            const plano = planejamentos.find(p => p.idAluno === idAluno);
+            
+            if (plano && plano.aulas) {
+                // Encontra a primeira aula que ainda não tem o "visto"
+                const aulaPendente = plano.aulas.find(a => !a.visto);
+                if (aulaPendente) {
+                    aulaPendente.visto = true;
+                    // Atualiza a data do planejamento para o dia real em que a aula foi dada
+                    const [ano, mes, dia] = data.split('-');
+                    aulaPendente.data = `${dia}/${mes}/${ano}`;
+                    
+                    await App.api(`/planejamentos/${plano.id}`, 'PUT', plano);
+                    avisoExtra = ` e Aula ${aulaPendente.num} concluída no planejamento!`;
+                }
+            }
+        }
+        
+        App.showToast(`Chamada registada${avisoExtra}`, "success");
         App.renderizarChamadaPro(); 
-    } catch(e) { App.showToast("Erro ao registar.", "error"); } 
-    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+    } catch(e) { 
+        App.showToast("Erro ao registar.", "error"); 
+    } finally { 
+        if(btn) { btn.innerText = txtOrig; btn.disabled = false; } 
+        document.body.style.cursor = 'default'; 
+    }
 };
 
 App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registo?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
