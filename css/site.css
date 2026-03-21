@@ -350,6 +350,38 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 }
 
 /* =========================================================
+   📅 CORREÇÃO DO CALENDÁRIO (ALINHAMENTO EM 7 COLUNAS)
+   ========================================================= */
+.calendario-grid, .calendar-grid, .dias-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: 5px;
+    width: 100%;
+}
+
+.calendario-header, .calendar-header, .dias-semana {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    text-align: center;
+    font-weight: bold;
+    padding: 10px 0;
+    background-color: var(--body-bg);
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+/* Ajuste para que os números não fiquem espremidos no telemóvel */
+@media (max-width: 768px) {
+    .calendario-grid, .calendar-grid, .dias-grid {
+        gap: 2px;
+    }
+    .calendario-grid div {
+        padding: 5px !important;
+        font-size: 12px;
+    }
+}
+
+/* =========================================================
    🖨️ IMPRESSÃO
    ========================================================= */
 @media print {
