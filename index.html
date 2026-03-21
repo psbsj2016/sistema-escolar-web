@@ -8,13 +8,15 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2c3e50">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes"> <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gestão Escolar">
     <link rel="apple-touch-icon" href="assets/icone.png">
     <link rel="icon" href="assets/icone.png" type="image/png">
 
-    <link rel="stylesheet" href="css/site.css?v=26">
+    <link rel="stylesheet" href="css/site.css?v=38">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -31,9 +33,9 @@
                     <label>Senha</label>
                     <input type="password" id="login-pass" placeholder="Digite sua senha" autocomplete="current-password" required>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 16px;">Entrar no Sistema</button>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 16px;">Entrar no Sistema</button>
                 
-                <button type="button" id="btn-biometria" class="btn-primary" style="display:none; width: 100%; margin-top: 10px; padding: 12px; font-size: 16px; background: #27ae60;" onclick="App.entrarComBiometria()">👆 Entrar com FaceID / Digital</button>
+                <button type="button" id="btn-biometria" class="btn-primary" style="display:none; width: 100%; margin-top: 10px; padding: 14px; font-size: 16px; background: #27ae60;" onclick="App.entrarComBiometria()">👆 Entrar com FaceID / Digital</button>
             </form>
         
         <p style="text-align: center; margin-top: 20px; font-size: 14px;">
@@ -43,13 +45,11 @@
     </div>
 
     <div id="tela-sistema" style="display: none;">
-        
         <nav class="sidebar">
             <div class="logo-area">
                 <h2>Gestão Escolar</h2>
                 <small id="user-name">Usuário</small>
             </div>
-            
             <div class="menu-scroll" style="flex:1; overflow-y:auto;">
                 <ul class="menu-lista">
                     <li><button onclick="App.renderizarInicio()">🏠 Visão Geral</button></li>
@@ -113,7 +113,6 @@
 
         <main class="content">
             <div class="content-wrapper">
-                
                 <header>
                     <div class="header-left">
                         <div style="display: flex; flex-direction: column;">
@@ -138,7 +137,6 @@
                 <div id="app-content"></div>
             </div>
         </main>
-
     </div>
 
     <div id="modal-overlay" class="modal-overlay" style="display: none;">
@@ -151,7 +149,7 @@
             
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="App.fecharModal()">✖️ Cancelar</button>
-                <button class="btn-confirm" onclick="App.salvarCadastro()">💾 Salvar Registro</button>
+                <button class="btn-primary btn-confirm" onclick="App.salvarCadastro()">💾 Salvar Registro</button>
             </div>
         </div>
     </div>
@@ -163,47 +161,35 @@
             <div id="etapa-1-email">
                 <h2 style="color: var(--accent); margin-bottom: 10px;">🏢 Nova Instituição</h2>
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Insira o e-mail oficial da escola para receber o código de verificação.</p>
-                
                 <div class="input-group" style="text-align: left;">
                     <label>E-mail da Instituição</label>
                     <input type="email" id="novo-inst-email" placeholder="escola@email.com">
                 </div>
-                
                 <button onclick="App.enviarCodigoInst()" class="btn-primary" style="width: 100%; margin-top: 15px;">Enviar Código</button>
             </div>
 
             <div id="etapa-2-validacao" style="display: none;">
                 <h2 style="color: var(--accent); margin-bottom: 10px;">🔐 Verificação</h2>
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Enviamos um código para o seu e-mail. Digite-o abaixo junto com o seu PIN Exclusivo de liberação.</p>
-                
                 <div class="input-group" style="text-align: left;">
                     <label>Código recebido no E-mail</label>
                     <input type="text" id="novo-inst-codigo" placeholder="Ex: 845921" style="text-align: center; font-size: 18px; letter-spacing: 2px;">
                 </div>
-                
                 <div class="input-group" style="text-align: left; margin-top: 15px;">
                     <label>PIN Exclusivo do Gestor</label>
                     <input type="password" id="novo-inst-pin" placeholder="****" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
                 </div>
-                
                 <button onclick="App.validarCadastroInst()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" style="width: 100%; margin-top: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
                     🚀 Validar e Ativar Sistema
                 </button>
-                
                 <button onclick="App.voltarEtapa1()" class="btn-cancel" style="width: 100%; margin-top: 15px;">⬅️ Voltar e corrigir e-mail</button>
             </div>
 
             <div id="etapa-3-sucesso" style="display: none;">
                 <img src="https://cdn-icons-png.flaticon.com/512/1903/1903112.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
                 <h2 style="color: #27ae60; margin-bottom: 10px;">🎉 Bem-vindo(a)!</h2>
-                <p style="color: #444; margin-bottom: 20px; font-size: 15px; line-height: 1.5;">
-                    O seu sistema de gestão está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.
-                </p>
-                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
-                    Seu usuário de acesso inicial é: <strong>Seu e-mail</strong><br>
-                    Sua senha temporária é: <strong>123</strong>
-                </p>
-                
+                <p style="color: #444; margin-bottom: 20px; font-size: 15px; line-height: 1.5;">O seu sistema de gestão está pronto e blindado. Preparamos um ambiente seguro e exclusivo para a sua instituição.</p>
+                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">Seu usuário de acesso inicial é: <strong>Seu e-mail</strong><br>Sua senha temporária é: <strong>123</strong></p>
                 <button onclick="App.fecharModalInst(); document.getElementById('login-user').focus();" class="btn-primary" style="width: 100%;">Fazer meu Primeiro Login</button>
             </div>
         </div>
@@ -213,8 +199,8 @@
         <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px;">📲 Instalar App</h3>
         <p style="margin: 0 0 15px 0; font-size: 13px; color: #666;">Deseja instalar o sistema no seu telemóvel para um acesso mais prático ao seu sistema?</p>
         <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="pwa-btn-cancel" class="btn-cancel" style="flex: 1; padding: 10px 15px;">✖️ Agora não</button>
-            <button id="pwa-btn-install" style="padding: 10px 15px; border: none; background: #3498db; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; flex: 1;">Instalar App</button>
+            <button id="pwa-btn-cancel" class="btn-cancel" style="flex: 1;">✖️ Agora não</button>
+            <button id="pwa-btn-install" class="btn-primary" style="flex: 1; margin-top: 0;">Instalar App</button>
         </div>
     </div>
 
@@ -222,20 +208,14 @@
         if ('serviceWorker' in navigator) {
             let refreshing = false;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    window.location.reload();
-                    refreshing = true;
-                }
+                if (!refreshing) { window.location.reload(); refreshing = true; }
             });
-
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('✅ Service Worker OK.');
                     reg.addEventListener('updatefound', () => {
                         const newWorker = reg.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('🔄 Atualização detetada! A aplicar a nova versão...');
                                 newWorker.postMessage({ action: 'skipWaiting' });
                             }
                         });
@@ -245,11 +225,11 @@
         }
     </script>
 
-    <script src="js/config.js?v=37"></script>
-    <script src="js/app.js?v=37"></script>
-    <script src="js/modulos/financeiro.js?v=37"></script>
-    <script src="js/modulos/pedagogico.js?v=37"></script>
-    <script src="js/modulos/relatorios.js?v=37"></script>
-    <script src="js/modulos/cadastros.js?v=37"></script>
+    <script src="js/config.js?v=38"></script>
+    <script src="js/app.js?v=38"></script>
+    <script src="js/modulos/financeiro.js?v=38"></script>
+    <script src="js/modulos/pedagogico.js?v=38"></script>
+    <script src="js/modulos/relatorios.js?v=38"></script>
+    <script src="js/modulos/cadastros.js?v=38"></script>
 </body>
 </html>
