@@ -2,7 +2,8 @@
 // SERVICE WORKER - MOTOR DO PWA (APP INSTALÁVEL)
 // =========================================================
 
-const CACHE_NAME = 'escola-pwa-v37';
+// 🚀 Detonador de Cache atualizado para forçar o restauro do design!
+const CACHE_NAME = 'escola-pwa-v39';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -27,6 +28,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
+            console.log('🧹 A limpar cache antigo:', cacheName);
             return caches.delete(cacheName); 
           }
         })
