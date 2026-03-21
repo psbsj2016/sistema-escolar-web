@@ -3,7 +3,7 @@
 // =========================================================
 
 // 🚀 Detonador de Cache atualizado para forçar o restauro do design!
-const CACHE_NAME = 'escola-pwa-v43';
+const CACHE_NAME = 'escola-pwa-v44';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
