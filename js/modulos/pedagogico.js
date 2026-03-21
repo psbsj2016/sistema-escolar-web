@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V119 (FIX MOBILE CALENDÁRIO + AUTO-AJUSTE)
+// MÓDULO PEDAGÓGICO V120 (TABELA DE PLANEAMENTO RESTAURADA)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -169,20 +169,34 @@ App.renderizarTelaEdicao = (plano) => {
                     </div>
                 </div>
             </div>
-            <div class="table-responsive-wrapper">
-                <table class="doc-table">
-                    <thead><tr><th style="width:5%;">Nº</th><th style="width:15%; min-width:105px;">DATA</th><th style="width:12%;">HORÁRIO</th><th style="width:12%;">DURAÇÃO</th><th>CONTEÚDO / OBS</th><th style="width:5%;">OK</th></tr></thead>
+            
+            <div style="overflow-x: auto; margin-top: 15px;">
+                <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:12px;" border="1">
+                    <thead>
+                        <tr style="background:#eee;">
+                            <th style="width:5%; text-align:center; padding:5px;">Nº</th>
+                            <th style="width:15%; min-width:140px; white-space:nowrap; text-align:center; padding:5px;">DATA</th>
+                            <th style="width:12%; text-align:center; padding:5px;">HORÁRIO</th>
+                            <th style="width:12%; text-align:center; padding:5px;">DURAÇÃO</th>
+                            <th style="padding:5px;">CONTEÚDO / OBS</th>
+                            <th style="width:5%; text-align:center; padding:5px;">OK</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         ${plano.aulas.map((a,i)=>`
                         <tr>
-                            <td style="text-align:center;">${a.num}</td>
-                            <td><input class="plan-input-print" style="text-align:center; min-width:95px; width:100%;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
-                            <td><input class="plan-input-print" style="text-align:center;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
-                            <td><input class="plan-input-print" style="text-align:center;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
-                            <td><input class="plan-input-print" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
-                            <td style="text-align:center;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
+                            <td style="text-align:center; padding:5px;">${a.num}</td>
+                            <td style="padding:2px;"><input class="plan-input-print" style="text-align:center; min-width:130px; width:100%; border:none; outline:none; background:transparent;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td style="padding:2px;"><input class="plan-input-print" style="text-align:center; width:100%; border:none; outline:none; background:transparent;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
+                            <td style="padding:2px;"><input class="plan-input-print" style="text-align:center; width:100%; border:none; outline:none; background:transparent;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td style="padding:2px;"><input class="plan-input-print" style="width:100%; border:none; outline:none; background:transparent;" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
+                            <td style="text-align:center; padding:5px;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
                         </tr>`).join('')}
-                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding-right:10px;">Carga Horária Total =</td><td style="text-align:center;">${totalHoras}H</td><td colspan="2"></td></tr>
+                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;">
+                            <td colspan="3" style="text-align:right; padding:5px 10px;">Carga Horária Total =</td>
+                            <td style="text-align:center; padding:5px;">${totalHoras}H</td>
+                            <td colspan="2"></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -687,7 +701,6 @@ App.selecionarDia = (dt) => {
 };
 
 App.salvarEvento = async () => { 
-    // 1. FECHA O TECLADO DO TELEMÓVEL FORÇADAMENTE (EVITA O CORTE DO ECRÃ)
     if (document.activeElement) document.activeElement.blur();
 
     const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
@@ -704,11 +717,8 @@ App.salvarEvento = async () => {
         
         App.idEdicaoEvento=null; 
 
-        // 2. DELAY ESTRATÉGICO: Aguarda 300ms para o teclado descer e a tela ajustar aos 100%
         setTimeout(() => {
             App.renderizarCalendarioPro(); 
-            
-            // 3. DESLIZA SUAVEMENTE ATÉ À TABELA PARA MOSTRAR O RESULTADO
             setTimeout(() => {
                 const tabelaEventos = document.querySelector('.table-responsive-wrapper');
                 if(tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
