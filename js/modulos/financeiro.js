@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO FINANCEIRO V109 (RESPONSIVO, COMPONENTIZADO E SEGURO)
+// MÓDULO FINANCEIRO V110 (RESPONSIVO, SEGURO E BI INTEGRADO)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
@@ -35,10 +35,11 @@ App.renderizarFinanceiroPro = async () => {
                 <div><h3 style="margin:0; color:#2c3e50;">Gerar Mensalidades</h3><p style="margin:0; color:#666; font-size:14px;">Preencha para gerar carnê.</p></div>
             </div>
             <div style="display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap;">
-                <div style="flex:3; min-width:250px;">
+                <div style="flex:2; min-width:250px;">
                     <label style="display:block; font-weight:bold; margin-bottom:8px; font-size:13px; color:#555;">Selecione o Aluno:</label>
                     <select id="fin-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select>
                 </div>
+                ${select('Tipo de Faturação:', 'fin-tipo', '<option value="padrao">🟢 Mensalidade Padrão</option><option value="extra">🟠 Parcela Extra (Reposição)</option>')}
                 ${col('Valor (R$):', 'fin-valor', 'number', '', '0,00')}
                 ${col('Parcelas:', 'fin-parcelas', 'number', '12')}
                 ${col('1º Vencimento:', 'fin-vencimento', 'date', new Date().toISOString().split('T')[0])}
@@ -247,6 +248,7 @@ App.gerarCarnes = async () => {
     const val = document.getElementById('fin-valor').value;
     const parc = parseInt(document.getElementById('fin-parcelas').value);
     const dataIni = document.getElementById('fin-vencimento').value;
+    const tipoFaturamento = document.getElementById('fin-tipo').value; // 🚀 NOVO CAMPO INTELIGENTE
     
     if(!idA || !val || !parc || !dataIni) return App.showToast("Preencha todos os campos do gerador.", "error");
     
@@ -265,10 +267,17 @@ App.gerarCarnes = async () => {
         const promessas = [];
         for(let i = 1; i <= parc; i++) {
             const vencUS = db.toISOString().split('T')[0];
+            
+            // 🚀 MOTOR DE NOMEAÇÃO AUTOMÁTICA
+            let descricaoParcela = `Mensalidade ${i}/${parc}`;
+            if (tipoFaturamento === 'extra') {
+                descricaoParcela = `Parcela Extra (Extensão de Curso) - ${i}/${parc}`;
+            }
+
             const payload = {
                 id: idLote + "_" + i, idCarne: idLote, dataGeracao, idAluno: idA, 
                 alunoNome, valor: val, vencimento: vencUS, status: 'Pendente', 
-                descricao: `Mensalidade ${i}/${parc}`, tipo: 'Receita'
+                descricao: descricaoParcela, tipo: 'Receita'
             };
             promessas.push(App.api('/financeiro', 'POST', payload));
             db.setMonth(db.getMonth() + 1);
