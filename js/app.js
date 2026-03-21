@@ -62,9 +62,6 @@ const App = {
         return true;
     },
 
-    // No início do objeto App, crie esta variável para controlar o tempo
-    timerNotificacao: null,
-
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
         const token = localStorage.getItem('token_acesso');
@@ -80,13 +77,9 @@ const App = {
                 throw new Error(`Erro API: ${response.status}`);
             }
             
-            // 🚀 DEBOUNCE APLICADO: Em vez de disparar dezenas de vezes, o sistema
-            // cancela os disparos pendentes e aguarda a última operação terminar!
+            // 🚀 GATILHO INVISÍVEL
             if (method !== 'GET' && App.usuario) {
-                clearTimeout(App.timerNotificacao);
-                App.timerNotificacao = setTimeout(() => {
-                    App.verificarNotificacoes();
-                }, 1500); // Aguarda 1.5s após a última gravação
+                setTimeout(App.verificarNotificacoes, 800);
             }
             
             return await response.json();
@@ -344,21 +337,9 @@ const App = {
     cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
         if (!App.verificarPermissao('whatsapp')) return;
 
-        if (!telefone || telefone.trim() === '' || telefone === 'undefined') { 
-            App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); 
-            return; 
-        }
-        
-        let numero = telefone.replace(/\D/g, ''); 
-        if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
-
-        // Busca o perfil da escola atual para dinamizar o texto
-        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-        const nomeEscola = escola.nome || 'a nossa instituição';
-        const pixEscola = escola.chavePix || 'Chave PIX não cadastrada (Consulte a secretaria)';
-
-        const msg = `🔔 LEMBRETE\nOlá! Tudo bem?\n\nVenceu em ${dataVencimento} a mensalidade do seu curso. Para realizar o pagamento e regularizar a situação, basta enviar o valor de R$ ${valorFmt} para o PIX abaixo:\n\n*CHAVE PIX:* ${pixEscola}\n*INSTITUIÇÃO:* ${nomeEscola}\n\nObs.: Após o pagamento, por favor, enviar o comprovante para darmos a baixa no sistema.\n\n🙏 Agradecemos desde já e desejamos um excelente dia!`;
-        
+        if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
+        let numero = telefone.replace(/\D/g, ''); if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
+        const msg = `🔔 LEMBRETE\nHello! Are you ok?\n\nVenceu em ${dataVencimento} a mensalidade do seu curso de inglês. Para realizar o pagamento, basta enviar o valor de R$ ${valorFmt} para o PIX CELULAR abaixo:\n\n(73) 98890-9273\nPTT CURSOS\nPaulo Sérgio Bispo Santana Júnior\nCORA\n\nObs.: Após o pagamento, por favor, enviar o comprovante para baixa no sistema.\n\n🙏 Agradeço desde já e desejo a você uma excelente dia! 😉✅`;
         window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
     },
 

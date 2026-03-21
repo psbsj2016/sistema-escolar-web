@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO FINANCEIRO V110 (RESPONSIVO, SEGURO E BI INTEGRADO)
+// MÓDULO FINANCEIRO V113 (VISUALIZADOR PDF EMBUTIDO)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
@@ -76,7 +76,6 @@ App.renderizarFinanceiroPro = async () => {
     } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
 };
 
-// --- HELPER: GERA TABELA FINANCEIRA ---
 App.gerarTabelaFinanceira = (dados) => {
     if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
     
@@ -118,7 +117,6 @@ App.filtrarFinanceiro = (termo) => {
     document.getElementById('fin-lista-area').innerHTML = App.gerarTabelaFinanceira(filtrados);
 };
 
-// --- 2. MODAL DE BAIXA (Pagamento) ---
 App.abrirModalBaixa = () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
@@ -242,16 +240,16 @@ App.confirmarBaixa = async () => {
     }
 };
 
-// --- 3. LÓGICAS DO BACKEND E OTIMIZAÇÕES ---
 App.gerarCarnes = async () => {
     const idA = document.getElementById('fin-aluno').value;
     const val = document.getElementById('fin-valor').value;
     const parc = parseInt(document.getElementById('fin-parcelas').value);
     const dataIni = document.getElementById('fin-vencimento').value;
-    const tipoFaturamento = document.getElementById('fin-tipo').value; // 🚀 NOVO CAMPO INTELIGENTE
+    const tipoFaturamento = document.getElementById('fin-tipo').value; 
     
     if(!idA || !val || !parc || !dataIni) return App.showToast("Preencha todos os campos do gerador.", "error");
-    
+    if(parseFloat(val) <= 0) return App.showToast("O valor da mensalidade deve ser maior que zero.", "warning");
+
     const alunoNome = document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;
     let db = new Date(dataIni + 'T00:00:00');
     const idLote = Date.now().toString();
@@ -268,7 +266,6 @@ App.gerarCarnes = async () => {
         for(let i = 1; i <= parc; i++) {
             const vencUS = db.toISOString().split('T')[0];
             
-            // 🚀 MOTOR DE NOMEAÇÃO AUTOMÁTICA
             let descricaoParcela = `Mensalidade ${i}/${parc}`;
             if (tipoFaturamento === 'extra') {
                 descricaoParcela = `Parcela Extra (Extensão de Curso) - ${i}/${parc}`;
@@ -284,7 +281,6 @@ App.gerarCarnes = async () => {
         }
 
         await Promise.all(promessas);
-        
         App.showToast("Carnê gerado com sucesso!", "success");
         App.abrirCarneExistente(idLote);
     } catch(e) {
@@ -296,9 +292,7 @@ App.gerarCarnes = async () => {
     }
 };
 
-App.toggleCheck = (s) => { 
-    document.querySelectorAll('.fin-check').forEach(c => c.checked = s.checked); 
-};
+App.toggleCheck = (s) => { document.querySelectorAll('.fin-check').forEach(c => c.checked = s.checked); };
 
 App.acaoLote = async (acao) => {
     const checks = document.querySelectorAll('.fin-check:checked');
@@ -328,9 +322,7 @@ App.acaoLote = async (acao) => {
         App.renderizarFinanceiroPro(); 
     } catch (e) {
         App.showToast("Erro ao processar lote.", "error");
-    } finally {
-        document.body.style.cursor = 'default';
-    }
+    } finally { document.body.style.cursor = 'default'; }
 };
 
 App.editarParcela = async (id) => {
@@ -346,114 +338,68 @@ App.editarParcela = async (id) => {
     }
 };
 
-App.cobrarWhatsApp = async (idAluno, valorTotal, idFinanceiro = null) => { 
-    try {
-        const aluno = await App.api(`/alunos/${idAluno}`);
-        const zap = aluno.whatsapp;
-
-        if(!zap || zap.length < 8 || zap === 'undefined') {
-            App.showToast("Este aluno não tem um número de WhatsApp cadastrado!", "error");
-            return; 
-        }
-        
-        if(idFinanceiro) {
-            const item = await App.api(`/financeiro/${idFinanceiro}`);
-            await App.api(`/financeiro/${idFinanceiro}`, 'PUT', {...item, cobradoZap: true});
-        }
-        
-        let numero = zap.replace(/\D/g, '');
-        if (numero.length === 10 || numero.length === 11) numero = '55' + numero; 
-        
-        const msg = `Olá, ${aluno.nome.split(' ')[0]}! Tudo bem?\n\nConsta uma pendência no valor total de R$ ${valorTotal} na escola. Podemos ajudar a regularizar?\n\nQualquer dúvida, estamos à disposição!`;
-        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank'); 
-    } catch (e) { App.showToast("Erro ao processar cobrança.", "error"); }
-};
-
-App.enviarWhatsApp = async (idFinanceiro) => {
-    try {
-        const item = await App.api(`/financeiro/${idFinanceiro}`);
-        if (!item.idAluno) return App.showToast("Este registo não está vinculado a um aluno.", "error");
-
-        const aluno = await App.api(`/alunos/${item.idAluno}`);
-        if (!aluno.whatsapp) return App.showToast("O aluno não tem número de WhatsApp registado.", "warning");
-
-        let numero = aluno.whatsapp.replace(/\D/g, '');
-        if (numero.length === 10 || numero.length === 11) numero = '55' + numero; 
-
-        const valorFmt = parseFloat(item.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-        const dataFmt = item.vencimento.split('-').reverse().join('/');
-        
-        let mensagem = "";
-        const saudacao = `Olá, ${aluno.nome.split(' ')[0]}! Tudo bem?`;
-
-        if (item.status === 'Pago') {
-            mensagem = `${saudacao}\n\nPassando apenas para enviar o recibo e agradecer o pagamento referente a *${item.descricao}*, no valor de R$ ${valorFmt}.\n\nMuito obrigado! 🎓`;
-        } else {
-            mensagem = `${saudacao}\n\nEste é um lembrete amigável sobre o vencimento referente a *${item.descricao}*, no valor de R$ ${valorFmt}. A data de vencimento está registada para ${dataFmt}.\n\nQualquer dúvida ou se já efetuaste o pagamento, por favor avisa-nos. Estamos à disposição! 🤝`;
-        }
-
-        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    } catch (e) { App.showToast("Erro ao processar o WhatsApp.", "error"); }
-};
-
-// --- 4. RENDERIZAÇÕES DE IMPRESSÃO (Carnês e Inadimplência) ---
+// ---------------------------------------------------------
+// 🚀 RENDERIZAÇÃO DO CARNÊ (AGORA PROTEGIDO NO VISUALIZADOR)
+// ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
-    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Layout de Impressão...</p>';
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Carnê...</p>';
     try {
         const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const parcelas = financeiro.filter(x => x.idCarne === idLote).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         if(parcelas.length === 0) return App.showToast("Carnê não encontrado.", "error");
-        
-        const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: parcelas[0].alunoNome, cpf: '', rua: '', bairro: '', cidade: '' };
+
+        const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: 'Aluno', cpf: '' };
         const logo = escola.foto ? `<img src="${escola.foto}" class="carne-logo-img">` : '';
-        // AJUSTE: QR Code 120x120 para melhor leitura sem deformar a div
-        let qrCodeImg = escola.qrCodeImagem ? `<img src="${escola.qrCodeImagem}" style="width:120px; height:120px; object-fit:contain;">` : (escola.chavePix ? `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(escola.chavePix)}" style="width:120px; height:120px;">` : '<div style="font-size:8px;">Sem PIX</div>');
-        
-        const carnesHTML = parcelas.map((p, index) => { 
-            const numParcela = p.descricao.includes('/') ? p.descricao.split(' ')[1] : `${index+1}/${parcelas.length}`; 
-            const dataVenc = p.vencimento.split('-').reverse().join('/'); 
-            const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}); 
-            
+        const nomeEscolaResumo = (escola.nome || 'Escola').substring(0, 18);
+        const primeiroNomeAluno = (aluno.nome || 'Aluno').split(' ')[0];
+
+        const carnesHTML = parcelas.map((p, index) => {
+            const dataVenc = p.vencimento.split('-').reverse().join('/');
+            const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             return `
             <div class="carne-row">
                 <div class="carne-canhoto">
-                    <div class="carne-header-box">${logo}<div class="carne-inst-name">${escola.nome.substr(0,18)}</div><div class="carne-inst-cnpj">CNPJ: ${escola.cnpj}</div></div>
-                    <div style="margin-top:5px;">
-                        <span class="carne-label">Vencimento</span> <span class="carne-value">${dataVenc}</span>
-                        <span class="carne-label">Parcela</span> <span class="carne-value">${numParcela}</span>
-                        <span class="carne-label">Valor</span> <span class="carne-value">R$ ${valorF}</span>
-                    </div>
-                    <div style="margin-top:auto;"><span class="carne-label">Sacado</span><span class="carne-value" style="font-size:9px;">${aluno.nome.split(' ')[0]}</span></div>
+                    <div style="border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:5px;">${logo}<div style="font-weight:bold;">${nomeEscolaResumo}</div></div>
+                    <div><b>Vencimento:</b> ${dataVenc}</div>
+                    <div><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="margin-top:auto;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
                 </div>
                 <div class="carne-recibo">
-                    <div class="badge-recibo">RECIBO</div>
-                    <div style="display:flex; align-items:center; border-bottom:2px solid #000; padding-bottom:3px; margin-bottom:3px;">
-                        ${logo}
-                        <div style="margin-left:10px; flex:1;"><div style="font-weight:bold; font-size:13px; text-transform:uppercase;">${escola.nome}</div><div style="font-size:9px;">CNPJ: ${escola.cnpj}</div></div>
+                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #000; padding-bottom:5px;">
+                        ${logo} <div><div style="font-weight:bold; font-size:14px;">${escola.nome || 'INSTITUIÇÃO'}</div><div style="font-size:10px;">CNPJ: ${escola.cnpj || ''}</div></div>
                     </div>
-                    <div class="carne-data-grid">
-                        <div class="carne-data-box"><span class="carne-label">Nosso Número</span><span class="carne-value">${p.id.substr(-10)}</span></div>
-                        <div class="carne-data-box"><span class="carne-label">Vencimento</span><span class="carne-value" style="color:#c0392b;">${dataVenc}</span></div>
-                        <div class="carne-data-box"><span class="carne-label">Valor</span><span class="carne-value">R$ ${valorF}</span></div>
+                    <div style="display:flex; gap:20px; margin:10px 0;">
+                        <div><small>Nosso Número</small><br><b>${p.id.slice(-8)}</b></div>
+                        <div><small>Vencimento</small><br><b style="color:red;">${dataVenc}</b></div>
+                        <div><small>Valor</small><br><b>R$ ${valorF}</b></div>
                     </div>
-                    <div class="carne-instructions">
-                        <span class="carne-label">Instruções</span>Ref: ${p.descricao} - Curso: ${aluno.curso || 'Geral'}<br><i>Após vencimento, perda de descontos e benefícios.</i>
-                    </div>
-                    <div class="carne-footer">
-                        <div class="carne-payer"><span class="carne-label">Pagador</span><b class="carne-value">${aluno.nome}</b><span style="font-size:8px;">CPF: ${aluno.cpf || '-'}</span><br><span style="font-size:8px;">${aluno.rua||''}, ${aluno.bairro||''}</span></div>
-                        <div class="carne-qr">${qrCodeImg}</div>
+                    <div style="font-size:11px; margin-bottom:10px;"><b>Ref:</b> ${p.descricao} | <b>Pagador:</b> ${aluno.nome}</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:auto; align-items:flex-end;">
+                        <div style="font-size:9px; color:#666;">Autenticação Mecânica / Canhoto</div>
+                        <div id="qr-${p.id}" class="carne-qr"></div>
                     </div>
                 </div>
-            </div>`; 
+            </div>`;
         }).join('');
-        
+
         div.innerHTML = `
-            <div class="no-print" style="text-align:center; padding:20px; background:#f0f0f0;">
-                <button onclick="window.print()" class="btn-primary" style="padding:12px 25px;">🖨️ IMPRIMIR</button>
-                <button onclick="App.renderizarFinanceiroPro()" style="background:#7f8c8d; color:white; border:none; padding:12px 25px; border-radius:5px; margin-left:10px; cursor:pointer;">VOLTAR</button>
+            <div class="no-print" style="text-align:center; padding:20px; background:#f0f0f0; border-radius: 8px; margin-bottom: 20px;">
+                <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR CARNÊ</button>
+                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px;">VOLTAR</button>
             </div>
-            <div class="print-sheet carne-layout">${carnesHTML}</div>`;
-    } catch(e) { App.showToast("Erro ao gerar carnê.", "error"); }
+            <div class="carne-viewer no-print-bg">
+                <div class="print-sheet carne-layout">${carnesHTML}</div>
+            </div>`;
+
+        // Geração segura do QR Code
+        parcelas.forEach(p => {
+            const el = document.getElementById(`qr-${p.id}`);
+            if(el && typeof QRCode !== 'undefined') {
+                new QRCode(el, { text: escola.chavePix || "PIX Indisponível", width: 100, height: 100 });
+            }
+        });
+    } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
 };
 
 App.renderizarInadimplencia = async () => {
@@ -479,7 +425,6 @@ App.renderizarInadimplencia = async () => {
         
         const style = `<style>.inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } .inad-kpi-val { font-size: 24px; font-weight: bold; } .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; } .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } @media print { .no-print { display: none !important; } .print-sheet { width: 100%; } .inad-card-top { border: 1px solid #000; box-shadow: none; } .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } }</style>`;
         
-        // AJUSTE: Trava de verificação de permissão do WhatsApp baseada no plano SaaS
         const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
 
         div.innerHTML = `${style}

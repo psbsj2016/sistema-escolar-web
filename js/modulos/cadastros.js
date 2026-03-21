@@ -1,12 +1,11 @@
 // =========================================================
-// MÓDULO DE CADASTROS V100 (REESTRUTURADO EM COMPONENTES)
+// MÓDULO DE CADASTROS V103 (RESPONSIVIDADE INTELIGENTE)
 // =========================================================
 
 App.abrirModalCadastroModulo = async (tipo, id) => {
     App.entidadeAtual = tipo;
     App.idEdicao = id;
     
-    // Abre o Modal
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
     
@@ -35,10 +34,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     const v = (val) => val || '';
     let html = '';
 
-    // =========================================================
-    // 🧱 ATALHOS DA FÁBRICA DE COMPONENTES LOCAIS
-    // =========================================================
-    const input = App.UI.input; // Importa a fábrica principal do app.js
+    const input = App.UI.input; 
     
     const select = (label, id, options) => `
         <div class="input-group">
@@ -47,14 +43,11 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
         </div>
     `;
     
-    const row = (conteudo) => `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">${conteudo}</div>`;
-    const row3 = (conteudo) => `<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">${conteudo}</div>`;
+    // 🚀 CORREÇÃO: Utilizando as novas classes CSS Responsivas
+    const row = (conteudo) => `<div class="form-grid-2">${conteudo}</div>`;
+    const row3 = (conteudo) => `<div class="form-grid-3">${conteudo}</div>`;
     const section = (title, margin = '25px') => `<div style="color:#2c3e50; font-size:14px; font-weight:600; margin:${margin} 0 10px 0; border-bottom:1px solid #eee; padding-bottom:5px;">${title}</div>`;
 
-    // =========================================================
-    // 📋 MONTAGEM DOS FORMULÁRIOS (ESTILO LEGO)
-    // =========================================================
-    
     if (tipo === 'aluno') {
         const opTurma = `<option value="">-- Selecione --</option>` + listas.turmas.map(t => `<option value="${t.nome}" ${v(dados.turma)===t.nome?'selected':''}>${t.nome}</option>`).join('');
         const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
@@ -64,7 +57,6 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
         `;
         
-        // A Mágica Acontece Aqui: Olha como fica fácil de ler e modificar!
         html = 
             section('1. Dados Pessoais', '0') +
             input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
@@ -128,7 +120,6 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     if(conteudo) conteudo.innerHTML = html;
 };
 
-// Função de Salvar (C/ PADRÃO OURO DE UX E SEGURANÇA)
 App.salvarCadastro = async () => {
     const t = App.entidadeAtual; 
     const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
@@ -142,22 +133,22 @@ App.salvarCadastro = async () => {
         p.sexo = document.getElementById('a-sexo').value;
         p.whatsapp = document.getElementById('a-zap').value;
         p.profissao = document.getElementById('a-prof').value;
-        
         p.curso = document.getElementById('a-curso').value;
         p.turma = document.getElementById('a-turma').value;
-        
         p.rua = document.getElementById('a-rua').value;
         p.numero = document.getElementById('a-num').value;
         p.bairro = document.getElementById('a-bairro').value;
         p.cidade = document.getElementById('a-cidade').value;
         p.estado = document.getElementById('a-uf').value;
         p.pais = document.getElementById('a-pais').value;
-        
         p.resp_nome = document.getElementById('r-nome').value;
         p.resp_cpf = document.getElementById('r-cpf').value;
         p.resp_zap = document.getElementById('r-zap').value;
         
         if(!p.nome) { App.showToast("O nome do aluno é obrigatório!", "error"); return; }
+        if(p.cpf && p.cpf.length !== 14) { App.showToast("O CPF do aluno deve estar completo (14 caracteres).", "warning"); return; }
+        if(p.resp_cpf && p.resp_cpf.length !== 14) { App.showToast("O CPF do responsável deve estar completo.", "warning"); return; }
+        if(p.whatsapp && p.whatsapp.length < 14) { App.showToast("Preencha o WhatsApp corretamente com o código de área.", "warning"); return; }
     } 
     else if (t === 'turma') {
         p.nome = document.getElementById('t-nome').value;
@@ -174,7 +165,6 @@ App.salvarCadastro = async () => {
         if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); return; }
     }
 
-    // 🔒 BLOQUEIO DO BOTÃO E FEEDBACK VISUAL
     const btn = document.querySelector('.btn-confirm');
     const txtOriginal = btn ? btn.innerText : 'Salvar Registro';
     if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
@@ -190,16 +180,13 @@ App.salvarCadastro = async () => {
         App.showToast('Registro salvo com sucesso!', 'success');
         App.fecharModal();
         
-        // 🔄 NOVO COMPORTAMENTO: Vai sempre para a lista após salvar!
         if (typeof App.renderizarLista === 'function') {
             App.renderizarLista(t);
         }
-
     } catch (err) {
         console.error(err);
         App.showToast("Erro ao salvar dados. Verifique a conexão.", "error");
     } finally {
-        // 🔓 DESBLOQUEIO DO BOTÃO
         if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
         document.body.style.cursor = 'default';
     }
