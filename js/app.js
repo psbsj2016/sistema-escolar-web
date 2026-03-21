@@ -244,82 +244,331 @@ const App = {
     abrirRelatorioFrequencia: async (idAluno, nomeAluno) => { /* ... código mantido ... */ },
     abrirModalVenda: (idAluno, nomeAluno) => { /* ... código mantido ... */ },
     salvarVenda: async () => { /* ... código mantido ... */ },
-    renderizarLista: async (tipo) => { /* ... código mantido ... */ },
-    filtrarTabelaReativa: () => { /* ... código mantido ... */ },
-    gerarTabelaHTML: (dados) => { /* ... código mantido ... */ },
-    renderizarMinhaConta: async () => { /* ... código mantido ... */ },
-    toggleSenhaVisibilidade: (id) => { /* ... código mantido ... */ },
-    atualizarMeusDados: async () => { /* ... código mantido ... */ },
-    salvarNovoUsuario: async () => { /* ... código mantido ... */ },
-    preencherEdicaoUsuario: (id, nome, login, tipo) => { /* ... código mantido ... */ },
-    cancelarEdicaoUsuario: () => { /* ... código mantido ... */ },
-    excluirUsuario: async (id) => { /* ... código mantido ... */ },
-    renderizarConfiguracoes: async () => { /* ... código mantido ... */ },
-    previewImagemLocal: (input, imgId) => { /* ... código mantido ... */ },
-    removerImagemLocal: (imgId) => { /* ... código mantido ... */ },
-    mascaraCNPJ: (i) => { /* ... código mantido ... */ },
-    salvarConfiguracoes: async () => { /* ... código mantido ... */ },   
-    mascaraCPF: (i) => { /* ... código mantido ... */ },
-    mascaraCelular: (i) => { /* ... código mantido ... */ },
-    mascaraCEP: (i) => { /* ... código mantido ... */ },
-    mascaraValor: (i) => { /* ... código mantido ... */ },
-    renderizarBackup: () => { /* ... código mantido ... */ },
-    resetarSistema: async () => { /* ... código mantido ... */ },
-    realizarDownloadBackup: async () => { /* ... código mantido ... */ },
-    processarRestauracao: async () => { /* ... código mantido ... */ },
-    excluir: async (ep, id) => { /* ... código mantido ... */ },
-    abrirTelaCadastroInst: () => { /* ... código mantido ... */ },
-    fecharModalInst: () => { /* ... código mantido ... */ },
-    voltarEtapa1: () => { /* ... código mantido ... */ },
-    enviarCodigoInst: async () => { /* ... código mantido ... */ },
-    validarCadastroInst: async () => { /* ... código mantido ... */ },
+    
+// =========================================================
+    // 1. LISTAS AVANÇADAS (PESQUISA REATIVA E AÇÕES RÁPIDAS)
+    // =========================================================
+    renderizarLista: async (tipo) => {
+        if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
+        if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-    entrarNoSistema: () => { 
-        document.getElementById('tela-login').style.display = 'none'; 
-        document.getElementById('tela-sistema').style.display = 'flex'; 
-        if(App.usuario && App.usuario.nome) { document.getElementById('user-name').innerText = App.usuario.nome; } 
-        App.renderizarInicio(); 
+        if(tipo === 'financeiro') { App.renderizarFinanceiroPro(); return; }
+
+        App.setTitulo(`Gerenciar ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}s`);
+        const div = document.getElementById('app-content');
+        div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar base de dados... ⏳</p>';
+
+        try {
+            App.dadosEmCache = await App.api(`/${tipo}s`); // Guarda em cache para a pesquisa
+            App.tipoListaAtual = tipo;
+            App.desenharTabelaLista(App.dadosEmCache);
+        } catch(e) {
+            div.innerHTML = '<p style="color:#e74c3c; text-align:center;">Erro ao carregar os dados.</p>';
+        }
     },
 
-    fazerLogin: async () => {
-        const userStr = document.getElementById('login-user').value.trim(); const passStr = document.getElementById('login-pass').value.trim(); const btnLogin = document.querySelector('#tela-login button[type="submit"]');
-        if (!userStr || !passStr) { App.showToast('Por favor, preencha o utilizador e a senha.', 'error'); return; }
-        const textoOriginal = btnLogin.innerText; btnLogin.innerText = "Autenticando... ⏳"; btnLogin.disabled = true;
-        try {
-            const response = await App.api('/auth/login', 'POST', { login: userStr, senha: passStr });
-            if (response && response.success) { 
-                App.usuario = response.usuario; 
-                localStorage.setItem('usuario_logado', JSON.stringify(App.usuario)); 
-                localStorage.setItem('token_acesso', response.token); 
+    desenharTabelaLista: (dados) => {
+        const div = document.getElementById('app-content');
+        const tipo = App.tipoListaAtual;
+        const btnNovo = `<button onclick="App.abrirModalCadastro('${tipo}')" class="btn-new-modern">➕ Novo Registro</button>`;
+
+        let html = `
+            <div class="toolbar" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                <div class="search-wrapper" style="flex:1; min-width:250px;">
+                    <input type="text" class="search-input-modern" placeholder="🔍 Pesquisar pelo nome..." onkeyup="App.filtrarLista(this.value)">
+                </div>
+                ${btnNovo}
+            </div>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead>
+                        <tr>
+                            <th>Nome / Descrição</th>
+                            ${tipo === 'aluno' ? '<th>Turma/Curso</th>' : ''}
+                            <th style="text-align:right;">Ações de Gestão</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        if(!dados || dados.length === 0) {
+            html += `<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">Nenhum registo encontrado.</td></tr>`;
+        } else {
+            dados.forEach(item => {
+                const nomeExibicao = item.nome || item.descricao || 'Sem Nome';
                 
-                // 🚀 CORREÇÃO: OBRIGA A BAIXAR A ESCOLA ANTES DE ENTRAR
-                await App.carregarDadosEscola(); 
-                App.aplicarTemaSalvo();
-                
-                const keyAtalhos = App.getTenantKey('escola_atalhos');
-                if (!localStorage.getItem(keyAtalhos)) {
-                    localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']));
+                // Botões Inteligentes Exclusivos para Alunos
+                let botoesExtras = '';
+                if(tipo === 'aluno') {
+                    botoesExtras = `
+                        <button onclick="App.renderizarRelatorioModulo('ficha'); setTimeout(()=>document.getElementById('ficha-aluno').value='${item.id}', 500);" class="btn-primary" style="padding:8px 12px; font-size:12px; background:#3498db; margin-right:5px;" title="Ficha">📄</button>
+                    `;
                 }
 
-                App.entrarNoSistema(); 
-                App.showToast('Bem-vindo ao sistema!', 'success'); 
-            } 
-            else { App.showToast('Utilizador ou senha incorretos.', 'error'); }
-        } catch (error) { App.showToast('Erro de conexão. Tente novamente.', 'error'); } finally { btnLogin.innerText = textoOriginal; btnLogin.disabled = false; }
+                html += `
+                    <tr>
+                        <td style="font-weight:bold; color:#333;">${App.escapeHTML(nomeExibicao)}</td>
+                        ${tipo === 'aluno' ? `<td><span style="font-size:11px; background:#eee; padding:3px 8px; border-radius:10px;">${item.turma||'S/T'}</span></td>` : ''}
+                        <td style="text-align:right; white-space:nowrap;">
+                            ${botoesExtras}
+                            <button onclick="App.abrirModalCadastro('${tipo}', '${item.id}')" class="btn-edit">✏️ Editar</button>
+                            <button onclick="App.excluir('${tipo}s', '${item.id}')" class="btn-del">🗑️</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+        
+        html += `</tbody></table></div>`;
+        div.innerHTML = App.UI.card('', '', html);
     },
 
-    logout: () => {
-        document.documentElement.removeAttribute('style');
-        App.usuario = null; localStorage.removeItem('usuario_logado'); localStorage.removeItem('token_acesso'); 
-        document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
-        document.getElementById('tela-sistema').style.display = 'none';
-        const telaLogin = document.getElementById('tela-login'); telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+    filtrarLista: (termo) => {
+        const txt = termo.toLowerCase();
+        const filtrados = App.dadosEmCache.filter(item => {
+            const nome = (item.nome || item.descricao || '').toLowerCase();
+            return nome.includes(txt);
+        });
+        App.desenharTabelaLista(filtrados);
     },
-    
-    // Motor de Notificações mantido...
-    toggleNotificacoes: () => { /* ... */ },
-    verificarNotificacoes: async () => { /* ... */ }
-};
+
+    excluir: async (endpoint, id) => {
+        if(confirm("Tem a certeza absoluta? Esta ação não pode ser desfeita.")) {
+            document.body.style.cursor = 'wait';
+            try {
+                await App.api(`/${endpoint}/${id}`, 'DELETE');
+                App.showToast("Excluído com sucesso!", "success");
+                App.renderizarLista(endpoint.slice(0, -1));
+            } catch(e) { App.showToast("Erro ao excluir.", "error"); } 
+            finally { document.body.style.cursor = 'default'; }
+        }
+    },
+
+    // =========================================================
+    // 2. CONFIGURAÇÕES COM UPLOAD DE BASE64 (IMAGENS)
+    // =========================================================
+    renderizarConfiguracoes: async () => {
+        App.setTitulo("Perfil da Instituição");
+        const div = document.getElementById('app-content');
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        
+        const html = `
+            <div class="form-grid-2">
+                ${App.UI.input('Nome da Instituição', 'conf-nome', escola.nome || '')}
+                ${App.UI.input('CNPJ / NIF', 'conf-cnpj', escola.cnpj || '')}
+            </div>
+            <div class="form-grid-2" style="margin-top:15px;">
+                ${App.UI.input('Chave PIX (Para Recebimentos)', 'conf-pix', escola.chavePix || '')}
+                ${App.UI.input('Email de Contacto', 'conf-email', escola.email || '')}
+            </div>
+            
+            <h3 style="margin-top:30px; border-bottom:1px solid #eee; padding-bottom:10px; color:var(--accent);">🖼️ Personalização Visual</h3>
+            <p style="font-size:12px; color:#666;">Carregue imagens quadradas. Elas serão otimizadas automaticamente.</p>
+            
+            <div class="form-grid-2">
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px dashed #ccc; text-align:center;">
+                    <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:10px;">Logomarca da Escola</label>
+                    ${escola.foto ? `<img src="${escola.foto}" style="height:60px; margin-bottom:10px; border-radius:8px;">` : ''}
+                    <input type="file" id="conf-logo" accept="image/*" style="width:100%; font-size:12px;">
+                </div>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px dashed #ccc; text-align:center;">
+                    <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:10px;">QR Code do PIX (Carnês)</label>
+                    ${escola.qrPix ? `<img src="${escola.qrPix}" style="height:60px; margin-bottom:10px; border-radius:8px;">` : ''}
+                    <input type="file" id="conf-qr" accept="image/*" style="width:100%; font-size:12px;">
+                </div>
+            </div>
+
+            <div style="margin-top:25px;">
+                <button class="btn-primary" onclick="App.salvarConfiguracoes()" style="width:100%; justify-content:center;">💾 GUARDAR CONFIGURAÇÕES</button>
+            </div>
+        `;
+        div.innerHTML = App.UI.card('🏢 Identidade Oficial', 'Estes dados sairão impressos nos Carnês, Boletins e Contratos.', html);
+    },
+
+    converterBase64: (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    },
+
+    salvarConfiguracoes: async () => {
+        document.body.style.cursor = 'wait';
+        try {
+            const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            const payload = {
+                nome: document.getElementById('conf-nome').value,
+                cnpj: document.getElementById('conf-cnpj').value,
+                chavePix: document.getElementById('conf-pix').value,
+                email: document.getElementById('conf-email').value,
+                foto: escola.foto || null,
+                qrPix: escola.qrPix || null
+            };
+
+            const logoFile = document.getElementById('conf-logo').files[0];
+            const qrFile = document.getElementById('conf-qr').files[0];
+
+            if(logoFile) payload.foto = await App.converterBase64(logoFile);
+            if(qrFile) payload.qrPix = await App.converterBase64(qrFile);
+            
+            await App.api('/escola', 'PUT', payload);
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(payload));
+            
+            App.showToast("Configurações salvas! A sua logomarca foi atualizada.", "success");
+            App.carregarDadosEscola(); // Recarrega a UI
+        } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
+        finally { document.body.style.cursor = 'default'; }
+    },
+
+    // =========================================================
+    // 3. MINHA CONTA (ACESSO E GESTÃO DE EQUIPA)
+    // =========================================================
+    renderizarMinhaConta: async () => {
+        App.setTitulo("Minha Conta e Equipa");
+        const div = document.getElementById('app-content');
+        const u = App.usuario || {};
+        
+        const htmlConta = `
+            <div class="form-grid-2">
+                ${App.UI.input('Nome Completo', 'conta-nome', u.nome)}
+                ${App.UI.input('Email de Acesso (Login)', 'conta-login', u.login)}
+            </div>
+            <div style="margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+                <p style="font-size:13px; color:#e74c3c; font-weight:bold; margin-bottom:10px;">Para alterar dados, confirme a senha atual:</p>
+                <div class="form-grid-2">
+                    ${App.UI.input('Senha Atual', 'conta-senha-atual', '', 'Obrigatório', 'password')}
+                    ${App.UI.input('Nova Senha', 'conta-senha-nova', '', 'Opcional', 'password')}
+                </div>
+            </div>
+            <button class="btn-primary" onclick="App.atualizarMeusDados()" style="margin-top:20px; width:100%;">💾 Atualizar Meus Dados</button>
+        `;
+
+        div.innerHTML = App.UI.card('🔐 Dados de Acesso', 'As suas credenciais.', htmlConta);
+    },
+
+    atualizarMeusDados: async () => {
+        const senhaAtual = document.getElementById('conta-senha-atual').value;
+        const novoLogin = document.getElementById('conta-login').value;
+        const novaSenha = document.getElementById('conta-senha-nova').value;
+
+        if(!senhaAtual) return App.showToast("A senha atual é obrigatória!", "error");
+        
+        document.body.style.cursor = 'wait';
+        try {
+            const res = await App.api('/usuarios/atualizar-conta', 'PUT', { senhaAtual, novoLogin, novaSenha });
+            if(res.error) throw new Error(res.error);
+            App.showToast("Conta atualizada! Faça o login novamente.", "success");
+            setTimeout(() => App.logout(), 2000);
+        } catch(e) { App.showToast(e.message, "error"); } 
+        finally { document.body.style.cursor = 'default'; }
+    },
+
+    // =========================================================
+    // 4. MEU PLANO (VITRINE E VALIDAÇÃO DE PIN)
+    // =========================================================
+    renderizarMeuPlano: () => {
+        App.setTitulo("Licença e Assinatura");
+        const planoAtual = App.getPlanoAtual();
+        const div = document.getElementById('app-content');
+        
+        let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+
+        div.innerHTML = `
+            <div style="background:linear-gradient(135deg, #2c3e50, #34495e); padding:40px; border-radius:12px; color:white; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.1); margin-bottom:30px;">
+                <h3 style="margin:0 0 10px 0; color:#bdc3c7;">Plano Atual Ativo</h3>
+                <h1 style="margin:0; font-size:48px; color:${corBadge}; text-transform:uppercase; text-shadow:0 2px 10px rgba(0,0,0,0.3);">${planoAtual}</h1>
+            </div>
+
+            <div class="card" style="text-align:center;">
+                <h3>Fez Upgrade? Insira o seu novo PIN de Liberação</h3>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">Cole abaixo o código enviado pelo nosso atendimento do WhatsApp para destrancar novas funções instantaneamente.</p>
+                <div style="display:flex; gap:10px; max-width:400px; margin:0 auto;">
+                    <input type="text" id="novo-pin-upgrade" placeholder="Ex: PRE-A1B2C3" style="flex:1; padding:15px; border-radius:8px; border:2px solid #ddd; text-align:center; font-size:18px; font-weight:bold; text-transform:uppercase;">
+                    <button onclick="App.validarPinUpgrade()" class="btn-primary">Validar 🚀</button>
+                </div>
+            </div>
+        `;
+    },
+
+    validarPinUpgrade: async () => {
+        const pin = document.getElementById('novo-pin-upgrade').value.trim();
+        if(!pin) return App.showToast("Digite o PIN!", "warning");
+
+        document.body.style.cursor = 'wait';
+        try {
+            const res = await App.api('/escola/validar-pin', 'POST', { pin });
+            if(res.error) throw new Error(res.error);
+            
+            App.showToast(`Parabéns! O seu sistema foi atualizado para o plano ${res.plano}.`, "success");
+            // Atualiza o localStorage para refletir o novo plano
+            let ativacao = JSON.parse(localStorage.getItem('escola_ativacao') || '{}');
+            ativacao.plano = res.plano;
+            localStorage.setItem('escola_ativacao', JSON.stringify(ativacao));
+            
+            setTimeout(() => App.renderizarMeuPlano(), 1500);
+        } catch(e) { App.showToast(e.message || "PIN inválido.", "error"); }
+        finally { document.body.style.cursor = 'default'; }
+    },
+
+    // =========================================================
+    // 5. SUPER SININHO (ANIVERSÁRIOS, AGENDA E INADIMPLÊNCIA)
+    // =========================================================
+    toggleNotificacoes: () => {
+        const dropdown = document.getElementById('noti-dropdown');
+        if (dropdown) dropdown.classList.toggle('active');
+    },
+
+    verificarNotificacoes: async () => {
+        try {
+            const badge = document.getElementById('noti-badge');
+            const list = document.getElementById('noti-list');
+            let alertasHTML = '';
+            let contador = 0;
+
+            const [alunos, financeiro, eventos] = await Promise.all([
+                App.api('/alunos'), App.api('/financeiro'), App.api('/eventos')
+            ]);
+
+            const dataHoje = new Date();
+            const diaHoje = String(dataHoje.getDate()).padStart(2, '0');
+            const mesHoje = String(dataHoje.getMonth() + 1).padStart(2, '0');
+            const formatHoje = `${dataHoje.getFullYear()}-${mesHoje}-${diaHoje}`;
+
+            // 1. Aniversariantes do Dia
+            alunos.forEach(a => {
+                if(a.nascimento && a.nascimento.endsWith(`-${mesHoje}-${diaHoje}`)) {
+                    contador++;
+                    alertasHTML += `<div class="noti-item"><div class="noti-icon">🎉</div><div><strong>Aniversário!</strong><br>Dê os parabéns a ${App.escapeHTML(a.nome)}.</div></div>`;
+                }
+            });
+
+            // 2. Eventos/Provas de Hoje
+            eventos.forEach(e => {
+                if(e.data === formatHoje) {
+                    contador++;
+                    alertasHTML += `<div class="noti-item"><div class="noti-icon">📅</div><div><strong>Agenda de Hoje:</strong><br>${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}</div></div>`;
+                }
+            });
+
+            // 3. Inadimplência (Faturas Vencidas)
+            const vencidos = financeiro.filter(f => f.status !== 'Pago' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje);
+            if(vencidos.length > 0) {
+                contador += vencidos.length;
+                alertasHTML += `<div class="noti-item"><div class="noti-icon" style="color:#e74c3c;">⚠️</div><div><strong>Financeiro Crítico:</strong><br>Existem ${vencidos.length} parcelas vencidas aguardando cobrança.</div></div>`;
+            }
+
+            // Renderizar na UI
+            if (contador > 0) {
+                if(badge) { badge.style.display = 'block'; badge.innerText = contador > 99 ? '99+' : contador; }
+                if(list) list.innerHTML = alertasHTML;
+            } else {
+                if(badge) badge.style.display = 'none';
+                if(list) list.innerHTML = '<div class="noti-item" style="justify-content:center; color:#27ae60; font-weight:bold;">Tudo em dia! Nenhuma pendência.</div>';
+            }
+        } catch (e) {
+            console.log("Notificações: Erro ao procurar alertas.");
+        }
+    },
 
 document.addEventListener('DOMContentLoaded', App.init);
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
