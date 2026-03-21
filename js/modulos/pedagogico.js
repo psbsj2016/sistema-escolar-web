@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V115 (RESPONSIVO + CALENDÁRIO GOOGLE UX)
+// MÓDULO PEDAGÓGICO V119 (FIX MOBILE CALENDÁRIO + AUTO-AJUSTE)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -142,14 +142,14 @@ App.renderizarTelaEdicao = (plano) => {
     plano.aulas.forEach(aula => { const [h, m] = aula.duracao.split(':').map(Number); totalMinutos += (h * 60) + m; });
     const totalHoras = (totalMinutos / 60).toFixed(0);
     
-    // 🛡️ A CADEADO SaaS AQUI: getTenantKey garante que busca o perfil da escola certa!
     const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
     div.innerHTML = `
-        <div class="no-print" style="margin-bottom:20px; text-align:center; background:#f4f4f4; padding:15px; border-radius:10px;">
-            <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; margin-right:10px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
-            <button onclick="window.print()" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:5px; margin-right:10px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
+        <div class="no-print" style="margin-bottom:20px; background:#f4f4f4; padding:15px; border-radius:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
+            <button id="btn-sync-plan" onclick="App.sincronizarPlanejamentoComChamadasUI()" style="background:#8e44ad; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(142,68,173,0.3);" title="Ajusta as datas de acordo com as presenças lançadas">🤖 AUTO-AJUSTAR</button>
+            <button onclick="window.print()" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
             <button onclick="App.renderizarPlanejamentosSalvos()" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">FECHAR</button>
         </div>
         <div class="print-sheet">
@@ -171,12 +171,12 @@ App.renderizarTelaEdicao = (plano) => {
             </div>
             <div class="table-responsive-wrapper">
                 <table class="doc-table">
-                    <thead><tr><th style="width:5%;">Nº</th><th style="width:12%;">DATA</th><th style="width:10%;">HORÁRIO</th><th style="width:10%;">DURAÇÃO</th><th>CONTEÚDO / OBS</th><th style="width:5%;">OK</th></tr></thead>
+                    <thead><tr><th style="width:5%;">Nº</th><th style="width:15%; min-width:105px;">DATA</th><th style="width:12%;">HORÁRIO</th><th style="width:12%;">DURAÇÃO</th><th>CONTEÚDO / OBS</th><th style="width:5%;">OK</th></tr></thead>
                     <tbody>
                         ${plano.aulas.map((a,i)=>`
                         <tr>
                             <td style="text-align:center;">${a.num}</td>
-                            <td><input class="plan-input-print" style="text-align:center;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td><input class="plan-input-print" style="text-align:center; min-width:95px; width:100%;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
                             <td><input class="plan-input-print" style="text-align:center;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
                             <td><input class="plan-input-print" style="text-align:center;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
                             <td><input class="plan-input-print" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
@@ -208,6 +208,86 @@ App.salvarPlanejamentoBanco = async () => {
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+};
+
+App.processarAutoAjustePlano = (plano, chamadas) => {
+    if (!plano || !plano.aulas) return plano;
+
+    const presencas = chamadas
+        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição'))
+        .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    let diasDaSemanaAulas = [];
+    if (presencas.length > 0) {
+        const ultimas = presencas.slice(-4);
+        diasDaSemanaAulas = [...new Set(ultimas.map(p => {
+            const [ano, mes, dia] = p.data.split('-');
+            const d = new Date(`${ano}-${mes}-${dia}T12:00:00`);
+            return d.getDay();
+        }))];
+    }
+
+    if (diasDaSemanaAulas.length === 0) {
+        diasDaSemanaAulas = [...new Set(plano.aulas.map(a => {
+            const parts = a.data.split('/');
+            if (parts.length === 3) {
+                const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`);
+                return d.getDay();
+            }
+            return -1;
+        }).filter(d => d !== -1))];
+    }
+    
+    if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
+
+    let presencasUsadas = 0;
+    let ultimaDataBase = new Date(); 
+    ultimaDataBase.setHours(12, 0, 0, 0);
+
+    for (let i = 0; i < plano.aulas.length; i++) {
+        const aula = plano.aulas[i];
+
+        if (presencasUsadas < presencas.length) {
+            const dataReal = presencas[presencasUsadas].data; 
+            const [ano, mes, dia] = dataReal.split('-');
+            aula.data = `${dia}/${mes}/${ano}`;
+            aula.visto = true;
+            ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`);
+            presencasUsadas++;
+        } else {
+            aula.visto = false;
+            ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            
+            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) {
+                ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            }
+            
+            const d = String(ultimaDataBase.getDate()).padStart(2, '0');
+            const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0');
+            const y = ultimaDataBase.getFullYear();
+            aula.data = `${d}/${m}/${y}`;
+        }
+    }
+    return plano;
+};
+
+App.sincronizarPlanejamentoComChamadasUI = async () => {
+    if(!App.planoAtual || !App.planoAtual.idAluno) return;
+
+    const btn = document.getElementById('btn-sync-plan');
+    const txtOrig = btn.innerHTML;
+    btn.innerHTML = "A analisar Padrões... ⏳"; btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    try {
+        const chamadas = await App.api('/chamadas');
+        App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
+        
+        App.renderizarTelaEdicao(App.planoAtual);
+        App.showToast("Planeamento Auto-Ajustado com Base nas Últimas Aulas! 🎉", "success");
+
+    } catch (e) { App.showToast("Erro ao sincronizar planeamento.", "error"); } 
+    finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
 App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
@@ -262,7 +342,6 @@ App.gerarBoletimTela = async () => {
             linhasHTML += `<tr><td>${d.nome}</td><td>${detalhe}</td><td style="text-align:center;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center;">${situacao}</td></tr>`;
         });
 
-        // 🛡️ A CADEADO SaaS AQUI: Usa a Cerca de Segurança no Boletim também!
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const dataHoje = new Date().toLocaleDateString('pt-BR');
 
@@ -287,7 +366,7 @@ App.gerarBoletimTela = async () => {
 };
 
 // ---------------------------------------------------------
-// 3. AVALIAÇÕES (NOTAS) - COM CAMPO DE DATA
+// 3. AVALIAÇÕES (NOTAS)
 // ---------------------------------------------------------
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
@@ -401,7 +480,7 @@ App.editarAvaliacao = async (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA (PRESENÇAS)
+// 4. CHAMADA E AUTO-AJUSTE PREDITIVO SILENCIOSO
 // ---------------------------------------------------------
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controlo de Presença");
@@ -473,31 +552,24 @@ App.salvarLancamentoChamada = async () => {
             await App.api('/chamadas', 'POST', payload); 
         } 
         
-        // 🧠 INTELIGÊNCIA ARTIFICIAL: Baixa Automática no Planejamento
         let avisoExtra = "";
-        if (status === 'Presença' || status === 'Reposição') {
-            const planejamentos = await App.api('/planejamentos');
-            const plano = planejamentos.find(p => p.idAluno === idAluno);
+        try {
+            const [planejamentos, chamadasGerais] = await Promise.all([App.api('/planejamentos'), App.api('/chamadas')]);
+            let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno);
             
-            if (plano && plano.aulas) {
-                // Encontra a primeira aula que ainda não tem o "visto"
-                const aulaPendente = plano.aulas.find(a => !a.visto);
-                if (aulaPendente) {
-                    aulaPendente.visto = true;
-                    // Atualiza a data do planejamento para o dia real em que a aula foi dada
-                    const [ano, mes, dia] = data.split('-');
-                    aulaPendente.data = `${dia}/${mes}/${ano}`;
-                    
-                    await App.api(`/planejamentos/${plano.id}`, 'PUT', plano);
-                    avisoExtra = ` e Aula ${aulaPendente.num} concluída no planejamento!`;
-                }
+            if (planoDoAluno) {
+                planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasGerais);
+                await App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno);
+                avisoExtra = " e Planeamento Auto-Ajustado com sucesso!";
             }
+        } catch (erroPlano) {
+            console.log("Aviso: Falha ao rodar o auto-ajuste de fundo.", erroPlano);
         }
         
         App.showToast(`Chamada registada${avisoExtra}`, "success");
         App.renderizarChamadaPro(); 
     } catch(e) { 
-        App.showToast("Erro ao registar.", "error"); 
+        App.showToast("Erro ao registar chamada.", "error"); 
     } finally { 
         if(btn) { btn.innerText = txtOrig; btn.disabled = false; } 
         document.body.style.cursor = 'default'; 
@@ -520,7 +592,6 @@ App.renderizarCalendarioPro = async () => {
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; 
         const mesNome = meses[App.calendarState.month]; const ano = App.calendarState.year; 
         
-        // NOVA ESTRUTURA DO CALENDÁRIO COM CLASSES CSS LIMPAS
         const gridCalendario = `
             <div class="cal-header-nav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
@@ -569,31 +640,23 @@ App.renderizarCalendarioPro = async () => {
     } catch(e) { div.innerHTML = "Erro ao carregar calendário."; } 
 };
 
-// NOVA LÓGICA DE DESENHO DOS DIAS (LIMPO E ARREDONDADO)
 App.gerarDiasCalendario = (mes, ano, eventos) => { 
     const startDay = new Date(ano, mes, 1).getDay(); 
     const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
     let html = ''; 
     
-    // Espaços vazios antes do dia 1
     for(let i=0; i<startDay; i++) {
         html += `<div style="background:#f8f9fa;"></div>`; 
     }
     
-    // Desenha os dias
     for(let d=1; d<=daysInMonth; d++){ 
-        // Formata data ISO com segurança (ex: 2026-03-05)
         const dataISO = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
-        
-        // Verifica se é o dia de hoje para colocar o Círculo Azul
         const hojeObj = new Date();
         const isHoje = (d === hojeObj.getDate() && mes === hojeObj.getMonth() && ano === hojeObj.getFullYear()); 
         
-        // Busca eventos do dia e cria as pílulas arredondadas
         const evs = eventos.filter(e => e.data === dataISO); 
         const tags = evs.map(e => `<div class="cal-event-pill" style="background:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">${e.descricao}</div>`).join(''); 
         
-        // Monta o quadrado do dia
         html += `<div id="cal-day-${dataISO}" class="cal-day ${isHoje?'today':''}" onclick="App.selecionarDia('${dataISO}')">
                     <div class="cal-day-num">${d}</div>
                     ${tags}
@@ -605,25 +668,18 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
 App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${e.inicio||'-'}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${e.tipo}</td><td style="padding:10px;">${e.descricao}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px; border-radius:4px; margin-right:5px;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px; border-radius:4px;">🗑️</button></td></tr>`).join(''); };
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 
-// NOVA LÓGICA DE UX DE CLIQUE (SELECIONAR E DESLIZAR)
 App.selecionarDia = (dt) => { 
-    // 1. Remove o foco de todos os dias
     document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
-    
-    // 2. Adiciona borda verde bonita no dia que o utilizador clicou
     const diaAtivo = document.getElementById(`cal-day-${dt}`);
     if(diaAtivo) diaAtivo.classList.add('selected');
     
-    // 3. Preenche a data no formulário
     const dataInput = document.getElementById('evt-data');
     dataInput.value = dt; 
     
-    // 4. Limpa edição anterior e foca na descrição
     const descInput = document.getElementById('evt-desc');
     descInput.value = '';
     App.idEdicaoEvento = null; 
     
-    // 5. A MAGIA: Desliza o ecrã suavemente até ao formulário!
     setTimeout(() => {
         document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' });
         descInput.focus();
@@ -631,6 +687,9 @@ App.selecionarDia = (dt) => {
 };
 
 App.salvarEvento = async () => { 
+    // 1. FECHA O TECLADO DO TELEMÓVEL FORÇADAMENTE (EVITA O CORTE DO ECRÃ)
+    if (document.activeElement) document.activeElement.blur();
+
     const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
     if(!pl.data || !pl.descricao) return App.showToast("Preencha data e descrição.", "error"); 
     
@@ -642,7 +701,23 @@ App.salvarEvento = async () => {
     try {
         if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); 
         else await App.api('/eventos', 'POST', pl); 
-        App.idEdicaoEvento=null; App.renderizarCalendarioPro(); 
+        
+        App.idEdicaoEvento=null; 
+
+        // 2. DELAY ESTRATÉGICO: Aguarda 300ms para o teclado descer e a tela ajustar aos 100%
+        setTimeout(() => {
+            App.renderizarCalendarioPro(); 
+            
+            // 3. DESLIZA SUAVEMENTE ATÉ À TABELA PARA MOSTRAR O RESULTADO
+            setTimeout(() => {
+                const tabelaEventos = document.querySelector('.table-responsive-wrapper');
+                if(tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+
+        }, 300);
+
+        App.showToast("Evento salvo com sucesso!", "success");
+
     } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
