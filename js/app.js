@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V147 - BUG DO PLANO CORRIGIDO)
+// SISTEMA ESCOLAR - APP.JS (V147 - BUG DO PLANO E SINTAXE CORRIGIDOS)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
@@ -81,7 +81,6 @@ const App = {
         if (salvo && token) { 
             App.usuario = JSON.parse(salvo); 
             
-            // 🚀 CORREÇÃO DO BUG "TESTE": OBRIGA A LER A ESCOLA ANTES DE ABRIR O SISTEMA
             await App.carregarDadosEscola(); 
             App.aplicarTemaSalvo();
 
@@ -159,7 +158,7 @@ const App = {
     
     otimizarImagem: (file, maxWidth, callback) => { /* ... código mantido ... */ },
     
-    renderizarInicio: async () => { /* ... manter todo o código complexo de renderizarInicio original intacto ... */
+    renderizarInicio: async () => { 
         App.verificarNotificacoes(); 
         App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         try {
@@ -235,17 +234,17 @@ const App = {
     
     renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
     renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
-    renderizarMeuPlano: () => { /* ... código mantido, igual ao original que você aprova ... */ },
+    renderizarMeuPlano: () => { /* ... código mantido ... */ },
     comprarPlano: (nomePlano, linkCheckout) => { /* ... código mantido ... */ },
     ativarNovoPlano: async () => { /* ... código mantido ... */ },
-    abrirModalCadastro: async (tipo, id) => { /* ... código mantido ... */ 
+    abrirModalCadastro: async (tipo, id) => { 
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
     abrirRelatorioFrequencia: async (idAluno, nomeAluno) => { /* ... código mantido ... */ },
     abrirModalVenda: (idAluno, nomeAluno) => { /* ... código mantido ... */ },
     salvarVenda: async () => { /* ... código mantido ... */ },
     
-// =========================================================
+    // =========================================================
     // 1. LISTAS AVANÇADAS (PESQUISA REATIVA E AÇÕES RÁPIDAS)
     // =========================================================
     renderizarLista: async (tipo) => {
@@ -259,7 +258,7 @@ const App = {
         div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar base de dados... ⏳</p>';
 
         try {
-            App.dadosEmCache = await App.api(`/${tipo}s`); // Guarda em cache para a pesquisa
+            App.dadosEmCache = await App.api(`/${tipo}s`); 
             App.tipoListaAtual = tipo;
             App.desenharTabelaLista(App.dadosEmCache);
         } catch(e) {
@@ -296,7 +295,6 @@ const App = {
             dados.forEach(item => {
                 const nomeExibicao = item.nome || item.descricao || 'Sem Nome';
                 
-                // Botões Inteligentes Exclusivos para Alunos
                 let botoesExtras = '';
                 if(tipo === 'aluno') {
                     botoesExtras = `
@@ -415,7 +413,7 @@ const App = {
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(payload));
             
             App.showToast("Configurações salvas! A sua logomarca foi atualizada.", "success");
-            App.carregarDadosEscola(); // Recarrega a UI
+            App.carregarDadosEscola(); 
         } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
         finally { document.body.style.cursor = 'default'; }
     },
@@ -500,7 +498,6 @@ const App = {
             if(res.error) throw new Error(res.error);
             
             App.showToast(`Parabéns! O seu sistema foi atualizado para o plano ${res.plano}.`, "success");
-            // Atualiza o localStorage para refletir o novo plano
             let ativacao = JSON.parse(localStorage.getItem('escola_ativacao') || '{}');
             ativacao.plano = res.plano;
             localStorage.setItem('escola_ativacao', JSON.stringify(ativacao));
@@ -568,7 +565,8 @@ const App = {
         } catch (e) {
             console.log("Notificações: Erro ao procurar alertas.");
         }
-    },
+    }
+}; // 🚀 AQUI ESTÁ A CORREÇÃO! A CHAVE QUE FALTAVA PARA FECHAR O OBJETO APP
 
 document.addEventListener('DOMContentLoaded', App.init);
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
