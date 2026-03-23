@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO FINANCEIRO V161 (CARNÊ BANCÁRIO BLINDADO E PIX OTIZIMADO)
+// MÓDULO FINANCEIRO V162 (CARNÊ BANCÁRIO A4 BLINDADO E QR OFICIAL)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
@@ -339,7 +339,7 @@ App.editarParcela = async (id) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (VISUALIZADOR PROFISSIONAL BANCÁRIO)
+// 🚀 RENDERIZAÇÃO DO CARNÊ (VISUALIZADOR PROFISSIONAL BANCÁRIO A4 + QR OFICIAL)
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
@@ -361,6 +361,11 @@ App.abrirCarneExistente = async (idLote) => {
             const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             const nossoNumero = p.id.slice(-8).toUpperCase();
             
+            // Lógica inteligente do QR Code: Puxar do perfil primeiro
+            const qrCodeDisplay = (escola.qrCodeImagem && escola.qrCodeImagem.length > 50 && !escola.qrCodeImagem.includes('placehold'))
+                ? `<img src="${escola.qrCodeImagem}" style="width: 85px; height: 85px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
+                : `<div id="qr-${p.id}" style="width: 85px; height: 85px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
+
             return `
             <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 25px; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
                 
@@ -412,7 +417,7 @@ App.abrirCarneExistente = async (idLote) => {
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
-                            <div id="qr-${p.id}" style="padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px;"></div>
+                            ${qrCodeDisplay}
                             <div style="font-size: 9px; color: #999; margin-top: 5px;">Autenticação Mecânica</div>
                         </div>
                     </div>
@@ -426,6 +431,7 @@ App.abrirCarneExistente = async (idLote) => {
                     body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
                     .no-print { display: none !important; }
                     .print-bg { background: transparent !important; padding: 0 !important; }
+                    .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
                     .carne-wrapper { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 15px !important; }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
@@ -433,6 +439,7 @@ App.abrirCarneExistente = async (idLote) => {
                     .carne-wrapper { flex-direction: column !important; }
                     .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
                     .carne-recibo { width: 100% !important; }
+                    .print-sheet { padding: 10px !important; }
                 }
             </style>
             
@@ -444,18 +451,22 @@ App.abrirCarneExistente = async (idLote) => {
             </div>
             
             <div class="print-bg" style="background: #f4f6f7; padding: 30px 15px; border-radius: 8px;">
-                ${carnesHTML}
+                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box;">
+                    ${carnesHTML}
+                </div>
             </div>`;
 
-        // Geração segura do QR Code
-        parcelas.forEach(p => {
-            const el = document.getElementById(`qr-${p.id}`);
-            if(el && typeof QRCode !== 'undefined') {
-                new QRCode(el, { text: chavePix, width: 85, height: 85, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
-            } else if(el) {
-                el.innerHTML = '<span style="font-size:10px; color:#999;">QR Code<br>Indisponível</span>';
-            }
-        });
+        // Geração segura do QR Code (Fallback se a imagem não estiver presente)
+        if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50 || escola.qrCodeImagem.includes('placehold')) {
+            parcelas.forEach(p => {
+                const el = document.getElementById(`qr-${p.id}`);
+                if(el && typeof QRCode !== 'undefined') {
+                    new QRCode(el, { text: chavePix, width: 75, height: 75, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
+                } else if(el) {
+                    el.innerHTML = '<span style="font-size:10px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
+                }
+            });
+        }
     } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
 };
 
