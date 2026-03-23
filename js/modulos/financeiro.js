@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO FINANCEIRO V113 (VISUALIZADOR PDF EMBUTIDO)
+// MÓDULO FINANCEIRO V161 (CARNÊ BANCÁRIO BLINDADO E PIX OTIZIMADO)
 // =========================================================
 
 // --- 1. PAINEL PRINCIPAL ---
@@ -28,7 +28,7 @@ App.renderizarFinanceiroPro = async () => {
                 <input type="${tipo}" id="${id}" value="${val}" placeholder="${placeholder}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
             </div>`;
 
-        const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const formGerador = `
             <div style="display:flex; align-items:center; margin-bottom:20px;">
                 <div style="font-size:24px; margin-right:10px;">💰</div>
@@ -44,7 +44,7 @@ App.renderizarFinanceiroPro = async () => {
                 ${col('Parcelas:', 'fin-parcelas', 'number', '12')}
                 ${col('1º Vencimento:', 'fin-vencimento', 'date', new Date().toISOString().split('T')[0])}
             </div>
-            <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Gerar e Imprimir Carnê</button>
+            <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">Gerar e Imprimir Carnê</button>
         `;
 
         const barraFerramentas = `
@@ -59,7 +59,7 @@ App.renderizarFinanceiroPro = async () => {
                     <input type="text" id="fin-busca" placeholder="Pesquisar lançamentos..." oninput="App.filtrarFinanceiro(this.value)" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
                 </div>
             </div>
-            <div id="fin-lista-area" class="table-responsive-wrapper">
+            <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
                 ${App.gerarTabelaFinanceira(App.financeiroCache)}
             </div>
         `;
@@ -79,9 +79,9 @@ App.renderizarFinanceiroPro = async () => {
 App.gerarTabelaFinanceira = (dados) => {
     if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
     
-    const th = (texto, align='center') => `<th style="padding:12px; text-align:${align};">${texto}</th>`;
+    const th = (texto, align='center') => `<th style="padding:12px; text-align:${align}; border-bottom:2px solid #eee;">${texto}</th>`;
     const cabecalho = `<tr style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase; font-size:12px;">
-        <th style="padding:12px; width:40px; text-align:center;"><input type="checkbox" onchange="App.toggleCheck(this)"></th>
+        <th style="padding:12px; width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheck(this)"></th>
         ${th('Aluno', 'left')}${th('Parcela')}${th('Vencimento')}${th('Valor')}${th('Status')}${th('Ações')}
     </tr>`;
 
@@ -96,8 +96,8 @@ App.gerarTabelaFinanceira = (dados) => {
         return `
         <tr style="border-bottom:1px solid #eee; ${bgRow} transition:background 0.2s;">
             <td style="padding:12px; text-align:center;"><input type="checkbox" class="fin-check" value="${p.id}"></td>
-            <td style="padding:12px; font-weight:bold;">${p.alunoNome}</td>
-            <td style="padding:12px; text-align:center;">${parcelaStr}</td>
+            <td style="padding:12px; font-weight:bold;">${App.escapeHTML(p.alunoNome)}</td>
+            <td style="padding:12px; text-align:center;">${App.escapeHTML(parcelaStr)}</td>
             <td style="padding:12px; text-align:center;">${vencStr}</td>
             <td style="padding:12px; text-align:center;">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
             <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
@@ -108,7 +108,7 @@ App.gerarTabelaFinanceira = (dados) => {
         </tr>`; 
     }).join('');
 
-    return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
+    return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555; min-width:600px;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
 };
 
 App.filtrarFinanceiro = (termo) => {
@@ -339,64 +339,121 @@ App.editarParcela = async (id) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (AGORA PROTEGIDO NO VISUALIZADOR)
+// 🚀 RENDERIZAÇÃO DO CARNÊ (VISUALIZADOR PROFISSIONAL BANCÁRIO)
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Carnê...</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Carnê Profissional...</p>';
     try {
         const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const parcelas = financeiro.filter(x => x.idCarne === idLote).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         if(parcelas.length === 0) return App.showToast("Carnê não encontrado.", "error");
 
-        const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: 'Aluno', cpf: '' };
-        const logo = escola.foto ? `<img src="${escola.foto}" class="carne-logo-img">` : '';
-        const nomeEscolaResumo = (escola.nome || 'Escola').substring(0, 18);
+        const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: 'Aluno', cpf: 'Não informado' };
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:45px; object-fit:contain; margin-right:10px;">` : '';
+        const nomeEscolaResumo = (escola.nome || 'INSTITUIÇÃO').substring(0, 20);
         const primeiroNomeAluno = (aluno.nome || 'Aluno').split(' ')[0];
+        const bancoNome = escola.banco || 'Não Configurado';
+        const chavePix = escola.chavePix || 'Não Configurada';
 
-        const carnesHTML = parcelas.map((p, index) => {
+        const carnesHTML = parcelas.map((p) => {
             const dataVenc = p.vencimento.split('-').reverse().join('/');
             const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            const nossoNumero = p.id.slice(-8).toUpperCase();
+            
             return `
-            <div class="carne-row">
-                <div class="carne-canhoto">
-                    <div style="border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:5px;">${logo}<div style="font-weight:bold;">${nomeEscolaResumo}</div></div>
-                    <div><b>Vencimento:</b> ${dataVenc}</div>
-                    <div><b>Valor:</b> R$ ${valorF}</div>
-                    <div style="margin-top:auto;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
+            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 25px; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
+                
+                <div class="carne-canhoto" style="width: 30%; border-right: 2px dashed #999; padding: 15px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box;">
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 15px; text-align: center;">
+                        ${logo}
+                        <div style="font-weight: bold; font-size: 11px; text-transform: uppercase; margin-top:5px;">${nomeEscolaResumo}</div>
+                    </div>
+                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Parcela:</b> ${p.descricao}</div>
+                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
+                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Nº Documento:</b> ${nossoNumero}</div>
+                    <div style="margin-top: auto; font-size: 10px; border-top: 1px solid #ccc; padding-top: 8px;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
                 </div>
-                <div class="carne-recibo">
-                    <div style="display:flex; justify-content:space-between; border-bottom:2px solid #000; padding-bottom:5px;">
-                        ${logo} <div><div style="font-weight:bold; font-size:14px;">${escola.nome || 'INSTITUIÇÃO'}</div><div style="font-size:10px;">CNPJ: ${escola.cnpj || ''}</div></div>
+                
+                <div class="carne-recibo" style="width: 70%; padding: 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
+                    
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; align-items: center;">
+                        <div style="display: flex; align-items: center;">
+                            ${logo} 
+                            <div>
+                                <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div>
+                                <div style="font-size: 10px; color: #555;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')} | Banco: <b>${App.escapeHTML(bancoNome)}</b></div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 11px; font-weight: bold; color: #555; border-left: 2px solid #ccc; padding-left:15px;">
+                            RECIBO DO<br>PAGADOR
+                        </div>
                     </div>
-                    <div style="display:flex; gap:20px; margin:10px 0;">
-                        <div><small>Nosso Número</small><br><b>${p.id.slice(-8)}</b></div>
-                        <div><small>Vencimento</small><br><b style="color:red;">${dataVenc}</b></div>
-                        <div><small>Valor</small><br><b>R$ ${valorF}</b></div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; background: #fdfdfd; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 14px;">${nossoNumero}</div></div>
+                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 14px; color: #c0392b;">${dataVenc}</div></div>
+                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 14px;">R$ ${valorF}</div></div>
                     </div>
-                    <div style="font-size:11px; margin-bottom:10px;"><b>Ref:</b> ${p.descricao} | <b>Pagador:</b> ${aluno.nome}</div>
-                    <div style="display:flex; justify-content:space-between; margin-top:auto; align-items:flex-end;">
-                        <div style="font-size:9px; color:#666;">Autenticação Mecânica / Canhoto</div>
-                        <div id="qr-${p.id}" class="carne-qr"></div>
+                    
+                    <div style="font-size: 12px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; line-height:1.5;">
+                        <div><b>Referência:</b> ${p.descricao}</div>
+                        <div><b>Pagador:</b> ${App.escapeHTML(aluno.nome)}</div>
+                        <div><b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-top: auto; align-items: flex-end; gap:20px;">
+                        <div style="flex:1;">
+                            <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color:#27ae60;">PAGAMENTO VIA PIX</div>
+                            <div style="font-size: 10px; margin-bottom: 5px; color:#555;">Abra o app do seu banco, leia o QR Code ao lado ou utilize a chave manual abaixo:</div>
+                            <div style="background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; font-weight: bold; word-break: break-all; border:1px dashed #ccc;">
+                                🔑 ${App.escapeHTML(chavePix)}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div id="qr-${p.id}" style="padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px;"></div>
+                            <div style="font-size: 9px; color: #999; margin-top: 5px;">Autenticação Mecânica</div>
+                        </div>
                     </div>
                 </div>
             </div>`;
         }).join('');
 
         div.innerHTML = `
-            <div class="no-print" style="text-align:center; padding:20px; background:#f0f0f0; border-radius: 8px; margin-bottom: 20px;">
-                <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR CARNÊ</button>
-                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px;">VOLTAR</button>
+            <style>
+                @media print {
+                    body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+                    .no-print { display: none !important; }
+                    .print-bg { background: transparent !important; padding: 0 !important; }
+                    .carne-wrapper { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 15px !important; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+                @media (max-width: 768px) {
+                    .carne-wrapper { flex-direction: column !important; }
+                    .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
+                    .carne-recibo { width: 100% !important; }
+                }
+            </style>
+            
+            <div class="no-print" style="text-align:center; padding:20px; background:#fff; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h2 style="margin-top:0; color:#2c3e50;">Carnê Gerado com Sucesso! 🎉</h2>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Verifique se os dados estão corretos antes de imprimir.</p>
+                <button onclick="window.print()" class="btn-primary" style="padding:12px 25px; font-size:16px; width:auto;">🖨️ IMPRIMIR CARNÊ</button>
+                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px; padding:12px 25px; width:auto;">VOLTAR</button>
             </div>
-            <div class="carne-viewer no-print-bg">
-                <div class="print-sheet carne-layout">${carnesHTML}</div>
+            
+            <div class="print-bg" style="background: #f4f6f7; padding: 30px 15px; border-radius: 8px;">
+                ${carnesHTML}
             </div>`;
 
         // Geração segura do QR Code
         parcelas.forEach(p => {
             const el = document.getElementById(`qr-${p.id}`);
             if(el && typeof QRCode !== 'undefined') {
-                new QRCode(el, { text: escola.chavePix || "PIX Indisponível", width: 100, height: 100 });
+                new QRCode(el, { text: chavePix, width: 85, height: 85, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
+            } else if(el) {
+                el.innerHTML = '<span style="font-size:10px; color:#999;">QR Code<br>Indisponível</span>';
             }
         });
     } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
@@ -423,22 +480,44 @@ App.renderizarInadimplencia = async () => {
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
         
-        const style = `<style>.inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } .inad-kpi-val { font-size: 24px; font-weight: bold; } .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; } .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } @media print { .no-print { display: none !important; } .print-sheet { width: 100%; } .inad-card-top { border: 1px solid #000; box-shadow: none; } .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } }</style>`;
+        const style = `
+        <style>
+            .inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } 
+            .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } 
+            .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } 
+            .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } 
+            .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } 
+            .inad-kpi-val { font-size: 24px; font-weight: bold; } 
+            .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } 
+            .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; min-width:600px; } 
+            .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } 
+            .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } 
+            .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } 
+            @media print { 
+                .no-print { display: none !important; } 
+                .print-sheet { width: 100%; } 
+                .inad-card-top { border: 1px solid #000; box-shadow: none; } 
+                .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } 
+                .table-responsive-wrapper { overflow-x: visible !important; }
+            }
+        </style>`;
         
-        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${d.nome}</td><td>${d.curso}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
+        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${App.escapeHTML(d.nome)}</td><td>${App.escapeHTML(d.curso)}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
 
         div.innerHTML = `${style}
             <div style="margin-bottom: 20px;" class="no-print">
                 <button onclick="App.renderizarFinanceiroPro()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">⬅ VOLTAR</button>
             </div>
             
-            <div class="print-sheet">
-                <div class="doc-header">
-                    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                        ${logo}
-                        <div><h2 style="margin:0; text-transform:uppercase; font-size:18px; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+            <div class="print-sheet" style="background:white; padding:30px; border-radius:8px;">
+                <div class="doc-header" style="margin-bottom:30px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; border-bottom:2px solid #eee; padding-bottom:15px;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            ${logo}
+                            <div><h2 style="margin:0; text-transform:uppercase; font-size:18px; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                        </div>
+                        <div style="text-align:right;"><div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div></div>
                     </div>
-                    <div style="text-align:right;"><div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div></div>
                 </div>
                 
                 <div style="border-bottom: 2px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; display:flex; align-items:center; gap:10px;">
@@ -464,7 +543,7 @@ App.renderizarInadimplencia = async () => {
                     <button onclick="window.print()" class="no-print" style="background:#34495e; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR LISTA</button>
                 </div>
                 
-                <div class="table-responsive-wrapper">
+                <div class="table-responsive-wrapper" style="overflow-x:auto;">
                     <table class="inad-table">
                         <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES (VENCIMENTOS)</th><th>TOTAL DEVIDO</th><th class="no-print" style="text-align:right;">AÇÃO</th></tr></thead>
                         <tbody>${linhasTabela}</tbody>
