@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO RELATÓRIOS V159 (FOLHA A4 BLINDADA, CABEÇALHOS E DECLARAÇÃO)
+// MÓDULO RELATÓRIOS V160 (FOLHA A4 BLINDADA + RESPONSIVIDADE MOBILE)
 // =========================================================
 
 App.renderizarRelatorioModulo = async (tipo) => {
@@ -22,8 +22,31 @@ const relSelect = (label, id, options, extra='') => `
         <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>${options}</select>
     </div>`;
 
+// --- ESTILOS COMUNS PARA IMPRESSÃO E MOBILE ---
+const reportStyles = `
+    <style>
+        .print-sheet { background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
+        .kpi-container { display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+        .kpi-box { flex: 1; min-width: 120px; padding: 15px; border-radius: 8px; text-align: center; }
+        @media (max-width: 768px) {
+            .print-sheet { padding: 15px !important; margin: 0 !important; width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
+            .doc-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
+            .doc-header > div { text-align: left !important; width: 100% !important; }
+            .kpi-container { flex-direction: column; }
+            .kpi-box { width: 100% !important; margin-bottom: 10px; }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+            .print-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; }
+            .table-responsive { overflow-x: visible !important; }
+        }
+    </style>
+`;
+
 // ---------------------------------------------------------
-// 1. RELATÓRIOS FINANCEIROS (COM CABEÇALHO E FOLHA A4)
+// 1. RELATÓRIOS FINANCEIROS
 // ---------------------------------------------------------
 App.renderizarSelecaoRelatorio = () => {
     const div = document.getElementById('app-content');
@@ -47,13 +70,13 @@ App.renderizarSelecaoRelatorio = () => {
         
         <div style="text-align:center; margin:25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS ESPECÍFICO</div>
         
-        <div style="display:flex; gap:10px; align-items:flex-end;">
-            ${relSelect('Mês:', 'rel-mes', opMeses, 'style="background:white; padding:12px;"')}
-            <button onclick="App.gerarRelatorioMensal()" style="flex:1; background:#2980b9; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; height:43px; box-shadow:0 4px 10px rgba(41,128,185,0.3);">VER MÊS</button>
+        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            ${relSelect('Mês:', 'rel-mes', opMeses, 'style="background:white; padding:12px; min-width:200px;"')}
+            <button onclick="App.gerarRelatorioMensal()" style="flex:1; min-width:150px; background:#2980b9; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; height:43px; box-shadow:0 4px 10px rgba(41,128,185,0.3);">VER MÊS</button>
         </div>
     `;
 
-    div.innerHTML = App.UI.card('', '', formHTML, '600px');
+    div.innerHTML = App.UI.card('', '', formHTML, '100%');
 };
 
 App.gerarRelatorioAnual = async () => {
@@ -71,44 +94,48 @@ App.gerarRelatorioAnual = async () => {
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
+            ${reportStyles}
             <div class="no-print" style="margin-bottom:20px; text-align:center;">
-                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px; margin-bottom:10px;">⬅ VOLTAR</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
             </div>
             
-            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family:'Segoe UI', sans-serif;">
+            <div class="print-sheet">
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
-                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}<br>Relatório Analítico Anual</div></div>
+                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}<br>Relatório Analítico Anual</div></div>
                     </div>
                     <div style="text-align:right;">
-                        <h1 style="margin:0; font-size:24px; color:#2c3e50;">EXERCÍCIO ${ano}</h1>
+                        <h1 style="margin:0; font-size:22px; color:#2c3e50;">EXERCÍCIO ${ano}</h1>
                         <div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleString('pt-BR')}</div>
                     </div>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; background:#fafafa; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #eee;">
-                    <div><div style="font-size:12px; font-weight:bold; color:#555;">TOTAL LANÇADO:</div><div style="font-size:18px; font-weight:bold; color:#333;">${fmt(totalLancado)}</div></div>
-                    <div><div style="font-size:12px; font-weight:bold; color:green;">TOTAL RECEBIDO:</div><div style="font-size:18px; color:green;">${fmt(totalRecebido)}</div></div>
-                    <div><div style="font-size:12px; font-weight:bold; color:red;">TOTAL PENDENTE:</div><div style="font-size:18px; color:red;">${fmt(totalPendente)}</div></div>
+                <div class="kpi-container" style="background:#fafafa; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #eee;">
+                    <div class="kpi-box"><div style="font-size:12px; font-weight:bold; color:#555;">TOTAL LANÇADO:</div><div style="font-size:18px; font-weight:bold; color:#333;">${fmt(totalLancado)}</div></div>
+                    <div class="kpi-box"><div style="font-size:12px; font-weight:bold; color:green;">TOTAL RECEBIDO:</div><div style="font-size:18px; color:green;">${fmt(totalRecebido)}</div></div>
+                    <div class="kpi-box"><div style="font-size:12px; font-weight:bold; color:red;">TOTAL PENDENTE:</div><div style="font-size:18px; color:red;">${fmt(totalPendente)}</div></div>
                 </div>
-                <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
-                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
-                        <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">RECEBIDO</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">PENDENTE</th></tr>
-                    </thead>
-                    <tbody>
-                        ${dados.map(f => { 
-                            const isPago = f.status === 'Pago'; 
-                            let textoStatus = isPago ? 'PAGO' : 'ABERTO';
-                            if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right;">${isPago ? fmt(parseFloat(f.valor)) : '-'}</td><td style="padding:10px; text-align:right;">${!isPago ? fmt(parseFloat(f.valor)) : '-'}</td></tr>`; 
-                        }).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr style="background:#f9f9f9; font-weight:bold; border-top:2px solid #333;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td></tr>
-                    </tfoot>
-                </table>
+                
+                <div class="table-responsive">
+                    <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555; min-width:600px;">
+                        <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
+                            <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">RECEBIDO</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">PENDENTE</th></tr>
+                        </thead>
+                        <tbody>
+                            ${dados.map(f => { 
+                                const isPago = f.status === 'Pago'; 
+                                let textoStatus = isPago ? 'PAGO' : 'ABERTO';
+                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${isPago ? fmt(parseFloat(f.valor)) : '-'}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${!isPago ? fmt(parseFloat(f.valor)) : '-'}</td></tr>`; 
+                            }).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background:#f9f9f9; font-weight:bold; border-top:2px solid #333;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green; white-space:nowrap;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red; white-space:nowrap;">${fmt(totalPendente)}</td></tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar relatório.", "error"); }
 };
@@ -132,16 +159,17 @@ App.gerarRelatorioMensal = async () => {
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
+            ${reportStyles}
             <div class="no-print" style="margin-bottom:20px; text-align:center;">
-                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR MÊS</button>
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px; margin-bottom:10px;">⬅ VOLTAR</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR MÊS</button>
             </div>
             
-            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family:'Segoe UI', sans-serif;">
+            <div class="print-sheet">
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
-                        <div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                        <div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
                     </div>
                     <div style="text-align:right;">
                         <h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2>
@@ -149,30 +177,33 @@ App.gerarRelatorioMensal = async () => {
                     </div>
                 </div>
                 
-                <div style="display:flex; gap:15px; margin-bottom:30px;">
-                    <div style="flex:1; background:#34495e; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PREVISÃO</div><div style="font-size:20px; font-weight:bold;">${fmt(previsao)}</div></div>
-                    <div style="flex:1; background:#27ae60; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">REALIZADO</div><div style="font-size:20px; font-weight:bold;">${fmt(realizado)}</div></div>
-                    <div style="flex:1; background:#e74c3c; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PENDENTE</div><div style="font-size:20px; font-weight:bold;">${fmt(pendente)}</div></div>
+                <div class="kpi-container" style="margin-bottom:30px;">
+                    <div class="kpi-box" style="background:#34495e; color:white;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PREVISÃO</div><div style="font-size:20px; font-weight:bold;">${fmt(previsao)}</div></div>
+                    <div class="kpi-box" style="background:#27ae60; color:white;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">REALIZADO</div><div style="font-size:20px; font-weight:bold;">${fmt(realizado)}</div></div>
+                    <div class="kpi-box" style="background:#e74c3c; color:white;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PENDENTE</div><div style="font-size:20px; font-weight:bold;">${fmt(pendente)}</div></div>
                 </div>
-                <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
-                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
-                        <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">VALOR</th></tr>
-                    </thead>
-                    <tbody>
-                        ${dados.map(f => { 
-                            const isPago = f.status === 'Pago'; 
-                            let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
-                            if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right;">${fmt(parseFloat(f.valor))}</td></tr>`; 
-                        }).join('')}
-                    </tbody>
-                </table>
+                
+                <div class="table-responsive">
+                    <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555; min-width:500px;">
+                        <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
+                            <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">VALOR</th></tr>
+                        </thead>
+                        <tbody>
+                            ${dados.map(f => { 
+                                const isPago = f.status === 'Pago'; 
+                                let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
+                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td></tr>`; 
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar relatório mensal.", "error"); }
 };
 
 // ---------------------------------------------------------
-// 2. SUPER DOSSIÊ EXECUTIVO (BI) - (COM FOLHA A4 BLINDADA)
+// 2. SUPER DOSSIÊ EXECUTIVO (BI)
 // ---------------------------------------------------------
 App.renderizarDossie = () => {
     App.setTitulo("Dossiê Executivo BI");
@@ -189,12 +220,12 @@ App.renderizarDossie = () => {
             <h2 style="margin:0 0 10px 0; color:#2c3e50;">Dossiê Executivo (BI)</h2>
             <p style="color:#666; margin-bottom:25px;">Selecione o período de referência para gerar a análise profunda da sua escola.</p>
             
-            <div style="display:flex; gap:15px; margin-bottom:25px; text-align:left;">
+            <div style="display:flex; gap:15px; margin-bottom:25px; text-align:left; flex-wrap:wrap;">
                 ${relSelect('Mês Vigente:', 'dossie-mes', opMeses, 'style="padding:12px;"')}
                 ${relCol('Ano:', 'dossie-ano', 'number', anoAtual, 'style="padding:12px; text-align:center;"')}
             </div>
             
-            <button onclick="App.gerarDossie()" class="btn-primary" style="padding:15px; font-size:16px; width:100%;">GERAR DOSSIÊ ➜</button>
+            <button onclick="App.gerarDossie()" class="btn-primary" style="padding:15px; font-size:16px; width:100%; justify-content:center;">GERAR DOSSIÊ ➜</button>
         </div>
     `;
     
@@ -221,7 +252,6 @@ App.gerarDossie = async () => {
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor) + parseFloat(f.valorPago2 || 0);
         const isVenda = (f) => (f.descricao && f.descricao.toLowerCase().includes('venda')) || (f.idCarne && f.idCarne.includes('VENDA'));
 
-        // --- DADOS FINANCEIROS ---
         const finAno = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano) && f.tipo === 'Receita');
         const finMes = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === mesIdx);
         
@@ -249,7 +279,7 @@ App.gerarDossie = async () => {
             const vV = fM.filter(f => isVenda(f)).reduce((a,c) => a+getVal(c), 0);
             const tot = vM + vV;
             acumuladoHistorico += tot;
-            linhasHistorico += `<tr><td>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td><td style="text-align:right; color:#2980b9;">${fmt(vM)}</td><td style="text-align:right; color:#8e44ad;">${fmt(vV)}</td><td style="text-align:right; font-weight:bold;">${fmt(tot)}</td></tr>`;
+            linhasHistorico += `<tr><td>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td><td style="text-align:right; color:#2980b9; white-space:nowrap;">${fmt(vM)}</td><td style="text-align:right; color:#8e44ad; white-space:nowrap;">${fmt(vV)}</td><td style="text-align:right; font-weight:bold; white-space:nowrap;">${fmt(tot)}</td></tr>`;
         }
 
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
@@ -269,12 +299,13 @@ App.gerarDossie = async () => {
         let linhasInad = '';
         listInad.forEach(f => {
             const cobrado = f.cobradoZap ? '<span style="color:#27ae60;font-weight:bold;">✅ Sim</span>' : '<span style="color:#e74c3c;font-weight:bold;">❌ Não</span>';
-            linhasInad += `<tr><td>${f.alunoNome || 'Desconhecido'}</td><td>${f.descricao}</td><td style="color:#c0392b; font-weight:bold;">${fmt(parseFloat(f.valor))}</td><td>${f.vencimento.split('-').reverse().join('/')}</td><td style="text-align:center;">${cobrado}</td></tr>`;
+            linhasInad += `<tr><td>${f.alunoNome || 'Desconhecido'}</td><td>${f.descricao}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td><td style="white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="text-align:center;">${cobrado}</td></tr>`;
         });
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
 
         div.innerHTML = `
+            ${reportStyles}
             <style>
                 .d-kpi { flex:1; background:#fff; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:center; min-width:140px; }
                 .d-kpi-tit { font-size:10px; color:#777; text-transform:uppercase; margin-bottom:5px; font-weight:bold; line-height:1.2; }
@@ -289,18 +320,23 @@ App.gerarDossie = async () => {
                 .badge-turma { background:#2ecc71; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
                 .flex-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: center; justify-content: space-between; }
                 .flex-item { flex: 1; min-width: 300px; }
-                @media print { .no-print { display: none !important; } .print-sheet { width: 100%; font-size:11px; } .d-box { page-break-inside: avoid; border:1px solid #000; } }
+                @media (max-width: 768px) {
+                    .d-kpi { min-width: 100%; margin-bottom: 10px; }
+                    .flex-item { min-width: 100%; }
+                    .d-box { padding: 10px; }
+                }
+                @media print { .d-box { page-break-inside: avoid; border:1px solid #000; } }
             </style>
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR DOSSIÊ</button>
+                <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px; margin-bottom:10px;">⬅ VOLTAR</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ</button>
             </div>
             
-            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+            <div class="print-sheet">
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                     <div style="display:flex; align-items:center; gap:20px;">
-                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
                     </div>
                     <div style="text-align:right;">
                         <div style="font-weight:bold; font-size:16px;">DOSSIÊ DE GESTÃO - ${nomeMes}/${ano}</div>
@@ -332,68 +368,72 @@ App.gerarDossie = async () => {
                 </div>
 
                 <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">📊 Resultados Financeiros: ${nomeMes} / ${ano}</h3>
+                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📊 Resultados Financeiros: ${nomeMes} / ${ano}</h3>
                     <div class="flex-container">
                         <div class="flex-item">
                             <table class="d-table">
-                                <tr><td><strong>Entradas em Mensalidades:</strong></td><td style="text-align:right; font-size:16px; color:#2980b9; font-weight:bold;">${fmt(entradaMesMensalidade)}</td></tr>
-                                <tr><td><strong>Entradas em Vendas:</strong></td><td style="text-align:right; font-size:16px; color:#8e44ad; font-weight:bold;">${fmt(entradaMesVenda)}</td></tr>
-                                <tr style="background:#f9f9f9;"><td><strong>TOTAL ARRECADADO NO MÊS:</strong></td><td style="text-align:right; font-size:18px; color:#27ae60; font-weight:bold;">${fmt(entradaMesTotal)}</td></tr>
+                                <tr><td><strong>Entradas em Mensalidades:</strong></td><td style="text-align:right; font-size:16px; color:#2980b9; font-weight:bold; white-space:nowrap;">${fmt(entradaMesMensalidade)}</td></tr>
+                                <tr><td><strong>Entradas em Vendas:</strong></td><td style="text-align:right; font-size:16px; color:#8e44ad; font-weight:bold; white-space:nowrap;">${fmt(entradaMesVenda)}</td></tr>
+                                <tr style="background:#f9f9f9;"><td><strong>TOTAL ARRECADADO NO MÊS:</strong></td><td style="text-align:right; font-size:18px; color:#27ae60; font-weight:bold; white-space:nowrap;">${fmt(entradaMesTotal)}</td></tr>
                             </table>
                         </div>
                         <div class="flex-item" style="display:flex; justify-content:space-evenly; gap:10px; align-items:center;">
                             <div style="text-align:center;">
                                 <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (MENSALIDADES)</div>
-                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;"><canvas id="grafMensalidade"></canvas></div>
+                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;"><canvas id="grafMensalidade"></canvas></div>
                             </div>
                             <div style="text-align:center;">
                                 <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (VENDAS)</div>
-                                <div style="position: relative; width: 130px; height: 130px; margin: 0 auto;"><canvas id="grafVenda"></canvas></div>
+                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;"><canvas id="grafVenda"></canvas></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">📈 Histórico de Entradas (${ano})</h3>
-                    <table class="d-table">
-                        <thead><tr><th>Mês</th><th style="text-align:right;">Mensalidades</th><th style="text-align:right;">Vendas</th><th style="text-align:right;">Total do Mês</th></tr></thead>
-                        <tbody>${linhasHistorico}</tbody>
-                        <tfoot><tr style="background:#e8f6f3; font-weight:bold; font-size:14px;"><td colspan="3" style="text-align:right;">TOTAL BRUTO (JAN ATÉ ${nomeMes.toUpperCase()}):</td><td style="text-align:right; color:#27ae60;">${fmt(acumuladoHistorico)}</td></tr></tfoot>
-                    </table>
+                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📈 Histórico de Entradas (${ano})</h3>
+                    <div class="table-responsive">
+                        <table class="d-table" style="min-width:400px;">
+                            <thead><tr><th>Mês</th><th style="text-align:right;">Mensalidades</th><th style="text-align:right;">Vendas</th><th style="text-align:right;">Total do Mês</th></tr></thead>
+                            <tbody>${linhasHistorico}</tbody>
+                            <tfoot><tr style="background:#e8f6f3; font-weight:bold; font-size:13px;"><td colspan="3" style="text-align:right;">TOTAL BRUTO (JAN ATÉ ${nomeMes.toUpperCase()}):</td><td style="text-align:right; color:#27ae60; white-space:nowrap;">${fmt(acumuladoHistorico)}</td></tr></tfoot>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="d-box">
                     <div class="flex-container">
                         <div class="flex-item">
-                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">📚 Cursos (${cursos.length})</h3>
+                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📚 Cursos (${cursos.length})</h3>
                             <div>${cursos.length ? cursos.map(c => `<div class="list-card"><span>${c.nome}</span><span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}</div>
                         </div>
                         <div class="flex-item">
-                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">🏫 Turmas (${turmas.length})</h3>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${t.nome}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
+                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">🏫 Turmas (${turmas.length})</h3>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${t.nome}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">👥 Demografia dos Alunos</h3>
-                    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; gap:30px;">
-                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 150px;"><div style="font-size:32px; font-weight:bold; color:#2c3e50; line-height:1; margin-bottom:5px;">${alunos.length}</div><div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">Alunos Ativos</div></div>
-                        <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
-                        <div style="display:flex; flex-direction:column; gap:10px; min-width:200px;">
-                            <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:18px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:16px; color:#999; font-weight:bold;">${percMasc}%</div></div>
-                            <div style="background:#fdedec; border-left:4px solid #e74c3c; padding:12px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👩 Feminino</div><div style="font-size:18px; font-weight:bold; color:#e74c3c;">${fem}</div></div><div style="font-size:16px; color:#999; font-weight:bold;">${percFem}%</div></div>
+                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">👥 Demografia dos Alunos</h3>
+                    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; gap:20px;">
+                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 120px;"><div style="font-size:32px; font-weight:bold; color:#2c3e50; line-height:1; margin-bottom:5px;">${alunos.length}</div><div style="font-size:11px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">Alunos Ativos</div></div>
+                        <div style="position: relative; width: 140px; height: 140px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
+                        <div style="display:flex; flex-direction:column; gap:10px; min-width:180px;">
+                            <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:16px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percMasc}%</div></div>
+                            <div style="background:#fdedec; border-left:4px solid #e74c3c; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👩 Feminino</div><div style="font-size:16px; font-weight:bold; color:#e74c3c;">${fem}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percFem}%</div></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-box" style="overflow-x:auto;">
-                    <h3 style="margin-top:0; color:#e74c3c; border-bottom:1px solid #eee; padding-bottom:10px;">⚠️ Relatório Analítico de Inadimplência</h3>
-                    <table class="d-table" style="min-width:600px;">
-                        <thead><tr><th>Nome do Aluno</th><th>Descrição (Mensalidade)</th><th>Valor</th><th>Vencimento</th><th style="text-align:center;">Cobrado no WhatsApp?</th></tr></thead>
-                        <tbody>${linhasInad || '<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Nenhum inadimplente! 🎉</td></tr>'}</tbody>
-                    </table>
+                <div class="d-box">
+                    <h3 style="margin-top:0; color:#e74c3c; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">⚠️ Relatório Analítico de Inadimplência</h3>
+                    <div class="table-responsive">
+                        <table class="d-table" style="min-width:600px;">
+                            <thead><tr><th>Nome do Aluno</th><th>Descrição (Mensalidade)</th><th>Valor</th><th>Vencimento</th><th style="text-align:center;">Cobrado no WhatsApp?</th></tr></thead>
+                            <tbody>${linhasInad || '<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Nenhum inadimplente! 🎉</td></tr>'}</tbody>
+                        </table>
+                    </div>
                 </div>
             </div>`;
 
@@ -410,7 +450,7 @@ App.gerarDossie = async () => {
 };
 
 // ---------------------------------------------------------
-// 3. FICHA DE MATRÍCULA (COM FOLHA A4 BLINDADA)
+// 3. FICHA DE MATRÍCULA
 // ---------------------------------------------------------
 App.gerarFichaSetup = async () => {
     App.setTitulo("Ficha de Matrícula");
@@ -420,13 +460,13 @@ App.gerarFichaSetup = async () => {
         const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
         
         const formFicha = `
-            <div style="display:flex; gap:10px; align-items:flex-end;">
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                 ${relSelect('Selecione o Aluno:', 'ficha-aluno', opAlunos)}
-                <button onclick="App.gerarFichaImprimir()" class="btn-primary" style="height:41px; padding:0 25px;">GERAR FICHA</button>
+                <button onclick="App.gerarFichaImprimir()" class="btn-primary" style="height:41px; padding:0 25px; margin-bottom:5px;">GERAR FICHA</button>
             </div>
         `;
         
-        div.innerHTML = App.UI.card('📄 Imprimir Ficha de Matrícula', '', formFicha, '800px') + `<div id="ficha-area" style="margin-top:30px;"></div>`;
+        div.innerHTML = App.UI.card('📄 Imprimir Ficha de Matrícula', '', formFicha, '100%') + `<div id="ficha-area" style="margin-top:30px;"></div>`;
     } catch(e) { div.innerHTML = "Erro ao carregar os alunos."; }
 };
 
@@ -443,18 +483,19 @@ App.gerarFichaImprimir = async () => {
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         
         divArea.innerHTML = `
+            ${reportStyles}
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR FICHA</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR FICHA</button>
             </div>
             
-            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
-                <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+            <div class="print-sheet">
+                <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
                     <div style="text-align:right;"><div><b>FICHA DE MATRÍCULA</b></div><div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
                 </div>
                 <div style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; background:#fafafa;">
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50;">1. DADOS DO ALUNO</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50; font-size:15px;">1. DADOS DO ALUNO</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div><b>Nome:</b> ${aluno.nome || '-'}</div>
                         <div><b>Data Nasc:</b> ${aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-'}</div>
                         <div><b>CPF:</b> ${aluno.cpf || '-'}</div>
@@ -462,21 +503,21 @@ App.gerarFichaImprimir = async () => {
                         <div><b>Sexo:</b> ${aluno.sexo || '-'}</div>
                         <div><b>WhatsApp:</b> ${aluno.whatsapp || '-'}</div>
                     </div>
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50;">2. CURSO E MATRÍCULA</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">2. CURSO E MATRÍCULA</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div><b>Curso:</b> ${aluno.curso || '-'}</div>
                         <div><b>Turma:</b> ${aluno.turma || '-'}</div>
                     </div>
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50;">3. ENDEREÇO</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div style="grid-column: span 2;"><b>Logradouro:</b> ${aluno.rua || '-'}, ${aluno.numero || '-'}</div>
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">3. ENDEREÇO</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
+                        <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${aluno.rua || '-'}, ${aluno.numero || '-'}</div>
                         <div><b>Bairro:</b> ${aluno.bairro || '-'}</div>
                         <div><b>Cidade/UF:</b> ${aluno.cidade || '-'}/${aluno.estado || '-'}</div>
                     </div>
                 </div>
-                <div style="margin-top:50px; display:flex; justify-content:space-between; text-align:center;">
-                    <div style="width:40%; border-top:1px solid #000; padding-top:5px; font-weight:bold;">Assinatura do Aluno / Responsável</div>
-                    <div style="width:40%; border-top:1px solid #000; padding-top:5px; font-weight:bold;">Direção da Escola</div>
+                <div style="margin-top:50px; display:flex; justify-content:space-between; text-align:center; flex-wrap:wrap; gap:30px;">
+                    <div style="flex:1; min-width:200px; border-top:1px solid #000; padding-top:5px; font-weight:bold; font-size:12px;">Assinatura do Aluno / Responsável</div>
+                    <div style="flex:1; min-width:200px; border-top:1px solid #000; padding-top:5px; font-weight:bold; font-size:12px;">Direção da Escola</div>
                 </div>
             </div>
         `;
@@ -487,7 +528,6 @@ App.gerarFichaImprimir = async () => {
 // =========================================================
 // 🎓 4. FÁBRICA DE DOCUMENTOS (CONTRATOS E DECLARAÇÕES)
 // =========================================================
-
 App.renderizarGeradorDocumentos = async () => {
     App.setTitulo("Gerador de Documentos");
     const div = document.getElementById('app-content');
@@ -501,7 +541,7 @@ App.renderizarGeradorDocumentos = async () => {
 
         const formHTML = `
             <div class="card" style="max-width: 600px; margin: 0 auto; border-top: 4px solid var(--accent);">
-                <h3 style="color:var(--card-text); margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px;">
+                <h3 style="color:var(--card-text); margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px; font-size:18px;">
                     🎓 Emissão de Documentos Oficiais
                 </h3>
                 <p style="font-size:13px; color:#666; margin-bottom:25px;">O sistema irá preencher os dados automaticamente para impressão profissional.</p>
@@ -516,14 +556,14 @@ App.renderizarGeradorDocumentos = async () => {
                         <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Qual documento deseja emitir?</label>
                         <select id="doc-tipo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
                             <option value="declaracao">📝 Declaração de Matrícula / Frequência</option>
-                            <option value="contrato">📄 Contrato de Prestação de Serviços Educacionais</option>
+                            <option value="contrato">📄 Contrato de Prestação de Serviços</option>
                             <option value="certificado">🎓 Certificado de Conclusão de Curso (Diploma)</option>
                         </select>
                     </div>
                 </div>
 
                 <div style="margin-top:30px; display:flex; gap:10px;">
-                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3);" onclick="App.gerarDocumentoPrint()">🖨️ GERAR E IMPRIMIR DOCUMENTO</button>
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3); justify-content:center;" onclick="App.gerarDocumentoPrint()">🖨️ GERAR E IMPRIMIR DOCUMENTO</button>
                 </div>
             </div>
         `;
@@ -554,28 +594,26 @@ App.gerarDocumentoPrint = async () => {
             printContainer.id = 'print-area';
             document.body.appendChild(printContainer);
         }
-        
-        // Limpar prints antigos
         printContainer.innerHTML = '';
 
         const dataHoje = new Date().toLocaleDateString('pt-BR');
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         
-        // Cabeçalho Dinâmico Comum
         const docHeader = `
-            <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px;">
-                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
-                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+            <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
+                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
             </div>`;
 
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
             printContainer.innerHTML = `
-                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
+                ${reportStyles}
+                <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
                     ${docHeader}
                     
-                    <p style="text-align: justify; margin-top: 20px;">
+                    <p style="text-align: justify; margin-top: 20px; font-size:14px;">
                         Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
                         inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
                         <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
@@ -584,102 +622,95 @@ App.gerarDocumentoPrint = async () => {
                     </p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-                    <p style="text-align: justify; margin-top:0;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
-                    <p style="text-align: justify; margin-top:0;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
-                    <p style="text-align: justify; margin-top:0;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas para ter direito ao certificado de conclusão. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas para ter direito ao certificado de conclusão. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
-                    <p style="text-align: justify; margin-top:0;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
                     
-                    <p style="text-align: right; margin-top: 60px;">Local e Data: ____________________________, ${dataHoje}</p>
+                    <p style="text-align: right; margin-top: 50px; font-size:14px;">Local e Data: ____________________________, ${dataHoje}</p>
                     
-                    <div style="display: flex; justify-content: space-between; margin-top: 80px; text-align: center;">
-                        <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px;">
+                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
                             <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
                         </div>
-                        <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
+                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
                             <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
                         </div>
                     </div>
                 </div>
             `;
-            let style = document.createElement('style');
-            style.innerHTML = `@page { size: A4 portrait; margin: 15mm; }`;
-            printContainer.appendChild(style);
+            let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
 
         } else if (tipo === 'declaracao') {
             printContainer.innerHTML = `
-                <div class="print-sheet" style="background: white; max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: Arial, sans-serif; color: #000;">
+                ${reportStyles}
+                <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; min-height: 297mm; display:flex; flex-direction:column;">
                     ${docHeader}
                     
-                    <h2 style="text-align: center; margin-top: 60px; margin-bottom: 50px; text-transform: uppercase;">Declaração de Matrícula</h2>
+                    <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase;">Declaração de Matrícula</h2>
                     
-                    <p style="text-align: justify; font-size: 18px; line-height: 2; margin-bottom: 40px;">
+                    <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px;">
                         Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
                         encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
                         (Turma: ${App.escapeHTML(aluno.turma || 'Não especificada')}) nesta instituição de ensino.
                     </p>
                     
-                    <p style="text-align: justify; font-size: 18px; line-height: 2; margin-bottom: 80px;">
+                    <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 60px;">
                         Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
                     </p>
                     
-                    <p style="text-align: right; font-size: 16px; margin-bottom: 100px;">
+                    <p style="text-align: right; font-size: 14px; margin-bottom: 80px;">
                         Local e Data: ____________________________, ${dataHoje}.
                     </p>
                     
-                    <div style="width: 60%; margin: 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 16px;">
+                    <div style="width: 100%; max-width: 400px; margin: auto auto 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 14px;">
                         <b>A Direção / Secretaria</b><br>
                         ${App.escapeHTML(escola.nome)}
                     </div>
                 </div>
             `;
-            let style = document.createElement('style');
-            style.innerHTML = `@page { size: A4 portrait; margin: 15mm; }`;
-            printContainer.appendChild(style);
+            let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
 
         } else if (tipo === 'certificado') {
             printContainer.innerHTML = `
-                <div style="padding: 50px; font-family: 'Times New Roman', serif; color: #000; text-align: center; border: 20px solid #2c3e50; outline: 6px solid #d4af37; outline-offset: -12px; height: 90vh; display: flex; flex-direction: column; justify-content: center; position:relative; box-sizing: border-box; background: #fff;">
+                <div style="padding: 30px; font-family: 'Times New Roman', serif; color: #000; text-align: center; border: 15px solid #2c3e50; outline: 4px solid #d4af37; outline-offset: -8px; min-height: 90vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; background: #fff;">
                     
-                    <h1 style="font-size: 55px; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 8px;">Certificado de Conclusão</h1>
-                    <p style="font-size: 24px; color: #555; margin-bottom: 50px; font-style: italic;">Certificamos que</p>
+                    <h1 style="font-size: 38px; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 5px;">Certificado de Conclusão</h1>
+                    <p style="font-size: 20px; color: #555; margin-bottom: 30px; font-style: italic;">Certificamos que</p>
                     
-                    <h2 style="font-size: 48px; color: #b71c1c; margin: 0 0 50px 0; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 50px; font-family: Arial, sans-serif;">
+                    <h2 style="font-size: 36px; color: #b71c1c; margin: 0 auto 30px auto; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 30px; font-family: Arial, sans-serif; word-break: break-word;">
                         ${App.escapeHTML(aluno.nome)}
                     </h2>
                     
-                    <p style="font-size: 22px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.6;">
+                    <p style="font-size: 18px; color: #333; max-width: 800px; margin: 0 auto; line-height: 1.6;">
                         concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, 
                         com a carga horária correspondente e aproveitamento plenamente satisfatório.
                     </p>
                     
-                    <p style="font-size: 18px; color: #555; margin-top: 50px;">
+                    <p style="font-size: 16px; color: #555; margin-top: 40px;">
                         Emitido por <b>${App.escapeHTML(escola.nome || 'Instituição de Ensino')}</b> em ${dataHoje}.
                     </p>
                     
-                    <div style="display: flex; justify-content: space-around; margin-top: auto; padding-bottom: 20px;">
-                        <div style="width: 35%; border-top: 1px solid #000; padding-top: 10px; font-size: 18px;">
+                    <div style="display: flex; justify-content: space-around; margin-top: 60px; padding-bottom: 20px; flex-wrap:wrap; gap:20px;">
+                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size: 16px;">
                             <b>A Direção</b>
                         </div>
-                        <div style="width: 35%; border-top: 1px solid #000; padding-top: 10px; font-size: 18px;">
+                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size: 16px;">
                             <b>Instrutor / Coordenação</b>
                         </div>
                     </div>
                 </div>
             `;
-            let style = document.createElement('style');
-            style.innerHTML = `@page { size: A4 landscape; margin: 10mm; }`;
-            printContainer.appendChild(style);
+            let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 landscape; margin: 10mm; } }`; printContainer.appendChild(style);
         }
 
-        setTimeout(() => {
-            window.print();
-        }, 500);
+        setTimeout(() => { window.print(); }, 500);
 
     } catch (e) {
         App.showToast("Erro ao gerar o documento.", "error");
