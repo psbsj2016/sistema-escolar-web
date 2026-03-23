@@ -85,6 +85,14 @@ const App = {
     // ARRANQUE E LOGIN (COM GATILHOS DE RASTREAMENTO GA4)
     // =========================================================
     init: async () => {
+        // 🔔 BLINDAGEM VISUAL DO SININHO NO MOBILE
+        if (!document.getElementById('fix-sininho-mobile')) {
+            const style = document.createElement('style');
+            style.id = 'fix-sininho-mobile';
+            style.innerHTML = `@media (max-width: 768px) { #noti-dropdown { position: fixed !important; top: 70px !important; right: auto !important; left: 50% !important; transform: translateX(-50%) !important; width: 90vw !important; max-width: 400px !important; border-radius: 15px !important; box-shadow: 0 15px 40px rgba(0,0,0,0.2) !important; z-index: 9999 !important; } }`;
+            document.head.appendChild(style);
+        }        
+
         localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
         const salvo = localStorage.getItem('usuario_logado'); const token = localStorage.getItem('token_acesso'); const bioId = localStorage.getItem('escola_bio_id');
 
