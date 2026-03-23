@@ -1,12 +1,12 @@
 // =========================================================
-// MÓDULO RELATÓRIOS V101 (REESTRUTURADO EM COMPONENTES)
+// MÓDULO RELATÓRIOS V159 (FOLHA A4 BLINDADA, CABEÇALHOS E DECLARAÇÃO)
 // =========================================================
 
 App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'fin_detalhado' || tipo === 'financeiro') { App.setTitulo("Relatórios Financeiros"); App.renderizarSelecaoRelatorio(); return; }
     if (tipo === 'dossie') { App.renderizarDossie(); return; }
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
-    if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; } // 🚀 ROTA NOVA ADICIONADA
+    if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; }
 };
 
 // 🧱 ATALHOS GERAIS PARA O MÓDULO DE RELATÓRIOS
@@ -23,7 +23,7 @@ const relSelect = (label, id, options, extra='') => `
     </div>`;
 
 // ---------------------------------------------------------
-// 1. RELATÓRIOS FINANCEIROS
+// 1. RELATÓRIOS FINANCEIROS (COM CABEÇALHO E FOLHA A4)
 // ---------------------------------------------------------
 App.renderizarSelecaoRelatorio = () => {
     const div = document.getElementById('app-content');
@@ -58,11 +58,11 @@ App.renderizarSelecaoRelatorio = () => {
 
 App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
-    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Gerando relatório anual...</p>';
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório anual...</p>';
     try {
         const financeiro = await App.api('/financeiro');
-        const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+        const escola = await App.api('/escola') || { nome: 'ESCOLA', cnpj: '' };
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
         const totalLancado = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
@@ -71,11 +71,13 @@ App.gerarRelatorioAnual = async () => {
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
-            <div class="no-print" style="margin-bottom:20px;">
-                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:8px 15px;">⬅ VOLTAR</button>
+            <div class="no-print" style="margin-bottom:20px; text-align:center;">
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px;">⬅ VOLTAR</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
             </div>
-            <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family:'Segoe UI', sans-serif;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
                         <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}<br>Relatório Analítico Anual</div></div>
@@ -85,7 +87,7 @@ App.gerarRelatorioAnual = async () => {
                         <div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleString('pt-BR')}</div>
                     </div>
                 </div>
-                <div style="border-bottom:2px dashed #ccc; margin-bottom:20px;"></div>
+                
                 <div style="display:flex; justify-content:space-between; background:#fafafa; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #eee;">
                     <div><div style="font-size:12px; font-weight:bold; color:#555;">TOTAL LANÇADO:</div><div style="font-size:18px; font-weight:bold; color:#333;">${fmt(totalLancado)}</div></div>
                     <div><div style="font-size:12px; font-weight:bold; color:green;">TOTAL RECEBIDO:</div><div style="font-size:18px; color:green;">${fmt(totalRecebido)}</div></div>
@@ -93,7 +95,7 @@ App.gerarRelatorioAnual = async () => {
                 </div>
                 <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
                     <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
-                        <tr><th style="padding:10px; text-align:left;">VENCIMENTO</th><th style="padding:10px; text-align:left;">ALUNO</th><th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center;">STATUS / FORMA</th><th style="padding:10px; text-align:right;">RECEBIDO</th><th style="padding:10px; text-align:right;">PENDENTE</th></tr>
+                        <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">RECEBIDO</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">PENDENTE</th></tr>
                     </thead>
                     <tbody>
                         ${dados.map(f => { 
@@ -104,12 +106,9 @@ App.gerarRelatorioAnual = async () => {
                         }).join('')}
                     </tbody>
                     <tfoot>
-                        <tr style="background:#f9f9f9; font-weight:bold;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td></tr>
+                        <tr style="background:#f9f9f9; font-weight:bold; border-top:2px solid #333;"><td colspan="4" style="padding:15px; text-align:right;">SALDO FINAL:</td><td style="padding:15px; text-align:right; color:green;">${fmt(totalRecebido)}</td><td style="padding:15px; text-align:right; color:red;">${fmt(totalPendente)}</td></tr>
                     </tfoot>
                 </table>
-                <div class="no-print" style="margin-top:30px;">
-                    <button onclick="window.print()" style="width:100%; padding:15px; background: #8e44ad; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
-                </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar relatório.", "error"); }
 };
@@ -117,14 +116,14 @@ App.gerarRelatorioAnual = async () => {
 App.gerarRelatorioMensal = async () => {
     const ano = document.getElementById('rel-ano').value;
     const mesIdx = parseInt(document.getElementById('rel-mes').value);
-    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Gerando relatório mensal...</p>';
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório mensal...</p>';
     const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
     const mesNome = meses[mesIdx - 1];
 
     try {
         const financeiro = await App.api('/financeiro');
-        const escola = JSON.parse(localStorage.getItem('escola_perfil')) || { nome: 'ESCOLA', cnpj: '' };
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+        const escola = await App.api('/escola') || { nome: 'ESCOLA', cnpj: '' };
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
         const previsao = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
@@ -133,21 +132,32 @@ App.gerarRelatorioMensal = async () => {
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
-            <div class="no-print" style="margin-bottom:20px;">
-                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:8px 15px;">⬅ VOLTAR</button>
+            <div class="no-print" style="margin-bottom:20px; text-align:center;">
+                <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px;">⬅ VOLTAR</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR MÊS</button>
             </div>
-            <div class="print-sheet" style="padding:40px; font-family:'Segoe UI', sans-serif;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                    <div style="display:flex; gap:15px; align-items:center;">${logo}<div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div></div>
-                    <div style="text-align:right;"><h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2><div style="font-size:10px; color:#999;">Relatório Mensal<br>Emissão: ${new Date().toLocaleString('pt-BR')}</div></div>
+            
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family:'Segoe UI', sans-serif;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px;">
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        ${logo}
+                        <div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2>
+                        <div style="font-size:10px; color:#999;">Relatório Mensal<br>Emissão: ${new Date().toLocaleString('pt-BR')}</div>
+                    </div>
                 </div>
+                
                 <div style="display:flex; gap:15px; margin-bottom:30px;">
                     <div style="flex:1; background:#34495e; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PREVISÃO</div><div style="font-size:20px; font-weight:bold;">${fmt(previsao)}</div></div>
                     <div style="flex:1; background:#27ae60; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">REALIZADO</div><div style="font-size:20px; font-weight:bold;">${fmt(realizado)}</div></div>
                     <div style="flex:1; background:#e74c3c; color:white; padding:15px; border-radius:8px; text-align:center;"><div style="font-size:10px; text-transform:uppercase; opacity:0.8;">PENDENTE</div><div style="font-size:20px; font-weight:bold;">${fmt(pendente)}</div></div>
                 </div>
                 <table style="width:100%; border-collapse:collapse; font-size:11px; color:#555;">
-                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;"><tr><th style="padding:10px; text-align:left;">VENCIMENTO</th><th style="padding:10px; text-align:left;">ALUNO</th><th style="padding:10px; text-align:left;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center;">STATUS / FORMA</th><th style="padding:10px; text-align:right;">VALOR</th></tr></thead>
+                    <thead style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase;">
+                        <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">VALOR</th></tr>
+                    </thead>
                     <tbody>
                         ${dados.map(f => { 
                             const isPago = f.status === 'Pago'; 
@@ -157,15 +167,12 @@ App.gerarRelatorioMensal = async () => {
                         }).join('')}
                     </tbody>
                 </table>
-                <div class="no-print" style="margin-top:30px;">
-                    <button onclick="window.print()" style="width:100%; padding:15px; background: #34495e; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display:flex; justify-content:center; align-items:center; gap:10px;">🖨️ IMPRIMIR MÊS</button>
-                </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar relatório mensal.", "error"); }
 };
 
 // ---------------------------------------------------------
-// 2. SUPER DOSSIÊ EXECUTIVO (BI)
+// 2. SUPER DOSSIÊ EXECUTIVO (BI) - (COM FOLHA A4 BLINDADA)
 // ---------------------------------------------------------
 App.renderizarDossie = () => {
     App.setTitulo("Dossiê Executivo BI");
@@ -227,7 +234,6 @@ App.gerarDossie = async () => {
         const entradaMesVenda = finMes.filter(f => f.status === 'Pago' && isVenda(f)).reduce((a, c) => a + getVal(c), 0);
         const entradaMesTotal = entradaMesMensalidade + entradaMesVenda;
 
-        // Formas de Pagamento
         const formasMensalidade = {}; const formasVenda = {};
         finMes.filter(f => f.status === 'Pago').forEach(p => {
             const target = isVenda(p) ? formasVenda : formasMensalidade;
@@ -236,7 +242,6 @@ App.gerarDossie = async () => {
             if(fp2) target[fp2] = (target[fp2] || 0) + parseFloat(p.valorPago2 || 0);
         });
 
-        // Histórico de Meses
         let linhasHistorico = ''; let acumuladoHistorico = 0;
         for(let i = 1; i <= mesIdx; i++) {
             const fM = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === i && f.status === 'Pago');
@@ -247,7 +252,6 @@ App.gerarDossie = async () => {
             linhasHistorico += `<tr><td>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td><td style="text-align:right; color:#2980b9;">${fmt(vM)}</td><td style="text-align:right; color:#8e44ad;">${fmt(vV)}</td><td style="text-align:right; font-weight:bold;">${fmt(tot)}</td></tr>`;
         }
 
-        // --- DADOS PEDAGÓGICOS E DEMOGRAFIA ---
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
         const alunosCurso = {}; cursos.forEach(c => alunosCurso[c.nome] = 0);
         alunos.forEach(a => { 
@@ -261,7 +265,6 @@ App.gerarDossie = async () => {
         const percMasc = ((masc / totalSexo) * 100).toFixed(1);
         const percFem = ((fem / totalSexo) * 100).toFixed(1);
 
-        // --- INADIMPLENTES ---
         const listInad = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje);
         let linhasInad = '';
         listInad.forEach(f => {
@@ -269,9 +272,8 @@ App.gerarDossie = async () => {
             linhasInad += `<tr><td>${f.alunoNome || 'Desconhecido'}</td><td>${f.descricao}</td><td style="color:#c0392b; font-weight:bold;">${fmt(parseFloat(f.valor))}</td><td>${f.vencimento.split('-').reverse().join('/')}</td><td style="text-align:center;">${cobrado}</td></tr>`;
         });
 
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
 
-        // Mantém-se o super HTML para a impressão perfeita
         div.innerHTML = `
             <style>
                 .d-kpi { flex:1; background:#fff; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:center; min-width:140px; }
@@ -295,8 +297,8 @@ App.gerarDossie = async () => {
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR DOSSIÊ</button>
             </div>
             
-            <div class="print-sheet">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                     <div style="display:flex; align-items:center; gap:20px;">
                         ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
                     </div>
@@ -408,7 +410,7 @@ App.gerarDossie = async () => {
 };
 
 // ---------------------------------------------------------
-// 3. FICHA DE MATRÍCULA
+// 3. FICHA DE MATRÍCULA (COM FOLHA A4 BLINDADA)
 // ---------------------------------------------------------
 App.gerarFichaSetup = async () => {
     App.setTitulo("Ficha de Matrícula");
@@ -444,8 +446,9 @@ App.gerarFichaImprimir = async () => {
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR FICHA</button>
             </div>
-            <div class="print-sheet" style="padding:40px;">
-                <div class="doc-header">
+            
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                     <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
                     <div style="text-align:right;"><div><b>FICHA DE MATRÍCULA</b></div><div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
                 </div>
@@ -482,7 +485,7 @@ App.gerarFichaImprimir = async () => {
 };
 
 // =========================================================
-// 🎓 FÁBRICA DE DOCUMENTOS (CONTRATOS E CERTIFICADOS)
+// 🎓 4. FÁBRICA DE DOCUMENTOS (CONTRATOS E DECLARAÇÕES)
 // =========================================================
 
 App.renderizarGeradorDocumentos = async () => {
@@ -512,6 +515,7 @@ App.renderizarGeradorDocumentos = async () => {
                     <div style="flex:1; min-width:150px; text-align:left;">
                         <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Qual documento deseja emitir?</label>
                         <select id="doc-tipo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
+                            <option value="declaracao">📝 Declaração de Matrícula / Frequência</option>
                             <option value="contrato">📄 Contrato de Prestação de Serviços Educacionais</option>
                             <option value="certificado">🎓 Certificado de Conclusão de Curso (Diploma)</option>
                         </select>
@@ -542,7 +546,7 @@ App.gerarDocumentoPrint = async () => {
 
     try {
         const aluno = await App.api(`/alunos/${idAluno}`);
-        const escola = await App.api('/escola');
+        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
 
         let printContainer = document.getElementById('print-area');
         if (!printContainer) {
@@ -550,17 +554,26 @@ App.gerarDocumentoPrint = async () => {
             printContainer.id = 'print-area';
             document.body.appendChild(printContainer);
         }
+        
+        // Limpar prints antigos
+        printContainer.innerHTML = '';
 
         const dataHoje = new Date().toLocaleDateString('pt-BR');
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        
+        // Cabeçalho Dinâmico Comum
+        const docHeader = `
+            <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px;">
+                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE PRESTAÇÃO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+            </div>`;
 
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
             printContainer.innerHTML = `
-                <div style="padding: 40px; font-family: Arial, sans-serif; color: #000; line-height: 1.6; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align:center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px;">
-                        <h2 style="margin:0; text-transform: uppercase;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS</h2>
-                    </div>
+                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
+                    ${docHeader}
                     
                     <p style="text-align: justify; margin-top: 20px;">
                         Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
@@ -591,6 +604,37 @@ App.gerarDocumentoPrint = async () => {
                         <div style="width: 45%; border-top: 1px solid #000; padding-top: 10px;">
                             <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
                         </div>
+                    </div>
+                </div>
+            `;
+            let style = document.createElement('style');
+            style.innerHTML = `@page { size: A4 portrait; margin: 15mm; }`;
+            printContainer.appendChild(style);
+
+        } else if (tipo === 'declaracao') {
+            printContainer.innerHTML = `
+                <div class="print-sheet" style="background: white; max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: Arial, sans-serif; color: #000;">
+                    ${docHeader}
+                    
+                    <h2 style="text-align: center; margin-top: 60px; margin-bottom: 50px; text-transform: uppercase;">Declaração de Matrícula</h2>
+                    
+                    <p style="text-align: justify; font-size: 18px; line-height: 2; margin-bottom: 40px;">
+                        Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
+                        encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
+                        (Turma: ${App.escapeHTML(aluno.turma || 'Não especificada')}) nesta instituição de ensino.
+                    </p>
+                    
+                    <p style="text-align: justify; font-size: 18px; line-height: 2; margin-bottom: 80px;">
+                        Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
+                    </p>
+                    
+                    <p style="text-align: right; font-size: 16px; margin-bottom: 100px;">
+                        Local e Data: ____________________________, ${dataHoje}.
+                    </p>
+                    
+                    <div style="width: 60%; margin: 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 16px;">
+                        <b>A Direção / Secretaria</b><br>
+                        ${App.escapeHTML(escola.nome)}
                     </div>
                 </div>
             `;
