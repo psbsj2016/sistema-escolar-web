@@ -339,7 +339,7 @@ App.editarParcela = async (id) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (VISUALIZADOR PROFISSIONAL BANCÁRIO A4 + QR OFICIAL)
+// 🚀 RENDERIZAÇÃO DO CARNÊ (4 POR PÁGINA + AVISO CENTRAL)
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
@@ -350,7 +350,7 @@ App.abrirCarneExistente = async (idLote) => {
         if(parcelas.length === 0) return App.showToast("Carnê não encontrado.", "error");
 
         const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: 'Aluno', cpf: 'Não informado' };
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:45px; object-fit:contain; margin-right:10px;">` : '';
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:35px; object-fit:contain; margin-right:10px;">` : '';
         const nomeEscolaResumo = (escola.nome || 'INSTITUIÇÃO').substring(0, 20);
         const primeiroNomeAluno = (aluno.nome || 'Aluno').split(' ')[0];
         const bancoNome = escola.banco || 'Não Configurado';
@@ -363,62 +363,65 @@ App.abrirCarneExistente = async (idLote) => {
             
             // Lógica inteligente do QR Code: Puxar do perfil primeiro
             const qrCodeDisplay = (escola.qrCodeImagem && escola.qrCodeImagem.length > 50 && !escola.qrCodeImagem.includes('placehold'))
-                ? `<img src="${escola.qrCodeImagem}" style="width: 85px; height: 85px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
-                : `<div id="qr-${p.id}" style="width: 85px; height: 85px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
+                ? `<img src="${escola.qrCodeImagem}" style="width: 70px; height: 70px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
+                : `<div id="qr-${p.id}" style="width: 70px; height: 70px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
 
             return `
-            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 25px; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
+            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 5mm; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; height: 65mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
                 
-                <div class="carne-canhoto" style="width: 30%; border-right: 2px dashed #999; padding: 15px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box;">
-                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 15px; text-align: center;">
+                <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 10px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px; text-align: center;">
                         ${logo}
-                        <div style="font-weight: bold; font-size: 11px; text-transform: uppercase; margin-top:5px;">${nomeEscolaResumo}</div>
+                        <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${nomeEscolaResumo}</div>
                     </div>
-                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Parcela:</b> ${p.descricao}</div>
-                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
-                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Valor:</b> R$ ${valorF}</div>
-                    <div style="font-size: 11px; margin-bottom: 8px;"><b>Nº Documento:</b> ${nossoNumero}</div>
-                    <div style="margin-top: auto; font-size: 10px; border-top: 1px solid #ccc; padding-top: 8px;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Parcela:</b> ${p.descricao}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Nº Doc:</b> ${nossoNumero}</div>
+                    <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
                 </div>
                 
-                <div class="carne-recibo" style="width: 70%; padding: 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
+                <div class="carne-recibo" style="width: 72%; padding: 10px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
                     
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 8px; align-items: center;">
                         <div style="display: flex; align-items: center;">
                             ${logo} 
                             <div>
-                                <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div>
-                                <div style="font-size: 10px; color: #555;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')} | Banco: <b>${App.escapeHTML(bancoNome)}</b></div>
+                                <div style="font-weight: bold; font-size: 12px; text-transform: uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div>
+                                <div style="font-size: 9px; color: #555;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')} | Banco: <b>${App.escapeHTML(bancoNome)}</b></div>
                             </div>
                         </div>
-                        <div style="text-align: right; font-size: 11px; font-weight: bold; color: #555; border-left: 2px solid #ccc; padding-left:15px;">
+                        <div style="text-align: right; font-size: 10px; font-weight: bold; color: #555; border-left: 2px solid #ccc; padding-left:10px;">
                             RECIBO DO<br>PAGADOR
                         </div>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; background: #fdfdfd; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
-                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 14px;">${nossoNumero}</div></div>
-                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 14px; color: #c0392b;">${dataVenc}</div></div>
-                        <div><div style="font-size: 10px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 14px;">R$ ${valorF}</div></div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; background: #fdfdfd; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px;">
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 12px;">${nossoNumero}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 12px; color: #c0392b;">${dataVenc}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
+                    </div>
+
+                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center;">
+                        <span style="font-size: 9px; font-weight: bold; color: #d35400;">⚠️ Informação Importante:</span> 
+                        <span style="font-size: 9px; color: #555;">Evite a perda de descontos e benefícios. Após o vencimento, o valor da mensalidade será atualizado.</span>
                     </div>
                     
-                    <div style="font-size: 12px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; line-height:1.5;">
-                        <div><b>Referência:</b> ${p.descricao}</div>
-                        <div><b>Pagador:</b> ${App.escapeHTML(aluno.nome)}</div>
-                        <div><b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
+                    <div style="font-size: 10px; margin-bottom: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; line-height:1.4;">
+                        <div><b>Ref:</b> ${p.descricao} &nbsp;|&nbsp; <b>Pagador:</b> ${App.escapeHTML(aluno.nome)} &nbsp;|&nbsp; <b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; margin-top: auto; align-items: flex-end; gap:20px;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; align-items: flex-end; gap:15px;">
                         <div style="flex:1;">
-                            <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color:#27ae60;">PAGAMENTO VIA PIX</div>
-                            <div style="font-size: 10px; margin-bottom: 5px; color:#555;">Abra o app do seu banco, leia o QR Code ao lado ou utilize a chave manual abaixo:</div>
-                            <div style="background: #eee; padding: 8px; border-radius: 4px; font-size: 12px; font-weight: bold; word-break: break-all; border:1px dashed #ccc;">
+                            <div style="font-size: 10px; font-weight: bold; margin-bottom: 2px; color:#27ae60;">PAGAMENTO VIA PIX</div>
+                            <div style="font-size: 9px; margin-bottom: 3px; color:#555;">Leia o QR Code ao lado ou utilize a chave manual abaixo:</div>
+                            <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; word-break: break-all; border:1px dashed #ccc;">
                                 🔑 ${App.escapeHTML(chavePix)}
                             </div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             ${qrCodeDisplay}
-                            <div style="font-size: 9px; color: #999; margin-top: 5px;">Autenticação Mecânica</div>
+                            <div style="font-size: 8px; color: #999; margin-top: 3px;">Autenticação Mecânica</div>
                         </div>
                     </div>
                 </div>
@@ -432,11 +435,23 @@ App.abrirCarneExistente = async (idLote) => {
                     .no-print { display: none !important; }
                     .print-bg { background: transparent !important; padding: 0 !important; }
                     .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
-                    .carne-wrapper { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 15px !important; }
+                    
+                    /* 🖨️ MATEMÁTICA DA IMPRESSÃO: 4 POR PÁGINA A4 */
+                    @page { size: A4 portrait; margin: 10mm; }
+                    .carne-wrapper { 
+                        border: 1px solid #000 !important; 
+                        box-shadow: none !important; 
+                        margin-bottom: 5mm !important; 
+                        height: 65mm !important; 
+                        flex-direction: row !important; /* Trava o horizontal mesmo se estiver no mobile! */
+                        page-break-inside: avoid !important;
+                    }
+                    .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
+                    .carne-recibo { width: 72% !important; }
                     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
                 @media (max-width: 768px) {
-                    .carne-wrapper { flex-direction: column !important; }
+                    .carne-wrapper { flex-direction: column !important; height: auto !important; }
                     .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
                     .carne-recibo { width: 100% !important; }
                     .print-sheet { padding: 10px !important; }
@@ -445,25 +460,25 @@ App.abrirCarneExistente = async (idLote) => {
             
             <div class="no-print" style="text-align:center; padding:20px; background:#fff; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <h2 style="margin-top:0; color:#2c3e50;">Carnê Gerado com Sucesso! 🎉</h2>
-                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Verifique se os dados estão corretos antes de imprimir.</p>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">O layout de impressão foi travado para emitir 4 carnês por página perfeitamente.</p>
                 <button onclick="window.print()" class="btn-primary" style="padding:12px 25px; font-size:16px; width:auto;">🖨️ IMPRIMIR CARNÊ</button>
                 <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px; padding:12px 25px; width:auto;">VOLTAR</button>
             </div>
             
             <div class="print-bg" style="background: #f4f6f7; padding: 30px 15px; border-radius: 8px;">
-                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box;">
+                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 20px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box;">
                     ${carnesHTML}
                 </div>
             </div>`;
 
-        // Geração segura do QR Code (Fallback se a imagem não estiver presente)
+        // Geração segura do QR Code (Fallback)
         if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50 || escola.qrCodeImagem.includes('placehold')) {
             parcelas.forEach(p => {
                 const el = document.getElementById(`qr-${p.id}`);
                 if(el && typeof QRCode !== 'undefined') {
-                    new QRCode(el, { text: chavePix, width: 75, height: 75, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
+                    new QRCode(el, { text: chavePix, width: 60, height: 60, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
                 } else if(el) {
-                    el.innerHTML = '<span style="font-size:10px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
+                    el.innerHTML = '<span style="font-size:8px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
                 }
             });
         }
