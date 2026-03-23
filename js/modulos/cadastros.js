@@ -61,15 +61,15 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             section('1. Dados Pessoais', '0') +
             input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
             row(
-                input('CPF', 'a-cpf', v(dados.cpf), '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
-                input('RG', 'a-rg', v(dados.rg))
+                input('CPF', 'a-cpf', v(dados.cpf), '000.000.000-00', 'tel', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
+                input('RG', 'a-rg', v(dados.rg), '', 'text')
             ) +
             row(
                 input('Data Nascimento', 'a-nasc', v(dados.nascimento), '', 'date') +
                 select('Sexo', 'a-sexo', opSexo)
             ) +
             row(
-                input('WhatsApp/Celular', 'a-zap', v(dados.whatsapp), '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)" maxlength="15"') +
+                input('WhatsApp/Celular', 'a-zap', v(dados.whatsapp), '(00) 00000-0000', 'tel', 'oninput="App.mascaraCelular(this)" maxlength="15"') +
                 input('Profissão / Ocupação', 'a-prof', v(dados.profissao), 'Ex: Estudante')
             ) +
 
@@ -82,7 +82,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             section('3. Endereço Completo') +
             row3(
                 input('Logradouro (Rua/Av)', 'a-rua', v(dados.rua), 'Ex: Rua das Flores') +
-                input('Número', 'a-num', v(dados.numero), '123')
+                input('Número', 'a-num', v(dados.numero), '123', 'tel')
             ) +
             row(
                 input('Bairro', 'a-bairro', v(dados.bairro)) +
@@ -96,10 +96,11 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             section('4. Dados do Responsável (Se menor)') +
             input('Nome do Responsável', 'r-nome', v(dados.resp_nome)) +
             row(
-                input('CPF do Responsável', 'r-cpf', v(dados.resp_cpf), '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
-                input('WhatsApp do Responsável', 'r-zap', v(dados.resp_zap), '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)" maxlength="15"')
+                input('CPF do Responsável', 'r-cpf', v(dados.resp_cpf), '000.000.000-00', 'tel', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
+                input('WhatsApp do Responsável', 'r-zap', v(dados.resp_zap), '(00) 00000-0000', 'tel', 'oninput="App.mascaraCelular(this)" maxlength="15"')
             );
-    } 
+    }
+
     else if (tipo === 'turma') {
         const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
         
