@@ -117,6 +117,22 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             input('Nome do Curso', 'c-nome', v(dados.nome), 'Ex: Inglês Básico') +
             input('Carga Horária (Horas)', 'c-carga', v(dados.carga), 'Ex: 40h');
     }
+    
+     else if (tipo === 'estoque') {
+        html = 
+            section('1. Identificação do Item', '0') +
+            input('Nome do Produto / Item', 'est-nome', v(dados.nome), 'Ex: Apostila de Inglês Módulo 1') +
+            row(
+                input('Código (Barras/Referência)', 'est-codigo', v(dados.codigo), 'Ex: 789102030') +
+                input('Valor Unitário (R$)', 'est-valor', v(dados.valor), '0.00', 'number', 'step="0.01"')
+            ) +
+            section('2. Controle de Quantidade') +
+            row(
+                input('Quantidade Atual em Estoque', 'est-qtd', v(dados.quantidade), 'Ex: 50', 'number') +
+                input('Quantidade Mínima (Para o Alerta 🔔)', 'est-min', v(dados.quantidadeMinima), 'Ex: 10', 'number')
+            ) +
+            input('Observações Adicionais', 'est-obs', v(dados.obs), 'Opcional...');
+    }
 
     if(conteudo) conteudo.innerHTML = html;
 };
@@ -164,6 +180,19 @@ App.salvarCadastro = async () => {
         p.carga = document.getElementById('c-carga').value;
         
         if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); return; }
+    }
+
+    else if (t === 'estoque') {
+        p.nome = document.getElementById('est-nome').value;
+        p.codigo = document.getElementById('est-codigo').value;
+        p.valor = document.getElementById('est-valor').value;
+        p.quantidade = document.getElementById('est-qtd').value;
+        p.quantidadeMinima = document.getElementById('est-min').value;
+        p.obs = document.getElementById('est-obs').value;
+        
+        if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); return; }
+        if(!p.quantidade) { p.quantidade = 0; }
+        if(!p.quantidadeMinima) { p.quantidadeMinima = 0; }
     }
 
     const btn = document.querySelector('.btn-confirm');

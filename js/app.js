@@ -681,6 +681,7 @@ const App = {
         if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
         if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
         if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
+        if (tipo === 'estoque')    cabecalho = TB.th('Item') + TB.th('Código') + TB.th('Qtd Atual') + TB.th('Mínimo (Alerta)') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');        
 
         const corpo = dados.map(item => {
             let celulas = '';
@@ -688,7 +689,17 @@ const App = {
             else if (tipo === 'turma') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); } 
             else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
             else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
-
+            else if (tipo === 'estoque') { 
+                const qtd = parseInt(item.quantidade) || 0;
+                const min = parseInt(item.quantidadeMinima) || 0;
+                const statusFmt = qtd <= min 
+                    ? `<span style="color:#e74c3c; font-weight:bold; background:#fdedec; padding:4px 8px; border-radius:4px; font-size:12px;">⚠️ Baixo</span>` 
+                    : `<span style="color:#27ae60; font-weight:bold; background:#eafaf1; padding:4px 8px; border-radius:4px; font-size:12px;">✅ Normal</span>`;
+                const valorFmt = item.valor ? `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '-';
+                
+                celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.codigo || '-')) + TB.td(qtd, 'center') + TB.td(min, 'center') + TB.td(valorFmt) + TB.td(statusFmt, 'center'); 
+            }           
+ 
             const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
             const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
             const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
@@ -1021,8 +1032,8 @@ const App = {
 
     verificarNotificacoes: async () => {
         try {
-            const [alunos, eventos, financeiro, planejamentos] = await Promise.all([
-                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos')
+            const [alunos, eventos, financeiro, planejamentos, estoque] = await Promise.all([
+                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoque')
             ]);
             
             let alertas = [];
@@ -1111,6 +1122,21 @@ const App = {
                                 });
                             }
                         }
+                    }
+                });
+            }
+       
+          // 📦 ALERTA DE ESTOQUE INTELIGENTE
+            if (Array.isArray(estoque)) {
+                estoque.forEach(item => {
+                    const qtd = parseInt(item.quantidade) || 0;
+                    const min = parseInt(item.quantidadeMinima) || 0;
+                    if (qtd <= min) {
+                        alertas.push({ 
+                            icon: '📦', 
+                            texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`,
+                            acao: "App.renderizarLista('estoque')" 
+                        });
                     }
                 });
             }
