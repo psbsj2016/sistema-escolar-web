@@ -745,52 +745,153 @@ const App = {
         } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
     },
     
+// =========================================================
+    // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
     // =========================================================
-    // O VERDADEIRO PDV (VENDA RÁPIDA)
-    // =========================================================
-    abrirModalVenda: (idAluno, nomeAluno) => {
+    abrirModalVenda: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
-        
-        const hoje = new Date().toISOString().split('T')[0];
-        const html = `
-            <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
-                <h4 style="margin:0 0 10px 0; color:#2c3e50;">🛒 Detalhes da Compra</h4>
-                <div class="input-group"><label>Item / Serviço Comprado</label><input id="v-item" placeholder="Ex: Uniforme M, Livro de Matemática, etc."></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="input-group"><label>Valor (R$)</label><input type="number" id="v-valor" step="0.01" placeholder="0.00"></div>
-                    <div class="input-group"><label>Data da Venda</label><input type="date" id="v-data" value="${hoje}"></div>
-                </div>
-                <div class="input-group"><label>Forma de Pagamento</label>
-                    <select id="v-forma" style="font-weight:bold;">
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
-                        <option value="Cartão de Débito">💳 Cartão de Débito</option>
-                        <option value="Dinheiro">💵 Dinheiro</option>
-                        <option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option>
-                    </select>
-                </div>
-                <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..."></textarea></div>
-                <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}"><input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
-            </div>`;
-        
-        document.getElementById('modal-form-content').innerHTML = html;
-        const btnConfirm = document.querySelector('.btn-confirm'); btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); btnConfirm.innerHTML = "💾 Registrar Venda";
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar estoque... ⏳</p>';
+
+        try {
+            // 🔍 Busca os itens do estoque na base de dados
+            const estoque = await App.api('/estoques');
+            const listaEstoque = Array.isArray(estoque) ? estoque : [];
+            
+            // Constrói a lista suspensa (dropdown) com os produtos disponíveis
+            let opcoesEstoque = '<option value="">-- Selecione um Produto/Serviço --</option>';
+            listaEstoque.forEach(item => {
+                const qtd = parseInt(item.quantidade) || 0;
+                const valor = parseFloat(item.valor) || 0;
+                opcoesEstoque += `<option value="${item.id}" data-nome="${App.escapeHTML(item.nome)}" data-valor="${valor}">📦 ${App.escapeHTML(item.nome)} (Estoque: ${qtd} | R$ ${valor.toFixed(2)})</option>`;
+            });
+            opcoesEstoque += '<option value="avulso">✏️ Outro Item (Digitar Manualmente)</option>';
+
+            const hoje = new Date().toISOString().split('T')[0];
+            const html = `
+                <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
+                    <h4 style="margin:0 0 10px 0; color:#2c3e50;">🛒 Detalhes da Compra</h4>
+                    
+                    <div class="input-group">
+                        <label>Item / Serviço Comprado</label>
+                        <select id="v-item-select" onchange="App.selecionarItemVenda(this)" style="font-weight:bold; padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; margin-bottom:5px; cursor:pointer;">
+                            ${opcoesEstoque}
+                        </select>
+                        <input type="text" id="v-item" placeholder="Digite o nome do item avulso..." style="display:none; width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px;">
+                        <input type="hidden" id="v-item-id" value="">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:10px;">
+                        <div class="input-group"><label>Valor (R$)</label><input type="number" id="v-valor" step="0.01" placeholder="0.00" style="padding:12px; border-radius:8px;"></div>
+                        <div class="input-group"><label>Data da Venda</label><input type="date" id="v-data" value="${hoje}" style="padding:12px; border-radius:8px;"></div>
+                    </div>
+                    
+                    <div class="input-group"><label>Forma de Pagamento</label>
+                        <select id="v-forma" style="font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;">
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..." style="padding:12px; border-radius:8px;"></textarea></div>
+                    <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}">
+                    <input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
+                </div>`;
+            
+            document.getElementById('modal-form-content').innerHTML = html;
+            const btnConfirm = document.querySelector('.btn-confirm'); 
+            btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); 
+            btnConfirm.innerHTML = "💾 Registrar Venda";
+            btnConfirm.style.display = 'inline-flex';
+
+        } catch (e) {
+            document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o estoque.</p>';
+        }
+    },
+
+    // ⚡ Gatilho Mágico: Preenche nome e valor automaticamente!
+    selecionarItemVenda: (selectElement) => {
+        const inputNome = document.getElementById('v-item');
+        const inputValor = document.getElementById('v-valor');
+        const inputId = document.getElementById('v-item-id');
+
+        if (selectElement.value === 'avulso') {
+            inputNome.style.display = 'block';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+            inputNome.focus();
+        } else if (selectElement.value !== '') {
+            inputNome.style.display = 'none';
+            const option = selectElement.options[selectElement.selectedIndex];
+            inputNome.value = option.getAttribute('data-nome');
+            inputValor.value = option.getAttribute('data-valor');
+            inputId.value = selectElement.value;
+        } else {
+            inputNome.style.display = 'none';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+        }
     },
 
     salvarVenda: async () => {
-        const idAluno = document.getElementById('v-idaluno').value; const alunoNome = document.getElementById('v-nomealuno').value; const item = document.getElementById('v-item').value; const valor = document.getElementById('v-valor').value; const data = document.getElementById('v-data').value; const forma = document.getElementById('v-forma').value; const obs = document.getElementById('v-desc').value;
+        const idAluno = document.getElementById('v-idaluno').value; 
+        const alunoNome = document.getElementById('v-nomealuno').value; 
+        const item = document.getElementById('v-item').value.trim(); 
+        const idItemEstoque = document.getElementById('v-item-id').value; // ID do produto se veio do estoque
+        const valor = document.getElementById('v-valor').value; 
+        const data = document.getElementById('v-data').value; 
+        const forma = document.getElementById('v-forma').value; 
+        const obs = document.getElementById('v-desc').value;
+        
         if(!item || !valor || !data) return App.showToast("Preencha o item, valor e data.", "error");
 
         const status = forma === 'Pendente (Fiado)' ? 'Pendente' : 'Pago';
         const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
-        const payload = { id: Date.now().toString(), idCarne: `VENDA_${Date.now()}`, idAluno: idAluno, alunoNome: alunoNome, valor: valor, vencimento: data, status: status, descricao: descricaoFinal, tipo: 'Receita', dataGeracao: new Date().toLocaleDateString('pt-BR') };
+        const payload = { 
+            id: Date.now().toString(), 
+            idCarne: `VENDA_${Date.now()}`, 
+            idAluno: idAluno, 
+            alunoNome: alunoNome, 
+            valor: valor, 
+            vencimento: data, 
+            status: status, 
+            descricao: descricaoFinal, 
+            tipo: 'Receita', 
+            dataGeracao: new Date().toLocaleDateString('pt-BR') 
+        };
 
-        const btn = document.querySelector('.btn-confirm'); const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
-        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } document.body.style.cursor = 'wait';
+        const btn = document.querySelector('.btn-confirm'); 
+        const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
+        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
 
-        try { await App.api('/financeiro', 'POST', payload); App.showToast("Venda registrada com sucesso!", "success"); App.fecharModal(); } catch (e) { App.showToast("Erro ao registrar venda.", "error"); } finally { if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
-    },
+        try { 
+            // 1️⃣ Salva a receita no financeiro da escola
+            await App.api('/financeiro', 'POST', payload); 
+            
+            // 2️⃣ Se for um item oficial do estoque, dá baixa de 1 unidade automaticamente!
+            if (idItemEstoque) {
+                const itemEstoque = await App.api(`/estoques/${idItemEstoque}`);
+                if (itemEstoque && itemEstoque.id) {
+                    let qtdAtual = parseInt(itemEstoque.quantidade) || 0;
+                    if (qtdAtual > 0) qtdAtual -= 1;
+                    await App.api(`/estoques/${idItemEstoque}`, 'PUT', { ...itemEstoque, quantidade: qtdAtual });
+                }
+            }
+
+            App.showToast("Venda registrada e baixa no estoque efetuada!", "success"); 
+            App.fecharModal(); 
+        } catch (e) { 
+            App.showToast("Erro ao registrar venda.", "error"); 
+        } finally { 
+            if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
+    },    
 
     // =========================================================
     // MOTOR DE LISTAS AVANÇADAS
