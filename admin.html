@@ -161,7 +161,7 @@
 
     <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
-    <script src="js/config.js?v=22"></script>
+    <script src="js/config.js"></script>
 
     <script>
         const API_URL = CONFIG.API_URL;
@@ -199,24 +199,43 @@
                 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
             },
 
-            login: async () => {
+           login: async () => {
                 const pwd = document.getElementById('master-pwd').value;
+                if(!pwd) return Admin.showToast("Digite a senha.", "warning");
+
+                const btn = document.querySelector('.login-box button');
+                const txtOrig = btn.innerText;
+                btn.innerText = "Autenticando... ⏳";
+                btn.disabled = true;
+                
+                const errEl = document.getElementById('login-error');
+                errEl.style.display = 'none';
+
                 try {
                     const res = await fetch(`${API_URL}/master/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ senha: pwd })
                     });
-                    const data = await res.json();
                     
-                    if(data.success && data.token) {
+                    let data;
+                    try { data = await res.json(); } catch(e) { data = { error: "Erro crítico no servidor." }; }
+                    
+                    if(res.ok && data.success && data.token) {
                         sessionStorage.setItem('token_master', data.token);
-                        document.getElementById('login-error').style.display = 'none';
+                        document.getElementById('master-pwd').value = '';
                         Admin.init();
                     } else {
-                        document.getElementById('login-error').style.display = 'block';
+                        // Mostra o erro real (ex: "Senha Incorreta" ou "Muitas tentativas - Bloqueado")
+                        errEl.innerText = data.error || "Acesso negado!";
+                        errEl.style.display = 'block';
                     }
-                } catch(e) { Admin.showToast("Erro ao conectar à API.", "error"); }
+                } catch(e) { 
+                    Admin.showToast("Erro de rede. O servidor pode estar a iniciar, aguarde...", "error"); 
+                } finally {
+                    btn.innerText = txtOrig;
+                    btn.disabled = false;
+                }
             },
 
             logout: () => {
@@ -293,7 +312,7 @@
                         <td style="padding:15px; text-align:right;">
                             <button onclick="Admin.abrirModalMudarPlano('${safeEmail}', '${Admin.escapeHTML(planoNome)}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
                             
-                            ${safePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=Olá! O seu PIN de acesso ao sistema escolar é: ${safePinAtivacao}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
+                           ${safePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + safePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
                             <button onclick="Admin.copiarAcesso('${safeEmail}', '${safePinAtivacao}', '${planoNome === 'Liberado' ? 'VIP' : Admin.escapeHTML(planoNome)}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
                             
                             <button onclick="Admin.bloquear('${safeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
