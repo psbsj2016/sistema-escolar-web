@@ -52,13 +52,34 @@ const App = {
         const headers = { 'Content-Type': 'application/json' };
         const token = localStorage.getItem('token_acesso');
         if (token) { headers['Authorization'] = `Bearer ${token}`; }
-        const options = { method, headers }; if (body) options.body = JSON.stringify(body);
+        
+        const options = { method, headers }; 
+        if (body) options.body = JSON.stringify(body);
+        
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
-            if (!response.ok) { if (response.status === 401 || response.status === 403) { App.logout(); } throw new Error(`Erro API`); }
+            
+            // LER A RESPOSTA MESMO COM ERRO (Para pegar as mensagens do servidor)
+            let data;
+            try { data = await response.json(); } catch(e) { data = null; }
+
+            if (!response.ok) { 
+                // Se for 401/403 e NÃO for a rota de login, a sessão expirou
+                if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth/')) { 
+                    App.showToast("Sessão expirada. Faça login novamente.", "warning");
+                    App.logout(); 
+                }
+                // Retorna os dados de erro para o ecrã poder mostrar a mensagem (Ex: "Senha incorreta")
+                return data || { error: `Erro HTTP: ${response.status}` };
+            }
+            
             if (method !== 'GET' && App.usuario) setTimeout(App.verificarNotificacoes, 800);
-            return await response.json();
-        } catch (error) { return method === 'GET' ? [] : null; }
+            return data;
+        } catch (error) { 
+            console.error("Erro no fetch:", error);
+            // Nunca retornar nulo. Retornamos um objeto padronizado para evitar falhas no ecrã
+            return method === 'GET' ? [] : { error: 'Falha na conexão. Verifique a internet.' }; 
+        }
     },
 
     setTitulo: (texto) => { const el = document.getElementById('titulo-pagina'); if(el) el.innerText = texto; },
@@ -936,19 +957,38 @@ const App = {
 
     salvarNovoUsuario: async () => {
         const nome = document.getElementById('new-nome').value; const login = document.getElementById('new-login').value; const senha = document.getElementById('new-senha').value; const tipo = document.getElementById('new-tipo').value;
-        if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
+        if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); 
+        if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
 
         const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
         if (!App.idEdicaoUsuario) { payload.donoId = App.usuario.id; }
 
-        const btn = document.getElementById('btn-save-user'); const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
-        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } document.body.style.cursor = 'wait';
+        const btn = document.getElementById('btn-save-user'); 
+        const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
+        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
 
         try {
-            if(App.idEdicaoUsuario) { await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); App.showToast("Atualizado!", "success"); } 
-            else { await App.api('/usuarios', 'POST', payload); App.showToast("Criado com sucesso!", "success"); }
-            App.renderizarMinhaConta();
-        } catch(e) { App.showToast("Erro ao salvar.", "error"); } finally { if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } document.body.style.cursor = 'default'; }
+            let res;
+            if(App.idEdicaoUsuario) { 
+                res = await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); 
+            } else { 
+                res = await App.api('/usuarios', 'POST', payload); 
+            }
+
+            // 🛡️ NOVA VALIDAÇÃO: Verifica se o servidor recusou (Ex: Login já existe)
+            if (res && res.error) {
+                App.showToast(res.error, "error");
+            } else {
+                App.showToast(App.idEdicaoUsuario ? "Atualizado com sucesso!" : "Criado com sucesso!", "success");
+                App.renderizarMinhaConta();
+            }
+        } catch(e) { 
+            App.showToast("Erro crítico ao salvar.", "error"); 
+        } finally { 
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
     },
 
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
