@@ -379,12 +379,17 @@ App.renderizarAvaliacoesPro = async () => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     try {
-        const [alunos, turmas, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/avaliacoes')]);
+        // 🚀 AQUI: Adicionámos a busca aos cursos cadastrados
+        const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
         const historico = avaliacoes.sort((a,b) => b.id - a.id);
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        
+        // 🚀 AQUI: Criámos as opções baseadas nos seus cursos reais
+        const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${c.nome}">${App.escapeHTML(c.nome)}</option>`).join('');
+        
         const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
         const opBimestres = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
         const hoje = new Date().toISOString().split('T')[0];
@@ -396,7 +401,7 @@ App.renderizarAvaliacoesPro = async () => {
                 ${selectLocal('Buscar Aluno Único:', 'nota-aluno', opAlunos)}
             </div>
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px;">
-                ${col('Disciplina/Módulo:', 'nota-disc', 'text', 'Geral', 'placeholder="Ex: Matemática"')}
+                ${selectLocal('Disciplina/Curso:', 'nota-disc', opCursos)}
                 ${selectLocal('Tipo de Avaliação:', 'nota-tipo', opTipos, 'onchange="App.toggleTipoOutroNota()"')}
                 <div id="div-outro-nota" style="flex: 1; min-width: 150px; display:none;">
                     <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Especifique:</label>
