@@ -382,6 +382,72 @@ tr:hover td { background: rgba(0,0,0,0.02); }
     }
 }
 
+/* =========================================================
+   📅 CALENDÁRIO INTELIGENTE (ESTILO GOOGLE AGENDA)
+   ========================================================= */
+
+/* 💻 COMPORTAMENTO PADRÃO (COMPUTADORES/TABLETS) */
+.cal-day {
+    background: #fff;
+    min-height: 90px;
+    padding: 5px;
+    cursor: pointer;
+    border-top: 4px solid transparent;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s;
+}
+.cal-day.empty { background: #f9f9f9; cursor: default; }
+.cal-day.hoje { background: #eafaf1; border-top-color: #27ae60; }
+.cal-day:hover:not(.empty) { background: #f1f5f9; }
+
+.dia-num { text-align: right; font-weight: bold; font-size: 13px; color: #555; margin-bottom: 5px; }
+.cal-day.hoje .dia-num { color: #27ae60; }
+
+.evt-container { display: flex; flex-direction: column; gap: 3px; }
+.evt-pilula {
+    background: var(--bg-cor);
+    color: #fff;
+    font-size: 10px;
+    padding: 3px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* 📱 MAGIA MOBILE: Transformar pílulas em bolinhas perfeitas */
+@media (max-width: 768px) {
+    .cal-day {
+        min-height: unset;
+        aspect-ratio: 1 / 1; /* Força um quadrado perfeito, sem degraus! */
+        padding: 3px;
+        justify-content: flex-start;
+        border-top-width: 2px; /* Topo mais fino no mobile */
+    }
+    .dia-num {
+        font-size: 12px;
+        text-align: center; /* Centraliza o número como na Google Agenda */
+        margin-bottom: 2px;
+    }
+    .evt-container {
+        flex-direction: row; /* Coloca os eventos lado a lado */
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+    }
+    .evt-pilula {
+        width: 6px;
+        height: 6px;
+        padding: 0;
+        border-radius: 50%; /* Bolinha perfeita */
+        font-size: 0; /* Esconde o texto para não quebrar a grelha */
+        color: transparent;
+    }
+    .evt-texto { display: none; }
+}
+
 /* 🔔 BLINDAGEM DO SININHO MOVIDA DO JS PARA O CSS */
 @media (max-width: 768px) {
     #noti-dropdown { 

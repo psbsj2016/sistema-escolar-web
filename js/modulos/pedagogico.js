@@ -126,7 +126,12 @@ App.gerarGridEditavel = () => {
     while(contador < qtdAulas) { 
         if(dias.includes(dataAtual.getDay())) { 
             contador++; 
-            listaAulas.push({ num: contador, data: dataAtual.toLocaleDateString('pt-BR'), hora: horario, duracao: duracao, conteudo: '', visto: false }); 
+            // 🛡️ CORREÇÃO: Formatação manual de data à prova de bugs de navegadores cruzados
+            const d = String(dataAtual.getDate()).padStart(2, '0');
+            const m = String(dataAtual.getMonth() + 1).padStart(2, '0');
+            const y = dataAtual.getFullYear();
+            
+            listaAulas.push({ num: contador, data: `${d}/${m}/${y}`, hora: horario, duracao: duracao, conteudo: '', visto: false }); 
         } 
         dataAtual.setDate(dataAtual.getDate() + 1); 
     }
@@ -195,6 +200,10 @@ App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) A
 
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
+    
+    // 🛡️ CORREÇÃO: Força o fecho do teclado para garantir que a última letra digitada é guardada
+    if (document.activeElement) document.activeElement.blur();
+
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
     if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
@@ -333,7 +342,14 @@ App.gerarBoletimTela = async () => {
         else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
 
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); const disciplinasMap = {};
-        notasAluno.forEach(n => { const disc = n.disciplina || 'Geral'; if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0 }; disciplinasMap[disc].notas.push(n); disciplinasMap[disc].total += parseFloat(n.nota); });
+        
+        // 🛡️ CORREÇÃO: parseFloat(n.nota) || 0 evita o temido erro NaN (Not a Number) no Boletim
+        notasAluno.forEach(n => { 
+            const disc = n.disciplina || 'Geral'; 
+            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0 }; 
+            disciplinasMap[disc].notas.push(n); 
+            disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
+        });
         
         let linhasHTML = '';
         if(Object.keys(disciplinasMap).length === 0) linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px;">Sem notas lançadas.</td></tr>';
@@ -809,7 +825,7 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
     
     // Espaços vazios no calendário
     for(let i=0; i<startDay; i++) {
-        html += `<div style="background:#f9f9f9; min-height:90px;"></div>`; 
+        html += `<div class="cal-day empty"></div>`; 
     }
     
     for(let d=1; d<=daysInMonth; d++){ 
@@ -818,14 +834,21 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
         const isHoje = (d === hojeObj.getDate() && mes === hojeObj.getMonth() && ano === hojeObj.getFullYear()); 
         
         const evs = eventos.filter(e => e.data === dataISO); 
-        // As "Pílulas" coloridas restauradas com estilos inline
-        const tags = evs.map(e => `<div style="background:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}; color:#fff; font-size:10px; padding:3px 5px; border-radius:4px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${e.descricao}">${e.descricao}</div>`).join(''); 
         
-        // Desenha a célula do dia
-        html += `<div id="cal-day-${dataISO}" class="cal-day" onclick="App.selecionarDia('${dataISO}')" style="background:${isHoje ? '#eafaf1' : '#fff'}; min-height:90px; padding:5px; cursor:pointer; border-top:${isHoje ? '4px solid #27ae60' : 'none'};">
-                    <div style="text-align:right; font-weight:bold; font-size:13px; color:${isHoje ? '#27ae60' : '#555'}; margin-bottom:5px;">${d}</div>
-                    ${tags}
-                 </div>`; 
+        // 🎨 Injetamos os eventos com uma classe limpa em vez de estilos complexos inline
+        const tags = evs.map(e => `
+            <div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">
+                <span class="evt-texto">${e.descricao}</span>
+            </div>
+        `).join(''); 
+        
+        // Célula do dia limpa
+        html += `
+            <div id="cal-day-${dataISO}" class="cal-day ${isHoje ? 'hoje' : ''}" onclick="App.selecionarDia('${dataISO}')">
+                <div class="dia-num">${d}</div>
+                <div class="evt-container">${tags}</div>
+            </div>
+        `; 
     } 
     return html; 
 };

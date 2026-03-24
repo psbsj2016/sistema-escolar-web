@@ -206,7 +206,7 @@ App.confirmarBaixa = async () => {
     if(!dataPagamento) return App.showToast("Informe a data de pagamento.", "error");
 
     const checks = document.querySelectorAll('.fin-check:checked');
-    const totalSelected = parseFloat(document.getElementById('baixa-total').value);
+    const totalSelected = parseFloat(document.getElementById('baixa-total').value) || 0;
     
     const btn = document.querySelector('.btn-confirm');
     const textoOriginal = btn.innerText;
@@ -218,9 +218,11 @@ App.confirmarBaixa = async () => {
         for(const c of checks) {
             const item = App.financeiroCache.find(f => f.id == c.value);
             if(item) {
-                const proportion = parseFloat(item.valor) / totalSelected;
-                const itemV1 = (parseFloat(v1) * proportion).toFixed(2);
-                const itemV2 = qtd === '2' ? (parseFloat(v2) * proportion).toFixed(2) : null;
+                // 🛡️ CORREÇÃO: Evita divisão por zero se a parcela for R$ 0,00
+                const proportion = totalSelected > 0 ? (parseFloat(item.valor) / totalSelected) : 0;
+                
+                const itemV1 = totalSelected > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
+                const itemV2 = (qtd === '2' && totalSelected > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
 
                 const payload = { ...item, status: 'Pago', dataPagamento: dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
                 promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
@@ -251,7 +253,6 @@ App.gerarCarnes = async () => {
     if(parseFloat(val) <= 0) return App.showToast("O valor da mensalidade deve ser maior que zero.", "warning");
 
     const alunoNome = document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;
-    let db = new Date(dataIni + 'T00:00:00');
     const idLote = Date.now().toString();
     const dataGeracao = new Date().toLocaleDateString('pt-BR');
 
@@ -263,7 +264,21 @@ App.gerarCarnes = async () => {
 
     try {
         const promessas = [];
+        
+        // Guarda a data original para não perder a referência do dia
+        const dataBaseOriginal = new Date(dataIni + 'T00:00:00');
+        const diaEsperado = dataBaseOriginal.getDate();
+
         for(let i = 1; i <= parc; i++) {
+            // 🛡️ CORREÇÃO: Matemática segura de calendário
+            let db = new Date(dataBaseOriginal.getTime());
+            db.setMonth(dataBaseOriginal.getMonth() + (i - 1));
+            
+            // Trava do "31 de Fevereiro": Se o mês pulou indevidamente, recua para o último dia válido
+            if (db.getDate() !== diaEsperado) {
+                db.setDate(0); 
+            }
+            
             const vencUS = db.toISOString().split('T')[0];
             
             let descricaoParcela = `Mensalidade ${i}/${parc}`;
@@ -277,7 +292,6 @@ App.gerarCarnes = async () => {
                 descricao: descricaoParcela, tipo: 'Receita'
             };
             promessas.push(App.api('/financeiro', 'POST', payload));
-            db.setMonth(db.getMonth() + 1);
         }
 
         await Promise.all(promessas);
