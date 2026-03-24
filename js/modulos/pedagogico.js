@@ -372,6 +372,246 @@ App.gerarBoletimTela = async () => {
 };
 
 // ---------------------------------------------------------
+// 3. CHAMADA / FREQUÊNCIA
+// ---------------------------------------------------------
+App.renderizarChamadaPro = async () => {
+    App.setTitulo("Chamada e Frequência");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar turmas...</p>';
+    try {
+        const turmas = await App.api('/turmas');
+        const opTurmas = `<option value="">-- Selecione a Turma --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)} (${App.escapeHTML(t.curso || 'Geral')})</option>`).join('');
+        const hoje = new Date().toISOString().split('T')[0];
+
+        const formFiltro = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                ${selectLocal('Turma:', 'chamada-turma', opTurmas)}
+                ${col('Data da Aula:', 'chamada-data', 'date', hoje)}
+                ${col('Duração (Ex: 01:30):', 'chamada-duracao', 'time', '01:00')}
+                <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 CARREGAR ALUNOS</button>
+            </div>
+        `;
+        div.innerHTML = App.UI.card('📝 Registo de Chamada', 'Selecione a turma e a data para fazer a chamada.', formFiltro) + `<div id="area-lista-chamada" style="margin-top:20px;"></div>`;
+    } catch(e) { div.innerHTML = "Erro ao carregar o módulo de chamada."; }
+};
+
+App.carregarListaChamada = async () => {
+    const turma = document.getElementById('chamada-turma').value;
+    const data = document.getElementById('chamada-data').value;
+    if(!turma || !data) return App.showToast("Selecione a turma e a data.", "warning");
+
+    const area = document.getElementById('area-lista-chamada');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A procurar alunos matriculados... ⏳</p>';
+
+    try {
+        const [alunos, chamadas] = await Promise.all([App.api('/alunos'), App.api('/chamadas')]);
+        const alunosTurma = alunos.filter(a => a.turma === turma);
+
+        if(alunosTurma.length === 0) {
+            area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno matriculado nesta turma.</p></div>';
+            return;
+        }
+
+        const chamadasDia = chamadas.filter(c => c.data === data);
+
+        let linhas = '';
+        alunosTurma.forEach(a => {
+            const regExistente = chamadasDia.find(c => c.idAluno === a.id);
+            const status = regExistente ? regExistente.status : 'Presença';
+            
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:200px;">
+                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':'#27ae60'};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+                        <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
+                        <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
+                        <option value="Falta Justificada" ${status==='Falta Justificada'?'selected':''}>⚠️ Falta Justificada</option>
+                        <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
+                    </select>
+                </td>
+            </tr>`;
+        });
+
+        area.innerHTML = `
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">NOME DO ALUNO</th><th style="padding:15px; text-align:left;">STATUS</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarChamadaLote()" class="btn-primary">💾 SALVAR CHAMADA DA TURMA</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a lista de alunos.</p>'; }
+};
+
+App.salvarChamadaLote = async () => {
+    const data = document.getElementById('chamada-data').value;
+    const duracao = document.getElementById('chamada-duracao').value || '01:00';
+    const linhas = document.querySelectorAll('.linha-chamada');
+    if(linhas.length === 0) return;
+
+    const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
+    const txt = btn.innerText; btn.innerText = "A processar... ⏳"; btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = [];
+        const chamadasExistentes = await App.api('/chamadas');
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id');
+            const nomeAluno = linha.getAttribute('data-nome');
+            const status = linha.querySelector('.status-chamada').value;
+            
+            const regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
+            const payload = { idAluno, nomeAluno, data, status, duracao };
+
+            if (regExistente) {
+                promessas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status, duracao }));
+            } else {
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000);
+                promessas.push(App.api('/chamadas', 'POST', payload));
+            }
+        });
+
+        await Promise.all(promessas);
+        App.showToast("Chamada registada com sucesso!", "success");
+    } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
+    finally { btn.innerText = txt; btn.disabled = false; document.body.style.cursor = 'default'; }
+};
+
+// ---------------------------------------------------------
+// 4. NOTAS E AVALIAÇÕES
+// ---------------------------------------------------------
+App.renderizarAvaliacoesPro = async () => {
+    App.setTitulo("Notas e Avaliações");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar módulos...</p>';
+    try {
+        const turmas = await App.api('/turmas');
+        const opTurmas = `<option value="">-- Selecione a Turma --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)} (${App.escapeHTML(t.curso || 'Geral')})</option>`).join('');
+        const hoje = new Date().toISOString().split('T')[0];
+
+        const formFiltro = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                ${selectLocal('Turma:', 'nota-turma', opTurmas)}
+                ${col('Disciplina/Módulo:', 'nota-disc', 'text', 'Geral', 'placeholder="Ex: Matemática"')}
+                ${selectLocal('Tipo:', 'nota-tipo', '<option value="Prova">Prova</option><option value="Trabalho">Trabalho</option><option value="Participação">Participação</option>')}
+                ${col('Data:', 'nota-data', 'date', hoje)}
+                ${col('Valor Máx:', 'nota-max', 'number', '10', 'step="0.1"')}
+                <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR LANÇAMENTO</button>
+            </div>
+        `;
+        div.innerHTML = App.UI.card('📝 Lançamento de Notas', 'Configure a avaliação e lance as notas para a turma inteira.', formFiltro) + `<div id="area-lista-notas" style="margin-top:20px;"></div>`;
+    } catch(e) { div.innerHTML = "Erro ao carregar módulo de avaliações."; }
+};
+
+App.carregarListaNotas = async () => {
+    const turma = document.getElementById('nota-turma').value;
+    const disc = document.getElementById('nota-disc').value;
+    const tipo = document.getElementById('nota-tipo').value;
+    const data = document.getElementById('nota-data').value;
+    const max = document.getElementById('nota-max').value;
+
+    if(!turma || !disc || !data) return App.showToast("Preencha Turma, Disciplina e Data.", "warning");
+
+    const area = document.getElementById('area-lista-notas');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A procurar pauta da turma... ⏳</p>';
+
+    try {
+        const [alunos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/avaliacoes')]);
+        const alunosTurma = alunos.filter(a => a.turma === turma);
+
+        if(alunosTurma.length === 0) {
+            area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno matriculado nesta turma.</p></div>';
+            return;
+        }
+
+        let linhas = '';
+        alunosTurma.forEach(a => {
+            const regExistente = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            const notaAtual = regExistente ? regExistente.nota : '';
+
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:150px;">
+                    <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${notaAtual}">
+                </td>
+            </tr>`;
+        });
+
+        area.innerHTML = `
+            <div class="card" style="padding:0; overflow:hidden;">
+                <div style="padding:15px; background:#e8f4f8; border-bottom:1px solid #d1e8f0; font-size:13px; color:#2980b9; display:flex; justify-content:space-between;">
+                    <span><b>Lançamento:</b> ${tipo} de ${App.escapeHTML(disc)}</span>
+                    <span><b>Máx:</b> ${max} pts</span>
+                </div>
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">ALUNO</th><th style="padding:15px; text-align:center;">NOTA OBTIDA</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarNotasLote()" class="btn-primary">💾 SALVAR PAUTA DE NOTAS</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a pauta.</p>'; }
+};
+
+App.salvarNotasLote = async () => {
+    const disc = document.getElementById('nota-disc').value;
+    const tipo = document.getElementById('nota-tipo').value;
+    const data = document.getElementById('nota-data').value;
+    const max = document.getElementById('nota-max').value;
+    const linhas = document.querySelectorAll('.linha-nota');
+    
+    if(linhas.length === 0) return;
+
+    const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
+    const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = [];
+        const avaliacoesExistentes = await App.api('/avaliacoes');
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id');
+            const nomeAluno = linha.getAttribute('data-nome');
+            const notaInput = linha.querySelector('.valor-nota').value;
+            
+            // Ignora se o campo estiver vazio (o professor não lançou a nota para este aluno)
+            if (notaInput === '') return; 
+
+            const regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            
+            const payload = {
+                idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, dataLancamento: new Date().toISOString().split('T')[0]
+            };
+
+            if (regExistente) {
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max }));
+            } else {
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000);
+                promessas.push(App.api('/avaliacoes', 'POST', payload));
+            }
+        });
+
+        await Promise.all(promessas);
+        App.showToast("Pauta arquivada com sucesso!", "success");
+    } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
+    finally { btn.innerText = txt; btn.disabled = false; document.body.style.cursor = 'default'; }
+};
+
+// ---------------------------------------------------------
 // 5. CALENDÁRIO (BLINDADO COM GRID CSS INLINE E PÍLULAS)
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
