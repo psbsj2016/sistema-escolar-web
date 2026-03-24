@@ -1,21 +1,22 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V157 - LIMITES DE PLANOS, TRIAL 7 DIAS E ANTI-PIRATARIA)
+// SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
 
+// 🛡️ Mapeamento de funcionalidades por Cargo
 const LISTA_FUNCIONALIDADES = [
-    { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')" },
-    { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')" },
-    { id: 'ped_chamada', nome: 'Fazer Chamada', icon: '📋', acao: "App.renderizarTela('chamada')" },
-    { id: 'ped_notas', nome: 'Lançar Nota', icon: '📝', acao: "App.renderizarTela('avaliacoes')" },
-    { id: 'ped_plan', nome: 'Planejamento', icon: '📅', acao: "App.renderizarTela('planejamento')" },
-    { id: 'ped_bol', nome: 'Boletins', icon: '🖨️', acao: "App.renderizarTela('boletins')" },
-    { id: 'fin_inad', nome: 'Inadimplência', icon: '⚠️', acao: "App.renderizarTela('inadimplencia')" },
-    { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')" },
-    { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')" },
-    { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')" },
-    { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')" } 
+    { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'ped_chamada', nome: 'Fazer Chamada', icon: '📋', acao: "App.renderizarTela('chamada')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_notas', nome: 'Lançar Nota', icon: '📝', acao: "App.renderizarTela('avaliacoes')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_plan', nome: 'Planejamento', icon: '📅', acao: "App.renderizarTela('planejamento')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_bol', nome: 'Boletins', icon: '🖨️', acao: "App.renderizarTela('boletins')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'fin_inad', nome: 'Inadimplência', icon: '⚠️', acao: "App.renderizarTela('inadimplencia')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')", roles: ['Gestor'] },
+    { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] } 
 ];
 
 const App = {
@@ -34,7 +35,6 @@ const App = {
 
     getPlanoAtual: () => { return localStorage.getItem(App.getTenantKey('escola_plano')) || 'Teste'; },
 
-    // 🛡️ NOVO: Impressão Digital do Dispositivo (Anti-Pirataria)
     getDeviceId: () => {
         let deviceId = localStorage.getItem('ptt_device_id');
         if (!deviceId) {
@@ -44,7 +44,30 @@ const App = {
         return deviceId;
     },
 
-    // 🛡️ NOVO: Bloqueio do Período de Teste (7 Dias)
+    // 🛡️ NOVO: Aplica filtros visuais no menu com base no cargo do utilizador
+    aplicarPermissoesDeUsuario: () => {
+        if (!App.usuario) return;
+        const tipo = App.usuario.tipo || 'Gestor';
+        
+        const menuItems = document.querySelectorAll('.sidebar button, .sidebar .menu-item');
+        menuItems.forEach(btn => {
+            const acao = btn.getAttribute('onclick') || '';
+            let visivel = true;
+            
+            if (tipo === 'Professor') {
+                if (acao.includes('mensalidade') || acao.includes('financeiro') || acao.includes('inadimplencia') || acao.includes('relatorio') || acao.includes('configuracoes') || acao.includes('aparencia') || acao.includes('backup') || acao.includes('plano') || acao.includes('conta')) visivel = false;
+            } else if (tipo === 'Secretaria') {
+                if (acao.includes('configuracoes') || acao.includes('aparencia') || acao.includes('backup') || acao.includes('plano') || acao.includes('dossie') || acao.includes('conta')) visivel = false;
+            }
+            
+            if (!visivel) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = ''; 
+            }
+        });
+    },
+
     verificarBloqueioTeste: (escola) => {
         const plano = escola.plano || 'Teste';
         if (plano === 'Teste') {
@@ -56,24 +79,22 @@ const App = {
             if (diffDays >= 7) {
                 App.showToast("⚠️ O seu período de teste expirou! Escolha um plano para continuar a usar o sistema.", "error");
                 const sidebar = document.querySelector('.sidebar');
-                if(sidebar) sidebar.style.display = 'none'; // Esconde menu
+                if(sidebar) sidebar.style.display = 'none'; 
                 const content = document.querySelector('.content');
                 if(content && window.innerWidth > 768) content.style.marginLeft = '0';
-                return true; // Sistema Bloqueado
+                return true; 
             }
         }
-        // Se pagou ou está dentro do prazo, garante que o menu aparece
         const sidebar = document.querySelector('.sidebar');
         if(sidebar) sidebar.style.display = 'flex';
         const content = document.querySelector('.content');
         if(content && window.innerWidth > 768) content.style.marginLeft = '260px';
-        return false; // Sistema Livre
+        return false; 
     },
 
-    // 🛡️ NOVO: Cão de Guarda (Limites de Cadastros)
     verificarLimites: async (tipo) => {
         const plano = App.getPlanoAtual();
-        if (plano === 'Premium' || plano === 'Teste') return true; // Sem limites
+        if (plano === 'Premium' || plano === 'Teste') return true; 
         
         try {
             if (tipo === 'aluno') {
@@ -99,7 +120,7 @@ const App = {
 
     verificarPermissao: (funcionalidade) => {
         const plano = App.getPlanoAtual();
-        if (plano === 'Premium' || plano === 'Teste') return true; // Teste libera tudo!
+        if (plano === 'Premium' || plano === 'Teste') return true; 
         
         if (funcionalidade === 'whatsapp' && plano === 'Essencial') {
             App.showToast("💎 Funcionalidade disponível a partir do Plano Profissional. Faça o upgrade!", "warning");
@@ -123,7 +144,6 @@ const App = {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
             
-            // LER A RESPOSTA MESMO COM ERRO
             let data;
             try { data = await response.json(); } catch(e) { data = null; }
 
@@ -155,7 +175,7 @@ const App = {
     },
 
     // =========================================================
-    // MÁSCARAS DE FORMATAÇÃO (RESTAURADAS)
+    // MÁSCARAS DE FORMATAÇÃO
     // =========================================================
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
     mascaraCPF: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; },
@@ -202,7 +222,6 @@ const App = {
         const txt = btn.innerText; btn.innerText = "Autenticando... ⏳"; btn.disabled = true;
         
         try {
-            // 🛡️ Envia o deviceId para validação Anti-Pirataria no servidor
             const deviceId = App.getDeviceId();
             const res = await App.api('/auth/login', 'POST', { login: login, senha: pass, deviceId: deviceId });
             
@@ -220,7 +239,6 @@ const App = {
                 App.entrarNoSistema();
                 App.showToast('Bem-vindo ao sistema!', 'success');
             } else { 
-                // A API pode retornar "Este utilizador já está logado noutro dispositivo"
                 App.showToast(res.error || "Login ou senha incorretos", "error"); 
             }
         } catch(e) { App.showToast("Erro ao conectar no servidor", "error"); } 
@@ -232,6 +250,7 @@ const App = {
         document.getElementById('tela-sistema').style.display = 'flex';
         const el = document.getElementById('user-name');
         if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+        App.aplicarPermissoesDeUsuario(); // 🛡️ Aplica o Filtro Visual
         App.renderizarInicio();
     },
 
@@ -397,7 +416,7 @@ const App = {
     },
 
     // =========================================================
-    // VISÃO GERAL (DASHBOARD)
+    // VISÃO GERAL (DASHBOARD INTELIGENTE COM FILTRO DE CARGO)
     // =========================================================
     renderizarInicio: async () => { 
         App.verificarNotificacoes(); 
@@ -412,9 +431,20 @@ const App = {
             const inadimplentesList = listaFin.filter(f => f.status === 'Pendente' && new Date(f.vencimento + 'T00:00:00') < dataHoje).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
             const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+            const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+            const mostraFinanceiro = tipoUtilizador !== 'Professor'; // Professores não vêem dinheiro
+
             let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
             if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
-            const htmlAtalhos = idsAtalhos.map(id => { const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); return func ? `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>` : ''; }).join('');
+            
+            // 🛡️ Filtra atalhos de acordo com a permissão do cargo
+            const htmlAtalhos = idsAtalhos.map(id => { 
+                const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); 
+                if (func && func.roles.includes(tipoUtilizador)) {
+                    return `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>`;
+                }
+                return ''; 
+            }).join('');
 
             const htmlInadimplentes = inadimplentesList.length === 0 
                 ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
@@ -431,6 +461,7 @@ const App = {
                         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">🏫</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Turmas</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaTurmas.length}</span></div>
                         <div style="width:100%; display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">📚</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Cursos</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaCursos.length}</span></div>
                     </div>
+                    ${mostraFinanceiro ? `
                     <div class="stat-card card-green" style="display:block; position:relative;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;"><div class="stat-info"><h4>Receita (${mesAtual}/${anoAtual})</h4><p style="color:#27ae60; font-size:20px;">R$ ${formatarMoeda(totalRecebido)}</p></div><div class="stat-icon" style="font-size:24px;">💰</div></div>
                         <div style="height:140px; width:100%; display:flex; justify-content:center; align-items:center;"><canvas id="graficoFinanceiro"></canvas></div>
@@ -440,14 +471,17 @@ const App = {
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fdedec; padding-bottom:8px;"><h4 style="margin:0; font-size:14px; color:#e74c3c; text-transform:uppercase; font-weight:bold;">⚠️ Títulos em Atraso (${inadimplentesList.length})</h4></div>
                         <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:5px;">${htmlInadimplentes}</div>
                     </div>
+                    ` : ''}
                 </div>
                 <h3 style="color:var(--card-text); font-size:16px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Acesso Rápido</h3>
-                <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado.</p>'}</div>`;
+                <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado ou permitido.</p>'}</div>`;
 
-            const ctx = document.getElementById('graficoFinanceiro');
-            if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
-                new Chart(ctx, { type: 'doughnut', data: { labels: ['Recebido', 'Pendente'], datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' } });
-            } else if (ctx) { new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [1], backgroundColor: ['#eee'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' } }); }
+            if (mostraFinanceiro) {
+                const ctx = document.getElementById('graficoFinanceiro');
+                if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
+                    new Chart(ctx, { type: 'doughnut', data: { labels: ['Recebido', 'Pendente'], datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' } });
+                } else if (ctx) { new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [1], backgroundColor: ['#eee'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' } }); }
+            }
         } catch(e) { console.error(e); div.innerHTML = "<p>Erro ao carregar dashboard.</p>"; }
     },
 
@@ -460,17 +494,29 @@ const App = {
     },
 
     // =========================================================
-    // ROTEAMENTO DE TELAS (BLINDAGEM DO PERÍODO DE TESTE)
+    // ROTEAMENTO DE TELAS (BLINDAGEM DO PERÍODO DE TESTE E CARGOS)
     // =========================================================
     renderizarTela: async (tela) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🛡️ Se o teste de 7 dias acabou, o gestor fica PRESO na tela de pagamento
+        // 🛡️ Se o teste expirou
         const escolaPerfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         if (tela !== 'plano' && tela !== 'login' && App.verificarBloqueioTeste(escolaPerfil)) {
             return App.renderizarMeuPlano(); 
+        }
+
+        // 🛡️ Se o Cargo (RBAC) não permite ver a tela
+        const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
+        const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
+        const bloqueadoSecr = ['configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'conta'];
+
+        if (tipoUtil === 'Professor' && bloqueadoProf.includes(tela)) {
+            App.showToast("🚫 Acesso restrito. Perfil de Professor não tem permissão para esta área.", "error"); return App.renderizarInicio();
+        }
+        if (tipoUtil === 'Secretaria' && bloqueadoSecr.includes(tela)) {
+            App.showToast("🚫 Acesso restrito. Perfil de Secretaria não tem permissão para esta área.", "error"); return App.renderizarInicio();
         }
 
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
@@ -622,7 +668,7 @@ const App = {
     abrirModalCadastro: async (tipo, id) => { 
         if (!id && (tipo === 'aluno')) {
             const podeCadastrar = await App.verificarLimites('aluno');
-            if (!podeCadastrar) return; // Bloqueia abertura da tela
+            if (!podeCadastrar) return; 
         }
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
@@ -632,7 +678,7 @@ const App = {
         document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A calcular horas e presenças... ⏳</p>';
         
         const btnConfirm = document.querySelector('.btn-confirm');
-        if(btnConfirm) btnConfirm.style.display = 'none'; // Esconde botão de salvar, pois é apenas um relatório
+        if(btnConfirm) btnConfirm.style.display = 'none'; 
 
         try {
             const chamadas = await App.api('/chamadas');
@@ -646,7 +692,6 @@ const App = {
                 const agrupado = {};
                 const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
                 
-                // Agrupar por Mês e somar minutos
                 historico.forEach(c => {
                     const d = new Date(c.data + 'T00:00:00');
                     const mesAno = `${mesesNomes[d.getMonth()]} de ${d.getFullYear()}`;
@@ -663,7 +708,6 @@ const App = {
                     else if (c.status === 'Falta') minFalta += mins;
                 });
                 
-                // Desenhar as tabelas separadas por mês
                 for (const mes in agrupado) {
                     htmlMeses += `<div style="background:#f4f6f7; padding:10px 15px; margin-top:15px; border-radius:8px 8px 0 0; font-weight:bold; color:#2c3e50; border:1px solid #eee; border-bottom:none; font-size:13px; text-transform:uppercase;">📅 ${mes}</div>`;
                     htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
@@ -702,7 +746,7 @@ const App = {
     },
     
     // =========================================================
-    // O VERDADEIRO PDV (VENDA RÁPIDA - RESTAURADO DA V145)
+    // O VERDADEIRO PDV (VENDA RÁPIDA)
     // =========================================================
     abrirModalVenda: (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
@@ -749,7 +793,7 @@ const App = {
     },
 
     // =========================================================
-    // MOTOR DE LISTAS AVANÇADAS (RESTAURADO DA V145)
+    // MOTOR DE LISTAS AVANÇADAS
     // =========================================================
     renderizarLista: async (tipo) => {
         if (!App.usuario) { App.logout(); return; }
@@ -783,7 +827,7 @@ const App = {
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
-    // 🎨 MOTOR VISUAL DE TABELAS (TB) - COMPACTO E ELEGANTE (RESTAURADO DA V145)
+    // 🎨 MOTOR VISUAL DE TABELAS (TB)
     gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
@@ -828,7 +872,9 @@ const App = {
             let botoes = [];
             if (tipo === 'aluno') {
                 botoes.push(TB.btn('⏱️', '#3498db', `App.abrirRelatorioFrequencia('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Ver Histórico de Horas / Frequência'));
-                botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
+                if (App.usuario.tipo !== 'Professor') {
+                    botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
+                }
             }
             if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
             
@@ -859,7 +905,6 @@ const App = {
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
             
-            // 🛡️ Garante que a data de criação existe para o Trial de 7 Dias
             if (!escola.dataCriacao) {
                 escola.dataCriacao = new Date().toISOString();
                 await App.api('/escola', 'PUT', escola);
@@ -880,7 +925,6 @@ const App = {
                 img.src = escola.foto; 
             } else if(img) { img.remove(); }
             
-            // 🛡️ Após carregar os dados, verifica se o Trial expirou
             App.verificarBloqueioTeste(escola);
 
         } catch(e) { console.log("Carregando perfil..."); } 
@@ -1074,10 +1118,9 @@ const App = {
 
         const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
         
-        // 🛡️ BLOQUEIO DE CÃO DE GUARDA: Só permite criar se o plano deixar
         if (!App.idEdicaoUsuario) { 
             const podeCadastrar = await App.verificarLimites('usuario');
-            if (!podeCadastrar) return; // Trava a execução
+            if (!podeCadastrar) return; 
             payload.donoId = App.usuario.id; 
         }
 
@@ -1180,7 +1223,7 @@ const App = {
     },
 
     // =========================================================
-    // 🔔 SUPER SININHO COM "TELETRANSPORTE" (RESTAURADO DA V145)
+    // 🔔 SUPER SININHO COM "TELETRANSPORTE" E FILTRO DE CARGOS
     // =========================================================
     toggleNotificacoes: () => {
         const dropdown = document.getElementById('noti-dropdown');
@@ -1189,6 +1232,8 @@ const App = {
 
     verificarNotificacoes: async () => {
         try {
+            const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+            
             const [alunos, eventos, financeiro, planejamentos, estoque] = await Promise.all([
                 App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques')
             ]);
@@ -1231,71 +1276,75 @@ const App = {
                 });
             }
 
-            if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
-                alunos.forEach(aluno => {
-                    const plano = planejamentos.find(p => p.idAluno === aluno.id);
-                    let parcelasFuturas = 0;
-                    let dataUltimaMensalidade = null;
-                    
-                    financeiro.forEach(f => {
-                        if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
-                            if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
-                                dataUltimaMensalidade = f.vencimento;
+            // 🛡️ Alertas Financeiros APENAS para Gestores e Secretárias
+            if (tipoUtilizador !== 'Professor') {
+                if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
+                    alunos.forEach(aluno => {
+                        const plano = planejamentos.find(p => p.idAluno === aluno.id);
+                        let parcelasFuturas = 0;
+                        let dataUltimaMensalidade = null;
+                        
+                        financeiro.forEach(f => {
+                            if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
+                                if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
+                                    dataUltimaMensalidade = f.vencimento;
+                                }
+                                if (f.vencimento >= hojeStr) {
+                                    parcelasFuturas++;
+                                }
                             }
-                            if (f.vencimento >= hojeStr) {
-                                parcelasFuturas++;
+                        });
+
+                        if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
+                            alertas.push({ 
+                                icon: '🎓', 
+                                texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
+                                acao: "App.renderizarTela('mensalidades')" 
+                            });
+                        }
+
+                        if (plano && plano.aulas) {
+                            const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
+                            if (aulasPendentes > 0) {
+                                let aulasPorMes = 4; 
+                                if (plano.aulas.length > 1) {
+                                    const d1 = plano.aulas[0].data.split('/');
+                                    const d2 = plano.aulas[1].data.split('/');
+                                    const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
+                                    const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
+                                    const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
+                                    if (diffDias <= 4) aulasPorMes = 8; 
+                                    else if (diffDias <= 2) aulasPorMes = 12; 
+                                }
+                                const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
+
+                                // 🛡️ Alerta de Faturamento (Apenas Gestor)
+                                if (mesesDeAulaRestantes > parcelasFuturas && tipoUtilizador === 'Gestor') {
+                                    alertas.push({ 
+                                        icon: '⚠️', 
+                                        texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes.`,
+                                        acao: "App.renderizarTela('mensalidades')"
+                                    });
+                                }
                             }
                         }
                     });
-
-                    if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
-                        alertas.push({ 
-                            icon: '🎓', 
-                            texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
-                            acao: "App.renderizarTela('mensalidades')" 
-                        });
-                    }
-
-                    if (plano && plano.aulas) {
-                        const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
-                        if (aulasPendentes > 0) {
-                            let aulasPorMes = 4; 
-                            if (plano.aulas.length > 1) {
-                                const d1 = plano.aulas[0].data.split('/');
-                                const d2 = plano.aulas[1].data.split('/');
-                                const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
-                                const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
-                                const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
-                                if (diffDias <= 4) aulasPorMes = 8; 
-                                else if (diffDias <= 2) aulasPorMes = 12; 
-                            }
-                            const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
-
-                            if (mesesDeAulaRestantes > parcelasFuturas) {
-                                alertas.push({ 
-                                    icon: '⚠️', 
-                                    texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes. Clique para faturar!`,
-                                    acao: "App.renderizarTela('mensalidades')"
-                                });
-                            }
+                }
+        
+                // 📦 Alerta de Estoque
+                if (Array.isArray(estoque)) {
+                    estoque.forEach(item => {
+                        const qtd = parseInt(item.quantidade) || 0;
+                        const min = parseInt(item.quantidadeMinima) || 0;
+                        if (qtd <= min) {
+                            alertas.push({ 
+                                icon: '📦', 
+                                texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`,
+                                acao: "App.renderizarLista('estoque')" 
+                            });
                         }
-                    }
-                });
-            }
-       
-          // 📦 ALERTA DE ESTOQUE INTELIGENTE
-            if (Array.isArray(estoque)) {
-                estoque.forEach(item => {
-                    const qtd = parseInt(item.quantidade) || 0;
-                    const min = parseInt(item.quantidadeMinima) || 0;
-                    if (qtd <= min) {
-                        alertas.push({ 
-                            icon: '📦', 
-                            texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`,
-                            acao: "App.renderizarLista('estoque')" 
-                        });
-                    }
-                });
+                    });
+                }
             }
 
             const badge = document.getElementById('noti-badge');
@@ -1324,7 +1373,6 @@ document.addEventListener('DOMContentLoaded', App.init);
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
 window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
 
-// Fechar Sininho ao clicar fora
 document.addEventListener('click', (e) => {
     const container = document.querySelector('.notification-container');
     if (container && !container.contains(e.target)) {
@@ -1337,9 +1385,6 @@ const btnInstall = document.getElementById('pwa-btn-install'); if (btnInstall) {
 const btnCancel = document.getElementById('pwa-btn-cancel'); if (btnCancel) { btnCancel.addEventListener('click', () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; }); }
 window.addEventListener('appinstalled', () => { 
     const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) installBanner.style.display = 'none'; deferredPrompt = null; 
-    
-    // 🚀 RASTREAMENTO GA4: Instalação do PWA
     if (typeof gtag === 'function') gtag('event', 'app_install', { platform: 'PWA Web' });
-    
     App.showToast('App instalada com sucesso! 🎉', 'success'); 
 });
