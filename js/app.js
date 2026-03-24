@@ -1033,7 +1033,7 @@ const App = {
     verificarNotificacoes: async () => {
         try {
             const [alunos, eventos, financeiro, planejamentos, estoque] = await Promise.all([
-                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoque')
+                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques')
             ]);
             
             let alertas = [];
