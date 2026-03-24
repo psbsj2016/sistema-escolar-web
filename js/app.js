@@ -1,10 +1,9 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
+// SISTEMA ESCOLAR - APP.JS (V159 - PDV ESTOQUE, RBAC E ANTI-PIRATARIA PREMIUM)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
 
-// 🛡️ Mapeamento de funcionalidades por Cargo
 const LISTA_FUNCIONALIDADES = [
     { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')", roles: ['Gestor', 'Secretaria'] },
     { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')", roles: ['Gestor', 'Secretaria'] },
@@ -44,7 +43,6 @@ const App = {
         return deviceId;
     },
 
-    // 🛡️ NOVO: Aplica filtros visuais no menu com base no cargo do utilizador
     aplicarPermissoesDeUsuario: () => {
         if (!App.usuario) return;
         const tipo = App.usuario.tipo || 'Gestor';
@@ -107,9 +105,10 @@ const App = {
                 }
             } else if (tipo === 'usuario') {
                 const usuarios = await App.api('/usuarios');
+                // Limite Essencial: Dono + 1 (Total 2) | Profissional: Dono + 3 (Total 4)
                 const limite = plano === 'Essencial' ? 2 : (plano === 'Profissional' ? 4 : 0);
-                if (usuarios.length >= limite) {
-                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipa!`, "warning");
+                if (limite > 0 && usuarios.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} acessos da equipa atingido no plano ${plano}. Faça o upgrade!`, "warning");
                     setTimeout(() => App.renderizarMeuPlano(), 2000);
                     return false;
                 }
@@ -143,7 +142,6 @@ const App = {
         
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
-            
             let data;
             try { data = await response.json(); } catch(e) { data = null; }
 
@@ -250,7 +248,7 @@ const App = {
         document.getElementById('tela-sistema').style.display = 'flex';
         const el = document.getElementById('user-name');
         if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
-        App.aplicarPermissoesDeUsuario(); // 🛡️ Aplica o Filtro Visual
+        App.aplicarPermissoesDeUsuario(); 
         App.renderizarInicio();
     },
 
@@ -432,12 +430,11 @@ const App = {
             const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
-            const mostraFinanceiro = tipoUtilizador !== 'Professor'; // Professores não vêem dinheiro
+            const mostraFinanceiro = tipoUtilizador !== 'Professor'; 
 
             let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
             if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
             
-            // 🛡️ Filtra atalhos de acordo com a permissão do cargo
             const htmlAtalhos = idsAtalhos.map(id => { 
                 const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); 
                 if (func && func.roles.includes(tipoUtilizador)) {
@@ -501,13 +498,11 @@ const App = {
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🛡️ Se o teste expirou
         const escolaPerfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         if (tela !== 'plano' && tela !== 'login' && App.verificarBloqueioTeste(escolaPerfil)) {
             return App.renderizarMeuPlano(); 
         }
 
-        // 🛡️ Se o Cargo (RBAC) não permite ver a tela
         const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
         const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
         const bloqueadoSecr = ['configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'conta'];
@@ -539,7 +534,7 @@ const App = {
     renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
 
     // =========================================================
-    // 💎 O MEU PLANO (NOVA VITRINE ESTRATÉGICA E CONTAGEM DE 7 DIAS)
+    // 💎 O MEU PLANO
     // =========================================================
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
@@ -672,6 +667,150 @@ const App = {
         }
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
+    
+    // =========================================================
+    // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
+    // =========================================================
+    abrirModalVenda: async (idAluno, nomeAluno) => {
+        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar estoque... ⏳</p>';
+
+        try {
+            const estoque = await App.api('/estoques');
+            const listaEstoque = Array.isArray(estoque) ? estoque : [];
+            
+            let opcoesEstoque = '<option value="">-- Selecione um Produto/Serviço --</option>';
+            listaEstoque.forEach(item => {
+                const qtd = parseInt(item.quantidade) || 0;
+                const valor = parseFloat(item.valor) || 0;
+                opcoesEstoque += `<option value="${item.id}" data-nome="${App.escapeHTML(item.nome)}" data-valor="${valor}">📦 ${App.escapeHTML(item.nome)} (Estoque: ${qtd} | R$ ${valor.toFixed(2)})</option>`;
+            });
+            opcoesEstoque += '<option value="avulso">✏️ Outro Item (Digitar Manualmente)</option>';
+
+            const hoje = new Date().toISOString().split('T')[0];
+            const html = `
+                <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
+                    <h4 style="margin:0 0 10px 0; color:#2c3e50;">🛒 Detalhes da Compra</h4>
+                    
+                    <div class="input-group">
+                        <label>Item / Serviço Comprado</label>
+                        <select id="v-item-select" onchange="App.selecionarItemVenda(this)" style="font-weight:bold; padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; margin-bottom:5px; cursor:pointer;">
+                            ${opcoesEstoque}
+                        </select>
+                        <input type="text" id="v-item" placeholder="Digite o nome do item avulso..." style="display:none; width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px;">
+                        <input type="hidden" id="v-item-id" value="">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:10px;">
+                        <div class="input-group"><label>Valor (R$)</label><input type="number" id="v-valor" step="0.01" placeholder="0.00" style="padding:12px; border-radius:8px;"></div>
+                        <div class="input-group"><label>Data da Venda</label><input type="date" id="v-data" value="${hoje}" style="padding:12px; border-radius:8px;"></div>
+                    </div>
+                    
+                    <div class="input-group"><label>Forma de Pagamento</label>
+                        <select id="v-forma" style="font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;">
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..." style="padding:12px; border-radius:8px;"></textarea></div>
+                    <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}">
+                    <input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
+                </div>`;
+            
+            document.getElementById('modal-form-content').innerHTML = html;
+            const btnConfirm = document.querySelector('.btn-confirm'); 
+            btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); 
+            btnConfirm.innerHTML = "💾 Registrar Venda";
+            btnConfirm.style.display = 'inline-flex';
+
+        } catch (e) {
+            document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o estoque.</p>';
+        }
+    },
+
+    selecionarItemVenda: (selectElement) => {
+        const inputNome = document.getElementById('v-item');
+        const inputValor = document.getElementById('v-valor');
+        const inputId = document.getElementById('v-item-id');
+
+        if (selectElement.value === 'avulso') {
+            inputNome.style.display = 'block';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+            inputNome.focus();
+        } else if (selectElement.value !== '') {
+            inputNome.style.display = 'none';
+            const option = selectElement.options[selectElement.selectedIndex];
+            inputNome.value = option.getAttribute('data-nome');
+            inputValor.value = option.getAttribute('data-valor');
+            inputId.value = selectElement.value;
+        } else {
+            inputNome.style.display = 'none';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+        }
+    },
+
+    salvarVenda: async () => {
+        const idAluno = document.getElementById('v-idaluno').value; 
+        const alunoNome = document.getElementById('v-nomealuno').value; 
+        const item = document.getElementById('v-item').value.trim(); 
+        const idItemEstoque = document.getElementById('v-item-id').value;
+        const valor = document.getElementById('v-valor').value; 
+        const data = document.getElementById('v-data').value; 
+        const forma = document.getElementById('v-forma').value; 
+        const obs = document.getElementById('v-desc').value;
+        
+        if(!item || !valor || !data) return App.showToast("Preencha o item, valor e data.", "error");
+
+        const status = forma === 'Pendente (Fiado)' ? 'Pendente' : 'Pago';
+        const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
+        const payload = { 
+            id: Date.now().toString(), 
+            idCarne: `VENDA_${Date.now()}`, 
+            idAluno: idAluno, 
+            alunoNome: alunoNome, 
+            valor: valor, 
+            vencimento: data, 
+            status: status, 
+            descricao: descricaoFinal, 
+            tipo: 'Receita', 
+            dataGeracao: new Date().toLocaleDateString('pt-BR') 
+        };
+
+        const btn = document.querySelector('.btn-confirm'); 
+        const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
+        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
+
+        try { 
+            await App.api('/financeiro', 'POST', payload); 
+            
+            if (idItemEstoque) {
+                const itemEstoque = await App.api(`/estoques/${idItemEstoque}`);
+                if (itemEstoque && itemEstoque.id) {
+                    let qtdAtual = parseInt(itemEstoque.quantidade) || 0;
+                    if (qtdAtual > 0) qtdAtual -= 1;
+                    await App.api(`/estoques/${idItemEstoque}`, 'PUT', { ...itemEstoque, quantidade: qtdAtual });
+                }
+            }
+
+            App.showToast("Venda registrada e baixa no estoque efetuada!", "success"); 
+            App.fecharModal(); 
+        } catch (e) { 
+            App.showToast("Erro ao registrar venda.", "error"); 
+        } finally { 
+            if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
+    },
+
     abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
@@ -744,154 +883,6 @@ const App = {
             `;
         } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
     },
-    
-// =========================================================
-    // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
-    // =========================================================
-    abrirModalVenda: async (idAluno, nomeAluno) => {
-        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
-        document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
-        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar estoque... ⏳</p>';
-
-        try {
-            // 🔍 Busca os itens do estoque na base de dados
-            const estoque = await App.api('/estoques');
-            const listaEstoque = Array.isArray(estoque) ? estoque : [];
-            
-            // Constrói a lista suspensa (dropdown) com os produtos disponíveis
-            let opcoesEstoque = '<option value="">-- Selecione um Produto/Serviço --</option>';
-            listaEstoque.forEach(item => {
-                const qtd = parseInt(item.quantidade) || 0;
-                const valor = parseFloat(item.valor) || 0;
-                opcoesEstoque += `<option value="${item.id}" data-nome="${App.escapeHTML(item.nome)}" data-valor="${valor}">📦 ${App.escapeHTML(item.nome)} (Estoque: ${qtd} | R$ ${valor.toFixed(2)})</option>`;
-            });
-            opcoesEstoque += '<option value="avulso">✏️ Outro Item (Digitar Manualmente)</option>';
-
-            const hoje = new Date().toISOString().split('T')[0];
-            const html = `
-                <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
-                    <h4 style="margin:0 0 10px 0; color:#2c3e50;">🛒 Detalhes da Compra</h4>
-                    
-                    <div class="input-group">
-                        <label>Item / Serviço Comprado</label>
-                        <select id="v-item-select" onchange="App.selecionarItemVenda(this)" style="font-weight:bold; padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; margin-bottom:5px; cursor:pointer;">
-                            ${opcoesEstoque}
-                        </select>
-                        <input type="text" id="v-item" placeholder="Digite o nome do item avulso..." style="display:none; width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px;">
-                        <input type="hidden" id="v-item-id" value="">
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:10px;">
-                        <div class="input-group"><label>Valor (R$)</label><input type="number" id="v-valor" step="0.01" placeholder="0.00" style="padding:12px; border-radius:8px;"></div>
-                        <div class="input-group"><label>Data da Venda</label><input type="date" id="v-data" value="${hoje}" style="padding:12px; border-radius:8px;"></div>
-                    </div>
-                    
-                    <div class="input-group"><label>Forma de Pagamento</label>
-                        <select id="v-forma" style="font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;">
-                            <option value="PIX">PIX</option>
-                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
-                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
-                            <option value="Dinheiro">💵 Dinheiro</option>
-                            <option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option>
-                        </select>
-                    </div>
-                    <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..." style="padding:12px; border-radius:8px;"></textarea></div>
-                    <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}">
-                    <input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
-                </div>`;
-            
-            document.getElementById('modal-form-content').innerHTML = html;
-            const btnConfirm = document.querySelector('.btn-confirm'); 
-            btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); 
-            btnConfirm.innerHTML = "💾 Registrar Venda";
-            btnConfirm.style.display = 'inline-flex';
-
-        } catch (e) {
-            document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o estoque.</p>';
-        }
-    },
-
-    // ⚡ Gatilho Mágico: Preenche nome e valor automaticamente!
-    selecionarItemVenda: (selectElement) => {
-        const inputNome = document.getElementById('v-item');
-        const inputValor = document.getElementById('v-valor');
-        const inputId = document.getElementById('v-item-id');
-
-        if (selectElement.value === 'avulso') {
-            inputNome.style.display = 'block';
-            inputNome.value = '';
-            inputValor.value = '';
-            inputId.value = '';
-            inputNome.focus();
-        } else if (selectElement.value !== '') {
-            inputNome.style.display = 'none';
-            const option = selectElement.options[selectElement.selectedIndex];
-            inputNome.value = option.getAttribute('data-nome');
-            inputValor.value = option.getAttribute('data-valor');
-            inputId.value = selectElement.value;
-        } else {
-            inputNome.style.display = 'none';
-            inputNome.value = '';
-            inputValor.value = '';
-            inputId.value = '';
-        }
-    },
-
-    salvarVenda: async () => {
-        const idAluno = document.getElementById('v-idaluno').value; 
-        const alunoNome = document.getElementById('v-nomealuno').value; 
-        const item = document.getElementById('v-item').value.trim(); 
-        const idItemEstoque = document.getElementById('v-item-id').value; // ID do produto se veio do estoque
-        const valor = document.getElementById('v-valor').value; 
-        const data = document.getElementById('v-data').value; 
-        const forma = document.getElementById('v-forma').value; 
-        const obs = document.getElementById('v-desc').value;
-        
-        if(!item || !valor || !data) return App.showToast("Preencha o item, valor e data.", "error");
-
-        const status = forma === 'Pendente (Fiado)' ? 'Pendente' : 'Pago';
-        const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
-        const payload = { 
-            id: Date.now().toString(), 
-            idCarne: `VENDA_${Date.now()}`, 
-            idAluno: idAluno, 
-            alunoNome: alunoNome, 
-            valor: valor, 
-            vencimento: data, 
-            status: status, 
-            descricao: descricaoFinal, 
-            tipo: 'Receita', 
-            dataGeracao: new Date().toLocaleDateString('pt-BR') 
-        };
-
-        const btn = document.querySelector('.btn-confirm'); 
-        const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
-        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } 
-        document.body.style.cursor = 'wait';
-
-        try { 
-            // 1️⃣ Salva a receita no financeiro da escola
-            await App.api('/financeiro', 'POST', payload); 
-            
-            // 2️⃣ Se for um item oficial do estoque, dá baixa de 1 unidade automaticamente!
-            if (idItemEstoque) {
-                const itemEstoque = await App.api(`/estoques/${idItemEstoque}`);
-                if (itemEstoque && itemEstoque.id) {
-                    let qtdAtual = parseInt(itemEstoque.quantidade) || 0;
-                    if (qtdAtual > 0) qtdAtual -= 1;
-                    await App.api(`/estoques/${idItemEstoque}`, 'PUT', { ...itemEstoque, quantidade: qtdAtual });
-                }
-            }
-
-            App.showToast("Venda registrada e baixa no estoque efetuada!", "success"); 
-            App.fecharModal(); 
-        } catch (e) { 
-            App.showToast("Erro ao registrar venda.", "error"); 
-        } finally { 
-            if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } 
-            document.body.style.cursor = 'default'; 
-        }
-    },    
 
     // =========================================================
     // MOTOR DE LISTAS AVANÇADAS
@@ -991,144 +982,20 @@ const App = {
         if(confirm("Tem a certeza absoluta? Esta ação não pode ser desfeita.")) {
             document.body.style.cursor = 'wait';
             try {
-                await App.api(`/${endpoint}/${id}`, 'DELETE');
-                App.showToast("Excluído com sucesso!", "success");
-                App.renderizarLista(endpoint.slice(0, -1));
+                const res = await App.api(`/${endpoint}/${id}`, 'DELETE');
+                if (res.error) {
+                    App.showToast(res.error, "error");
+                } else {
+                    App.showToast("Excluído com sucesso!", "success");
+                    App.renderizarLista(endpoint.slice(0, -1));
+                }
             } catch(e) { App.showToast("Erro ao excluir.", "error"); } 
             finally { document.body.style.cursor = 'default'; }
         }
     },
 
     // =========================================================
-    // CONFIGURAÇÕES E ESCOLA
-    // =========================================================
-    carregarDadosEscola: async () => { 
-        try { 
-            const escola = await App.api('/escola'); if(!escola) return;
-            
-            if (!escola.dataCriacao) {
-                escola.dataCriacao = new Date().toISOString();
-                await App.api('/escola', 'PUT', escola);
-            }
-
-            if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
-            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
-            
-            const logoTitle = document.querySelector('.logo-area h2'); 
-            const planoAtual = App.getPlanoAtual();
-            let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
-            const badgeHtml = `<div style="margin-top:8px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 ${App.escapeHTML(planoAtual)}</span></div>`;
-            if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}`; 
-            
-            const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
-            if(escola.foto && escola.foto.length > 50) { 
-                if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
-                img.src = escola.foto; 
-            } else if(img) { img.remove(); }
-            
-            App.verificarBloqueioTeste(escola);
-
-        } catch(e) { console.log("Carregando perfil..."); } 
-    },
-    
-    otimizarImagem: (file, maxWidth, callback) => { 
-        const reader = new FileReader(); reader.readAsDataURL(file); 
-        reader.onload = (event) => { 
-            const img = new Image(); img.src = event.target.result; 
-            img.onload = () => { 
-                const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; 
-                if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } 
-                canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); 
-                ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.8)); 
-            }; 
-        }; 
-    },
-
-    renderizarConfiguracoes: async () => { 
-        App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); 
-        try { 
-            const escola = await App.api('/escola') || {}; 
-            const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
-            const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
-            
-            div.innerHTML = `
-                <div class="card" style="max-width:850px; margin:0 auto;">
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-bottom:30px;">
-                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
-                            <img id="conf-preview" src="${imgLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
-                            <div>
-                                <label style="font-weight:bold; font-size:13px;">Logotipo Oficial</label>
-                                <input type="file" id="conf-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
-                                <div style="display:flex; gap:5px;">
-                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-preview')">🗑️ Remover Imagem</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
-                            <img id="conf-qr-preview" src="${imgQr}" style="width:100px; height:100px; object-fit:contain; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
-                            <div>
-                                <label style="font-weight:bold; font-size:13px;">QR Code PIX</label>
-                                <input type="file" id="conf-qr-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-qr-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
-                                <div style="display:flex; gap:5px;">
-                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-qr-preview')">🗑️ Remover Imagem</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
-                        <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${App.escapeHTML(escola.nome||'')}"></div>
-                        <div class="input-group"><label>CNPJ / NIF</label><input id="conf-cnpj" value="${App.escapeHTML(escola.cnpj||'')}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
-                    </div>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
-                        <div class="input-group"><label>Dados Bancários (Carnê)</label><input id="conf-banco" value="${App.escapeHTML(escola.banco||'')}"></div>
-                        <div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${App.escapeHTML(escola.chavePix||'')}"></div>
-                    </div>
-                    <button class="btn-primary" style="width:100%; margin-top:20px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
-                </div>`; 
-        } catch(e) { div.innerHTML = "Erro ao carregar."; } 
-    },
-
-    previewImagemLocal: (input, imgId) => {
-        if (!input.files || input.files.length === 0) return;
-        App.otimizarImagem(input.files[0], 400, (imgBase64) => {
-            const img = document.getElementById(imgId); img.src = imgBase64; img.setAttribute('data-nova', 'true');
-        });
-    },
-
-    removerImagemLocal: (imgId) => {
-        const img = document.getElementById(imgId);
-        img.src = imgId === 'conf-preview' ? "https://placehold.co/100?text=LOGO" : "https://placehold.co/100?text=QR+CODE";
-        img.setAttribute('data-nova', 'true');
-        const fileInput = document.getElementById(imgId === 'conf-preview' ? 'conf-file' : 'conf-qr-file'); if(fileInput) fileInput.value = '';
-    },
-
-    salvarConfiguracoes: async () => { 
-        const p = { 
-            nome: document.getElementById('conf-nome').value, cnpj: document.getElementById('conf-cnpj').value, 
-            banco: document.getElementById('conf-banco').value, chavePix: document.getElementById('conf-pix').value 
-        }; 
-        
-        const imgLogo = document.getElementById('conf-preview');
-        if (imgLogo && imgLogo.hasAttribute('data-nova')) p.foto = imgLogo.src.includes('placehold') ? "" : imgLogo.src;
-
-        const imgQr = document.getElementById('conf-qr-preview');
-        if (imgQr && imgQr.hasAttribute('data-nova')) p.qrCodeImagem = imgQr.src.includes('placehold') ? "" : imgQr.src;
-
-        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); 
-        const txt = btn.innerText; btn.innerText = "A atualizar... ⏳"; btn.disabled = true; 
-        
-        try { 
-            const escolaAtual = await App.api('/escola') || {};
-            await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
-            await App.carregarDadosEscola(); 
-            
-            if (imgLogo) imgLogo.removeAttribute('data-nova'); if (imgQr) imgQr.removeAttribute('data-nova');
-            App.showToast("Configurações atualizadas com sucesso!", "success"); 
-        } catch(e) { App.showToast("Erro ao salvar perfil da escola.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
-    },
-
-    // =========================================================
-    // MINHA CONTA E GESTÃO DE EQUIPA (CÃO DE GUARDA)
+    // MINHA CONTA E GESTÃO DE EQUIPA (CÃO DE GUARDA E DONO)
     // =========================================================
     toggleSenhaVisibilidade: (id) => { 
         const input = document.getElementById(id); 
@@ -1151,8 +1018,8 @@ const App = {
                     <div class="card" style="flex:1; height:fit-content; min-width:300px;">
                         <h3>Meus Dados de Acesso</h3>
                         <p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
-                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
-                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
+                        <div class="input-group"><label>E-mail (Seu Login)</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
+                        <div class="input-group"><label>Login (Apelido)</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
                         ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}
                         ${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}
                         ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
@@ -1168,10 +1035,10 @@ const App = {
                     <div class="card" style="flex:2; min-width:300px;">
                         <h3>Equipa e Acessos</h3>
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
-                            <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
+                            <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário da Equipa</h4>
                             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">
                                 <div class="input-group"><label>Nome</label><input id="new-nome" placeholder="Ex: Maria"></div>
-                                <div class="input-group"><label>Login</label><input id="new-login" placeholder="Ex: maria"></div>
+                                <div class="input-group"><label>Login</label><input id="new-login" placeholder="Ex: maria_sec"></div>
                                 <div class="input-group"><label>Senha</label><input id="new-senha" type="password" placeholder="******"></div>
                                 <div class="input-group"><label>Permissão</label><select id="new-tipo"><option value="Gestor">Gestor</option><option value="Secretaria">Secretaria</option><option value="Professor">Professor</option></select></div>
                             </div>
@@ -1183,7 +1050,7 @@ const App = {
                         <div class="table-responsive-wrapper">
                             <table style="width:100%; text-align:left; border-collapse:collapse;">
                                 <thead><tr><th style="padding-bottom:10px;">Nome</th><th style="padding-bottom:10px;">Login</th><th style="padding-bottom:10px;">Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
-                                <tbody>${listaUsers.map(u => `<tr><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.nome)}</td><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.login)}</td><td style="padding:10px 0; border-top:1px solid #eee;"><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right; border-top:1px solid #eee;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${u.id !== App.usuario.id ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody>
+                                <tbody>${listaUsers.map(u => `<tr><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.nome)} ${u.isDono ? '👑' : ''}</td><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.login)}</td><td style="padding:10px 0; border-top:1px solid #eee;"><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right; border-top:1px solid #eee;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${!u.isDono ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody>
                             </table>
                         </div>
                     </div>
@@ -1254,77 +1121,16 @@ const App = {
 
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
-    excluirUsuario: async (id) => { if(confirm("Deseja excluir este usuário?")) { await App.api(`/usuarios/${id}`, 'DELETE'); App.showToast("Excluído.", "success"); App.renderizarMinhaConta(); } },
-
-    // =========================================================
-    // BACKUP E RESET (ZONA DE PERIGO) RESTAURADA
-    // =========================================================
-    renderizarBackup: () => { 
-        App.setTitulo("Backup de Dados"); 
-        const div = document.getElementById('app-content');
-        div.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
-                <div class="card" style="flex:1; border-left: 5px solid #27ae60; padding:25px;">
-                    <h3 style="color:#27ae60; border:none; margin-top:0;">📥 Fazer Backup</h3>
-                    <p style="opacity:0.7; margin-bottom:20px; font-size:13px;">Baixe uma cópia completa de todos os dados do sistema.</p>
-                    <button class="btn-primary" style="width:100%; background:#27ae60; justify-content:center;" onclick="App.realizarDownloadBackup()">⬇️ BAIXAR DADOS (.JSON)</button>
-                </div>
-                <div class="card" style="flex:1; border-left: 5px solid #f39c12; padding:25px;">
-                    <h3 style="color:#f39c12; border:none; margin-top:0;">📤 Restaurar</h3>
-                    <p style="opacity:0.7; margin-bottom:15px; font-size:13px;">Carregue um arquivo de backup para recuperar dados.</p>
-                    <input type="file" id="input-backup-file" accept=".json" style="width:100%; margin-bottom:15px; border:1px solid #ddd; padding:10px; border-radius:5px;">
-                    <button class="btn-primary" style="width:100%; background:#f39c12; justify-content:center;" onclick="App.processarRestauracao()">⬆️ RESTAURAR DADOS</button>
-                </div>
-            </div>
-            <div class="card" style="border:2px solid #e74c3c; background:#fff5f5; padding:30px; text-align:center;">
-                <h3 style="color:#c0392b; border:none; font-size:22px; margin-top:0;">⚠️ ZONA DE PERIGO</h3>
-                <p style="color:#c0392b; margin-bottom:20px;">Esta ação apagará <strong>TODOS</strong> os dados operacionais e resetará o <strong>PERFIL DA ESCOLA</strong>.<br>O seu usuário será mantido para login.</p>
-                <button class="btn-primary" style="background:#c0392b; width:100%; max-width:250px; margin: 0 auto; padding:15px; font-weight:bold; border:2px solid #c0392b; justify-content:center;" onclick="App.resetarSistema()">🗑️ RESETAR TUDO</button>
-            </div>
-        `; 
-    },
-
-    resetarSistema: async () => {
-        if(!confirm("⚠️ ATENÇÃO EXTREMA: ISSO APAGARÁ TODOS OS DADOS DA ESCOLA. Deseja continuar?")) return;
-        const confirmacao = prompt("Para confirmar a exclusão TOTAL, digite: APAGAR TUDO");
-        if(confirmacao !== "APAGAR TUDO") return App.showToast("Ação cancelada. Código incorreto.", "error");
-
-        const btn = document.querySelector('button[onclick="App.resetarSistema()"]');
-        if(btn) { btn.disabled = true; btn.innerText = "⏳ APAGANDO..."; } document.body.style.cursor = 'wait';
-        
-        try {
-            const entidades = ['alunos', 'turmas', 'cursos', 'financeiro', 'eventos', 'chamadas', 'avaliacoes', 'planejamentos'];
-            for (const ent of entidades) { const dados = await App.api(`/${ent}`); if (Array.isArray(dados) && dados.length > 0) { await Promise.all(dados.map(item => App.api(`/${ent}/${item.id}`, 'DELETE'))); } }
-            await App.api('/escola', 'PUT', { nome: 'Escola', cnpj: '', foto: '', qrCodeImagem: '', banco: '', chavePix: '' });
-            localStorage.removeItem(App.getTenantKey('escola_perfil')); alert("✅ Sistema resetado com sucesso!"); location.reload();
-        } catch (e) { alert("Erro ao limpar dados."); if(btn) { btn.disabled = false; btn.innerText = "🗑️ RESETAR TUDO"; } } finally { document.body.style.cursor = 'default'; }
-    },
-
-    realizarDownloadBackup: async () => { 
-        try { 
-            const e=['escola','usuarios','alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos']; 
-            const d={}; for(const ep of e){const r=await App.api(`/${ep}`); d[ep]=r;} 
-            const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}); const a=document.createElement('a'); 
-            a.href=URL.createObjectURL(b); a.download=`backup_${new Date().toISOString().split('T')[0]}.json`; 
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); 
-        } catch(x){alert("Erro no backup.");} 
-    },
-    
-    processarRestauracao: async () => { 
-        const f=document.getElementById('input-backup-file'); if(!f.files.length)return alert("Selecione o arquivo."); 
-        if(!confirm("Substituir dados atuais?"))return; const r=new FileReader(); 
-        r.onload=async(e)=>{
-            try{
-                const d=JSON.parse(e.target.result); const t=['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos','usuarios','escola']; 
-                for(const k of t){if(d[k]){if(Array.isArray(d[k])){for(const i of d[k])await App.api(`/${k}`,'POST',i)}else{await App.api('/escola','PUT',d[k])}}} 
-                alert("Restaurado com sucesso!"); location.reload();
-            }catch(x){alert("Arquivo inválido.");}
-        }; 
-        r.readAsText(f.files[0]); 
+    excluirUsuario: async (id) => { 
+        if(confirm("Deseja excluir este usuário?")) { 
+            const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
+            if(res.error) { App.showToast(res.error, "error"); }
+            else { App.showToast("Excluído.", "success"); App.renderizarMinhaConta(); }
+        } 
     },
 
     // =========================================================
-    // 🔔 SUPER SININHO COM "TELETRANSPORTE" E FILTRO DE CARGOS
+    // SUPER SININHO COM "TELETRANSPORTE" E FILTRO DE CARGOS
     // =========================================================
     toggleNotificacoes: () => {
         const dropdown = document.getElementById('noti-dropdown');
@@ -1353,31 +1159,18 @@ const App = {
             if (Array.isArray(alunos)) {
                 alunos.forEach(a => {
                     if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
-                        alertas.push({ 
-                            icon: '🎂', 
-                            texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`,
-                            acao: "App.renderizarLista('aluno')" 
-                        });
+                        alertas.push({ icon: '🎂', texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`, acao: "App.renderizarLista('aluno')" });
                     }
                 });
             }
 
             if (Array.isArray(eventos)) {
                 eventos.forEach(e => {
-                    if (e.data === hojeStr) alertas.push({ 
-                        icon: '🚨', 
-                        texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
-                        acao: "App.renderizarTela('calendario')" 
-                    });
-                    else if (e.data === amanhaStr) alertas.push({ 
-                        icon: '⏳', 
-                        texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
-                        acao: "App.renderizarTela('calendario')" 
-                    });
+                    if (e.data === hojeStr) alertas.push({ icon: '🚨', texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`, acao: "App.renderizarTela('calendario')" });
+                    else if (e.data === amanhaStr) alertas.push({ icon: '⏳', texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`, acao: "App.renderizarTela('calendario')" });
                 });
             }
 
-            // 🛡️ Alertas Financeiros APENAS para Gestores e Secretárias
             if (tipoUtilizador !== 'Professor') {
                 if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
                     alunos.forEach(aluno => {
@@ -1387,21 +1180,13 @@ const App = {
                         
                         financeiro.forEach(f => {
                             if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
-                                if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
-                                    dataUltimaMensalidade = f.vencimento;
-                                }
-                                if (f.vencimento >= hojeStr) {
-                                    parcelasFuturas++;
-                                }
+                                if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) dataUltimaMensalidade = f.vencimento;
+                                if (f.vencimento >= hojeStr) parcelasFuturas++;
                             }
                         });
 
                         if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
-                            alertas.push({ 
-                                icon: '🎓', 
-                                texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
-                                acao: "App.renderizarTela('mensalidades')" 
-                            });
+                            alertas.push({ icon: '🎓', texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`, acao: "App.renderizarTela('mensalidades')" });
                         }
 
                         if (plano && plano.aulas) {
@@ -1411,38 +1196,25 @@ const App = {
                                 if (plano.aulas.length > 1) {
                                     const d1 = plano.aulas[0].data.split('/');
                                     const d2 = plano.aulas[1].data.split('/');
-                                    const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
-                                    const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
-                                    const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
-                                    if (diffDias <= 4) aulasPorMes = 8; 
-                                    else if (diffDias <= 2) aulasPorMes = 12; 
+                                    const diffDias = Math.abs((new Date(`${d2[2]}-${d2[1]}-${d2[0]}`) - new Date(`${d1[2]}-${d1[1]}-${d1[0]}`)) / 86400000);
+                                    if (diffDias <= 4) aulasPorMes = 8; else if (diffDias <= 2) aulasPorMes = 12; 
                                 }
                                 const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
 
-                                // 🛡️ Alerta de Faturamento (Apenas Gestor)
                                 if (mesesDeAulaRestantes > parcelasFuturas && tipoUtilizador === 'Gestor') {
-                                    alertas.push({ 
-                                        icon: '⚠️', 
-                                        texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes.`,
-                                        acao: "App.renderizarTela('mensalidades')"
-                                    });
+                                    alertas.push({ icon: '⚠️', texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes.`, acao: "App.renderizarTela('mensalidades')" });
                                 }
                             }
                         }
                     });
                 }
         
-                // 📦 Alerta de Estoque
                 if (Array.isArray(estoque)) {
                     estoque.forEach(item => {
                         const qtd = parseInt(item.quantidade) || 0;
                         const min = parseInt(item.quantidadeMinima) || 0;
                         if (qtd <= min) {
-                            alertas.push({ 
-                                icon: '📦', 
-                                texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`,
-                                acao: "App.renderizarLista('estoque')" 
-                            });
+                            alertas.push({ icon: '📦', texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`, acao: "App.renderizarLista('estoque')" });
                         }
                     });
                 }
@@ -1455,10 +1227,8 @@ const App = {
                 if (badge) { badge.innerText = alertas.length; badge.style.display = 'block'; }
                 if (list) list.innerHTML = alertas.map(a => `
                     <div class="noti-item" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
-                        <span class="noti-icon">${a.icon}</span>
-                        <div>${a.texto}</div>
-                    </div>
-                `).join('');
+                        <span class="noti-icon">${a.icon}</span><div>${a.texto}</div>
+                    </div>`).join('');
             } else {
                 if (badge) badge.style.display = 'none';
                 if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
@@ -1467,9 +1237,6 @@ const App = {
     }
 }; 
 
-// =========================================================
-// EVENTOS DE ARRANQUE E PWA
-// =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
 window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
