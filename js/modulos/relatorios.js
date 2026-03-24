@@ -88,9 +88,12 @@ App.gerarRelatorioAnual = async () => {
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
-        const totalLancado = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
-        const totalRecebido = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
-        const totalPendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
+        // 🛡️ CORREÇÃO: Pega o valor real pago (incluindo divisões e juros)
+        const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
+
+        const totalLancado = dados.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
+        const totalRecebido = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + getVal(c), 0);
+        const totalPendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
@@ -128,7 +131,7 @@ App.gerarRelatorioAnual = async () => {
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'ABERTO';
                                 if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${isPago ? fmt(parseFloat(f.valor)) : '-'}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${!isPago ? fmt(parseFloat(f.valor)) : '-'}</td></tr>`; 
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${isPago ? fmt(getVal(f)) : '-'}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${!isPago ? fmt(parseFloat(f.valor) || 0) : '-'}</td></tr>`; 
                             }).join('')}
                         </tbody>
                         <tfoot>
@@ -153,9 +156,12 @@ App.gerarRelatorioMensal = async () => {
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
-        const previsao = dados.reduce((acc, c) => acc + parseFloat(c.valor), 0);
-        const realizado = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
-        const pendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + parseFloat(c.valor), 0);
+        // 🛡️ CORREÇÃO: Lógica segura de valores
+        const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
+
+        const previsao = dados.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
+        const realizado = dados.filter(f => f.status === 'Pago').reduce((acc, c) => acc + getVal(c), 0);
+        const pendente = dados.filter(f => f.status !== 'Pago').reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
         const fmt = (v) => v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
         div.innerHTML = `
@@ -193,7 +199,7 @@ App.gerarRelatorioMensal = async () => {
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
                                 if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td></tr>`; 
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${fmt(isPago ? getVal(f) : parseFloat(f.valor) || 0)}</td></tr>`; 
                             }).join('')}
                         </tbody>
                     </table>
@@ -255,10 +261,11 @@ App.gerarDossie = async () => {
         const finAno = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano) && f.tipo === 'Receita');
         const finMes = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === mesIdx);
         
+        // 🛡️ CORREÇÃO: || 0 inserido para blindar contra falhas e NaN
         const entradaBrutaAno = finAno.filter(f => f.status === 'Pago').reduce((a, c) => a + getVal(c), 0);
-        const esperadoAnoMensalidade = finAno.filter(f => !isVenda(f)).reduce((a, c) => a + parseFloat(c.valor), 0);
-        const esperadoMesMensalidade = finMes.filter(f => !isVenda(f)).reduce((a, c) => a + parseFloat(c.valor), 0);
-        const inadimplenciaGeral = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje).reduce((a, c) => a + parseFloat(c.valor), 0);
+        const esperadoAnoMensalidade = finAno.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        const esperadoMesMensalidade = finMes.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        const inadimplenciaGeral = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
         
         const entradaMesMensalidade = finMes.filter(f => f.status === 'Pago' && !isVenda(f)).reduce((a, c) => a + getVal(c), 0);
         const entradaMesVenda = finMes.filter(f => f.status === 'Pago' && isVenda(f)).reduce((a, c) => a + getVal(c), 0);
@@ -563,9 +570,11 @@ App.renderizarGeradorDocumentos = async () => {
                 </div>
 
                 <div style="margin-top:30px; display:flex; gap:10px;">
-                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3); justify-content:center;" onclick="App.gerarDocumentoPrint()">🖨️ GERAR E IMPRIMIR DOCUMENTO</button>
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3); justify-content:center;" onclick="App.gerarDocumentoPrint()">🖨️ GERAR DOCUMENTO</button>
                 </div>
             </div>
+            
+            <div id="doc-area" style="margin-top: 30px;"></div>
         `;
         div.innerHTML = formHTML;
     } catch (e) {
@@ -588,13 +597,9 @@ App.gerarDocumentoPrint = async () => {
         const aluno = await App.api(`/alunos/${idAluno}`);
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
 
-        let printContainer = document.getElementById('print-area');
-        if (!printContainer) {
-            printContainer = document.createElement('div');
-            printContainer.id = 'print-area';
-            document.body.appendChild(printContainer);
-        }
-        printContainer.innerHTML = '';
+        // 🛡️ CORREÇÃO: Usa a área delimitada em vez de jogar direto no Body
+        const printContainer = document.getElementById('doc-area');
+        printContainer.innerHTML = '<p style="text-align:center;">Gerando Layout... ⏳</p>';
 
         const dataHoje = new Date().toLocaleDateString('pt-BR');
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
@@ -604,12 +609,19 @@ App.gerarDocumentoPrint = async () => {
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
             </div>`;
+            
+        const painelImpressao = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px;">
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR ESTE DOCUMENTO</button>
+            </div>
+        `;
 
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
             printContainer.innerHTML = `
                 ${reportStyles}
+                ${painelImpressao}
                 <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
                     ${docHeader}
                     
@@ -650,6 +662,7 @@ App.gerarDocumentoPrint = async () => {
         } else if (tipo === 'declaracao') {
             printContainer.innerHTML = `
                 ${reportStyles}
+                ${painelImpressao}
                 <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; min-height: 297mm; display:flex; flex-direction:column;">
                     ${docHeader}
                     
@@ -679,6 +692,8 @@ App.gerarDocumentoPrint = async () => {
 
         } else if (tipo === 'certificado') {
             printContainer.innerHTML = `
+                ${reportStyles}
+                ${painelImpressao}
                 <div style="padding: 30px; font-family: 'Times New Roman', serif; color: #000; text-align: center; border: 15px solid #2c3e50; outline: 4px solid #d4af37; outline-offset: -8px; min-height: 90vh; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; background: #fff;">
                     
                     <h1 style="font-size: 38px; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 5px;">Certificado de Conclusão</h1>
@@ -710,8 +725,7 @@ App.gerarDocumentoPrint = async () => {
             let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 landscape; margin: 10mm; } }`; printContainer.appendChild(style);
         }
 
-        setTimeout(() => { window.print(); }, 500);
-
+        // Removido setTimeout forçado - O Gestor clica no botão azul de imprimir!
     } catch (e) {
         App.showToast("Erro ao gerar o documento.", "error");
     } finally {

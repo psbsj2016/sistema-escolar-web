@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO DE CADASTROS V103 (RESPONSIVIDADE INTELIGENTE)
+// MÓDULO DE CADASTROS V103 (RESPONSIVIDADE INTELIGENTE E DADOS SEGUROS)
 // =========================================================
 
 App.abrirModalCadastroModulo = async (tipo, id) => {
@@ -43,7 +43,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
         </div>
     `;
     
-    // 🚀 CORREÇÃO: Utilizando as novas classes CSS Responsivas
+    // Utilizando as novas classes CSS Responsivas
     const row = (conteudo) => `<div class="form-grid-2">${conteudo}</div>`;
     const row3 = (conteudo) => `<div class="form-grid-3">${conteudo}</div>`;
     const section = (title, margin = '25px') => `<div style="color:#2c3e50; font-size:14px; font-weight:600; margin:${margin} 0 10px 0; border-bottom:1px solid #eee; padding-bottom:5px;">${title}</div>`;
@@ -141,6 +141,9 @@ App.salvarCadastro = async () => {
     const t = App.entidadeAtual; 
     const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
     const p = {}; 
+    
+    // 🛡️ CORREÇÃO: Garante a persistência do ID ao atualizar um cadastro
+    if (App.idEdicao) p.id = App.idEdicao;
 
     if (t === 'aluno') {
         p.nome = document.getElementById('a-nome').value;
@@ -181,18 +184,17 @@ App.salvarCadastro = async () => {
         
         if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); return; }
     }
-
     else if (t === 'estoque') {
         p.nome = document.getElementById('est-nome').value;
         p.codigo = document.getElementById('est-codigo').value;
-        p.valor = document.getElementById('est-valor').value;
-        p.quantidade = document.getElementById('est-qtd').value;
-        p.quantidadeMinima = document.getElementById('est-min').value;
         p.obs = document.getElementById('est-obs').value;
         
+        // 🛡️ CORREÇÃO: Conversão segura para números, impedindo falhas matemáticas futuras
+        p.valor = parseFloat(document.getElementById('est-valor').value) || 0;
+        p.quantidade = parseInt(document.getElementById('est-qtd').value) || 0;
+        p.quantidadeMinima = parseInt(document.getElementById('est-min').value) || 0;
+        
         if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); return; }
-        if(!p.quantidade) { p.quantidade = 0; }
-        if(!p.quantidadeMinima) { p.quantidadeMinima = 0; }
     }
 
     const btn = document.querySelector('.btn-confirm');
