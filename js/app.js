@@ -998,8 +998,8 @@ const App = {
         }
     },
 
-    // =========================================================
-    // CONFIGURAÇÕES E ESCOLA
+   // =========================================================
+    // CONFIGURAÇÕES E ESCOLA (COM NOVO DESIGN DO MENU LATERAL)
     // =========================================================
     carregarDadosEscola: async () => { 
         try { 
@@ -1015,10 +1015,20 @@ const App = {
             
             const logoTitle = document.querySelector('.logo-area h2'); 
             const planoAtual = App.getPlanoAtual();
-            let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
-            const badgeHtml = `<div style="margin-top:8px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 ${App.escapeHTML(planoAtual)}</span></div>`;
-            if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}`; 
             
+            // 🎨 1. Selo do Plano
+            let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
+            const badgeHtml = `<div style="margin-top:8px; margin-bottom:5px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 PLANO ${App.escapeHTML(planoAtual)}</span></div>`;
+            
+            // 👤 2. Informação do Utilizador Logado
+            const userLogin = App.usuario ? App.usuario.login : 'Desconhecido';
+            const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
+            const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
+
+            // 🏗️ Monta a estrutura final
+            if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
+            
+            // 🖼️ Logo da Escola
             const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
             if(escola.foto && escola.foto.length > 50) { 
                 if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
