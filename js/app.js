@@ -1,5 +1,5 @@
 // =========================================================
-// SISTEMA ESCOLAR - APP.JS (V156 - MASTER: PDV, SININHO, VITRINE E MÁSCARAS)
+// SISTEMA ESCOLAR - APP.JS (V157 - LIMITES DE PLANOS, TRIAL 7 DIAS E ANTI-PIRATARIA)
 // =========================================================
 
 const API_URL = CONFIG.API_URL; 
@@ -34,11 +34,75 @@ const App = {
 
     getPlanoAtual: () => { return localStorage.getItem(App.getTenantKey('escola_plano')) || 'Teste'; },
 
+    // 🛡️ NOVO: Impressão Digital do Dispositivo (Anti-Pirataria)
+    getDeviceId: () => {
+        let deviceId = localStorage.getItem('ptt_device_id');
+        if (!deviceId) {
+            deviceId = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            localStorage.setItem('ptt_device_id', deviceId);
+        }
+        return deviceId;
+    },
+
+    // 🛡️ NOVO: Bloqueio do Período de Teste (7 Dias)
+    verificarBloqueioTeste: (escola) => {
+        const plano = escola.plano || 'Teste';
+        if (plano === 'Teste') {
+            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
+            const hoje = new Date();
+            const diffTime = Math.abs(hoje - dataCriacao);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays >= 7) {
+                App.showToast("⚠️ O seu período de teste expirou! Escolha um plano para continuar a usar o sistema.", "error");
+                const sidebar = document.querySelector('.sidebar');
+                if(sidebar) sidebar.style.display = 'none'; // Esconde menu
+                const content = document.querySelector('.content');
+                if(content && window.innerWidth > 768) content.style.marginLeft = '0';
+                return true; // Sistema Bloqueado
+            }
+        }
+        // Se pagou ou está dentro do prazo, garante que o menu aparece
+        const sidebar = document.querySelector('.sidebar');
+        if(sidebar) sidebar.style.display = 'flex';
+        const content = document.querySelector('.content');
+        if(content && window.innerWidth > 768) content.style.marginLeft = '260px';
+        return false; // Sistema Livre
+    },
+
+    // 🛡️ NOVO: Cão de Guarda (Limites de Cadastros)
+    verificarLimites: async (tipo) => {
+        const plano = App.getPlanoAtual();
+        if (plano === 'Premium' || plano === 'Teste') return true; // Sem limites
+        
+        try {
+            if (tipo === 'aluno') {
+                const alunos = await App.api('/alunos');
+                const limite = plano === 'Essencial' ? 20 : (plano === 'Profissional' ? 80 : 0);
+                if (alunos.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} alunos atingido no plano ${plano}. Faça o upgrade para continuar a crescer!`, "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 2000);
+                    return false;
+                }
+            } else if (tipo === 'usuario') {
+                const usuarios = await App.api('/usuarios');
+                const limite = plano === 'Essencial' ? 2 : (plano === 'Profissional' ? 4 : 0);
+                if (usuarios.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipa!`, "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 2000);
+                    return false;
+                }
+            }
+            return true;
+        } catch(e) { return false; }
+    },
+
     verificarPermissao: (funcionalidade) => {
         const plano = App.getPlanoAtual();
-        if (plano === 'Premium') return true; 
-        if (funcionalidade === 'whatsapp' && (plano === 'Essencial' || plano === 'Teste')) {
-            App.showToast("💎 Funcionalidade Premium. Faça o upgrade para cobrar via WhatsApp num clique!", "warning");
+        if (plano === 'Premium' || plano === 'Teste') return true; // Teste libera tudo!
+        
+        if (funcionalidade === 'whatsapp' && plano === 'Essencial') {
+            App.showToast("💎 Funcionalidade disponível a partir do Plano Profissional. Faça o upgrade!", "warning");
             setTimeout(() => App.renderizarMeuPlano(), 1500); return false;
         }
         if (funcionalidade === 'dossie' && plano !== 'Premium') {
@@ -59,17 +123,15 @@ const App = {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, options);
             
-            // LER A RESPOSTA MESMO COM ERRO (Para pegar as mensagens do servidor)
+            // LER A RESPOSTA MESMO COM ERRO
             let data;
             try { data = await response.json(); } catch(e) { data = null; }
 
             if (!response.ok) { 
-                // Se for 401/403 e NÃO for a rota de login, a sessão expirou
                 if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth/')) { 
                     App.showToast("Sessão expirada. Faça login novamente.", "warning");
                     App.logout(); 
                 }
-                // Retorna os dados de erro para o ecrã poder mostrar a mensagem (Ex: "Senha incorreta")
                 return data || { error: `Erro HTTP: ${response.status}` };
             }
             
@@ -77,7 +139,6 @@ const App = {
             return data;
         } catch (error) { 
             console.error("Erro no fetch:", error);
-            // Nunca retornar nulo. Retornamos um objeto padronizado para evitar falhas no ecrã
             return method === 'GET' ? [] : { error: 'Falha na conexão. Verifique a internet.' }; 
         }
     },
@@ -103,7 +164,7 @@ const App = {
     mascaraValor: (i) => { let v = i.value.replace(/\D/g, ""); v = (v / 100).toFixed(2) + ""; i.value = v; },
 
     // =========================================================
-    // ARRANQUE E LOGIN (COM GATILHOS DE RASTREAMENTO GA4)
+    // ARRANQUE E LOGIN
     // =========================================================
     init: async () => {
         localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
@@ -141,13 +202,15 @@ const App = {
         const txt = btn.innerText; btn.innerText = "Autenticando... ⏳"; btn.disabled = true;
         
         try {
-            const res = await App.api('/auth/login', 'POST', { login: login, senha: pass });
+            // 🛡️ Envia o deviceId para validação Anti-Pirataria no servidor
+            const deviceId = App.getDeviceId();
+            const res = await App.api('/auth/login', 'POST', { login: login, senha: pass, deviceId: deviceId });
+            
             if(res && res.success) {
                 App.usuario = res.usuario;
                 localStorage.setItem('usuario_logado', JSON.stringify(res.usuario));
                 localStorage.setItem('token_acesso', res.token);
                 
-                // 🚀 RASTREAMENTO GA4: Evento de Login
                 if (typeof gtag === 'function') gtag('event', 'login', { method: 'Sistema PTT' });
                 
                 App.aplicarTemaSalvo();
@@ -156,7 +219,10 @@ const App = {
 
                 App.entrarNoSistema();
                 App.showToast('Bem-vindo ao sistema!', 'success');
-            } else { App.showToast(res.error || "Login ou senha incorretos", "error"); }
+            } else { 
+                // A API pode retornar "Este utilizador já está logado noutro dispositivo"
+                App.showToast(res.error || "Login ou senha incorretos", "error"); 
+            }
         } catch(e) { App.showToast("Erro ao conectar no servidor", "error"); } 
         finally { btn.innerText = txt; btn.disabled = false; }
     },
@@ -244,7 +310,6 @@ const App = {
             if(res && res.success) { 
                 document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'block'; 
                 if(typeof confetti === 'function') confetti(); 
-                // 🚀 RASTREAMENTO GA4: Novo Lead/Escola
                 if (typeof gtag === 'function') gtag('event', 'generate_lead', { currency: 'BRL', value: 0.00, tipo_conta: 'Nova Escola' });
             } 
             else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
@@ -395,14 +460,19 @@ const App = {
     },
 
     // =========================================================
-    // ROTEAMENTO DE TELAS
+    // ROTEAMENTO DE TELAS (BLINDAGEM DO PERÍODO DE TESTE)
     // =========================================================
     renderizarTela: async (tela) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🚀 RASTREAMENTO GA4: Pageview Virtual
+        // 🛡️ Se o teste de 7 dias acabou, o gestor fica PRESO na tela de pagamento
+        const escolaPerfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        if (tela !== 'plano' && tela !== 'login' && App.verificarBloqueioTeste(escolaPerfil)) {
+            return App.renderizarMeuPlano(); 
+        }
+
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
 
         if (tela === 'chamada') { App.setTitulo("Chamada"); App.renderizarChamadaPro(); }
@@ -423,15 +493,25 @@ const App = {
     renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
 
     // =========================================================
-    // 💎 O MEU PLANO (VITRINE DO MERCADO PAGO RESTAURADA DA V145)
+    // 💎 O MEU PLANO (NOVA VITRINE ESTRATÉGICA E CONTAGEM DE 7 DIAS)
     // =========================================================
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
-        
         const planoAtual = App.getPlanoAtual();
+        
+        let diasRestantes = 0;
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        if (escola.dataCriacao) {
+            const diffTime = Math.abs(new Date() - new Date(escola.dataCriacao));
+            diasRestantes = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            if(diasRestantes < 0) diasRestantes = 0;
+        }
+
         let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
-        const infoPlano = planoAtual === 'Teste' ? '<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:4px 10px; border-radius:20px;">Plano Teste (7 dias restantes)</strong>' : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()}</strong>`;
+        const infoPlano = planoAtual === 'Teste' 
+            ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px;">⏳ Plano Teste (${diasRestantes} dias restantes)</strong>` 
+            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()}</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
@@ -456,7 +536,12 @@ const App = {
                     <div style="font-size:32px; font-weight:bold; color:#27ae60; margin:15px 0;">R$ 97<span style="font-size:14px; color:#999;">/mês</span></div>
                     <p style="color:#666; font-size:13px; margin-bottom:20px;">Para pequenos cursos e professores particulares.</p>
                     <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
-                        <li style="margin-bottom:10px;">✅ Até 60 Alunos Ativos</li><li style="margin-bottom:10px;">✅ 2 Acessos (Gestor + Sec)</li><li style="margin-bottom:10px;">✅ Gestão Pedagógica</li><li style="margin-bottom:10px;">✅ Controlo Financeiro</li><li style="margin-bottom:10px; color:#ccc;">❌ Cobrança WhatsApp</li><li style="color:#ccc;">❌ Dossiê Executivo</li>
+                        <li style="margin-bottom:10px;">✅ Até 20 Alunos Ativos</li>
+                        <li style="margin-bottom:10px;">✅ 2 Acessos (Gestor + 1 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Controle Financeiro</li>
+                        <li style="margin-bottom:10px; color:#ccc;">❌ Cobrança via WhatsApp</li>
+                        <li style="color:#ccc;">❌ Dossiê Executivo</li>
                     </ul>
                     <button class="btn-primary" style="width:100%; background:transparent; color:#27ae60; border:2px solid #27ae60; justify-content:center;" onclick="App.comprarPlano('Essencial', 'https://mpago.la/2LcgaA1')">Assinar Essencial</button>
                 </div>
@@ -467,7 +552,12 @@ const App = {
                     <div style="font-size:32px; font-weight:bold; color:#3498db; margin:15px 0;">R$ 147<span style="font-size:14px; color:#999;">/mês</span></div>
                     <p style="color:#666; font-size:13px; margin-bottom:20px;">A solução completa para acabar com a inadimplência.</p>
                     <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
-                        <li style="margin-bottom:10px;">✅ Até 200 Alunos Ativos</li><li style="margin-bottom:10px;">✅ 5 Acessos (Equipa)</li><li style="margin-bottom:10px;">✅ Gestão Pedagógica</li><li style="margin-bottom:10px;">✅ Financeiro Completo</li><li style="margin-bottom:10px;">✅ <strong>Cobrança WhatsApp</strong></li><li style="color:#ccc;">❌ Dossiê Executivo</li>
+                        <li style="margin-bottom:10px;">✅ Até 80 Alunos Ativos</li>
+                        <li style="margin-bottom:10px;">✅ 4 Acessos (Gestor + 3 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Financeiro Completo</li>
+                        <li style="margin-bottom:10px;">✅ <strong>Cobrança WhatsApp</strong></li>
+                        <li style="color:#ccc;">❌ Dossiê Executivo</li>
                     </ul>
                     <button class="btn-primary" style="width:100%; background:#3498db; justify-content:center;" onclick="App.comprarPlano('Profissional', 'https://mpago.la/1KmmwZf')">Assinar Profissional</button>
                 </div>
@@ -477,7 +567,12 @@ const App = {
                     <div style="font-size:32px; font-weight:bold; color:#f39c12; margin:15px 0;">R$ 297<span style="font-size:14px; color:#999;">/mês</span></div>
                     <p style="color:#666; font-size:13px; margin-bottom:20px;">Para escolas estruturadas e sem limites operacionais.</p>
                     <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
-                        <li style="margin-bottom:10px;">✅ Alunos Ilimitados</li><li style="margin-bottom:10px;">✅ Acessos Ilimitados</li><li style="margin-bottom:10px;">✅ Gestão Pedagógica</li><li style="margin-bottom:10px;">✅ Financeiro Completo</li><li style="margin-bottom:10px;">✅ Cobrança WhatsApp</li><li>✅ <strong>Dossiê Executivo</strong></li>
+                        <li style="margin-bottom:10px;">✅ Alunos Ilimitados</li>
+                        <li style="margin-bottom:10px;">✅ Acessos Ilimitados</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Financeiro Completo</li>
+                        <li style="margin-bottom:10px;">✅ Cobrança WhatsApp</li>
+                        <li>✅ <strong>Dossiê Executivo</strong></li>
                     </ul>
                     <button class="btn-primary" style="width:100%; background:transparent; color:#f39c12; border:2px solid #f39c12; justify-content:center;" onclick="App.comprarPlano('Premium', 'https://mpago.la/1DNyscL')">Assinar Premium</button>
                 </div>
@@ -523,7 +618,12 @@ const App = {
         } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
+    // 🛡️ BLOQUEIO DE CADASTRO COM CÃO DE GUARDA
     abrirModalCadastro: async (tipo, id) => { 
+        if (!id && (tipo === 'aluno')) {
+            const podeCadastrar = await App.verificarLimites('aluno');
+            if (!podeCadastrar) return; // Bloqueia abertura da tela
+        }
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
     abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
@@ -719,7 +819,7 @@ const App = {
                 const valorFmt = item.valor ? `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '-';
                 
                 celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.codigo || '-')) + TB.td(qtd, 'center') + TB.td(min, 'center') + TB.td(valorFmt) + TB.td(statusFmt, 'center'); 
-            }           
+            }            
  
             const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
             const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
@@ -753,12 +853,21 @@ const App = {
     },
 
     // =========================================================
-    // CONFIGURAÇÕES, ESCOLA E MÁSCARAS (RESTAURADO DA V145)
+    // CONFIGURAÇÕES E ESCOLA
     // =========================================================
     carregarDadosEscola: async () => { 
         try { 
             const escola = await App.api('/escola'); if(!escola) return;
+            
+            // 🛡️ Garante que a data de criação existe para o Trial de 7 Dias
+            if (!escola.dataCriacao) {
+                escola.dataCriacao = new Date().toISOString();
+                await App.api('/escola', 'PUT', escola);
+            }
+
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
+            
             const logoTitle = document.querySelector('.logo-area h2'); 
             const planoAtual = App.getPlanoAtual();
             let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
@@ -770,7 +879,10 @@ const App = {
                 if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
                 img.src = escola.foto; 
             } else if(img) { img.remove(); }
-            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola)); 
+            
+            // 🛡️ Após carregar os dados, verifica se o Trial expirou
+            App.verificarBloqueioTeste(escola);
+
         } catch(e) { console.log("Carregando perfil..."); } 
     },
     
@@ -871,7 +983,7 @@ const App = {
     },
 
     // =========================================================
-    // MINHA CONTA E GESTÃO DE EQUIPA (COM "OLHO" DA SENHA - RESTAURADO DA V145)
+    // MINHA CONTA E GESTÃO DE EQUIPA (CÃO DE GUARDA)
     // =========================================================
     toggleSenhaVisibilidade: (id) => { 
         const input = document.getElementById(id); 
@@ -961,7 +1073,13 @@ const App = {
         if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
 
         const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
-        if (!App.idEdicaoUsuario) { payload.donoId = App.usuario.id; }
+        
+        // 🛡️ BLOQUEIO DE CÃO DE GUARDA: Só permite criar se o plano deixar
+        if (!App.idEdicaoUsuario) { 
+            const podeCadastrar = await App.verificarLimites('usuario');
+            if (!podeCadastrar) return; // Trava a execução
+            payload.donoId = App.usuario.id; 
+        }
 
         const btn = document.getElementById('btn-save-user'); 
         const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
@@ -976,7 +1094,6 @@ const App = {
                 res = await App.api('/usuarios', 'POST', payload); 
             }
 
-            // 🛡️ NOVA VALIDAÇÃO: Verifica se o servidor recusou (Ex: Login já existe)
             if (res && res.error) {
                 App.showToast(res.error, "error");
             } else {
