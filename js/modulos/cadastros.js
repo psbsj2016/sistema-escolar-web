@@ -56,10 +56,19 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             <option value="Masculino" ${v(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
             <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
         `;
+        // 🛡️ NOVO: Opções de Status
+        const opStatus = `
+            <option value="Ativo" ${!dados.status || dados.status === 'Ativo' ? 'selected' : ''}>🟢 Ativo</option>
+            <option value="Trancado" ${dados.status === 'Trancado' ? 'selected' : ''}>🟡 Trancado / Pausado</option>
+            <option value="Cancelado" ${dados.status === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
+        `;
         
         html = 
             section('1. Dados Pessoais', '0') +
-            input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
+            row(
+                input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
+                select('Status da Matrícula', 'a-status', opStatus) // 👈 Adicionado aqui
+            ) +
             row(
                 input('CPF', 'a-cpf', v(dados.cpf), '000.000.000-00', 'tel', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
                 input('RG', 'a-rg', v(dados.rg), '', 'text')
@@ -147,6 +156,7 @@ App.salvarCadastro = async () => {
 
     if (t === 'aluno') {
         p.nome = document.getElementById('a-nome').value;
+        p.status = document.getElementById('a-status').value || 'Ativo'; // 👈 NOVO STATUS
         p.cpf = document.getElementById('a-cpf').value;
         p.rg = document.getElementById('a-rg').value;
         p.nascimento = document.getElementById('a-nasc').value;

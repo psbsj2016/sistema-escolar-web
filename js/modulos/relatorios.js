@@ -424,7 +424,16 @@ App.gerarDossie = async () => {
                 <div class="d-box">
                     <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">👥 Demografia dos Alunos</h3>
                     <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; gap:20px;">
-                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 120px;"><div style="font-size:32px; font-weight:bold; color:#2c3e50; line-height:1; margin-bottom:5px;">${alunos.length}</div><div style="font-size:11px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">Alunos Ativos</div></div>
+                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 120px;"><div style="display:flex; flex-direction:column; gap:10px;">
+                            <div style="background:#f4f6f7; padding:15px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 140px;">
+                                <div style="font-size:28px; font-weight:bold; color:#27ae60; line-height:1; margin-bottom:5px;">${alunos.filter(a => !a.status || a.status === 'Ativo').length}</div>
+                                <div style="font-size:10px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">🟢 Ativos</div>
+                            </div>
+                            <div style="background:#fdf2f2; padding:10px; border-radius:8px; text-align:center; border:1px solid #f5b7b1; min-width: 140px;">
+                                <div style="font-size:20px; font-weight:bold; color:#e74c3c; line-height:1; margin-bottom:5px;">${alunos.filter(a => a.status && a.status !== 'Ativo').length}</div>
+                                <div style="font-size:10px; font-weight:bold; color:#c0392b; text-transform:uppercase;">🔴 Inativos (Evasão)</div>
+                            </div>
+                        </div>
                         <div style="position: relative; width: 140px; height: 140px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
                         <div style="display:flex; flex-direction:column; gap:10px; min-width:180px;">
                             <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:16px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percMasc}%</div></div>
@@ -464,7 +473,8 @@ App.gerarFichaSetup = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Carregando...</p>';
     try {
         const alunos = await App.api('/alunos');
-        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
         
         const formFicha = `
             <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
@@ -542,9 +552,10 @@ App.renderizarGeradorDocumentos = async () => {
     
     try {
         const alunos = await App.api('/alunos');
-        const alunosOptions = alunos.length > 0 
-            ? `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Turma: ${App.escapeHTML(a.turma || '-')})</option>`).join('')
-            : `<option value="">Nenhum aluno encontrado</option>`;
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const alunosOptions = alunosAtivos.length > 0 
+            ? `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Turma: ${App.escapeHTML(a.turma || '-')})</option>`).join('')
+            : `<option value="">Nenhum aluno ativo encontrado</option>`;
 
         const formHTML = `
             <div class="card" style="max-width: 600px; margin: 0 auto; border-top: 4px solid var(--accent);">

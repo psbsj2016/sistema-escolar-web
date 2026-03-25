@@ -423,7 +423,9 @@ const App = {
         App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
         try {
             const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
-            const listaAlunos = Array.isArray(alunos) ? alunos : []; const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
+            const todosAlunos = Array.isArray(alunos) ? alunos : [];
+            const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); // Filtra ativos para o Dashboard
+            const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
             const dataHoje = new Date(); const mesAtual = dataHoje.getMonth() + 1; const anoAtual = dataHoje.getFullYear();
             const financasMes = listaFin.filter(f => { if(!f.vencimento) return false; const parts = f.vencimento.split('-'); return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual; });
             const totalRecebido = financasMes.filter(f => f.status === 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
@@ -938,7 +940,7 @@ const App = {
         };
 
         let cabecalho = '';
-        if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('WhatsApp') + TB.th('Ações', 'right');
+        if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('Status') + TB.th('WhatsApp') + TB.th('Ações', 'right');
         if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
         if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
         if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
@@ -946,7 +948,14 @@ const App = {
 
         const corpo = dados.map(item => {
             let celulas = '';
-            if (tipo === 'aluno') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.turma || '-')) + TB.td(App.escapeHTML(item.whatsapp || '-')); } 
+            if (tipo === 'aluno') { 
+                const statusAluno = item.status || 'Ativo';
+                const corStatus = statusAluno === 'Ativo' ? '#27ae60' : (statusAluno === 'Trancado' ? '#f39c12' : '#e74c3c');
+                const badgeStatus = `<span style="background:${corStatus}20; color:${corStatus}; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; border: 1px solid ${corStatus}50;">${statusAluno}</span>`;
+                
+                celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.turma || '-')) + TB.td(badgeStatus) + TB.td(App.escapeHTML(item.whatsapp || '-')); 
+            }
+
             else if (tipo === 'turma') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); } 
             else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
             else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
@@ -967,8 +976,11 @@ const App = {
             
             let botoes = [];
             if (tipo === 'aluno') {
+                const statusAluno = item.status || 'Ativo';
+                botoes.push(TB.btn('🔄', '#8e44ad', `App.alterarStatusAluno('${item.id}', '${statusAluno}')`, 'Alterar Status (Ativo/Trancado/Cancelado)'));
                 botoes.push(TB.btn('⏱️', '#3498db', `App.abrirRelatorioFrequencia('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Ver Histórico de Horas / Frequência'));
-                if (App.usuario.tipo !== 'Professor') {
+                
+                if (App.usuario.tipo !== 'Professor' && statusAluno === 'Ativo') {
                     botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
                 }
             }
@@ -976,7 +988,7 @@ const App = {
             
             botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
             botoes.push(TB.btn('🗑️', '#e74c3c', `App.excluir('${epExcluir}', '${item.id}')`, 'Excluir'));
-
+            
             celulas += TB.td(TB.acoes(botoes), 'right'); return TB.tr(celulas);
         }).join('');
         return TB.estrutura(cabecalho, corpo);
@@ -995,6 +1007,30 @@ const App = {
                 }
             } catch(e) { App.showToast("Erro ao excluir.", "error"); } 
             finally { document.body.style.cursor = 'default'; }
+        }
+    },
+
+    alterarStatusAluno: async (id, statusAtual) => {
+        const opcoes = "Digite o número da opção desejada:\n1 - 🟢 Ativo\n2 - 🟡 Trancado\n3 - 🔴 Cancelado";
+        const res = prompt(`Status Atual: ${statusAtual}\n\n${opcoes}`);
+        
+        let novoStatus = null;
+        if(res === '1') novoStatus = 'Ativo';
+        if(res === '2') novoStatus = 'Trancado';
+        if(res === '3') novoStatus = 'Cancelado';
+
+        if(novoStatus && novoStatus !== statusAtual) {
+            App.showToast("Atualizando status... ⏳", "info");
+            document.body.style.cursor = 'wait';
+            try {
+                const aluno = await App.api(`/alunos/${id}`);
+                await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
+                App.showToast("Status alterado com sucesso!", "success");
+                App.renderizarLista('aluno');
+            } catch(e) { App.showToast("Erro ao atualizar o status.", "error"); }
+            finally { document.body.style.cursor = 'default'; }
+        } else if (res) {
+            App.showToast("Ação cancelada ou status inválido.", "warning");
         }
     },
 
@@ -1190,7 +1226,7 @@ const App = {
                         </div>
                     </div>
                     <div class="card" style="flex:2; min-width:300px;">
-                        <h3>Equipa e Acessos</h3>
+                        <h3>Equipe e Acessos</h3>
                         <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
                             <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
                             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">

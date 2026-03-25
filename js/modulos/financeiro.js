@@ -28,7 +28,8 @@ App.renderizarFinanceiroPro = async () => {
                 <input type="${tipo}" id="${id}" value="${val}" placeholder="${placeholder}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
             </div>`;
 
-        const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const formGerador = `
             <div style="display:flex; align-items:center; margin-bottom:20px;">
                 <div style="font-size:24px; margin-right:10px;">💰</div>
