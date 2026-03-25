@@ -41,7 +41,7 @@
         <div class="login-box">
             <h2 style="margin-top:0; color:var(--accent);">👑 CEO Login</h2>
             <p style="color:#94a3b8; font-size:14px; margin-bottom:20px;">Acesso restrito à gestão de licenças.</p>
-            <input type="password" id="master-pwd" placeholder="Senha Master" onkeypress="if(event.key === 'Enter') Admin.login()">
+            <input type="password" id="master-pwd" placeholder="Senha Master" autocomplete="off" onkeypress="if(event.key === 'Enter') Admin.login()">
             <button onclick="Admin.login()">Autenticar</button>
             <div id="login-error" style="color:var(--danger); font-size:12px; margin-top:10px; display:none;">Senha incorreta!</div>
         </div>
@@ -80,7 +80,8 @@
             <div style="background: var(--card); border-radius: 12px; border: 1px solid #334155; overflow: hidden;">
                 <div style="padding: 20px; border-bottom: 1px solid #334155; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
                     <h2 style="margin:0; font-weight:400; font-size:18px;">Escolas Gerenciadas</h2>
-                    <input type="text" id="pesquisa-admin" placeholder="🔍 Pesquisar e-mail ou plano..." oninput="Admin.filtrarTabela(this.value)" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                    
+                    <input type="text" id="pesquisa-admin" placeholder="🔍 Pesquisar e-mail ou plano..." oninput="Admin.filtrarTabela(this.value)" autocomplete="off" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 </div>
                 
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -109,10 +110,10 @@
             
             <div id="vip-form-area">
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">E-mail do Cliente:</label>
-                <input type="email" id="vip-email" placeholder="escola@email.com" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <input type="email" id="vip-email" placeholder="escola@email.com" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">WhatsApp (com DDD):</label>
-                <input type="text" id="vip-zap" placeholder="Ex: 11999999999" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <input type="text" id="vip-zap" placeholder="Ex: 11999999999" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Plano Contratado:</label>
                 <select id="vip-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
@@ -170,7 +171,6 @@
         let cacheClientes = [];
 
         const Admin = {
-            // 🛡️ ESCUDO ANTI-XSS FRONTEND
             escapeHTML: (str) => {
                 if (str === null || str === undefined) return '';
                 return String(str)
@@ -228,7 +228,6 @@
                         document.getElementById('master-pwd').value = '';
                         Admin.init();
                     } else {
-                        // Mostra o erro real (ex: "Senha Incorreta" ou "Muitas tentativas - Bloqueado")
                         errEl.innerText = data.error || "Acesso negado!";
                         errEl.style.display = 'block';
                     }
@@ -274,7 +273,6 @@
                     let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
                     let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '<span style="color:#64748b;">Aguardando...</span>');
                     
-                    // 🧠 INTELIGÊNCIA VISUAL 2.0 (Com blindagem XSS)
                     let planoNome = c.plano;
                     if (!planoNome || planoNome === 'Aguardando' || planoNome === 'Teste') {
                         if (c.pinAtivacao) {
