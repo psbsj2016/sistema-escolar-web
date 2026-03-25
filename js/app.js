@@ -999,41 +999,56 @@ const App = {
     },
 
    // =========================================================
-    // CONFIGURAÇÕES E ESCOLA (COM NOVO DESIGN DO MENU LATERAL)
+    // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
     // =========================================================
+    
+    // 🎨 Função Auxiliar: Apenas desenha o cabeçalho (não faz requisições)
+    atualizarUIHeader: (escola) => {
+        if (!escola) return;
+        const logoTitle = document.querySelector('.logo-area h2'); 
+        
+        // Lê o plano diretamente do objeto que foi passado (ignora o cache antigo do navegador)
+        const planoAtual = escola.plano || 'Teste';
+        
+        let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
+        const badgeHtml = `<div style="margin-top:8px; margin-bottom:5px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 PLANO ${App.escapeHTML(planoAtual)}</span></div>`;
+        
+        const userLogin = App.usuario ? App.usuario.login : 'Desconhecido';
+        const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
+        const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
+
+        if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
+        
+        const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
+        if(escola.foto && escola.foto.length > 50) { 
+            if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
+            img.src = escola.foto; 
+        } else if(img) { img.remove(); }
+    },
+
     carregarDadosEscola: async () => { 
         try { 
-            const escola = await App.api('/escola'); if(!escola) return;
+            // ⚡ 1. Renderização Imediata (Tiro e Queda): Desenha a tela usando o que tem na memória do celular. Evita o ecrã em branco!
+            const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
+            if (cacheEscola) {
+                App.atualizarUIHeader(cacheEscola);
+            }
+
+            // 🔄 2. Busca Fantasma (Assíncrona): Vai ao servidor Render conferir se o plano ou a logo mudaram enquanto o app estava fechado
+            const escola = await App.api('/escola'); 
+            if(!escola) return;
             
             if (!escola.dataCriacao) {
                 escola.dataCriacao = new Date().toISOString();
                 await App.api('/escola', 'PUT', escola);
             }
 
+            // 💾 3. Guarda a Verdade Absoluta: Atualiza a memória local com os dados frescos do servidor
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
             
-            const logoTitle = document.querySelector('.logo-area h2'); 
-            const planoAtual = App.getPlanoAtual();
-            
-            // 🎨 1. Selo do Plano
-            let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
-            const badgeHtml = `<div style="margin-top:8px; margin-bottom:5px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 PLANO ${App.escapeHTML(planoAtual)}</span></div>`;
-            
-            // 👤 2. Informação do Utilizador Logado
-            const userLogin = App.usuario ? App.usuario.login : 'Desconhecido';
-            const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
-            const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
-
-            // 🏗️ Monta a estrutura final
-            if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
-            
-            // 🖼️ Logo da Escola
-            const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
-            if(escola.foto && escola.foto.length > 50) { 
-                if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
-                img.src = escola.foto; 
-            } else if(img) { img.remove(); }
+            // ✨ 4. Redesenha Mágicamente: Se o plano mudou no computador, o celular redesenha o cabeçalho agora mesmo sem o usuário perceber!
+            App.atualizarUIHeader(escola);
             
             App.verificarBloqueioTeste(escola);
 
