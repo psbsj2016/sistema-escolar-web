@@ -84,13 +84,13 @@
                     <input type="text" id="pesquisa-admin" placeholder="🔍 Pesquisar e-mail ou plano..." oninput="Admin.filtrarTabela(this.value)" autocomplete="off" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 </div>
                 
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
                     <thead>
                         <tr style="background: #0f172a; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
-                            <th style="padding: 15px 20px;">E-mail da Escola</th>
-                            <th style="padding: 15px 20px;">Plano Atual</th>
-                            <th style="padding: 15px 20px;">Status / PIN</th>
-                            <th style="padding: 15px 20px; text-align: right;">Ações de Gestão</th>
+                            <th style="padding: 15px 20px; width: 30%;">E-mail da Escola</th>
+                            <th style="padding: 15px 20px; width: 15%;">Plano Atual</th>
+                            <th style="padding: 15px 20px; width: 20%;">Status / PIN</th>
+                            <th style="padding: 15px 20px; text-align: right; width: 35%;">Ações de Gestão</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-clientes">
@@ -270,6 +270,10 @@
                 if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Nenhuma escola encontrada.</td></tr>'; return; }
                 
                 tbody.innerHTML = lista.map(c => {
+                    // LIMPEZA CRÍTICA: Trim no e-mail para evitar espaços fantasmas
+                    const rawEmail = (c.email || "").trim();
+                    const safeEmail = Admin.escapeHTML(rawEmail);
+
                     let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
                     let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '<span style="color:#64748b;">Aguardando...</span>');
                     
@@ -294,22 +298,20 @@
                     else if(planoNome === 'Premium') planoClass = 'plan-premium';
                     else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
 
-                    const safeEmail = Admin.escapeHTML(c.email);
-                    const safePlanoDisplay = Admin.escapeHTML(planoDisplay);
                     const safeStatus = Admin.escapeHTML(c.status);
                     const safePinAtivacao = c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '';
 
                     return `
                     <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
-                        <td style="padding:15px; font-weight:bold;">${safeEmail}</td>
+                        <td style="padding:15px; font-weight:bold; max-width: 250px; word-break: break-all; white-space: normal;">${safeEmail}</td>
                         <td style="padding:15px;">
-                            <span class="${planoClass}">${safePlanoDisplay}</span>
+                            <span class="${planoClass}">${Admin.escapeHTML(planoDisplay)}</span>
                         </td>
                         <td style="padding:15px; font-family:monospace;">
                             <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-right: 10px; ${badgeClass}">${safeStatus}</span>
                             ${statusPin}
                         </td>
-                        <td style="padding:15px; text-align:right;">
+                        <td style="padding:15px; text-align:right; white-space: nowrap;">
                             <button onclick="Admin.abrirModalMudarPlano('${safeEmail}', '${Admin.escapeHTML(planoNome)}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
                             
                            ${safePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + safePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
@@ -322,8 +324,13 @@
             },
 
             filtrarTabela: (termo) => {
-                const t = termo.toLowerCase();
-                const filtrados = cacheClientes.filter(c => c.email.toLowerCase().includes(t) || (c.plano && c.plano.toLowerCase().includes(t)) || c.status.toLowerCase().includes(t) || (c.pinAtivacao && c.pinAtivacao.toLowerCase().includes(t)));
+                const t = termo.toLowerCase().trim();
+                const filtrados = cacheClientes.filter(c => 
+                    (c.email && c.email.toLowerCase().includes(t)) || 
+                    (c.plano && c.plano.toLowerCase().includes(t)) || 
+                    (c.status && c.status.toLowerCase().includes(t)) || 
+                    (c.pinAtivacao && c.pinAtivacao.toLowerCase().includes(t))
+                );
                 Admin.desenharTabela(filtrados);
             },
 
@@ -374,7 +381,7 @@
             fecharModalVip: () => { document.getElementById('modal-vip').style.display = 'none'; },
 
             gerarAcessoVip: async () => {
-                const email = document.getElementById('vip-email').value;
+                const email = document.getElementById('vip-email').value.trim();
                 const zap = document.getElementById('vip-zap').value.replace(/\D/g, ''); 
                 const plano = document.getElementById('vip-plano').value;
                 
@@ -430,7 +437,7 @@
                     const res = await fetch(`${API_URL}/master/bloquear`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ email })
+                        body: JSON.stringify({ email: email.trim() })
                     });
                     const data = await res.json();
                     if(data.success) { Admin.showToast('Conta bloqueada.', 'success'); Admin.carregarDados(); }
