@@ -121,11 +121,17 @@ App.abrirModalBaixa = () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
 
-    let total = 0;
+    // 🛡️ CORREÇÃO MATEMÁTICA: Somar em cêntimos (inteiros) para evitar erros
+    let totalCentavos = 0;
     for(const c of checks) {
         const item = App.financeiroCache.find(f => f.id == c.value);
-        if(item) total += parseFloat(item.valor);
+        if(item) {
+            // Multiplica por 100 e arredonda para virar inteiro
+            totalCentavos += Math.round(parseFloat(item.valor) * 100);
+        }
     }
+    // Converte de volta para decimal apenas para exibir e usar no ecrã
+    const total = totalCentavos / 100;
 
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
@@ -187,11 +193,15 @@ App.mudarQtdFormasBaixa = () => {
 App.calcValorBaixa = () => {
     const qtd = document.getElementById('baixa-qtd').value;
     if(qtd === '2') {
-        const total = parseFloat(document.getElementById('baixa-total').value);
-        const val1 = parseFloat(document.getElementById('baixa-valor-1').value) || 0;
-        let val2 = total - val1;
-        if(val2 < 0) val2 = 0;
-        document.getElementById('baixa-valor-2').value = val2.toFixed(2);
+        // 🛡️ CORREÇÃO MATEMÁTICA: Lemos os inputs, convertemos para cêntimos e fazemos a subtração segura
+        const totalCentavos = Math.round(parseFloat(document.getElementById('baixa-total').value) * 100);
+        const val1Centavos = Math.round(parseFloat(document.getElementById('baixa-valor-1').value) * 100) || 0;
+        
+        let val2Centavos = totalCentavos - val1Centavos;
+        if(val2Centavos < 0) val2Centavos = 0; // Proteção contra valores negativos
+        
+        // Devolve o valor formatado para Reais (dividindo por 100)
+        document.getElementById('baixa-valor-2').value = (val2Centavos / 100).toFixed(2);
     }
 };
 
@@ -499,27 +509,35 @@ App.abrirCarneExistente = async (idLote) => {
     } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
 };
 
-App.renderizarInadimplencia = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center; padding:20px;">Calculando inadimplência...</p>';
+// Substitua o trecho inicial dentro do try {} da função App.renderizarInadimplencia
     try {
         const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const hoje = new Date(); const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
         
-        let totalAtraso = 0; const devedoresMap = {};
+        // 🛡️ CORREÇÃO MATEMÁTICA: Usar variáveis com centavos
+        let totalAtrasoCentavos = 0; const devedoresMap = {};
+        
         vencidos.forEach(f => { 
+            const valorCentavos = Math.round(parseFloat(f.valor) * 100); // 👈 Converte para centavos
+
             if(!devedoresMap[f.idAluno]) { 
                 const aluno = alunos.find(a => a.id == f.idAluno); 
-                devedoresMap[f.idAluno] = { idAluno: f.idAluno, nome: f.alunoNome, curso: aluno ? aluno.curso : '-', total: 0, detalhes: [] }; 
+                devedoresMap[f.idAluno] = { idAluno: f.idAluno, nome: f.alunoNome, curso: aluno ? aluno.curso : '-', totalCentavos: 0, detalhes: [] }; 
             } 
-            devedoresMap[f.idAluno].total += parseFloat(f.valor); 
+            devedoresMap[f.idAluno].totalCentavos += valorCentavos; // 👈 Soma centavos
             devedoresMap[f.idAluno].detalhes.push(`${f.vencimento.split('-').reverse().join('/')} (R$ ${parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})})`); 
-            totalAtraso += parseFloat(f.valor); 
+            totalAtrasoCentavos += valorCentavos; // 👈 Soma total geral em centavos
         });
         
-        const listaDevedores = Object.values(devedoresMap); 
+        // Mapeia de volta dividindo por 100 para criar a lista final
+        const listaDevedores = Object.values(devedoresMap).map(d => {
+            return { ...d, total: d.totalCentavos / 100 };
+        });
+        const totalAtraso = totalAtrasoCentavos / 100;
+
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
-        
+                
         const style = `
         <style>
             .inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } 
