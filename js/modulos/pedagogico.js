@@ -495,7 +495,6 @@ App.carregarListaNotas = async () => {
     try {
         const [alunos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/avaliacoes')]);
         
-        // Lógica Híbrida: Puxa só o aluno ou a turma inteira
         let alunosAlvo = [];
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
@@ -504,17 +503,29 @@ App.carregarListaNotas = async () => {
 
         let linhas = '';
         alunosAlvo.forEach(a => {
-            const regExistente = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            let regExistente = null;
+            
+            // 🎯 NOVO: Se estiver a editar, procura pelo ID exato. Se não, usa o filtro normal.
+            if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
+                regExistente = avaliacoes.find(av => av.id === App.idAvaliacaoEditando);
+            } else {
+                regExistente = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            }
+
             const notaAtual = regExistente ? regExistente.nota : '';
+            const idEdicaoTag = (App.idAvaliacaoEditando && regExistente) ? `data-id-avaliacao="${regExistente.id}"` : '';
 
             linhas += `
-            <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">
+            <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
                 <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
                 <td style="padding:12px; width:150px;">
                     <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${notaAtual}">
                 </td>
             </tr>`;
         });
+        
+        // 🎯 NOVO: Limpa a memória após gerar a tabela
+        App.idAvaliacaoEditando = null;
 
         area.innerHTML = `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #2980b9;">
@@ -555,14 +566,27 @@ App.salvarNotasLote = async () => {
 
         linhas.forEach(linha => {
             const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
+            const idEdicao = linha.getAttribute('data-id-avaliacao'); // 🎯 NOVO: Recupera o ID exato escondido
             const notaInput = linha.querySelector('.valor-nota').value;
             if (notaInput === '') return; // Ignora se estiver em branco
 
-            const regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            let regExistente = null;
+            if (idEdicao) {
+                regExistente = avaliacoesExistentes.find(av => av.id === idEdicao);
+            } else {
+                regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            }
+
             const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, bimestre, dataLancamento: new Date().toISOString().split('T')[0] };
 
-            if (regExistente) { promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max })); } 
-            else { payload.id = Date.now().toString() + Math.floor(Math.random()*1000); promessas.push(App.api('/avaliacoes', 'POST', payload)); }
+            if (regExistente) { 
+                // 🎯 NOVO: Usa o PUT com TODOS os campos novos (atualizando também data, tipo e disciplina)
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, bimestre: bimestre })); 
+            } 
+            else { 
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
+                promessas.push(App.api('/avaliacoes', 'POST', payload)); 
+            }
         });
 
         await Promise.all(promessas);
@@ -581,7 +605,10 @@ App.editarAvaliacao = async (id) => {
     else { document.getElementById('nota-tipo').value='Outro'; App.toggleTipoOutroNota(); document.getElementById('nota-outro-desc').value=n.tipo; } 
     document.getElementById('nota-max').value = n.valorMax; document.getElementById('nota-bimestre').value = n.bimestre; document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
     document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
-    App.carregarListaNotas(); // Abre a grelha automaticamente só para este aluno!
+    
+    // 🎯 NOVO: Guarda o ID exato na memória antes de carregar a lista
+    App.idAvaliacaoEditando = id; 
+    App.carregarListaNotas(); 
 };
 
 // ✨ IMPLEMENTAÇÃO: FUNÇÃO DE FILTRAGEM INSTANTÂNEA DE NOTAS ✨
