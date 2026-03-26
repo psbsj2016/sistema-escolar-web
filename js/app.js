@@ -21,6 +21,7 @@ const LISTA_FUNCIONALIDADES = [
 
 const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
+    motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
     escapeHTML: (str) => {
@@ -211,17 +212,15 @@ const App = {
         if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
-    },
-
-         // ⏰ MOTOR DE TEMPO REAL DO SININHO (Adicione este bloco)
+        
+        // ⏰ MOTOR DE TEMPO REAL DO SININHO (Agora está dentro da função de forma segura!)
         if (!App.motorTempoRealLigado) {
             setInterval(() => {
                 const telaSistema = document.getElementById('tela-sistema');
-                // Só atualiza se o utilizador estiver logado e a ver a tela do sistema
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
                     App.verificarNotificacoes();
                 }
-            }, 60000); // Roda silenciosamente a cada 60 segundos (60000 milissegundos)
+            }, 300000); 
             App.motorTempoRealLigado = true;
         }
     },
@@ -293,7 +292,7 @@ const App = {
                     user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
                     pubKeyCredParams: [{type: "public-key", alg: -7}, {type: "public-key", alg: -257}],
                     authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 60000
+                    timeout: 300000
                 }
             });
             localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
@@ -1505,14 +1504,67 @@ const App = {
     },
     
     processarRestauracao: async () => { 
-        const f=document.getElementById('input-backup-file'); if(!f.files.length)return alert("Selecione o arquivo."); 
-        if(!confirm("Substituir dados atuais?"))return; const r=new FileReader(); 
-        r.onload=async(e)=>{
-            try{
-                const d=JSON.parse(e.target.result); const t=['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos','usuarios','escola']; 
-                for(const k of t){if(d[k]){if(Array.isArray(d[k])){for(const i of d[k])await App.api(`/${k}`,'POST',i)}else{await App.api('/escola','PUT',d[k])}}} 
-                alert("Restaurado com sucesso!"); location.reload();
-            }catch(x){alert("Arquivo inválido.");}
+        const f = document.getElementById('input-backup-file'); 
+        if (!f.files.length) return App.showToast("Por favor, selecione o ficheiro de backup.", "warning"); 
+        
+        if (!confirm("Tem a certeza absoluta que deseja substituir os dados atuais? Esta ação não pode ser desfeita.")) return; 
+        
+        // Proteção UI: Bloqueia o botão e muda o cursor
+        const btn = document.querySelector('button[onclick="App.processarRestauracao()"]');
+        if (btn) { btn.disabled = true; btn.innerText = "A Ler ficheiro... ⏳"; }
+        document.body.style.cursor = 'wait';
+
+        const r = new FileReader(); 
+        r.onload = async (e) => {
+            try {
+                const d = JSON.parse(e.target.result); 
+                const t = ['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos','usuarios','escola']; 
+                
+                // 1. Contabilizar o total de registos para dar feedback visual
+                let totalRegistos = 0;
+                let processados = 0;
+                
+                for (const k of t) {
+                    if (d[k]) {
+                        if (Array.isArray(d[k])) totalRegistos += d[k].length;
+                        else totalRegistos += 1; // Para o objeto único 'escola'
+                    }
+                }
+
+                if (totalRegistos === 0) {
+                    App.showToast("O ficheiro de backup parece estar vazio.", "warning");
+                    if (btn) { btn.disabled = false; btn.innerText = "⬆️ RESTAURAR DADOS"; }
+                    document.body.style.cursor = 'default';
+                    return;
+                }
+
+                // 2. Processar e mostrar o progresso no botão
+                for (const k of t) {
+                    if (d[k]) {
+                        if (Array.isArray(d[k])) {
+                            for (const i of d[k]) {
+                                await App.api(`/${k}`, 'POST', i);
+                                processados++;
+                                if (btn) btn.innerText = `A Restaurar: ${processados} de ${totalRegistos} ⏳`;
+                            }
+                        } else {
+                            await App.api('/escola', 'PUT', d[k]);
+                            processados++;
+                            if (btn) btn.innerText = `A Restaurar: ${processados} de ${totalRegistos} ⏳`;
+                        }
+                    }
+                } 
+                
+                // 3. Sucesso e recarregamento da página
+                App.showToast("Dados restaurados com sucesso! A reiniciar...", "success"); 
+                setTimeout(() => location.reload(), 1500);
+
+            } catch (x) {
+                console.error("Erro na restauração:", x);
+                App.showToast("Ficheiro inválido ou erro de comunicação.", "error");
+                if (btn) { btn.disabled = false; btn.innerText = "⬆️ RESTAURAR DADOS"; }
+                document.body.style.cursor = 'default';
+            }
         }; 
         r.readAsText(f.files[0]); 
     },
@@ -1682,7 +1734,8 @@ const App = {
                 if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
             }
         } catch (e) { console.error("Erro nas notificações", e); }
-    },
+    }
+};
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
