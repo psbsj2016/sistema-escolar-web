@@ -1120,7 +1120,7 @@ const App = {
     },
 
     // 🔄 Versão Sincronizada com a sua renderizarLista
-    App.confirmarAlteracaoStatus = async () => {
+    confirmarAlteracaoStatus: async () => {
         const id = document.getElementById('status-student-id').value;
         const statusOriginal = document.getElementById('status-student-orig').value;
         const novoStatus = document.getElementById('status-options-container').getAttribute('data-selecionado');
@@ -1144,8 +1144,6 @@ const App = {
             App.fecharModal();
             
             // 🚀 O PULO DO GATO: Atualização Otimista na Memória!
-            // Em vez de puxar a lista toda de novo (que pode vir da cache antiga do navegador),
-            // nós alteramos o status na memória RAM da página e redesenhamos a grelha na hora:
             if (Array.isArray(App.listaCache)) {
                 const index = App.listaCache.findIndex(a => a.id === id);
                 if (index !== -1) {
@@ -1163,7 +1161,7 @@ const App = {
             if(btn) { btn.innerText = textOrig; btn.disabled = false; }
             document.body.style.cursor = 'default';
         }
-    };
+    },
 
    // =========================================================
     // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
