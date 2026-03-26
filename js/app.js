@@ -211,6 +211,18 @@ const App = {
         if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
+        
+        // ⏰ MOTOR DE TEMPO REAL DO SININHO (Adicione este bloco)
+        if (!App.motorTempoRealLigado) {
+            setInterval(() => {
+                const telaSistema = document.getElementById('tela-sistema');
+                // Só atualiza se o utilizador estiver logado e a ver a tela do sistema
+                if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
+                    App.verificarNotificacoes();
+                }
+            }, 60000); // Roda silenciosamente a cada 60 segundos (60000 milissegundos)
+            App.motorTempoRealLigado = true;
+        }
     },
 
     fazerLogin: async () => {
@@ -1516,8 +1528,9 @@ const App = {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            const [alunos, eventos, financeiro, planejamentos, estoque] = await Promise.all([
-                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques')
+            // 🛡️ ADICIONADO: Busca também os dados da 'escola' para verificar o plano
+            const [alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
+                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques'), App.api('/escola')
             ]);
             
             let alertas = [];
@@ -1530,6 +1543,31 @@ const App = {
             const amanha = new Date(hoje);
             amanha.setDate(amanha.getDate() + 1);
             const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
+
+            // 💎 NOVO: ALERTA DE VENCIMENTO DO PLANO DA ESCOLA (Apenas para Gestor)
+            if (escola && tipoUtilizador === 'Gestor') {
+                const planoAtual = escola.plano || 'Teste';
+                if (planoAtual === 'Teste') {
+                    const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
+                    const diffTime = Math.abs(hoje - dataCriacao);
+                    const diasPassados = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const diasRestantes = 7 - diasPassados;
+
+                    if (diasRestantes <= 3 && diasRestantes > 0) {
+                        alertas.push({ 
+                            icon: '⏳', 
+                            texto: `<b>Atenção Gestor:</b> O seu período de Teste termina em <b>${diasRestantes} dia(s)</b>! Assine um plano.`, 
+                            acao: "App.renderizarTela('plano')" 
+                        });
+                    } else if (diasRestantes <= 0) {
+                        alertas.push({ 
+                            icon: '🚫', 
+                            texto: `<b>Urgente:</b> O seu período de Teste <b>expirou</b>! Regularize para continuar usando o sistema.`, 
+                            acao: "App.renderizarTela('plano')" 
+                        });
+                    }
+                }
+            }
 
             if (Array.isArray(alunos)) {
                 alunos.forEach(a => {
@@ -1600,7 +1638,6 @@ const App = {
                                 }
                                 const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
 
-                                // 🛡️ Alerta de Faturamento (Apenas Gestor)
                                 if (mesesDeAulaRestantes > parcelasFuturas && tipoUtilizador === 'Gestor') {
                                     alertas.push({ 
                                         icon: '⚠️', 
@@ -1613,7 +1650,6 @@ const App = {
                     });
                 }
         
-                // 📦 Alerta de Estoque
                 if (Array.isArray(estoque)) {
                     estoque.forEach(item => {
                         const qtd = parseInt(item.quantidade) || 0;
@@ -1645,8 +1681,7 @@ const App = {
                 if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
             }
         } catch (e) { console.error("Erro nas notificações", e); }
-    }
-}; 
+    },
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
