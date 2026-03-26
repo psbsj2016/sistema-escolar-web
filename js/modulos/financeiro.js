@@ -510,30 +510,47 @@ App.abrirCarneExistente = async (idLote) => {
     } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
 };
 
-// Substitua o trecho inicial dentro do try {} da função App.renderizarInadimplencia
+// ---------------------------------------------------------
+// 📉 RELATÓRIO DE INADIMPLÊNCIA (CORRIGIDO)
+// ---------------------------------------------------------
+App.renderizarInadimplencia = async () => {
+    App.setTitulo("Relatório de Inadimplência");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Calculando inadimplência... ⏳</p>';
+
     try {
-        const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
-        const hoje = new Date(); const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
+        const [financeiro, alunos, escola] = await Promise.all([
+            App.api('/financeiro'), 
+            App.api('/alunos'), 
+            App.api('/escola')
+        ]);
+
+        const hoje = new Date(); 
+        const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
         
         // 🛡️ CORREÇÃO MATEMÁTICA: Usar variáveis com centavos
-        let totalAtrasoCentavos = 0; const devedoresMap = {};
+        let totalAtrasoCentavos = 0; 
+        const devedoresMap = {};
         
         vencidos.forEach(f => { 
-            const valorCentavos = Math.round(parseFloat(f.valor) * 100); // 👈 Converte para centavos
+            const valorCentavos = Math.round(parseFloat(f.valor) * 100);
 
             if(!devedoresMap[f.idAluno]) { 
                 const aluno = alunos.find(a => a.id == f.idAluno); 
-                devedoresMap[f.idAluno] = { idAluno: f.idAluno, nome: f.alunoNome, curso: aluno ? aluno.curso : '-', totalCentavos: 0, detalhes: [] }; 
+                devedoresMap[f.idAluno] = { 
+                    idAluno: f.idAluno, 
+                    nome: f.alunoNome, 
+                    curso: aluno ? aluno.curso : '-', 
+                    totalCentavos: 0, 
+                    detalhes: [] 
+                }; 
             } 
-            devedoresMap[f.idAluno].totalCentavos += valorCentavos; // 👈 Soma centavos
+            devedoresMap[f.idAluno].totalCentavos += valorCentavos;
             devedoresMap[f.idAluno].detalhes.push(`${f.vencimento.split('-').reverse().join('/')} (R$ ${parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})})`); 
-            totalAtrasoCentavos += valorCentavos; // 👈 Soma total geral em centavos
+            totalAtrasoCentavos += valorCentavos;
         });
         
-        // Mapeia de volta dividindo por 100 para criar a lista final
-        const listaDevedores = Object.values(devedoresMap).map(d => {
-            return { ...d, total: d.totalCentavos / 100 };
-        });
+        const listaDevedores = Object.values(devedoresMap).map(d => ({ ...d, total: d.totalCentavos / 100 }));
         const totalAtraso = totalAtrasoCentavos / 100;
 
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
@@ -554,60 +571,65 @@ App.abrirCarneExistente = async (idLote) => {
             .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } 
             @media print { 
                 .no-print { display: none !important; } 
-                .print-sheet { width: 100%; } 
                 .inad-card-top { border: 1px solid #000; box-shadow: none; } 
                 .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } 
-                .table-responsive-wrapper { overflow-x: visible !important; }
             }
         </style>`;
         
-        const linhasTabela = listaDevedores.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' : listaDevedores.map(d => `<tr><td style="font-weight:bold;">${App.escapeHTML(d.nome)}</td><td>${App.escapeHTML(d.curso)}</td><td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td><td class="no-print" style="text-align:right;"><button onclick="if(App.verificarPermissao('whatsapp')) App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button></td></tr>`).join('');
+        const linhasTabela = listaDevedores.length === 0 
+            ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' 
+            : listaDevedores.map(d => `
+                <tr>
+                    <td style="font-weight:bold;">${App.escapeHTML(d.nome)}</td>
+                    <td>${App.escapeHTML(d.curso)}</td>
+                    <td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td>
+                    <td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="no-print" style="text-align:right;">
+                        <button onclick="App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button>
+                    </td>
+                </tr>`).join('');
 
         div.innerHTML = `${style}
             <div style="margin-bottom: 20px;" class="no-print">
-                <button onclick="App.renderizarFinanceiroPro()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">⬅ VOLTAR</button>
+                <button onclick="App.renderizarFinanceiroPro()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button>
             </div>
             
             <div class="print-sheet" style="background:white; padding:30px; border-radius:8px;">
-                <div class="doc-header" style="margin-bottom:30px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; border-bottom:2px solid #eee; padding-bottom:15px;">
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            ${logo}
-                            <div><h2 style="margin:0; text-transform:uppercase; font-size:18px; color:#2c3e50;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
-                        </div>
-                        <div style="text-align:right;"><div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div></div>
+                <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:15px; margin-bottom:30px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        ${logo}
+                        <div><h2 style="margin:0;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div>
                     </div>
+                    <div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div>
                 </div>
                 
-                <div style="border-bottom: 2px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:24px;">📉</span><h2 style="margin:0; color:#2c3e50;">Relatório de Inadimplência</h2>
-                </div>
+                <h2 style="color:#2c3e50; margin-bottom:20px;">📉 Relatório de Inadimplência</h2>
                 
                 <div class="inad-card-top">
-                    <p style="color:#666; margin:0; font-size:14px;">Este relatório exibe apenas parcelas com data de vencimento anterior a hoje (${dataHojeStr}).</p>
                     <div class="inad-kpi-box">
                         <div class="inad-kpi inad-kpi-red">
                             <div class="inad-kpi-label" style="color:#c0392b;">TOTAL EM ATRASO</div>
                             <div class="inad-kpi-val" style="color:#c0392b;">R$ ${totalAtraso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                         </div>
                         <div class="inad-kpi">
-                            <div class="inad-kpi-label" style="color:#555;">ALUNOS DEVEDORES</div>
-                            <div class="inad-kpi-val" style="color:#333;">${listaDevedores.length}</div>
+                            <div class="inad-kpi-label">ALUNOS DEVEDORES</div>
+                            <div class="inad-kpi-val">${listaDevedores.length}</div>
                         </div>
                     </div>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:30px; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px;">
                     <h3 class="inad-list-title">Lista de Pendências Vencidas</h3>
-                    <button onclick="window.print()" class="no-print" style="background:#34495e; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR LISTA</button>
+                    <button onclick="window.print()" class="no-print" style="background:#34495e; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">🖨️ IMPRIMIR</button>
                 </div>
                 
-                <div class="table-responsive-wrapper" style="overflow-x:auto;">
-                    <table class="inad-table">
-                        <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES (VENCIMENTOS)</th><th>TOTAL DEVIDO</th><th class="no-print" style="text-align:right;">AÇÃO</th></tr></thead>
-                        <tbody>${linhasTabela}</tbody>
-                    </table>
-                </div>
+                <table class="inad-table">
+                    <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES</th><th>TOTAL DEVIDO</th><th class="no-print">AÇÃO</th></tr></thead>
+                    <tbody>${linhasTabela}</tbody>
+                </table>
             </div>`;
-    } catch(e) { App.showToast("Erro ao calcular inadimplência.", "error"); }
+    } catch(e) { 
+        console.error(e);
+        App.showToast("Erro ao calcular inadimplência.", "error"); 
+    }
 };
