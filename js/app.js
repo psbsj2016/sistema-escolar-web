@@ -686,7 +686,8 @@ const App = {
             const chamadas = await App.api('/chamadas');
             const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
             
-            let minPresenca = 0; let minFalta = 0; let htmlMeses = '';
+            // 🛡️ NOVO: Variável para as Faltas Justificadas
+            let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
             
             if (historico.length === 0) {
                 htmlMeses = '<p style="text-align:center; padding:30px; color:#999; font-size:14px;">Nenhum registo de chamada encontrado para este aluno.</p>';
@@ -706,7 +707,9 @@ const App = {
                         mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
                     }
                     
+                    // 🛡️ NOVO: Lógica de separação do tempo
                     if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
+                    else if (c.status === 'Falta Justificada' || c.status === 'Justificada') minJustificada += mins;
                     else if (c.status === 'Falta') minFalta += mins;
                 });
                 
@@ -715,6 +718,7 @@ const App = {
                     htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
                     agrupado[mes].forEach(c => {
                         const dataBr = c.data.split('-').reverse().join('/');
+                        // 🎨 Cor dinâmica na tabela
                         const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
                         htmlMeses += `<tr style="border-bottom:1px solid #eee;">
                                         <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
@@ -728,15 +732,20 @@ const App = {
             
             const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
             
+            // 📊 NOVO: Design dos KPI's em 3 blocos
             const kpiHTML = `
-                <div style="display:flex; gap:15px; margin-top:20px;">
-                    <div style="flex:1; background:#eafaf1; border:1px solid #27ae60; padding:15px; border-radius:8px; text-align:center;">
-                        <div style="font-size:11px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Total Presenças</div>
-                        <div style="font-size:20px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
+                <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Presenças</div>
+                        <div style="font-size:18px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
                     </div>
-                    <div style="flex:1; background:#fdedec; border:1px solid #e74c3c; padding:15px; border-radius:8px; text-align:center;">
-                        <div style="font-size:11px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Total Faltas</div>
-                        <div style="font-size:20px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
+                    <div style="flex:1; min-width:90px; background:#fef5e7; border:1px solid #f39c12; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#d68910; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Justificadas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#b9770e;">${fmtHoras(minJustificada)}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; background:#fdedec; border:1px solid #e74c3c; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Faltas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
                     </div>
                 </div>`;
                 
