@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V158 (BLINDADO CONTRA CACHE: FOLHA A4 E GRID)
+// MÓDULO PEDAGÓGICO V159 (BLINDADO + FILTRO DE CHAMADA EM TEMPO REAL)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -603,9 +603,18 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
+        // ✨ IMPLEMENTAÇÃO: BARRA DE PESQUISA ADICIONADA AQUI LOGO ACIMA DA TABELA ✨
         const tabelaChamada = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-chamada" 
+                       placeholder="Pesquisar histórico pelo nome do aluno ou status..." 
+                       oninput="App.filtrarHistoricoChamada()" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+            
             <div class="table-responsive-wrapper">
-                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
                             <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
@@ -754,6 +763,27 @@ App.editarLancamentoChamada = async (id) => {
     document.getElementById('chamada-data').value = registro.data; document.getElementById('chamada-duracao').value = registro.duracao; 
     document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
     App.carregarListaChamada(); // Abre a grelha automaticamente só para este aluno!
+};
+
+// ✨ IMPLEMENTAÇÃO: FUNÇÃO DE FILTRAGEM INSTANTÂNEA ✨
+App.filtrarHistoricoChamada = () => {
+    const termo = document.getElementById('input-busca-chamada').value.trim().toLowerCase();
+    const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr');
+    
+    if (!linhas || linhas.length === 0) return;
+
+    linhas.forEach(linha => {
+        // Ignora a linha de "Nenhum registo encontrado" para não gerar erros visuais
+        if (linha.innerText.includes('Nenhum registo encontrado')) return;
+        
+        const textoLinha = linha.innerText.toLowerCase(); 
+        
+        if (textoLinha.includes(termo)) {
+            linha.style.display = '';
+        } else {
+            linha.style.display = 'none';
+        }
+    });
 };
 
 // ---------------------------------------------------------
