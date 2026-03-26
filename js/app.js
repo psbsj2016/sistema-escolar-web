@@ -1120,12 +1120,11 @@ const App = {
     },
 
     // 🔄 Versão Sincronizada com a sua renderizarLista
-    confirmarAlteracaoStatus: async () => {
+    App.confirmarAlteracaoStatus = async () => {
         const id = document.getElementById('status-student-id').value;
         const statusOriginal = document.getElementById('status-student-orig').value;
         const novoStatus = document.getElementById('status-options-container').getAttribute('data-selecionado');
 
-        // Validações básicas
         if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
         if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
 
@@ -1135,22 +1134,27 @@ const App = {
         document.body.style.cursor = 'wait';
 
         try {
-            // 1. Busca os dados atuais do aluno no servidor para não perder outros campos (como CPF, RG, etc)
             const aluno = await App.api(`/alunos/${id}`);
             if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
 
-            // 2. Envia a atualização apenas do campo Status, mantendo o restante
+            // 1. Envia a ordem para o servidor atualizar a base de dados
             await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
             
             App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
-            
-            // 3. Fecha o Modal Visual
             App.fecharModal();
             
-            // 4. ✨ O PULO DO GATO: Chama a SUA função renderizarLista
-            // Como a sua função faz: App.listaCache = await App.api(`/${endpoint}`);
-            // Ela vai buscar os dados novos do MongoDB e atualizar a tela sozinha!
-            await App.renderizarLista('aluno');
+            // 🚀 O PULO DO GATO: Atualização Otimista na Memória!
+            // Em vez de puxar a lista toda de novo (que pode vir da cache antiga do navegador),
+            // nós alteramos o status na memória RAM da página e redesenhamos a grelha na hora:
+            if (Array.isArray(App.listaCache)) {
+                const index = App.listaCache.findIndex(a => a.id === id);
+                if (index !== -1) {
+                    App.listaCache[index].status = novoStatus;
+                }
+            }
+            
+            // 🎨 Redesenha a tabela instantaneamente à frente dos seus olhos
+            App.filtrarTabelaReativa();
 
         } catch (e) {
             console.error("Erro na atualização:", e);
@@ -1159,7 +1163,7 @@ const App = {
             if(btn) { btn.innerText = textOrig; btn.disabled = false; }
             document.body.style.cursor = 'default';
         }
-    },
+    };
 
    // =========================================================
     // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
