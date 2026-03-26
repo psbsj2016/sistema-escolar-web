@@ -1010,27 +1010,123 @@ const App = {
         }
     },
 
-    alterarStatusAluno: async (id, statusAtual) => {
-        const opcoes = "Digite o número da opção desejada:\n1 - 🟢 Ativo\n2 - 🟡 Trancado\n3 - 🔴 Cancelado";
-        const res = prompt(`Status Atual: ${statusAtual}\n\n${opcoes}`);
-        
-        let novoStatus = null;
-        if(res === '1') novoStatus = 'Ativo';
-        if(res === '2') novoStatus = 'Trancado';
-        if(res === '3') novoStatus = 'Cancelado';
+    // =========================================================
+    // 🔄 MOTOR VISUAL DE ALTERAÇÃO DE STATUS (NOVO PDV)
+    // =========================================================
+    
+    // 🎨 1. Abre o PDV Visual de Status (Substitui o prompt() nativo)
+    alterarStatusAluno: (id, statusAtual) => {
+        const modal = document.getElementById('modal-overlay');
+        if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = "Atualizar Status de Matrícula";
 
-        if(novoStatus && novoStatus !== statusAtual) {
-            App.showToast("Atualizando status... ⏳", "info");
-            document.body.style.cursor = 'wait';
-            try {
-                const aluno = await App.api(`/alunos/${id}`);
-                await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
-                App.showToast("Status alterado com sucesso!", "success");
-                App.renderizarLista('aluno');
-            } catch(e) { App.showToast("Erro ao atualizar o status.", "error"); }
-            finally { document.body.style.cursor = 'default'; }
-        } else if (res) {
-            App.showToast("Ação cancelada ou status inválido.", "warning");
+        // Mapeamento de cores e descrições para os cartões
+        const estilos = {
+            Ativo: { icon: '🟢', color: '#27ae60', desc: 'Aluno matriculado e assistindo aulas.' },
+            Trancado: { icon: '🟡', color: '#f39c12', desc: 'Matrícula pausada. Histórico financeiro preservado.' },
+            Cancelado: { icon: '🔴', color: '#e74c3c', desc: 'Vínculo encerrado com a instituição.' }
+        };
+
+        // Criação dinâmica dos "Cartões de Opção"
+        const htmlOptions = Object.entries(estilos).map(([key, info]) => `
+            <div class="status-option-card" data-status="${key}" onclick="App.selecionarOpcaoStatus(this)" style="border: 2px solid #eee; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; transition: all 0.2s;">
+                <span style="font-size: 32px; filter: grayscale(1); transition: filter 0.2s;">${info.icon}</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: ${info.color}; font-size: 16px;">${key}</div>
+                    <p style="margin: 0; color: #666; font-size: 12px; line-height: 1.4;">${info.desc}</p>
+                </div>
+                <div class="selection-indicator" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center;"></div>
+            </div>
+        `).join('');
+
+        const html = `
+            <div style="background: #fdf2f2; border: 1px solid #f5b7b1; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 12px; color: #7f8c8d; text-transform: uppercase;">Status Atual:</span>
+                <span style="font-size: 14px; font-weight: bold; color: ${estilos[statusAtual] ? estilos[statusAtual].color : '#333'}; margin-left: 5px;">${statusAtual}</span>
+            </div>
+            
+            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom:10px;">Selecione o novo status:</h4>
+            <div id="status-options-container" data-selecionado="">
+                ${htmlOptions}
+            </div>
+            <input type="hidden" id="status-student-id" value="${id}">
+            <input type="hidden" id="status-student-orig" value="${statusAtual}">
+        `;
+
+        document.getElementById('modal-form-content').innerHTML = html;
+
+        // Pré-seleciona a opção atual se for válida
+        if (estilos[statusAtual]) {
+            const targetCard = document.querySelector(`.status-option-card[data-status="${statusAtual}"]`);
+            if (targetCard) App.selecionarOpcaoStatus(targetCard);
+        }
+
+        // Atualiza o botão de confirmação do modal
+        const btnConfirm = document.querySelector('.btn-confirm');
+        btnConfirm.setAttribute('onclick', 'App.confirmarAlteracaoStatus()');
+        btnConfirm.innerText = "💾 Salvar Novo Status";
+        btnConfirm.style.display = 'inline-flex';
+    },
+
+    // 🎨 2. Função Auxiliar: Gerencia a Seleção Visual (Clique no Cartão)
+    selecionarOpcaoStatus: (card) => {
+        // Deseleciona todos os cartões e remove cores
+        document.querySelectorAll('.status-option-card').forEach(c => {
+            c.style.borderColor = '#eee';
+            c.style.background = 'white';
+            c.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(1)'; // Esmaeve o ícone
+            c.querySelector('.selection-indicator').innerHTML = '';
+            c.querySelector('.selection-indicator').style.borderColor = '#ccc';
+            c.querySelector('.selection-indicator').style.background = 'white';
+        });
+
+        // Seleciona o cartão clicado e aplica as cores
+        const status = card.getAttribute('data-status');
+        const styleTextBold = card.querySelector('div[style*="font-weight: bold"]'); // Pega o div do texto em negrito
+        const color = styleTextBold.style.color; // Obtém a cor dele (que é a cor do status)
+
+        card.style.borderColor = color;
+        card.style.background = `${color}05`; // Aplica um fundo claríssimo da cor do status
+        card.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(0)'; // Mostra o ícone colorido
+        
+        // Indicador de seleção profissional (Círculo preenchido)
+        card.querySelector('.selection-indicator').innerHTML = `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>`;
+        card.querySelector('.selection-indicator').style.borderColor = color;
+        
+        // Define o dado oculto de seleção
+        document.getElementById('status-options-container').setAttribute('data-selecionado', status);
+    },
+
+    // 🔄 3. Função de Confirmação: Salva no Servidor
+    confirmarAlteracaoStatus: async () => {
+        const id = document.getElementById('status-student-id').value;
+        const statusOriginal = document.getElementById('status-student-orig').value;
+        const novoStatus = document.getElementById('status-options-container').getAttribute('data-selecionado');
+
+        if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
+        if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
+
+        const btn = document.querySelector('.btn-confirm');
+        const textOrig = btn.innerText;
+        btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+        document.body.style.cursor = 'wait';
+
+        try {
+            const aluno = await App.api(`/alunos/${id}`);
+            if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
+
+            // Executa o PUT (Blindado)
+            await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
+            
+            App.showToast(`Status alterado para ${novoStatus} com sucesso! 🎉`, "success");
+            App.fecharModal();
+            App.renderizarLista('aluno');
+        } catch (e) {
+            console.error(e);
+            App.showToast("Erro crítico ao comunicar com o servidor.", "error");
+        } finally {
+            btn.innerText = textOrig; btn.disabled = false;
+            document.body.style.cursor = 'default';
         }
     },
 
