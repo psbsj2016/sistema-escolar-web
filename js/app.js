@@ -211,8 +211,9 @@ const App = {
         if (App.usuario) { await App.carregarDadosEscola(); }
 
         const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
-        
-        // ⏰ MOTOR DE TEMPO REAL DO SININHO (Adicione este bloco)
+    },
+
+         // ⏰ MOTOR DE TEMPO REAL DO SININHO (Adicione este bloco)
         if (!App.motorTempoRealLigado) {
             setInterval(() => {
                 const telaSistema = document.getElementById('tela-sistema');
