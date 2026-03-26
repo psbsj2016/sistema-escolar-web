@@ -1577,14 +1577,19 @@ const App = {
         if (dropdown) dropdown.classList.toggle('active');
     },
 
-    verificarNotificacoes: async () => {
+   verificarNotificacoes: async () => {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            // 🛡️ ADICIONADO: Busca também os dados da 'escola' para verificar o plano
-            const [alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
+            // 🛡️ Mudamos de 'const' para 'let' para poder sobrescrever a variável de forma segura
+            let [alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
                 App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques'), App.api('/escola')
             ]);
+            
+            // 🎯 NOVA REGRA: Filtra a lista para manter APENAS alunos ativos
+            if (Array.isArray(alunos)) {
+                alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
+            }
             
             let alertas = [];
             const hoje = new Date();
