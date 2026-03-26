@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO DE CADASTROS V103 (RESPONSIVIDADE INTELIGENTE E DADOS SEGUROS)
+// MÓDULO DE CADASTROS V104 (STATUS BLINDADO E PRESERVAÇÃO DE DADOS)
 // =========================================================
 
 App.abrirModalCadastroModulo = async (tipo, id) => {
@@ -56,18 +56,20 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             <option value="Masculino" ${v(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
             <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
         `;
-        // 🛡️ NOVO: Opções de Status
+        
+        // 🛡️ CORREÇÃO: Força o HTML a focar no status real guardado na base de dados
+        const statusAtual = dados.status || 'Ativo';
         const opStatus = `
-            <option value="Ativo" ${!dados.status || dados.status === 'Ativo' ? 'selected' : ''}>🟢 Ativo</option>
-            <option value="Trancado" ${dados.status === 'Trancado' ? 'selected' : ''}>🟡 Trancado / Pausado</option>
-            <option value="Cancelado" ${dados.status === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
+            <option value="Ativo" ${statusAtual === 'Ativo' ? 'selected' : ''}>🟢 Ativo</option>
+            <option value="Trancado" ${statusAtual === 'Trancado' ? 'selected' : ''}>🟡 Trancado / Pausado</option>
+            <option value="Cancelado" ${statusAtual === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
         `;
         
         html = 
             section('1. Dados Pessoais', '0') +
             row(
                 input('Nome Completo', 'a-nome', v(dados.nome), 'Ex: João da Silva') +
-                select('Status da Matrícula', 'a-status', opStatus) // 👈 Adicionado aqui
+                select('Status da Matrícula', 'a-status', opStatus)
             ) +
             row(
                 input('CPF', 'a-cpf', v(dados.cpf), '000.000.000-00', 'tel', 'oninput="App.mascaraCPF(this)" maxlength="14"') +
@@ -149,70 +151,71 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
 App.salvarCadastro = async () => {
     const t = App.entidadeAtual; 
     const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
-    const p = {}; 
     
-    // 🛡️ CORREÇÃO: Garante a persistência do ID ao atualizar um cadastro
-    if (App.idEdicao) p.id = App.idEdicao;
-
-    if (t === 'aluno') {
-        p.nome = document.getElementById('a-nome').value;
-        p.status = document.getElementById('a-status').value || 'Ativo'; // 👈 NOVO STATUS
-        p.cpf = document.getElementById('a-cpf').value;
-        p.rg = document.getElementById('a-rg').value;
-        p.nascimento = document.getElementById('a-nasc').value;
-        p.sexo = document.getElementById('a-sexo').value;
-        p.whatsapp = document.getElementById('a-zap').value;
-        p.profissao = document.getElementById('a-prof').value;
-        p.curso = document.getElementById('a-curso').value;
-        p.turma = document.getElementById('a-turma').value;
-        p.rua = document.getElementById('a-rua').value;
-        p.numero = document.getElementById('a-num').value;
-        p.bairro = document.getElementById('a-bairro').value;
-        p.cidade = document.getElementById('a-cidade').value;
-        p.estado = document.getElementById('a-uf').value;
-        p.pais = document.getElementById('a-pais').value;
-        p.resp_nome = document.getElementById('r-nome').value;
-        p.resp_cpf = document.getElementById('r-cpf').value;
-        p.resp_zap = document.getElementById('r-zap').value;
-        
-        if(!p.nome) { App.showToast("O nome do aluno é obrigatório!", "error"); return; }
-        if(p.cpf && p.cpf.length !== 14) { App.showToast("O CPF do aluno deve estar completo (14 caracteres).", "warning"); return; }
-        if(p.resp_cpf && p.resp_cpf.length !== 14) { App.showToast("O CPF do responsável deve estar completo.", "warning"); return; }
-        if(p.whatsapp && p.whatsapp.length < 14) { App.showToast("Preencha o WhatsApp corretamente com o código de área.", "warning"); return; }
-    } 
-    else if (t === 'turma') {
-        p.nome = document.getElementById('t-nome').value;
-        p.curso = document.getElementById('t-curso').value;
-        p.dia = document.getElementById('t-dia').value;
-        p.horario = document.getElementById('t-horario').value;
-        
-        if(!p.nome) { App.showToast("Nome da turma é obrigatório!", "error"); return; }
-    } 
-    else if (t === 'curso') {
-        p.nome = document.getElementById('c-nome').value;
-        p.carga = document.getElementById('c-carga').value;
-        
-        if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); return; }
-    }
-    else if (t === 'estoque') {
-        p.nome = document.getElementById('est-nome').value;
-        p.codigo = document.getElementById('est-codigo').value;
-        p.obs = document.getElementById('est-obs').value;
-        
-        // 🛡️ CORREÇÃO: Conversão segura para números, impedindo falhas matemáticas futuras
-        p.valor = parseFloat(document.getElementById('est-valor').value) || 0;
-        p.quantidade = parseInt(document.getElementById('est-qtd').value) || 0;
-        p.quantidadeMinima = parseInt(document.getElementById('est-min').value) || 0;
-        
-        if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); return; }
-    }
-
     const btn = document.querySelector('.btn-confirm');
     const txtOriginal = btn ? btn.innerText : 'Salvar Registro';
     if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
+        // 🛡️ CORREÇÃO PRINCIPAL: Buscar o registo original (se existir) para não perder dados que não estão no formulário
+        let p = {};
+        if (App.idEdicao) {
+            try {
+                const original = await App.api(`/${ep}/${App.idEdicao}`);
+                if (original) p = { ...original };
+            } catch(e) { console.warn("Aviso: Falha ao buscar dados originais", e); }
+            p.id = App.idEdicao;
+        }
+
+        if (t === 'aluno') {
+            p.nome = document.getElementById('a-nome').value;
+            p.status = document.getElementById('a-status').value; // 👈 AGORA GUARDA FIELMENTE A ESCOLHA DO SELECT
+            p.cpf = document.getElementById('a-cpf').value;
+            p.rg = document.getElementById('a-rg').value;
+            p.nascimento = document.getElementById('a-nasc').value;
+            p.sexo = document.getElementById('a-sexo').value;
+            p.whatsapp = document.getElementById('a-zap').value;
+            p.profissao = document.getElementById('a-prof').value;
+            p.curso = document.getElementById('a-curso').value;
+            p.turma = document.getElementById('a-turma').value;
+            p.rua = document.getElementById('a-rua').value;
+            p.numero = document.getElementById('a-num').value;
+            p.bairro = document.getElementById('a-bairro').value;
+            p.cidade = document.getElementById('a-cidade').value;
+            p.estado = document.getElementById('a-uf').value;
+            p.pais = document.getElementById('a-pais').value;
+            p.resp_nome = document.getElementById('r-nome').value;
+            p.resp_cpf = document.getElementById('r-cpf').value;
+            p.resp_zap = document.getElementById('r-zap').value;
+            
+            if(!p.nome) { App.showToast("O nome do aluno é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+            if(p.cpf && p.cpf.length !== 14) { App.showToast("O CPF do aluno deve estar completo (14 caracteres).", "warning"); throw new Error("Validação Falhou"); }
+            if(p.resp_cpf && p.resp_cpf.length !== 14) { App.showToast("O CPF do responsável deve estar completo.", "warning"); throw new Error("Validação Falhou"); }
+            if(p.whatsapp && p.whatsapp.length < 14) { App.showToast("Preencha o WhatsApp corretamente com o código de área.", "warning"); throw new Error("Validação Falhou"); }
+        } 
+        else if (t === 'turma') {
+            p.nome = document.getElementById('t-nome').value;
+            p.curso = document.getElementById('t-curso').value;
+            p.dia = document.getElementById('t-dia').value;
+            p.horario = document.getElementById('t-horario').value;
+            if(!p.nome) { App.showToast("Nome da turma é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        } 
+        else if (t === 'curso') {
+            p.nome = document.getElementById('c-nome').value;
+            p.carga = document.getElementById('c-carga').value;
+            if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        }
+        else if (t === 'estoque') {
+            p.nome = document.getElementById('est-nome').value;
+            p.codigo = document.getElementById('est-codigo').value;
+            p.obs = document.getElementById('est-obs').value;
+            p.valor = parseFloat(document.getElementById('est-valor').value) || 0;
+            p.quantidade = parseInt(document.getElementById('est-qtd').value) || 0;
+            p.quantidadeMinima = parseInt(document.getElementById('est-min').value) || 0;
+            if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        }
+
         const endpoint = App.idEdicao ? `/${ep}/${App.idEdicao}` : `/${ep}`;
         const method = App.idEdicao ? 'PUT' : 'POST';
 
@@ -226,8 +229,10 @@ App.salvarCadastro = async () => {
             App.renderizarLista(t);
         }
     } catch (err) {
-        console.error(err);
-        App.showToast("Erro ao salvar dados. Verifique a conexão.", "error");
+        if(err.message !== "Validação Falhou") {
+            console.error(err);
+            App.showToast("Erro ao salvar dados. Verifique a conexão.", "error");
+        }
     } finally {
         if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
         document.body.style.cursor = 'default';
