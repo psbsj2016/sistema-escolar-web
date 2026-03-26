@@ -432,9 +432,18 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
         `;
 
+        // ✨ IMPLEMENTAÇÃO: BARRA DE PESQUISA ADICIONADA AQUI LOGO ACIMA DA TABELA ✨
         const tabelaHistorico = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-notas" 
+                       placeholder="Pesquisar histórico pelo nome do aluno, disciplina ou tipo..." 
+                       oninput="App.filtrarHistoricoNotas()" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+
             <div class="table-responsive-wrapper">
-                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
                             <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
@@ -573,6 +582,27 @@ App.editarAvaliacao = async (id) => {
     document.getElementById('nota-max').value = n.valorMax; document.getElementById('nota-bimestre').value = n.bimestre; document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
     document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
     App.carregarListaNotas(); // Abre a grelha automaticamente só para este aluno!
+};
+
+// ✨ IMPLEMENTAÇÃO: FUNÇÃO DE FILTRAGEM INSTANTÂNEA DE NOTAS ✨
+App.filtrarHistoricoNotas = () => {
+    const termo = document.getElementById('input-busca-notas').value.trim().toLowerCase();
+    const linhas = document.querySelectorAll('#tabela-historico-notas tbody tr');
+    
+    if (!linhas || linhas.length === 0) return;
+
+    linhas.forEach(linha => {
+        // Ignora a linha de "Nenhuma nota lançada" para não gerar erros visuais
+        if (linha.innerText.includes('Nenhuma nota lançada')) return;
+        
+        const textoLinha = linha.innerText.toLowerCase(); 
+        
+        if (textoLinha.includes(termo)) {
+            linha.style.display = '';
+        } else {
+            linha.style.display = 'none';
+        }
+    });
 };
 
 // ---------------------------------------------------------
