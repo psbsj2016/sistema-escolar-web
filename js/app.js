@@ -1106,35 +1106,44 @@ const App = {
         document.getElementById('status-options-container').setAttribute('data-selecionado', status);
     },
 
-    // 🔄 3. Função de Confirmação: Salva no Servidor
+    // 🔄 Versão Sincronizada com a sua renderizarLista
     confirmarAlteracaoStatus: async () => {
         const id = document.getElementById('status-student-id').value;
         const statusOriginal = document.getElementById('status-student-orig').value;
         const novoStatus = document.getElementById('status-options-container').getAttribute('data-selecionado');
 
+        // Validações básicas
         if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
         if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
 
         const btn = document.querySelector('.btn-confirm');
-        const textOrig = btn.innerText;
-        btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+        const textOrig = btn ? btn.innerText : "Salvar";
+        if(btn) { btn.innerText = "Atualizando... ⏳"; btn.disabled = true; }
         document.body.style.cursor = 'wait';
 
         try {
+            // 1. Busca os dados atuais do aluno no servidor para não perder outros campos (como CPF, RG, etc)
             const aluno = await App.api(`/alunos/${id}`);
             if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
 
-            // Executa o PUT (Blindado)
+            // 2. Envia a atualização apenas do campo Status, mantendo o restante
             await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
             
-            App.showToast(`Status alterado para ${novoStatus} com sucesso! 🎉`, "success");
+            App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
+            
+            // 3. Fecha o Modal Visual
             App.fecharModal();
-            App.renderizarLista('aluno');
+            
+            // 4. ✨ O PULO DO GATO: Chama a SUA função renderizarLista
+            // Como a sua função faz: App.listaCache = await App.api(`/${endpoint}`);
+            // Ela vai buscar os dados novos do MongoDB e atualizar a tela sozinha!
+            await App.renderizarLista('aluno');
+
         } catch (e) {
-            console.error(e);
-            App.showToast("Erro crítico ao comunicar com o servidor.", "error");
+            console.error("Erro na atualização:", e);
+            App.showToast("Não foi possível atualizar o status. Tente novamente.", "error");
         } finally {
-            btn.innerText = textOrig; btn.disabled = false;
+            if(btn) { btn.innerText = textOrig; btn.disabled = false; }
             document.body.style.cursor = 'default';
         }
     },
