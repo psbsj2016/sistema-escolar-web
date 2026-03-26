@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V159 (BLINDADO + FILTRO DE CHAMADA EM TEMPO REAL)
+// MÓDULO PEDAGÓGICO V160 (BLINDADO + FILTRO DE INATIVOS + CHAMADA EM TEMPO REAL)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -50,7 +50,9 @@ App.renderizarNovoPlanejamento = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
-        const opAlunos = `<option value="">-- Selecione --</option>` + alunos.map(a => `<option value="${a.id}" data-curso="${a.curso}">${a.nome}</option>`).join('');
+        // 🛡️ FILTRO: Apenas alunos ativos para novos planeamentos
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${a.curso}">${a.nome}</option>`).join('');
         
         const formPlan = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -311,7 +313,9 @@ App.renderizarBoletimVisual = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
-        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        // 🛡️ FILTRO: Apenas alunos ativos
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
         
         const formBoletim = `
             <div style="display:flex; gap:10px; align-items:center;">
@@ -395,15 +399,15 @@ App.renderizarAvaliacoesPro = async () => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     try {
-        // 🚀 AQUI: Adicionámos a busca aos cursos cadastrados
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
         const historico = avaliacoes.sort((a,b) => b.id - a.id);
 
+        // 🛡️ FILTRO: Apenas alunos ativos para a caixa de seleção de notas
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
-        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
-        
-        // 🚀 AQUI: Criámos as opções baseadas nos seus cursos reais
+        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${c.nome}">${App.escapeHTML(c.nome)}</option>`).join('');
         
         const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
@@ -432,7 +436,6 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
         `;
 
-        // ✨ IMPLEMENTAÇÃO: BARRA DE PESQUISA ADICIONADA AQUI LOGO ACIMA DA TABELA ✨
         const tabelaHistorico = `
             <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
@@ -499,13 +502,15 @@ App.carregarListaNotas = async () => {
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
 
-        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno encontrado para este filtro.</p></div>'; return; }
+        // 🛡️ FILTRO: Impede inativos de aparecerem na grelha
+        alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
+
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
 
         let linhas = '';
         alunosAlvo.forEach(a => {
             let regExistente = null;
             
-            // 🎯 NOVO: Se estiver a editar, procura pelo ID exato. Se não, usa o filtro normal.
             if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
                 regExistente = avaliacoes.find(av => av.id === App.idAvaliacaoEditando);
             } else {
@@ -524,7 +529,6 @@ App.carregarListaNotas = async () => {
             </tr>`;
         });
         
-        // 🎯 NOVO: Limpa a memória após gerar a tabela
         App.idAvaliacaoEditando = null;
 
         area.innerHTML = `
@@ -566,9 +570,9 @@ App.salvarNotasLote = async () => {
 
         linhas.forEach(linha => {
             const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
-            const idEdicao = linha.getAttribute('data-id-avaliacao'); // 🎯 NOVO: Recupera o ID exato escondido
+            const idEdicao = linha.getAttribute('data-id-avaliacao');
             const notaInput = linha.querySelector('.valor-nota').value;
-            if (notaInput === '') return; // Ignora se estiver em branco
+            if (notaInput === '') return; 
 
             let regExistente = null;
             if (idEdicao) {
@@ -580,7 +584,6 @@ App.salvarNotasLote = async () => {
             const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, bimestre, dataLancamento: new Date().toISOString().split('T')[0] };
 
             if (regExistente) { 
-                // 🎯 NOVO: Usa o PUT com TODOS os campos novos (atualizando também data, tipo e disciplina)
                 promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, bimestre: bimestre })); 
             } 
             else { 
@@ -591,7 +594,7 @@ App.salvarNotasLote = async () => {
 
         await Promise.all(promessas);
         App.showToast("Pauta de notas arquivada com sucesso!", "success");
-        App.renderizarAvaliacoesPro(); // Recarrega histórico
+        App.renderizarAvaliacoesPro(); 
     } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
     finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
 };
@@ -606,12 +609,10 @@ App.editarAvaliacao = async (id) => {
     document.getElementById('nota-max').value = n.valorMax; document.getElementById('nota-bimestre').value = n.bimestre; document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
     document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
     
-    // 🎯 NOVO: Guarda o ID exato na memória antes de carregar a lista
     App.idAvaliacaoEditando = id; 
     App.carregarListaNotas(); 
 };
 
-// ✨ IMPLEMENTAÇÃO: FUNÇÃO DE FILTRAGEM INSTANTÂNEA DE NOTAS ✨
 App.filtrarHistoricoNotas = () => {
     const termo = document.getElementById('input-busca-notas').value.trim().toLowerCase();
     const linhas = document.querySelectorAll('#tabela-historico-notas tbody tr');
@@ -619,9 +620,7 @@ App.filtrarHistoricoNotas = () => {
     if (!linhas || linhas.length === 0) return;
 
     linhas.forEach(linha => {
-        // Ignora a linha de "Nenhuma nota lançada" para não gerar erros visuais
         if (linha.innerText.includes('Nenhuma nota lançada')) return;
-        
         const textoLinha = linha.innerText.toLowerCase(); 
         
         if (textoLinha.includes(termo)) {
@@ -643,8 +642,11 @@ App.renderizarChamadaPro = async () => {
         const [alunos, turmas, chamadas] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/chamadas')]); 
         const historico = Array.isArray(chamadas) ? chamadas.sort((a,b) => new Date(b.data) - new Date(a.data)) : []; 
         
+        // 🛡️ FILTRO: Apenas alunos ativos na caixa de chamada
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
-        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const hoje = new Date().toISOString().split('T')[0];
 
         const formChamada = `
@@ -660,7 +662,6 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
-        // ✨ IMPLEMENTAÇÃO: BARRA DE PESQUISA ADICIONADA AQUI LOGO ACIMA DA TABELA ✨
         const tabelaChamada = `
             <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
@@ -712,7 +713,10 @@ App.carregarListaChamada = async () => {
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
 
-        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno encontrado para este filtro.</p></div>'; return; }
+        // 🛡️ FILTRO: Impede inativos de aparecerem na grelha de chamada
+        alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
+
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
 
         const chamadasDia = chamadas.filter(c => c.data === data);
         let linhas = '';
@@ -774,7 +778,7 @@ App.salvarChamadaLote = async () => {
             const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
             const status = linha.querySelector('.status-chamada').value;
             
-            alunosAfetados.push(idAluno); // Guardar para o auto-ajuste
+            alunosAfetados.push(idAluno); 
 
             const regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
             const payload = { idAluno, nomeAluno, data, status, duracao };
@@ -783,13 +787,11 @@ App.salvarChamadaLote = async () => {
             else { payload.id = Date.now().toString() + Math.floor(Math.random()*1000); promessasChamadas.push(App.api('/chamadas', 'POST', payload)); }
         });
 
-        // 1. Guarda todas as presenças
         await Promise.all(promessasChamadas);
         
         // 2. 🧠 MOTOR PREDITIVO EM MASSA (AUTO-AJUSTE SILENCIOSO)
         let avisoExtra = "";
         try {
-            // Puxa as chamadas fresquinhas (já com as gravadas acima) e os planeamentos
             const [planejamentos, chamadasAtualizadas] = await Promise.all([App.api('/planejamentos'), App.api('/chamadas')]);
             const promessasPlano = [];
 
@@ -808,7 +810,7 @@ App.salvarChamadaLote = async () => {
         } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
 
         App.showToast(`Frequência registada${avisoExtra}`, "success");
-        App.renderizarChamadaPro(); // Recarrega histórico
+        App.renderizarChamadaPro(); 
     } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
     finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
 };
@@ -819,10 +821,9 @@ App.editarLancamentoChamada = async (id) => {
     document.getElementById('chamada-aluno').value = registro.idAluno; document.getElementById('chamada-turma').value = "";
     document.getElementById('chamada-data').value = registro.data; document.getElementById('chamada-duracao').value = registro.duracao; 
     document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
-    App.carregarListaChamada(); // Abre a grelha automaticamente só para este aluno!
+    App.carregarListaChamada(); 
 };
 
-// ✨ IMPLEMENTAÇÃO: FUNÇÃO DE FILTRAGEM INSTANTÂNEA ✨
 App.filtrarHistoricoChamada = () => {
     const termo = document.getElementById('input-busca-chamada').value.trim().toLowerCase();
     const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr');
@@ -830,9 +831,7 @@ App.filtrarHistoricoChamada = () => {
     if (!linhas || linhas.length === 0) return;
 
     linhas.forEach(linha => {
-        // Ignora a linha de "Nenhum registo encontrado" para não gerar erros visuais
         if (linha.innerText.includes('Nenhum registo encontrado')) return;
-        
         const textoLinha = linha.innerText.toLowerCase(); 
         
         if (textoLinha.includes(termo)) {
@@ -856,7 +855,6 @@ App.renderizarCalendarioPro = async () => {
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; 
         const mesNome = meses[App.calendarState.month]; const ano = App.calendarState.year; 
         
-        // CSS INLINE DE GRID APLICADO DIRETAMENTE AQUI
         const gridCalendario = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
@@ -910,7 +908,6 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
     const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
     let html = ''; 
     
-    // Espaços vazios no calendário
     for(let i=0; i<startDay; i++) {
         html += `<div class="cal-day empty"></div>`; 
     }
@@ -922,14 +919,12 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
         
         const evs = eventos.filter(e => e.data === dataISO); 
         
-        // 🎨 Injetamos os eventos com uma classe limpa em vez de estilos complexos inline
         const tags = evs.map(e => `
             <div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">
                 <span class="evt-texto">${e.descricao}</span>
             </div>
         `).join(''); 
         
-        // Célula do dia limpa
         html += `
             <div id="cal-day-${dataISO}" class="cal-day ${isHoje ? 'hoje' : ''}" onclick="App.selecionarDia('${dataISO}')">
                 <div class="dia-num">${d}</div>
@@ -944,7 +939,6 @@ App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 
 App.selecionarDia = (dt) => { 
-    // Remove o border selecionado antigo (se houver) e adiciona ao novo
     document.querySelectorAll('.cal-day').forEach(el => el.style.border = 'none');
     const diaAtivo = document.getElementById(`cal-day-${dt}`);
     if(diaAtivo) diaAtivo.style.border = '2px solid #3498db';
@@ -963,7 +957,6 @@ App.selecionarDia = (dt) => {
 };
 
 App.salvarEvento = async () => { 
-    // 1. FECHA O TECLADO DO TELEMÓVEL FORÇADAMENTE (EVITA O CORTE DO ECRÃ)
     if (document.activeElement) document.activeElement.blur();
 
     const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
@@ -980,11 +973,9 @@ App.salvarEvento = async () => {
         
         App.idEdicaoEvento=null; 
 
-        // 2. DELAY ESTRATÉGICO: Aguarda 300ms para o teclado descer
         setTimeout(() => {
             App.renderizarCalendarioPro(); 
             
-            // 3. DESLIZA SUAVEMENTE ATÉ À TABELA PARA MOSTRAR O RESULTADO
             setTimeout(() => {
                 const tabelaEventos = document.querySelector('.table-responsive-wrapper');
                 if(tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
