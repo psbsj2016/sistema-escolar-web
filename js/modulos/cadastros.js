@@ -157,8 +157,11 @@ App.salvarCadastro = async () => {
     if(btn) { btn.innerText = "A guardar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
+    // 🛡️ FUNÇÕES SALVA-VIDAS: Verificam se o campo existe antes de ler, evitando o erro "null"
+    const lerInput = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const lerNum = (id) => { const el = document.getElementById(id); return el ? parseFloat(el.value) || 0 : 0; };
+
     try {
-        // 🛡️ O SEGREDO MÁGICO: Buscar os dados antigos primeiro para não apagar o status!
         let p = {};
         if (App.idEdicao) {
             const dadosAntigos = await App.api(`/${ep}/${App.idEdicao}`);
@@ -166,58 +169,56 @@ App.salvarCadastro = async () => {
         }
 
         if (t === 'aluno') {
-            p.nome = document.getElementById('alu-nome').value;
-            p.nascimento = document.getElementById('alu-nasc').value;
-            p.cpf = document.getElementById('alu-cpf').value;
-            p.rg = document.getElementById('alu-rg').value;
-            p.endereco = document.getElementById('alu-end').value;
-            p.bairro = document.getElementById('alu-bairro').value;
-            p.cidade = document.getElementById('alu-cidade').value;
-            p.cep = document.getElementById('alu-cep').value;
-            p.email = document.getElementById('alu-email').value;
-            p.telefone = document.getElementById('alu-tel').value;
-            p.responsavel = document.getElementById('alu-resp').value;
-            p.telResponsavel = document.getElementById('alu-tel-resp').value;
-            p.curso = document.getElementById('alu-curso').value;
-            p.turma = document.getElementById('alu-turma').value;
-            p.vencimento = document.getElementById('alu-venc').value;
-            p.valorMensalidade = parseFloat(document.getElementById('alu-val').value) || 0;
-            p.bolsa = parseFloat(document.getElementById('alu-bolsa').value) || 0;
+            p.nome = lerInput('alu-nome');
+            p.nascimento = lerInput('alu-nasc');
+            p.cpf = lerInput('alu-cpf');
+            p.rg = lerInput('alu-rg');
+            p.endereco = lerInput('alu-end');
+            p.bairro = lerInput('alu-bairro');
+            p.cidade = lerInput('alu-cidade');
+            p.cep = lerInput('alu-cep');
+            p.email = lerInput('alu-email');
+            p.telefone = lerInput('alu-tel');
+            p.responsavel = lerInput('alu-resp');
+            p.telResponsavel = lerInput('alu-tel-resp');
+            p.curso = lerInput('alu-curso');
+            p.turma = lerInput('alu-turma');
+            p.vencimento = lerInput('alu-venc');
+            p.valorMensalidade = lerNum('alu-val');
+            p.bolsa = lerNum('alu-bolsa');
             
-            // Garante que o status não fique vazio se for um aluno novo
             if (!p.status) p.status = 'Ativo';
-            
             if(!p.nome || !p.curso) { App.showToast("Nome e Curso são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'curso') {
-            p.nome = document.getElementById('cur-nome').value;
-            p.cargaHoraria = document.getElementById('cur-ch').value;
-            p.valorPadrao = parseFloat(document.getElementById('cur-val').value) || 0;
+            p.nome = lerInput('cur-nome');
+            p.cargaHoraria = lerInput('cur-ch');
+            p.valorPadrao = lerNum('cur-val');
             if(!p.nome) { App.showToast("O nome do curso é obrigatório!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'turma') {
-            p.nome = document.getElementById('tur-nome').value;
-            p.curso = document.getElementById('tur-curso').value;
-            p.horario = document.getElementById('tur-hora').value;
-            p.dias = document.getElementById('tur-dias').value;
-            p.limiteAlunos = parseInt(document.getElementById('tur-limite').value) || 0;
+            p.nome = lerInput('tur-nome');
+            p.curso = lerInput('tur-curso');
+            p.horario = lerInput('tur-hora');
+            p.dias = lerInput('tur-dias');
+            p.limiteAlunos = parseInt(lerInput('tur-limite')) || 0;
             if(!p.nome || !p.curso) { App.showToast("Nome e Curso são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'usuario') {
-            p.nome = document.getElementById('usu-nome').value;
-            p.email = document.getElementById('usu-email').value;
-            p.senha = document.getElementById('usu-senha').value;
-            p.cargo = document.getElementById('usu-cargo').value;
-            p.pin = document.getElementById('usu-pin').value;
+            p.nome = lerInput('usu-nome');
+            p.email = lerInput('usu-email');
+            p.senha = lerInput('usu-senha');
+            p.cargo = lerInput('usu-cargo');
+            p.pin = lerInput('usu-pin');
             if(!p.nome || !p.email || !p.cargo) { App.showToast("Preencha os dados obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'estoque') {
-            p.nome = document.getElementById('est-nome').value;
-            p.codigo = document.getElementById('est-codigo').value;
-            p.obs = document.getElementById('est-obs').value;
-            p.valor = parseFloat(document.getElementById('est-valor').value) || 0;
-            p.quantidade = parseInt(document.getElementById('est-qtd').value) || 0;
-            p.quantidadeMinima = parseInt(document.getElementById('est-min').value) || 0;
+            p.nome = lerInput('est-nome');
+            p.codigo = lerInput('est-codigo');
+            p.obs = lerInput('est-obs');
+            p.valor = lerNum('est-valor');
+            p.quantidade = parseInt(lerInput('est-qtd')) || 0;
+            p.quantidadeMinima = parseInt(lerInput('est-min')) || 0;
             if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); throw new Error("Validação Falhou"); }
         }
 
