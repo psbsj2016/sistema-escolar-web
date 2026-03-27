@@ -149,62 +149,67 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
 };
 
 App.salvarCadastro = async () => {
-    const t = App.entidadeAtual; 
-    const ep = t === 'financeiro' ? 'financeiro' : t + 's'; 
+    const t = App.entidadeAtual;
+    const ep = t === 'financeiro' ? 'financeiro' : t + 's';
     
     const btn = document.querySelector('.btn-confirm');
     const txtOriginal = btn ? btn.innerText : 'Salvar Registro';
-    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A guardar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
-        // 🛡️ CORREÇÃO PRINCIPAL: Buscar o registo original (se existir) para não perder dados que não estão no formulário
+        // 🛡️ O SEGREDO MÁGICO: Buscar os dados antigos primeiro para não apagar o status!
         let p = {};
         if (App.idEdicao) {
-            try {
-                const original = await App.api(`/${ep}/${App.idEdicao}`);
-                if (original) p = { ...original };
-            } catch(e) { console.warn("Aviso: Falha ao buscar dados originais", e); }
-            p.id = App.idEdicao;
+            const dadosAntigos = await App.api(`/${ep}/${App.idEdicao}`);
+            if (dadosAntigos) p = { ...dadosAntigos }; 
         }
 
         if (t === 'aluno') {
-            p.nome = document.getElementById('a-nome').value;
-            p.status = document.getElementById('a-status').value; // 👈 AGORA GUARDA FIELMENTE A ESCOLHA DO SELECT
-            p.cpf = document.getElementById('a-cpf').value;
-            p.rg = document.getElementById('a-rg').value;
-            p.nascimento = document.getElementById('a-nasc').value;
-            p.sexo = document.getElementById('a-sexo').value;
-            p.whatsapp = document.getElementById('a-zap').value;
-            p.profissao = document.getElementById('a-prof').value;
-            p.curso = document.getElementById('a-curso').value;
-            p.turma = document.getElementById('a-turma').value;
-            p.rua = document.getElementById('a-rua').value;
-            p.numero = document.getElementById('a-num').value;
-            p.bairro = document.getElementById('a-bairro').value;
-            p.cidade = document.getElementById('a-cidade').value;
-            p.estado = document.getElementById('a-uf').value;
-            p.pais = document.getElementById('a-pais').value;
-            p.resp_nome = document.getElementById('r-nome').value;
-            p.resp_cpf = document.getElementById('r-cpf').value;
-            p.resp_zap = document.getElementById('r-zap').value;
+            p.nome = document.getElementById('alu-nome').value;
+            p.nascimento = document.getElementById('alu-nasc').value;
+            p.cpf = document.getElementById('alu-cpf').value;
+            p.rg = document.getElementById('alu-rg').value;
+            p.endereco = document.getElementById('alu-end').value;
+            p.bairro = document.getElementById('alu-bairro').value;
+            p.cidade = document.getElementById('alu-cidade').value;
+            p.cep = document.getElementById('alu-cep').value;
+            p.email = document.getElementById('alu-email').value;
+            p.telefone = document.getElementById('alu-tel').value;
+            p.responsavel = document.getElementById('alu-resp').value;
+            p.telResponsavel = document.getElementById('alu-tel-resp').value;
+            p.curso = document.getElementById('alu-curso').value;
+            p.turma = document.getElementById('alu-turma').value;
+            p.vencimento = document.getElementById('alu-venc').value;
+            p.valorMensalidade = parseFloat(document.getElementById('alu-val').value) || 0;
+            p.bolsa = parseFloat(document.getElementById('alu-bolsa').value) || 0;
             
-            if(!p.nome) { App.showToast("O nome do aluno é obrigatório!", "error"); throw new Error("Validação Falhou"); }
-            if(p.cpf && p.cpf.length !== 14) { App.showToast("O CPF do aluno deve estar completo (14 caracteres).", "warning"); throw new Error("Validação Falhou"); }
-            if(p.resp_cpf && p.resp_cpf.length !== 14) { App.showToast("O CPF do responsável deve estar completo.", "warning"); throw new Error("Validação Falhou"); }
-            if(p.whatsapp && p.whatsapp.length < 14) { App.showToast("Preencha o WhatsApp corretamente com o código de área.", "warning"); throw new Error("Validação Falhou"); }
-        } 
-        else if (t === 'turma') {
-            p.nome = document.getElementById('t-nome').value;
-            p.curso = document.getElementById('t-curso').value;
-            p.dia = document.getElementById('t-dia').value;
-            p.horario = document.getElementById('t-horario').value;
-            if(!p.nome) { App.showToast("Nome da turma é obrigatório!", "error"); throw new Error("Validação Falhou"); }
-        } 
+            // Garante que o status não fique vazio se for um aluno novo
+            if (!p.status) p.status = 'Ativo';
+            
+            if(!p.nome || !p.curso) { App.showToast("Nome e Curso são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
+        }
         else if (t === 'curso') {
-            p.nome = document.getElementById('c-nome').value;
-            p.carga = document.getElementById('c-carga').value;
-            if(!p.nome) { App.showToast("Nome do curso é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+            p.nome = document.getElementById('cur-nome').value;
+            p.cargaHoraria = document.getElementById('cur-ch').value;
+            p.valorPadrao = parseFloat(document.getElementById('cur-val').value) || 0;
+            if(!p.nome) { App.showToast("O nome do curso é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        }
+        else if (t === 'turma') {
+            p.nome = document.getElementById('tur-nome').value;
+            p.curso = document.getElementById('tur-curso').value;
+            p.horario = document.getElementById('tur-hora').value;
+            p.dias = document.getElementById('tur-dias').value;
+            p.limiteAlunos = parseInt(document.getElementById('tur-limite').value) || 0;
+            if(!p.nome || !p.curso) { App.showToast("Nome e Curso são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
+        }
+        else if (t === 'usuario') {
+            p.nome = document.getElementById('usu-nome').value;
+            p.email = document.getElementById('usu-email').value;
+            p.senha = document.getElementById('usu-senha').value;
+            p.cargo = document.getElementById('usu-cargo').value;
+            p.pin = document.getElementById('usu-pin').value;
+            if(!p.nome || !p.email || !p.cargo) { App.showToast("Preencha os dados obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'estoque') {
             p.nome = document.getElementById('est-nome').value;
@@ -222,7 +227,7 @@ App.salvarCadastro = async () => {
         const resultado = await App.api(endpoint, method, p);
         if (!resultado) throw new Error("Erro de comunicação com a API");
 
-        App.showToast('Registro salvo com sucesso!', 'success');
+        App.showToast('Registo salvo com sucesso!', 'success');
         App.fecharModal();
         
         if (typeof App.renderizarLista === 'function') {
@@ -231,7 +236,7 @@ App.salvarCadastro = async () => {
     } catch (err) {
         if(err.message !== "Validação Falhou") {
             console.error(err);
-            App.showToast("Erro ao salvar dados. Verifique a conexão.", "error");
+            App.showToast("Erro ao guardar dados. Verifique a ligação.", "error");
         }
     } finally {
         if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }

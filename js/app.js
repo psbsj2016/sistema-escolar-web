@@ -1130,29 +1130,33 @@ const App = {
 
         const btn = document.querySelector('.btn-confirm');
         const textOrig = btn ? btn.innerText : "Salvar";
-        if(btn) { btn.innerText = "Atualizando... ⏳"; btn.disabled = true; }
+        if(btn) { btn.innerText = "A atualizar... ⏳"; btn.disabled = true; }
         document.body.style.cursor = 'wait';
 
         try {
             const aluno = await App.api(`/alunos/${id}`);
             if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
 
-            // 1. Envia a ordem para o servidor atualizar a base de dados
+            // Envia a ordem para o servidor atualizar a base de dados
             await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
             
             App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
             App.fecharModal();
             
-            // 🚀 O PULO DO GATO: Atualização Otimista na Memória!
-            if (Array.isArray(App.listaCache)) {
-                const index = App.listaCache.findIndex(a => a.id === id);
+            // 🚀 O PULO DO GATO: Atualização Otimista usando a Cache Correta (cacheAlunos)!
+            if (Array.isArray(App.cacheAlunos)) {
+                const index = App.cacheAlunos.findIndex(a => a.id === id);
                 if (index !== -1) {
-                    App.listaCache[index].status = novoStatus;
+                    App.cacheAlunos[index].status = novoStatus;
                 }
             }
             
-            // 🎨 Redesenha a tabela instantaneamente à frente dos seus olhos
-            App.filtrarTabelaReativa();
+            // 🎨 Redesenha a tabela instantaneamente
+            if(typeof App.filtrarTabelaReativa === 'function') {
+                App.filtrarTabelaReativa();
+            } else if(typeof App.renderizarLista === 'function') {
+                App.renderizarLista('aluno');
+            }
 
         } catch (e) {
             console.error("Erro na atualização:", e);
