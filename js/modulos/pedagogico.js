@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V160 (AJUSTADO: FILTRO DE INATIVOS INTEGRADO)
+// MÓDULO PEDAGÓGICO V160 (BLINDADO + FILTRO DE INATIVOS + CHAMADA EM TEMPO REAL)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -17,7 +17,7 @@ const selectLocal = (label, id, options, extra='') => `
     </div>`;
 
 // ---------------------------------------------------------
-// 1. PLANEAMENTO
+// 1. PLANEAMENTO (COM FOLHA A4 BLINDADA)
 // ---------------------------------------------------------
 App.renderizarPlanejamentoPro = () => {
     App.setTitulo("Planeamento");
@@ -50,7 +50,7 @@ App.renderizarNovoPlanejamento = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
-        // 🛡️ FILTRO: Mostra apenas alunos Ativos
+        // 🛡️ FILTRO: Apenas alunos ativos para novos planeamentos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
         const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${a.curso}">${a.nome}</option>`).join('');
         
@@ -128,9 +128,11 @@ App.gerarGridEditavel = () => {
     while(contador < qtdAulas) { 
         if(dias.includes(dataAtual.getDay())) { 
             contador++; 
+            // 🛡️ CORREÇÃO: Formatação manual de data à prova de bugs de navegadores cruzados
             const d = String(dataAtual.getDate()).padStart(2, '0');
             const m = String(dataAtual.getMonth() + 1).padStart(2, '0');
             const y = dataAtual.getFullYear();
+            
             listaAulas.push({ num: contador, data: `${d}/${m}/${y}`, hora: horario, duracao: duracao, conteudo: '', visto: false }); 
         } 
         dataAtual.setDate(dataAtual.getDate() + 1); 
@@ -145,6 +147,7 @@ App.renderizarTelaEdicao = (plano) => {
     let totalMinutos = 0;
     plano.aulas.forEach(aula => { const [h, m] = aula.duracao.split(':').map(Number); totalMinutos += (h * 60) + m; });
     const totalHoras = (totalMinutos / 60).toFixed(0);
+    
     const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
@@ -161,6 +164,7 @@ App.renderizarTelaEdicao = (plano) => {
                 <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome||'ESCOLA'}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj||''}</div></div></div>
                 <div style="text-align:right;"><div><b>Planeamento Pedagógico</b></div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
             </div>
+            
             <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px; background:#fafafa;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="width:60%;">
@@ -173,6 +177,7 @@ App.renderizarTelaEdicao = (plano) => {
                     </div>
                 </div>
             </div>
+            
             <div class="table-responsive-wrapper">
                 <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
                     <thead><tr style="border-bottom:1px solid #000;"><th style="width:5%; padding:8px;">Nº</th><th style="width:15%; padding:8px;">DATA</th><th style="width:12%; padding:8px;">HORÁRIO</th><th style="width:12%; padding:8px;">DURAÇÃO</th><th style="padding:8px;">CONTEÚDO / OBS</th><th style="width:5%; padding:8px;">OK</th></tr></thead>
@@ -197,50 +202,79 @@ App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) A
 
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
+    
+    // 🛡️ CORREÇÃO: Força o fecho do teclado para garantir que a última letra digitada é guardada
     if (document.activeElement) document.activeElement.blur();
+
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
     if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
+    
     const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
+    const txtOrig = btn ? btn.innerText : '💾 SALVAR';
     if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
+
     try {
         await App.api(url, met, App.planoAtual); 
         App.showToast("Planeamento Salvo!", "success"); 
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
-    finally { if(btn) { btn.innerText = '💾 SALVAR'; btn.disabled = false; } document.body.style.cursor = 'default'; }
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas) return plano;
-    const presencas = chamadas.filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição')).sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    const presencas = chamadas
+        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição'))
+        .sort((a, b) => new Date(a.data) - new Date(b.data));
+
     let diasDaSemanaAulas = [];
     if (presencas.length > 0) {
         const ultimas = presencas.slice(-4);
         diasDaSemanaAulas = [...new Set(ultimas.map(p => {
             const [ano, mes, dia] = p.data.split('-');
-            return new Date(`${ano}-${mes}-${dia}T12:00:00`).getDay();
+            const d = new Date(`${ano}-${mes}-${dia}T12:00:00`);
+            return d.getDay();
         }))];
     }
+
     if (diasDaSemanaAulas.length === 0) {
         diasDaSemanaAulas = [...new Set(plano.aulas.map(a => {
             const parts = a.data.split('/');
-            return parts.length === 3 ? new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`).getDay() : -1;
+            if (parts.length === 3) {
+                const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`);
+                return d.getDay();
+            }
+            return -1;
         }).filter(d => d !== -1))];
     }
+    
     if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
+
     let presencasUsadas = 0;
-    let ultimaDataBase = new Date(); ultimaDataBase.setHours(12, 0, 0, 0);
+    let ultimaDataBase = new Date(); 
+    ultimaDataBase.setHours(12, 0, 0, 0);
+
     for (let i = 0; i < plano.aulas.length; i++) {
         const aula = plano.aulas[i];
+
         if (presencasUsadas < presencas.length) {
-            const [ano, mes, dia] = presencas[presencasUsadas].data.split('-');
-            aula.data = `${dia}/${mes}/${ano}`; aula.visto = true;
-            ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`); presencasUsadas++;
+            const dataReal = presencas[presencasUsadas].data; 
+            const [ano, mes, dia] = dataReal.split('-');
+            aula.data = `${dia}/${mes}/${ano}`;
+            aula.visto = true;
+            ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`);
+            presencasUsadas++;
         } else {
-            aula.visto = false; ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
-            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); }
+            aula.visto = false;
+            ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            
+            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) {
+                ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            }
+            
             const d = String(ultimaDataBase.getDate()).padStart(2, '0');
             const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0');
             const y = ultimaDataBase.getFullYear();
@@ -252,21 +286,27 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
 
 App.sincronizarPlanejamentoComChamadasUI = async () => {
     if(!App.planoAtual || !App.planoAtual.idAluno) return;
+
     const btn = document.getElementById('btn-sync-plan');
-    btn.innerHTML = "A analisar... ⏳"; btn.disabled = true;
+    const txtOrig = btn.innerHTML;
+    btn.innerHTML = "A analisar Padrões... ⏳"; btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
     try {
         const chamadas = await App.api('/chamadas');
         App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
+        
         App.renderizarTelaEdicao(App.planoAtual);
-        App.showToast("Planeamento Ajustado!", "success");
-    } catch (e) { App.showToast("Erro.", "error"); } 
-    finally { if(btn) { btn.innerHTML = "🤖 AUTO-AJUSTAR"; btn.disabled = false; } }
+        App.showToast("Planeamento Auto-Ajustado com Base nas Últimas Aulas! 🎉", "success");
+
+    } catch (e) { App.showToast("Erro ao sincronizar planeamento.", "error"); } 
+    finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
 App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
 
 // ---------------------------------------------------------
-// 2. BOLETIM
+// 2. BOLETIM (COM FOLHA A4 BLINDADA)
 // ---------------------------------------------------------
 App.renderizarBoletimVisual = async () => {
     App.setTitulo("Boletim Escolar");
@@ -276,212 +316,679 @@ App.renderizarBoletimVisual = async () => {
         // 🛡️ FILTRO: Apenas alunos ativos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
         const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
-        const formBoletim = `<div style="display:flex; gap:10px; align-items:center;"><select id="bol-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select><button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR</button></div>`;
+        
+        const formBoletim = `
+            <div style="display:flex; gap:10px; align-items:center;">
+                <select id="bol-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select>
+                <button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR</button>
+            </div>
+        `;
+        
         div.innerHTML = App.UI.card('📄 Emitir Boletim Escolar', '', formBoletim, '800px') + `<div id="boletim-area" style="margin-top:30px;"></div>`;
     } catch(e) { div.innerHTML = "Erro."; }
 };
 
 App.gerarBoletimTela = async () => {
-    const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione.", "error");
-    const divArea = document.getElementById('boletim-area'); divArea.innerHTML = 'A gerar...';
+    const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
+    const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
+    
     try {
-        const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([App.api(`/alunos/${idAluno}`), App.api('/avaliacoes'), App.api('/chamadas'), App.api('/escola'), App.api('/planejamentos')]);
+        const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([
+            App.api(`/alunos/${idAluno}`), App.api('/avaliacoes'), App.api('/chamadas'), App.api('/escola'), App.api('/planejamentos')
+        ]);
+        
         const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).map(c => c.data).sort();
         const primAula = presencas.length > 0 ? presencas[0].split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+        
         let ultAula = '__/__/____';
         const planoAluno = planejamentos.find(p => p.idAluno === idAluno);
-        if (planoAluno && planoAluno.aulas?.length > 0) ultAula = planoAluno.aulas[planoAluno.aulas.length - 1].data;
+        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = planoAluno.aulas[planoAluno.aulas.length - 1].data; } 
+        else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
+
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); const disciplinasMap = {};
-        notasAluno.forEach(n => { const disc = n.disciplina || 'Geral'; if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0 }; disciplinasMap[disc].notas.push(n); disciplinasMap[disc].total += (parseFloat(n.nota) || 0); });
+        
+        // 🛡️ CORREÇÃO: parseFloat(n.nota) || 0 evita o temido erro NaN (Not a Number) no Boletim
+        notasAluno.forEach(n => { 
+            const disc = n.disciplina || 'Geral'; 
+            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0 }; 
+            disciplinasMap[disc].notas.push(n); 
+            disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
+        });
+        
         let linhasHTML = '';
         if(Object.keys(disciplinasMap).length === 0) linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px;">Sem notas lançadas.</td></tr>';
         else Object.keys(disciplinasMap).forEach(chave => {
-            const d = disciplinasMap[chave]; const situacao = d.total >= 6 ? '<span style="color:green;">APROVADO</span>' : '<span style="color:orange;">EM CURSO</span>';
+            const d = disciplinasMap[chave];
+            const situacao = d.total >= 6 ? '<span style="color:green; font-weight:bold;">APROVADO</span>' : '<span style="color:orange;">EM CURSO</span>';
             const detalhe = d.notas.map(n => `<span style="font-size:11px;">${n.tipo}: <b>${n.nota}</b></span>`).join(', ');
-            linhasHTML += `<tr><td style="padding:10px;">${d.nome}</td><td>${detalhe}</td><td style="text-align:center;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center;">${situacao}</td></tr>`;
+            linhasHTML += `<tr><td style="padding:10px; border-bottom:1px solid #eee;">${d.nome}</td><td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;">${situacao}</td></tr>`;
         });
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px;">` : '';
-        divArea.innerHTML = `<div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR</button></div><div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; border-radius: 8px;"><div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;"><div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div><div style="text-align:right;"><div><b>BOLETIM</b></div><div style="font-size:10px;">${new Date().toLocaleDateString('pt-BR')}</div></div></div><div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;"><div style="font-weight:bold; font-size:16px;">ALUNO: ${aluno.nome.toUpperCase()}</div><div style="font-size:13px;"><b>CURSO:</b> ${aluno.curso || '-'} | <b>TURMA:</b> ${aluno.turma || '-'}</div><div style="display:flex; justify-content:space-between; font-size:12px;"><div>INÍCIO: <b>${primAula}</b></div><div>TÉRMINO: <b>${ultAula}</b></div></div></div><div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px; text-align:left;">DISCIPLINA</th><th style="text-align:left;">AVALIAÇÕES</th><th style="text-align:center;">NOTA</th><th style="text-align:center;">RESULTADO</th></tr></thead><tbody>${linhasHTML}</tbody></table></div></div>`;
-    } catch(e) { App.showToast("Erro.", "error"); }
+
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+        divArea.innerHTML = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR BOLETIM</button></div>
+            
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="text-align:right;"><div><b>BOLETIM ESCOLAR</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+                </div>
+                <div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;">
+                    <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${aluno.nome.toUpperCase()}</div>
+                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${aluno.curso || '-'} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${aluno.turma || '-'}</div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px;">DISCIPLINA</th><th style="padding:10px;">AVALIAÇÕES</th><th style="text-align:center; padding:10px;">NOTA</th><th style="text-align:center; padding:10px;">RESULTADO</th></tr></thead>
+                        <tbody>${linhasHTML}</tbody>
+                    </table>
+                </div>
+                <div style="padding:40px 30px; text-align:center;"><div style="width:300px; margin:0 auto; border-top:1px solid #333; padding-top:5px; font-size:12px;">Coordenação Pedagógica</div></div>
+            </div>`;
+    } catch(e) { App.showToast("Erro ao gerar boletim.", "error"); }
 };
 
 // ---------------------------------------------------------
-// 3. AVALIAÇÕES E NOTAS
+// 3. AVALIAÇÕES E NOTAS (HÍBRIDO: TURMA OU ALUNO)
 // ---------------------------------------------------------
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     try {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
         const historico = avaliacoes.sort((a,b) => b.id - a.id);
-        // 🛡️ FILTRO: Apenas alunos ativos
+
+        // 🛡️ FILTRO: Apenas alunos ativos para a caixa de seleção de notas
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
-        const opCursos = `<option value="Geral">Geral</option>` + cursos.map(c => `<option value="${c.nome}">${App.escapeHTML(c.nome)}</option>`).join('');
-        const formFiltros = `<div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px;">${selectLocal('Turma:', 'nota-turma', opTurmas)}<span style="padding-top:25px;">OU</span>${selectLocal('Aluno:', 'nota-aluno', opAlunos)}</div><div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">${selectLocal('Disciplina:', 'nota-disc', opCursos)}${selectLocal('Tipo:', 'nota-tipo', '<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Outro">Outro</option>')}</div><div style="display:flex; gap:15px;">${col('Data:', 'nota-data', 'date', new Date().toISOString().split('T')[0])}${col('Máx:', 'nota-max', 'number', '10')}<button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px;">📋 ABRIR PAUTA</button></div>`;
-        const tabelaHistorico = `<div style="background:#fff; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #eee;"><input type="text" id="input-busca-notas" placeholder="🔍 Pesquisar..." oninput="App.filtrarHistoricoNotas()" style="width:100%; border:none; outline:none;"></div><div class="table-responsive-wrapper"><table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#f4f6f7; text-align:left;"><th style="padding:12px;">Aluno</th><th>Data</th><th>Avaliação</th><th style="text-align:center;">Nota</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${historico.map(h => `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td>${h.data?.split('-').reverse().join('/')}</td><td>${h.tipo}</td><td style="text-align:center;"><b>${h.nota}</b></td><td style="text-align:right;"><button onclick="App.editarAvaliacao('${h.id}')" style="background:none; border:none; cursor:pointer;">✏️</button><button onclick="App.excluirAvaliacao('${h.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td></tr>`).join('')}</tbody></table></div>`;
-        div.innerHTML = App.UI.card('📝 Notas', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico', '', tabelaHistorico, '100%') + '</div>';
-    } catch(e) { div.innerHTML="Erro."; }
+        const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${c.nome}">${App.escapeHTML(c.nome)}</option>`).join('');
+        
+        const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
+        const opBimestres = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
+        const hoje = new Date().toISOString().split('T')[0];
+
+        const formFiltros = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                ${selectLocal('Filtrar por Turma:', 'nota-turma', opTurmas)}
+                <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
+                ${selectLocal('Buscar Aluno Único:', 'nota-aluno', opAlunos)}
+            </div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px;">
+                ${selectLocal('Disciplina/Curso:', 'nota-disc', opCursos)}
+                ${selectLocal('Tipo de Avaliação:', 'nota-tipo', opTipos, 'onchange="App.toggleTipoOutroNota()"')}
+                <div id="div-outro-nota" style="flex: 1; min-width: 150px; display:none;">
+                    <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Especifique:</label>
+                    <input type="text" id="nota-outro-desc" placeholder="Ex: Seminário" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                </div>
+                ${selectLocal('Bimestre:', 'nota-bimestre', opBimestres)}
+            </div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                ${col('Data da Avaliação:', 'nota-data', 'date', hoje)}
+                ${col('Valor Máximo (Pts):', 'nota-max', 'number', '10', 'step="0.1"')}
+                <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
+            </div>
+        `;
+
+        const tabelaHistorico = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-notas" 
+                       placeholder="Pesquisar histórico pelo nome do aluno, disciplina ou tipo..." 
+                       oninput="App.filtrarHistoricoNotas()" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+
+            <div class="table-responsive-wrapper">
+                <table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="7" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
+                        ${historico.map(h => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
+                                <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
+                                <td style="padding:12px;">${h.data ? h.data.split('-').reverse().join('/') : '-'}</td>
+                                <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
+                                <td style="padding:12px;">${App.escapeHTML(h.bimestre)}</td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${h.nota}</strong> <span style="color:#999; font-size:11px;">/ ${h.valorMax}</span></td>
+                                <td style="padding:12px; text-align:right;">
+                                    <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️</button>
+                                    <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;" title="Excluir">🗑️</button>
+                                </td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('📝 Lançamento de Notas (Híbrido)', 'Gere a pauta para a turma inteira ou para um aluno isolado.', formFiltros, '100%') + 
+                        `<div id="area-lista-notas" style="margin-top:20px;"></div>` +
+                        '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
+    } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
 };
+
+App.toggleTipoOutroNota = () => { const tipo = document.getElementById('nota-tipo').value; document.getElementById('div-outro-nota').style.display = (tipo==='Outro')?'block':'none'; };
 
 App.carregarListaNotas = async () => {
     const turma = document.getElementById('nota-turma').value;
     const idAluno = document.getElementById('nota-aluno').value;
     const disc = document.getElementById('nota-disc').value;
+    let tipo = document.getElementById('nota-tipo').value;
+    if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
     const data = document.getElementById('nota-data').value;
     const max = document.getElementById('nota-max').value;
-    if(!turma && !idAluno) return App.showToast("Selecione.", "warning");
-    const area = document.getElementById('area-lista-notas'); area.innerHTML = 'A preparar...';
+
+    if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
+    if(!disc || !data) return App.showToast("Preencha Disciplina e Data.", "warning");
+
+    const area = document.getElementById('area-lista-notas');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar pauta de lançamento... ⏳</p>';
+
     try {
         const [alunos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/avaliacoes')]);
-        let alunosAlvo = idAluno ? alunos.filter(a => a.id === idAluno) : alunos.filter(a => a.turma === turma);
-        // 🛡️ FILTRO: Impede inativos de aparecerem na pauta
+        
+        let alunosAlvo = [];
+        if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
+        else { alunosAlvo = alunos.filter(a => a.turma === turma); }
+
+        // 🛡️ FILTRO: Impede inativos de aparecerem na grelha
         alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
-        if(alunosAlvo.length === 0) { area.innerHTML = '<p>Nenhum aluno ativo.</p>'; return; }
+
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
+
         let linhas = '';
         alunosAlvo.forEach(a => {
-            const reg = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc);
-            linhas += `<tr class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}"><td style="padding:12px;">${App.escapeHTML(a.nome)}</td><td style="width:150px;"><input type="number" class="valor-nota" style="width:100%; text-align:center;" value="${reg?.nota || ''}"></td></tr>`;
+            let regExistente = null;
+            
+            if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
+                regExistente = avaliacoes.find(av => av.id === App.idAvaliacaoEditando);
+            } else {
+                regExistente = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            }
+
+            const notaAtual = regExistente ? regExistente.nota : '';
+            const idEdicaoTag = (App.idAvaliacaoEditando && regExistente) ? `data-id-avaliacao="${regExistente.id}"` : '';
+
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:150px;">
+                    <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${notaAtual}">
+                </td>
+            </tr>`;
         });
-        area.innerHTML = `<div class="card" style="border:2px solid #2980b9;"><div class="table-responsive-wrapper"><table style="width:100%;"><thead><tr><th>ALUNO</th><th>NOTA</th></tr></thead><tbody>${linhas}</tbody></table></div><div style="padding:15px; text-align:right;"><button onclick="App.salvarNotasLote()" class="btn-primary">💾 SALVAR NOTAS</button></div></div>`;
-    } catch(e) { area.innerHTML = 'Erro.'; }
+        
+        App.idAvaliacaoEditando = null;
+
+        area.innerHTML = `
+            <div class="card" style="padding:0; overflow:hidden; border:2px solid #2980b9;">
+                <div style="padding:15px; background:#e8f4f8; border-bottom:1px solid #d1e8f0; font-size:13px; color:#2980b9; display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>Lançamento:</b> ${App.escapeHTML(tipo)} de ${App.escapeHTML(disc)}</span>
+                    <span style="background:#2980b9; color:white; padding:4px 10px; border-radius:12px; font-weight:bold;">Máx: ${max} pts</span>
+                </div>
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">ALUNO</th><th style="padding:15px; text-align:center;">NOTA OBTIDA</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarNotasLote()" class="btn-primary">💾 SALVAR NOTAS NO BOLETIM</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a pauta.</p>'; }
 };
 
 App.salvarNotasLote = async () => {
-    const disc = document.getElementById('nota-disc').value; const tipo = document.getElementById('nota-tipo').value;
-    const data = document.getElementById('nota-data').value; const max = document.getElementById('nota-max').value;
+    const disc = document.getElementById('nota-disc').value;
+    let tipo = document.getElementById('nota-tipo').value;
+    if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
+    const data = document.getElementById('nota-data').value;
+    const max = document.getElementById('nota-max').value;
+    const bimestre = document.getElementById('nota-bimestre').value;
     const linhas = document.querySelectorAll('.linha-nota');
+    if(linhas.length === 0) return;
+
+    const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
+    const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+
     try {
-        const avaliacoesExistentes = await App.api('/avaliacoes');
         const promessas = [];
-        linhas.forEach(l => {
-            const idAluno = l.getAttribute('data-id'); const nomeAluno = l.getAttribute('data-nome');
-            const nota = l.querySelector('.valor-nota').value; if(nota === '') return;
-            const reg = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc);
-            if(reg) promessas.push(App.api(`/avaliacoes/${reg.id}`, 'PUT', {...reg, nota, valorMax: max}));
-            else promessas.push(App.api('/avaliacoes', 'POST', {id: Date.now()+Math.random(), idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota}));
+        const avaliacoesExistentes = await App.api('/avaliacoes');
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
+            const idEdicao = linha.getAttribute('data-id-avaliacao');
+            const notaInput = linha.querySelector('.valor-nota').value;
+            if (notaInput === '') return; 
+
+            let regExistente = null;
+            if (idEdicao) {
+                regExistente = avaliacoesExistentes.find(av => av.id === idEdicao);
+            } else {
+                regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            }
+
+            const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, bimestre, dataLancamento: new Date().toISOString().split('T')[0] };
+
+            if (regExistente) { 
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, bimestre: bimestre })); 
+            } 
+            else { 
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
+                promessas.push(App.api('/avaliacoes', 'POST', payload)); 
+            }
         });
-        await Promise.all(promessas); App.showToast("Salvo!", "success"); App.renderizarAvaliacoesPro();
-    } catch(e) { App.showToast("Erro.", "error"); }
+
+        await Promise.all(promessas);
+        App.showToast("Pauta de notas arquivada com sucesso!", "success");
+        App.renderizarAvaliacoesPro(); 
+    } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
+    finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
 };
 
-App.excluirAvaliacao = async (id) => { if(confirm("Excluir?")) { await App.api(`/avaliacoes/${id}`, 'DELETE'); App.renderizarAvaliacoesPro(); }};
+App.excluirAvaliacao = async (id) => { if(confirm("Excluir nota?")) { await App.api(`/avaliacoes/${id}`, 'DELETE'); App.renderizarAvaliacoesPro(); }};
 App.editarAvaliacao = async (id) => { 
     const n = await App.api(`/avaliacoes/${id}`); 
-    document.getElementById('nota-aluno').value = n.idAluno; document.getElementById('nota-disc').value = n.disciplina || 'Geral';
-    document.getElementById('nota-data').value = n.data; App.carregarListaNotas(); 
+    document.getElementById('nota-aluno').value = n.idAluno; document.getElementById('nota-turma').value = "";
+    document.getElementById('nota-disc').value = n.disciplina || 'Geral';
+    if(["Teste","Prova","Pesquisa","Trabalho"].includes(n.tipo)) { document.getElementById('nota-tipo').value=n.tipo; document.getElementById('div-outro-nota').style.display='none'; } 
+    else { document.getElementById('nota-tipo').value='Outro'; App.toggleTipoOutroNota(); document.getElementById('nota-outro-desc').value=n.tipo; } 
+    document.getElementById('nota-max').value = n.valorMax; document.getElementById('nota-bimestre').value = n.bimestre; document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
+    document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
+    
+    App.idAvaliacaoEditando = id; 
+    App.carregarListaNotas(); 
 };
 
 App.filtrarHistoricoNotas = () => {
-    const termo = document.getElementById('input-busca-notas').value.toLowerCase();
-    document.querySelectorAll('#tabela-historico-notas tbody tr').forEach(l => l.style.display = l.innerText.toLowerCase().includes(termo) ? '' : 'none');
+    const termo = document.getElementById('input-busca-notas').value.trim().toLowerCase();
+    const linhas = document.querySelectorAll('#tabela-historico-notas tbody tr');
+    
+    if (!linhas || linhas.length === 0) return;
+
+    linhas.forEach(linha => {
+        if (linha.innerText.includes('Nenhuma nota lançada')) return;
+        const textoLinha = linha.innerText.toLowerCase(); 
+        
+        if (textoLinha.includes(termo)) {
+            linha.style.display = '';
+        } else {
+            linha.style.display = 'none';
+        }
+    });
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA
+// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA
 // ---------------------------------------------------------
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controlo de Presença");
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     try { 
         const [alunos, turmas, chamadas] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/chamadas')]); 
-        const historico = chamadas.sort((a,b) => new Date(b.data) - new Date(a.data));
-        // 🛡️ FILTRO: Apenas alunos ativos
+        const historico = Array.isArray(chamadas) ? chamadas.sort((a,b) => new Date(b.data) - new Date(a.data)) : []; 
+        
+        // 🛡️ FILTRO: Apenas alunos ativos na caixa de chamada
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
-        const opTurmas = `<option value="">-- Turma --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
-        const opAlunos = `<option value="">-- Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
-        const formChamada = `<div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px; background:#f9f9f9; padding:15px;">${selectLocal('Turma:', 'ch-turma', opTurmas)}<span>OU</span>${selectLocal('Aluno:', 'ch-aluno', opAlunos)}</div><div style="display:flex; gap:15px;">${col('Data:', 'ch-data', 'date', new Date().toISOString().split('T')[0])}${col('Duração:', 'ch-duracao', 'time', '01:00')}<button onclick="App.carregarListaChamada()" class="btn-primary">📋 ABRIR CHAMADA</button></div>`;
-        const tabelaChamada = `<div style="background:#fff; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #eee;"><input type="text" id="input-busca-chamada" placeholder="🔍 Pesquisar..." oninput="App.filtrarHistoricoChamada()" style="width:100%; border:none; outline:none;"></div><div class="table-responsive-wrapper"><table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="background:#f4f6f7;"><th>Data</th><th>Aluno</th><th>Status</th><th style="text-align:right;">Ações</th></tr></thead><tbody>${historico.map(h => `<tr style="border-bottom:1px solid #eee;"><td>${h.data.split('-').reverse().join('/')}</td><td style="font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="color:${h.status==='Falta'?'red':'green'}">${h.status}</td><td style="text-align:right;"><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td></tr>`).join('')}</tbody></table></div>`;
-        div.innerHTML = App.UI.card('📝 Chamada', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico', '', tabelaChamada, '100%') + '</div>';
-    } catch(e) { div.innerHTML = "Erro."; } 
+
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const hoje = new Date().toISOString().split('T')[0];
+
+        const formChamada = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                ${selectLocal('Filtrar por Turma:', 'chamada-turma', opTurmas)}
+                <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
+                ${selectLocal('Buscar Aluno Único:', 'chamada-aluno', opAlunos)}
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
+                ${col('Data da Aula:', 'chamada-data', 'date', hoje)}
+                ${col('Duração (Ex: 01:30):', 'chamada-duracao', 'time', '01:00')}
+                <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR CHAMADA</button>
+            </div>
+        `;
+
+        const tabelaChamada = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-chamada" 
+                       placeholder="Pesquisar histórico pelo nome do aluno ou status..." 
+                       oninput="App.filtrarHistoricoChamada()" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
+                        ${historico.map(h => { 
+                            let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="padding:12px; font-weight:bold; color:${color};">${h.status}</td><td style="padding:12px; color:#555;">${h.duracao}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('📝 Registo de Frequência (Híbrido)', 'Faça a chamada para a turma ou ajuste as faltas de um único aluno.', formChamada, '100%') + 
+                        `<div id="area-lista-chamada" style="margin-top:20px;"></div>` +
+                        '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
+    } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
 App.carregarListaChamada = async () => {
-    const turma = document.getElementById('ch-turma').value;
-    const idAluno = document.getElementById('ch-aluno').value;
-    const data = document.getElementById('ch-data').value;
-    if(!turma && !idAluno) return App.showToast("Selecione.", "warning");
-    const area = document.getElementById('area-lista-chamada'); area.innerHTML = 'A preparar...';
+    const turma = document.getElementById('chamada-turma').value;
+    const idAluno = document.getElementById('chamada-aluno').value;
+    const data = document.getElementById('chamada-data').value;
+    
+    if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
+    if(!data) return App.showToast("Preencha a Data da aula.", "warning");
+
+    const area = document.getElementById('area-lista-chamada');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe... ⏳</p>';
+
     try {
         const [alunos, chamadas] = await Promise.all([App.api('/alunos'), App.api('/chamadas')]);
-        let alunosAlvo = idAluno ? alunos.filter(a => a.id === idAluno) : alunos.filter(a => a.turma === turma);
+        
+        let alunosAlvo = [];
+        if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
+        else { alunosAlvo = alunos.filter(a => a.turma === turma); }
+
         // 🛡️ FILTRO: Impede inativos de aparecerem na grelha de chamada
         alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
-        if(alunosAlvo.length === 0) { area.innerHTML = '<p>Nenhum aluno ativo.</p>'; return; }
+
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
+
+        const chamadasDia = chamadas.filter(c => c.data === data);
         let linhas = '';
+        
         alunosAlvo.forEach(a => {
-            const reg = chamadas.find(c => c.idAluno === a.id && c.data === data);
-            const status = reg ? reg.status : 'Presença';
-            linhas += `<tr class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}"><td style="padding:12px;">${App.escapeHTML(a.nome)}</td><td><select class="status-chamada"><option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option><option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option></select></td></tr>`;
+            const regExistente = chamadasDia.find(c => c.idAluno === a.id);
+            const status = regExistente ? regExistente.status : 'Presença';
+            
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:250px;">
+                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':'#27ae60'};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+                        <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
+                        <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
+                        <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
+                        <option value="Falta Justificada" ${status==='Falta Justificada'?'selected':''}>⚠️ Falta Justificada</option>
+                        <option value="Feriado" ${status==='Feriado'?'selected':''}>📅 Feriado</option>
+                        <option value="Recesso" ${status==='Recesso'?'selected':''}>🏖️ Recesso</option>
+                    </select>
+                </td>
+            </tr>`;
         });
-        area.innerHTML = `<div class="card" style="border:2px solid #27ae60;"><div class="table-responsive-wrapper"><table style="width:100%;"><thead><tr><th>NOME</th><th>STATUS</th></tr></thead><tbody>${linhas}</tbody></table></div><div style="padding:15px; text-align:right;"><button onclick="App.salvarChamadaLote()" class="btn-primary">💾 SALVAR CHAMADA</button></div></div>`;
-    } catch(e) { area.innerHTML = 'Erro.'; }
+
+        area.innerHTML = `
+            <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
+                <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
+                    Grelha de Frequência - ${data.split('-').reverse().join('/')}
+                </div>
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">NOME DO ALUNO</th><th style="padding:15px; text-align:left;">STATUS DA AULA</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60;">💾 SALVAR FREQUÊNCIA</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a lista.</p>'; }
 };
 
 App.salvarChamadaLote = async () => {
-    const data = document.getElementById('ch-data').value; const duracao = document.getElementById('ch-duracao').value;
+    const data = document.getElementById('chamada-data').value;
+    const duracao = document.getElementById('chamada-duracao').value || '01:00';
     const linhas = document.querySelectorAll('.linha-chamada');
+    if(linhas.length === 0) return;
+
+    const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
+    const txt = btn.innerText; btn.innerText = "A processar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+
     try {
-        const chamadasExistentes = await App.api('/chamadas'); const planejamentos = await App.api('/planejamentos');
-        const promessas = [];
-        linhas.forEach(l => {
-            const idAluno = l.getAttribute('data-id'); const nomeAluno = l.getAttribute('data-nome');
-            const status = l.querySelector('.status-chamada').value;
-            const reg = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
-            if(reg) promessas.push(App.api(`/chamadas/${reg.id}`, 'PUT', {...reg, status}));
-            else promessas.push(App.api('/chamadas', 'POST', {id: Date.now()+Math.random(), idAluno, nomeAluno, data, status, duracao}));
+        const promessasChamadas = [];
+        const chamadasExistentes = await App.api('/chamadas');
+        const alunosAfetados = [];
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
+            const status = linha.querySelector('.status-chamada').value;
             
-            // Auto-ajuste de planeamento
-            let plano = planejamentos.find(p => p.idAluno === idAluno);
-            if(plano && typeof App.processarAutoAjustePlano === 'function') {
-                 plano = App.processarAutoAjustePlano(plano, [...chamadasExistentes, {idAluno, status, data}]);
-                 promessas.push(App.api(`/planejamentos/${plano.id}`, 'PUT', plano));
-            }
+            alunosAfetados.push(idAluno); 
+
+            const regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
+            const payload = { idAluno, nomeAluno, data, status, duracao };
+
+            if (regExistente) { promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status, duracao })); } 
+            else { payload.id = Date.now().toString() + Math.floor(Math.random()*1000); promessasChamadas.push(App.api('/chamadas', 'POST', payload)); }
         });
-        await Promise.all(promessas); App.showToast("Salvo!", "success"); App.renderizarChamadaPro();
-    } catch(e) { App.showToast("Erro.", "error"); }
+
+        await Promise.all(promessasChamadas);
+        
+        // 2. 🧠 MOTOR PREDITIVO EM MASSA (AUTO-AJUSTE SILENCIOSO)
+        let avisoExtra = "";
+        try {
+            const [planejamentos, chamadasAtualizadas] = await Promise.all([App.api('/planejamentos'), App.api('/chamadas')]);
+            const promessasPlano = [];
+
+            alunosAfetados.forEach(idAluno => {
+                let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno);
+                if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
+                    planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadas);
+                    promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
+                }
+            });
+
+            if (promessasPlano.length > 0) {
+                await Promise.all(promessasPlano);
+                avisoExtra = " e Planeamento(s) Auto-Ajustado(s)!";
+            }
+        } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+
+        App.showToast(`Frequência registada${avisoExtra}`, "success");
+        App.renderizarChamadaPro(); 
+    } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
+    finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
 };
 
-App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
+App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registo?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
+App.editarLancamentoChamada = async (id) => { 
+    const registro = await App.api(`/chamadas/${id}`); 
+    document.getElementById('chamada-aluno').value = registro.idAluno; document.getElementById('chamada-turma').value = "";
+    document.getElementById('chamada-data').value = registro.data; document.getElementById('chamada-duracao').value = registro.duracao; 
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
+    App.carregarListaChamada(); 
+};
+
 App.filtrarHistoricoChamada = () => {
-    const termo = document.getElementById('input-busca-chamada').value.toLowerCase();
-    document.querySelectorAll('#tabela-historico-chamadas tbody tr').forEach(l => l.style.display = l.innerText.toLowerCase().includes(termo) ? '' : 'none');
+    const termo = document.getElementById('input-busca-chamada').value.trim().toLowerCase();
+    const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr');
+    
+    if (!linhas || linhas.length === 0) return;
+
+    linhas.forEach(linha => {
+        if (linha.innerText.includes('Nenhum registo encontrado')) return;
+        const textoLinha = linha.innerText.toLowerCase(); 
+        
+        if (textoLinha.includes(termo)) {
+            linha.style.display = '';
+        } else {
+            linha.style.display = 'none';
+        }
+    });
 };
 
 // ---------------------------------------------------------
-// 5. CALENDÁRIO
+// 5. CALENDÁRIO (BLINDADO COM GRID CSS INLINE E PÍLULAS)
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
     App.setTitulo("Calendário");
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...'; 
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar calendário...'; 
     if (!App.calendarState) App.calendarState = { month: new Date().getMonth(), year: new Date().getFullYear() }; 
+    
     try { 
         const eventos = await App.api('/eventos'); 
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; 
         const mesNome = meses[App.calendarState.month]; const ano = App.calendarState.year; 
-        const gridCalendario = `<div style="display:flex; justify-content:space-between; margin-bottom:20px;"><button onclick="App.mudarMes(-1)">◀</button><h2>${mesNome} ${ano}</h2><button onclick="App.mudarMes(1)">▶</button></div><div id="calendar-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; background:#eee;">${App.gerarDiasCalendario(App.calendarState.month, App.calendarState.year, eventos)}</div>`;
-        const formEvento = `<div id="box-gerir-evento"><h3>Gerir Evento</h3><div style="display:flex; gap:10px; flex-wrap:wrap;">${col('Data:', 'evt-data', 'date')}${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">Evento</option><option value="Feriado">Feriado</option>')}${col('Desc:', 'evt-desc', 'text')}</div><button onclick="App.salvarEvento()" class="btn-primary" style="margin-top:10px;">Salvar</button></div>`;
-        div.innerHTML = App.UI.card('', '', gridCalendario, '100%') + App.UI.card('', '', formEvento, '100%'); 
-    } catch(e) { div.innerHTML = "Erro."; } 
+        
+        const gridCalendario = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
+                <h2 style="margin:0; color:#2c3e50; text-transform:uppercase; font-size:22px;">${mesNome} ${ano}</h2>
+                <button onclick="App.mudarMes(1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">▶</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; font-size:12px; text-transform:uppercase;">
+                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+            </div>
+            <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #eee; border: 1px solid #eee;">
+                ${App.gerarDiasCalendario(App.calendarState.month, App.calendarState.year, eventos)}
+            </div>
+        `;
+
+        const formEvento = `
+            <div id="box-gerir-evento" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerir Evento</h3></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+                ${col('Data:', 'evt-data', 'date')}
+                ${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">🟢 Evento</option><option value="Feriado">🔴 Feriado</option><option value="Prova">🔵 Prova</option><option value="Reunião">🟠 Reunião</option>')}
+                ${col('Descrição:', 'evt-desc', 'text', '', 'placeholder="Ex: Prova de História / Carnaval" style="flex:3;"')}
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 15px; align-items: flex-end;">
+                ${col('Início:', 'evt-inicio', 'time')}
+                ${col('Término:', 'evt-fim', 'time')}
+                <div style="flex: 1; text-align: right;">
+                    <button onclick="App.limparFormEvento()" style="background:#95a5a6; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:5px;">Cancelar</button>
+                    <button onclick="App.salvarEvento()" style="background:#6c5ce7; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold;">Salvar</button>
+                </div>
+            </div>
+        `;
+
+        const tabelaEventos = `
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
+                    <thead><tr style="background:#f8f9fa; color:#7f8c8d; border-bottom:2px solid #eee;"><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
+                    <tbody>${App.gerarListaEventosHTML(App.calendarState.month, App.calendarState.year, eventos)}</tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('', '', gridCalendario, '100%') + 
+                        '<div style="margin-top:20px;">' + App.UI.card('', '', formEvento, '100%') + '</div>' + 
+                        '<div style="margin-top:20px;">' + App.UI.card(`Lista de Eventos (${mesNome})`, '', tabelaEventos, '100%') + '</div>'; 
+                        
+        document.getElementById('evt-data').value = new Date().toISOString().split('T')[0]; 
+    } catch(e) { div.innerHTML = "Erro ao carregar calendário."; } 
 };
 
 App.gerarDiasCalendario = (mes, ano, eventos) => { 
-    const startDay = new Date(ano, mes, 1).getDay(); const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
-    let html = ''; for(let i=0; i<startDay; i++) html += `<div class="cal-day empty"></div>`;
+    const startDay = new Date(ano, mes, 1).getDay(); 
+    const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
+    let html = ''; 
+    
+    for(let i=0; i<startDay; i++) {
+        html += `<div class="cal-day empty"></div>`; 
+    }
+    
     for(let d=1; d<=daysInMonth; d++){ 
         const dataISO = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
+        const hojeObj = new Date();
+        const isHoje = (d === hojeObj.getDate() && mes === hojeObj.getMonth() && ano === hojeObj.getFullYear()); 
+        
         const evs = eventos.filter(e => e.data === dataISO); 
-        html += `<div class="cal-day" onclick="App.selecionarDia('${dataISO}')"><div class="dia-num">${d}</div>${evs.map(e=>`<div class="evt-pilula" style="background:${(EVENTO_CORES[e.tipo]||{}).bg}">${e.descricao}</div>`).join('')}</div>`; 
+        
+        const tags = evs.map(e => `
+            <div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">
+                <span class="evt-texto">${e.descricao}</span>
+            </div>
+        `).join(''); 
+        
+        html += `
+            <div id="cal-day-${dataISO}" class="cal-day ${isHoje ? 'hoje' : ''}" onclick="App.selecionarDia('${dataISO}')">
+                <div class="dia-num">${d}</div>
+                <div class="evt-container">${tags}</div>
+            </div>
+        `; 
     } 
     return html; 
 };
 
+App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${e.inicio||'-'}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${e.tipo}</td><td style="padding:10px;">${e.descricao}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button></td></tr>`).join(''); };
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
-App.selecionarDia = (dt) => { document.getElementById('evt-data').value = dt; document.getElementById('evt-desc').focus(); };
-App.salvarEvento = async () => { 
-    const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value }; 
-    if(!pl.data || !pl.descricao) return; 
-    try { await App.api('/eventos', 'POST', pl); App.renderizarCalendarioPro(); App.showToast("Salvo!", "success"); } catch(e) { App.showToast("Erro.", "error"); }
+
+App.selecionarDia = (dt) => { 
+    document.querySelectorAll('.cal-day').forEach(el => el.style.border = 'none');
+    const diaAtivo = document.getElementById(`cal-day-${dt}`);
+    if(diaAtivo) diaAtivo.style.border = '2px solid #3498db';
+    
+    const dataInput = document.getElementById('evt-data');
+    dataInput.value = dt; 
+    
+    const descInput = document.getElementById('evt-desc');
+    descInput.value = '';
+    App.idEdicaoEvento = null; 
+    
+    setTimeout(() => {
+        document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        descInput.focus();
+    }, 100);
 };
+
+App.salvarEvento = async () => { 
+    if (document.activeElement) document.activeElement.blur();
+
+    const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
+    if(!pl.data || !pl.descricao) return App.showToast("Preencha data e descrição.", "error"); 
+    
+    const btn = document.querySelector('button[onclick="App.salvarEvento()"]');
+    const txtOrig = btn ? btn.innerText : 'Salvar';
+    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); 
+        else await App.api('/eventos', 'POST', pl); 
+        
+        App.idEdicaoEvento=null; 
+
+        setTimeout(() => {
+            App.renderizarCalendarioPro(); 
+            
+            setTimeout(() => {
+                const tabelaEventos = document.querySelector('.table-responsive-wrapper');
+                if(tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+
+        }, 300);
+
+        App.showToast("Evento salvo com sucesso!", "success");
+
+    } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+};
+
+App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+App.excluirEvento = async (id) => { if(confirm("Excluir?")){ await App.api(`/eventos/${id}`, 'DELETE'); App.renderizarCalendarioPro(); }};
+App.limparFormEvento = () => { document.getElementById('evt-desc').value=''; App.idEdicaoEvento=null; };
