@@ -439,10 +439,22 @@ const App = {
             const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); // Filtra ativos para o Dashboard
             const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
             const dataHoje = new Date(); const mesAtual = dataHoje.getMonth() + 1; const anoAtual = dataHoje.getFullYear();
+            // 🛡️ CORREÇÃO: Pegamos os IDs apenas dos alunos ativos
+            const ativosIds = listaAlunos.map(a => a.id);
+
             const financasMes = listaFin.filter(f => { if(!f.vencimento) return false; const parts = f.vencimento.split('-'); return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual; });
             const totalRecebido = financasMes.filter(f => f.status === 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
-            const totalPendente = financasMes.filter(f => f.status !== 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
-            const inadimplentesList = listaFin.filter(f => f.status === 'Pendente' && new Date(f.vencimento + 'T00:00:00') < dataHoje).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+            
+            // 🛡️ CORREÇÃO: Soma apenas os pendentes de quem ESTÁ ATIVO
+            const totalPendente = financasMes.filter(f => f.status !== 'Pago' && ativosIds.includes(f.idAluno)).reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
+            
+            // 🛡️ CORREÇÃO: Mostra na lista de atrasados apenas quem ESTÁ ATIVO
+            const inadimplentesList = listaFin.filter(f => 
+                f.status === 'Pendente' && 
+                new Date(f.vencimento + 'T00:00:00') < dataHoje &&
+                ativosIds.includes(f.idAluno) 
+            ).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+
             const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
@@ -1168,6 +1180,14 @@ confirmarAlteracaoStatus: async () => {
             } else {
                 // Último recurso de segurança: força um refresh rápido
                 setTimeout(() => window.location.reload(), 500);
+            }
+
+            // 🛡️ CORREÇÃO (PASSO 4): Força o sininho a recalcular e sumir com os cancelados na hora!
+            App.verificarNotificacoes();
+            
+            // 🛡️ BÔNUS: Se estivermos na tela principal, recarrega o dashboard para atualizar as dívidas e gráficos
+            if (document.getElementById('titulo-pagina') && document.getElementById('titulo-pagina').innerText === 'Visão Geral') {
+                App.renderizarInicio();
             }
 
         } catch (e) {

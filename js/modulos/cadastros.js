@@ -169,25 +169,32 @@ App.salvarCadastro = async () => {
         }
 
         if (t === 'aluno') {
-            p.nome = lerInput('alu-nome');
-            p.nascimento = lerInput('alu-nasc');
-            p.cpf = lerInput('alu-cpf');
-            p.rg = lerInput('alu-rg');
-            p.endereco = lerInput('alu-end');
-            p.bairro = lerInput('alu-bairro');
-            p.cidade = lerInput('alu-cidade');
-            p.cep = lerInput('alu-cep');
-            p.email = lerInput('alu-email');
-            p.telefone = lerInput('alu-tel');
-            p.responsavel = lerInput('alu-resp');
-            p.telResponsavel = lerInput('alu-tel-resp');
-            p.curso = lerInput('alu-curso');
-            p.turma = lerInput('alu-turma');
-            p.vencimento = lerInput('alu-venc');
-            p.valorMensalidade = lerNum('alu-val');
-            p.bolsa = lerNum('alu-bolsa');
+            // Lemos os inputs tentando o prefixo 'a-' (do HTML) ou 'alu-' (legado)
+            p.nome = lerInput('a-nome') || lerInput('alu-nome');
+            p.nascimento = lerInput('a-nasc') || lerInput('alu-nasc');
+            p.cpf = lerInput('a-cpf') || lerInput('alu-cpf');
+            p.rg = lerInput('a-rg') || lerInput('alu-rg');
+            p.sexo = lerInput('a-sexo') || lerInput('alu-sexo');
+            p.whatsapp = lerInput('a-zap') || lerInput('alu-zap');
+            p.profissao = lerInput('a-prof') || lerInput('alu-prof');
             
-            if (!p.status) p.status = 'Ativo';
+            p.curso = lerInput('a-curso') || lerInput('alu-curso');
+            p.turma = lerInput('a-turma') || lerInput('alu-turma');
+            
+            p.rua = lerInput('a-rua') || lerInput('alu-rua');
+            p.numero = lerInput('a-num') || lerInput('alu-num');
+            p.bairro = lerInput('a-bairro') || lerInput('alu-bairro');
+            p.cidade = lerInput('a-cidade') || lerInput('alu-cidade');
+            p.estado = lerInput('a-uf') || lerInput('alu-uf');
+            p.pais = lerInput('a-pais') || lerInput('alu-pais');
+            
+            p.resp_nome = lerInput('r-nome');
+            p.resp_cpf = lerInput('r-cpf');
+            p.resp_zap = lerInput('r-zap');
+            
+            // 🛡️ AQUI ESTÁ A CORREÇÃO DO STATUS: Lemos o campo exato da tela!
+            p.status = lerInput('a-status') || lerInput('alu-status') || 'Ativo';
+            
             if(!p.nome || !p.curso) { App.showToast("Nome e Curso são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         }
         else if (t === 'curso') {

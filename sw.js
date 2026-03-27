@@ -5,7 +5,7 @@
 // 1. GESTÃO DE VERSÃO DINÂMICA
 const APP_PREFIX = 'escola-pwa-';
 // 🚀 SEMPRE QUE ATUALIZAR O SISTEMA, MUDE ESTE NÚMERO (Ex: v2.0.1, v2.0.2...)
-const VERSION = 'v2.0.0'; 
+const VERSION = 'v2.0.1'; 
 const CACHE_NAME = APP_PREFIX + VERSION;
 
 // Ficheiros essenciais para o ecrã inicial funcionar offline

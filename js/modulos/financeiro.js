@@ -526,7 +526,18 @@ App.renderizarInadimplencia = async () => {
         ]);
 
         const hoje = new Date(); 
-        const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
+
+// 🛡️ PASSO 1: Criar uma lista APENAS com os IDs dos alunos que estão Ativos
+const alunosAtivosIds = alunos
+    .filter(a => !a.status || a.status === 'Ativo')
+    .map(a => a.id);
+
+// 🛡️ PASSO 2: O filtro agora exige que o ID do aluno esteja na lista de Ativos
+const vencidos = financeiro.filter(f => 
+    f.status !== 'Pago' && 
+    new Date(f.vencimento + 'T00:00:00') < hoje &&
+    alunosAtivosIds.includes(f.idAluno) // <-- A MÁGICA ACONTECE AQUI
+);
         
         // 🛡️ CORREÇÃO MATEMÁTICA: Usar variáveis com centavos
         let totalAtrasoCentavos = 0; 
