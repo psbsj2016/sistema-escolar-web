@@ -1120,64 +1120,64 @@ const App = {
     },
 
     // 🔄 Versão Sincronizada com a sua renderizarLista
-App.confirmarAlteracaoStatus = async () => {
-    // Busca segura dos elementos do DOM
-    const inputId = document.getElementById('status-student-id');
-    const inputOrig = document.getElementById('status-student-orig');
-    const containerStatus = document.getElementById('status-options-container');
+confirmarAlteracaoStatus: async () => {
+        // Busca segura dos elementos do DOM
+        const inputId = document.getElementById('status-student-id');
+        const inputOrig = document.getElementById('status-student-orig');
+        const containerStatus = document.getElementById('status-options-container');
 
-    if (!inputId || !containerStatus) return App.showToast("Erro: Janela não abriu corretamente.", "error");
+        if (!inputId || !containerStatus) return App.showToast("Erro: Janela não abriu corretamente.", "error");
 
-    const id = inputId.value;
-    const statusOriginal = inputOrig ? inputOrig.value : '';
-    const novoStatus = containerStatus.getAttribute('data-selecionado');
+        const id = inputId.value;
+        const statusOriginal = inputOrig ? inputOrig.value : '';
+        const novoStatus = containerStatus.getAttribute('data-selecionado');
 
-    if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
-    if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
+        if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
+        if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
 
-    const btn = document.querySelector('.btn-confirm');
-    const textOrig = btn ? btn.innerText : "Salvar";
-    if(btn) { btn.innerText = "A atualizar... ⏳"; btn.disabled = true; }
-    document.body.style.cursor = 'wait';
+        const btn = document.querySelector('.btn-confirm');
+        const textOrig = btn ? btn.innerText : "Salvar";
+        if(btn) { btn.innerText = "A atualizar... ⏳"; btn.disabled = true; }
+        document.body.style.cursor = 'wait';
 
-    try {
-        const aluno = await App.api(`/alunos/${id}`);
-        if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
+        try {
+            const aluno = await App.api(`/alunos/${id}`);
+            if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
 
-        // Envia ordem ao servidor
-        await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
-        
-        App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
-        App.fecharModal();
-        
-        // 🚀 Atualização Otimista Blindada (Cobre todas as caches possíveis)
-        if (Array.isArray(App.cacheAlunos)) {
-            const index = App.cacheAlunos.findIndex(a => a.id === id);
-            if (index !== -1) App.cacheAlunos[index].status = novoStatus;
+            // Envia ordem ao servidor
+            await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
+            
+            App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
+            App.fecharModal();
+            
+            // 🚀 Atualização Otimista Blindada (Cobre todas as caches possíveis)
+            if (Array.isArray(App.cacheAlunos)) {
+                const index = App.cacheAlunos.findIndex(a => a.id === id);
+                if (index !== -1) App.cacheAlunos[index].status = novoStatus;
+            }
+            if (Array.isArray(App.listaCache)) {
+                const index = App.listaCache.findIndex(a => a.id === id);
+                if (index !== -1) App.listaCache[index].status = novoStatus;
+            }
+            
+            // Redesenha a tabela de imediato
+            if(typeof App.filtrarTabelaReativa === 'function') {
+                App.filtrarTabelaReativa();
+            } else if(typeof App.renderizarLista === 'function') {
+                App.renderizarLista('aluno');
+            } else {
+                // Último recurso de segurança: força um refresh rápido
+                setTimeout(() => window.location.reload(), 500);
+            }
+
+        } catch (e) {
+            console.error("Erro na atualização:", e);
+            App.showToast("Não foi possível atualizar o status. Tente novamente.", "error");
+        } finally {
+            if(btn) { btn.innerText = textOrig; btn.disabled = false; }
+            document.body.style.cursor = 'default';
         }
-        if (Array.isArray(App.listaCache)) {
-            const index = App.listaCache.findIndex(a => a.id === id);
-            if (index !== -1) App.listaCache[index].status = novoStatus;
-        }
-        
-        // Redesenha a tabela de imediato
-        if(typeof App.filtrarTabelaReativa === 'function') {
-            App.filtrarTabelaReativa();
-        } else if(typeof App.renderizarLista === 'function') {
-            App.renderizarLista('aluno');
-        } else {
-            // Último recurso de segurança: força um refresh rápido
-            setTimeout(() => window.location.reload(), 500);
-        }
-
-    } catch (e) {
-        console.error("Erro na atualização:", e);
-        App.showToast("Não foi possível atualizar o status. Tente novamente.", "error");
-    } finally {
-        if(btn) { btn.innerText = textOrig; btn.disabled = false; }
-        document.body.style.cursor = 'default';
-    }
-};
+    },
 
    // =========================================================
     // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
