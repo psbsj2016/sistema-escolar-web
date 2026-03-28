@@ -111,6 +111,16 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
                 input('WhatsApp do Responsável', 'r-zap', v(dados.resp_zap), '(00) 00000-0000', 'tel', 'oninput="App.mascaraCelular(this)" maxlength="15"')
             );
     }
+            
+           // Cole isto LOGO ABAIXO de onde desenha o formulário HTML do aluno
+        if (id && tipo === 'aluno') {
+            setTimeout(() => {
+                const selectStatus = document.getElementById('a-status') || document.getElementById('alu-status');
+                if (selectStatus && dados.status) {
+                    selectStatus.value = dados.status;
+                }
+            }, 200); // Um pequeno atraso para garantir que o HTML já está no ecrã
+        }
 
     else if (tipo === 'turma') {
         const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
@@ -169,25 +179,24 @@ App.salvarCadastro = async () => {
         }
 
         if (t === 'aluno') {
-            p.nome = lerInput('alu-nome');
-            p.nascimento = lerInput('alu-nasc');
-            p.cpf = lerInput('alu-cpf');
-            p.rg = lerInput('alu-rg');
-            p.whatsapp = lerInput('alu-zap');
-            p.curso = lerInput('alu-curso');
-            p.turma = lerInput('alu-turma');
-            p.rua = lerInput('alu-rua');
-            p.numero = lerInput('alu-num');
-            p.bairro = lerInput('alu-bairro');
-            p.cidade = lerInput('alu-cidade');
-            p.estado = lerInput('alu-uf');
-            p.resp_nome = lerInput('alu-resp-nome');
-            p.resp_cpf = lerInput('alu-resp-cpf');
-            p.resp_zap = lerInput('alu-resp-zap');
+            p.nome = lerInput('a-nome') || lerInput('alu-nome');
+            p.nascimento = lerInput('a-nasc') || lerInput('alu-nasc');
+            p.cpf = lerInput('a-cpf') || lerInput('alu-cpf');
+            p.rg = lerInput('a-rg') || lerInput('alu-rg');
+            p.whatsapp = lerInput('a-zap') || lerInput('alu-zap');
+            p.curso = lerInput('a-curso') || lerInput('alu-curso');
+            p.turma = lerInput('a-turma') || lerInput('alu-turma');
+            p.rua = lerInput('a-rua') || lerInput('alu-rua');
+            p.numero = lerInput('a-num') || lerInput('alu-num');
+            p.bairro = lerInput('a-bairro') || lerInput('alu-bairro');
+            p.cidade = lerInput('a-cidade') || lerInput('alu-cidade');
+            p.estado = lerInput('a-uf') || lerInput('alu-uf');
+            p.resp_nome = lerInput('r-nome') || lerInput('alu-resp-nome');
+            p.resp_cpf = lerInput('r-cpf') || lerInput('alu-resp-cpf');
+            p.resp_zap = lerInput('r-zap') || lerInput('alu-resp-zap');
 
-            // 🛡️ BLINDAGEM 1: Agora lemos o status do ecrã antes de enviar para o servidor!
-            // Se não houver nada selecionado, ele assume 'Ativo' por segurança.
-            p.status = lerInput('alu-status') || 'Ativo';
+            // 🛡️ BLINDAGEM 1: Lemos o status garantindo que pega o ID correto do HTML!
+            p.status = lerInput('a-status') || lerInput('alu-status') || 'Ativo';
 
             if(!p.nome || !p.curso) { App.showToast("Preencha nome e curso!", "error"); throw new Error("Validação Falhou"); }
         }

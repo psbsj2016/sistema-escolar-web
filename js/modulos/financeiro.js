@@ -10,7 +10,22 @@ App.renderizarFinanceiroPro = async () => {
     
     try {
         const [turmas, financeiro, alunos] = await Promise.all([App.api('/turmas'), App.api('/financeiro'), App.api('/alunos')]);
-        App.financeiroCache = financeiro.sort((a,b) => { 
+        
+        // 🛡️ BLINDAGEM FINANCEIRA: 
+        // 1. Criamos a lista dos alunos que estão ativos
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+
+        // 2. Filtramos as finanças: Escondemos as contas Pendentes de alunos inativos
+        const financeiroLimpo = financeiro.filter(f => {
+            // Se estiver pendente, mas o aluno não estiver na lista de ativos, removemos da vista!
+            if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) {
+                return false;
+            }
+            return true; // Mantém os Pagos (para histórico) e os pendentes dos ativos
+        });
+
+        // 3. Ordenamos a lista limpa
+        App.financeiroCache = financeiroLimpo.sort((a,b) => { 
             if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
             return a.status === 'Pendente' ? -1 : 1; 
         });
@@ -525,8 +540,15 @@ App.renderizarInadimplencia = async () => {
             App.api('/escola')
         ]);
 
+        // 🛡️ BLINDAGEM 3: Lista de Alunos Ativos para o Relatório
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+
         const hoje = new Date(); 
-        const vencidos = financeiro.filter(f => f.status !== 'Pago' && new Date(f.vencimento + 'T00:00:00') < hoje);
+        const vencidos = financeiro.filter(f => 
+            f.status !== 'Pago' && 
+            new Date(f.vencimento + 'T00:00:00') < hoje &&
+            alunosAtivosIds.includes(f.idAluno) // <-- A trava contra os fantasmas!
+        );
         
         // 🛡️ CORREÇÃO MATEMÁTICA: Usar variáveis com centavos
         let totalAtrasoCentavos = 0; 
