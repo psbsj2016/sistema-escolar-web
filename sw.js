@@ -4,17 +4,17 @@
 
 // 1. GESTÃO DE VERSÃO DINÂMICA
 const APP_PREFIX = 'escola-pwa-';
-// 🚀 SEMPRE QUE ATUALIZAR O SISTEMA, MUDE ESTE NÚMERO (Ex: v2.0.1, v2.0.2...)
-const VERSION = 'v2.0.3'; 
+// 🚀 SEMPRE QUE ATUALIZAR O SISTEMA FRONT-END, MUDE ESTE NÚMERO
+const VERSION = 'v2.0.4'; 
 const CACHE_NAME = APP_PREFIX + VERSION;
 
-// Ficheiros essenciais para o ecrã inicial funcionar offline
+// Ficheiros essenciais para o ecrã inicial funcionar super rápido
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/css/site.css',
-  '/js/app.js',
-  '/js/config.js'
+  '/js/config.js',
+  '/js/app.js'
 ];
 
 // 2. INSTALAÇÃO: Força a ativação imediata e guarda os ficheiros estáticos
@@ -34,7 +34,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    // Verifica se o cache é do nosso PWA e se a versão é diferente da atual
+                    // Verifica se o cache é do nosso PWA e se a versão é velha
                     if (cacheName.startsWith(APP_PREFIX) && cacheName !== CACHE_NAME) {
                         console.log(`🧹 [SW] Cache antigo detetado e removido: ${cacheName}`);
                         return caches.delete(cacheName);
@@ -46,22 +46,21 @@ self.addEventListener('activate', (event) => {
     self.clients.claim(); // Assume o controlo imediato das páginas abertas
 });
 
-// 4. INTERCETADOR DE PEDIDOS (Estratégia: Network First)
+// 4. INTERCETADOR DE PEDIDOS (Estratégia: Network First / Rede Primeiro)
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // 🚨 REGRA DE OURO BANCÁRIA: Não fazer cache a APIs ou Extensões!
+    // 🚨 REGRA DE OURO BANCÁRIA: Nunca fazer cache da API do Render ou Extensões!
     if (url.origin.includes('onrender.com') || 
         event.request.method !== 'GET' || 
         url.protocol === 'chrome-extension:') {
-        return; // Passa direto para a internet
+        return; // Passa direto para a internet sem interferir
     }
 
     event.respondWith(
         fetch(event.request)
             .then((networkResponse) => {
-                // Fomos à internet e recebemos ficheiros frescos.
-                // Guardamos uma cópia no NOSSO CACHE ATUALIZADO.
+                // Se a internet funcionou, atualizamos o cache com os dados mais recentes
                 if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
@@ -70,10 +69,11 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             })
-            .catch(() => {
+            .catch(async () => {
                 // 📵 O UTILIZADOR ESTÁ OFFLINE
-                console.log(`📡 [SW] Modo Offline. A carregar do cache: ${event.request.url}`);
-                return caches.match(event.request);
+                console.log(`📡 [SW] Sem rede! Tentando carregar da mochila (cache): ${event.request.url}`);
+                const cachedResponse = await caches.match(event.request);
+                return cachedResponse;
             })
     );
 });
