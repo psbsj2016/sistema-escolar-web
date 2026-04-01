@@ -52,7 +52,7 @@ App.renderizarNovoPlanejamento = async () => {
         const alunos = await App.api('/alunos');
         // 🛡️ FILTRO: Apenas alunos ativos para novos planeamentos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
-        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${a.curso}">${a.nome}</option>`).join('');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${App.escapeHTML(a.curso || 'Geral')}">${App.escapeHTML(a.nome)}</option>`).join('');
         
         const formPlan = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -92,8 +92,8 @@ App.renderizarPlanejamentosSalvos = async () => {
         const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
         const corpo = planos.map(p => `
             <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px;">${p.nomeAluno}</td>
-                <td style="padding:10px;">${p.curso}</td>
+                <td style="padding:10px;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center;">${p.aulas.length}</td>
                 <td style="padding:10px; text-align:right;">
                     <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button>
@@ -161,18 +161,18 @@ App.renderizarTelaEdicao = (plano) => {
         
         <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
             <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
-                <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome||'ESCOLA'}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj||''}</div></div></div>
+                <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome||'ESCOLA')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj||'')}</div></div></div>
                 <div style="text-align:right;"><div><b>Planeamento Pedagógico</b></div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
             </div>
             
             <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px; background:#fafafa;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="width:60%;">
-                        <div style="margin-bottom:5px;"><b>ALUNO:</b> ${plano.nomeAluno}</div>
+                        <div style="margin-bottom:5px;"><b>ALUNO:</b> ${App.escapeHTML(plano.nomeAluno)}</div>
                         <div><b>TOTAL DE AULAS:</b> ${plano.aulas.length}</div>
                     </div>
                     <div style="width:40%;">
-                        <div style="margin-bottom:5px;"><b>CURSO:</b> ${plano.curso}</div>
+                        <div style="margin-bottom:5px;"><b>CURSO:</b> ${App.escapeHTML(plano.curso)}</div>
                         <div><b>CARGA HORÁRIA PREVISTA:</b> ${totalHoras}H</div>
                     </div>
                 </div>
@@ -185,10 +185,10 @@ App.renderizarTelaEdicao = (plano) => {
                         ${plano.aulas.map((a,i)=>`
                         <tr>
                             <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;">${a.num}</td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${a.data}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${a.hora}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${a.duracao}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${a.conteudo}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.data)}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.hora)}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${App.escapeHTML(a.conteudo)}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
                             <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
                         </tr>`).join('')}
                         <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding:10px;">Carga Horária Total =</td><td style="text-align:center; padding:10px;">${totalHoras}H</td><td colspan="2"></td></tr>
@@ -315,7 +315,7 @@ App.renderizarBoletimVisual = async () => {
         const alunos = await App.api('/alunos');
         // 🛡️ FILTRO: Apenas alunos ativos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
-        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         
         const formBoletim = `
             <div style="display:flex; gap:10px; align-items:center;">
@@ -342,7 +342,7 @@ App.gerarBoletimTela = async () => {
         
         let ultAula = '__/__/____';
         const planoAluno = planejamentos.find(p => p.idAluno === idAluno);
-        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = planoAluno.aulas[planoAluno.aulas.length - 1].data; } 
+        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); } 
         else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
 
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); const disciplinasMap = {};
@@ -360,8 +360,8 @@ App.gerarBoletimTela = async () => {
         else Object.keys(disciplinasMap).forEach(chave => {
             const d = disciplinasMap[chave];
             const situacao = d.total >= 6 ? '<span style="color:green; font-weight:bold;">APROVADO</span>' : '<span style="color:orange;">EM CURSO</span>';
-            const detalhe = d.notas.map(n => `<span style="font-size:11px;">${n.tipo}: <b>${n.nota}</b></span>`).join(', ');
-            linhasHTML += `<tr><td style="padding:10px; border-bottom:1px solid #eee;">${d.nome}</td><td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;">${situacao}</td></tr>`;
+            const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join(', ');
+            linhasHTML += `<tr><td style="padding:10px; border-bottom:1px solid #eee;">${App.escapeHTML(d.nome)}</td><td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;">${situacao}</td></tr>`;
         });
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
@@ -372,12 +372,12 @@ App.gerarBoletimTela = async () => {
             
             <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
                 <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '')}</div></div></div>
                     <div style="text-align:right;"><div><b>BOLETIM ESCOLAR</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
                 </div>
                 <div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;">
-                    <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${aluno.nome.toUpperCase()}</div>
-                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${aluno.curso || '-'} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${aluno.turma || '-'}</div>
+                    <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${App.escapeHTML(aluno.nome).toUpperCase()}</div>
+                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${App.escapeHTML(aluno.curso || '-')} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${App.escapeHTML(aluno.turma || '-')}</div>
                     <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
                 </div>
                 <div class="table-responsive-wrapper">
@@ -406,9 +406,9 @@ App.renderizarAvaliacoesPro = async () => {
         // 🛡️ FILTRO: Apenas alunos ativos para a caixa de seleção de notas
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
 
-        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
-        const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${c.nome}">${App.escapeHTML(c.nome)}</option>`).join('');
+        const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${App.escapeHTML(c.nome)}">${App.escapeHTML(c.nome)}</option>`).join('');
         
         const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
         const opBimestres = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
@@ -458,10 +458,10 @@ App.renderizarAvaliacoesPro = async () => {
                             <tr style="border-bottom:1px solid #eee;">
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
-                                <td style="padding:12px;">${h.data ? h.data.split('-').reverse().join('/') : '-'}</td>
+                                <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.bimestre)}</td>
-                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${h.nota}</strong> <span style="color:#999; font-size:11px;">/ ${h.valorMax}</span></td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(h.valorMax)}</span></td>
                                 <td style="padding:12px; text-align:right;">
                                     <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️</button>
                                     <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;" title="Excluir">🗑️</button>
@@ -524,7 +524,7 @@ App.carregarListaNotas = async () => {
             <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
                 <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
                 <td style="padding:12px; width:150px;">
-                    <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${notaAtual}">
+                    <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${App.escapeHTML(notaAtual)}">
                 </td>
             </tr>`;
         });
@@ -535,7 +535,7 @@ App.carregarListaNotas = async () => {
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #2980b9;">
                 <div style="padding:15px; background:#e8f4f8; border-bottom:1px solid #d1e8f0; font-size:13px; color:#2980b9; display:flex; justify-content:space-between; align-items:center;">
                     <span><b>Lançamento:</b> ${App.escapeHTML(tipo)} de ${App.escapeHTML(disc)}</span>
-                    <span style="background:#2980b9; color:white; padding:4px 10px; border-radius:12px; font-weight:bold;">Máx: ${max} pts</span>
+                    <span style="background:#2980b9; color:white; padding:4px 10px; border-radius:12px; font-weight:bold;">Máx: ${App.escapeHTML(max)} pts</span>
                 </div>
                 <div class="table-responsive-wrapper" style="margin:0; border:none;">
                     <table style="width:100%; border-collapse:collapse; min-width:400px;">
@@ -645,7 +645,7 @@ App.renderizarChamadaPro = async () => {
         // 🛡️ FILTRO: Apenas alunos ativos na caixa de chamada
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
 
-        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const hoje = new Date().toISOString().split('T')[0];
 
@@ -682,7 +682,7 @@ App.renderizarChamadaPro = async () => {
                         ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
                         ${historico.map(h => { 
                             let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
-                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="padding:12px; font-weight:bold; color:${color};">${h.status}</td><td style="padding:12px; color:#555;">${h.duracao}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td><td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
                         }).join('')}
                     </tbody>
                 </table>
@@ -744,7 +744,7 @@ App.carregarListaChamada = async () => {
         area.innerHTML = `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
                 <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
-                    Grelha de Frequência - ${data.split('-').reverse().join('/')}
+                    Grelha de Frequência - ${App.escapeHTML(data.split('-').reverse().join('/'))}
                 </div>
                 <div class="table-responsive-wrapper" style="margin:0; border:none;">
                     <table style="width:100%; border-collapse:collapse; min-width:400px;">
@@ -920,8 +920,8 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
         const evs = eventos.filter(e => e.data === dataISO); 
         
         const tags = evs.map(e => `
-            <div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${e.descricao}">
-                <span class="evt-texto">${e.descricao}</span>
+            <div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${App.escapeHTML(e.descricao)}">
+                <span class="evt-texto">${App.escapeHTML(e.descricao)}</span>
             </div>
         `).join(''); 
         
@@ -935,7 +935,7 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
     return html; 
 };
 
-App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${e.inicio||'-'}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${e.tipo}</td><td style="padding:10px;">${e.descricao}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button></td></tr>`).join(''); };
+App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${App.escapeHTML(e.inicio||'-')}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${App.escapeHTML(e.tipo)}</td><td style="padding:10px;">${App.escapeHTML(e.descricao)}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button></td></tr>`).join(''); };
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 
 App.selecionarDia = (dt) => { 

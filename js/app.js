@@ -19,6 +19,28 @@ const LISTA_FUNCIONALIDADES = [
     { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] } 
 ];
 
+// =========================================================
+// 🛡️ SISTEMA DE SEGURANÇA CONTRA XSS (CROSS-SITE SCRIPTING)
+// =========================================================
+
+/**
+ * Filtra textos para impedir injeção de código malicioso no HTML.
+ * @param {string} str - O texto original vindo da base de dados.
+ * @returns {string} O texto seguro para ser usado no .innerHTML
+ */
+App.escapeHTML = (str) => {
+    // Se o valor for nulo, indefinido ou vazio, devolvemos uma string vazia
+    if (str === null || str === undefined) return '';
+    
+    // Convertemos para string (caso seja um número) e substituímos os caracteres perigosos
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
 const App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     motorTempoRealLigado: false,

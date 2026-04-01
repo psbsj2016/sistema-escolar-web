@@ -107,7 +107,7 @@ App.gerarRelatorioAnual = async () => {
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
-                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}<br>Relatório Analítico Anual</div></div>
+                        <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#666;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>Relatório Analítico Anual</div></div>
                     </div>
                     <div style="text-align:right;">
                         <h1 style="margin:0; font-size:22px; color:#2c3e50;">EXERCÍCIO ${ano}</h1>
@@ -130,8 +130,8 @@ App.gerarRelatorioAnual = async () => {
                             ${dados.map(f => { 
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'ABERTO';
-                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${isPago ? fmt(getVal(f)) : '-'}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${!isPago ? fmt(parseFloat(f.valor) || 0) : '-'}</td></tr>`; 
+                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${App.escapeHTML(f.formaPagamento)}${f.formaPagamento2 ? ` / ${App.escapeHTML(f.formaPagamento2)}` : ''}<br>Pago em: ${App.escapeHTML(f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '')}</span>`; }
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${App.escapeHTML(f.vencimento.split('-').reverse().join('/'))}</td><td style="padding:10px;">${App.escapeHTML(f.alunoNome || 'Não informado')}</td><td style="padding:10px;">${App.escapeHTML(f.descricao)}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${isPago ? fmt(getVal(f)) : '-'}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${!isPago ? fmt(parseFloat(f.valor) || 0) : '-'}</td></tr>`; 
                             }).join('')}
                         </tbody>
                         <tfoot>
@@ -175,7 +175,7 @@ App.gerarRelatorioMensal = async () => {
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px;">
                     <div style="display:flex; gap:15px; align-items:center;">
                         ${logo}
-                        <div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h3><div style="font-size:11px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                        <div><h3 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${App.escapeHTML(escola.nome)}</h3><div style="font-size:11px; color:#666;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div>
                     </div>
                     <div style="text-align:right;">
                         <h2 style="margin:0; font-size:20px; color:#2980b9;">${mesNome} / ${ano}</h2>
@@ -198,8 +198,8 @@ App.gerarRelatorioMensal = async () => {
                             ${dados.map(f => { 
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
-                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${f.formaPagamento}${f.formaPagamento2 ? ` / ${f.formaPagamento2}` : ''}<br>Pago em: ${f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : ''}</span>`; }
-                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="padding:10px;">${f.alunoNome || 'Não informado'}</td><td style="padding:10px;">${f.descricao}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${fmt(isPago ? getVal(f) : parseFloat(f.valor) || 0)}</td></tr>`; 
+                                if(isPago && f.formaPagamento) { textoStatus += `<br><span style="font-size:9px; color:#666; display:block; line-height:1.2; margin-top:2px;">${App.escapeHTML(f.formaPagamento)}${f.formaPagamento2 ? ` / ${App.escapeHTML(f.formaPagamento2)}` : ''}<br>Pago em: ${App.escapeHTML(f.dataPagamento ? f.dataPagamento.split('-').reverse().join('/') : '')}</span>`; }
+                                return `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; white-space:nowrap;">${App.escapeHTML(f.vencimento.split('-').reverse().join('/'))}</td><td style="padding:10px;">${App.escapeHTML(f.alunoNome || 'Não informado')}</td><td style="padding:10px;">${App.escapeHTML(f.descricao)}</td><td style="padding:10px; text-align:center; font-weight:bold; color:${isPago ? 'green' : 'red'};">${textoStatus}</td><td style="padding:10px; text-align:right; white-space:nowrap;">${fmt(isPago ? getVal(f) : parseFloat(f.valor) || 0)}</td></tr>`; 
                             }).join('')}
                         </tbody>
                     </table>
@@ -306,7 +306,7 @@ App.gerarDossie = async () => {
         let linhasInad = '';
         listInad.forEach(f => {
             const cobrado = f.cobradoZap ? '<span style="color:#27ae60;font-weight:bold;">✅ Sim</span>' : '<span style="color:#e74c3c;font-weight:bold;">❌ Não</span>';
-            linhasInad += `<tr><td>${f.alunoNome || 'Desconhecido'}</td><td>${f.descricao}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td><td style="white-space:nowrap;">${f.vencimento.split('-').reverse().join('/')}</td><td style="text-align:center;">${cobrado}</td></tr>`;
+            linhasInad += `<tr><td>${App.escapeHTML(f.alunoNome || 'Desconhecido')}</td><td>${App.escapeHTML(f.descricao)}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td><td style="white-space:nowrap;">${App.escapeHTML(f.vencimento.split('-').reverse().join('/'))}</td><td style="text-align:center;">${cobrado}</td></tr>`;
         });
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
@@ -343,7 +343,7 @@ App.gerarDossie = async () => {
             <div class="print-sheet">
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                     <div style="display:flex; align-items:center; gap:20px;">
-                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${escola.nome}</h2><div style="font-size:12px; color:#666;">CNPJ: ${escola.cnpj}</div></div>
+                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#666;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div>
                     </div>
                     <div style="text-align:right;">
                         <div style="font-weight:bold; font-size:16px;">DOSSIÊ DE GESTÃO - ${nomeMes}/${ano}</div>
@@ -412,11 +412,11 @@ App.gerarDossie = async () => {
                     <div class="flex-container">
                         <div class="flex-item">
                             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📚 Cursos (${cursos.length})</h3>
-                            <div>${cursos.length ? cursos.map(c => `<div class="list-card"><span>${c.nome}</span><span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}</div>
+                            <div>${cursos.length ? cursos.map(c => `<div class="list-card"><span>${App.escapeHTML(c.nome)}</span><span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}</div>
                         </div>
                         <div class="flex-item">
                             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">🏫 Turmas (${turmas.length})</h3>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${t.nome}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${App.escapeHTML(t.nome)}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
                         </div>
                     </div>
                 </div>
@@ -474,7 +474,7 @@ App.gerarFichaSetup = async () => {
     try {
         const alunos = await App.api('/alunos');
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
-        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         
         const formFicha = `
             <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
@@ -507,29 +507,29 @@ App.gerarFichaImprimir = async () => {
             
             <div class="print-sheet">
                 <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div></div>
                     <div style="text-align:right;"><div><b>FICHA DE MATRÍCULA</b></div><div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
                 </div>
                 <div style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; background:#fafafa;">
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50; font-size:15px;">1. DADOS DO ALUNO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
-                        <div><b>Nome:</b> ${aluno.nome || '-'}</div>
-                        <div><b>Data Nasc:</b> ${aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-'}</div>
-                        <div><b>CPF:</b> ${aluno.cpf || '-'}</div>
-                        <div><b>RG:</b> ${aluno.rg || '-'}</div>
-                        <div><b>Sexo:</b> ${aluno.sexo || '-'}</div>
-                        <div><b>WhatsApp:</b> ${aluno.whatsapp || '-'}</div>
+                        <div><b>Nome:</b> ${App.escapeHTML(aluno.nome || '-')}</div>
+                        <div><b>Data Nasc:</b> ${App.escapeHTML(aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-')}</div>
+                        <div><b>CPF:</b> ${App.escapeHTML(aluno.cpf || '-')}</div>
+                        <div><b>RG:</b> ${App.escapeHTML(aluno.rg || '-')}</div>
+                        <div><b>Sexo:</b> ${App.escapeHTML(aluno.sexo || '-')}</div>
+                        <div><b>WhatsApp:</b> ${App.escapeHTML(aluno.whatsapp || '-')}</div>
                     </div>
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">2. CURSO E MATRÍCULA</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
-                        <div><b>Curso:</b> ${aluno.curso || '-'}</div>
-                        <div><b>Turma:</b> ${aluno.turma || '-'}</div>
+                        <div><b>Curso:</b> ${App.escapeHTML(aluno.curso || '-')}</div>
+                        <div><b>Turma:</b> ${App.escapeHTML(aluno.turma || '-')}</div>
                     </div>
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">3. ENDEREÇO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
-                        <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${aluno.rua || '-'}, ${aluno.numero || '-'}</div>
-                        <div><b>Bairro:</b> ${aluno.bairro || '-'}</div>
-                        <div><b>Cidade/UF:</b> ${aluno.cidade || '-'}/${aluno.estado || '-'}</div>
+                        <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${App.escapeHTML(aluno.rua || '-')}, ${App.escapeHTML(aluno.numero || '-')}</div>
+                        <div><b>Bairro:</b> ${App.escapeHTML(aluno.bairro || '-')}</div>
+                        <div><b>Cidade/UF:</b> ${App.escapeHTML(aluno.cidade || '-')}/${App.escapeHTML(aluno.estado || '-')}</div>
                     </div>
                 </div>
                 <div style="margin-top:50px; display:flex; justify-content:space-between; text-align:center; flex-wrap:wrap; gap:30px;">
@@ -617,7 +617,7 @@ App.gerarDocumentoPrint = async () => {
         
         const docHeader = `
             <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
-                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div></div>
+                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div></div>
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
             </div>`;
             

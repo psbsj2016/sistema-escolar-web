@@ -412,13 +412,13 @@ App.abrirCarneExistente = async (idLote) => {
                 <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 10px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
                     <div style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px; text-align: center;">
                         ${logo}
-                        <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${nomeEscolaResumo}</div>
+                        <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${App.escapeHTML(nomeEscolaResumo)}</div>
                     </div>
-                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Parcela:</b> ${p.descricao}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
                     <div style="font-size: 10px; margin-bottom: 4px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
                     <div style="font-size: 10px; margin-bottom: 4px;"><b>Valor:</b> R$ ${valorF}</div>
                     <div style="font-size: 10px; margin-bottom: 4px;"><b>Nº Doc:</b> ${nossoNumero}</div>
-                    <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${primeiroNomeAluno}</div>
+                    <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${App.escapeHTML(primeiroNomeAluno)}</div>
                 </div>
                 
                 <div class="carne-recibo" style="width: 72%; padding: 10px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
@@ -448,7 +448,7 @@ App.abrirCarneExistente = async (idLote) => {
                     </div>
                     
                     <div style="font-size: 10px; margin-bottom: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; line-height:1.4;">
-                        <div><b>Ref:</b> ${p.descricao} &nbsp;|&nbsp; <b>Pagador:</b> ${App.escapeHTML(aluno.nome)} &nbsp;|&nbsp; <b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
+                        <div><b>Ref:</b> ${App.escapeHTML(p.descricao)} &nbsp;|&nbsp; <b>Pagador:</b> ${App.escapeHTML(aluno.nome)} &nbsp;|&nbsp; <b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; margin-top: 5px; align-items: flex-end; gap:15px;">
@@ -620,7 +620,7 @@ App.renderizarInadimplencia = async () => {
                 <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:15px; margin-bottom:30px;">
                     <div style="display:flex; align-items:center; gap:15px;">
                         ${logo}
-                        <div><h2 style="margin:0;">${escola.nome}</h2><div style="font-size:12px;">CNPJ: ${escola.cnpj}</div></div>
+                        <div><h2 style="margin:0;">${App.escapeHTML(escola.nome || '')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '')}</div></div>
                     </div>
                     <div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div>
                 </div>

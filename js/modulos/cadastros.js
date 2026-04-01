@@ -31,7 +31,12 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
         }
     } catch (e) { console.error("Erro ao carregar dados:", e); }
 
-    const v = (val) => val || '';
+    // 🛡️ A GRANDE JOGADA: Blindamos a função "v" que gera os values dos inputs!
+    const v = (val) => App.escapeHTML(val || '');
+    
+    // Função auxiliar para comparações limpas (sem escape)
+    const raw = (val) => val || ''; 
+
     let html = '';
 
     const input = App.UI.input; 
@@ -49,12 +54,13 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
     const section = (title, margin = '25px') => `<div style="color:#2c3e50; font-size:14px; font-weight:600; margin:${margin} 0 10px 0; border-bottom:1px solid #eee; padding-bottom:5px;">${title}</div>`;
 
     if (tipo === 'aluno') {
-        const opTurma = `<option value="">-- Selecione --</option>` + listas.turmas.map(t => `<option value="${t.nome}" ${v(dados.turma)===t.nome?'selected':''}>${t.nome}</option>`).join('');
-        const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
+        // 🛡️ Protegemos os nomes das turmas e cursos que vêm do banco e vão para o HTML
+        const opTurma = `<option value="">-- Selecione --</option>` + listas.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}" ${raw(dados.turma)===t.nome?'selected':''}>${App.escapeHTML(t.nome)}</option>`).join('');
+        const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${App.escapeHTML(c.nome)}" ${raw(dados.curso)===c.nome?'selected':''}>${App.escapeHTML(c.nome)}</option>`).join('');
         const opSexo = `
             <option value="">-- Selecione --</option>
-            <option value="Masculino" ${v(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
-            <option value="Feminino" ${v(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
+            <option value="Masculino" ${raw(dados.sexo) === 'Masculino' ? 'selected' : ''}>Masculino</option>
+            <option value="Feminino" ${raw(dados.sexo) === 'Feminino' ? 'selected' : ''}>Feminino</option>
         `;
         
         // 🛡️ CORREÇÃO: Força o HTML a focar no status real guardado na base de dados
@@ -112,7 +118,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             );
     }
             
-           // Cole isto LOGO ABAIXO de onde desenha o formulário HTML do aluno
+        // Cole isto LOGO ABAIXO de onde desenha o formulário HTML do aluno
         if (id && tipo === 'aluno') {
             setTimeout(() => {
                 const selectStatus = document.getElementById('a-status') || document.getElementById('alu-status');
@@ -123,7 +129,8 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
         }
 
     else if (tipo === 'turma') {
-        const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${c.nome}" ${v(dados.curso)===c.nome?'selected':''}>${c.nome}</option>`).join('');
+        // 🛡️ Protege o select de curso dentro de Turmas
+        const opCurso = `<option value="">-- Selecione --</option>` + listas.cursos.map(c => `<option value="${App.escapeHTML(c.nome)}" ${raw(dados.curso)===c.nome?'selected':''}>${App.escapeHTML(c.nome)}</option>`).join('');
         
         html = 
             input('Nome da Turma', 't-nome', v(dados.nome), 'Ex: Turma A - Manhã') +
