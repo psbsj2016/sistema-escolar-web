@@ -675,11 +675,22 @@ var App = {
         try {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             if (res && res.success) {
+                // 🔴 A MÁGICA ACONTECE AQUI: Atualiza o cache IMEDIATAMENTE para matar o bloqueio
                 localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
-                App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A reiniciar o sistema...`, "success");
+                
+                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+                perfilCache.plano = res.plano;
+                perfilCache.dataCriacao = new Date().toISOString(); // Renova a data para matar o bloqueio antigo localmente
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+                App.atualizarUIHeader(perfilCache); // Atualiza o emblema e o plano no topo no mesmo segundo!
+
+                App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A iniciar o sistema...`, "success");
                 inputElement.value = '';
-                // 🔄 Agora sim, recarrega a página de forma controlada!
-                setTimeout(() => { window.location.reload(); }, 2000); 
+                
+                // 🚀 Em vez de dar reload bruto, força a atualização suave e vai para a página inicial (Dashboard)
+                await App.carregarDadosEscola();
+                App.renderizarInicio(); 
             } else { 
                 App.showToast(res.error || "PIN inválido ou expirado.", "error"); 
             }
@@ -697,10 +708,22 @@ var App = {
             try {
                 const escolaAtual = await App.api('/escola') || {};
                 await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
+                
+                // 🔴 A MÁGICA DE CACHE (Fallback)
                 localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
-                App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A reiniciar...`, "success");
+                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+                perfilCache.plano = novoPlano;
+                perfilCache.dataCriacao = new Date().toISOString();
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+                App.atualizarUIHeader(perfilCache); // Atualiza emblema do topo
+                
+                App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
                 inputElement.value = '';
-                setTimeout(() => { window.location.reload(); }, 2000);
+                
+                // 🚀 Vai para a página inicial diretamente
+                await App.carregarDadosEscola();
+                App.renderizarInicio();
             } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
         } finally { 
             if(btn) { btn.innerText = txt; btn.disabled = false; } 
@@ -1193,7 +1216,7 @@ var App = {
         }
     },
 
-    // =========================================================
+// =========================================================
     // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
     // =========================================================
     atualizarUIHeader: (escola) => {
@@ -1237,7 +1260,14 @@ var App = {
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
             
             App.atualizarUIHeader(escola);
-            App.verificarBloqueioTeste(escola);
+            
+            // 🚀 CÃO DE GUARDA INTELIGENTE: Se o backend destrancou (ex: via portal Admin), liberta o utilizador automaticamente!
+            const bloqueado = App.verificarBloqueioTeste ? App.verificarBloqueioTeste(escola) : false;
+            const tituloApp = document.getElementById('titulo-pagina') ? document.getElementById('titulo-pagina').innerText : '';
+            
+            if (!bloqueado && (tituloApp === 'Gerenciar Assinatura' || tituloApp === 'Meu Plano' || App.entidadeAtual === 'plano')) {
+                App.renderizarInicio(); 
+            }
 
         } catch(e) { console.log("Carregando perfil..."); } 
     },
