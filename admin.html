@@ -201,7 +201,7 @@
                 setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
             },
 
-           login: async () => {
+            login: async () => {
                 const pwd = document.getElementById('master-pwd').value;
                 if(!pwd) return Admin.showToast("Digite a senha.", "warning");
 
@@ -270,9 +270,12 @@
                 if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Nenhuma escola encontrada.</td></tr>'; return; }
                 
                 tbody.innerHTML = lista.map(c => {
-                    // LIMPEZA CRÍTICA: Trim no e-mail para evitar espaços fantasmas
-                    const rawEmail = (c.email || "").trim();
+                    const rawEmail = (c.email || "").trim().toLowerCase();
                     const safeEmail = Admin.escapeHTML(rawEmail);
+                    
+                    // 🛡️ Segurança: Substitui aspas para não quebrar os eventos 'onclick'
+                    const jsSafeEmail = rawEmail.replace(/'/g, "\\'");
+                    const jsSafePinAtivacao = c.pinAtivacao ? String(c.pinAtivacao).replace(/'/g, "\\'") : '';
 
                     let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
                     let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '<span style="color:#64748b;">Aguardando...</span>');
@@ -290,6 +293,8 @@
                         }
                     }
 
+                    const jsSafePlano = planoNome ? String(planoNome).replace(/'/g, "\\'") : '';
+
                     let planoClass = 'bg-gray';
                     let planoDisplay = planoNome;
                     
@@ -299,7 +304,6 @@
                     else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
 
                     const safeStatus = Admin.escapeHTML(c.status);
-                    const safePinAtivacao = c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '';
 
                     return `
                     <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
@@ -312,12 +316,12 @@
                             ${statusPin}
                         </td>
                         <td style="padding:15px; text-align:right; white-space: nowrap;">
-                            <button onclick="Admin.abrirModalMudarPlano('${safeEmail}', '${Admin.escapeHTML(planoNome)}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
+                            <button onclick="Admin.abrirModalMudarPlano('${jsSafeEmail}', '${jsSafePlano}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
                             
-                           ${safePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + safePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
-                            <button onclick="Admin.copiarAcesso('${safeEmail}', '${safePinAtivacao}', '${planoNome === 'Liberado' ? 'VIP' : Admin.escapeHTML(planoNome)}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
+                           ${jsSafePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + jsSafePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
+                            <button onclick="Admin.copiarAcesso('${jsSafeEmail}', '${jsSafePinAtivacao}', '${jsSafePlano === 'Liberado' ? 'VIP' : jsSafePlano}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
                             
-                            <button onclick="Admin.bloquear('${safeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
+                            <button onclick="Admin.bloquear('${jsSafeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
                         </td>
                     </tr>
                 `}).join('');
@@ -346,7 +350,8 @@
             fecharModalMudarPlano: () => { document.getElementById('modal-mudar-plano').style.display = 'none'; },
 
             confirmarMudancaPlano: async () => {
-                const email = document.getElementById('mp-email').value;
+                // 🛡️ Segurança: Trim e LowerCase obrigatório
+                const email = document.getElementById('mp-email').value.trim().toLowerCase();
                 const plano = document.getElementById('mp-plano').value;
                 const token = sessionStorage.getItem('token_master');
                 const btn = document.getElementById('btn-confirmar-mp');
@@ -361,10 +366,10 @@
                     const data = await res.json();
                     
                     if(data.success) {
-                        Admin.showToast(`Plano atualizado para ${plano}! Novo PIN gerado.`, 'success');
+                        Admin.showToast(`Plano atualizado para ${plano}! Novo PIN gerado: ${data.pin}`, 'success');
                         Admin.fecharModalMudarPlano();
                         Admin.carregarDados(); 
-                    } else { Admin.showToast("Erro ao gerar novo PIN da API.", "error"); }
+                    } else { Admin.showToast(data.error || "Erro ao gerar novo PIN da API.", "error"); }
                 } catch(e) { Admin.showToast("Erro de comunicação com o servidor.", "error"); } 
                 finally { btn.innerText = "Atualizar Plano"; btn.disabled = false; }
             },
@@ -381,7 +386,8 @@
             fecharModalVip: () => { document.getElementById('modal-vip').style.display = 'none'; },
 
             gerarAcessoVip: async () => {
-                const email = document.getElementById('vip-email').value.trim();
+                // 🛡️ Segurança: Trim e LowerCase obrigatório
+                const email = document.getElementById('vip-email').value.trim().toLowerCase();
                 const zap = document.getElementById('vip-zap').value.replace(/\D/g, ''); 
                 const plano = document.getElementById('vip-plano').value;
                 
@@ -403,7 +409,8 @@
                         const pin = data.pin;
                         const urlSistema = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
                         
-                        const msg = `Olá! A sua conta VIP foi criada no plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar o seu sistema agora mesmo:* \n1. Aceda ao portal: ${urlSistema}\n2. Clique em "Nova Instituição" e coloque o seu e-mail: *${email}*\n3. O sistema enviará um código de segurança rápido para o seu e-mail.\n4. Insira esse código junto com o seu PIN de Ativação VIP: *${pin}*\n\nPronto! O seu sistema será destravado automaticamente. Boas vendas!`;
+                        // 🚀 ATENÇÃO: Removi os asteriscos do *${pin}* para evitar que copiem os "estrelinhas"
+                        const msg = `Olá! A sua conta VIP foi criada no plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar o seu sistema agora mesmo:* \n1. Aceda ao portal: ${urlSistema}\n2. Clique em "Nova Instituição" e coloque o seu e-mail: *${email}*\n3. O sistema enviará um código de segurança rápido para o seu e-mail.\n4. Insira esse código junto com o seu PIN de Ativação VIP: ${pin}\n\nPronto! O seu sistema será destravado automaticamente. Boas vendas!`;
                         
                         const linkZap = zap ? `https://wa.me/${zap.length <= 11 ? '55'+zap : zap}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
                         
@@ -415,19 +422,40 @@
                         
                         Admin.showToast("Acesso VIP gerado!", "success");
                         Admin.carregarDados(); 
-                    } else { Admin.showToast("Erro ao gerar PIN da API.", "error"); }
+                    } else { Admin.showToast(data.error || "Erro ao gerar PIN da API.", "error"); }
                 } catch(e) { Admin.showToast("Erro de comunicação com o servidor.", "error"); } 
                 finally { btn.innerText = "Gerar PIN e Acesso Direto"; btn.disabled = false; }
             },
 
             copiarAcesso: (email, pin, plano) => {
                 const urlSistema = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-                const mensagem = `Olá! A sua conta foi atualizada para o plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar:* \n1. Aceda a: ${urlSistema}\n2. Vá ao menu "💎 Meu Plano"\n3. Insira o PIN Exclusivo: *${pin}*\n\nQualquer dúvida, estamos à disposição!`;
-                navigator.clipboard.writeText(mensagem).then(() => {
-                    Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
-                }).catch(err => {
-                    Admin.showToast("Erro ao copiar.", "error");
-                });
+                
+                // 🚀 ATENÇÃO: Removi os asteriscos do PIN para proteger contra falha no 'Colar'
+                const mensagem = `Olá! A sua conta foi atualizada para o plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar:* \n1. Aceda a: ${urlSistema}\n2. Vá ao menu "💎 Meu Plano"\n3. Insira o PIN Exclusivo: ${pin}\n\nQualquer dúvida, estamos à disposição!`;
+                
+                // 🛡️ Fallback para quando não se usa HTTPS (quebrava a função copiar silenciosamente)
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(mensagem).then(() => {
+                        Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
+                    }).catch(err => {
+                        Admin.showToast("Erro ao copiar.", "error");
+                    });
+                } else {
+                    let textArea = document.createElement("textarea");
+                    textArea.value = mensagem;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
+                    } catch (err) {
+                        Admin.showToast("Erro ao copiar. Use o botão do WhatsApp.", "error");
+                    }
+                    document.body.removeChild(textArea);
+                }
             },
 
             bloquear: async (email) => {
@@ -437,7 +465,8 @@
                     const res = await fetch(`${API_URL}/master/bloquear`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ email: email.trim() })
+                        // 🛡️ Segurança: Trim e LowerCase obrigatório
+                        body: JSON.stringify({ email: email.trim().toLowerCase() })
                     });
                     const data = await res.json();
                     if(data.success) { Admin.showToast('Conta bloqueada.', 'success'); Admin.carregarDados(); }
