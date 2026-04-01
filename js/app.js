@@ -319,7 +319,7 @@ var App = {
         } catch (e) { console.error(e); App.showToast("Falha na validação. Por favor, insira a sua senha.", "error"); }
     },
 
-    // =========================================================
+// =========================================================
     // CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
     // =========================================================
     abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
@@ -352,7 +352,7 @@ var App = {
         } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-// =========================================================
+    // =========================================================
     // UTILITÁRIOS DA INTERFACE
     // =========================================================
     showToast: (mensagem, tipo = 'info') => {
@@ -522,20 +522,18 @@ var App = {
     },
 
     // =========================================================
-    // ROTEAMENTO DE TELAS (BLINDAGEM DO PERÍODO DE TESTE E CARGOS)
+    // ROTEAMENTO DE TELAS E BLOQUEIO DE CARGOS
     // =========================================================
     renderizarTela: async (tela) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🛡️ Se o teste expirou
         const escolaPerfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         if (tela !== 'plano' && tela !== 'login' && App.verificarBloqueioTeste(escolaPerfil)) {
             return App.renderizarMeuPlano(); 
         }
 
-        // 🛡️ Se o Cargo (RBAC) não permite ver a tela
         const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
         const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
         const bloqueadoSecr = ['configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'conta'];
@@ -567,7 +565,7 @@ var App = {
     renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
 
     // =========================================================
-    // 💎 O MEU PLANO (NOVA VITRINE ESTRATÉGICA E CONTAGEM DE 7 DIAS)
+    // 💎 O MEU PLANO (COM CORREÇÃO DE VALIDAÇÃO DO PIN)
     // =========================================================
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
@@ -596,7 +594,8 @@ var App = {
                     <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <input type="text" id="input-novo-pin" placeholder="Insira a sua Chave de Ativação (PIN)" style="flex:1; min-width: 200px; padding:12px; border-radius:6px; border:1px solid #ccc; text-align:center; letter-spacing:2px; font-weight:bold; font-size:16px;">
-                        <button class="btn-primary" style="width:auto; margin:0;" onclick="App.ativarNovoPlano()">Validar PIN</button>
+                        
+                        <button class="btn-primary" style="width:auto; margin:0;" onclick="App.ativarNovoPlano(event)">Validar PIN</button>
                     </div>
                     <p style="font-size:11px; color:#999; margin: 10px 0 0 0;">O PIN é enviado para o seu e-mail imediatamente após a confirmação do pagamento.</p>
                 </div>
@@ -659,37 +658,53 @@ var App = {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
-    ativarNovoPlano: async () => {
-        const pin = document.getElementById('input-novo-pin').value.trim().toUpperCase();
+    // 🚀 AQUI ESTÁ A FUNÇÃO CORRIGIDA E BLINDADA!
+    ativarNovoPlano: async (event) => {
+        if (event) event.preventDefault(); // Impede o recarregamento automático da página
+
+        const inputElement = document.getElementById('input-novo-pin');
+        if (!inputElement) return;
+
+        const pin = inputElement.value.trim().toUpperCase(); // Limpa espaços vazios
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
 
-        const btn = document.querySelector('button[onclick="App.ativarNovoPlano()"]');
-        const txt = btn.innerText; btn.innerText = "A validar... ⏳"; btn.disabled = true;
+        const btn = document.querySelector('button[onclick="App.ativarNovoPlano(event)"]');
+        const txt = btn ? btn.innerText : 'Validar PIN'; 
+        if(btn) { btn.innerText = "A validar... ⏳"; btn.disabled = true; }
 
         try {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             if (res && res.success) {
                 localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
                 App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A reiniciar o sistema...`, "success");
-                document.getElementById('input-novo-pin').value = '';
-                setTimeout(() => { window.location.reload(); }, 2000);
-            } else { App.showToast(res.error || "PIN inválido ou expirado.", "error"); }
+                inputElement.value = '';
+                // 🔄 Agora sim, recarrega a página de forma controlada!
+                setTimeout(() => { window.location.reload(); }, 2000); 
+            } else { 
+                App.showToast(res.error || "PIN inválido ou expirado.", "error"); 
+            }
         } catch(e) { 
             let novoPlano = 'Profissional';
             if (pin.includes('PRE')) novoPlano = 'Premium';
             else if (pin.includes('ESS')) novoPlano = 'Essencial';
             else if (pin.includes('PRO')) novoPlano = 'Profissional';
-            else { App.showToast("PIN em formato inválido.", "error"); btn.innerText = txt; btn.disabled = false; return; }
+            else { 
+                App.showToast("PIN em formato inválido.", "error"); 
+                if(btn) { btn.innerText = txt; btn.disabled = false; } 
+                return; 
+            }
             
             try {
                 const escolaAtual = await App.api('/escola') || {};
                 await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
                 localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
                 App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A reiniciar...`, "success");
-                document.getElementById('input-novo-pin').value = '';
+                inputElement.value = '';
                 setTimeout(() => { window.location.reload(); }, 2000);
             } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
-        } finally { btn.innerText = txt; btn.disabled = false; }
+        } finally { 
+            if(btn) { btn.innerText = txt; btn.disabled = false; } 
+        }
     },
 
     // 🛡️ BLOQUEIO DE CADASTRO COM CÃO DE GUARDA
@@ -779,7 +794,7 @@ var App = {
         } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
     },
 
-// =========================================================
+    // =========================================================
     // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
     // =========================================================
     abrirModalVenda: async (idAluno, nomeAluno) => {
@@ -922,7 +937,7 @@ var App = {
         }
     },
 
-    // =========================================================
+// =========================================================
     // MOTOR DE LISTAS AVANÇADAS
     // =========================================================
     renderizarLista: async (tipo) => {
