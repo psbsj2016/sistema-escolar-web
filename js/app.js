@@ -20,32 +20,15 @@ const LISTA_FUNCIONALIDADES = [
 ];
 
 // =========================================================
-// 🛡️ SISTEMA DE SEGURANÇA CONTRA XSS (CROSS-SITE SCRIPTING)
+// 🛡️ CORE DA APLICAÇÃO E SISTEMA DE SEGURANÇA CONTRA XSS
 // =========================================================
 
-/**
- * Filtra textos para impedir injeção de código malicioso no HTML.
- * @param {string} str - O texto original vindo da base de dados.
- * @returns {string} O texto seguro para ser usado no .innerHTML
- */
-App.escapeHTML = (str) => {
-    // Se o valor for nulo, indefinido ou vazio, devolvemos uma string vazia
-    if (str === null || str === undefined) return '';
-    
-    // Convertemos para string (caso seja um número) e substituímos os caracteres perigosos
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-};
-
-const App = {
+var App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
+    // Filtra textos para impedir injeção de código malicioso no HTML.
     escapeHTML: (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -235,7 +218,7 @@ const App = {
 
         const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
         
-        // ⏰ MOTOR DE TEMPO REAL DO SININHO (Agora está dentro da função de forma segura!)
+        // ⏰ MOTOR DE TEMPO REAL DO SININHO
         if (!App.motorTempoRealLigado) {
             setInterval(() => {
                 const telaSistema = document.getElementById('tela-sistema');
@@ -369,7 +352,7 @@ const App = {
         } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // =========================================================
+// =========================================================
     // UTILITÁRIOS DA INTERFACE
     // =========================================================
     showToast: (mensagem, tipo = 'info') => {
@@ -449,7 +432,7 @@ const App = {
         document.documentElement.removeAttribute('style'); App.showToast("Aparência restaurada com sucesso! 🔄", "success"); setTimeout(() => { location.reload(); }, 1000);
     },
 
-// =========================================================
+    // =========================================================
     // VISÃO GERAL (DASHBOARD INTELIGENTE COM FILTRO DE CARGO)
     // =========================================================
     renderizarInicio: async () => { 
@@ -458,19 +441,17 @@ const App = {
         try {
             const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
             const todosAlunos = Array.isArray(alunos) ? alunos : [];
-            const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); // Filtra ativos para o Dashboard
+            const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); 
             const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
             const dataHoje = new Date(); const mesAtual = dataHoje.getMonth() + 1; const anoAtual = dataHoje.getFullYear();
-            // 🛡️ CORREÇÃO: Pegamos os IDs apenas dos alunos ativos
+            
             const ativosIds = listaAlunos.map(a => a.id);
 
             const financasMes = listaFin.filter(f => { if(!f.vencimento) return false; const parts = f.vencimento.split('-'); return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual; });
             const totalRecebido = financasMes.filter(f => f.status === 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
             
-            // 🛡️ CORREÇÃO: Soma apenas os pendentes de quem ESTÁ ATIVO
             const totalPendente = financasMes.filter(f => f.status !== 'Pago' && ativosIds.includes(f.idAluno)).reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
             
-            // 🛡️ CORREÇÃO: Mostra na lista de atrasados apenas quem ESTÁ ATIVO
             const inadimplentesList = listaFin.filter(f => 
                 f.status === 'Pendente' && 
                 new Date(f.vencimento + 'T00:00:00') < dataHoje &&
@@ -480,12 +461,11 @@ const App = {
             const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
-            const mostraFinanceiro = tipoUtilizador !== 'Professor'; // Professores não vêem dinheiro
+            const mostraFinanceiro = tipoUtilizador !== 'Professor'; 
 
             let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
             if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
             
-            // 🛡️ Filtra atalhos de acordo com a permissão do cargo
             const htmlAtalhos = idsAtalhos.map(id => { 
                 const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); 
                 if (func && func.roles.includes(tipoUtilizador)) {
@@ -733,7 +713,6 @@ const App = {
             const chamadas = await App.api('/chamadas');
             const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
             
-            // 🛡️ NOVO: Variável para as Faltas Justificadas
             let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
             
             if (historico.length === 0) {
@@ -754,7 +733,6 @@ const App = {
                         mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
                     }
                     
-                    // 🛡️ NOVO: Lógica de separação do tempo
                     if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
                     else if (c.status === 'Falta Justificada' || c.status === 'Justificada') minJustificada += mins;
                     else if (c.status === 'Falta') minFalta += mins;
@@ -765,7 +743,6 @@ const App = {
                     htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
                     agrupado[mes].forEach(c => {
                         const dataBr = c.data.split('-').reverse().join('/');
-                        // 🎨 Cor dinâmica na tabela
                         const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
                         htmlMeses += `<tr style="border-bottom:1px solid #eee;">
                                         <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
@@ -779,7 +756,6 @@ const App = {
             
             const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
             
-            // 📊 NOVO: Design dos KPI's em 3 blocos
             const kpiHTML = `
                 <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
                     <div style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
@@ -802,8 +778,8 @@ const App = {
             `;
         } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
     },
-    
-    // =========================================================
+
+// =========================================================
     // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
     // =========================================================
     abrirModalVenda: async (idAluno, nomeAluno) => {
@@ -981,7 +957,6 @@ const App = {
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
-    // 🎨 MOTOR VISUAL DE TABELAS (TB)
     gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
@@ -1070,20 +1045,17 @@ const App = {
     // 🔄 MOTOR VISUAL DE ALTERAÇÃO DE STATUS (NOVO PDV)
     // =========================================================
     
-    // 🎨 1. Abre o PDV Visual de Status (Substitui o prompt() nativo)
     alterarStatusAluno: (id, statusAtual) => {
         const modal = document.getElementById('modal-overlay');
         if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = "Atualizar Status de Matrícula";
 
-        // Mapeamento de cores e descrições para os cartões
         const estilos = {
             Ativo: { icon: '🟢', color: '#27ae60', desc: 'Aluno matriculado e assistindo aulas.' },
             Trancado: { icon: '🟡', color: '#f39c12', desc: 'Matrícula pausada. Histórico financeiro preservado.' },
             Cancelado: { icon: '🔴', color: '#e74c3c', desc: 'Vínculo encerrado com a instituição.' }
         };
 
-        // Criação dinâmica dos "Cartões de Opção"
         const htmlOptions = Object.entries(estilos).map(([key, info]) => `
             <div class="status-option-card" data-status="${key}" onclick="App.selecionarOpcaoStatus(this)" style="border: 2px solid #eee; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; transition: all 0.2s;">
                 <span style="font-size: 32px; filter: grayscale(1); transition: filter 0.2s;">${info.icon}</span>
@@ -1111,51 +1083,42 @@ const App = {
 
         document.getElementById('modal-form-content').innerHTML = html;
 
-        // Pré-seleciona a opção atual se for válida
         if (estilos[statusAtual]) {
             const targetCard = document.querySelector(`.status-option-card[data-status="${statusAtual}"]`);
             if (targetCard) App.selecionarOpcaoStatus(targetCard);
         }
 
-        // Atualiza o botão de confirmação do modal
         const btnConfirm = document.querySelector('.btn-confirm');
         btnConfirm.setAttribute('onclick', 'App.confirmarAlteracaoStatus()');
         btnConfirm.innerText = "💾 Salvar Novo Status";
         btnConfirm.style.display = 'inline-flex';
     },
 
-    // 🎨 2. Função Auxiliar: Gerencia a Seleção Visual (Clique no Cartão)
     selecionarOpcaoStatus: (card) => {
-        // Deseleciona todos os cartões e remove cores
         document.querySelectorAll('.status-option-card').forEach(c => {
             c.style.borderColor = '#eee';
             c.style.background = 'white';
-            c.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(1)'; // Esmaeve o ícone
+            c.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(1)';
             c.querySelector('.selection-indicator').innerHTML = '';
             c.querySelector('.selection-indicator').style.borderColor = '#ccc';
             c.querySelector('.selection-indicator').style.background = 'white';
         });
 
-        // Seleciona o cartão clicado e aplica as cores
         const status = card.getAttribute('data-status');
-        const styleTextBold = card.querySelector('div[style*="font-weight: bold"]'); // Pega o div do texto em negrito
-        const color = styleTextBold.style.color; // Obtém a cor dele (que é a cor do status)
+        const styleTextBold = card.querySelector('div[style*="font-weight: bold"]'); 
+        const color = styleTextBold.style.color; 
 
         card.style.borderColor = color;
-        card.style.background = `${color}05`; // Aplica um fundo claríssimo da cor do status
-        card.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(0)'; // Mostra o ícone colorido
+        card.style.background = `${color}05`; 
+        card.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(0)'; 
         
-        // Indicador de seleção profissional (Círculo preenchido)
         card.querySelector('.selection-indicator').innerHTML = `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>`;
         card.querySelector('.selection-indicator').style.borderColor = color;
         
-        // Define o dado oculto de seleção
         document.getElementById('status-options-container').setAttribute('data-selecionado', status);
     },
 
-    // 🔄 Versão Sincronizada com a sua renderizarLista
-confirmarAlteracaoStatus: async () => {
-        // Busca segura dos elementos do DOM
+    confirmarAlteracaoStatus: async () => {
         const inputId = document.getElementById('status-student-id');
         const inputOrig = document.getElementById('status-student-orig');
         const containerStatus = document.getElementById('status-options-container');
@@ -1178,13 +1141,11 @@ confirmarAlteracaoStatus: async () => {
             const aluno = await App.api(`/alunos/${id}`);
             if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
 
-            // Envia ordem ao servidor
             await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
             
             App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
             App.fecharModal();
             
-            // 🚀 Atualização Otimista Blindada (Cobre todas as caches possíveis)
             if (Array.isArray(App.cacheAlunos)) {
                 const index = App.cacheAlunos.findIndex(a => a.id === id);
                 if (index !== -1) App.cacheAlunos[index].status = novoStatus;
@@ -1194,20 +1155,16 @@ confirmarAlteracaoStatus: async () => {
                 if (index !== -1) App.listaCache[index].status = novoStatus;
             }
             
-            // Redesenha a tabela de imediato
             if(typeof App.filtrarTabelaReativa === 'function') {
                 App.filtrarTabelaReativa();
             } else if(typeof App.renderizarLista === 'function') {
                 App.renderizarLista('aluno');
             } else {
-                // Último recurso de segurança: força um refresh rápido
                 setTimeout(() => window.location.reload(), 500);
             }
 
-            // 🛡️ CORREÇÃO (PASSO 4): Força o sininho a recalcular e sumir com os cancelados na hora!
             App.verificarNotificacoes();
             
-            // 🛡️ BÔNUS: Se estivermos na tela principal, recarrega o dashboard para atualizar as dívidas e gráficos
             if (document.getElementById('titulo-pagina') && document.getElementById('titulo-pagina').innerText === 'Visão Geral') {
                 App.renderizarInicio();
             }
@@ -1221,16 +1178,13 @@ confirmarAlteracaoStatus: async () => {
         }
     },
 
-   // =========================================================
+    // =========================================================
     // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
     // =========================================================
-    
-    // 🎨 Função Auxiliar: Apenas desenha o cabeçalho (não faz requisições)
     atualizarUIHeader: (escola) => {
         if (!escola) return;
         const logoTitle = document.querySelector('.logo-area h2'); 
         
-        // Lê o plano diretamente do objeto que foi passado (ignora o cache antigo do navegador)
         const planoAtual = escola.plano || 'Teste';
         
         let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
@@ -1251,13 +1205,11 @@ confirmarAlteracaoStatus: async () => {
 
     carregarDadosEscola: async () => { 
         try { 
-            // ⚡ 1. Renderização Imediata (Tiro e Queda): Desenha a tela usando o que tem na memória do celular. Evita o ecrã em branco!
             const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
             if (cacheEscola) {
                 App.atualizarUIHeader(cacheEscola);
             }
 
-            // 🔄 2. Busca Fantasma (Assíncrona): Vai ao servidor Render conferir se o plano ou a logo mudaram enquanto o app estava fechado
             const escola = await App.api('/escola'); 
             if(!escola) return;
             
@@ -1266,13 +1218,10 @@ confirmarAlteracaoStatus: async () => {
                 await App.api('/escola', 'PUT', escola);
             }
 
-            // 💾 3. Guarda a Verdade Absoluta: Atualiza a memória local com os dados frescos do servidor
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
             
-            // ✨ 4. Redesenha Mágicamente: Se o plano mudou no computador, o celular redesenha o cabeçalho agora mesmo sem o usuário perceber!
             App.atualizarUIHeader(escola);
-            
             App.verificarBloqueioTeste(escola);
 
         } catch(e) { console.log("Carregando perfil..."); } 
@@ -1569,7 +1518,6 @@ confirmarAlteracaoStatus: async () => {
         
         if (!confirm("Tem a certeza absoluta que deseja substituir os dados atuais? Esta ação não pode ser desfeita.")) return; 
         
-        // Proteção UI: Bloqueia o botão e muda o cursor
         const btn = document.querySelector('button[onclick="App.processarRestauracao()"]');
         if (btn) { btn.disabled = true; btn.innerText = "A Ler ficheiro... ⏳"; }
         document.body.style.cursor = 'wait';
@@ -1580,14 +1528,13 @@ confirmarAlteracaoStatus: async () => {
                 const d = JSON.parse(e.target.result); 
                 const t = ['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos','usuarios','escola']; 
                 
-                // 1. Contabilizar o total de registos para dar feedback visual
                 let totalRegistos = 0;
                 let processados = 0;
                 
                 for (const k of t) {
                     if (d[k]) {
                         if (Array.isArray(d[k])) totalRegistos += d[k].length;
-                        else totalRegistos += 1; // Para o objeto único 'escola'
+                        else totalRegistos += 1; 
                     }
                 }
 
@@ -1598,7 +1545,6 @@ confirmarAlteracaoStatus: async () => {
                     return;
                 }
 
-                // 2. Processar e mostrar o progresso no botão
                 for (const k of t) {
                     if (d[k]) {
                         if (Array.isArray(d[k])) {
@@ -1615,7 +1561,6 @@ confirmarAlteracaoStatus: async () => {
                     }
                 } 
                 
-                // 3. Sucesso e recarregamento da página
                 App.showToast("Dados restaurados com sucesso! A reiniciar...", "success"); 
                 setTimeout(() => location.reload(), 1500);
 
@@ -1641,12 +1586,10 @@ confirmarAlteracaoStatus: async () => {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            // 🛡️ Mudamos de 'const' para 'let' para poder sobrescrever a variável de forma segura
             let [alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
                 App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques'), App.api('/escola')
             ]);
             
-            // 🎯 NOVA REGRA: Filtra a lista para manter APENAS alunos ativos
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
             }
@@ -1662,7 +1605,6 @@ confirmarAlteracaoStatus: async () => {
             amanha.setDate(amanha.getDate() + 1);
             const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
 
-            // 💎 NOVO: ALERTA DE VENCIMENTO DO PLANO DA ESCOLA (Apenas para Gestor)
             if (escola && tipoUtilizador === 'Gestor') {
                 const planoAtual = escola.plano || 'Teste';
                 if (planoAtual === 'Teste') {
@@ -1714,7 +1656,6 @@ confirmarAlteracaoStatus: async () => {
                 });
             }
 
-            // 🛡️ Alertas Financeiros APENAS para Gestores e Secretárias
             if (tipoUtilizador !== 'Professor') {
                 if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
                     alunos.forEach(aluno => {

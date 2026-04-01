@@ -179,7 +179,9 @@
                 </div>
                 <div class="input-group" style="text-align: left; margin-top: 15px;">
                     <label>PIN Exclusivo do Gestor</label>
-                    <input type="password" id="novo-inst-pin" placeholder="****" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
+                    <form onsubmit="return false;" style="margin: 0;">
+    <input type="password" id="novo-inst-pin" placeholder="****" style="text-align: center; font-size: 18px; letter-spacing: 4px;">
+    </form>
                 </div>
                 <button onclick="App.validarCadastroInst()" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" style="width: 100%; margin-top: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease;">
                     🚀 Validar e Ativar Sistema
