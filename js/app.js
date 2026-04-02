@@ -50,7 +50,6 @@ var App = {
         return deviceId;
     },
 
-    // 🛡️ NOVO: Aplica filtros visuais no menu com base no cargo do utilizador
     aplicarPermissoesDeUsuario: () => {
         if (!App.usuario) return;
         const tipo = App.usuario.tipo || 'Gestor';
@@ -66,36 +65,138 @@ var App = {
                 if (acao.includes('configuracoes') || acao.includes('aparencia') || acao.includes('backup') || acao.includes('plano') || acao.includes('dossie') || acao.includes('conta')) visivel = false;
             }
             
-            if (!visivel) {
-                btn.style.display = 'none';
-            } else {
-                btn.style.display = ''; 
-            }
+            btn.style.display = visivel ? '' : 'none';
         });
     },
 
+    // 🚀 LÓGICA DE BLOQUEIO DESTRUTIVA MELHORADA E RESTRITA A BOOLEAN
     verificarBloqueioTeste: (escola) => {
         const plano = escola.plano || 'Teste';
         if (plano === 'Teste') {
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
-            const hoje = new Date();
-            const diffTime = Math.abs(hoje - dataCriacao);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays >= 7) {
-                App.showToast("⚠️ O seu período de teste expirou! Escolha um plano para continuar a usar o sistema.", "error");
-                const sidebar = document.querySelector('.sidebar');
-                if(sidebar) sidebar.style.display = 'none'; 
-                const content = document.querySelector('.content');
-                if(content && window.innerWidth > 768) content.style.marginLeft = '0';
-                return true; 
-            }
+            const diffDays = Math.floor(Math.abs(new Date() - dataCriacao) / (1000 * 60 * 60 * 24));
+            return diffDays >= 7; // Retorna true se passou de 7 dias
         }
-        const sidebar = document.querySelector('.sidebar');
-        if(sidebar) sidebar.style.display = 'flex';
-        const content = document.querySelector('.content');
-        if(content && window.innerWidth > 768) content.style.marginLeft = '260px';
-        return false; 
+        return false;
+    },
+
+    // 🔒 NOVO: APRESENTA TELA DE BLOQUEIO ABSOLUTO (FORA DO DASHBOARD)
+    mostrarTelaBloqueioLogin: (escola) => {
+        document.documentElement.removeAttribute('style');
+        document.getElementById('tela-sistema').style.display = 'none';
+
+        const telaLogin = document.getElementById('tela-login');
+        if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+
+        const loginForms = telaLogin.querySelectorAll('.login-box, .box-login');
+        loginForms.forEach(form => {
+            if (form.id !== 'box-bloqueio-conta') form.style.display = 'none';
+        });
+
+        let blockBox = document.getElementById('box-bloqueio-conta');
+        if (!blockBox) {
+            blockBox = document.createElement('div');
+            blockBox.id = 'box-bloqueio-conta';
+            blockBox.className = loginForms.length > 0 ? loginForms[0].className : 'login-box';
+            blockBox.style.maxWidth = '400px';
+            blockBox.style.margin = '0 auto';
+            blockBox.style.background = '#fff';
+            blockBox.style.padding = '30px';
+            blockBox.style.borderRadius = '12px';
+            blockBox.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            telaLogin.appendChild(blockBox);
+        }
+
+        blockBox.style.display = 'block';
+        blockBox.innerHTML = `
+            <div style="text-align:center;">
+                <span style="font-size: 45px; display:block; margin-bottom: 10px;">🔒</span>
+                <h2 style="color: #e74c3c; margin-top:0; font-size:22px;">Acesso Bloqueado</h2>
+                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">O seu acesso foi bloqueado por falta de pagamento ou o seu período de teste expirou.</p>
+
+                <div style="background: #fdf2f2; padding: 20px; border-radius: 8px; border: 1px solid #f5b7b1; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #c0392b; font-size: 15px;">Já efetuou o pagamento?</h4>
+                    <p style="font-size:12px; color:#c0392b; margin-bottom: 15px;">Insira a sua Chave de Ativação (PIN) para liberar o sistema imediatamente.</p>
+
+                    <input type="text" id="input-pin-login" placeholder="Digite o PIN recebido" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; text-align: center; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; font-size: 16px; box-sizing:border-box;">
+
+                    <button class="btn-primary" style="width: 100%; justify-content: center; background: #27ae60; border:none; padding:12px; border-radius:6px; color:white; font-weight:bold; cursor:pointer;" onclick="App.ativarPinLogin(event)">🔓 Validar e Desbloquear</button>
+                </div>
+
+                <button class="btn-cancel" style="width: 100%; justify-content: center; background:transparent; border:1px solid #ccc; padding:10px; border-radius:6px; cursor:pointer;" onclick="App.sairDaTelaDeBloqueio()">Sair e Voltar ao Login</button>
+            </div>
+        `;
+    },
+
+    sairDaTelaDeBloqueio: () => {
+        App.logout();
+    },
+
+    // 🔓 NOVO: DESBLOQUEIA DIRECTAMENTE NA TELA DE ENTRADA E LOGA
+    ativarPinLogin: async (event) => {
+        if (event) event.preventDefault();
+        const inputElement = document.getElementById('input-pin-login');
+        if (!inputElement) return;
+
+        const pin = inputElement.value.trim().toUpperCase();
+        if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
+
+        const btn = event.target;
+        const txt = btn.innerText;
+        if(btn) { btn.innerText = "A validar... ⏳"; btn.disabled = true; }
+
+        try {
+            const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
+            if (res && res.success) {
+                localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
+
+                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+                perfilCache.plano = res.plano;
+                perfilCache.dataCriacao = new Date().toISOString();
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+                App.atualizarUIHeader(perfilCache);
+                App.showToast(`🎉 PIN validado! Sistema desbloqueado.`, "success");
+                
+                const blockBox = document.getElementById('box-bloqueio-conta');
+                if(blockBox) blockBox.style.display = 'none';
+                
+                App.entrarNoSistema();
+            } else {
+                App.showToast(res.error || "PIN inválido ou expirado.", "error");
+            }
+        } catch(e) {
+            let novoPlano = 'Profissional';
+            if (pin.includes('PRE')) novoPlano = 'Premium';
+            else if (pin.includes('ESS')) novoPlano = 'Essencial';
+            else if (pin.includes('PRO')) novoPlano = 'Profissional';
+            else {
+                App.showToast("PIN em formato inválido.", "error");
+                if(btn) { btn.innerText = txt; btn.disabled = false; }
+                return;
+            }
+
+            try {
+                const escolaAtual = await App.api('/escola') || {};
+                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
+
+                localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+                perfilCache.plano = novoPlano;
+                perfilCache.dataCriacao = new Date().toISOString();
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+                App.atualizarUIHeader(perfilCache);
+                App.showToast(`🎉 PIN validado com sucesso! Sistema desbloqueado.`, "success");
+
+                const blockBox = document.getElementById('box-bloqueio-conta');
+                if(blockBox) blockBox.style.display = 'none';
+                
+                App.entrarNoSistema();
+            } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
+        } finally {
+            if(btn) { btn.innerText = txt; btn.disabled = false; }
+        }
     },
 
     verificarLimites: async (tipo) => {
@@ -190,7 +291,7 @@ var App = {
     mascaraValor: (i) => { let v = i.value.replace(/\D/g, ""); v = (v / 100).toFixed(2) + ""; i.value = v; },
 
     // =========================================================
-    // ARRANQUE E LOGIN
+    // ARRANQUE E LOGIN COM FILTRO DE BLOQUEIO ABSOLUTO
     // =========================================================
     init: async () => {
         localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
@@ -203,10 +304,21 @@ var App = {
             const keyAtalhos = App.getTenantKey('escola_atalhos');
             if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
-            if (bioId && window.PublicKeyCredential) {
-                document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none';
-                document.getElementById('btn-biometria').style.display = 'block'; App.entrarComBiometria(); 
-            } else { App.entrarNoSistema(); }
+            // Verifica o bloqueio usando api e em caso de falha de net, com o cache local
+            let escola = await App.api('/escola');
+            if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+            if (App.verificarBloqueioTeste(escola)) {
+                document.documentElement.removeAttribute('style'); 
+                App.mostrarTelaBloqueioLogin(escola);
+            } else {
+                if (bioId && window.PublicKeyCredential) {
+                    document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none';
+                    document.getElementById('btn-biometria').style.display = 'block'; App.entrarComBiometria(); 
+                } else { 
+                    App.entrarNoSistema(); 
+                }
+            }
         } else { 
             document.documentElement.removeAttribute('style'); document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none'; 
         }
@@ -214,16 +326,15 @@ var App = {
         const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
         App.setupMobileMenu(); 
         
-        if (App.usuario) { await App.carregarDadosEscola(); }
-
         const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
         
-        // ⏰ MOTOR DE TEMPO REAL DO SININHO
+        // ⏰ MOTOR DE TEMPO REAL DO SININHO E CÃO DE GUARDA
         if (!App.motorTempoRealLigado) {
             setInterval(() => {
                 const telaSistema = document.getElementById('tela-sistema');
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
                     App.verificarNotificacoes();
+                    App.carregarDadosEscola(); // Verifica de 5 em 5 mins se a licença expirou online
                 }
             }, 300000); 
             App.motorTempoRealLigado = true;
@@ -253,8 +364,16 @@ var App = {
                 const keyAtalhos = App.getTenantKey('escola_atalhos');
                 if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
-                App.entrarNoSistema();
-                App.showToast('Bem-vindo ao sistema!', 'success');
+                // VERIFICA BLOQUEIO AO LOGAR ANTES DE LIBERTAR O DASHBOARD
+                let escola = await App.api('/escola');
+                if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+                if (App.verificarBloqueioTeste(escola)) {
+                    App.mostrarTelaBloqueioLogin(escola);
+                } else {
+                    App.entrarNoSistema();
+                    App.showToast('Bem-vindo ao sistema!', 'success');
+                }
             } else { 
                 App.showToast(res.error || "Login ou senha incorretos", "error"); 
             }
@@ -262,24 +381,43 @@ var App = {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    entrarNoSistema: () => {
+    entrarNoSistema: async () => {
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-sistema').style.display = 'flex';
         const el = document.getElementById('user-name');
         if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
-        App.aplicarPermissoesDeUsuario(); // 🛡️ Aplica o Filtro Visual
-        App.renderizarInicio();
+        App.aplicarPermissoesDeUsuario(); 
+        
+        await App.carregarDadosEscola();
+        
+        // Verifica se o cão de guarda não o empurrou de volta pro login
+        if (document.getElementById('tela-sistema').style.display !== 'none') {
+            App.renderizarInicio();
+        }
     },
 
     logout: () => {
         document.documentElement.removeAttribute('style');
         localStorage.removeItem('usuario_logado'); localStorage.removeItem('token_acesso'); App.usuario = null;
-        document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
+        
+        const inUser = document.getElementById('login-user'); if(inUser) inUser.value = ''; 
+        const inPass = document.getElementById('login-pass'); if(inPass) inPass.value = '';
+        
         document.getElementById('tela-sistema').style.display = 'none';
-        const telaLogin = document.getElementById('tela-login'); telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+        const telaLogin = document.getElementById('tela-login'); 
+        if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+
+        const blockBox = document.getElementById('box-bloqueio-conta');
+        if(blockBox) blockBox.style.display = 'none';
+        
+        // Garante que as janelas de login originais retornam em paz
+        const loginForms = document.querySelectorAll('#tela-login .login-box, #tela-login .box-login');
+        loginForms.forEach(form => {
+            if (form.id !== 'box-bloqueio-conta') form.style.display = '';
+        });
     },
 
-    // =========================================================
+// =========================================================
     // BIOMETRIA REAL (WEBAUTHN)
     // =========================================================
     bufferToBase64: (buf) => { const bytes = new Uint8Array(buf); let str = ''; for (let i = 0; i < bytes.byteLength; i++) { str += String.fromCharCode(bytes[i]); } return btoa(str); },
@@ -319,7 +457,7 @@ var App = {
         } catch (e) { console.error(e); App.showToast("Falha na validação. Por favor, insira a sua senha.", "error"); }
     },
 
-// =========================================================
+    // =========================================================
     // CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
     // =========================================================
     abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
@@ -521,18 +659,13 @@ var App = {
         window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
     },
 
-    // =========================================================
+// =========================================================
     // ROTEAMENTO DE TELAS E BLOQUEIO DE CARGOS
     // =========================================================
     renderizarTela: async (tela) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
-
-        const escolaPerfil = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-        if (tela !== 'plano' && tela !== 'login' && App.verificarBloqueioTeste(escolaPerfil)) {
-            return App.renderizarMeuPlano(); 
-        }
 
         const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
         const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
@@ -565,7 +698,7 @@ var App = {
     renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
 
     // =========================================================
-    // 💎 O MEU PLANO (COM CORREÇÃO DE VALIDAÇÃO DO PIN)
+    // 💎 O MEU PLANO (PAINEL INTERNO)
     // =========================================================
     renderizarMeuPlano: () => {
         App.setTitulo("Gerenciar Assinatura");
@@ -658,14 +791,13 @@ var App = {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
-    // 🚀 AQUI ESTÁ A FUNÇÃO CORRIGIDA E BLINDADA!
     ativarNovoPlano: async (event) => {
-        if (event) event.preventDefault(); // Impede o recarregamento automático da página
+        if (event) event.preventDefault(); 
 
         const inputElement = document.getElementById('input-novo-pin');
         if (!inputElement) return;
 
-        const pin = inputElement.value.trim().toUpperCase(); // Limpa espaços vazios
+        const pin = inputElement.value.trim().toUpperCase(); 
         if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
 
         const btn = document.querySelector('button[onclick="App.ativarNovoPlano(event)"]');
@@ -675,20 +807,18 @@ var App = {
         try {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             if (res && res.success) {
-                // 🔴 A MÁGICA ACONTECE AQUI: Atualiza o cache IMEDIATAMENTE para matar o bloqueio
                 localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
                 
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = res.plano;
-                perfilCache.dataCriacao = new Date().toISOString(); // Renova a data para matar o bloqueio antigo localmente
+                perfilCache.dataCriacao = new Date().toISOString(); 
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
-                App.atualizarUIHeader(perfilCache); // Atualiza o emblema e o plano no topo no mesmo segundo!
+                App.atualizarUIHeader(perfilCache); 
 
                 App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A iniciar o sistema...`, "success");
                 inputElement.value = '';
                 
-                // 🚀 Em vez de dar reload bruto, força a atualização suave e vai para a página inicial (Dashboard)
                 await App.carregarDadosEscola();
                 App.renderizarInicio(); 
             } else { 
@@ -709,19 +839,17 @@ var App = {
                 const escolaAtual = await App.api('/escola') || {};
                 await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
                 
-                // 🔴 A MÁGICA DE CACHE (Fallback)
                 localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = novoPlano;
                 perfilCache.dataCriacao = new Date().toISOString();
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
-                App.atualizarUIHeader(perfilCache); // Atualiza emblema do topo
+                App.atualizarUIHeader(perfilCache);
                 
                 App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
                 inputElement.value = '';
                 
-                // 🚀 Vai para a página inicial diretamente
                 await App.carregarDadosEscola();
                 App.renderizarInicio();
             } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
@@ -730,7 +858,6 @@ var App = {
         }
     },
 
-    // 🛡️ BLOQUEIO DE CADASTRO COM CÃO DE GUARDA
     abrirModalCadastro: async (tipo, id) => { 
         if (!id && (tipo === 'aluno')) {
             const podeCadastrar = await App.verificarLimites('aluno');
@@ -817,9 +944,6 @@ var App = {
         } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
     },
 
-    // =========================================================
-    // O VERDADEIRO PDV (VENDA RÁPIDA INTEGRADA AO ESTOQUE)
-    // =========================================================
     abrirModalVenda: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
@@ -960,9 +1084,6 @@ var App = {
         }
     },
 
-// =========================================================
-    // MOTOR DE LISTAS AVANÇADAS
-    // =========================================================
     renderizarLista: async (tipo) => {
         if (!App.usuario) { App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
@@ -1079,10 +1200,6 @@ var App = {
         }
     },
 
-    // =========================================================
-    // 🔄 MOTOR VISUAL DE ALTERAÇÃO DE STATUS (NOVO PDV)
-    // =========================================================
-    
     alterarStatusAluno: (id, statusAtual) => {
         const modal = document.getElementById('modal-overlay');
         if(modal) modal.style.display = 'flex';
@@ -1216,9 +1333,6 @@ var App = {
         }
     },
 
-// =========================================================
-    // CONFIGURAÇÕES E ESCOLA (COM RENDERIZAÇÃO OTIMISTA CACHE-FIRST)
-    // =========================================================
     atualizarUIHeader: (escola) => {
         if (!escola) return;
         const logoTitle = document.querySelector('.logo-area h2'); 
@@ -1249,7 +1363,7 @@ var App = {
             }
 
             const escola = await App.api('/escola'); 
-            if(!escola) return;
+            if(!escola || escola.error) return;
             
             if (!escola.dataCriacao) {
                 escola.dataCriacao = new Date().toISOString();
@@ -1261,12 +1375,9 @@ var App = {
             
             App.atualizarUIHeader(escola);
             
-            // 🚀 CÃO DE GUARDA INTELIGENTE: Se o backend destrancou (ex: via portal Admin), liberta o utilizador automaticamente!
-            const bloqueado = App.verificarBloqueioTeste ? App.verificarBloqueioTeste(escola) : false;
-            const tituloApp = document.getElementById('titulo-pagina') ? document.getElementById('titulo-pagina').innerText : '';
-            
-            if (!bloqueado && (tituloApp === 'Gerenciar Assinatura' || tituloApp === 'Meu Plano' || App.entidadeAtual === 'plano')) {
-                App.renderizarInicio(); 
+            // 🚀 CÃO DE GUARDA: Expulsa se vencer com o sistema aberto
+            if (App.verificarBloqueioTeste(escola)) {
+                App.mostrarTelaBloqueioLogin(escola);
             }
 
         } catch(e) { console.log("Carregando perfil..."); } 
@@ -1368,9 +1479,6 @@ var App = {
         } catch(e) { App.showToast("Erro ao salvar perfil da escola.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
     },
 
-    // =========================================================
-    // MINHA CONTA E GESTÃO DE EQUIPA (CÃO DE GUARDA)
-    // =========================================================
     toggleSenhaVisibilidade: (id) => { 
         const input = document.getElementById(id); 
         input.type = input.type === 'password' ? 'text' : 'password'; 
@@ -1503,9 +1611,6 @@ var App = {
         } 
     },
 
-    // =========================================================
-    // BACKUP E RESET (ZONA DE PERIGO) RESTAURADA
-    // =========================================================
     renderizarBackup: () => { 
         App.setTitulo("Backup de Dados"); 
         const div = document.getElementById('app-content');
@@ -1619,9 +1724,6 @@ var App = {
         r.readAsText(f.files[0]); 
     },
 
-    // =========================================================
-    // 🔔 SUPER SININHO COM "TELETRANSPORTE" E FILTRO DE CARGOS
-    // =========================================================
     toggleNotificacoes: () => {
         const dropdown = document.getElementById('noti-dropdown');
         if (dropdown) dropdown.classList.toggle('active');
