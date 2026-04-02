@@ -28,7 +28,6 @@ var App = {
     motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
-    // Filtra textos para impedir injeção de código malicioso no HTML.
     escapeHTML: (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -69,18 +68,31 @@ var App = {
         });
     },
 
-    // 🚀 LÓGICA DE BLOQUEIO DESTRUTIVA MELHORADA E RESTRITA A BOOLEAN
-    verificarBloqueioTeste: (escola) => {
+    // 🚀 LÓGICA DE BLOQUEIO DESTRUTIVA GERAL (30 DIAS E TESTE)
+    verificarBloqueioGeral: (escola) => {
+        if (!escola) return false;
         const plano = escola.plano || 'Teste';
-        if (plano === 'Teste') {
+        
+        if (plano === 'Bloqueado') return true;
+
+        const dataHoje = new Date();
+
+        // Respeita a data de validade imposta no sistema
+        if (escola.dataExpiracao) {
+            const dataVenc = new Date(escola.dataExpiracao);
+            return dataHoje >= dataVenc;
+        } else {
+            // Fallback para escolas que ainda não tem a data registrada
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
-            const diffDays = Math.floor(Math.abs(new Date() - dataCriacao) / (1000 * 60 * 60 * 24));
-            return diffDays >= 7; // Retorna true se passou de 7 dias
+            const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
+            
+            if (plano === 'Teste' && diffDays >= 7) return true;
+            if (plano !== 'Teste' && plano !== 'Premium' && diffDays >= 30) return true; 
         }
+
         return false;
     },
 
-    // 🔒 NOVO: APRESENTA TELA DE BLOQUEIO ABSOLUTO (FORA DO DASHBOARD)
     mostrarTelaBloqueioLogin: (escola) => {
         document.documentElement.removeAttribute('style');
         document.getElementById('tela-sistema').style.display = 'none';
@@ -132,7 +144,7 @@ var App = {
         App.logout();
     },
 
-    // 🔓 NOVO: DESBLOQUEIA DIRECTAMENTE NA TELA DE ENTRADA E LOGA
+    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS
     ativarPinLogin: async (event) => {
         if (event) event.preventDefault();
         const inputElement = document.getElementById('input-pin-login');
@@ -152,11 +164,15 @@ var App = {
 
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = res.plano;
-                perfilCache.dataCriacao = new Date().toISOString();
+                
+                const novaDataExp = new Date();
+                novaDataExp.setDate(novaDataExp.getDate() + 30);
+                perfilCache.dataExpiracao = novaDataExp.toISOString();
+                
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
                 App.atualizarUIHeader(perfilCache);
-                App.showToast(`🎉 PIN validado! Sistema desbloqueado.`, "success");
+                App.showToast(`🎉 PIN validado! Sistema desbloqueado por mais 30 dias.`, "success");
                 
                 const blockBox = document.getElementById('box-bloqueio-conta');
                 if(blockBox) blockBox.style.display = 'none';
@@ -178,16 +194,20 @@ var App = {
 
             try {
                 const escolaAtual = await App.api('/escola') || {};
-                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
+                
+                const novaDataExp = new Date();
+                novaDataExp.setDate(novaDataExp.getDate() + 30);
+                
+                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin, dataExpiracao: novaDataExp.toISOString() });
 
                 localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = novoPlano;
-                perfilCache.dataCriacao = new Date().toISOString();
+                perfilCache.dataExpiracao = novaDataExp.toISOString();
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
                 App.atualizarUIHeader(perfilCache);
-                App.showToast(`🎉 PIN validado com sucesso! Sistema desbloqueado.`, "success");
+                App.showToast(`🎉 PIN validado com sucesso! Sistema desbloqueado por 30 dias.`, "success");
 
                 const blockBox = document.getElementById('box-bloqueio-conta');
                 if(blockBox) blockBox.style.display = 'none';
@@ -304,11 +324,10 @@ var App = {
             const keyAtalhos = App.getTenantKey('escola_atalhos');
             if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
-            // Verifica o bloqueio usando api e em caso de falha de net, com o cache local
             let escola = await App.api('/escola');
             if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
 
-            if (App.verificarBloqueioTeste(escola)) {
+            if (App.verificarBloqueioGeral(escola)) {
                 document.documentElement.removeAttribute('style'); 
                 App.mostrarTelaBloqueioLogin(escola);
             } else {
@@ -334,7 +353,7 @@ var App = {
                 const telaSistema = document.getElementById('tela-sistema');
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
                     App.verificarNotificacoes();
-                    App.carregarDadosEscola(); // Verifica de 5 em 5 mins se a licença expirou online
+                    App.carregarDadosEscola(); 
                 }
             }, 300000); 
             App.motorTempoRealLigado = true;
@@ -364,11 +383,10 @@ var App = {
                 const keyAtalhos = App.getTenantKey('escola_atalhos');
                 if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
-                // VERIFICA BLOQUEIO AO LOGAR ANTES DE LIBERTAR O DASHBOARD
                 let escola = await App.api('/escola');
                 if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
 
-                if (App.verificarBloqueioTeste(escola)) {
+                if (App.verificarBloqueioGeral(escola)) {
                     App.mostrarTelaBloqueioLogin(escola);
                 } else {
                     App.entrarNoSistema();
@@ -390,7 +408,6 @@ var App = {
         
         await App.carregarDadosEscola();
         
-        // Verifica se o cão de guarda não o empurrou de volta pro login
         if (document.getElementById('tela-sistema').style.display !== 'none') {
             App.renderizarInicio();
         }
@@ -410,7 +427,6 @@ var App = {
         const blockBox = document.getElementById('box-bloqueio-conta');
         if(blockBox) blockBox.style.display = 'none';
         
-        // Garante que as janelas de login originais retornam em paz
         const loginForms = document.querySelectorAll('#tela-login .login-box, #tela-login .box-login');
         loginForms.forEach(form => {
             if (form.id !== 'box-bloqueio-conta') form.style.display = '';
@@ -707,16 +723,22 @@ var App = {
         
         let diasRestantes = 0;
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-        if (escola.dataCriacao) {
-            const diffTime = Math.abs(new Date() - new Date(escola.dataCriacao));
-            diasRestantes = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            if(diasRestantes < 0) diasRestantes = 0;
+        const hojeTime = new Date().getTime();
+        
+        // Pega os dias restantes diretos da nova arquitetura de expiração
+        if (escola.dataExpiracao) {
+            const diffTime = new Date(escola.dataExpiracao).getTime() - hojeTime;
+            diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        } else if (escola.dataCriacao) {
+            const diffTime = Math.abs(hojeTime - new Date(escola.dataCriacao).getTime());
+            diasRestantes = (planoAtual === 'Teste' ? 7 : 30) - Math.floor(diffTime / (1000 * 60 * 60 * 24));
         }
+        if(diasRestantes < 0) diasRestantes = 0;
 
         let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
         const infoPlano = planoAtual === 'Teste' 
             ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px;">⏳ Plano Teste (${diasRestantes} dias restantes)</strong>` 
-            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()}</strong>`;
+            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias)</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
@@ -811,7 +833,11 @@ var App = {
                 
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = res.plano;
-                perfilCache.dataCriacao = new Date().toISOString(); 
+                
+                const novaDataExp = new Date();
+                novaDataExp.setDate(novaDataExp.getDate() + 30);
+                perfilCache.dataExpiracao = novaDataExp.toISOString();
+                
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
                 App.atualizarUIHeader(perfilCache); 
@@ -837,12 +863,16 @@ var App = {
             
             try {
                 const escolaAtual = await App.api('/escola') || {};
-                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin });
+                
+                const novaDataExp = new Date();
+                novaDataExp.setDate(novaDataExp.getDate() + 30);
+                
+                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin, dataExpiracao: novaDataExp.toISOString() });
                 
                 localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
                 let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 perfilCache.plano = novoPlano;
-                perfilCache.dataCriacao = new Date().toISOString();
+                perfilCache.dataExpiracao = novaDataExp.toISOString();
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
                 App.atualizarUIHeader(perfilCache);
@@ -1376,7 +1406,7 @@ var App = {
             App.atualizarUIHeader(escola);
             
             // 🚀 CÃO DE GUARDA: Expulsa se vencer com o sistema aberto
-            if (App.verificarBloqueioTeste(escola)) {
+            if (App.verificarBloqueioGeral(escola)) {
                 App.mostrarTelaBloqueioLogin(escola);
             }
 
@@ -1754,22 +1784,30 @@ var App = {
 
             if (escola && tipoUtilizador === 'Gestor') {
                 const planoAtual = escola.plano || 'Teste';
-                if (planoAtual === 'Teste') {
-                    const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
-                    const diffTime = Math.abs(hoje - dataCriacao);
-                    const diasPassados = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diasRestantes = 7 - diasPassados;
+                const hojeTime = hoje.getTime();
+                
+                let diasRestantes = 0;
+                
+                if (escola.dataExpiracao) {
+                    const dataVenc = new Date(escola.dataExpiracao).getTime();
+                    diasRestantes = Math.ceil((dataVenc - hojeTime) / (1000 * 60 * 60 * 24));
+                } else {
+                    const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao).getTime() : hojeTime;
+                    const diasPassados = Math.floor(Math.abs(hojeTime - dataCriacao) / (1000 * 60 * 60 * 24));
+                    diasRestantes = (planoAtual === 'Teste' ? 7 : 30) - diasPassados;
+                }
 
+                if (planoAtual !== 'Premium' && planoAtual !== 'Bloqueado') {
                     if (diasRestantes <= 3 && diasRestantes > 0) {
                         alertas.push({ 
                             icon: '⏳', 
-                            texto: `<b>Atenção Gestor:</b> O seu período de Teste termina em <b>${diasRestantes} dia(s)</b>! Assine um plano.`, 
+                            texto: `<b>Atenção Gestor:</b> O seu plano <b>${planoAtual}</b> expira em <b>${diasRestantes} dia(s)</b>! Renove agora.`, 
                             acao: "App.renderizarTela('plano')" 
                         });
                     } else if (diasRestantes <= 0) {
                         alertas.push({ 
                             icon: '🚫', 
-                            texto: `<b>Urgente:</b> O seu período de Teste <b>expirou</b>! Regularize para continuar usando o sistema.`, 
+                            texto: `<b>Urgente:</b> O seu acesso <b>expirou</b>! Regularize para continuar usando o sistema.`, 
                             acao: "App.renderizarTela('plano')" 
                         });
                     }
