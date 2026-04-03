@@ -144,7 +144,7 @@ var App = {
         App.logout();
     },
 
-    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS
+    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS NO LOGIN
     ativarPinLogin: async (event) => {
         if (event) event.preventDefault();
         const inputElement = document.getElementById('input-pin-login');
@@ -159,61 +159,48 @@ var App = {
 
         try {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
-            if (res && res.success) {
-                localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
+            let novoPlano = res && res.success ? res.plano : null;
 
-                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-                perfilCache.plano = res.plano;
-                
-                const novaDataExp = new Date();
-                novaDataExp.setDate(novaDataExp.getDate() + 30);
-                perfilCache.dataExpiracao = novaDataExp.toISOString();
-                
-                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
-
-                App.atualizarUIHeader(perfilCache);
-                App.showToast(`🎉 PIN validado! Sistema desbloqueado por mais 30 dias.`, "success");
-                
-                const blockBox = document.getElementById('box-bloqueio-conta');
-                if(blockBox) blockBox.style.display = 'none';
-                
-                App.entrarNoSistema();
-            } else {
-                App.showToast(res.error || "PIN inválido ou expirado.", "error");
+            // Se falhar na API, verifica as chaves manuais (fallback)
+            if (!novoPlano) {
+                if (pin.includes('PRE')) novoPlano = 'Premium';
+                else if (pin.includes('ESS')) novoPlano = 'Essencial';
+                else if (pin.includes('PRO')) novoPlano = 'Profissional';
+                else {
+                    App.showToast(res.error || "PIN inválido ou formato incorreto.", "error");
+                    if(btn) { btn.innerText = txt; btn.disabled = false; }
+                    return;
+                }
             }
+
+            // 🚀 O SEGREDO: GRAVAR A NOVA DATA DE VALIDADE NO BANCO DE DADOS OFICIAL
+            const escolaAtual = await App.api('/escola') || {};
+            const novaDataExp = new Date();
+            novaDataExp.setDate(novaDataExp.getDate() + 30); // Soma +30 dias ao dia de hoje
+            
+            await App.api('/escola', 'PUT', { 
+                ...escolaAtual, 
+                plano: novoPlano, 
+                pinUsado: pin, 
+                dataExpiracao: novaDataExp.toISOString() 
+            });
+
+            // Atualiza o Cache Local
+            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+            let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            perfilCache.plano = novoPlano;
+            perfilCache.dataExpiracao = novaDataExp.toISOString();
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+            App.atualizarUIHeader(perfilCache);
+            App.showToast(`🎉 PIN validado! Sistema desbloqueado por mais 30 dias.`, "success");
+            
+            const blockBox = document.getElementById('box-bloqueio-conta');
+            if(blockBox) blockBox.style.display = 'none';
+            
+            App.entrarNoSistema();
         } catch(e) {
-            let novoPlano = 'Profissional';
-            if (pin.includes('PRE')) novoPlano = 'Premium';
-            else if (pin.includes('ESS')) novoPlano = 'Essencial';
-            else if (pin.includes('PRO')) novoPlano = 'Profissional';
-            else {
-                App.showToast("PIN em formato inválido.", "error");
-                if(btn) { btn.innerText = txt; btn.disabled = false; }
-                return;
-            }
-
-            try {
-                const escolaAtual = await App.api('/escola') || {};
-                
-                const novaDataExp = new Date();
-                novaDataExp.setDate(novaDataExp.getDate() + 30);
-                
-                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin, dataExpiracao: novaDataExp.toISOString() });
-
-                localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
-                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-                perfilCache.plano = novoPlano;
-                perfilCache.dataExpiracao = novaDataExp.toISOString();
-                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
-
-                App.atualizarUIHeader(perfilCache);
-                App.showToast(`🎉 PIN validado com sucesso! Sistema desbloqueado por 30 dias.`, "success");
-
-                const blockBox = document.getElementById('box-bloqueio-conta');
-                if(blockBox) blockBox.style.display = 'none';
-                
-                App.entrarNoSistema();
-            } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
+            App.showToast("Erro ao comunicar com a base de dados.", "error");
         } finally {
             if(btn) { btn.innerText = txt; btn.disabled = false; }
         }
@@ -813,6 +800,7 @@ var App = {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
+    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS DENTRO DO SISTEMA
     ativarNovoPlano: async (event) => {
         if (event) event.preventDefault(); 
 
@@ -828,61 +816,48 @@ var App = {
 
         try {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
-            if (res && res.success) {
-                localStorage.setItem(App.getTenantKey('escola_plano'), res.plano);
-                
-                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-                perfilCache.plano = res.plano;
-                
-                const novaDataExp = new Date();
-                novaDataExp.setDate(novaDataExp.getDate() + 30);
-                perfilCache.dataExpiracao = novaDataExp.toISOString();
-                
-                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+            let novoPlano = res && res.success ? res.plano : null;
 
-                App.atualizarUIHeader(perfilCache); 
+            // Se falhar na API, verifica as chaves manuais (fallback)
+            if (!novoPlano) {
+                if (pin.includes('PRE')) novoPlano = 'Premium';
+                else if (pin.includes('ESS')) novoPlano = 'Essencial';
+                else if (pin.includes('PRO')) novoPlano = 'Profissional';
+                else { 
+                    App.showToast(res.error || "PIN em formato inválido.", "error"); 
+                    if(btn) { btn.innerText = txt; btn.disabled = false; } 
+                    return; 
+                }
+            }
 
-                App.showToast(`🎉 PIN validado! O seu novo plano é: ${res.plano}. A iniciar o sistema...`, "success");
-                inputElement.value = '';
-                
-                await App.carregarDadosEscola();
-                App.renderizarInicio(); 
-            } else { 
-                App.showToast(res.error || "PIN inválido ou expirado.", "error"); 
-            }
-        } catch(e) { 
-            let novoPlano = 'Profissional';
-            if (pin.includes('PRE')) novoPlano = 'Premium';
-            else if (pin.includes('ESS')) novoPlano = 'Essencial';
-            else if (pin.includes('PRO')) novoPlano = 'Profissional';
-            else { 
-                App.showToast("PIN em formato inválido.", "error"); 
-                if(btn) { btn.innerText = txt; btn.disabled = false; } 
-                return; 
-            }
+            // 🚀 O SEGREDO: GRAVAR A NOVA DATA DE VALIDADE NO BANCO DE DADOS OFICIAL
+            const escolaAtual = await App.api('/escola') || {};
+            const novaDataExp = new Date();
+            novaDataExp.setDate(novaDataExp.getDate() + 30); // Soma +30 dias ao dia de hoje
             
-            try {
-                const escolaAtual = await App.api('/escola') || {};
-                
-                const novaDataExp = new Date();
-                novaDataExp.setDate(novaDataExp.getDate() + 30);
-                
-                await App.api('/escola', 'PUT', { ...escolaAtual, plano: novoPlano, pinUsado: pin, dataExpiracao: novaDataExp.toISOString() });
-                
-                localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
-                let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-                perfilCache.plano = novoPlano;
-                perfilCache.dataExpiracao = novaDataExp.toISOString();
-                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+            await App.api('/escola', 'PUT', { 
+                ...escolaAtual, 
+                plano: novoPlano, 
+                pinUsado: pin, 
+                dataExpiracao: novaDataExp.toISOString() 
+            });
 
-                App.atualizarUIHeader(perfilCache);
-                
-                App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
-                inputElement.value = '';
-                
-                await App.carregarDadosEscola();
-                App.renderizarInicio();
-            } catch(errFallback) { App.showToast("Erro ao comunicar com a base de dados.", "error"); }
+            // Atualiza o Cache Local
+            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+            let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            perfilCache.plano = novoPlano;
+            perfilCache.dataExpiracao = novaDataExp.toISOString();
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+            App.atualizarUIHeader(perfilCache);
+            
+            App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
+            inputElement.value = '';
+            
+            await App.carregarDadosEscola();
+            App.renderizarInicio();
+        } catch(e) { 
+            App.showToast("Erro ao comunicar com a base de dados.", "error"); 
         } finally { 
             if(btn) { btn.innerText = txt; btn.disabled = false; } 
         }
