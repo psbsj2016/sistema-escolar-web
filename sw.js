@@ -5,16 +5,20 @@
 // 1. GESTÃO DE VERSÃO DINÂMICA
 const APP_PREFIX = 'escola-pwa-';
 // 🚀 SEMPRE QUE ATUALIZAR O SISTEMA FRONT-END, MUDE ESTE NÚMERO
-const VERSION = 'v2.0.5'; 
+const VERSION = 'v2.0.6'; 
 const CACHE_NAME = APP_PREFIX + VERSION;
 
 // Ficheiros essenciais para o ecrã inicial funcionar super rápido
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
-  '/css/site.css',
-  '/js/config.js',
-  '/js/app.js'
+    '/index.html',
+    '/css/site.css',
+    '/js/config.js',
+    '/js/app.js',
+    '/js/modulos/cadastros.js',
+    '/js/modulos/financeiro.js',
+    '/js/modulos/pedagogico.js',
+    '/js/modulos/relatorios.js'
 ];
 
 // 2. INSTALAÇÃO: Força a ativação imediata e guarda os ficheiros estáticos
