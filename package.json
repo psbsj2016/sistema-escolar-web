@@ -1,0 +1,10 @@
+{
+  "name": "sistema-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "javascript-obfuscator ./js_src --output ./js"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.0"
+  }
+}

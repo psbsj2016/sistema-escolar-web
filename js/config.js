@@ -1,8 +1,1 @@
-// =========================================================
-// ARQUIVO CENTRAL DE CONFIGURAÇÕES DO SISTEMA (SAAS)
-// =========================================================
-
-const CONFIG = {
-    // 🌐 URL do Servidor Principal (Backend / API)
-    API_URL: "https://sistema-escolar-api-k3o8.onrender.com"
-};
+const a1_0x2780ab=a1_0x130e;(function(_0x35bc5,_0x515efa){const _0x8e5ded=a1_0x130e,_0x332cf4=_0x35bc5();while(!![]){try{const _0xa80a8a=parseInt(_0x8e5ded(0x97))/0x1*(parseInt(_0x8e5ded(0x9b))/0x2)+parseInt(_0x8e5ded(0x94))/0x3+-parseInt(_0x8e5ded(0x9c))/0x4+-parseInt(_0x8e5ded(0x9d))/0x5+-parseInt(_0x8e5ded(0x98))/0x6*(parseInt(_0x8e5ded(0x95))/0x7)+-parseInt(_0x8e5ded(0x9a))/0x8*(parseInt(_0x8e5ded(0x9e))/0x9)+parseInt(_0x8e5ded(0x93))/0xa*(parseInt(_0x8e5ded(0x96))/0xb);if(_0xa80a8a===_0x515efa)break;else _0x332cf4['push'](_0x332cf4['shift']());}catch(_0xcbb8e8){_0x332cf4['push'](_0x332cf4['shift']());}}}(a1_0x1b1c,0xd2d1f));const CONFIG={'API_URL':a1_0x2780ab(0x99)};function a1_0x130e(_0x482396,_0x1e4ab8){_0x482396=_0x482396-0x93;const _0x1b1c17=a1_0x1b1c();let _0x130eb4=_0x1b1c17[_0x482396];return _0x130eb4;}function a1_0x1b1c(){const _0x3c83c5=['597814NIcLZS','220unaFuA','17YWmJIR','96gGZvxZ','https://sistema-escolar-api-k3o8.onrender.com','8103288tVFoqW','90746XaDvxF','586064YrDQkj','5083520jmerld','9LVNCXq','1770290AwhPsK','282483GqTJWB'];a1_0x1b1c=function(){return _0x3c83c5;};return a1_0x1b1c();}
