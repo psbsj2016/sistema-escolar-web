@@ -25,17 +25,26 @@
             <h1>📊 Sistema de Gestão Escolar</h1>
             <div style="margin-bottom:20px; color:#888;">Acesso Restrito</div>
             <form onsubmit="event.preventDefault(); App.fazerLogin();">
-                <div class="input-group">
-                    <label>Login de Acesso</label>
-                    <input type="text" id="login-user" placeholder="Digite seu usuário" autocomplete="username" required>
-                </div>
-                <div class="input-group">
-                    <label>Senha</label>
-                    <input type="password" id="login-pass" placeholder="Digite sua senha" autocomplete="current-password" required>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 16px;">Entrar no Sistema</button>
                 
-                <button type="button" id="btn-biometria" class="btn-primary" style="display:none; width: 100%; margin-top: 10px; padding: 14px; font-size: 16px; background: #27ae60;" onclick="App.entrarComBiometria()">👆 Entrar com FaceID / Digital</button>
+                <div class="input-group">
+                    <label>Login / E-mail</label>
+                    <input type="text" id="login-user" placeholder="O seu utilizador..." style="width: 100%;">
+                </div>
+                <div class="input-group" style="position: relative;">
+                    <label>Senha de Acesso</label>
+                    <input type="password" id="login-pass" placeholder="A sua senha secreta..." style="width: 100%; padding-right: 40px;">
+                    <span onclick="App.toggleSenhaLogin()" style="position: absolute; right: 12px; top: 32px; cursor: pointer; font-size: 16px; opacity: 0.6; user-select: none;" title="Mostrar/Ocultar Senha">👁️</span>
+                </div>
+
+                <div style="text-align: right; margin-top: -10px; margin-bottom: 20px;">
+                    <a href="#" onclick="App.abrirModalRecuperacao(event)" style="font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600;">Esqueci a minha senha</a>
+                </div>
+
+                <button type="submit" onclick="App.fazerLogin()" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 16px;">Entrar no Sistema</button>
+
+                <button id="btn-biometria" type="button" onclick="App.entrarComBiometria()" class="btn-primary" style="display: none; width: 100%; justify-content: center; background: #27ae60; margin-top: 10px; padding: 12px; font-size: 16px; border: none;">
+                    👆 Entrar com Biometria
+                </button>
             </form>
         
         <p style="text-align: center; margin-top: 20px; font-size: 14px;">

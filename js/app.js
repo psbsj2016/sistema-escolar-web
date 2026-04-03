@@ -419,6 +419,62 @@ var App = {
             if (form.id !== 'box-bloqueio-conta') form.style.display = '';
         });
     },
+     
+        // =========================================================
+    // 👁️ OLHINHO E RECUPERAÇÃO DE SENHA
+    // =========================================================
+    toggleSenhaLogin: () => {
+        const input = document.getElementById('login-pass');
+        if (input) input.type = input.type === 'password' ? 'text' : 'password';
+    },
+
+    abrirModalRecuperacao: (event) => {
+        if(event) event.preventDefault();
+        let modal = document.getElementById('modal-recuperacao-senha');
+        
+        // Cria a janela de popup dinamicamente se não existir
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-recuperacao-senha';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;';
+            modal.innerHTML = `
+                <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                    <span style="font-size: 40px; display:block; margin-bottom:10px;">🔐</span>
+                    <h3 style="margin-top:0; color:#2c3e50;">Recuperar Senha</h3>
+                    <p style="font-size:13px; color:#666; margin-bottom:20px;">Insira o e-mail registado na sua conta. Vamos gerar uma nova senha temporária e enviar para lá.</p>
+                    <input type="email" id="recuperar-email-input" placeholder="O seu e-mail de acesso..." style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
+                    <button class="btn-primary" onclick="App.enviarRecuperacaoSenha()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">✉️ Enviar Nova Senha</button>
+                    <button class="btn-cancel" onclick="document.getElementById('modal-recuperacao-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancelar e Voltar</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        document.getElementById('recuperar-email-input').value = '';
+        modal.style.display = 'flex';
+    },
+
+    enviarRecuperacaoSenha: async () => {
+        const email = document.getElementById('recuperar-email-input').value.trim();
+        if(!email || !email.includes('@')) return App.showToast("Por favor, introduza um e-mail válido.", "warning");
+
+        const btn = document.querySelector('#modal-recuperacao-senha .btn-primary');
+        const txtOriginal = btn.innerText;
+        btn.innerText = "A enviar e-mail... ⏳"; btn.disabled = true;
+
+        try {
+            const res = await App.api('/auth/recuperar-senha', 'POST', { email });
+            if (res && res.success) {
+                App.showToast("Sucesso! Verifique a sua caixa de entrada (e o Spam).", "success");
+                document.getElementById('modal-recuperacao-senha').style.display = 'none';
+            } else {
+                App.showToast(res.error || "E-mail não encontrado no sistema.", "error");
+            }
+        } catch(e) {
+            App.showToast("Erro ao tentar comunicar com o servidor.", "error");
+        } finally {
+            btn.innerText = txtOriginal; btn.disabled = false;
+        }
+    },
 
 // =========================================================
     // BIOMETRIA REAL (WEBAUTHN)
