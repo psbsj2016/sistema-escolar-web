@@ -19,6 +19,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+    
+    <div id="offline-banner" style="display: none; background-color: #e74c3c; color: white; text-align: center; padding: 10px; font-weight: bold; position: fixed; top: 0; width: 100%; z-index: 99999; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        ⚠️ Sem ligação à Internet. Verifique a sua conexão, por favor.
+    </div>
+
+    <div id="update-banner" style="display: none; background-color: #3498db; color: white; text-align: center; padding: 10px; font-weight: bold; position: fixed; top: 0; width: 100%; z-index: 99999; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        🚀 Nova versão do sistema disponível! 
+        <button onclick="atualizarApp()" style="margin-left: 15px; padding: 5px 15px; background: white; color: #3498db; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Atualizar Agora</button>
+    </div>
 
     <div id="tela-login" class="login-wrapper">
         <div class="login-box">
@@ -217,23 +226,41 @@
         </div>
     </div>
 
-    <script>
+   <script>
+        // Variável para guardar o novo Service Worker que está a ser descarregado
+        let novoWorker;
+
+        // Função chamada quando o cliente clica no botão "Atualizar Agora"
+        function atualizarApp() {
+            if (novoWorker) {
+                novoWorker.postMessage({ action: 'skipWaiting' });
+            }
+        }
+
         if ('serviceWorker' in navigator) {
-            let refreshing = false;
+            let atualizando = false;
+            
+            // Quando a atualização for aplicada, recarrega a página automaticamente
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) { window.location.reload(); refreshing = true; }
+                if (!atualizando) { 
+                    window.location.reload(); 
+                    atualizando = true; 
+                }
             });
+
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                newWorker.postMessage({ action: 'skipWaiting' });
+                navigator.serviceWorker.register('sw.js').then(registo => {
+                    registo.addEventListener('updatefound', () => {
+                        novoWorker = registo.installing;
+                        novoWorker.addEventListener('statechange', () => {
+                            // Se instalou a nova versão e já existe uma antiga a correr
+                            if (novoWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // MOSTRA O BANNER DE ATUALIZAÇÃO! 🎉
+                                document.getElementById('update-banner').style.display = 'block';
                             }
                         });
                     });
-                }).catch(err => console.log('❌ Erro SW.', err));
+                }).catch(erro => console.log('❌ Erro no Service Worker:', erro));
             });
         }
     </script>

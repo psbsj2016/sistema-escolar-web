@@ -1973,6 +1973,31 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// =========================================================
+// 📡 DETEÇÃO DE LIGAÇÃO (ONLINE / OFFLINE)
+// =========================================================
+
+// Ouvinte que dispara quando o dispositivo PERDE a internet
+window.addEventListener('offline', () => {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.style.display = 'block'; // Mostra o banner vermelho
+    
+    // Como você já tem um sistema de Toast no seu app.js, vamos usá-lo também!
+    if (typeof App.showToast === 'function') {
+        App.showToast("Sem ligação à Internet!", "error");
+    }
+});
+
+// Ouvinte que dispara quando o dispositivo RECUPERA a internet
+window.addEventListener('online', () => {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.style.display = 'none'; // Esconde o banner vermelho
+    
+    if (typeof App.showToast === 'function') {
+        App.showToast("Ligação à Internet restaurada!", "success");
+    }
+});
+
 let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) { installBanner.style.display = 'block'; } });
 const btnInstall = document.getElementById('pwa-btn-install'); if (btnInstall) { btnInstall.addEventListener('click', async () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; } }); }
 const btnCancel = document.getElementById('pwa-btn-cancel'); if (btnCancel) { btnCancel.addEventListener('click', () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; }); }
