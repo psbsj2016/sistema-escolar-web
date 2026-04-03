@@ -119,7 +119,7 @@ App.gerarTabelaFinanceira = (dados) => {
             <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
             <td style="padding:12px; text-align:center; white-space:nowrap;">
                 <button onclick="App.abrirCarneExistente('${p.idCarne}')" style="background:#3498db; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Ver Carnê">📄</button>
-                <button onclick="App.editarParcela('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
+                <button onclick="App.abrirEdicaoFinanceiro('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
             </td>
         </tr>`; 
     }).join('');
@@ -363,19 +363,6 @@ App.acaoLote = async (acao) => {
     } catch (e) {
         App.showToast("Erro ao processar lote.", "error");
     } finally { document.body.style.cursor = 'default'; }
-};
-
-App.editarParcela = async (id) => {
-    const v = prompt("Novo Valor (R$):");
-    if (v) {
-        App.showToast("Atualizando valor... ⏳", "info");
-        document.body.style.cursor = 'wait';
-        try {
-            const i = await App.api(`/financeiro/${id}`);
-            await App.api(`/financeiro/${id}`, 'PUT', { ...i, valor: v });
-            App.renderizarFinanceiroPro();
-        } finally { document.body.style.cursor = 'default'; }
-    }
 };
 
 // ---------------------------------------------------------
@@ -653,5 +640,117 @@ App.renderizarInadimplencia = async () => {
     } catch(e) { 
         console.error(e);
         App.showToast("Erro ao calcular inadimplência.", "error"); 
+    }
+};
+
+// =========================================================
+// ✏️ EDICÃO RÁPIDA DE MENSALIDADES E PARCELAS (MODAL)
+// =========================================================
+
+App.abrirEdicaoFinanceiro = async (idParcela) => {
+    // 1. Abre a tela de fundo escura
+    const modal = document.getElementById('modal-overlay');
+    if (modal) modal.style.display = 'flex';
+    
+    document.getElementById('modal-titulo').innerText = "Editar Parcela";
+    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados da parcela... ⏳</p>';
+    
+    // Esconde o botão de salvar enquanto carrega
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if (btnConfirm) btnConfirm.style.display = 'none';
+
+    try {
+        // 2. Busca os dados exatos desta parcela na base de dados
+        const parcela = await App.api(`/financeiro/${idParcela}`);
+        if (!parcela || parcela.error) throw new Error("Parcela não encontrada");
+        
+        App.idEdicaoFinanceiro = idParcela;
+        App.parcelaEdicaoAtual = parcela; // Guardamos os dados originais
+
+        // 3. Inteligência de Design (Pendente vs Pago)
+        const isPago = parcela.status === 'Pago';
+        const corBase = isPago ? '#27ae60' : '#f39c12';
+        const corFundo = isPago ? '#eafaf1' : '#fef5e7';
+        const icone = isPago ? '✅' : '⏳';
+        const tituloStatus = isPago ? 'Parcela Liquidada (Paga)' : 'Parcela Pendente';
+
+        const dataLabel = isPago ? 'Data de Pagamento' : 'Data de Vencimento';
+        const valorLabel = isPago ? 'Valor Recebido (R$)' : 'Valor do Documento (R$)';
+        
+        // 4. Constrói o HTML do Modal bonito
+        const html = `
+            <div style="background: ${corFundo}; border-left: 4px solid ${corBase}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h4 style="margin: 0 0 5px 0; color: ${corBase}; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">${icone}</span> ${tituloStatus}
+                </h4>
+                <p style="margin: 0; font-size: 13px; color: #555;">
+                    <strong>Aluno(a):</strong> ${App.escapeHTML(parcela.alunoNome || 'Não informado')}<br>
+                    <strong>Referência:</strong> ${App.escapeHTML(parcela.descricao || 'Mensalidade')}
+                </p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+                <div class="input-group">
+                    <label style="font-weight:bold; color:#333;">${dataLabel}</label>
+                    <input type="date" id="edit-fin-data" value="${parcela.vencimento || ''}" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                </div>
+                <div class="input-group">
+                    <label style="font-weight:bold; color:#333;">${valorLabel}</label>
+                    <input type="number" step="0.01" id="edit-fin-valor" value="${parcela.valor || ''}" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
+                </div>
+            </div>
+            <p style="font-size:11px; color:#999; text-align:center; margin-top:5px;">Atenção: A alteração destes valores refletirá imediatamente nos relatórios.</p>
+        `;
+
+        document.getElementById('modal-form-content').innerHTML = html;
+
+        // 5. Configura o botão de Salvar
+        btnConfirm.setAttribute('onclick', 'App.salvarEdicaoFinanceiro()');
+        btnConfirm.innerHTML = "💾 Salvar Alterações";
+        btnConfirm.style.display = 'inline-flex';
+
+    } catch (e) {
+        document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar os dados da parcela.</p>';
+    }
+};
+
+App.salvarEdicaoFinanceiro = async () => {
+    const novaData = document.getElementById('edit-fin-data').value;
+    const novoValor = document.getElementById('edit-fin-valor').value;
+
+    if (!novaData || !novoValor) {
+        return App.showToast("Por favor, preencha a data e o valor.", "warning");
+    }
+
+    const btn = document.querySelector('.btn-confirm');
+    const txtOrig = btn.innerHTML;
+    btn.innerHTML = "⏳ A salvar...";
+    btn.disabled = true;
+
+    try {
+        // Junta os dados antigos com os novos que acabámos de digitar
+        const parcelaAtualizada = {
+            ...App.parcelaEdicaoAtual,
+            vencimento: novaData, 
+            valor: novoValor
+        };
+
+        // Envia para o Backend
+        await App.api(`/financeiro/${App.idEdicaoFinanceiro}`, 'PUT', parcelaAtualizada);
+        
+        App.showToast("Parcela atualizada com sucesso! 🎉", "success");
+        App.fecharModal();
+        
+        // Recarrega a tela de forma inteligente para mostrar a alteração
+        if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
+            App.renderizarFinanceiroPro();
+        } else if (typeof App.filtrarTabelaReativa === 'function') {
+            App.renderizarLista('financeiro');
+        }
+
+    } catch (e) {
+        App.showToast("Erro ao atualizar parcela.", "error");
+    } finally {
+        if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; }
     }
 };

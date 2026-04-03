@@ -1222,7 +1222,7 @@ var App = {
             }            
  
             const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
-            const acaoEdit = tipo === 'financeiro' ? `App.renderizarTela('mensalidades')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
+            const acaoEdit = tipo === 'financeiro' ? `App.abrirEdicaoFinanceiro('${item.id}')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
             const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
             
             let botoes = [];
