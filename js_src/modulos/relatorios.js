@@ -531,8 +531,35 @@ App.gerarFichaImprimir = async () => {
     document.body.style.cursor = 'wait';
     
     try {
-        const [aluno, escola] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api('/escola') ]);
+        // 🧠 AQUI: O sistema agora vai buscar as finanças e as turmas em simultâneo!
+        const [aluno, escola, financeiro, turmas] = await Promise.all([ 
+            App.api(`/alunos/${idAluno}`), 
+            App.api('/escola'),
+            App.api('/financeiro'),
+            App.api('/turmas')
+        ]);
+        
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        const turmaObj = turmas.find(t => t.nome === aluno.turma) || { dia: '-', horario: '-' };
+        
+        // 💰 CÁLCULO INTELIGENTE DO INVESTIMENTO TOTAL
+        const parcelasPadrao = financeiro.filter(f => f.idAluno === idAluno && f.descricao && f.descricao.toLowerCase().includes('mensalidade'));
+        const totalInvestimento = parcelasPadrao.reduce((soma, p) => soma + (parseFloat(p.valor) || 0), 0);
+        const investFormatado = totalInvestimento > 0 ? `R$ ${totalInvestimento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : 'Isento / Não Gerado';
+
+        // 👤 MÓDULO DO RESPONSÁVEL LEGAL
+        let htmlResponsavel = '';
+        if (aluno.resp_nome && aluno.resp_nome.trim() !== '') {
+            htmlResponsavel = `
+                <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; color:#d35400; font-size:15px;">👤 DADOS DO RESPONSÁVEL LEGAL (Menor de Idade)</h3>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px; background:#fff3e0; padding:15px; border-radius:5px; border:1px dashed #e67e22;">
+                    <div><b>Nome do Responsável:</b> ${App.escapeHTML(aluno.resp_nome)}</div>
+                    <div><b>Grau Parentesco:</b> ${App.escapeHTML(aluno.resp_parentesco || '-')}</div>
+                    <div><b>CPF do Respons.:</b> ${App.escapeHTML(aluno.resp_cpf || '-')}</div>
+                    <div><b>WhatsApp:</b> ${App.escapeHTML(aluno.resp_zap || '-')}</div>
+                </div>
+            `;
+        }
         
         divArea.innerHTML = `
             ${reportStyles}
@@ -546,6 +573,7 @@ App.gerarFichaImprimir = async () => {
                     <div style="text-align:right;"><div><b>FICHA DE MATRÍCULA</b></div><div style="font-size:10px; color:#999;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
                 </div>
                 <div style="border: 1px solid #ccc; padding: 20px; margin-top: 20px; background:#fafafa;">
+                    
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50; font-size:15px;">1. DADOS DO ALUNO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div><b>Nome:</b> ${App.escapeHTML(aluno.nome || '-')}</div>
@@ -555,12 +583,22 @@ App.gerarFichaImprimir = async () => {
                         <div><b>Sexo:</b> ${App.escapeHTML(aluno.sexo || '-')}</div>
                         <div><b>WhatsApp:</b> ${App.escapeHTML(aluno.whatsapp || '-')}</div>
                     </div>
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">2. CURSO E MATRÍCULA</h3>
+
+                    ${htmlResponsavel}
+
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; color:#2c3e50; font-size:15px;">CURSO E MATRÍCULA</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div><b>Curso:</b> ${App.escapeHTML(aluno.curso || '-')}</div>
                         <div><b>Turma:</b> ${App.escapeHTML(aluno.turma || '-')}</div>
+                        <div><b>Dias de Aula:</b> ${App.escapeHTML(turmaObj.dia || '-')}</div>
+                        <div><b>Horário:</b> ${App.escapeHTML(turmaObj.horario || '-')}</div>
+                        
+                        <div style="grid-column: 1 / -1; background: #ffffd0; padding: 12px; border: 1px dashed #f1c40f; border-radius: 5px; font-weight:bold; color:#d35400; margin-top:5px;">
+                            💰 Investimento Total do Curso (Mensalidades Padrão): ${investFormatado}
+                        </div>
                     </div>
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">3. ENDEREÇO</h3>
+
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">ENDEREÇO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${App.escapeHTML(aluno.rua || '-')}, ${App.escapeHTML(aluno.numero || '-')}</div>
                         <div><b>Bairro:</b> ${App.escapeHTML(aluno.bairro || '-')}</div>
@@ -568,7 +606,7 @@ App.gerarFichaImprimir = async () => {
                     </div>
                 </div>
                 <div style="margin-top:50px; display:flex; justify-content:space-between; text-align:center; flex-wrap:wrap; gap:30px;">
-                    <div style="flex:1; min-width:200px; border-top:1px solid #000; padding-top:5px; font-weight:bold; font-size:12px;">Assinatura do Aluno / Responsável</div>
+                    <div style="flex:1; min-width:200px; border-top:1px solid #000; padding-top:5px; font-weight:bold; font-size:12px;">Assinatura do Aluno${aluno.resp_nome ? ' / Responsável Legal' : ''}</div>
                     <div style="flex:1; min-width:200px; border-top:1px solid #000; padding-top:5px; font-weight:bold; font-size:12px;">Direção da Escola</div>
                 </div>
             </div>
