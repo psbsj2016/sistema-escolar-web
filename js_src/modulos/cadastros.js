@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO DE CADASTROS V106 (RESPONSÁVEL INTELIGENTE, DIAS MÚLTIPLOS E DOSSIÊ COMPLETO)
+// MÓDULO DE CADASTROS V107 (MULTI-SELECT ELEGANTE PARA TURMAS E DOSSIÊ COMPLETO)
 // =========================================================
 
 // 🛡️ FUNÇÕES AUXILIARES SEGURAS
@@ -34,7 +34,6 @@ App.verificarMaioridade = () => {
         idade--;
     }
 
-    // Se menor de 18 anos, mostra o formulário do responsável
     if (idade < 18) {
         boxResp.style.display = 'block';
         boxResp.style.animation = 'fadeIn 0.5s';
@@ -42,6 +41,25 @@ App.verificarMaioridade = () => {
         boxResp.style.display = 'none';
     }
 };
+
+// 🎨 Função Visual: Atualiza o texto do campo bonito de dias da Turma
+App.atualizarDisplayDias = () => {
+    const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
+    const dias = Array.from(checkboxes).map(chk => chk.value);
+    const display = document.getElementById('tur-dia-display');
+    if(display) {
+        display.innerText = dias.length > 0 ? dias.join(', ') : '-- Selecione os dias --';
+    }
+};
+
+// Fecha o dropdown se clicar fora dele
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('tur-dia-wrapper');
+    const options = document.getElementById('tur-dia-options');
+    if (options && wrapper && !wrapper.contains(e.target)) {
+        options.style.display = 'none';
+    }
+});
 
 App.abrirModalCadastroModulo = async (tipo, id) => {
     App.entidadeAtual = tipo;
@@ -165,34 +183,40 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
                 ? '<option value="">-- Sem Curso Específico --</option>' + listas.cursos.map(x => `<option value="${x.nome}" ${dados.curso === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
                 : '<option value="">-- Cadastre um Curso Primeiro --</option>';
 
-            // 🧠 Sistema Inteligente de Checkboxes para Múltiplos Dias
+            // 🧠 Componente Customizado: Select com Checkboxes!
             const diasSalvos = dados.dia ? dados.dia.split(',').map(d => d.trim()) : [];
             const checkDia = (dia) => `
-                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
-                    <input type="checkbox" class="turma-dia-chk" value="${dia}" ${diasSalvos.includes(dia) ? 'checked' : ''}>
-                    ${dia}
+                <label style="display:flex; align-items:center; gap:8px; padding:10px; cursor:pointer; border-bottom:1px solid #f0f0f0; margin:0; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" class="turma-dia-chk" value="${dia}" ${diasSalvos.includes(dia) ? 'checked' : ''} onchange="App.atualizarDisplayDias()">
+                    <span style="font-weight: normal;">${dia}</span>
                 </label>
             `;
 
             html = `
                 <div class="input-group">${UI.input('Nome da Turma *', 'tur-nome', dados.nome, 'Ex: Inglês Kids T1')}</div>
                 
-                <div class="input-group" style="margin-bottom:15px;">
-                    <label>Dia(s) da Aula (Marque quantos quiser)</label>
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ccc;">
-                        ${checkDia('Segunda-feira')}
-                        ${checkDia('Terça-feira')}
-                        ${checkDia('Quarta-feira')}
-                        ${checkDia('Quinta-feira')}
-                        ${checkDia('Sexta-feira')}
-                        ${checkDia('Sábado')}
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div class="input-group" id="tur-dia-wrapper" style="position: relative;">
+                        <label>Dia(s) da Aula</label>
+                        <div id="tur-dia-display" 
+                             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #fff url('data:image/svg+xml;utf8,<svg fill=%22%23333%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/><path d=%22M0 0h24v24H0z%22 fill=%22none%22/></svg>') no-repeat right 10px center; cursor: pointer; min-height: 41px; display: flex; align-items: center; padding-right: 30px; font-size: 14px; box-sizing: border-box;" 
+                             onclick="const opt = document.getElementById('tur-dia-options'); opt.style.display = opt.style.display === 'block' ? 'none' : 'block';">
+                            ${diasSalvos.length > 0 ? diasSalvos.join(', ') : '-- Selecione os dias --'}
+                        </div>
+                        <div id="tur-dia-options" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 5px; z-index: 999; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 2px;">
+                            ${checkDia('Segunda-feira')}
+                            ${checkDia('Terça-feira')}
+                            ${checkDia('Quarta-feira')}
+                            ${checkDia('Quinta-feira')}
+                            ${checkDia('Sexta-feira')}
+                            ${checkDia('Sábado')}
+                            ${checkDia('Diversos (Flexível)')}
+                        </div>
                     </div>
+                    ${UI.input('Horário', 'tur-hora', dados.horario, 'Ex: 14:00 às 16:00')}
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-                    ${UI.input('Horário', 'tur-hora', dados.horario, 'Ex: 14:00 às 16:00')}
-                    <div class="input-group"><label>Curso Padrão desta Turma</label><select id="tur-curso">${opcoesCursos}</select></div>
-                </div>
+                <div class="input-group"><label>Curso Padrão desta Turma</label><select id="tur-curso">${opcoesCursos}</select></div>
             `;
         } 
         else if (tipo === 'curso') {
@@ -222,11 +246,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
 
         if(conteudo) {
             conteudo.innerHTML = html;
-            
-            // 🧠 Aciona a verificação de idade assim que o formulário abrir
-            if (tipo === 'aluno') {
-                setTimeout(() => App.verificarMaioridade(), 100);
-            }
+            if (tipo === 'aluno') setTimeout(() => App.verificarMaioridade(), 100);
         }
         
         const btnConfirm = document.querySelector('.btn-confirm');
@@ -272,7 +292,6 @@ App.salvarCadastro = async () => {
             p.curso = lerInput('alu-curso');
             p.status = lerInput('alu-status') || 'Ativo';
 
-            // 🧠 Lógica do Responsável: Guarda apenas se for Menor de Idade
             let isMenor = false;
             if(p.nascimento) {
                 const hoje = new Date();
@@ -301,7 +320,7 @@ App.salvarCadastro = async () => {
             p.horario = lerInput('tur-hora');
             p.curso = lerInput('tur-curso');
             
-            // 🧠 Captura todos os dias de aula marcados e junta separados por vírgula
+            // 🧠 Captura todos os dias do Custom Dropdown
             const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
             p.dia = Array.from(checkboxes).map(chk => chk.value).join(', ');
 
