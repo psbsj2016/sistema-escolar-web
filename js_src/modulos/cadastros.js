@@ -1,8 +1,8 @@
 // =========================================================
-// MÓDULO DE CADASTROS V105 (STATUS BLINDADO, PRESERVAÇÃO E PARSERS SEGUROS)
+// MÓDULO DE CADASTROS V106 (RESPONSÁVEL INTELIGENTE, DIAS MÚLTIPLOS E DOSSIÊ COMPLETO)
 // =========================================================
 
-// 🛡️ FUNÇÕES AUXILIARES SEGURAS (Evitam que o sistema quebre se um campo não existir)
+// 🛡️ FUNÇÕES AUXILIARES SEGURAS
 const lerInput = (id) => { 
     const el = document.getElementById(id); 
     return el ? el.value.trim() : ''; 
@@ -11,9 +11,36 @@ const lerInput = (id) => {
 const lerNum = (id) => { 
     const el = document.getElementById(id); 
     if (!el || !el.value) return 0;
-    // Tenta converter, se falhar ou não for número, retorna 0
     const val = parseFloat(el.value);
     return isNaN(val) ? 0 : val;
+};
+
+// 🧠 Função Inteligente: Verifica a Idade do Aluno em tempo real
+App.verificarMaioridade = () => {
+    const elNasc = document.getElementById('alu-nasc');
+    const boxResp = document.getElementById('box-responsavel');
+    if (!elNasc || !boxResp) return;
+    
+    if (!elNasc.value) {
+        boxResp.style.display = 'none';
+        return;
+    }
+
+    const hoje = new Date();
+    const nasc = new Date(elNasc.value);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+        idade--;
+    }
+
+    // Se menor de 18 anos, mostra o formulário do responsável
+    if (idade < 18) {
+        boxResp.style.display = 'block';
+        boxResp.style.animation = 'fadeIn 0.5s';
+    } else {
+        boxResp.style.display = 'none';
+    }
 };
 
 App.abrirModalCadastroModulo = async (tipo, id) => {
@@ -38,7 +65,6 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             dados = await App.api(`/${endpoint}/${id}`);
         }
         
-        // 🛡️ Buscamos as listas com fallback para Array vazio se a API falhar
         if (tipo === 'aluno' || tipo === 'turma') {
             const [c, t] = await Promise.all([ App.api('/cursos'), App.api('/turmas') ]);
             listas.cursos = Array.isArray(c) ? c : [];
@@ -49,7 +75,6 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
         let html = '';
 
         if (tipo === 'aluno') {
-            // Se não houver turmas/cursos, criamos uma opção em branco inteligente
             const opcoesTurmas = listas.turmas.length > 0 
                 ? '<option value="">-- Selecione a Turma --</option>' + listas.turmas.map(x => `<option value="${x.nome}" ${dados.turma === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
                 : '<option value="">-- Cadastre uma Turma Primeiro --</option>';
@@ -59,6 +84,7 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
                 : '<option value="">-- Cadastre um Curso Primeiro --</option>';
 
             html = `
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">1. Dados Pessoais</h4>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
                     ${UI.input('Nome Completo *', 'alu-nome', dados.nome)}
                     ${UI.input('E-mail', 'alu-email', dados.email, 'email@exemplo.com', 'email')}
@@ -67,6 +93,59 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
                     ${UI.input('WhatsApp *', 'alu-zap', dados.whatsapp, '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)"')}
                     ${UI.input('CPF', 'alu-cpf', dados.cpf, '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)"')}
                 </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('RG', 'alu-rg', dados.rg, '00.000.000-0', 'text')}
+                    ${UI.input('Data de Nascimento', 'alu-nasc', dados.nascimento, '', 'date', 'onchange="App.verificarMaioridade()" onblur="App.verificarMaioridade()"')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    <div class="input-group">
+                        <label>Sexo</label>
+                        <select id="alu-sexo">
+                            <option value="">-- Selecione --</option>
+                            <option value="Masculino" ${dados.sexo === 'Masculino' ? 'selected' : ''}>Masculino</option>
+                            <option value="Feminino" ${dados.sexo === 'Feminino' ? 'selected' : ''}>Feminino</option>
+                        </select>
+                    </div>
+                    ${UI.input('Profissão / Ocupação', 'alu-prof', dados.profissao, 'Ex: Estudante')}
+                </div>
+
+                <div id="box-responsavel" style="display: none; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #e67e22; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #d35400; margin-bottom: 10px;">👤 Dados do Responsável Legal (Menor de Idade)</h4>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:15px; margin-bottom:10px;">
+                        ${UI.input('Nome do Responsável', 'alu-resp-nome', dados.resp_nome, 'Ex: Maria da Silva')}
+                        <div class="input-group">
+                            <label>Grau de Parentesco</label>
+                            <select id="alu-resp-parentesco">
+                                <option value="">-- Selecione --</option>
+                                <option value="Pai" ${dados.resp_parentesco === 'Pai' ? 'selected' : ''}>Pai</option>
+                                <option value="Mãe" ${dados.resp_parentesco === 'Mãe' ? 'selected' : ''}>Mãe</option>
+                                <option value="Avô/Avó" ${dados.resp_parentesco === 'Avô/Avó' ? 'selected' : ''}>Avô/Avó</option>
+                                <option value="Tio/Tia" ${dados.resp_parentesco === 'Tio/Tia' ? 'selected' : ''}>Tio/Tia</option>
+                                <option value="Outro" ${dados.resp_parentesco === 'Outro' ? 'selected' : ''}>Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        ${UI.input('CPF do Responsável', 'alu-resp-cpf', dados.resp_cpf, '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)"')}
+                        ${UI.input('WhatsApp do Responsável', 'alu-resp-zap', dados.resp_zap, '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)"')}
+                    </div>
+                </div>
+
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">2. Endereço Completo</h4>
+                <div style="display:grid; grid-template-columns:2fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Logradouro (Rua/Av)', 'alu-rua', dados.rua, 'Ex: Rua das Flores')}
+                    ${UI.input('Número', 'alu-num', dados.numero, '123', 'text')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Bairro', 'alu-bairro', dados.bairro)}
+                    ${UI.input('Cidade', 'alu-cidade', dados.cidade)}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    ${UI.input('Estado (UF)', 'alu-uf', dados.estado, 'Ex: SP', 'text', 'maxlength="2"')}
+                    ${UI.input('País', 'alu-pais', dados.pais || 'Brasil')}
+                </div>
+
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">3. Matrícula</h4>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
                     <div class="input-group"><label>Turma / Horário</label><select id="alu-turma">${opcoesTurmas}</select></div>
                     <div class="input-group"><label>Curso Vinculado</label><select id="alu-curso">${opcoesCursos}</select></div>
@@ -86,21 +165,34 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
                 ? '<option value="">-- Sem Curso Específico --</option>' + listas.cursos.map(x => `<option value="${x.nome}" ${dados.curso === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
                 : '<option value="">-- Cadastre um Curso Primeiro --</option>';
 
+            // 🧠 Sistema Inteligente de Checkboxes para Múltiplos Dias
+            const diasSalvos = dados.dia ? dados.dia.split(',').map(d => d.trim()) : [];
+            const checkDia = (dia) => `
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" class="turma-dia-chk" value="${dia}" ${diasSalvos.includes(dia) ? 'checked' : ''}>
+                    ${dia}
+                </label>
+            `;
+
             html = `
                 <div class="input-group">${UI.input('Nome da Turma *', 'tur-nome', dados.nome, 'Ex: Inglês Kids T1')}</div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-                    <div class="input-group"><label>Dia(s) da Aula</label><select id="tur-dia">
-                        <option value="Segunda-feira" ${dados.dia === 'Segunda-feira' ? 'selected' : ''}>Segunda-feira</option>
-                        <option value="Terça-feira" ${dados.dia === 'Terça-feira' ? 'selected' : ''}>Terça-feira</option>
-                        <option value="Quarta-feira" ${dados.dia === 'Quarta-feira' ? 'selected' : ''}>Quarta-feira</option>
-                        <option value="Quinta-feira" ${dados.dia === 'Quinta-feira' ? 'selected' : ''}>Quinta-feira</option>
-                        <option value="Sexta-feira" ${dados.dia === 'Sexta-feira' ? 'selected' : ''}>Sexta-feira</option>
-                        <option value="Sábado" ${dados.dia === 'Sábado' ? 'selected' : ''}>Sábado</option>
-                        <option value="Diversos (Flexível)" ${dados.dia === 'Diversos (Flexível)' ? 'selected' : ''}>Diversos (Flexível)</option>
-                    </select></div>
-                    ${UI.input('Horário', 'tur-hora', dados.horario, 'Ex: 14:00 às 16:00')}
+                
+                <div class="input-group" style="margin-bottom:15px;">
+                    <label>Dia(s) da Aula (Marque quantos quiser)</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; background:#f9f9f9; padding:15px; border-radius:5px; border:1px solid #ccc;">
+                        ${checkDia('Segunda-feira')}
+                        ${checkDia('Terça-feira')}
+                        ${checkDia('Quarta-feira')}
+                        ${checkDia('Quinta-feira')}
+                        ${checkDia('Sexta-feira')}
+                        ${checkDia('Sábado')}
+                    </div>
                 </div>
-                <div class="input-group"><label>Curso Padrão desta Turma</label><select id="tur-curso">${opcoesCursos}</select></div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Horário', 'tur-hora', dados.horario, 'Ex: 14:00 às 16:00')}
+                    <div class="input-group"><label>Curso Padrão desta Turma</label><select id="tur-curso">${opcoesCursos}</select></div>
+                </div>
             `;
         } 
         else if (tipo === 'curso') {
@@ -128,7 +220,14 @@ App.abrirModalCadastroModulo = async (tipo, id) => {
             `;
         }
 
-        if(conteudo) conteudo.innerHTML = html;
+        if(conteudo) {
+            conteudo.innerHTML = html;
+            
+            // 🧠 Aciona a verificação de idade assim que o formulário abrir
+            if (tipo === 'aluno') {
+                setTimeout(() => App.verificarMaioridade(), 100);
+            }
+        }
         
         const btnConfirm = document.querySelector('.btn-confirm');
         if(btnConfirm) {
@@ -146,7 +245,6 @@ App.salvarCadastro = async () => {
     const ep = t === 'financeiro' ? 'financeiro' : t + 's';
     let p = {};
     
-    // Mostra estado de loading
     const btn = document.querySelector('.btn-confirm');
     const txtOriginal = btn ? btn.innerText : 'Salvar';
     if(btn) { btn.innerText = "A guardar... ⏳"; btn.disabled = true; }
@@ -158,16 +256,55 @@ App.salvarCadastro = async () => {
             p.email = lerInput('alu-email');
             p.whatsapp = lerInput('alu-zap');
             p.cpf = lerInput('alu-cpf');
+            p.rg = lerInput('alu-rg');
+            p.nascimento = lerInput('alu-nasc');
+            p.sexo = lerInput('alu-sexo');
+            p.profissao = lerInput('alu-prof');
+
+            p.rua = lerInput('alu-rua');
+            p.numero = lerInput('alu-num');
+            p.bairro = lerInput('alu-bairro');
+            p.cidade = lerInput('alu-cidade');
+            p.estado = lerInput('alu-uf');
+            p.pais = lerInput('alu-pais');
+
             p.turma = lerInput('alu-turma');
             p.curso = lerInput('alu-curso');
             p.status = lerInput('alu-status') || 'Ativo';
+
+            // 🧠 Lógica do Responsável: Guarda apenas se for Menor de Idade
+            let isMenor = false;
+            if(p.nascimento) {
+                const hoje = new Date();
+                const nasc = new Date(p.nascimento);
+                let idade = hoje.getFullYear() - nasc.getFullYear();
+                if (hoje.getMonth() < nasc.getMonth() || (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate())) idade--;
+                isMenor = idade < 18;
+            }
+
+            if (isMenor) {
+                p.resp_nome = lerInput('alu-resp-nome');
+                p.resp_parentesco = lerInput('alu-resp-parentesco');
+                p.resp_cpf = lerInput('alu-resp-cpf');
+                p.resp_zap = lerInput('alu-resp-zap');
+            } else {
+                p.resp_nome = '';
+                p.resp_parentesco = '';
+                p.resp_cpf = '';
+                p.resp_zap = '';
+            }
+
             if(!p.nome || !p.whatsapp) { App.showToast("Nome e WhatsApp são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
         } 
         else if (t === 'turma') {
             p.nome = lerInput('tur-nome');
-            p.dia = lerInput('tur-dia');
             p.horario = lerInput('tur-hora');
             p.curso = lerInput('tur-curso');
+            
+            // 🧠 Captura todos os dias de aula marcados e junta separados por vírgula
+            const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
+            p.dia = Array.from(checkboxes).map(chk => chk.value).join(', ');
+
             if(!p.nome) { App.showToast("O nome da turma é obrigatório!", "error"); throw new Error("Validação Falhou"); }
         } 
         else if (t === 'curso') {
