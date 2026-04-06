@@ -293,21 +293,37 @@ App.gerarDossie = async () => {
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor) + parseFloat(f.valorPago2 || 0);
         const isVenda = (f) => (f.descricao && f.descricao.toLowerCase().includes('venda')) || (f.idCarne && f.idCarne.includes('VENDA'));
 
-        const finAno = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano) && f.tipo === 'Receita');
-        const finMes = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === mesIdx);
+        const mesFormatado = mesIdx.toString().padStart(2, '0');
+        const anoMes = `${ano}-${mesFormatado}`; // Ex: "2024-05"
+
+        // 🧠 NOVA INTELIGÊNCIA FINANCEIRA: SEPARAÇÃO DE RECEITAS
+        const finReceitas = financeiro.filter(f => f.tipo === 'Receita');
         
-        // 🛡️ CORREÇÃO: || 0 inserido para blindar contra falhas e NaN
-        const entradaBrutaAno = finAno.filter(f => f.status === 'Pago').reduce((a, c) => a + getVal(c), 0);
-        const esperadoAnoMensalidade = finAno.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
-        const esperadoMesMensalidade = finMes.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
-        const inadimplenciaGeral = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        // 1. PREVISÃO (Baseada estritamente na Data de Vencimento do mês selecionado)
+        const esperadoAnoMensalidade = finReceitas.filter(f => f.vencimento && f.vencimento.startsWith(ano) && !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        const esperadoMesMensalidade = finReceitas.filter(f => f.vencimento && f.vencimento.startsWith(anoMes) && !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
         
-        const entradaMesMensalidade = finMes.filter(f => f.status === 'Pago' && !isVenda(f)).reduce((a, c) => a + getVal(c), 0);
-        const entradaMesVenda = finMes.filter(f => f.status === 'Pago' && isVenda(f)).reduce((a, c) => a + getVal(c), 0);
+        // 2. FLUXO DE CAIXA REAL (Baseado estritamente na Data de Pagamento!)
+        const getMesPgto = (f) => {
+            if (f.dataPagamento) return f.dataPagamento.substring(0, 7); 
+            if (f.vencimento) return f.vencimento.substring(0, 7); // Fallback caso não haja registo de data de pagamento
+            return '';
+        };
+        const getAnoPgto = (f) => getMesPgto(f).substring(0, 4);
+
+        const entradaBrutaAno = finReceitas.filter(f => f.status === 'Pago' && getAnoPgto(f) === ano).reduce((a, c) => a + getVal(c), 0);
+        
+        const finPagosMes = finReceitas.filter(f => f.status === 'Pago' && getMesPgto(f) === anoMes);
+        const entradaMesMensalidade = finPagosMes.filter(f => !isVenda(f)).reduce((a, c) => a + getVal(c), 0);
+        const entradaMesVenda = finPagosMes.filter(f => isVenda(f)).reduce((a, c) => a + getVal(c), 0);
         const entradaMesTotal = entradaMesMensalidade + entradaMesVenda;
 
+        // 3. INADIMPLÊNCIA FOCADA: Apenas faturas que VENCERAM neste mês e não foram pagas
+        const listInad = finReceitas.filter(f => f.status === 'Pendente' && f.vencimento && f.vencimento.startsWith(anoMes) && new Date(f.vencimento + 'T00:00:00') < dataHoje);
+        const inadimplenciaMes = listInad.reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+
         const formasMensalidade = {}; const formasVenda = {};
-        finMes.filter(f => f.status === 'Pago').forEach(p => {
+        finPagosMes.forEach(p => {
             const target = isVenda(p) ? formasVenda : formasMensalidade;
             const fp1 = p.formaPagamento || 'Outros'; const fp2 = p.formaPagamento2;
             target[fp1] = (target[fp1] || 0) + parseFloat(p.valorPago1 || p.valor);
@@ -316,7 +332,8 @@ App.gerarDossie = async () => {
 
         let linhasHistorico = ''; let acumuladoHistorico = 0;
         for(let i = 1; i <= mesIdx; i++) {
-            const fM = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === i && f.status === 'Pago');
+            const iAnoMes = `${ano}-${i.toString().padStart(2, '0')}`;
+            const fM = finReceitas.filter(f => f.status === 'Pago' && getMesPgto(f) === iAnoMes);
             const vM = fM.filter(f => !isVenda(f)).reduce((a,c) => a+getVal(c), 0);
             const vV = fM.filter(f => isVenda(f)).reduce((a,c) => a+getVal(c), 0);
             const tot = vM + vV;
@@ -337,7 +354,6 @@ App.gerarDossie = async () => {
         const percMasc = ((masc / totalSexo) * 100).toFixed(1);
         const percFem = ((fem / totalSexo) * 100).toFixed(1);
 
-        const listInad = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje);
         let linhasInad = '';
         listInad.forEach(f => {
             const cobrado = f.cobradoZap ? '<span style="color:#27ae60;font-weight:bold;">✅ Sim</span>' : '<span style="color:#e74c3c;font-weight:bold;">❌ Não</span>';
@@ -392,7 +408,7 @@ App.gerarDossie = async () => {
                         <div class="d-kpi-val" style="color:#34495e;">${fmt(esperadoAnoMensalidade)}</div>
                     </div>
                     <div class="d-kpi" style="border-bottom:3px solid #f39c12;">
-                        <div class="d-kpi-tit">Esperado no Mês Vigente<br>(Mensalidades)</div>
+                        <div class="d-kpi-tit">Esperado no Mês<br>(Mensalidades)</div>
                         <div class="d-kpi-val" style="color:#f39c12;">${fmt(esperadoMesMensalidade)}</div>
                     </div>
                     <div class="d-kpi" style="border-bottom:3px solid #27ae60;">
@@ -400,17 +416,17 @@ App.gerarDossie = async () => {
                         <div class="d-kpi-val" style="color:#27ae60;">${fmt(entradaBrutaAno)}</div>
                     </div>
                     <div class="d-kpi" style="border-bottom:3px solid #3498db;">
-                        <div class="d-kpi-tit">Entrada Mês Vigente<br>(Mensalidades + Vendas)</div>
+                        <div class="d-kpi-tit">Entrada no Mês<br>(Pagamentos Recebidos)</div>
                         <div class="d-kpi-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div>
                     </div>
                     <div class="d-kpi" style="border-bottom:3px solid #e74c3c;">
-                        <div class="d-kpi-tit">Total Inadimplência<br>(Geral)</div>
-                        <div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div>
+                        <div class="d-kpi-tit">Inadimplência<br>(Do Mês Selecionado)</div>
+                        <div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaMes)}</div>
                     </div>
                 </div>
 
                 <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📊 Resultados Financeiros: ${nomeMes} / ${ano}</h3>
+                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📊 Fluxo de Caixa Realizado: ${nomeMes} / ${ano}</h3>
                     <div class="flex-container">
                         <div class="flex-item">
                             <table class="d-table">
@@ -478,11 +494,11 @@ App.gerarDossie = async () => {
                 </div>
 
                 <div class="d-box">
-                    <h3 style="margin-top:0; color:#e74c3c; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">⚠️ Relatório Analítico de Inadimplência</h3>
+                    <h3 style="margin-top:0; color:#e74c3c; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">⚠️ Inadimplência Restrita: ${nomeMes} / ${ano}</h3>
                     <div class="table-responsive">
                         <table class="d-table" style="min-width:600px;">
                             <thead><tr><th>Nome do Aluno</th><th>Descrição (Mensalidade)</th><th>Valor</th><th>Vencimento</th><th style="text-align:center;">Cobrado no WhatsApp?</th></tr></thead>
-                            <tbody>${linhasInad || '<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Nenhum inadimplente! 🎉</td></tr>'}</tbody>
+                            <tbody>${linhasInad || '<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Nenhum inadimplente neste mês! 🎉</td></tr>'}</tbody>
                         </table>
                     </div>
                 </div>
