@@ -292,18 +292,13 @@ App.salvarCadastro = async () => {
             p.curso = lerInput('alu-curso');
             p.status = lerInput('alu-status') || 'Ativo';
 
-            let isMenor = false;
-            if(p.nascimento) {
-                const hoje = new Date();
-                const nasc = new Date(p.nascimento);
-                let idade = hoje.getFullYear() - nasc.getFullYear();
-                if (hoje.getMonth() < nasc.getMonth() || (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate())) idade--;
-                isMenor = idade < 18;
-            }
+            // 🧠 NOVA LÓGICA DO RESPONSÁVEL: Direta, Visual e à prova de falhas
+            const boxResp = document.getElementById('box-responsavel');
+            const isMenorVisivel = boxResp && boxResp.style.display !== 'none';
 
-            if (isMenor) {
+            if (isMenorVisivel) {
                 p.resp_nome = lerInput('alu-resp-nome');
-                p.resp_parentesco = lerInput('alu-resp-parentesco');
+                p.resp_parentesco = lerInput('alu-resp-parentesco'); // Salva o select perfeitamente
                 p.resp_cpf = lerInput('alu-resp-cpf');
                 p.resp_zap = lerInput('alu-resp-zap');
             } else {
@@ -319,11 +314,8 @@ App.salvarCadastro = async () => {
             p.nome = lerInput('tur-nome');
             p.horario = lerInput('tur-hora');
             p.curso = lerInput('tur-curso');
-            
-            // 🧠 Captura todos os dias do Custom Dropdown
             const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
             p.dia = Array.from(checkboxes).map(chk => chk.value).join(', ');
-
             if(!p.nome) { App.showToast("O nome da turma é obrigatório!", "error"); throw new Error("Validação Falhou"); }
         } 
         else if (t === 'curso') {

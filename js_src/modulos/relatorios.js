@@ -531,7 +531,6 @@ App.gerarFichaImprimir = async () => {
     document.body.style.cursor = 'wait';
     
     try {
-        // 🧠 AQUI: O sistema agora vai buscar as finanças e as turmas em simultâneo!
         const [aluno, escola, financeiro, turmas] = await Promise.all([ 
             App.api(`/alunos/${idAluno}`), 
             App.api('/escola'),
@@ -542,10 +541,15 @@ App.gerarFichaImprimir = async () => {
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const turmaObj = turmas.find(t => t.nome === aluno.turma) || { dia: '-', horario: '-' };
         
-        // 💰 CÁLCULO INTELIGENTE DO INVESTIMENTO TOTAL
-        const parcelasPadrao = financeiro.filter(f => f.idAluno === idAluno && f.descricao && f.descricao.toLowerCase().includes('mensalidade'));
-        const totalInvestimento = parcelasPadrao.reduce((soma, p) => soma + (parseFloat(p.valor) || 0), 0);
-        const investFormatado = totalInvestimento > 0 ? `R$ ${totalInvestimento.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : 'Isento / Não Gerado';
+        // 💰 NOVA AUDITORIA FINANCEIRA: SEPARA CURSO E LOJA
+        const financeiroAluno = financeiro.filter(f => f.idAluno === idAluno && f.tipo === 'Receita');
+        const isVenda = (f) => (f.descricao && f.descricao.toLowerCase().includes('venda')) || (f.idCarne && f.idCarne.includes('VENDA'));
+        
+        const totalCurso = financeiroAluno.filter(f => !isVenda(f)).reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
+        const totalLoja = financeiroAluno.filter(f => isVenda(f)).reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
+        const totalGeral = totalCurso + totalLoja;
+        
+        const fmt = (val) => `R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
 
         // 👤 MÓDULO DO RESPONSÁVEL LEGAL
         let htmlResponsavel = '';
@@ -586,19 +590,35 @@ App.gerarFichaImprimir = async () => {
 
                     ${htmlResponsavel}
 
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; color:#2c3e50; font-size:15px;">CURSO E MATRÍCULA</h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 20px; color:#2c3e50; font-size:15px;">2. CURSO E MATRÍCULA</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 10px; font-size:13px;">
                         <div><b>Curso:</b> ${App.escapeHTML(aluno.curso || '-')}</div>
                         <div><b>Turma:</b> ${App.escapeHTML(aluno.turma || '-')}</div>
                         <div><b>Dias de Aula:</b> ${App.escapeHTML(turmaObj.dia || '-')}</div>
                         <div><b>Horário:</b> ${App.escapeHTML(turmaObj.horario || '-')}</div>
-                        
-                        <div style="grid-column: 1 / -1; background: #ffffd0; padding: 12px; border: 1px dashed #f1c40f; border-radius: 5px; font-weight:bold; color:#d35400; margin-top:5px;">
-                            💰 Investimento Total do Curso (Mensalidades Padrão): ${investFormatado}
+                    </div>
+
+                    <div style="grid-column: 1 / -1; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
+                        <div style="background: #2c3e50; color: white; padding: 6px 10px; font-weight: bold; font-size: 12px; text-transform: uppercase;">
+                            📊 Auditoria Financeira do Aluno
+                        </div>
+                        <div style="display: flex; background: #fafafa; text-align: center; flex-wrap: wrap;">
+                            <div style="flex: 1; padding: 10px; border-right: 1px solid #eee; min-width: 100px;">
+                                <div style="font-size: 10px; color: #666; text-transform: uppercase; font-weight:bold;">Investimento do Curso</div>
+                                <div style="font-size: 14px; font-weight: bold; color: #2980b9;">${totalCurso > 0 ? fmt(totalCurso) : '-'}</div>
+                            </div>
+                            <div style="flex: 1; padding: 10px; border-right: 1px solid #eee; min-width: 100px;">
+                                <div style="font-size: 10px; color: #666; text-transform: uppercase; font-weight:bold;">Materiais / Lojinha</div>
+                                <div style="font-size: 14px; font-weight: bold; color: #8e44ad;">${totalLoja > 0 ? fmt(totalLoja) : '-'}</div>
+                            </div>
+                            <div style="flex: 1; padding: 10px; background: #ffffd0; min-width: 100px;">
+                                <div style="font-size: 10px; color: #d35400; text-transform: uppercase; font-weight: bold;">Investimento Total</div>
+                                <div style="font-size: 15px; font-weight: bold; color: #d35400;">${totalGeral > 0 ? fmt(totalGeral) : 'Isento'}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">ENDEREÇO</h3>
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">3. ENDEREÇO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${App.escapeHTML(aluno.rua || '-')}, ${App.escapeHTML(aluno.numero || '-')}</div>
                         <div><b>Bairro:</b> ${App.escapeHTML(aluno.bairro || '-')}</div>
