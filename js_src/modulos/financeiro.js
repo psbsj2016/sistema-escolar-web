@@ -643,74 +643,61 @@ App.renderizarInadimplencia = async () => {
     }
 };
 
-// =========================================================
-// ✏️ EDICÃO RÁPIDA DE MENSALIDADES E PARCELAS (MODAL)
-// =========================================================
+// =======================================================================
+// NOVAS FUNÇÕES DE EDIÇÃO INTELIGENTE (PROTEÇÃO DE VENCIMENTO)
+// =======================================================================
 
-App.abrirEdicaoFinanceiro = async (idParcela) => {
-    // 1. Abre a tela de fundo escura
+App.abrirEdicaoFinanceiro = async (id) => {
+    App.idEdicaoFinanceiro = id;
+    
     const modal = document.getElementById('modal-overlay');
-    if (modal) modal.style.display = 'flex';
+    if(modal) modal.style.display = 'flex';
     
-    document.getElementById('modal-titulo').innerText = "Editar Parcela";
-    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados da parcela... ⏳</p>';
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
     
-    // Esconde o botão de salvar enquanto carrega
-    const btnConfirm = document.querySelector('.btn-confirm');
-    if (btnConfirm) btnConfirm.style.display = 'none';
+    if(titulo) titulo.innerText = "Editar Lançamento";
+    if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando dados da parcela... ⏳</p>';
 
     try {
-        // 2. Busca os dados exatos desta parcela na base de dados
-        const parcela = await App.api(`/financeiro/${idParcela}`);
-        if (!parcela || parcela.error) throw new Error("Parcela não encontrada");
-        
-        App.idEdicaoFinanceiro = idParcela;
-        App.parcelaEdicaoAtual = parcela; // Guardamos os dados originais
+        // 1. Busca a parcela atualizada do banco de dados
+        const parcela = await App.api(`/financeiro/${id}`);
+        App.parcelaEdicaoAtual = parcela;
 
-        // 3. Inteligência de Design (Pendente vs Pago)
+        // 2. A Inteligência artificial entra em ação: A conta está paga?
         const isPago = parcela.status === 'Pago';
-        const corBase = isPago ? '#27ae60' : '#f39c12';
-        const corFundo = isPago ? '#eafaf1' : '#fef5e7';
-        const icone = isPago ? '✅' : '⏳';
-        const tituloStatus = isPago ? 'Parcela Liquidada (Paga)' : 'Parcela Pendente';
-
-        const dataLabel = isPago ? 'Data de Pagamento' : 'Data de Vencimento';
-        const valorLabel = isPago ? 'Valor Recebido (R$)' : 'Valor do Documento (R$)';
         
-        // 4. Constrói o HTML do Modal bonito
-        const html = `
-            <div style="background: ${corFundo}; border-left: 4px solid ${corBase}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 5px 0; color: ${corBase}; display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:18px;">${icone}</span> ${tituloStatus}
-                </h4>
-                <p style="margin: 0; font-size: 13px; color: #555;">
-                    <strong>Aluno(a):</strong> ${App.escapeHTML(parcela.alunoNome || 'Não informado')}<br>
-                    <strong>Referência:</strong> ${App.escapeHTML(parcela.descricao || 'Mensalidade')}
-                </p>
+        // 3. Define os textos e as datas corretas dependendo do status
+        const labelData = isPago ? 'Data Efetiva do Pagamento' : 'Nova Data de Vencimento';
+        const dataAtual = isPago ? (parcela.dataPagamento || parcela.vencimento) : parcela.vencimento;
+        
+        // Caixa de aviso elegante para o utilizador saber o que está a fazer
+        const aviso = isPago 
+            ? '<div style="background:#e8f4f8; color:#2980b9; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #2980b9;">ℹ️ <b>Parcela Paga:</b> Você está alterando apenas o dia em que o aluno efetuou o pagamento. <b>O vencimento original do carnê ficará intacto.</b></div>'
+            : '<div style="background:#fff3e0; color:#d35400; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #d35400;">⚠️ <b>Parcela Pendente:</b> Alterar a data mudará o dia de vencimento no carnê do aluno.</div>';
+
+        let html = `
+            ${aviso}
+            <div class="input-group" style="margin-bottom:15px;">
+                <label style="font-weight:bold; color:#2c3e50;">${labelData}</label>
+                <input type="date" id="edit-fin-data" value="${dataAtual || ''}" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
             </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
-                <div class="input-group">
-                    <label style="font-weight:bold; color:#333;">${dataLabel}</label>
-                    <input type="date" id="edit-fin-data" value="${parcela.vencimento || ''}" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
-                </div>
-                <div class="input-group">
-                    <label style="font-weight:bold; color:#333;">${valorLabel}</label>
-                    <input type="number" step="0.01" id="edit-fin-valor" value="${parcela.valor || ''}" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; font-weight:bold;">
-                </div>
+            <div class="input-group" style="margin-bottom:15px;">
+                <label style="font-weight:bold; color:#2c3e50;">Valor Registado (R$)</label>
+                <input type="number" step="0.01" id="edit-fin-valor" value="${parcela.valor || ''}" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
             </div>
-            <p style="font-size:11px; color:#999; text-align:center; margin-top:5px;">Atenção: A alteração destes valores refletirá imediatamente nos relatórios.</p>
         `;
 
-        document.getElementById('modal-form-content').innerHTML = html;
+        conteudo.innerHTML = html;
 
-        // 5. Configura o botão de Salvar
-        btnConfirm.setAttribute('onclick', 'App.salvarEdicaoFinanceiro()');
-        btnConfirm.innerHTML = "💾 Salvar Alterações";
-        btnConfirm.style.display = 'inline-flex';
-
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) {
+            btnConfirm.setAttribute('onclick', 'App.salvarEdicaoFinanceiro()');
+            btnConfirm.innerHTML = "💾 Salvar Alterações";
+        }
     } catch (e) {
-        document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar os dados da parcela.</p>';
+        console.error("Erro ao carregar edição:", e);
+        if(conteudo) conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar dados. Tente novamente.</p>';
     }
 };
 
@@ -728,20 +715,31 @@ App.salvarEdicaoFinanceiro = async () => {
     btn.disabled = true;
 
     try {
-        // Junta os dados antigos com os novos que acabámos de digitar
+        const isPago = App.parcelaEdicaoAtual.status === 'Pago';
+        
+        // Preparamos o pacote básico de atualização
         const parcelaAtualizada = {
             ...App.parcelaEdicaoAtual,
-            vencimento: novaData, 
-            valor: novoValor
+            valor: parseFloat(novoValor)
         };
 
-        // Envia para o Backend
+        // 🧠 O SEGREDO ESTÁ AQUI: Separamos as variáveis!
+        if (isPago) {
+            // Se está pago, atualizamos a variável secreta "dataPagamento".
+            // O "parcelaAtualizada.vencimento" não é tocado e mantém a data antiga do carnê!
+            parcelaAtualizada.dataPagamento = novaData;
+        } else {
+            // Se está pendente, aí sim, atualizamos o vencimento do carnê.
+            parcelaAtualizada.vencimento = novaData;
+        }
+
+        // Envia a instrução correta para o Back-end
         await App.api(`/financeiro/${App.idEdicaoFinanceiro}`, 'PUT', parcelaAtualizada);
         
-        App.showToast("Parcela atualizada com sucesso! 🎉", "success");
+        App.showToast("Alteração financeira guardada com sucesso! 💼", "success");
         App.fecharModal();
         
-        // Recarrega a tela de forma inteligente para mostrar a alteração
+        // Recarrega o ecrã para mostrar as novidades
         if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
             App.renderizarFinanceiroPro();
         } else if (typeof App.filtrarTabelaReativa === 'function') {
@@ -749,8 +747,12 @@ App.salvarEdicaoFinanceiro = async () => {
         }
 
     } catch (e) {
-        App.showToast("Erro ao atualizar parcela.", "error");
+        console.error("Erro ao salvar edição:", e);
+        App.showToast("Ocorreu um erro ao salvar a alteração.", "error");
     } finally {
-        if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; }
+        if (btn) {
+            btn.innerHTML = txtOrig;
+            btn.disabled = false;
+        }
     }
 };
