@@ -46,37 +46,72 @@ const reportStyles = `
 `;
 
 // ---------------------------------------------------------
-// 1. RELATÓRIOS FINANCEIROS
+// 1. RELATÓRIOS FINANCEIROS (COM LEITURA DINÂMICA DE ANOS)
 // ---------------------------------------------------------
-App.renderizarSelecaoRelatorio = () => {
+App.renderizarSelecaoRelatorio = async () => {
     const div = document.getElementById('app-content');
     
-    const anoAtual = new Date().getFullYear();
-    const opAnos = `<option value="${anoAtual+1}">${anoAtual+1}</option><option value="${anoAtual}" selected>${anoAtual}</option><option value="${anoAtual-1}">${anoAtual-1}</option>`;
-    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
+    // Mostra um aviso rápido enquanto "vasculha" a base de dados
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar períodos disponíveis... ⏳</p>';
+    
+    try {
+        // 🧠 A MÁGICA: Vai buscar todo o histórico financeiro
+        const financeiro = await App.api('/financeiro');
+        
+        let anosSet = new Set();
+        const anoAtual = new Date().getFullYear();
+        
+        // Garante que o ano atual e o próximo existem sempre (mesmo sem lançamentos)
+        anosSet.add(anoAtual);
+        anosSet.add(anoAtual + 1); 
+        
+        // Varre todos os registos à procura de anos antigos
+        financeiro.forEach(f => {
+            if (f.vencimento) {
+                const anoVenc = parseInt(f.vencimento.split('-')[0]);
+                if (!isNaN(anoVenc)) anosSet.add(anoVenc);
+            }
+            if (f.dataPagamento) {
+                const anoPag = parseInt(f.dataPagamento.split('-')[0]);
+                if (!isNaN(anoPag)) anosSet.add(anoPag);
+            }
+        });
+        
+        // Ordena os anos do mais recente para o mais antigo (ex: 2027, 2026, 2025, 2024...)
+        const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
+        
+        // Monta os botões de seleção
+        const opAnos = anosOrdenados.map(ano => `<option value="${ano}" ${ano === anoAtual ? 'selected' : ''}>${ano}</option>`).join('');
 
-    const formHTML = `
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-            <span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2>
-        </div>
-        <p style="color:#666; margin-bottom:20px;">Selecione o ano base para emitir os relatórios financeiros.</p>
-        
-        ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="margin-bottom:25px; background:white; padding:12px; font-size:16px;"')}
-        
-        <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
-            📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span>
-        </button>
-        
-        <div style="text-align:center; margin:25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS ESPECÍFICO</div>
-        
-        <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-            ${relSelect('Mês:', 'rel-mes', opMeses, 'style="background:white; padding:12px; min-width:200px;"')}
-            <button onclick="App.gerarRelatorioMensal()" style="flex:1; min-width:150px; background:#2980b9; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; height:43px; box-shadow:0 4px 10px rgba(41,128,185,0.3);">VER MÊS</button>
-        </div>
-    `;
+        const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
 
-    div.innerHTML = App.UI.card('', '', formHTML, '100%');
+        const formHTML = `
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2>
+            </div>
+            <p style="color:#666; margin-bottom:20px;">Selecione o ano base para emitir os relatórios financeiros.</p>
+            
+            ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="margin-bottom:25px; background:white; padding:12px; font-size:16px;"')}
+            
+            <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
+                📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span>
+            </button>
+            
+            <div style="text-align:center; margin:25px 0; color:#999; font-size:12px; font-weight:bold;">OU SELECIONE UM MÊS ESPECÍFICO</div>
+            
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                ${relSelect('Mês:', 'rel-mes', opMeses, 'style="background:white; padding:12px; min-width:200px;"')}
+                <button onclick="App.gerarRelatorioMensal()" style="flex:1; min-width:150px; background:#2980b9; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; height:43px; box-shadow:0 4px 10px rgba(41,128,185,0.3);">VER MÊS</button>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('', '', formHTML, '100%');
+        
+    } catch(e) {
+        console.error("Erro ao carregar anos para relatório:", e);
+        div.innerHTML = '<p style="color:red; text-align:center;">Erro ao ligar ao servidor para ler o histórico. Tente novamente.</p>';
+    }
 };
 
 App.gerarRelatorioAnual = async () => {
