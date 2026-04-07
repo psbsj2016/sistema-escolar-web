@@ -703,33 +703,45 @@ App.abrirEdicaoFinanceiro = async (id) => {
 
 App.salvarEdicaoFinanceiro = async () => {
     const novaData = document.getElementById('edit-fin-data').value;
-    const novoValor = document.getElementById('edit-fin-valor').value;
+    const novoValorStr = document.getElementById('edit-fin-valor').value;
 
-    if (!novaData || !novoValor) {
+    if (!novaData || !novoValorStr) {
         return App.showToast("Por favor, preencha a data e o valor.", "warning");
     }
 
+    // 🛡️ TRATAMENTO BLINDADO DE MOEDA BRASILEIRA (Aceita 150,00 ou 1.500,00)
+    let novoValor = novoValorStr.toString().trim();
+    if (novoValor.includes(',') && novoValor.includes('.')) {
+        novoValor = novoValor.replace(/\./g, '').replace(',', '.'); // Remove ponto de milhar, troca vírgula por ponto
+    } else if (novoValor.includes(',')) {
+        novoValor = novoValor.replace(',', '.'); // Apenas troca vírgula por ponto
+    }
+    novoValor = parseFloat(novoValor) || 0;
+
     const btn = document.querySelector('.btn-confirm');
-    const txtOrig = btn.innerHTML;
-    btn.innerHTML = "⏳ A salvar...";
-    btn.disabled = true;
+    const txtOrig = btn ? btn.innerHTML : 'Salvar';
+    if (btn) { btn.innerHTML = "⏳ A guardar..."; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
 
     try {
         const isPago = App.parcelaEdicaoAtual.status === 'Pago';
         
-        // Preparamos o pacote básico de atualização
+        // Junta os dados antigos com o novo valor base que acabámos de digitar
         const parcelaAtualizada = {
             ...App.parcelaEdicaoAtual,
-            valor: parseFloat(novoValor)
+            valor: novoValor
         };
 
-        // 🧠 O SEGREDO ESTÁ AQUI: Separamos as variáveis!
+        // 🧠 AUDITORIA DE CAIXA: Sobrescreve o Recibo real da baixa!
         if (isPago) {
-            // Se está pago, atualizamos a variável secreta "dataPagamento".
-            // O "parcelaAtualizada.vencimento" não é tocado e mantém a data antiga do carnê!
+            // Se já foi pago, atualiza a data de pagamento
             parcelaAtualizada.dataPagamento = novaData;
+            
+            // O SEGREDO PARA OS RELATÓRIOS: Sobrescreve o dinheiro recebido!
+            parcelaAtualizada.valorPago1 = novoValor;
+            parcelaAtualizada.valorPago2 = 0; // Zera para evitar cêntimos fantasmas de baixas anteriores
         } else {
-            // Se está pendente, aí sim, atualizamos o vencimento do carnê.
+            // Se está pendente, atualizamos o vencimento normal do carnê
             parcelaAtualizada.vencimento = novaData;
         }
 
@@ -739,7 +751,7 @@ App.salvarEdicaoFinanceiro = async () => {
         App.showToast("Alteração financeira guardada com sucesso! 💼", "success");
         App.fecharModal();
         
-        // Recarrega o ecrã para mostrar as novidades
+        // Recarrega o ecrã para mostrar as novidades imediatamente
         if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
             App.renderizarFinanceiroPro();
         } else if (typeof App.filtrarTabelaReativa === 'function') {
@@ -747,12 +759,10 @@ App.salvarEdicaoFinanceiro = async () => {
         }
 
     } catch (e) {
-        console.error("Erro ao salvar edição:", e);
-        App.showToast("Ocorreu um erro ao salvar a alteração.", "error");
+        console.error("Erro ao guardar edição:", e);
+        App.showToast("Ocorreu um erro ao atualizar.", "error");
     } finally {
-        if (btn) {
-            btn.innerHTML = txtOrig;
-            btn.disabled = false;
-        }
+        if (btn) { btn.innerHTML = txtOrig; btn.disabled = false; }
+        document.body.style.cursor = 'default';
     }
 };
