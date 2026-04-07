@@ -919,7 +919,7 @@ if (typeof App.renderizarLista === 'function') {
 }
 
 // =======================================================================
-// 💬 INTEGRAÇÃO DE COBRANÇA PROFISSIONAL VIA WHATSAPP
+// 💬 INTEGRAÇÃO DE COBRANÇA PROFISSIONAL VIA WHATSAPP (CORRIGIDA)
 // =======================================================================
 
 App.cobrarWhatsApp = async (idAluno, valorPendente) => {
@@ -934,10 +934,17 @@ App.cobrarWhatsApp = async (idAluno, valorPendente) => {
 
         const aluno = alunos.find(a => a.id === idAluno);
         if (!aluno) return App.showToast("Erro: Aluno não encontrado.", "error");
-        if (!aluno.telefone) return App.showToast("O aluno não tem número de WhatsApp registado.", "warning");
 
-        // 2. Limpar e formatar o número de telefone (remover espaços, traços, etc.)
-        let telefone = aluno.telefone.replace(/\D/g, '');
+        // 🕵️‍♂️ 2. BUSCA INTELIGENTE: Procura o número em todos os campos possíveis
+        let numeroBruto = aluno.whatsapp || aluno.celular || aluno.telefone || aluno.contato || '';
+        
+        // Remove tudo o que não for número (limpa parênteses, traços, espaços)
+        let telefone = numeroBruto.replace(/\D/g, '');
+
+        // Se, depois de limpar, não sobrar um número válido (mínimo de 10 dígitos)
+        if (telefone.length < 10) {
+            return App.showToast("O aluno não tem um número válido registado.", "warning");
+        }
         
         // Se o número for do Brasil e não tiver o DDI (55), o sistema adiciona automaticamente
         if (telefone.length === 10 || telefone.length === 11) {
@@ -945,7 +952,7 @@ App.cobrarWhatsApp = async (idAluno, valorPendente) => {
         }
 
         // 3. Organizar as variáveis para o texto
-        const primeiroNome = aluno.nome.split(' ')[0]; // Pega só o primeiro nome para ser mais pessoal
+        const primeiroNome = aluno.nome ? aluno.nome.split(' ')[0] : 'Aluno'; // Pega só o primeiro nome
         const nomeEscola = escola.nome || 'Nossa Instituição';
         const cnpjEscola = escola.cnpj || 'Não informado';
         const bancoEscola = escola.banco || 'Não informado';
