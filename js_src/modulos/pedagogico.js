@@ -128,7 +128,6 @@ App.gerarGridEditavel = () => {
     while(contador < qtdAulas) { 
         if(dias.includes(dataAtual.getDay())) { 
             contador++; 
-            // 🛡️ CORREÇÃO: Formatação manual de data à prova de bugs de navegadores cruzados
             const d = String(dataAtual.getDate()).padStart(2, '0');
             const m = String(dataAtual.getMonth() + 1).padStart(2, '0');
             const y = dataAtual.getFullYear();
@@ -148,7 +147,7 @@ App.renderizarTelaEdicao = (plano) => {
     plano.aulas.forEach(aula => { const [h, m] = aula.duracao.split(':').map(Number); totalMinutos += (h * 60) + m; });
     const totalHoras = (totalMinutos / 60).toFixed(0);
     
-    const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {}; 
+    const escola = JSON.parse(localStorage.getItem(App.getTenantKey ? App.getTenantKey('escola_perfil') : 'escola_perfil')) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
     div.innerHTML = `
@@ -202,8 +201,6 @@ App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) A
 
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
-    
-    // 🛡️ CORREÇÃO: Força o fecho do teclado para garantir que a última letra digitada é guardada
     if (document.activeElement) document.activeElement.blur();
 
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
@@ -306,21 +303,20 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
 App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
 
 // ---------------------------------------------------------
-// 2. BOLETIM (COM FOLHA A4 BLINDADA)
+// 2. BOLETIM (CÁLCULO INTELIGENTE DE APROVAÇÃO E METAS)
 // ---------------------------------------------------------
 App.renderizarBoletimVisual = async () => {
     App.setTitulo("Boletim Escolar");
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
-        // 🛡️ FILTRO: Apenas alunos ativos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
         const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         
         const formBoletim = `
             <div style="display:flex; gap:10px; align-items:center;">
                 <select id="bol-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select>
-                <button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR</button>
+                <button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR BOLETIM</button>
             </div>
         `;
         
@@ -332,6 +328,9 @@ App.gerarBoletimTela = async () => {
     const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
     const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
     
+    // 🧠 Puxa a "Média" que a escola configurou na aba de Lançamentos
+    const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
+
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([
             App.api(`/alunos/${idAluno}`), App.api('/avaliacoes'), App.api('/chamadas'), App.api('/escola'), App.api('/planejamentos')
@@ -345,24 +344,55 @@ App.gerarBoletimTela = async () => {
         if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); } 
         else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
 
-        const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); const disciplinasMap = {};
+        const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); 
+        const disciplinasMap = {};
         
-        // 🛡️ CORREÇÃO: parseFloat(n.nota) || 0 evita o temido erro NaN (Not a Number) no Boletim
+        // 🧠 Agrupamento e Cálculo dos Bimestres
         notasAluno.forEach(n => { 
             const disc = n.disciplina || 'Geral'; 
-            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0 }; 
+            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, bimestres: new Set() }; 
+            
             disciplinasMap[disc].notas.push(n); 
             disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
+            
+            // Marca os bimestres que já têm alguma nota para poder calcular a meta
+            if (n.bimestre) disciplinasMap[disc].bimestres.add(n.bimestre);
         });
         
         let linhasHTML = '';
-        if(Object.keys(disciplinasMap).length === 0) linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px;">Sem notas lançadas.</td></tr>';
-        else Object.keys(disciplinasMap).forEach(chave => {
-            const d = disciplinasMap[chave];
-            const situacao = d.total >= 6 ? '<span style="color:green; font-weight:bold;">APROVADO</span>' : '<span style="color:orange;">EM CURSO</span>';
-            const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join(', ');
-            linhasHTML += `<tr><td style="padding:10px; border-bottom:1px solid #eee;">${App.escapeHTML(d.nome)}</td><td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;"><b>${d.total.toFixed(1)}</b></td><td style="text-align:center; padding:10px; border-bottom:1px solid #eee;">${situacao}</td></tr>`;
-        });
+        if(Object.keys(disciplinasMap).length === 0) {
+            linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">Sem notas lançadas para este aluno.</td></tr>';
+        } else {
+            Object.keys(disciplinasMap).forEach(chave => {
+                const d = disciplinasMap[chave];
+                
+                // 🧠 LÓGICA DE APROVAÇÃO: (Qtd. Bimestres Lançados * Média Exigida)
+                const qtdBimestresLancados = d.bimestres.size > 0 ? d.bimestres.size : 1;
+                const metaAtual = mediaConfig * qtdBimestresLancados;
+                
+                const isAprovado = d.total >= metaAtual;
+                const corStatus = isAprovado ? '#27ae60' : '#c0392b';
+                
+                const situacao = isAprovado 
+                    ? `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">APROVADO</span>` 
+                    : `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">RECUPERAÇÃO</span>`;
+                
+                const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.bimestre)} - ${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join('<br>');
+                
+                linhasHTML += `
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee; vertical-align:middle;"><b>${App.escapeHTML(d.nome)}</b></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td>
+                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;">
+                        <span style="font-size:16px; font-weight:bold; color:${corStatus};">${d.total.toFixed(1)}</span>
+                    </td>
+                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;">
+                        ${situacao}<br>
+                        <span style="font-size:10px; color:#7f8c8d;">Meta p/ Aprovação: ${metaAtual.toFixed(1)} pts</span>
+                    </td>
+                </tr>`;
+            });
+        }
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const dataHoje = new Date().toLocaleDateString('pt-BR');
@@ -382,28 +412,40 @@ App.gerarBoletimTela = async () => {
                 </div>
                 <div class="table-responsive-wrapper">
                     <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
-                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px;">DISCIPLINA</th><th style="padding:10px;">AVALIAÇÕES</th><th style="text-align:center; padding:10px;">NOTA</th><th style="text-align:center; padding:10px;">RESULTADO</th></tr></thead>
+                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px; width:30%;">DISCIPLINA</th><th style="padding:10px; width:30%;">AVALIAÇÕES (BIMESTRE)</th><th style="text-align:center; padding:10px; width:15%;">NOTA TOTAL</th><th style="text-align:center; padding:10px; width:25%;">RESULTADO</th></tr></thead>
                         <tbody>${linhasHTML}</tbody>
                     </table>
                 </div>
-                <div style="padding:40px 30px; text-align:center;"><div style="width:300px; margin:0 auto; border-top:1px solid #333; padding-top:5px; font-size:12px;">Coordenação Pedagógica</div></div>
+                <div style="padding:40px 30px 10px 30px; text-align:center;"><div style="width:300px; margin:0 auto; border-top:1px solid #333; padding-top:5px; font-size:12px;">Coordenação Pedagógica</div></div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar boletim.", "error"); }
 };
 
 // ---------------------------------------------------------
-// 3. AVALIAÇÕES E NOTAS (HÍBRIDO: TURMA OU ALUNO)
+// 3. AVALIAÇÕES E NOTAS (HÍBRIDO COM CONFIG. DE MÉDIA)
 // ---------------------------------------------------------
+
+// 🧠 Guardar ou Atualizar a Média no LocalStorage
+App.salvarMediaConfig = (val) => { 
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao', val); 
+    App.showToast("Média de aprovação atualizada!", "info"); 
+    App.renderizarAvaliacoesPro(); // Recarrega para aplicar as novas cores no histórico
+};
+
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
+    
+    // Recupera a média salva
+    const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
+    const percentualAprovacao = parseFloat(mediaSalva) / 10;
+
     try {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
         const historico = avaliacoes.sort((a,b) => b.id - a.id);
 
-        // 🛡️ FILTRO: Apenas alunos ativos para a caixa de seleção de notas
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
@@ -420,6 +462,7 @@ App.renderizarAvaliacoesPro = async () => {
                 <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
                 ${selectLocal('Buscar Aluno Único:', 'nota-aluno', opAlunos)}
             </div>
+            
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px;">
                 ${selectLocal('Disciplina/Curso:', 'nota-disc', opCursos)}
                 ${selectLocal('Tipo de Avaliação:', 'nota-tipo', opTipos, 'onchange="App.toggleTipoOutroNota()"')}
@@ -429,9 +472,11 @@ App.renderizarAvaliacoesPro = async () => {
                 </div>
                 ${selectLocal('Bimestre:', 'nota-bimestre', opBimestres)}
             </div>
+            
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
-                ${col('Data da Avaliação:', 'nota-data', 'date', hoje)}
+                ${col('Média Mín. (Aprovação):', 'nota-media', 'number', mediaSalva, 'step="0.1" onchange="App.salvarMediaConfig(this.value)" title="Esta média decidirá quem fica Aprovado/Recuperação no Boletim!"')}
                 ${col('Valor Máximo (Pts):', 'nota-max', 'number', '10', 'step="0.1"')}
+                ${col('Data da Avaliação:', 'nota-data', 'date', hoje)}
                 <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
             </div>
         `;
@@ -461,7 +506,7 @@ App.renderizarAvaliacoesPro = async () => {
                                 <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.bimestre)}</td>
-                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax)*0.6 ? '#27ae60' : '#c0392b'}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(h.valorMax)}</span></td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax) * percentualAprovacao ? '#27ae60' : '#c0392b'}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(h.valorMax)}</span></td>
                                 <td style="padding:12px; text-align:right;">
                                     <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️</button>
                                     <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;" title="Excluir">🗑️</button>
@@ -472,7 +517,7 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Lançamento de Notas (Híbrido)', 'Gere a pauta para a turma inteira ou para um aluno isolado.', formFiltros, '100%') + 
+        div.innerHTML = App.UI.card('📝 Lançamento de Notas (Híbrido)', 'Gere a pauta para a turma inteira ou para um aluno isolado. A "Média Mínima" alimentará a aprovação no boletim.', formFiltros, '100%') + 
                         `<div id="area-lista-notas" style="margin-top:20px;"></div>` +
                         '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
     } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
@@ -502,7 +547,6 @@ App.carregarListaNotas = async () => {
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
 
-        // 🛡️ FILTRO: Impede inativos de aparecerem na grelha
         alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
 
         if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
@@ -642,7 +686,6 @@ App.renderizarChamadaPro = async () => {
         const [alunos, turmas, chamadas] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/chamadas')]); 
         const historico = Array.isArray(chamadas) ? chamadas.sort((a,b) => new Date(b.data) - new Date(a.data)) : []; 
         
-        // 🛡️ FILTRO: Apenas alunos ativos na caixa de chamada
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
@@ -713,7 +756,6 @@ App.carregarListaChamada = async () => {
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } 
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
 
-        // 🛡️ FILTRO: Impede inativos de aparecerem na grelha de chamada
         alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
 
         if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
