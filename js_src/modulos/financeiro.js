@@ -59,7 +59,7 @@ App.renderizarFinanceiroPro = async () => {
             <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">Gerar e Imprimir Carnê</button>
         `;
 
-        // 🧠 NOVO: Gerar lista de Anos e Meses dinamicamente para os filtros
+        // 🧠 Gerar lista de Anos e Meses dinamicamente para os filtros
         let anosSet = new Set();
         const anoAtual = new Date().getFullYear();
         anosSet.add(anoAtual);
@@ -68,7 +68,7 @@ App.renderizarFinanceiroPro = async () => {
         });
         const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
         
-        // Mantém a opção "Todos" selecionada por padrão
+        const opStatusBusca = '<option value="">Todos os Status</option><option value="Pago">🟢 Pagos</option><option value="Pendente">🟠 Pendentes</option>';
         const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
         const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
@@ -81,16 +81,19 @@ App.renderizarFinanceiroPro = async () => {
                     ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
                 </div>
                 
-                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:500px;">
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
                     <div class="search-wrapper" style="width: 100%; position:relative;">
                         <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
                         <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opStatusBusca}
+                        </select>
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opMesesBusca}
                         </select>
-                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:100px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opAnosBusca}
                         </select>
                     </div>
@@ -178,40 +181,38 @@ App.gerarTabelaFinanceira = (dados) => {
     return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555; min-width:600px;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
 };
 
-// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO DE DADOS E ORDENAÇÃO
+// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO QUÁDRUPLO
 App.filtrarFinanceiro = () => {
     const inputBusca = document.getElementById('fin-busca');
     const selectMes = document.getElementById('fin-filtro-mes');
     const selectAno = document.getElementById('fin-filtro-ano');
+    const selectStatus = document.getElementById('fin-filtro-status');
     
     const termo = inputBusca ? inputBusca.value.toLowerCase() : '';
     const mes = selectMes ? selectMes.value : '';
     const ano = selectAno ? selectAno.value : '';
+    const status = selectStatus ? selectStatus.value : '';
 
     let filtrados = App.financeiroCache.filter(f => {
-        // Verifica o nome do Aluno ou Descrição
         const matchTermo = !termo || 
             (f.alunoNome && f.alunoNome.toLowerCase().includes(termo)) || 
             (f.descricao && f.descricao.toLowerCase().includes(termo));
         
-        // Verifica o Mês e o Ano
         const dataStr = f.vencimento || '';
         const fAno = dataStr.substring(0, 4);
         const fMes = dataStr.substring(5, 7);
 
         const matchAno = !ano || fAno === ano;
         const matchMes = !mes || fMes === mes;
+        const matchStatus = !status || f.status === status;
 
-        // Só exibe se bater com os 3 filtros ao mesmo tempo
-        return matchTermo && matchAno && matchMes;
+        // Cruza os 4 filtros!
+        return matchTermo && matchAno && matchMes && matchStatus;
     });
 
-    // 🚀 ORDENAÇÃO INTELIGENTE (Como você pediu)
-    if (mes || ano) {
-        // Ao selecionar Mês ou Ano: Ordena do Mais Recente para o Mais Antigo (Decrescente)
+    if (mes || ano || status) {
         filtrados.sort((a, b) => new Date(b.vencimento) - new Date(a.vencimento));
     } else {
-        // Sem filtro: Pendentes Primeiro (Visão padrão do dia a dia)
         filtrados.sort((a, b) => { 
             if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
             return a.status === 'Pendente' ? -1 : 1; 
@@ -230,11 +231,9 @@ App.abrirModalBaixa = () => {
     for(const c of checks) {
         const item = App.financeiroCache.find(f => f.id == c.value);
         if(item) {
-            // Multiplica por 100 e arredonda para virar inteiro
             totalCentavos += Math.round(parseFloat(item.valor) * 100);
         }
     }
-    // Converte de volta para decimal apenas para exibir e usar no ecrã
     const total = totalCentavos / 100;
 
     const modal = document.getElementById('modal-overlay');
@@ -297,14 +296,12 @@ App.mudarQtdFormasBaixa = () => {
 App.calcValorBaixa = () => {
     const qtd = document.getElementById('baixa-qtd').value;
     if(qtd === '2') {
-        // 🛡️ CORREÇÃO MATEMÁTICA: Lemos os inputs, convertemos para cêntimos e fazemos a subtração segura
         const totalCentavos = Math.round(parseFloat(document.getElementById('baixa-total').value) * 100);
         const val1Centavos = Math.round(parseFloat(document.getElementById('baixa-valor-1').value) * 100) || 0;
         
         let val2Centavos = totalCentavos - val1Centavos;
-        if(val2Centavos < 0) val2Centavos = 0; // Proteção contra valores negativos
+        if(val2Centavos < 0) val2Centavos = 0; 
         
-        // Devolve o valor formatado para Reais (dividindo por 100)
         document.getElementById('baixa-valor-2').value = (val2Centavos / 100).toFixed(2);
     }
 };
@@ -332,9 +329,7 @@ App.confirmarBaixa = async () => {
         for(const c of checks) {
             const item = App.financeiroCache.find(f => f.id == c.value);
             if(item) {
-                // 🛡️ CORREÇÃO: Evita divisão por zero se a parcela for R$ 0,00
                 const proportion = totalSelected > 0 ? (parseFloat(item.valor) / totalSelected) : 0;
-                
                 const itemV1 = totalSelected > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
                 const itemV2 = (qtd === '2' && totalSelected > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
 
@@ -379,16 +374,13 @@ App.gerarCarnes = async () => {
     try {
         const promessas = [];
         
-        // Guarda a data original para não perder a referência do dia
         const dataBaseOriginal = new Date(dataIni + 'T00:00:00');
         const diaEsperado = dataBaseOriginal.getDate();
 
         for(let i = 1; i <= parc; i++) {
-            // 🛡️ CORREÇÃO: Matemática segura de calendário
             let db = new Date(dataBaseOriginal.getTime());
             db.setMonth(dataBaseOriginal.getMonth() + (i - 1));
             
-            // Trava do "31 de Fevereiro": Se o mês pulou indevidamente, recua para o último dia válido
             if (db.getDate() !== diaEsperado) {
                 db.setDate(0); 
             }
@@ -454,7 +446,7 @@ App.acaoLote = async (acao) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (4 POR PÁGINA + AVISO CENTRAL)
+// 🚀 RENDERIZAÇÃO DO CARNÊ
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
@@ -476,7 +468,6 @@ App.abrirCarneExistente = async (idLote) => {
             const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             const nossoNumero = p.id.slice(-8).toUpperCase();
             
-            // Lógica inteligente do QR Code: Puxar do perfil primeiro
             const qrCodeDisplay = (escola.qrCodeImagem && escola.qrCodeImagem.length > 50 && !escola.qrCodeImagem.includes('placehold'))
                 ? `<img src="${escola.qrCodeImagem}" style="width: 70px; height: 70px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
                 : `<div id="qr-${p.id}" style="width: 70px; height: 70px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
@@ -558,7 +549,7 @@ App.abrirCarneExistente = async (idLote) => {
                         box-shadow: none !important; 
                         margin-bottom: 5mm !important; 
                         height: 65mm !important; 
-                        flex-direction: row !important; /* Trava o horizontal mesmo se estiver no mobile! */
+                        flex-direction: row !important;
                         page-break-inside: avoid !important;
                     }
                     .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
@@ -586,7 +577,6 @@ App.abrirCarneExistente = async (idLote) => {
                 </div>
             </div>`;
 
-        // Geração segura do QR Code (Fallback)
         if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50 || escola.qrCodeImagem.includes('placehold')) {
             parcelas.forEach(p => {
                 const el = document.getElementById(`qr-${p.id}`);
@@ -615,17 +605,15 @@ App.renderizarInadimplencia = async () => {
             App.api('/escola')
         ]);
 
-        // 🛡️ BLINDAGEM 3: Lista de Alunos Ativos para o Relatório
         const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
 
         const hoje = new Date(); 
         const vencidos = financeiro.filter(f => 
             f.status !== 'Pago' && 
             new Date(f.vencimento + 'T00:00:00') < hoje &&
-            alunosAtivosIds.includes(f.idAluno) // <-- A trava contra os fantasmas!
+            alunosAtivosIds.includes(f.idAluno) 
         );
         
-        // 🛡️ CORREÇÃO MATEMÁTICA: Usar variáveis com centavos
         let totalAtrasoCentavos = 0; 
         const devedoresMap = {};
         
@@ -748,18 +736,14 @@ App.abrirEdicaoFinanceiro = async (id) => {
     if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando dados da parcela... ⏳</p>';
 
     try {
-        // 1. Busca a parcela atualizada do banco de dados
         const parcela = await App.api(`/financeiro/${id}`);
         App.parcelaEdicaoAtual = parcela;
 
-        // 2. A Inteligência artificial entra em ação: A conta está paga?
         const isPago = parcela.status === 'Pago';
         
-        // 3. Define os textos e as datas corretas dependendo do status
         const labelData = isPago ? 'Data Efetiva do Pagamento' : 'Nova Data de Vencimento';
         const dataAtual = isPago ? (parcela.dataPagamento || parcela.vencimento) : parcela.vencimento;
         
-        // Caixa de aviso elegante para o utilizador saber o que está a fazer
         const aviso = isPago 
             ? '<div style="background:#e8f4f8; color:#2980b9; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #2980b9;">ℹ️ <b>Parcela Paga:</b> Você está alterando apenas o dia em que o aluno efetuou o pagamento. <b>O vencimento original do carnê ficará intacto.</b></div>'
             : '<div style="background:#fff3e0; color:#d35400; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #d35400;">⚠️ <b>Parcela Pendente:</b> Alterar a data mudará o dia de vencimento no carnê do aluno.</div>';
@@ -797,12 +781,11 @@ App.salvarEdicaoFinanceiro = async () => {
         return App.showToast("Por favor, preencha a data e o valor.", "warning");
     }
 
-    // 🛡️ TRATAMENTO BLINDADO DE MOEDA BRASILEIRA (Aceita 150,00 ou 1.500,00)
     let novoValor = novoValorStr.toString().trim();
     if (novoValor.includes(',') && novoValor.includes('.')) {
-        novoValor = novoValor.replace(/\./g, '').replace(',', '.'); // Remove ponto de milhar, troca vírgula por ponto
+        novoValor = novoValor.replace(/\./g, '').replace(',', '.'); 
     } else if (novoValor.includes(',')) {
-        novoValor = novoValor.replace(',', '.'); // Apenas troca vírgula por ponto
+        novoValor = novoValor.replace(',', '.'); 
     }
     novoValor = parseFloat(novoValor) || 0;
 
@@ -814,32 +797,24 @@ App.salvarEdicaoFinanceiro = async () => {
     try {
         const isPago = App.parcelaEdicaoAtual.status === 'Pago';
         
-        // Junta os dados antigos com o novo valor base que acabámos de digitar
         const parcelaAtualizada = {
             ...App.parcelaEdicaoAtual,
             valor: novoValor
         };
 
-        // 🧠 AUDITORIA DE CAIXA: Sobrescreve o Recibo real da baixa!
         if (isPago) {
-            // Se já foi pago, atualiza a data de pagamento
             parcelaAtualizada.dataPagamento = novaData;
-            
-            // O SEGREDO PARA OS RELATÓRIOS: Sobrescreve o dinheiro recebido!
             parcelaAtualizada.valorPago1 = novoValor;
-            parcelaAtualizada.valorPago2 = 0; // Zera para evitar cêntimos fantasmas de baixas anteriores
+            parcelaAtualizada.valorPago2 = 0; 
         } else {
-            // Se está pendente, atualizamos o vencimento normal do carnê
             parcelaAtualizada.vencimento = novaData;
         }
 
-        // Envia a instrução correta para o Back-end
         await App.api(`/financeiro/${App.idEdicaoFinanceiro}`, 'PUT', parcelaAtualizada);
         
         App.showToast("Alteração financeira guardada com sucesso! 💼", "success");
         App.fecharModal();
         
-        // Recarrega o ecrã para mostrar as novidades imediatamente
         if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
             App.renderizarFinanceiroPro();
         } else if (typeof App.filtrarTabelaReativa === 'function') {
@@ -867,14 +842,12 @@ App.renderizarHistoricoFinanceiro = async () => {
     try {
         const [financeiro, alunos] = await Promise.all([App.api('/financeiro'), App.api('/alunos')]);
         
-        // 🛡️ BLINDAGEM FINANCEIRA: Ocultar pendentes de alunos inativos
         const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
         const financeiroLimpo = financeiro.filter(f => {
             if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) return false;
             return true; 
         });
 
-        // Ordem padrão: Pendentes primeiro (igual ao painel principal)
         App.financeiroCache = financeiroLimpo.sort((a,b) => { 
             if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
             return a.status === 'Pendente' ? -1 : 1; 
@@ -882,7 +855,6 @@ App.renderizarHistoricoFinanceiro = async () => {
         
         const botao = App.UI.botao;
 
-        // 🧠 CRIAR LISTA DE FILTROS DINAMICAMENTE
         let anosSet = new Set();
         const anoAtual = new Date().getFullYear();
         anosSet.add(anoAtual);
@@ -927,7 +899,6 @@ App.renderizarHistoricoFinanceiro = async () => {
             </div>
         `;
 
-        // 🧹 Visual limpo, focando diretamente no cartão de pesquisa e lista
         div.innerHTML = `
             <div style="margin-top: 20px;">
                 ${App.UI.card('', '', barraFerramentas)}
@@ -937,7 +908,6 @@ App.renderizarHistoricoFinanceiro = async () => {
 };
 
 // 🔗 INTERCEPTADOR (HOOK)
-// Se o menu do sistema tentar abrir a lista antiga de 'financeiro', nós injetamos esta nova tela!
 if (typeof App.renderizarLista === 'function') {
     const _renderizarListaOriginal = App.renderizarLista;
     App.renderizarLista = (colecao) => {
