@@ -825,3 +825,97 @@ App.salvarEdicaoFinanceiro = async () => {
         document.body.style.cursor = 'default';
     }
 };
+
+// =======================================================================
+// 🗂️ TELA EXCLUSIVA DE HISTÓRICO DE LANÇAMENTOS (COM FILTROS AVANÇADOS)
+// =======================================================================
+
+App.renderizarHistoricoFinanceiro = async () => {
+    App.setTitulo("Histórico de Lançamentos");
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Carregando histórico financeiro... ⏳</p>';
+    
+    try {
+        const [financeiro, alunos] = await Promise.all([App.api('/financeiro'), App.api('/alunos')]);
+        
+        // 🛡️ BLINDAGEM FINANCEIRA: Ocultar pendentes de alunos inativos
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+        const financeiroLimpo = financeiro.filter(f => {
+            if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) return false;
+            return true; 
+        });
+
+        // Ordem padrão: Pendentes primeiro (igual ao painel principal)
+        App.financeiroCache = financeiroLimpo.sort((a,b) => { 
+            if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
+            return a.status === 'Pendente' ? -1 : 1; 
+        });
+        
+        const botao = App.UI.botao;
+
+        // 🧠 CRIAR LISTA DE FILTROS DINAMICAMENTE
+        let anosSet = new Set();
+        const anoAtual = new Date().getFullYear();
+        anosSet.add(anoAtual);
+        financeiroLimpo.forEach(f => {
+            if (f.vencimento) anosSet.add(parseInt(f.vencimento.split('-')[0]));
+        });
+        const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
+        
+        const opStatusBusca = '<option value="">Todos os Status</option><option value="Pago">🟢 Pagos</option><option value="Pendente">🟠 Pendentes</option>';
+        const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
+        const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
+
+        const barraFerramentas = `
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
+                    <div class="search-wrapper" style="width: 100%; position:relative;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opStatusBusca}
+                        </select>
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opMesesBusca}
+                        </select>
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:100px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opAnosBusca}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
+                ${App.gerarTabelaFinanceira(App.financeiroCache)}
+            </div>
+        `;
+
+        div.innerHTML = `
+            <h3 style="color:#2c3e50; margin-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                🗂️ Histórico Geral de Lançamentos
+            </h3>
+            <p style="color:#666; margin-top:0; margin-bottom:20px; font-size:14px;">Utilize os filtros abaixo para auditar todas as contas recebidas ou pendentes no sistema.</p>
+            ${App.UI.card('', '', barraFerramentas)}
+        `;
+    } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
+};
+
+// 🔗 INTERCEPTADOR (HOOK)
+// Se o menu do sistema tentar abrir a lista antiga de 'financeiro', nós injetamos esta nova tela!
+if (typeof App.renderizarLista === 'function') {
+    const _renderizarListaOriginal = App.renderizarLista;
+    App.renderizarLista = (colecao) => {
+        if (colecao === 'financeiro') {
+            return App.renderizarHistoricoFinanceiro();
+        }
+        return _renderizarListaOriginal(colecao);
+    };
+}
