@@ -44,53 +44,47 @@ const relSelect = (label, id, options, extra='') => `
 
     </div>`;
 
-
-
 // --- ESTILOS COMUNS PARA IMPRESSÃO E MOBILE ---
-
 const reportStyles = `
-
     <style>
-
         .print-sheet { background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; }
-
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
-
         .kpi-container { display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
-
         .kpi-box { flex: 1; min-width: 120px; padding: 15px; border-radius: 8px; text-align: center; }
-
+        
         @media (max-width: 768px) {
-
             .print-sheet { padding: 15px !important; margin: 0 !important; width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
-
             .doc-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
-
             .doc-header > div { text-align: left !important; width: 100% !important; }
-
             .kpi-container { flex-direction: column; }
-
             .kpi-box { width: 100% !important; margin-bottom: 10px; }
-
         }
-
+        
         @media print {
-
             .no-print { display: none !important; }
-
             body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
-
             .print-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; }
-
             .table-responsive { overflow-x: visible !important; }
-
+            
+            /* 🖨️ NOVAS REGRAS DE IMPRESSÃO INTELIGENTE */
+            /* 1. Impede o rodapé (Total) de se repetir em todas as folhas */
+            tfoot { display: table-row-group !important; }
+            
+            /* 2. Força as caixas de resumo a ficarem lado a lado e reduz o espaço vertical */
+            .kpi-container { 
+                flex-direction: row !important; 
+                flex-wrap: nowrap !important; 
+                gap: 10px !important; 
+                margin-bottom: 15px !important; 
+            }
+            .kpi-box { 
+                padding: 10px !important; 
+                min-width: auto !important; 
+                border: 1px solid #ccc !important; /* Adiciona uma borda leve na impressão */
+            }
         }
-
     </style>
-
 `;
-
-
 
 // ---------------------------------------------------------
 
