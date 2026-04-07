@@ -446,7 +446,7 @@ App.acaoLote = async (acao) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (COM ALTURA AJUSTADA PARA A4)
+// 🚀 RENDERIZAÇÃO DO CARNÊ
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
@@ -473,23 +473,23 @@ App.abrirCarneExistente = async (idLote) => {
                 : `<div id="qr-${p.id}" style="width: 70px; height: 70px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
 
             return `
-            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 5mm; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; height: 60mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
+            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 5mm; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; height: 65mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
                 
-                <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 8px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
-                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px; text-align: center;">
+                <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 10px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px; text-align: center;">
                         ${logo}
                         <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${App.escapeHTML(nomeEscolaResumo)}</div>
                     </div>
-                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
-                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
-                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Valor:</b> R$ ${valorF}</div>
-                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Nº Doc:</b> ${nossoNumero}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="font-size: 10px; margin-bottom: 4px;"><b>Nº Doc:</b> ${nossoNumero}</div>
                     <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${App.escapeHTML(primeiroNomeAluno)}</div>
                 </div>
                 
-                <div class="carne-recibo" style="width: 72%; padding: 8px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
+                <div class="carne-recibo" style="width: 72%; padding: 10px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
                     
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 6px; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 8px; align-items: center;">
                         <div style="display: flex; align-items: center;">
                             ${logo} 
                             <div>
@@ -502,13 +502,13 @@ App.abrirCarneExistente = async (idLote) => {
                         </div>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; background: #fdfdfd; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; background: #fdfdfd; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px;">
                         <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 12px;">${nossoNumero}</div></div>
                         <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 12px; color: #c0392b;">${dataVenc}</div></div>
                         <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
                     </div>
 
-                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 6px; text-align: center;">
+                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; text-align: center;">
                         <span style="font-size: 9px; font-weight: bold; color: #d35400;">⚠️ Informação Importante:</span> 
                         <span style="font-size: 9px; color: #555;">Evite a perda de descontos e benefícios. Após o vencimento, o valor da mensalidade será atualizado.</span>
                     </div>
@@ -542,13 +542,13 @@ App.abrirCarneExistente = async (idLote) => {
                     .print-bg { background: transparent !important; padding: 0 !important; }
                     .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
                     
-                    /* 🖨️ MATEMÁTICA DA IMPRESSÃO: 4 POR PÁGINA A4 COM MARGENS AJUSTADAS */
+                    /* 🖨️ MATEMÁTICA DA IMPRESSÃO: 4 POR PÁGINA A4 */
                     @page { size: A4 portrait; margin: 10mm; }
                     .carne-wrapper { 
                         border: 1px solid #000 !important; 
                         box-shadow: none !important; 
                         margin-bottom: 5mm !important; 
-                        height: 60mm !important; 
+                        height: 65mm !important; 
                         flex-direction: row !important;
                         page-break-inside: avoid !important;
                     }
@@ -566,7 +566,7 @@ App.abrirCarneExistente = async (idLote) => {
             
             <div class="no-print" style="text-align:center; padding:20px; background:#fff; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <h2 style="margin-top:0; color:#2c3e50;">Carnê Gerado com Sucesso! 🎉</h2>
-                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">O layout de impressão foi ajustado para caber 4 carnês por página perfeitamente sem cortes.</p>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">O layout de impressão foi travado para emitir 4 carnês por página perfeitamente.</p>
                 <button onclick="window.print()" class="btn-primary" style="padding:12px 25px; font-size:16px; width:auto;">🖨️ IMPRIMIR CARNÊ</button>
                 <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px; padding:12px 25px; width:auto;">VOLTAR</button>
             </div>
