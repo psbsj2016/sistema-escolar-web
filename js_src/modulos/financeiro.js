@@ -12,19 +12,15 @@ App.renderizarFinanceiroPro = async () => {
         const [turmas, financeiro, alunos] = await Promise.all([App.api('/turmas'), App.api('/financeiro'), App.api('/alunos')]);
         
         // 🛡️ BLINDAGEM FINANCEIRA: 
-        // 1. Criamos a lista dos alunos que estão ativos
         const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
 
-        // 2. Filtramos as finanças: Escondemos as contas Pendentes de alunos inativos
         const financeiroLimpo = financeiro.filter(f => {
-            // Se estiver pendente, mas o aluno não estiver na lista de ativos, removemos da vista!
             if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) {
                 return false;
             }
-            return true; // Mantém os Pagos (para histórico) e os pendentes dos ativos
+            return true; 
         });
 
-        // 3. Ordenamos a lista limpa
         App.financeiroCache = financeiroLimpo.sort((a,b) => { 
             if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
             return a.status === 'Pendente' ? -1 : 1; 
@@ -63,16 +59,41 @@ App.renderizarFinanceiroPro = async () => {
             <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">Gerar e Imprimir Carnê</button>
         `;
 
+        // 🧠 NOVO: Gerar lista de Anos e Meses dinamicamente para os filtros
+        let anosSet = new Set();
+        const anoAtual = new Date().getFullYear();
+        anosSet.add(anoAtual);
+        financeiroLimpo.forEach(f => {
+            if (f.vencimento) anosSet.add(parseInt(f.vencimento.split('-')[0]));
+        });
+        const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
+        
+        // Mantém a opção "Todos" selecionada por padrão
+        const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
+        const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
+
         const barraFerramentas = `
-            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
                     ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
                     ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
                     ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
                 </div>
-                <div class="search-wrapper" style="width: 300px; position:relative;">
-                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
-                    <input type="text" id="fin-busca" placeholder="Pesquisar lançamentos..." oninput="App.filtrarFinanceiro(this.value)" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:500px;">
+                    <div class="search-wrapper" style="width: 100%; position:relative;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opMesesBusca}
+                        </select>
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opAnosBusca}
+                        </select>
+                    </div>
                 </div>
             </div>
             <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
@@ -93,6 +114,7 @@ App.renderizarFinanceiroPro = async () => {
 };
 
 App.gerarTabelaFinanceira = (dados) => {
+    // A função de Gerar a Tabela mantém-se IGUAL à que você já tem no código
     if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
     
     const th = (texto, align='center') => `<th style="padding:12px; text-align:${align}; border-bottom:2px solid #eee;">${texto}</th>`;
@@ -127,9 +149,46 @@ App.gerarTabelaFinanceira = (dados) => {
     return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555; min-width:600px;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
 };
 
-App.filtrarFinanceiro = (termo) => {
-    const t = termo.toLowerCase();
-    const filtrados = App.financeiroCache.filter(f => (f.alunoNome && f.alunoNome.toLowerCase().includes(t)) || (f.descricao && f.descricao.toLowerCase().includes(t)) || f.vencimento.includes(t));
+// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO DE DADOS E ORDENAÇÃO
+App.filtrarFinanceiro = () => {
+    const inputBusca = document.getElementById('fin-busca');
+    const selectMes = document.getElementById('fin-filtro-mes');
+    const selectAno = document.getElementById('fin-filtro-ano');
+    
+    const termo = inputBusca ? inputBusca.value.toLowerCase() : '';
+    const mes = selectMes ? selectMes.value : '';
+    const ano = selectAno ? selectAno.value : '';
+
+    let filtrados = App.financeiroCache.filter(f => {
+        // Verifica o nome do Aluno ou Descrição
+        const matchTermo = !termo || 
+            (f.alunoNome && f.alunoNome.toLowerCase().includes(termo)) || 
+            (f.descricao && f.descricao.toLowerCase().includes(termo));
+        
+        // Verifica o Mês e o Ano
+        const dataStr = f.vencimento || '';
+        const fAno = dataStr.substring(0, 4);
+        const fMes = dataStr.substring(5, 7);
+
+        const matchAno = !ano || fAno === ano;
+        const matchMes = !mes || fMes === mes;
+
+        // Só exibe se bater com os 3 filtros ao mesmo tempo
+        return matchTermo && matchAno && matchMes;
+    });
+
+    // 🚀 ORDENAÇÃO INTELIGENTE (Como você pediu)
+    if (mes || ano) {
+        // Ao selecionar Mês ou Ano: Ordena do Mais Recente para o Mais Antigo (Decrescente)
+        filtrados.sort((a, b) => new Date(b.vencimento) - new Date(a.vencimento));
+    } else {
+        // Sem filtro: Pendentes Primeiro (Visão padrão do dia a dia)
+        filtrados.sort((a, b) => { 
+            if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
+            return a.status === 'Pendente' ? -1 : 1; 
+        });
+    }
+
     document.getElementById('fin-lista-area').innerHTML = App.gerarTabelaFinanceira(filtrados);
 };
 
