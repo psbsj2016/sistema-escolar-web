@@ -114,7 +114,6 @@ App.renderizarFinanceiroPro = async () => {
 };
 
 App.gerarTabelaFinanceira = (dados) => {
-    // A função de Gerar a Tabela mantém-se IGUAL à que você já tem no código
     if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
     
     const th = (texto, align='center') => `<th style="padding:12px; text-align:${align}; border-bottom:2px solid #eee;">${texto}</th>`;
@@ -123,25 +122,55 @@ App.gerarTabelaFinanceira = (dados) => {
         ${th('Aluno', 'left')}${th('Parcela')}${th('Vencimento')}${th('Valor')}${th('Status')}${th('Ações')}
     </tr>`;
 
+    // 🧠 Inteligência de Datas (Para pintar os atrasados)
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
     const corpo = dados.map(p => { 
         const isPago = p.status === 'Pago'; 
-        const color = isPago ? '#1e8449' : (p.status === 'Pendente' ? '#f39c12' : '#e74c3c'); 
-        const bgRow = isPago ? 'background-color:#eafaf1;' : '';
-        const statusBadge = `<span style="background:${isPago?'#d4efdf':'#fdf2f2'}; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span>`;
+        const isPendente = p.status === 'Pendente';
+        const dataVencimento = new Date(p.vencimento + 'T00:00:00');
+        
+        // Verifica se a parcela está pendente E o vencimento já passou
+        const isAtrasado = isPendente && dataVencimento < hoje;
+
+        // Regras de Cores do Status
+        let color = isPago ? '#1e8449' : (isPendente ? '#f39c12' : '#e74c3c'); 
+        if (isAtrasado) color = '#c0392b'; // Vermelho mais forte se atrasar
+
+        // 🎨 GESTÃO À VISTA: Regras de fundo da linha
+        let bgRow = '';
+        if (isPago) {
+            bgRow = 'background-color:#eafaf1;'; // Verde claro para Pagos
+        } else if (isAtrasado) {
+            bgRow = 'background-color:#fdf2f2;'; // Vermelho claro para Atrasados
+        }
+
+        const textoStatus = isAtrasado ? 'Atrasado' : p.status;
+        const bgBadge = isPago ? '#d4efdf' : (isAtrasado ? '#fadbd8' : '#fcf3cf');
+        const statusBadge = `<span style="background:${bgBadge}; padding:4px 8px; border-radius:4px; font-size:12px;">${textoStatus}</span>`;
+        
         const parcelaStr = p.descricao.includes('/') ? p.descricao.split(' ').pop() : '-';
         const vencStr = p.vencimento.split('-').reverse().join('/');
+        const valorFormatado = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2});
         
+        // 💬 Botão do WhatsApp (Só aparece se a conta NÃO estiver paga)
+        const btnWhatsApp = !isPago 
+            ? `<button onclick="App.cobrarWhatsApp('${p.idAluno}', '${valorFormatado}')" style="background:#27ae60; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Cobrar no WhatsApp">💬</button>` 
+            : '';
+
         return `
         <tr style="border-bottom:1px solid #eee; ${bgRow} transition:background 0.2s;">
             <td style="padding:12px; text-align:center;"><input type="checkbox" class="fin-check" value="${p.id}"></td>
             <td style="padding:12px; font-weight:bold;">${App.escapeHTML(p.alunoNome)}</td>
             <td style="padding:12px; text-align:center;">${App.escapeHTML(parcelaStr)}</td>
-            <td style="padding:12px; text-align:center;">${vencStr}</td>
-            <td style="padding:12px; text-align:center;">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+            <td style="padding:12px; text-align:center; ${isAtrasado ? 'color:#c0392b; font-weight:bold;' : ''}">${vencStr}</td>
+            <td style="padding:12px; text-align:center;">R$ ${valorFormatado}</td>
             <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
             <td style="padding:12px; text-align:center; white-space:nowrap;">
                 <button onclick="App.abrirCarneExistente('${p.idCarne}')" style="background:#3498db; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Ver Carnê">📄</button>
                 <button onclick="App.abrirEdicaoFinanceiro('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
+                ${btnWhatsApp}
             </td>
         </tr>`; 
     }).join('');
@@ -898,12 +927,11 @@ App.renderizarHistoricoFinanceiro = async () => {
             </div>
         `;
 
+        // 🧹 Visual limpo, focando diretamente no cartão de pesquisa e lista
         div.innerHTML = `
-            <h3 style="color:#2c3e50; margin-bottom: 15px; display:flex; align-items:center; gap:10px;">
-                🗂️ Histórico Geral de Lançamentos
-            </h3>
-            <p style="color:#666; margin-top:0; margin-bottom:20px; font-size:14px;">Utilize os filtros abaixo para auditar todas as contas recebidas ou pendentes no sistema.</p>
-            ${App.UI.card('', '', barraFerramentas)}
+            <div style="margin-top: 20px;">
+                ${App.UI.card('', '', barraFerramentas)}
+            </div>
         `;
     } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
 };
