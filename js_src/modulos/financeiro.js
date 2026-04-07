@@ -917,3 +917,67 @@ if (typeof App.renderizarLista === 'function') {
         return _renderizarListaOriginal(colecao);
     };
 }
+
+// =======================================================================
+// 💬 INTEGRAÇÃO DE COBRANÇA PROFISSIONAL VIA WHATSAPP
+// =======================================================================
+
+App.cobrarWhatsApp = async (idAluno, valorPendente) => {
+    try {
+        App.showToast("A preparar mensagem...", "info");
+
+        // 1. Buscar os dados atualizados do aluno e da instituição
+        const [alunos, escola] = await Promise.all([
+            App.api('/alunos'), 
+            App.api('/escola')
+        ]);
+
+        const aluno = alunos.find(a => a.id === idAluno);
+        if (!aluno) return App.showToast("Erro: Aluno não encontrado.", "error");
+        if (!aluno.telefone) return App.showToast("O aluno não tem número de WhatsApp registado.", "warning");
+
+        // 2. Limpar e formatar o número de telefone (remover espaços, traços, etc.)
+        let telefone = aluno.telefone.replace(/\D/g, '');
+        
+        // Se o número for do Brasil e não tiver o DDI (55), o sistema adiciona automaticamente
+        if (telefone.length === 10 || telefone.length === 11) {
+            telefone = '55' + telefone;
+        }
+
+        // 3. Organizar as variáveis para o texto
+        const primeiroNome = aluno.nome.split(' ')[0]; // Pega só o primeiro nome para ser mais pessoal
+        const nomeEscola = escola.nome || 'Nossa Instituição';
+        const cnpjEscola = escola.cnpj || 'Não informado';
+        const bancoEscola = escola.banco || 'Não informado';
+        const pixEscola = escola.chavePix || 'Não informada';
+
+        // 4. Montar a mensagem de "Lembrete" (Formatada com Negritos e Itálicos)
+        const mensagem = 
+`Olá, *${primeiroNome}*! Tudo bem? ✨
+
+Passando apenas para deixar um lembrete sobre a sua mensalidade no valor de *R$ ${valorPendente}*, que se encontra em aberto no nosso sistema.
+
+Para sua maior comodidade, deixamos abaixo os nossos dados para pagamento via PIX:
+
+🏦 *Dados da Instituição:*
+*Instituição:* _${nomeEscola}_
+*CNPJ:* _${cnpjEscola}_
+*Banco:* _${bancoEscola}_
+
+🔑 *Chave PIX:* *${pixEscola}*
+
+_Caso o pagamento já tenha sido realizado, por favor, desconsidere esta mensagem._ 🙏
+
+Qualquer dúvida, estamos à inteira disposição. Tenha um excelente dia! 🌟`;
+
+        // 5. Transformar o texto num link válido para a internet e abrir o WhatsApp
+        const textoCodificado = encodeURIComponent(mensagem);
+        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefone}&text=${textoCodificado}`;
+        
+        window.open(urlWhatsApp, '_blank'); // Abre em nova aba (ou App do celular)
+
+    } catch (error) {
+        console.error("Erro ao gerar link do WhatsApp:", error);
+        App.showToast("Erro ao processar a mensagem.", "error");
+    }
+};
