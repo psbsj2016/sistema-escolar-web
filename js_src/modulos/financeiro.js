@@ -41,10 +41,11 @@ App.renderizarFinanceiroPro = async () => {
 
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
         const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        
         const formGerador = `
             <div style="display:flex; align-items:center; margin-bottom:20px;">
                 <div style="font-size:24px; margin-right:10px;">💰</div>
-                <div><h3 style="margin:0; color:#2c3e50;">Gerar Mensalidades</h3><p style="margin:0; color:#666; font-size:14px;">Preencha para gerar carnê.</p></div>
+                <div><h3 style="margin:0; color:#2c3e50;">Controle de Mensalidades</h3><p style="margin:0; color:#666; font-size:14px;">Preencha para gerar carnê.</p></div>
             </div>
             <div style="display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap;">
                 <div style="flex:2; min-width:250px;">
@@ -59,7 +60,7 @@ App.renderizarFinanceiroPro = async () => {
             <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">Gerar e Imprimir Carnê</button>
         `;
 
-        // 🧠 NOVO: Gerar lista de Anos e Meses dinamicamente para os filtros
+        // 🧠 CRIAR LISTA DE FILTROS DINAMICAMENTE
         let anosSet = new Set();
         const anoAtual = new Date().getFullYear();
         anosSet.add(anoAtual);
@@ -68,7 +69,7 @@ App.renderizarFinanceiroPro = async () => {
         });
         const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
         
-        // Mantém a opção "Todos" selecionada por padrão
+        const opStatusBusca = '<option value="">Todos os Status</option><option value="Pago">🟢 Pagos</option><option value="Pendente">🟠 Pendentes</option>';
         const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
         const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
@@ -81,16 +82,19 @@ App.renderizarFinanceiroPro = async () => {
                     ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
                 </div>
                 
-                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:500px;">
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
                     <div class="search-wrapper" style="width: 100%; position:relative;">
                         <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
                         <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opStatusBusca}
+                        </select>
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opMesesBusca}
                         </select>
-                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:100px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opAnosBusca}
                         </select>
                     </div>
@@ -101,71 +105,46 @@ App.renderizarFinanceiroPro = async () => {
             </div>
         `;
 
+        // 🔄 ORDEM DO ECRÃ REORGANIZADA DE ACORDO COM O SEU PEDIDO
         div.innerHTML = `
-            <div style="margin-bottom:20px; text-align:right;">
-                <button onclick="App.renderizarTela('inadimplencia')" style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(192, 57, 43, 0.3);">📉 RELATÓRIO DE INADIMPLÊNCIA</button>
-            </div>
             <div class="card" style="border-left:5px solid #2980b9; padding:25px; margin-bottom:30px;">
                 ${formGerador}
             </div>
+            
+            <h3 style="color:#2c3e50; margin-bottom: 15px; display:flex; align-items:center; gap:10px;">
+                🔍 Consultar Lançamentos
+            </h3>
             ${App.UI.card('', '', barraFerramentas)}
+            
+            <div style="margin-top:30px; text-align:center;">
+                <button onclick="App.renderizarTela('inadimplencia')" style="width:100%; max-width:400px; background:#c0392b; color:white; border:none; padding:15px 20px; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(192, 57, 43, 0.3); font-size:16px;">
+                    📉 ABRIR RELATÓRIO DE INADIMPLÊNCIA
+                </button>
+            </div>
         `;
     } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
 };
 
-App.gerarTabelaFinanceira = (dados) => {
-    // A função de Gerar a Tabela mantém-se IGUAL à que você já tem no código
-    if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
-    
-    const th = (texto, align='center') => `<th style="padding:12px; text-align:${align}; border-bottom:2px solid #eee;">${texto}</th>`;
-    const cabecalho = `<tr style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase; font-size:12px;">
-        <th style="padding:12px; width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheck(this)"></th>
-        ${th('Aluno', 'left')}${th('Parcela')}${th('Vencimento')}${th('Valor')}${th('Status')}${th('Ações')}
-    </tr>`;
 
-    const corpo = dados.map(p => { 
-        const isPago = p.status === 'Pago'; 
-        const color = isPago ? '#1e8449' : (p.status === 'Pendente' ? '#f39c12' : '#e74c3c'); 
-        const bgRow = isPago ? 'background-color:#eafaf1;' : '';
-        const statusBadge = `<span style="background:${isPago?'#d4efdf':'#fdf2f2'}; padding:4px 8px; border-radius:4px; font-size:12px;">${p.status}</span>`;
-        const parcelaStr = p.descricao.includes('/') ? p.descricao.split(' ').pop() : '-';
-        const vencStr = p.vencimento.split('-').reverse().join('/');
-        
-        return `
-        <tr style="border-bottom:1px solid #eee; ${bgRow} transition:background 0.2s;">
-            <td style="padding:12px; text-align:center;"><input type="checkbox" class="fin-check" value="${p.id}"></td>
-            <td style="padding:12px; font-weight:bold;">${App.escapeHTML(p.alunoNome)}</td>
-            <td style="padding:12px; text-align:center;">${App.escapeHTML(parcelaStr)}</td>
-            <td style="padding:12px; text-align:center;">${vencStr}</td>
-            <td style="padding:12px; text-align:center;">R$ ${parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
-            <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
-            <td style="padding:12px; text-align:center; white-space:nowrap;">
-                <button onclick="App.abrirCarneExistente('${p.idCarne}')" style="background:#3498db; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Ver Carnê">📄</button>
-                <button onclick="App.abrirEdicaoFinanceiro('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
-            </td>
-        </tr>`; 
-    }).join('');
-
-    return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555; min-width:600px;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
-};
-
-// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO DE DADOS E ORDENAÇÃO
+// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO QUÁDRUPLO E ORDENAÇÃO
 App.filtrarFinanceiro = () => {
     const inputBusca = document.getElementById('fin-busca');
     const selectMes = document.getElementById('fin-filtro-mes');
     const selectAno = document.getElementById('fin-filtro-ano');
+    const selectStatus = document.getElementById('fin-filtro-status');
     
     const termo = inputBusca ? inputBusca.value.toLowerCase() : '';
     const mes = selectMes ? selectMes.value : '';
     const ano = selectAno ? selectAno.value : '';
+    const status = selectStatus ? selectStatus.value : '';
 
     let filtrados = App.financeiroCache.filter(f => {
-        // Verifica o nome do Aluno ou Descrição
+        // 1. Verifica o Nome ou Descrição
         const matchTermo = !termo || 
             (f.alunoNome && f.alunoNome.toLowerCase().includes(termo)) || 
             (f.descricao && f.descricao.toLowerCase().includes(termo));
         
-        // Verifica o Mês e o Ano
+        // 2. Verifica a Data (Mês e Ano)
         const dataStr = f.vencimento || '';
         const fAno = dataStr.substring(0, 4);
         const fMes = dataStr.substring(5, 7);
@@ -173,16 +152,19 @@ App.filtrarFinanceiro = () => {
         const matchAno = !ano || fAno === ano;
         const matchMes = !mes || fMes === mes;
 
-        // Só exibe se bater com os 3 filtros ao mesmo tempo
-        return matchTermo && matchAno && matchMes;
+        // 3. Verifica o Status
+        const matchStatus = !status || f.status === status;
+
+        // Só exibe se bater com todos os 4 filtros ativos ao mesmo tempo
+        return matchTermo && matchAno && matchMes && matchStatus;
     });
 
-    // 🚀 ORDENAÇÃO INTELIGENTE (Como você pediu)
-    if (mes || ano) {
-        // Ao selecionar Mês ou Ano: Ordena do Mais Recente para o Mais Antigo (Decrescente)
+    // 🚀 ORDENAÇÃO INTELIGENTE DA TABELA
+    if (mes || ano || status) {
+        // Se usar qualquer filtro de auditoria: Ordena do mais recente para o mais antigo (Decrescente)
         filtrados.sort((a, b) => new Date(b.vencimento) - new Date(a.vencimento));
     } else {
-        // Sem filtro: Pendentes Primeiro (Visão padrão do dia a dia)
+        // Sem filtro: Pendentes Primeiro (Visão natural de cobrança diária)
         filtrados.sort((a, b) => { 
             if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
             return a.status === 'Pendente' ? -1 : 1; 
