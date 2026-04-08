@@ -16,6 +16,18 @@ const selectLocal = (label, id, options, extra='') => `
         <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>${options}</select>
     </div>`;
 
+// --- FUNÇÃO GERAL DE FILTRO PARA TABELAS ---
+App.filtrarTabela = (inputId, tabelaId) => {
+    const termo = document.getElementById(inputId).value.trim().toLowerCase();
+    const linhas = document.querySelectorAll(`#${tabelaId} tbody tr`);
+    if (!linhas || linhas.length === 0) return;
+    linhas.forEach(linha => {
+        if (linha.innerText.includes('Nenhum') || linha.innerText.includes('Nenhuma')) return;
+        const textoLinha = linha.innerText.toLowerCase(); 
+        linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+    });
+};
+
 // ---------------------------------------------------------
 // 1. PLANEAMENTO (COM FOLHA A4 BLINDADA E ARQUIVAMENTO)
 // ---------------------------------------------------------
@@ -97,10 +109,10 @@ App.renderizarPlanejamentosSalvos = async () => {
             return; 
         }
         
-        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
         const corpo = planosAtivos.map(p => `
             <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
                 <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center;">${p.aulas ? p.aulas.length : 0}</td>
                 <td style="padding:10px; text-align:right;">
@@ -110,13 +122,24 @@ App.renderizarPlanejamentosSalvos = async () => {
                 </td>
             </tr>`).join('');
 
+        const buscaHtml = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-plan-ativos" 
+                       placeholder="Pesquisar planeamento ativo pelo nome do aluno ou curso..." 
+                       oninput="App.filtrarTabela('input-busca-plan-ativos', 'tabela-plan-ativos')" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+        `;
+
         div.innerHTML = App.UI.card('', '', `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0; color:#27ae60;">Planeamentos Ativos</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
+            ${buscaHtml}
             <div class="table-responsive-wrapper">
-                <table style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+                <table id="tabela-plan-ativos" style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
             </div>
         `);
     } catch(e) { div.innerHTML = "Erro."; }
@@ -135,10 +158,10 @@ App.renderizarPlanejamentosArquivados = async () => {
             return; 
         }
         
-        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
         const corpo = planosArquivados.map(p => `
             <tr style="border-bottom:1px solid #ddd; background:#f9f9f9;">
-                <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px; color:#7f8c8d; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
                 <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center; color:#7f8c8d;">${p.aulas ? p.aulas.length : 0}</td>
                 <td style="padding:10px; text-align:right;">
@@ -147,14 +170,25 @@ App.renderizarPlanejamentosArquivados = async () => {
                 </td>
             </tr>`).join('');
 
+        const buscaHtml = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-plan-arquivados" 
+                       placeholder="Pesquisar arquivo morto..." 
+                       oninput="App.filtrarTabela('input-busca-plan-arquivados', 'tabela-plan-arquivados')" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+        `;
+
         div.innerHTML = App.UI.card('', '', `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="margin:0; color:#8e44ad;">🗄️ Planeamentos Arquivados</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
             <p style="color:#666; font-size:13px; margin-bottom:20px;">Estes planeamentos foram finalizados/arquivados. Não são contabilizados no boletim nem no auto-ajuste de presenças.</p>
+            ${buscaHtml}
             <div class="table-responsive-wrapper">
-                <table style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+                <table id="tabela-plan-arquivados" style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
             </div>
         `);
     } catch(e) { div.innerHTML = "Erro ao ler arquivados."; }
@@ -190,9 +224,18 @@ App.abrirPlanejamentoEditavel = async (id) => { try { const plano = await App.ap
 
 App.renderizarTelaEdicao = (plano) => {
     App.planoAtual = plano; const div = document.getElementById('app-content');
+    
+    // 🧠 CÁLCULO PRECISO DE HORAS (Soma de minutos adaptável)
     let totalMinutos = 0;
-    plano.aulas.forEach(aula => { const [h, m] = aula.duracao.split(':').map(Number); totalMinutos += (h * 60) + m; });
-    const totalHoras = (totalMinutos / 60).toFixed(0);
+    plano.aulas.forEach(aula => { 
+        if(aula.duracao && aula.duracao.includes(':')) {
+            const [h, m] = aula.duracao.split(':').map(Number); 
+            totalMinutos += (h * 60) + (m || 0); 
+        }
+    });
+    const horasInt = Math.floor(totalMinutos / 60);
+    const minutosRest = totalMinutos % 60;
+    const totalHorasText = minutosRest > 0 ? `${horasInt}h ${minutosRest}m` : `${horasInt}H`;
     
     const escola = JSON.parse(localStorage.getItem(App.getTenantKey ? App.getTenantKey('escola_perfil') : 'escola_perfil')) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
@@ -200,7 +243,7 @@ App.renderizarTelaEdicao = (plano) => {
     div.innerHTML = `
         <div class="no-print" style="margin-bottom:20px; background:#f4f4f4; padding:15px; border-radius:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
             <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
-            <button id="btn-sync-plan" onclick="App.sincronizarPlanejamentoComChamadasUI()" style="background:#8e44ad; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(142,68,173,0.3);" title="Ajusta as datas de acordo com as presenças lançadas">🤖 AUTO-AJUSTAR</button>
+            <button id="btn-sync-plan" onclick="App.sincronizarPlanejamentoComChamadasUI()" style="background:#8e44ad; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(142,68,173,0.3);" title="Ajusta datas e a duração exata registada na chamada de presença!">🤖 AUTO-AJUSTAR</button>
             <button onclick="window.print()" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
             <button onclick="App.renderizarPlanejamentosSalvos()" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">FECHAR</button>
         </div>
@@ -219,7 +262,7 @@ App.renderizarTelaEdicao = (plano) => {
                     </div>
                     <div style="width:40%;">
                         <div style="margin-bottom:5px;"><b>CURSO:</b> ${App.escapeHTML(plano.curso)}</div>
-                        <div><b>CARGA HORÁRIA PREVISTA:</b> ${totalHoras}H</div>
+                        <div><b>CARGA HORÁRIA PREVISTA:</b> ${totalHorasText}</div>
                     </div>
                 </div>
             </div>
@@ -233,18 +276,22 @@ App.renderizarTelaEdicao = (plano) => {
                             <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;">${a.num}</td>
                             <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.data)}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
                             <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.hora)}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent; font-weight:bold; color:#2980b9;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
                             <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${App.escapeHTML(a.conteudo)}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
                             <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
                         </tr>`).join('')}
-                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding:10px;">Carga Horária Total =</td><td style="text-align:center; padding:10px;">${totalHoras}H</td><td colspan="2"></td></tr>
+                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding:10px;">Carga Horária Total =</td><td style="text-align:center; padding:10px; color:#2980b9;">${totalHorasText}</td><td colspan="2"></td></tr>
                     </tbody>
                 </table>
             </div>
         </div>`;
 };
 
-App.atualizarAula = (i,c,v) => { if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; };
+App.atualizarAula = (i,c,v) => { 
+    if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; 
+    // Se atualizar a duração manualmente, recalcula o header no ecrã para mostrar o novo total
+    if(c === 'duracao') App.renderizarTelaEdicao(App.planoAtual);
+};
 
 App.salvarPlanejamentoBanco = async () => { 
     if(!App.planoAtual) return; 
@@ -336,9 +383,17 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         const aula = plano.aulas[i];
 
         if (presencasUsadas < presencas.length) {
-            const dataReal = presencas[presencasUsadas].data; 
+            const presencaDia = presencas[presencasUsadas];
+            const dataReal = presencaDia.data; 
             const [ano, mes, dia] = dataReal.split('-');
+            
             aula.data = `${dia}/${mes}/${ano}`;
+            
+            // 🧠 SINCRONIZAÇÃO DA DURAÇÃO REAL DA AULA:
+            if(presencaDia.duracao) {
+                aula.duracao = presencaDia.duracao;
+            }
+            
             aula.visto = true;
             ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`);
             presencasUsadas++;
@@ -372,7 +427,7 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
         App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
         
         App.renderizarTelaEdicao(App.planoAtual);
-        App.showToast("Planeamento Auto-Ajustado com Base nas Últimas Aulas! 🎉", "success");
+        App.showToast("Datas e Tempos Sincronizados com a Folha de Presenças! 🎉", "success");
 
     } catch (e) { App.showToast("Erro ao sincronizar planeamento.", "error"); } 
     finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
@@ -563,7 +618,7 @@ App.renderizarAvaliacoesPro = async () => {
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
                 <input type="text" id="input-busca-notas" 
                        placeholder="Pesquisar histórico pelo nome do aluno, disciplina ou tipo..." 
-                       oninput="App.filtrarHistoricoNotas()" 
+                       oninput="App.filtrarTabela('input-busca-notas', 'tabela-historico-notas')" 
                        style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
             </div>
 
@@ -734,24 +789,6 @@ App.editarAvaliacao = async (id) => {
     App.carregarListaNotas(); 
 };
 
-App.filtrarHistoricoNotas = () => {
-    const termo = document.getElementById('input-busca-notas').value.trim().toLowerCase();
-    const linhas = document.querySelectorAll('#tabela-historico-notas tbody tr');
-    
-    if (!linhas || linhas.length === 0) return;
-
-    linhas.forEach(linha => {
-        if (linha.innerText.includes('Nenhuma nota lançada')) return;
-        const textoLinha = linha.innerText.toLowerCase(); 
-        
-        if (textoLinha.includes(termo)) {
-            linha.style.display = '';
-        } else {
-            linha.style.display = 'none';
-        }
-    });
-};
-
 // ---------------------------------------------------------
 // 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA
 // ---------------------------------------------------------
@@ -787,7 +824,7 @@ App.renderizarChamadaPro = async () => {
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
                 <input type="text" id="input-busca-chamada" 
                        placeholder="Pesquisar histórico pelo nome do aluno ou status..." 
-                       oninput="App.filtrarHistoricoChamada()" 
+                       oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" 
                        style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
             </div>
             
@@ -942,24 +979,6 @@ App.editarLancamentoChamada = async (id) => {
     document.getElementById('chamada-data').value = registro.data; document.getElementById('chamada-duracao').value = registro.duracao; 
     document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
     App.carregarListaChamada(); 
-};
-
-App.filtrarHistoricoChamada = () => {
-    const termo = document.getElementById('input-busca-chamada').value.trim().toLowerCase();
-    const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr');
-    
-    if (!linhas || linhas.length === 0) return;
-
-    linhas.forEach(linha => {
-        if (linha.innerText.includes('Nenhum registo encontrado')) return;
-        const textoLinha = linha.innerText.toLowerCase(); 
-        
-        if (textoLinha.includes(termo)) {
-            linha.style.display = '';
-        } else {
-            linha.style.display = 'none';
-        }
-    });
 };
 
 // ---------------------------------------------------------
