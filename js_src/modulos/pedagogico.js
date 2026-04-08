@@ -1,5 +1,5 @@
 // =========================================================
-// MÓDULO PEDAGÓGICO V160 (BLINDADO + FILTRO DE INATIVOS + CHAMADA EM TEMPO REAL)
+// MÓDULO PEDAGÓGICO V161 (BLINDADO + AUTO-AJUSTE DINÂMICO + EDIÇÃO CORRIGIDA)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -67,7 +67,6 @@ App.renderizarNovoPlanejamento = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const alunos = await App.api('/alunos');
-        // 🛡️ FILTRO: Apenas alunos ativos para novos planeamentos
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
         const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${App.escapeHTML(a.curso || 'Geral')}">${App.escapeHTML(a.nome)}</option>`).join('');
         
@@ -101,7 +100,6 @@ App.renderizarPlanejamentosSalvos = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const planos = await App.api('/planejamentos');
-        // Filtra para remover os arquivados da vista principal
         const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
         
         if(planosAtivos.length === 0) { 
@@ -145,12 +143,10 @@ App.renderizarPlanejamentosSalvos = async () => {
     } catch(e) { div.innerHTML = "Erro."; }
 };
 
-// --- ÁREA NOVA: PLANEAMENTOS ARQUIVADOS ---
 App.renderizarPlanejamentosArquivados = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar arquivados...';
     try {
         const planos = await App.api('/planejamentos');
-        // Filtra apenas os arquivados
         const planosArquivados = planos.filter(p => p.status === 'Arquivado');
         
         if(planosArquivados.length === 0) { 
@@ -289,7 +285,6 @@ App.renderizarTelaEdicao = (plano) => {
 
 App.atualizarAula = (i,c,v) => { 
     if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; 
-    // Se atualizar a duração manualmente, recalcula o header no ecrã para mostrar o novo total
     if(c === 'duracao') App.renderizarTelaEdicao(App.planoAtual);
 };
 
@@ -301,8 +296,7 @@ App.salvarPlanejamentoBanco = async () => {
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
     if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
     
-    // Garante que o status do planeamento não está vazio (padrão Ativo)
-    if(!App.planoAtual.status) App.planoAtual.status = 'Ativo';
+    if(!App.planoAtual.status) App.planoAtual.status = 'Ativo'; // Garante o Status Ativo por defeito
     
     const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
     const txtOrig = btn ? btn.innerText : '💾 SALVAR';
@@ -317,9 +311,8 @@ App.salvarPlanejamentoBanco = async () => {
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
-// --- FUNÇÕES DE ARQUIVAMENTO E RESTAURAÇÃO DE PLANEAMENTOS ---
 App.arquivarPlanejamento = async (id) => {
-    if(confirm("Deseja arquivar este planeamento? Ele deixará de aparecer na lista principal para que possa iniciar um novo cronograma limpo.")) {
+    if(confirm("Deseja arquivar este planeamento? Ele deixará de aparecer na lista principal.")) {
         try {
             const plano = await App.api(`/planejamentos/${id}`);
             plano.status = 'Arquivado';
@@ -331,7 +324,7 @@ App.arquivarPlanejamento = async (id) => {
 };
 
 App.restaurarPlanejamento = async (id) => {
-    if(confirm("Deseja reativar este planeamento? Ele voltará para a sua lista ativa principal.")) {
+    if(confirm("Deseja reativar este planeamento? Ele voltará para a lista ativa.")) {
         try {
             const plano = await App.api(`/planejamentos/${id}`);
             plano.status = 'Ativo';
@@ -345,6 +338,7 @@ App.restaurarPlanejamento = async (id) => {
 App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
 App.excluirPlanejamentoArquivado = async (id) => { if(confirm("Excluir DEFINITIVAMENTE este histórico?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosArquivados(); } };
 
+// 🧠 O CÉREBRO DA ADIÇÃO DINÂMICA DE AULAS
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas) return plano;
 
@@ -378,9 +372,12 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
     let presencasUsadas = 0;
     let ultimaDataBase = new Date(); 
     ultimaDataBase.setHours(12, 0, 0, 0);
+    let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
 
+    // 1. Atualiza as linhas já existentes no planeamento
     for (let i = 0; i < plano.aulas.length; i++) {
         const aula = plano.aulas[i];
+        if (aula.hora) ultimoHorarioBase = aula.hora;
 
         if (presencasUsadas < presencas.length) {
             const presencaDia = presencas[presencasUsadas];
@@ -388,11 +385,7 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
             const [ano, mes, dia] = dataReal.split('-');
             
             aula.data = `${dia}/${mes}/${ano}`;
-            
-            // 🧠 SINCRONIZAÇÃO DA DURAÇÃO REAL DA AULA:
-            if(presencaDia.duracao) {
-                aula.duracao = presencaDia.duracao;
-            }
+            if(presencaDia.duracao) aula.duracao = presencaDia.duracao;
             
             aula.visto = true;
             ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`);
@@ -400,17 +393,32 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         } else {
             aula.visto = false;
             ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
-            
             while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) {
                 ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
             }
-            
             const d = String(ultimaDataBase.getDate()).padStart(2, '0');
             const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0');
             const y = ultimaDataBase.getFullYear();
             aula.data = `${d}/${m}/${y}`;
         }
     }
+
+    // 2. ADIÇÃO DINÂMICA: Se o aluno teve MAIS presenças do que as linhas do plano, adicionamos mais linhas!
+    while (presencasUsadas < presencas.length) {
+        const presencaDia = presencas[presencasUsadas];
+        const [ano, mes, dia] = presencaDia.data.split('-');
+        
+        plano.aulas.push({
+            num: plano.aulas.length + 1,
+            data: `${dia}/${mes}/${ano}`,
+            hora: ultimoHorarioBase,
+            duracao: presencaDia.duracao || '01:00',
+            conteudo: 'Aula Adicional (Auto-Ajuste)',
+            visto: true
+        });
+        presencasUsadas++;
+    }
+
     return plano;
 };
 
@@ -427,7 +435,7 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
         App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
         
         App.renderizarTelaEdicao(App.planoAtual);
-        App.showToast("Datas e Tempos Sincronizados com a Folha de Presenças! 🎉", "success");
+        App.showToast("Datas, Tempos e Aulas Extra Sincronizados! 🎉", "success");
 
     } catch (e) { App.showToast("Erro ao sincronizar planeamento.", "error"); } 
     finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
@@ -450,7 +458,6 @@ App.renderizarBoletimVisual = async () => {
                 <button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR BOLETIM</button>
             </div>
         `;
-        
         div.innerHTML = App.UI.card('📄 Emitir Boletim Escolar', '', formBoletim, '800px') + `<div id="boletim-area" style="margin-top:30px;"></div>`;
     } catch(e) { div.innerHTML = "Erro."; }
 };
@@ -459,7 +466,6 @@ App.gerarBoletimTela = async () => {
     const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
     const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
     
-    // 🧠 Puxa a "Média" que a escola configurou na aba de Lançamentos
     const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
 
     try {
@@ -471,7 +477,6 @@ App.gerarBoletimTela = async () => {
         const primAula = presencas.length > 0 ? presencas[0].split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
         
         let ultAula = '__/__/____';
-        // 🛡️ Ignora os planeamentos arquivados na busca das datas do aluno!
         const planoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
         if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); } 
         else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
@@ -479,15 +484,11 @@ App.gerarBoletimTela = async () => {
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); 
         const disciplinasMap = {};
         
-        // 🧠 Agrupamento e Cálculo dos Bimestres
         notasAluno.forEach(n => { 
             const disc = n.disciplina || 'Geral'; 
             if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, bimestres: new Set() }; 
-            
             disciplinasMap[disc].notas.push(n); 
             disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
-            
-            // Marca os bimestres que já têm alguma nota para poder calcular a meta
             if (n.bimestre) disciplinasMap[disc].bimestres.add(n.bimestre);
         });
         
@@ -497,8 +498,6 @@ App.gerarBoletimTela = async () => {
         } else {
             Object.keys(disciplinasMap).forEach(chave => {
                 const d = disciplinasMap[chave];
-                
-                // 🧠 LÓGICA DE APROVAÇÃO: (Qtd. Bimestres Lançados * Média Exigida)
                 const qtdBimestresLancados = d.bimestres.size > 0 ? d.bimestres.size : 1;
                 const metaAtual = mediaConfig * qtdBimestresLancados;
                 
@@ -531,7 +530,6 @@ App.gerarBoletimTela = async () => {
 
         divArea.innerHTML = `
             <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR BOLETIM</button></div>
-            
             <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
                 <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                     <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '')}</div></div></div>
@@ -556,12 +554,9 @@ App.gerarBoletimTela = async () => {
 // ---------------------------------------------------------
 // 3. AVALIAÇÕES E NOTAS (HÍBRIDO COM CONFIG. DE MÉDIA)
 // ---------------------------------------------------------
-
-// 🧠 Guardar ou Atualizar a Média no LocalStorage
 App.salvarMediaConfig = (val) => { 
     localStorage.setItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao', val); 
-    App.showToast("Média de aprovação atualizada!", "info"); 
-    App.renderizarAvaliacoesPro(); // Recarrega para aplicar as novas cores no histórico
+    App.showToast("Média atualizada!", "info"); App.renderizarAvaliacoesPro();
 };
 
 App.renderizarAvaliacoesPro = async () => {
@@ -569,7 +564,6 @@ App.renderizarAvaliacoesPro = async () => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     
-    // Recupera a média salva
     const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
     const percentualAprovacao = parseFloat(mediaSalva) / 10;
 
@@ -577,7 +571,6 @@ App.renderizarAvaliacoesPro = async () => {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api('/avaliacoes')]);
         App.cacheAlunos = alunos;
         const historico = avaliacoes.sort((a,b) => b.id - a.id);
-
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
@@ -606,7 +599,7 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
             
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
-                ${col('Média Mín. (Aprovação):', 'nota-media', 'number', mediaSalva, 'step="0.1" onchange="App.salvarMediaConfig(this.value)" title="Esta média decidirá quem fica Aprovado/Recuperação no Boletim!"')}
+                ${col('Média Mín. (Aprovação):', 'nota-media', 'number', mediaSalva, 'step="0.1" onchange="App.salvarMediaConfig(this.value)"')}
                 ${col('Valor Máximo (Pts):', 'nota-max', 'number', '10', 'step="0.1"')}
                 ${col('Data da Avaliação:', 'nota-data', 'date', hoje)}
                 <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
@@ -617,7 +610,7 @@ App.renderizarAvaliacoesPro = async () => {
             <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
                 <input type="text" id="input-busca-notas" 
-                       placeholder="Pesquisar histórico pelo nome do aluno, disciplina ou tipo..." 
+                       placeholder="Pesquisar histórico..." 
                        oninput="App.filtrarTabela('input-busca-notas', 'tabela-historico-notas')" 
                        style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
             </div>
@@ -649,7 +642,7 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Lançamento de Notas (Híbrido)', 'Gere a pauta para a turma inteira ou para um aluno isolado. A "Média Mínima" alimentará a aprovação no boletim.', formFiltros, '100%') + 
+        div.innerHTML = App.UI.card('📝 Lançamento de Notas', '', formFiltros, '100%') + 
                         `<div id="area-lista-notas" style="margin-top:20px;"></div>` +
                         '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
     } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
@@ -680,13 +673,11 @@ App.carregarListaNotas = async () => {
         else { alunosAlvo = alunos.filter(a => a.turma === turma); }
 
         alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
-
         if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
 
         let linhas = '';
         alunosAlvo.forEach(a => {
             let regExistente = null;
-            
             if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
                 regExistente = avaliacoes.find(av => av.id === App.idAvaliacaoEditando);
             } else {
@@ -846,10 +837,23 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Registo de Frequência (Híbrido)', 'Faça a chamada para a turma ou ajuste as faltas de um único aluno.', formChamada, '100%') + 
+        div.innerHTML = App.UI.card('📝 Registo de Frequência', '', formChamada, '100%') + 
                         `<div id="area-lista-chamada" style="margin-top:20px;"></div>` +
                         '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
+};
+
+// 🧠 O CÉREBRO DA EDIÇÃO CORRETA DE CHAMADA
+App.editarLancamentoChamada = async (id) => { 
+    const registro = await App.api(`/chamadas/${id}`); 
+    document.getElementById('chamada-aluno').value = registro.idAluno; 
+    document.getElementById('chamada-turma').value = "";
+    document.getElementById('chamada-data').value = registro.data; 
+    document.getElementById('chamada-duracao').value = registro.duracao; 
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
+    
+    App.idChamadaEditando = id; // O MARCADOR EXATO!
+    App.carregarListaChamada(); 
 };
 
 App.carregarListaChamada = async () => {
@@ -878,11 +882,20 @@ App.carregarListaChamada = async () => {
         let linhas = '';
         
         alunosAlvo.forEach(a => {
-            const regExistente = chamadasDia.find(c => c.idAluno === a.id);
+            let regExistente = null;
+            
+            // 🛡️ SE ESTOU A EDITAR, PROCURO PELO ID EXATO, SE NÃO, PROCURO PELA DATA DO DIA!
+            if (App.idChamadaEditando && a.id === document.getElementById('chamada-aluno').value) {
+                regExistente = chamadas.find(c => c.id === App.idChamadaEditando);
+            } else {
+                regExistente = chamadasDia.find(c => c.idAluno === a.id);
+            }
+
             const status = regExistente ? regExistente.status : 'Presença';
+            const idEdicaoTag = (App.idChamadaEditando && regExistente) ? `data-id-chamada="${regExistente.id}"` : '';
             
             linhas += `
-            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">
+            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
                 <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
                 <td style="padding:12px; width:250px;">
                     <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':'#27ae60'};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
@@ -896,6 +909,8 @@ App.carregarListaChamada = async () => {
                 </td>
             </tr>`;
         });
+        
+        App.idChamadaEditando = null; // Limpa o estado depois de desenhar a grelha
 
         area.innerHTML = `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
@@ -933,26 +948,36 @@ App.salvarChamadaLote = async () => {
         linhas.forEach(linha => {
             const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
             const status = linha.querySelector('.status-chamada').value;
+            const idEdicao = linha.getAttribute('data-id-chamada'); // Apanha o ID exato se foi uma edição!
             
             alunosAfetados.push(idAluno); 
 
-            const regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
+            let regExistente = null;
+            if (idEdicao) {
+                regExistente = chamadasExistentes.find(c => c.id === idEdicao);
+            } else {
+                regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data);
+            }
+
             const payload = { idAluno, nomeAluno, data, status, duracao };
 
-            if (regExistente) { promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status, duracao })); } 
-            else { payload.id = Date.now().toString() + Math.floor(Math.random()*1000); promessasChamadas.push(App.api('/chamadas', 'POST', payload)); }
+            if (regExistente) { 
+                promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, data: data, status: status, duracao: duracao })); 
+            } 
+            else { 
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
+                promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
+            }
         });
 
         await Promise.all(promessasChamadas);
         
-        // 2. 🧠 MOTOR PREDITIVO EM MASSA (AUTO-AJUSTE SILENCIOSO)
         let avisoExtra = "";
         try {
             const [planejamentos, chamadasAtualizadas] = await Promise.all([App.api('/planejamentos'), App.api('/chamadas')]);
             const promessasPlano = [];
 
             alunosAfetados.forEach(idAluno => {
-                // 🛡️ Ignorar auto-ajuste de planeamentos arquivados!
                 let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
                 if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
                     planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadas);
@@ -973,13 +998,6 @@ App.salvarChamadaLote = async () => {
 };
 
 App.excluirLancamentoChamada = async (id) => { if(confirm("Excluir este registo?")) { await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); } };
-App.editarLancamentoChamada = async (id) => { 
-    const registro = await App.api(`/chamadas/${id}`); 
-    document.getElementById('chamada-aluno').value = registro.idAluno; document.getElementById('chamada-turma').value = "";
-    document.getElementById('chamada-data').value = registro.data; document.getElementById('chamada-duracao').value = registro.duracao; 
-    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
-    App.carregarListaChamada(); 
-};
 
 // ---------------------------------------------------------
 // 5. CALENDÁRIO (BLINDADO COM GRID CSS INLINE E PÍLULAS)
