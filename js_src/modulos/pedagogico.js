@@ -17,13 +17,13 @@ const selectLocal = (label, id, options, extra='') => `
     </div>`;
 
 // ---------------------------------------------------------
-// 1. PLANEAMENTO (COM FOLHA A4 BLINDADA)
+// 1. PLANEAMENTO (COM FOLHA A4 BLINDADA E ARQUIVAMENTO)
 // ---------------------------------------------------------
 App.renderizarPlanejamentoPro = () => {
     App.setTitulo("Planeamento");
     const div = document.getElementById('app-content');
     
-    const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:30px; border-radius:15px; width:250px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05);`;
+    const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:30px; border-radius:15px; width:220px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05);`;
     const hoverIn = (cor) => `this.style.borderColor='${cor}'; this.style.transform='translateY(-5px)'`;
     const hoverOut = `this.style.borderColor='#eee'; this.style.transform='translateY(0)'`;
 
@@ -31,7 +31,7 @@ App.renderizarPlanejamentoPro = () => {
         <div class="card" style="text-align:center; padding:50px;">
             <h2 style="color:#2c3e50; margin-bottom:10px;">Planeamento Pedagógico</h2>
             <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controlo de aulas.</p>
-            <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
+            <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
                 <div onclick="App.renderizarNovoPlanejamento()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📝</div>
                     <h3 style="margin:0; color:#3498db;">Novo Planeamento</h3>
@@ -39,8 +39,13 @@ App.renderizarPlanejamentoPro = () => {
                 </div>
                 <div onclick="App.renderizarPlanejamentosSalvos()" style="${btnStyle('#27ae60')}" onmouseover="${hoverIn('#27ae60')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📂</div>
-                    <h3 style="margin:0; color:#27ae60;">Planeamentos Salvos</h3>
+                    <h3 style="margin:0; color:#27ae60;">Planeamentos Ativos</h3>
                     <p style="font-size:13px; color:#999; margin-top:5px;">Editar e acompanhar</p>
+                </div>
+                <div onclick="App.renderizarPlanejamentosArquivados()" style="${btnStyle('#8e44ad')}" onmouseover="${hoverIn('#8e44ad')}" onmouseout="${hoverOut}">
+                    <div style="font-size:50px; margin-bottom:15px;">🗄️</div>
+                    <h3 style="margin:0; color:#8e44ad;">Arquivados</h3>
+                    <p style="font-size:13px; color:#999; margin-top:5px;">Histórico não utilizado</p>
                 </div>
             </div>
         </div>`;
@@ -84,26 +89,30 @@ App.renderizarPlanejamentosSalvos = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
         const planos = await App.api('/planejamentos');
-        if(planos.length === 0) { 
-            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento salvo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+        // Filtra para remover os arquivados da vista principal
+        const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
+        
+        if(planosAtivos.length === 0) { 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento ativo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
             return; 
         }
         
         const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
-        const corpo = planos.map(p => `
+        const corpo = planosAtivos.map(p => `
             <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px;">${App.escapeHTML(p.nomeAluno)}</td>
                 <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
-                <td style="padding:10px; text-align:center;">${p.aulas.length}</td>
+                <td style="padding:10px; text-align:center;">${p.aulas ? p.aulas.length : 0}</td>
                 <td style="padding:10px; text-align:right;">
-                    <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button>
-                    <button onclick="App.excluirPlanejamento('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">🗑️</button>
+                    <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Editar">✏️</button>
+                    <button onclick="App.arquivarPlanejamento('${p.id}')" style="background:#8e44ad; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Arquivar">🗄️</button>
+                    <button onclick="App.excluirPlanejamento('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir">🗑️</button>
                 </td>
             </tr>`).join('');
 
         div.innerHTML = App.UI.card('', '', `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0;">Salvos</h3>
+                <h3 style="margin:0; color:#27ae60;">Planeamentos Ativos</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
             <div class="table-responsive-wrapper">
@@ -111,6 +120,44 @@ App.renderizarPlanejamentosSalvos = async () => {
             </div>
         `);
     } catch(e) { div.innerHTML = "Erro."; }
+};
+
+// --- ÁREA NOVA: PLANEAMENTOS ARQUIVADOS ---
+App.renderizarPlanejamentosArquivados = async () => {
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar arquivados...';
+    try {
+        const planos = await App.api('/planejamentos');
+        // Filtra apenas os arquivados
+        const planosArquivados = planos.filter(p => p.status === 'Arquivado');
+        
+        if(planosArquivados.length === 0) { 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento no arquivo morto.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            return; 
+        }
+        
+        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const corpo = planosArquivados.map(p => `
+            <tr style="border-bottom:1px solid #ddd; background:#f9f9f9;">
+                <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.curso)}</td>
+                <td style="padding:10px; text-align:center; color:#7f8c8d;">${p.aulas ? p.aulas.length : 0}</td>
+                <td style="padding:10px; text-align:right;">
+                    <button onclick="App.restaurarPlanejamento('${p.id}')" style="background:#27ae60; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Restaurar / Reativar">♻️</button>
+                    <button onclick="App.excluirPlanejamentoArquivado('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir Definitivamente">🗑️</button>
+                </td>
+            </tr>`).join('');
+
+        div.innerHTML = App.UI.card('', '', `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0; color:#8e44ad;">🗄️ Planeamentos Arquivados</h3>
+                <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
+            </div>
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">Estes planeamentos foram finalizados/arquivados. Não são contabilizados no boletim nem no auto-ajuste de presenças.</p>
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+            </div>
+        `);
+    } catch(e) { div.innerHTML = "Erro ao ler arquivados."; }
 };
 
 App.gerarGridEditavel = () => {
@@ -136,7 +183,7 @@ App.gerarGridEditavel = () => {
         } 
         dataAtual.setDate(dataAtual.getDate() + 1); 
     }
-    App.renderizarTelaEdicao({ id: null, idAluno, nomeAluno, curso: cursoAluno, aulas: listaAulas });
+    App.renderizarTelaEdicao({ id: null, idAluno, nomeAluno, curso: cursoAluno, status: 'Ativo', aulas: listaAulas });
 };
 
 App.abrirPlanejamentoEditavel = async (id) => { try { const plano = await App.api(`/planejamentos/${id}`); App.renderizarTelaEdicao(plano); } catch(e) { alert("Erro."); } };
@@ -207,6 +254,9 @@ App.salvarPlanejamentoBanco = async () => {
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
     if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
     
+    // Garante que o status do planeamento não está vazio (padrão Ativo)
+    if(!App.planoAtual.status) App.planoAtual.status = 'Ativo';
+    
     const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
     const txtOrig = btn ? btn.innerText : '💾 SALVAR';
     if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
@@ -219,6 +269,34 @@ App.salvarPlanejamentoBanco = async () => {
     } catch(e) { App.showToast("Erro ao salvar.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
+
+// --- FUNÇÕES DE ARQUIVAMENTO E RESTAURAÇÃO DE PLANEAMENTOS ---
+App.arquivarPlanejamento = async (id) => {
+    if(confirm("Deseja arquivar este planeamento? Ele deixará de aparecer na lista principal para que possa iniciar um novo cronograma limpo.")) {
+        try {
+            const plano = await App.api(`/planejamentos/${id}`);
+            plano.status = 'Arquivado';
+            await App.api(`/planejamentos/${id}`, 'PUT', plano);
+            App.showToast("Planeamento Arquivado!", "success");
+            App.renderizarPlanejamentosSalvos();
+        } catch(e) { App.showToast("Erro ao arquivar.", "error"); }
+    }
+};
+
+App.restaurarPlanejamento = async (id) => {
+    if(confirm("Deseja reativar este planeamento? Ele voltará para a sua lista ativa principal.")) {
+        try {
+            const plano = await App.api(`/planejamentos/${id}`);
+            plano.status = 'Ativo';
+            await App.api(`/planejamentos/${id}`, 'PUT', plano);
+            App.showToast("Planeamento Reativado com sucesso!", "success");
+            App.renderizarPlanejamentosArquivados();
+        } catch(e) { App.showToast("Erro ao reativar.", "error"); }
+    }
+};
+
+App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
+App.excluirPlanejamentoArquivado = async (id) => { if(confirm("Excluir DEFINITIVAMENTE este histórico?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosArquivados(); } };
 
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas) return plano;
@@ -300,8 +378,6 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
     finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
-App.excluirPlanejamento = async (id) => { if(confirm("Excluir?")) { await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); } };
-
 // ---------------------------------------------------------
 // 2. BOLETIM (CÁLCULO INTELIGENTE DE APROVAÇÃO E METAS)
 // ---------------------------------------------------------
@@ -340,7 +416,8 @@ App.gerarBoletimTela = async () => {
         const primAula = presencas.length > 0 ? presencas[0].split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
         
         let ultAula = '__/__/____';
-        const planoAluno = planejamentos.find(p => p.idAluno === idAluno);
+        // 🛡️ Ignora os planeamentos arquivados na busca das datas do aluno!
+        const planoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
         if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); } 
         else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
 
@@ -838,7 +915,8 @@ App.salvarChamadaLote = async () => {
             const promessasPlano = [];
 
             alunosAfetados.forEach(idAluno => {
-                let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno);
+                // 🛡️ Ignorar auto-ajuste de planeamentos arquivados!
+                let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
                 if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
                     planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadas);
                     promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
