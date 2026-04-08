@@ -859,6 +859,16 @@ App.gerarDocumentoPrint = async () => {
                         
                         /* A print-sheet agora utiliza flexbox para garantir que a caixa fica 100% no meio da folha impressa */
                         .print-sheet { margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; background:transparent !important; border:none !important; max-width: 100% !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100vh !important;}
+                        
+                        /* Garante que o scroll no modo de ecrã não afeta o modo de impressão */
+                        .scroll-wrapper { overflow: visible !important; padding: 0 !important; }
+                    }
+                    
+                    /* O WRAPPER DO SCROLL: Permite rolar horizontalmente se o ecrã for pequeno */
+                    .scroll-wrapper {
+                        width: 100%;
+                        overflow-x: auto;
+                        padding-bottom: 20px;
                     }
                     
                     /* A SOLUÇÃO DEFINITIVA: 260x180 garante que os roletes de tração não cortam o design */
@@ -883,43 +893,45 @@ App.gerarDocumentoPrint = async () => {
                     }
                 </style>
                 
-                <div class="print-sheet">
-                    <div class="cert-box">
-                        
-                        <h1 style="font-size: 40px; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px;">Certificado de Conclusão</h1>
-                        <p style="font-size: 20px; color: #555; margin-bottom: 20px; font-style: italic;">Certificamos para os devidos fins que</p>
-                        
-                        <h2 style="font-size: 34px; color: #b71c1c; margin: 0 auto 20px auto; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 40px; font-family: Arial, sans-serif;">
-                            ${App.escapeHTML(aluno.nome)}
-                        </h2>
-                        
-                        <p style="font-size: 19px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
-                            portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b>, concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, iniciado em <b>${dataInicioStr}</b> e finalizado em <b>${dataFimStr}</b>, com carga horária total de <b>${cargaHoraria} horas</b> e aproveitamento plenamente satisfatório.<br>
-                            <span style="font-size: 15px; color: #555; display: block; margin-top: 10px; text-align: center;">O presente documento é amparado legalmente pela Lei nº 9.394/96 (Diretrizes e Bases da Educação Nacional) e pelo Decreto nº 5.154/04.</span>
-                        </p>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                <div class="scroll-wrapper">
+                    <div class="print-sheet">
+                        <div class="cert-box">
                             
-                            <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
-                                <b>A Direção</b><br>
-                                <span style="font-size: 12px; color: #555;">${App.escapeHTML(escola.nome || 'Instituição')}</span>
+                            <h1 style="font-size: 40px; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px;">Certificado de Conclusão</h1>
+                            <p style="font-size: 20px; color: #555; margin-bottom: 20px; font-style: italic;">Certificamos para os devidos fins que</p>
+                            
+                            <h2 style="font-size: 34px; color: #b71c1c; margin: 0 auto 20px auto; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 40px; font-family: Arial, sans-serif;">
+                                ${App.escapeHTML(aluno.nome)}
+                            </h2>
+                            
+                            <p style="font-size: 19px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
+                                portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b>, concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, iniciado em <b>${dataInicioStr}</b> e finalizado em <b>${dataFimStr}</b>, com carga horária total de <b>${cargaHoraria} horas</b> e aproveitamento plenamente satisfatório.
+                            </p>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                                
+                                <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
+                                    <b>A Direção</b><br>
+                                    <span style="font-size: 12px; color: #555;">${App.escapeHTML(escola.nome || 'Instituição')}</span>
+                                </div>
+                                
+                                <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+                                    ${logoCert}
+                                </div>
+                                
+                                <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
+                                    <b>Aluno(a) Titular</b><br>
+                                    <span style="font-size: 12px; color: #555;">${App.escapeHTML(aluno.nome)}</span>
+                                </div>
+                                
                             </div>
                             
-                            <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                                ${logoCert}
-                            </div>
-                            
-                            <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
-                                <b>Aluno(a) Titular</b><br>
-                                <span style="font-size: 12px; color: #555;">${App.escapeHTML(aluno.nome)}</span>
+                            <div style="position: absolute; bottom: 10px; left: 0; right: 0; font-size: 10px; color: #777; text-align: center; line-height: 1.4;">
+                                <div style="margin-bottom: 2px;">O presente documento é amparado legalmente pela Lei nº 9.394/96 (Diretrizes e Bases da Educação Nacional) e pelo Decreto nº 5.154/04.</div>
+                                <div>Documento Oficial. Emitido por ${App.escapeHTML(escola.nome || 'Instituição de Ensino')} (CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}) em ${dataHoje}.</div>
                             </div>
                             
                         </div>
-                        
-                        <div style="position: absolute; bottom: 10px; left: 0; right: 0; font-size: 10px; color: #999; text-align: center;">
-                            Documento Oficial. Emitido por ${App.escapeHTML(escola.nome || 'Instituição de Ensino')} (CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}) em ${dataHoje}.
-                        </div>
-                        
                     </div>
                 </div>
             `;
