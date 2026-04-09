@@ -193,6 +193,7 @@ App.renderizarPlanejamentosArquivados = async () => {
                 <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center; color:#7f8c8d;">${p.aulas ? p.aulas.length : 0}</td>
                 <td style="padding:10px; text-align:right;">
+                    <button onclick="App.abrirPlanejamentoVisualizacao('${p.id}')" style="background:#3498db; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Visualizar">👁️</button>
                     <button onclick="App.restaurarPlanejamento('${p.id}')" style="background:#27ae60; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Restaurar / Reativar">♻️</button>
                     <button onclick="App.excluirPlanejamentoArquivado('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir Definitivamente">🗑️</button>
                 </td>
@@ -250,7 +251,16 @@ App.gerarGridEditavel = () => {
 
 App.abrirPlanejamentoEditavel = async (id) => { try { const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`); App.renderizarTelaEdicao(plano); } catch(e) { alert("Erro."); } };
 
-App.renderizarTelaEdicao = (plano) => {
+App.abrirPlanejamentoVisualizacao = async (id) => { 
+    try { 
+        const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`); 
+        App.renderizarTelaEdicao(plano, true); // O 'true' ativa o Modo Blindado de Leitura!
+    } catch(e) { 
+        alert("Erro ao abrir."); 
+    } 
+};
+
+App.renderizarTelaEdicao = (plano, isReadOnly = false) => {
     App.planoAtual = plano; const div = document.getElementById('app-content');
     
     let totalMinutos = 0;
@@ -267,18 +277,24 @@ App.renderizarTelaEdicao = (plano) => {
     const escola = JSON.parse(localStorage.getItem(App.getTenantKey ? App.getTenantKey('escola_perfil') : 'escola_perfil')) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
+    // Se for leitura, o botão fechar volta para os Arquivados, senão volta para os Ativos
+    const acaoVoltar = isReadOnly ? 'App.renderizarPlanejamentosArquivados()' : 'App.renderizarPlanejamentosSalvos()';
+    const tagArquivado = isReadOnly ? '<br><span style="color:#e74c3c; font-size:12px;">(ARQUIVADO - APENAS LEITURA)</span>' : '';
+
     div.innerHTML = `
         <div class="no-print" style="margin-bottom:20px; background:#f4f4f4; padding:15px; border-radius:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            ${!isReadOnly ? `
             <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
             <button id="btn-sync-plan" onclick="App.sincronizarPlanejamentoComChamadasUI()" style="background:#8e44ad; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(142,68,173,0.3);" title="Ajusta datas e a duração exata registada na chamada de presença!">🤖 AUTO-AJUSTAR</button>
+            ` : ''}
             <button onclick="window.print()" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
-            <button onclick="App.renderizarPlanejamentosSalvos()" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">FECHAR</button>
+            <button onclick="${acaoVoltar}" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">FECHAR</button>
         </div>
         
         <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
             <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                 <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome||'ESCOLA')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj||'')}</div></div></div>
-                <div style="text-align:right;"><div><b>Planeamento Pedagógico</b></div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
+                <div style="text-align:right;"><div><b>Planeamento Pedagógico</b> ${tagArquivado}</div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
             </div>
             
             <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px; background:#fafafa;">
@@ -301,11 +317,11 @@ App.renderizarTelaEdicao = (plano) => {
                         ${plano.aulas.map((a,i)=>`
                         <tr>
                             <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;">${a.num}</td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.data)}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.hora)}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent; font-weight:bold; color:#2980b9;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
-                            <td style="padding:8px; border-bottom:1px solid #eee;"><input style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${App.escapeHTML(a.conteudo)}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
-                            <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.data)}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.hora)}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent; font-weight:bold; color:#2980b9;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${App.escapeHTML(a.conteudo)}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
+                            <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" ${isReadOnly ? 'disabled' : ''} ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
                         </tr>`).join('')}
                         <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding:10px;">Carga Horária Total =</td><td style="text-align:center; padding:10px; color:#2980b9;">${totalHorasText}</td><td colspan="2"></td></tr>
                     </tbody>
