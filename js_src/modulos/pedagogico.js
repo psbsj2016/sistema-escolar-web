@@ -621,7 +621,7 @@ App.renderizarAvaliacoesPro = async () => {
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
                 ${col('Média Mín. (Aprovação):', 'nota-media', 'number', mediaSalva, 'step="0.1" onchange="App.salvarMediaConfig(this.value)"')}
                 ${col('Valor Máximo (Pts):', 'nota-max', 'number', '10', 'step="0.1"')}
-                ${col('Data da Avaliação:', 'nota-data', 'date', hoje)}
+                ${col('Data da Avaliação:', 'nota-data', 'date', hoje, `max="${hoje}"`)}
                 <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
                 <button onclick="App.cancelarEdicaoNota()" id="btn-cancel-nota" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
             </div>
@@ -698,6 +698,11 @@ App.carregarListaNotas = async () => {
 
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
     if(!disc || !data) return App.showToast("Preencha Disciplina e Data.", "warning");
+    // 🛡️ TRAVA ANTI-FUTURO
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) {
+        return App.showToast("Não é permitido abrir pautas para datas futuras.", "warning");
+    }    
 
     const area = document.getElementById('area-lista-notas');
     area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar pauta de lançamento... ⏳</p>';
@@ -763,6 +768,11 @@ App.salvarNotasLote = async () => {
     const bimestre = document.getElementById('nota-bimestre').value;
     const linhas = document.querySelectorAll('.linha-nota');
     if(linhas.length === 0) return;
+    // 🛡️ TRAVA ANTI-FUTURO
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) {
+        return App.showToast("Bloqueado: Não é possível gravar notas com datas futuras.", "error");
+    }
 
     const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
     const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
