@@ -345,24 +345,46 @@ App.salvarPlanejamentoBanco = async () => {
 App.arquivarPlanejamento = (id) => {
     App.confirmar("Arquivar Planeamento", "Tem a certeza que deseja enviar este planeamento para o arquivo morto? Ele deixará de aparecer na sua lista principal.", "Sim, Arquivar", "#8e44ad", async () => {
         try {
-            const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`);
-            plano.status = 'Arquivado';
-            await App.api(`/planejamentos/${id}`, 'PUT', plano);
-            App.showToast("Planeamento Arquivado!", "success");
-            App.renderizarPlanejamentosSalvos();
-        } catch(e) { App.showToast("Erro ao arquivar.", "error"); }
+            // Busca a lista segura e localiza o plano (evita bugs de API com query params)
+            const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+            const planoAtual = planos.find(p => String(p.id) === String(id));
+            
+            if (!planoAtual) return App.showToast("Planeamento não encontrado.", "error");
+
+            // Atualiza o status
+            planoAtual.status = 'Arquivado';
+            
+            // Salva a alteração de forma limpa na base de dados
+            await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
+            
+            App.showToast("Planeamento Arquivado com sucesso!", "success");
+            App.renderizarPlanejamentosSalvos(); // Remove da tela na hora
+        } catch(e) { 
+            App.showToast("Erro ao arquivar.", "error"); 
+        }
     });
 };
 
 App.restaurarPlanejamento = (id) => {
     App.confirmar("Restaurar Planeamento", "Deseja reativar este planeamento e devolvê-lo para a lista ativa?", "Restaurar", "#27ae60", async () => {
         try {
-            const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`);
-            plano.status = 'Ativo';
-            await App.api(`/planejamentos/${id}`, 'PUT', plano);
+            // Mesma lógica segura para restaurar
+            const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+            const planoAtual = planos.find(p => String(p.id) === String(id));
+            
+            if (!planoAtual) return App.showToast("Planeamento não encontrado.", "error");
+
+            // Volta para ativo
+            planoAtual.status = 'Ativo';
+            
+            // Salva a alteração
+            await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
+            
             App.showToast("Planeamento Reativado com sucesso!", "success");
-            App.renderizarPlanejamentosArquivados();
-        } catch(e) { App.showToast("Erro ao reativar.", "error"); }
+            App.renderizarPlanejamentosArquivados(); // Remove do arquivo morto
+        } catch(e) { 
+            App.showToast("Erro ao reativar.", "error"); 
+        }
     });
 };
 
