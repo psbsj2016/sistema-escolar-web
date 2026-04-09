@@ -838,7 +838,7 @@ App.renderizarChamadaPro = async () => {
                 ${selectLocal('Buscar Aluno Único:', 'chamada-aluno', opAlunos)}
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-                ${col('Data da Aula:', 'chamada-data', 'date', hoje)}
+                ${col('Data da Aula:', 'chamada-data', 'date', hoje, `max="${hoje}"`)}
                 ${col('Duração (Ex: 01:30):', 'chamada-duracao', 'time', '01:00')}
                 <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR CHAMADA</button>
                 <button onclick="App.cancelarEdicaoChamada()" id="btn-cancel-chamada" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
@@ -900,6 +900,11 @@ App.carregarListaChamada = async () => {
     
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
     if(!data) return App.showToast("Preencha a Data da aula.", "warning");
+    // 🛡️ TRAVA ANTI-FUTURO
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) {
+        return App.showToast("Não é permitido abrir grelhas de frequência para datas futuras.", "warning");
+    }
 
     const area = document.getElementById('area-lista-chamada');
     area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe... ⏳</p>';
@@ -969,6 +974,11 @@ App.salvarChamadaLote = async () => {
     const duracao = document.getElementById('chamada-duracao').value || '01:00';
     const linhas = document.querySelectorAll('.linha-chamada');
     if(linhas.length === 0) return;
+    // 🛡️ TRAVA ANTI-FUTURO
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) {
+        return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
+    }
 
     const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
     const txt = btn.innerText; btn.innerText = "A processar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
