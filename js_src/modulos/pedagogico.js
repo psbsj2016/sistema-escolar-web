@@ -416,9 +416,16 @@ App.excluirPlanejamentoArquivado = (id) => {
 };
 
 App.processarAutoAjustePlano = (plano, chamadas) => {
-    if (!plano || !plano.aulas) return plano;
+    if (!plano || !plano.aulas || plano.aulas.length === 0) return plano;
+
+    // 🚀 NOVA REGRA 2: A BARREIRA DO TEMPO
+    // Descobre a data da 1ª aula do planeamento atual (converte DD/MM/YYYY para YYYY-MM-DD)
+    const primeiraAulaArr = plano.aulas[0].data.split('/');
+    const dataInicioPlano = `${primeiraAulaArr[2]}-${primeiraAulaArr[1]}-${primeiraAulaArr[0]}`;
+
+    // Agora só puxa as presenças que aconteceram DEPOIS do início deste planeamento! (Adeus, fantasmas do passado!)
     const presencas = chamadas
-        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição'))
+        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição') && c.data >= dataInicioPlano)
         .sort((a, b) => new Date(a.data) - new Date(b.data));
 
     let diasDaSemanaAulas = [];
@@ -974,6 +981,7 @@ App.salvarChamadaLote = async () => {
     const duracao = document.getElementById('chamada-duracao').value || '01:00';
     const linhas = document.querySelectorAll('.linha-chamada');
     if(linhas.length === 0) return;
+
     // 🛡️ TRAVA ANTI-FUTURO
     const hojeStr = new Date().toISOString().split('T')[0];
     if (data > hojeStr) {
@@ -981,9 +989,31 @@ App.salvarChamadaLote = async () => {
     }
 
     const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
-    const txt = btn.innerText; btn.innerText = "A processar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    const txt = btn.innerText; btn.innerText = "A validar dados... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
+        // 🚀 NOVA REGRA 1: VERIFICAR PLANEAMENTO ATIVO ANTES DE GRAVAR
+        const planejamentos = await App.api(`/planejamentos?_t=${Date.now()}`);
+        const alunosSemPlano = [];
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id');
+            const nomeAluno = linha.getAttribute('data-nome');
+            
+            // Verifica se o aluno tem pelo menos um planeamento que NÃO esteja arquivado
+            const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+            if (!temPlanoAtivo) {
+                alunosSemPlano.push(nomeAluno);
+            }
+        });
+
+        // Se encontrou alunos sem planeamento, ABORTA o salvamento!
+        if (alunosSemPlano.length > 0) {
+            App.showToast(`Bloqueado: Crie um Planeamento para: ${alunosSemPlano.join(', ')}`, "error");
+            if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
+            return; 
+        }
+
         const promessasChamadas = [];
         const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
         const alunosAfetados = [];
@@ -1013,11 +1043,11 @@ App.salvarChamadaLote = async () => {
         
         let avisoExtra = "";
         try {
-            const [planejamentos, chamadasAtualizadas] = await Promise.all([App.api(`/planejamentos?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`)]);
+            const [planejamentosAjuste, chamadasAtualizadas] = await Promise.all([App.api(`/planejamentos?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`)]);
             const promessasPlano = [];
 
             alunosAfetados.forEach(idAluno => {
-                let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                let planoDoAluno = planejamentosAjuste.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
                 if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
                     planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadas);
                     promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
