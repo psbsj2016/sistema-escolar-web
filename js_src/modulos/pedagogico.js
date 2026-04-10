@@ -347,64 +347,77 @@ App.salvarPlanejamentoBanco = async () => {
     
     const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
     const txtOrig = btn ? btn.innerText : '💾 SALVAR';
-    if(btn) { btn.innerText = "A guardar e sincronizar... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "A sincronizar tudo... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {
-        // 1. Salva o planeamento primeiro
+        // 1. Salva o Planeamento (Base de tudo)
         await App.api(url, met, App.planoAtual); 
         
-        // 🚀 2. Automação Inteligente de Frequências (Regra: Visto Manual + Data Passada)
+        // 🚀 2. GESTÃO DE SINCRONIZAÇÃO (Cria, Atualiza ou Remove Presenças)
         const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
         const chamadasDoAluno = chamadasExistentes.filter(c => c.idAluno === App.planoAtual.idAluno);
         
         const hojeStr = new Date().toISOString().split('T')[0];
-        const promessasAutomacao = [];
-        let chamadasCriadas = 0;
+        const promessasSincronizacao = [];
+        let totalCriadas = 0, totalAtualizadas = 0, totalRemovidas = 0;
 
         App.planoAtual.aulas.forEach((aula, index) => {
-            // Converte a data da aula de DD/MM/YYYY para YYYY-MM-DD
             const partesData = aula.data.split('/');
             if(partesData.length === 3) {
                 const dataAulaISO = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
                 
-                // 🛡️ FILTRO DE PRECISÃO:
-                // Só cria chamada se: Tiver Visto (visto === true) E a data for hoje ou passada
-                if (aula.visto === true && dataAulaISO <= hojeStr) {
-                    
-                    // Verifica se já existe chamada nesse dia para não duplicar
-                    const jaExiste = chamadasDoAluno.find(c => c.data === dataAulaISO);
-                    
-                    if (!jaExiste) {
-                        const payloadChamada = {
-                            id: Date.now().toString() + Math.floor(Math.random()*1000) + index,
-                            idAluno: App.planoAtual.idAluno,
-                            nomeAluno: App.planoAtual.nomeAluno,
-                            data: dataAulaISO,
-                            status: 'Presença', // Assume presença pois foi dado "Visto" no plano
-                            duracao: aula.duracao || '01:00'
-                        };
-                        promessasAutomacao.push(App.api('/chamadas', 'POST', payloadChamada));
-                        chamadasCriadas++;
+                // 🛡️ SÓ PROCESSA DATAS PASSADAS OU HOJE
+                if (dataAulaISO <= hojeStr) {
+                    const regExistente = chamadasDoAluno.find(c => c.data === dataAulaISO);
+
+                    if (aula.visto === true) {
+                        // CASO A: Marcou OK ou Atualizou dados
+                        if (!regExistente) {
+                            // Criar nova presença
+                            const payload = {
+                                id: Date.now().toString() + Math.floor(Math.random()*1000) + index,
+                                idAluno: App.planoAtual.idAluno,
+                                nomeAluno: App.planoAtual.nomeAluno,
+                                data: dataAulaISO,
+                                status: 'Presença',
+                                duracao: aula.duracao || '01:00'
+                            };
+                            promessasSincronizacao.push(App.api('/chamadas', 'POST', payload));
+                            totalCriadas++;
+                        } else {
+                            // Atualizar presença se a duração mudou
+                            if (regExistente.duracao !== aula.duracao) {
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, duracao: aula.duracao }));
+                                totalAtualizadas++;
+                            }
+                        }
+                    } else {
+                        // CASO B: Desmarcou o visto (Remover do diário)
+                        if (regExistente) {
+                            promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'DELETE'));
+                            totalRemovidas++;
+                        }
                     }
                 }
             }
         });
 
-        if (promessasAutomacao.length > 0) {
-            await Promise.all(promessasAutomacao);
+        // Executa todas as mudanças em lote
+        if (promessasSincronizacao.length > 0) {
+            await Promise.all(promessasSincronizacao);
         }
 
-        // Feedback visual
-        if (chamadasCriadas > 0) {
-            App.showToast(`Plano salvo e ${chamadasCriadas} presenças (com Visto) lançadas!`, "success"); 
-        } else {
-            App.showToast("Planeamento salvo com sucesso!", "success"); 
+        // Feedback Inteligente
+        let msg = "Planeamento Salvo!";
+        if(totalCriadas > 0 || totalAtualizadas > 0 || totalRemovidas > 0) {
+            msg += ` Sincronizado: ${totalCriadas}✅ | ${totalAtualizadas}✏️ | ${totalRemovidas}🗑️`;
         }
+        App.showToast(msg, "success");
         
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { 
-        App.showToast("Erro ao guardar dados.", "error"); 
+        App.showToast("Erro na sincronização.", "error"); 
         console.error(e);
     } 
     finally { 
