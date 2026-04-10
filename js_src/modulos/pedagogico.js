@@ -351,10 +351,10 @@ App.salvarPlanejamentoBanco = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        // 1. Salva o planeamento normalmente na base de dados
+        // 1. Salva o planeamento primeiro
         await App.api(url, met, App.planoAtual); 
         
-        // 🚀 2. NOVA REGRA: Automação Inteligente de Frequências (Apenas Passado e Hoje)
+        // 🚀 2. Automação Inteligente de Frequências (Regra: Visto Manual + Data Passada)
         const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
         const chamadasDoAluno = chamadasExistentes.filter(c => c.idAluno === App.planoAtual.idAluno);
         
@@ -362,17 +362,17 @@ App.salvarPlanejamentoBanco = async () => {
         const promessasAutomacao = [];
         let chamadasCriadas = 0;
 
-        // Analisa todas as datas que estão na grelha do planeamento
         App.planoAtual.aulas.forEach((aula, index) => {
-            // Converte a data da aula de DD/MM/YYYY para YYYY-MM-DD para comparar com a trava
+            // Converte a data da aula de DD/MM/YYYY para YYYY-MM-DD
             const partesData = aula.data.split('/');
             if(partesData.length === 3) {
                 const dataAulaISO = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
                 
-                // 🛡️ A BARREIRA: Só cria chamada automática se a aula for no Passado ou Hoje
-                if (dataAulaISO <= hojeStr) {
+                // 🛡️ FILTRO DE PRECISÃO:
+                // Só cria chamada se: Tiver Visto (visto === true) E a data for hoje ou passada
+                if (aula.visto === true && dataAulaISO <= hojeStr) {
                     
-                    // Verifica se JÁ EXISTE uma chamada para este aluno neste dia exato
+                    // Verifica se já existe chamada nesse dia para não duplicar
                     const jaExiste = chamadasDoAluno.find(c => c.data === dataAulaISO);
                     
                     if (!jaExiste) {
@@ -381,7 +381,7 @@ App.salvarPlanejamentoBanco = async () => {
                             idAluno: App.planoAtual.idAluno,
                             nomeAluno: App.planoAtual.nomeAluno,
                             data: dataAulaISO,
-                            status: 'Presença',
+                            status: 'Presença', // Assume presença pois foi dado "Visto" no plano
                             duracao: aula.duracao || '01:00'
                         };
                         promessasAutomacao.push(App.api('/chamadas', 'POST', payloadChamada));
@@ -391,21 +391,20 @@ App.salvarPlanejamentoBanco = async () => {
             }
         });
 
-        // Se encontrou chamadas do passado/hoje que ainda não estavam no sistema, envia todas de uma vez!
         if (promessasAutomacao.length > 0) {
             await Promise.all(promessasAutomacao);
         }
 
-        // 3. Feedback visual dinâmico (mostra quantas presenças foram criadas sozinhas)
+        // Feedback visual
         if (chamadasCriadas > 0) {
-            App.showToast(`Plano Salvo e ${chamadasCriadas} presença(s) lançada(s) automaticamente! 🎉`, "success"); 
+            App.showToast(`Plano salvo e ${chamadasCriadas} presenças (com Visto) lançadas!`, "success"); 
         } else {
-            App.showToast("Planeamento Salvo com sucesso!", "success"); 
+            App.showToast("Planeamento salvo com sucesso!", "success"); 
         }
         
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { 
-        App.showToast("Erro ao salvar.", "error"); 
+        App.showToast("Erro ao guardar dados.", "error"); 
         console.error(e);
     } 
     finally { 
