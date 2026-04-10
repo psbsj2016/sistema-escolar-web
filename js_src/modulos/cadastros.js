@@ -360,3 +360,187 @@ App.salvarCadastro = async () => {
         document.body.style.cursor = 'default';
     }
 };
+
+// =========================================================
+// 📄 DOSSIÊ DINÂMICO DE FREQUÊNCIA (CONTEXTUALIZADO)
+// =========================================================
+
+App.abrirDossierAluno = async (id, idPlanoEspecifico = null) => {
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:50px; color:#666;">A preparar dossiê dinâmico... ⏳</p>';
+
+    try {
+        // 1. Coleta de Dados
+        const [aluno, chamadas, planejamentos] = await Promise.all([
+            App.api(`/alunos/${id}`),
+            App.api(`/chamadas?idAluno=${id}&_t=${Date.now()}`),
+            App.api(`/planejamentos?idAluno=${id}&_t=${Date.now()}`)
+        ]);
+        
+        // Busca perfil da escola para o cabeçalho de impressão
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+        // 2. Lógica de Contexto: Qual plano exibir?
+        let planoAlvo;
+        if (idPlanoEspecifico) {
+            planoAlvo = planejamentos.find(p => p.id === idPlanoEspecifico);
+        } else {
+            // Prioriza o plano ativo. Se não houver, pega o último registro.
+            planoAlvo = planejamentos.find(p => p.status === 'Ativo') || (planejamentos.length > 0 ? planejamentos[planejamentos.length - 1] : null);
+        }
+
+        const isArquivado = planoAlvo && planoAlvo.status === 'Arquivado';
+
+        // 3. Filtragem de Frequência baseada no Ciclo do Plano
+        let frequenciaCiclo = [];
+        if (planoAlvo && planoAlvo.aulas && planoAlvo.aulas.length > 0) {
+            const p1 = planoAlvo.aulas[0].data.split('/');
+            const p2 = planoAlvo.aulas[planoAlvo.aulas.length - 1].data.split('/');
+            const inicioISO = `${p1[2]}-${p1[1]}-${p1[0]}`;
+            const fimISO = `${p2[2]}-${p2[1]}-${p2[0]}`;
+
+            // Filtra chamadas que estão dentro do range de datas deste planejamento
+            frequenciaCiclo = chamadas.filter(c => c.data >= inicioISO && c.data <= fimISO)
+                                     .sort((a, b) => b.data.localeCompare(a.data));
+        }
+
+        // 4. Cálculo de Horas do Ciclo
+        let totalMinutos = 0;
+        frequenciaCiclo.forEach(c => {
+            if (c.status === 'Presença' || c.status === 'Reposição') {
+                const [h, m] = (c.duracao || "01:00").split(':').map(Number);
+                totalMinutos += (h * 60) + (m || 0);
+            }
+        });
+        const horasCump = Math.floor(totalMinutos / 60);
+        const minCump = totalMinutos % 60;
+        const totalHorasText = minCump > 0 ? `${horasCump}h ${minCump}m` : `${horasCump}H`;
+
+        // 5. Layout de Impressão (Só aparece no papel)
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; margin-bottom:10px;">` : '';
+        const headerImpressao = `
+            <div class="header-impressao" style="display:none; border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:20px; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    ${logo}
+                    <div>
+                        <h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO ENSINO')}</h2>
+                        <div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:bold;">RELATÓRIO DE FREQUÊNCIA</div>
+                    <div style="font-size:11px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div>
+                </div>
+            </div>
+        `;
+
+        // 6. Renderização do Dossiê
+        div.innerHTML = `
+            <style>
+                @media print {
+                    .no-print { display: none !important; }
+                    .header-impressao { display: flex !important; }
+                    .card-dossie { box-shadow:none !important; border:none !important; padding:0 !important; }
+                    body { background: white !important; }
+                }
+            </style>
+
+            <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#2c3e50;">📁 Dossiê: ${App.escapeHTML(aluno.nome)}</h3>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="window.print()" style="background:#3498db; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
+                    <button onclick="App.abrirMenuArquivadosDossie('${id}')" style="background:#8e44ad; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">🗄️ ARQUIVADOS</button>
+                    <button onclick="App.renderizarLista('aluno')" style="background:#95a5a6; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">VOLTAR</button>
+                </div>
+            </div>
+
+            <div class="card card-dossie" style="background:white; border-radius:12px; padding:40px; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+                ${headerImpressao}
+                
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px; border-bottom:1px solid #f0f0f0; padding-bottom:20px;">
+                    <div>
+                        <div style="font-size:22px; font-weight:bold; color:#2c3e50; margin-bottom:5px;">${App.escapeHTML(aluno.nome)}</div>
+                        <div style="color:#7f8c8d; font-size:14px;">Curso: <b>${App.escapeHTML(aluno.curso || 'Geral')}</b> | Turma: <b>${App.escapeHTML(aluno.turma || '-')}</b></div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; color:#95a5a6; text-transform:uppercase;">Horas no Ciclo</div>
+                        <div style="font-size:28px; font-weight:bold; color:#27ae60;">${totalHorasText}</div>
+                    </div>
+                </div>
+
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:25px; border-left:4px solid #3498db;">
+                    <div style="font-weight:bold; color:#2980b9;">Ciclo de Planeamento:</div>
+                    <div style="font-size:14px;">
+                        ${planoAlvo ? `Período de ${planoAlvo.aulas[0].data} até ${planoAlvo.aulas[planoAlvo.aulas.length-1].data}` : 'Nenhum ciclo ativo.'}
+                        ${isArquivado ? ' <b style="color:#e74c3c;">(ARQUIVADO)</b>' : ' <b style="color:#27ae60;">(EM CURSO)</b>'}
+                    </div>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #333; text-align:left;">
+                            <th style="padding:12px;">Data</th>
+                            <th style="padding:12px;">Situação</th>
+                            <th style="padding:12px; text-align:center;">Duração</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${frequenciaCiclo.length === 0 ? '<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">Sem registros para este período.</td></tr>' : ''}
+                        ${frequenciaCiclo.map(c => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px;">${c.data.split('-').reverse().join('/')}</td>
+                                <td style="padding:12px; font-weight:bold; color:${c.status === 'Presença' ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12')}">${c.status}</td>
+                                <td style="padding:12px; text-align:center;">${c.duracao || '01:00'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <div class="only-print" style="display:none; margin-top:60px; text-align:center; font-size:12px;">
+                    <div style="display:flex; justify-content:space-around;">
+                        <div style="border-top:1px solid #000; width:200px; padding-top:5px;">Coordenação</div>
+                        <div style="border-top:1px solid #000; width:200px; padding-top:5px;">Responsável</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+    } catch (e) {
+        App.showToast("Erro ao abrir dossiê.", "error");
+    }
+};
+
+// 🗄️ Função para exibir e selecionar planeamentos arquivados
+App.abrirMenuArquivadosDossie = async (idAluno) => {
+    try {
+        const planejamentos = await App.api(`/planejamentos?idAluno=${idAluno}`);
+        const arquivados = planejamentos.filter(p => p.status === 'Arquivado');
+
+        if (arquivados.length === 0) {
+            return App.showToast("Não existem ciclos arquivados para este aluno.", "info");
+        }
+
+        const htmlLista = arquivados.map(p => `
+            <div onclick="App.fecharModal(); App.abrirDossierAluno('${idAluno}', '${p.id}')" 
+                 style="padding:15px; border-bottom:1px solid #eee; cursor:pointer; transition:0.3s;" 
+                 onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='white'">
+                <div style="font-weight:bold;">Período: ${p.aulas[0].data} - ${p.aulas[p.aulas.length-1].data}</div>
+                <div style="font-size:12px; color:#666;">Curso: ${p.curso} | ${p.aulas.length} aulas</div>
+            </div>
+        `).join('');
+
+        const modal = document.getElementById('modal-overlay');
+        const titulo = document.getElementById('modal-titulo');
+        const conteudo = document.getElementById('modal-form-content');
+        
+        titulo.innerText = "Histórico de Ciclos Arquivados";
+        conteudo.innerHTML = `<div style="max-height:400px; overflow-y:auto;">${htmlLista}</div>`;
+        modal.style.display = 'flex';
+        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) btnConfirm.style.display = 'none';
+
+    } catch (e) {
+        App.showToast("Erro ao ler arquivos.", "error");
+    }
+};
