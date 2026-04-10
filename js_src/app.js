@@ -927,83 +927,236 @@ var App = {
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
 
-    abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
-        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
-        document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
-        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A calcular horas e presenças... ⏳</p>';
-        
-        const btnConfirm = document.querySelector('.btn-confirm');
-        if(btnConfirm) btnConfirm.style.display = 'none'; 
+     // =========================================================
+    // ⏱️ RELATÓRIO DE FREQUÊNCIA DINÂMICO E IMPRESSÃO (ATUALIZADO)
+    // =========================================================
+    abrirRelatorioFrequencia: async (idAluno, nomeAluno, idPlanoAlvo = null) => {
+        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A calcular horas e cruzar ciclos de planejamento... ⏳</p>';
+        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) btnConfirm.style.display = 'none'; 
 
-        try {
-            const chamadas = await App.api('/chamadas');
-            const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
-            
-            let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
-            
-            if (historico.length === 0) {
-                htmlMeses = '<p style="text-align:center; padding:30px; color:#999; font-size:14px;">Nenhum registo de chamada encontrado para este aluno.</p>';
-            } else {
-                const agrupado = {};
-                const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-                
-                historico.forEach(c => {
-                    const d = new Date(c.data + 'T00:00:00');
-                    const mesAno = `${mesesNomes[d.getMonth()]} de ${d.getFullYear()}`;
-                    if (!agrupado[mesAno]) agrupado[mesAno] = [];
-                    agrupado[mesAno].push(c);
-                    
-                    let mins = 0;
-                    if (c.duracao) {
-                        const [h, m] = c.duracao.split(':');
-                        mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
-                    }
-                    
-                    if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
-                    else if (c.status === 'Falta Justificada' || c.status === 'Justificada') minJustificada += mins;
-                    else if (c.status === 'Falta') minFalta += mins;
-                });
-                
-                for (const mes in agrupado) {
-                    htmlMeses += `<div style="background:#f4f6f7; padding:10px 15px; margin-top:15px; border-radius:8px 8px 0 0; font-weight:bold; color:#2c3e50; border:1px solid #eee; border-bottom:none; font-size:13px; text-transform:uppercase;">📅 ${mes}</div>`;
-                    htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
-                    agrupado[mes].forEach(c => {
-                        const dataBr = c.data.split('-').reverse().join('/');
-                        const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
-                        htmlMeses += `<tr style="border-bottom:1px solid #eee;">
-                                        <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
-                                        <td style="padding:10px 15px; font-weight:bold; color:${cor};">${c.status}</td>
-                                        <td style="padding:10px 15px; text-align:right; color:#666; font-weight:500;">${c.duracao || '00:00'} h</td>
-                                      </tr>`;
-                    });
-                    htmlMeses += `</tbody></table>`;
-                }
-            }
-            
-            const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
-            
-            const kpiHTML = `
-                <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
-                    <div style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
-                        <div style="font-size:10px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Presenças</div>
-                        <div style="font-size:18px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
-                    </div>
-                    <div style="flex:1; min-width:90px; background:#fef5e7; border:1px solid #f39c12; padding:15px 10px; border-radius:8px; text-align:center;">
-                        <div style="font-size:10px; color:#d68910; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Justificadas</div>
-                        <div style="font-size:18px; font-weight:bold; color:#b9770e;">${fmtHoras(minJustificada)}</div>
-                    </div>
-                    <div style="flex:1; min-width:90px; background:#fdedec; border:1px solid #e74c3c; padding:15px 10px; border-radius:8px; text-align:center;">
-                        <div style="font-size:10px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Faltas</div>
-                        <div style="font-size:18px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
-                    </div>
-                </div>`;
-                
-            document.getElementById('modal-form-content').innerHTML = `
-                <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
-                ${kpiHTML}
-            `;
-        } catch(e) { document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; }
-    },
+        // 1. Injetar CSS de Impressão (Só funciona na hora de imprimir)
+        if (!document.getElementById('print-style-freq')) {
+            const style = document.createElement('style');
+            style.id = 'print-style-freq';
+            style.innerHTML = `
+                @media print {
+                    body * { visibility: hidden; }
+                    #modal-form-content, #modal-form-content * { visibility: visible; }
+                    #modal-form-content { position: absolute; left: 0; top: 0; width: 100%; max-height: none; overflow: visible; }
+                    .no-print { display: none !important; }
+                    .print-only { display: block !important; }
+                    .modal-box { box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+                    #modal-overlay { background: white !important; align-items: flex-start; padding: 0; overflow: visible; }
+                    .kpi-box { border: 1px solid #ccc !important; background: #fff !important; } /* Ajuste de cor para papel */
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        try {
+            // 2. Busca simultânea de Chamadas, Planejamentos e Perfil da Escola
+            const [chamadas, planejamentos] = await Promise.all([
+                App.api('/chamadas'),
+                App.api('/planejamentos')
+            ]);
+            
+            const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+            // 3. Lógica de Contexto: Encontrar o Ciclo Correto
+            const planosAluno = (Array.isArray(planejamentos) ? planejamentos : []).filter(p => p.idAluno === idAluno);
+            let planoAtivo;
+            
+            if (idPlanoAlvo) {
+                planoAtivo = planosAluno.find(p => p.id === idPlanoAlvo);
+            } else {
+                planoAtivo = planosAluno.find(p => p.status !== 'Arquivado') || planosAluno[planosAluno.length - 1];
+            }
+
+            let historico = [];
+            let tituloCiclo = "";
+
+            if (planoAtivo && planoAtivo.aulas && planoAtivo.aulas.length > 0) {
+                const dataInicioBR = planoAtivo.aulas[0].data;
+                const dataFimBR = planoAtivo.aulas[planoAtivo.aulas.length - 1].data;
+                const isArquivado = planoAtivo.status === 'Arquivado';
+                
+                tituloCiclo = `Período do Planejamento: ${dataInicioBR} a ${dataFimBR} ${isArquivado ? '<span style="color:#e74c3c; font-size:12px;">(ARQUIVADO)</span>' : '<span style="color:#27ae60; font-size:12px;">(ATIVO)</span>'}`;
+
+                // Conversão de DD/MM/YYYY para YYYY-MM-DD para comparação precisa
+                const [d1, m1, y1] = dataInicioBR.split('/');
+                const [d2, m2, y2] = dataFimBR.split('/');
+                const isoInicio = `${y1}-${m1}-${d1}`;
+                const isoFim = `${y2}-${m2}-${d2}`;
+
+                // Filtra as chamadas apenas dentro das datas do planejamento selecionado
+                historico = chamadas.filter(c => c.idAluno === idAluno && c.data >= isoInicio && c.data <= isoFim);
+            } else {
+                tituloCiclo = "Nenhum planejamento de aulas encontrado para gerar o ciclo.";
+            }
+
+            historico = historico.sort((a,b) => new Date(b.data) - new Date(a.data));
+            
+            // 4. Cálculos e Agrupamento Mês a Mês (Mantendo a beleza original)
+            let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
+            
+            if (historico.length === 0) {
+                htmlMeses = '<p style="text-align:center; padding:40px; color:#999; font-size:14px; background:#f9f9f9; border-radius:8px; border:1px dashed #ccc;">Nenhum registro de presença lançado para as datas deste ciclo.</p>';
+            } else {
+                const agrupado = {};
+                const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                
+                historico.forEach(c => {
+                    const d = new Date(c.data + 'T00:00:00');
+                    const mesAno = `${mesesNomes[d.getMonth()]} de ${d.getFullYear()}`;
+                    if (!agrupado[mesAno]) agrupado[mesAno] = [];
+                    agrupado[mesAno].push(c);
+                    
+                    let mins = 0;
+                    if (c.duracao) {
+                        const [h, m] = c.duracao.split(':');
+                        mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
+                    }
+                    
+                    if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
+                    else if (c.status === 'Falta Justificada' || c.status === 'Justificada') minJustificada += mins;
+                    else if (c.status === 'Falta') minFalta += mins;
+                });
+                
+                for (const mes in agrupado) {
+                    htmlMeses += `<div style="background:#f4f6f7; padding:10px 15px; margin-top:15px; border-radius:8px 8px 0 0; font-weight:bold; color:#2c3e50; border:1px solid #eee; border-bottom:none; font-size:13px; text-transform:uppercase;">📅 ${mes}</div>`;
+                    htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
+                    agrupado[mes].forEach(c => {
+                        const dataBr = c.data.split('-').reverse().join('/');
+                        const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
+                        htmlMeses += `<tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
+                                        <td style="padding:10px 15px; font-weight:bold; color:${cor};">${c.status}</td>
+                                        <td style="padding:10px 15px; text-align:right; color:#666; font-weight:500;">${c.duracao || '00:00'} h</td>
+                                      </tr>`;
+                    });
+                    htmlMeses += `</tbody></table>`;
+                }
+            }
+            
+            const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
+            
+            const kpiHTML = `
+                <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                    <div class="kpi-box" style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Presenças</div>
+                        <div style="font-size:18px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
+                    </div>
+                    <div class="kpi-box" style="flex:1; min-width:90px; background:#fef5e7; border:1px solid #f39c12; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#d68910; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Justificadas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#b9770e;">${fmtHoras(minJustificada)}</div>
+                    </div>
+                    <div class="kpi-box" style="flex:1; min-width:90px; background:#fdedec; border:1px solid #e74c3c; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Faltas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
+                    </div>
+                </div>`;
+
+            // 5. Estrutura do Cabeçalho de Impressão (Oficial)
+            const logoPrint = escola.foto ? `<img src="${escola.foto}" style="max-height:60px; object-fit:contain;">` : '';
+            const dataEmissao = new Date().toLocaleDateString('pt-BR');
+            const headerPrintHTML = `
+                <div class="print-only" style="display:none; border-bottom:3px solid #2c3e50; padding-bottom:15px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            ${logoPrint}
+                            <div>
+                                <h2 style="margin:0; color:#2c3e50; font-size:22px; text-transform:uppercase;">${App.escapeHTML(escola.nome || 'Instituição de Ensino')}</h2>
+                                <p style="margin:2px 0 0 0; color:#555; font-size:12px; font-weight:bold;">CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}</p>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <h3 style="margin:0; color:#2c3e50; font-size:16px;">RELATÓRIO DE FREQUÊNCIA</h3>
+                            <p style="margin:2px 0 0 0; color:#7f8c8d; font-size:11px;">Emissão: ${dataEmissao}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 6. Montagem Final da Tela + Botões Novos
+            document.getElementById('modal-form-content').innerHTML = `
+                ${headerPrintHTML}
+                
+                <div style="background:#f8f9fa; padding:12px 15px; border-radius:6px; margin-bottom:15px; border-left:4px solid #3498db;">
+                    <strong style="display:block; font-size:14px; color:#2c3e50;">Aluno: ${App.escapeHTML(nomeAluno)}</strong>
+                    <div style="font-size:13px; color:#555; margin-top:3px;">${tituloCiclo}</div>
+                </div>
+
+                <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
+                ${kpiHTML}
+
+                <div class="print-only" style="display:none; margin-top:60px; text-align:center;">
+                    <div style="display:flex; justify-content:space-around;">
+                        <div style="width:250px; border-top:1px solid #000; padding-top:5px; font-size:12px;">Coordenação / Professor</div>
+                        <div style="width:250px; border-top:1px solid #000; padding-top:5px; font-size:12px;">Assinatura do Aluno / Responsável</div>
+                    </div>
+                </div>
+                
+                <div class="no-print" style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px; border-top:1px solid #eee; padding-top:15px;">
+                    <button class="btn-cancel" onclick="App.fecharModal()" style="margin:0; padding:10px 20px;">✖️ Cancelar</button>
+                    <button class="btn-primary" style="background:#8e44ad; border:none; margin:0; padding:10px 20px;" onclick="App.abrirModalArquivosFrequencia('${idAluno}', '${App.escapeHTML(nomeAluno)}')">🗄️ Arquivados</button>
+                    <button class="btn-primary" style="background:#2980b9; border:none; margin:0; padding:10px 20px;" onclick="window.print()">🖨️ Imprimir</button>
+                </div>
+            `;
+        } catch(e) { 
+            console.error(e);
+            document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao processar o ciclo de frequência.</p>'; 
+        }
+    },
+
+    // 🗄️ FUNÇÃO NOVA: Lista os planejamentos arquivados do aluno
+    abrirModalArquivosFrequencia: async (idAluno, nomeAluno) => {
+        document.getElementById('modal-titulo').innerText = `Histórico Arquivado: ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px;">Procurando históricos... ⏳</p>';
+        
+        try {
+            const planejamentos = await App.api('/planejamentos');
+            const arquivados = (Array.isArray(planejamentos) ? planejamentos : []).filter(p => p.idAluno === idAluno && p.status === 'Arquivado');
+            
+            if (arquivados.length === 0) {
+                App.showToast("Nenhum ciclo arquivado para este aluno.", "info");
+                return App.abrirRelatorioFrequencia(idAluno, nomeAluno); // Volta pro atual
+            }
+
+            let html = '<p style="font-size:13px; color:#666; margin-bottom:15px;">Selecione um planejamento passado para visualizar as horas e a frequência daquele período exato.</p>';
+            html += '<div style="display:flex; flex-direction:column; gap:10px; max-height:40vh; overflow-y:auto; padding-right:5px;">';
+            
+            arquivados.forEach(p => {
+                const dtInicio = p.aulas && p.aulas[0] ? p.aulas[0].data : 'Data Indisponível';
+                const dtFim = p.aulas && p.aulas.length ? p.aulas[p.aulas.length - 1].data : '';
+                
+                html += `
+                    <div style="background:#f8f9fa; border:1px solid #ddd; padding:15px; border-radius:8px; cursor:pointer; transition:0.2s; border-left:4px solid #8e44ad;" 
+                         onmouseover="this.style.background='#f4ecf7'" onmouseout="this.style.background='#f8f9fa'" 
+                         onclick="App.abrirRelatorioFrequencia('${idAluno}', '${App.escapeHTML(nomeAluno)}', '${p.id}')">
+                        <div style="font-weight:bold; color:#2c3e50;">Ciclo: ${dtInicio} até ${dtFim}</div>
+                        <div style="font-size:12px; color:#7f8c8d; margin-top:5px;">Curso: ${App.escapeHTML(p.curso || 'Não especificado')} | ${p.aulas ? p.aulas.length : 0} aulas planejadas</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            html += `
+                <div style="display:flex; justify-content:flex-end; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+                    <button class="btn-cancel" style="margin:0; padding:10px 20px;" onclick="App.abrirRelatorioFrequencia('${idAluno}', '${App.escapeHTML(nomeAluno)}')">⬅️ Voltar ao Ciclo Ativo</button>
+                </div>
+            `;
+            
+            document.getElementById('modal-form-content').innerHTML = html;
+
+        } catch (e) {
+            App.showToast("Erro ao carregar arquivos.", "error");
+            App.abrirRelatorioFrequencia(idAluno, nomeAluno);
+        }
+    },
 
     abrirModalVenda: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
