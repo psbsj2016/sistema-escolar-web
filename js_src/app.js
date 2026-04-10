@@ -1229,7 +1229,7 @@ var App = {
             if (tipo === 'aluno') {
                 const statusAluno = item.status || 'Ativo';
                 botoes.push(TB.btn('🔄', '#8e44ad', `App.alterarStatusAluno('${item.id}', '${statusAluno}')`, 'Alterar Status (Ativo/Trancado/Cancelado)'));
-                botoes.push(TB.btn('⏱️', '#3498db', `App.abrirDossierAluno('${item.id}')`, 'Ver Dossiê Dinâmico e Frequência'));
+                botoes.push(TB.btn('⏱️', '#3498db', `App.abrirRelatorioFrequencia('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Ver Histórico de Horas / Frequência'));
                 
                 if (App.usuario.tipo !== 'Professor' && statusAluno === 'Ativo') {
                     botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
