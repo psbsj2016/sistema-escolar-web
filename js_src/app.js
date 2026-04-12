@@ -33,6 +33,29 @@ var App = {
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     },
 
+    criarElemento: (tag, classes = [], atributos = {}, texto = '') => {
+        const elemento = document.createElement(tag);
+        
+        // Adiciona classes
+        if (classes.length > 0) elemento.classList.add(...classes);
+        
+        // Adiciona atributos (id, type, etc.) e Eventos (onclick)
+        for (const chave in atributos) {
+            // Se o atributo for um evento (ex: onClick), adicionamos o Listener de forma moderna
+            if (chave.startsWith('on') && typeof atributos[chave] === 'function') {
+                const nomeEvento = chave.substring(2).toLowerCase(); // transforma 'onClick' em 'click'
+                elemento.addEventListener(nomeEvento, atributos[chave]);
+            } else {
+                elemento.setAttribute(chave, atributos[chave]);
+            }
+        }
+        
+        // Adiciona o texto de forma 100% segura (não precisa do escapeHTML)
+        if (texto !== '') elemento.textContent = texto; 
+        
+        return elemento;
+    },
+
     getTenantKey: (chaveBase) => {
         const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
         return `${chaveBase}_${tenantId}`;
@@ -553,10 +576,34 @@ var App = {
     // UTILITÁRIOS DA INTERFACE
     // =========================================================
     showToast: (mensagem, tipo = 'info') => {
-        let container = document.getElementById('toast-container'); if (!container) { container = document.createElement('div'); container.id = 'toast-container'; document.body.appendChild(container); }
-        const toast = document.createElement('div'); toast.className = `toast ${tipo}`; const icon = tipo === 'success' ? '✅' : (tipo === 'error' ? '❌' : (tipo === 'warning' ? '⚠️' : 'ℹ️'));
-        toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${App.escapeHTML(mensagem)}</span>`; container.appendChild(toast);
-        setTimeout(() => { toast.style.animation = 'fadeOut 0.5s ease forwards'; setTimeout(() => toast.remove(), 500); }, 3000);
+        let container = document.getElementById('toast-container'); 
+        if (!container) { 
+            // Usando o nosso novo criador para fazer o container
+            container = App.criarElemento('div', [], { id: 'toast-container' });
+            document.body.appendChild(container); 
+        }
+
+        const iconStr = tipo === 'success' ? '✅' : (tipo === 'error' ? '❌' : (tipo === 'warning' ? '⚠️' : 'ℹ️'));
+
+        // Fabricamos a caixa do Toast
+        const toast = App.criarElemento('div', ['toast', tipo]);
+        
+        // Fabricamos o ícone
+        const iconSpan = App.criarElemento('span', ['toast-icon'], {}, iconStr);
+        
+        // Fabricamos o texto da mensagem (O textContent torna-o super seguro automaticamente)
+        const msgSpan = App.criarElemento('span', [], {}, mensagem);
+
+        // Juntamos os blocos (Colocamos os spans dentro do toast, e o toast no container)
+        toast.appendChild(iconSpan);
+        toast.appendChild(msgSpan);
+        container.appendChild(toast);
+
+        // A animação continua igual
+        setTimeout(() => { 
+            toast.style.animation = 'fadeOut 0.5s ease forwards'; 
+            setTimeout(() => toast.remove(), 500); 
+        }, 3000);
     },
 
     setupMobileMenu: () => {
