@@ -486,33 +486,29 @@ App.excluirPlanejamentoArquivado = (id) => {
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas || plano.aulas.length === 0) return plano;
 
-    // 🚀 REGRA 1: A BARREIRA DO TEMPO
+    // 🚀 NOVA REGRA 2: A BARREIRA DO TEMPO
     // Descobre a data da 1ª aula do planeamento atual (converte DD/MM/YYYY para YYYY-MM-DD)
     const primeiraAulaArr = plano.aulas[0].data.split('/');
     const dataInicioPlano = `${primeiraAulaArr[2]}-${primeiraAulaArr[1]}-${primeiraAulaArr[0]}`;
 
-    // 🚀 REGRA 2: FILTRO UNIVERSAL
-    // Agora puxa TODOS os registos (Presenças, Faltas, Feriados) ocorridos DEPOIS do início deste planeamento
+    // Agora só puxa as presenças que aconteceram DEPOIS do início deste planeamento! (Adeus, fantasmas do passado!)
     const presencas = chamadas
-        .filter(c => c.idAluno === plano.idAluno && c.data >= dataInicioPlano)
+        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição') && c.data >= dataInicioPlano)
         .sort((a, b) => new Date(a.data) - new Date(b.data));
 
-    // Descobre os dias da semana habituais para projetar o futuro com base no planeamento original
-    let diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { 
-        const parts = a.data.split('/'); 
-        if (parts.length === 3) { 
-            const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); 
-            return d.getDay(); 
-        } 
-        return -1; 
-    }).filter(d => d !== -1))];
-    
-    if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; // Fallback para Segunda-feira
+    let diasDaSemanaAulas = [];
+    if (presencas.length > 0) {
+        const ultimas = presencas.slice(-4);
+        diasDaSemanaAulas = [...new Set(ultimas.map(p => { const [ano, mes, dia] = p.data.split('-'); const d = new Date(`${ano}-${mes}-${dia}T12:00:00`); return d.getDay(); }))];
+    }
 
-    let presencasUsadas = 0; 
-    // 🚀 REGRA 3: MÁQUINA DO TEMPO CORRIGIDA
-    // A data base para projetar o futuro começa no INÍCIO DO PLANO, não no dia de hoje!
-    let ultimaDataBase = new Date(`${dataInicioPlano}T12:00:00`);
+    if (diasDaSemanaAulas.length === 0) {
+        diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { const parts = a.data.split('/'); if (parts.length === 3) { const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); return d.getDay(); } return -1; }).filter(d => d !== -1))];
+    }
+    
+    if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
+
+    let presencasUsadas = 0; let ultimaDataBase = new Date(); ultimaDataBase.setHours(12, 0, 0, 0);
     let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
 
     for (let i = 0; i < plano.aulas.length; i++) {
@@ -520,63 +516,21 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         if (aula.hora) ultimoHorarioBase = aula.hora;
 
         if (presencasUsadas < presencas.length) {
-            // Existe um registo real (Falta ou Presença) para mapear aqui!
-            const presencaDia = presencas[presencasUsadas]; 
-            const dataReal = presencaDia.data; 
-            const [ano, mes, dia] = dataReal.split('-');
-            
+            const presencaDia = presencas[presencasUsadas]; const dataReal = presencaDia.data; const [ano, mes, dia] = dataReal.split('-');
             aula.data = `${dia}/${mes}/${ano}`;
             if(presencaDia.duracao) aula.duracao = presencaDia.duracao;
-            
-            // Marca o visto para NÃO excluir o registo no banco de dados
-            aula.visto = true; 
-            
-            // 🚀 REGRA 4: MARCADOR VISUAL INTELIGENTE
-            // Se não foi presença, avisa no conteúdo da aula para o professor saber o que houve
-            if (presencaDia.status !== 'Presença' && presencaDia.status !== 'Reposição') {
-                if (!aula.conteudo.includes(`[${presencaDia.status}]`)) {
-                    aula.conteudo = `[${presencaDia.status}] ${aula.conteudo}`.trim();
-                }
-            }
-
-            ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`); 
-            presencasUsadas++;
+            aula.visto = true; ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`); presencasUsadas++;
         } else {
-            // Aulas futuras: Projetar a partir da ÚLTIMA data real que ocorreu
-            aula.visto = false; 
-            
-            // Avança um dia e procura o próximo dia da semana válido
-            ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
-            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { 
-                ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); 
-            }
-            
-            const d = String(ultimaDataBase.getDate()).padStart(2, '0'); 
-            const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0'); 
-            const y = ultimaDataBase.getFullYear();
-            
+            aula.visto = false; ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); }
+            const d = String(ultimaDataBase.getDate()).padStart(2, '0'); const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0'); const y = ultimaDataBase.getFullYear();
             aula.data = `${d}/${m}/${y}`;
         }
     }
 
-    // Se houver mais registos do que aulas planeadas (Ex: Aulas Extraordinárias)
     while (presencasUsadas < presencas.length) {
-        const presencaDia = presencas[presencasUsadas]; 
-        const [ano, mes, dia] = presencaDia.data.split('-');
-        
-        let novoConteudo = 'Aula Adicional (Auto-Ajuste)';
-        if (presencaDia.status !== 'Presença' && presencaDia.status !== 'Reposição') {
-            novoConteudo = `[${presencaDia.status}] ${novoConteudo}`;
-        }
-
-        plano.aulas.push({ 
-            num: plano.aulas.length + 1, 
-            data: `${dia}/${mes}/${ano}`, 
-            hora: ultimoHorarioBase, 
-            duracao: presencaDia.duracao || '01:00', 
-            conteudo: novoConteudo, 
-            visto: true 
-        });
+        const presencaDia = presencas[presencasUsadas]; const [ano, mes, dia] = presencaDia.data.split('-');
+        plano.aulas.push({ num: plano.aulas.length + 1, data: `${dia}/${mes}/${ano}`, hora: ultimoHorarioBase, duracao: presencaDia.duracao || '01:00', conteudo: 'Aula Adicional (Auto-Ajuste)', visto: true });
         presencasUsadas++;
     }
     return plano;
