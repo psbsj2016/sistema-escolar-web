@@ -62,10 +62,10 @@ App.filtrarTabela = (inputId, tabelaId) => {
 };
 
 // ---------------------------------------------------------
-// 1. PLANEAMENTO (COM FOLHA A4 BLINDADA E ARQUIVAMENTO)
+// 1. PLANEJAMENTO (COM FOLHA A4 BLINDADA E ARQUIVAMENTO)
 // ---------------------------------------------------------
 App.renderizarPlanejamentoPro = () => {
-    App.setTitulo("Planeamento");
+    App.setTitulo("Planejamento");
     const div = document.getElementById('app-content');
     
     const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:30px; border-radius:15px; width:220px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05);`;
@@ -74,16 +74,16 @@ App.renderizarPlanejamentoPro = () => {
 
     div.innerHTML = `
         <div class="card" style="text-align:center; padding:50px;">
-            <h2 style="color:#2c3e50; margin-bottom:10px;">Planeamento Pedagógico</h2>
+            <h2 style="color:#2c3e50; margin-bottom:10px;">Planejamento Pedagógico</h2>
             <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controlo de aulas.</p>
             <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
                 <div onclick="App.renderizarNovoPlanejamento()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📝</div>
-                    <h3 style="margin:0; color:#3498db;">Novo Planeamento</h3>
+                    <h3 style="margin:0; color:#3498db;">Novo Planejamento</h3>
                 </div>
                 <div onclick="App.renderizarPlanejamentosSalvos()" style="${btnStyle('#27ae60')}" onmouseover="${hoverIn('#27ae60')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📂</div>
-                    <h3 style="margin:0; color:#27ae60;">Planeamentos Ativos</h3>
+                    <h3 style="margin:0; color:#27ae60;">Planejamentos Ativos</h3>
                 </div>
                 <div onclick="App.renderizarPlanejamentosArquivados()" style="${btnStyle('#8e44ad')}" onmouseover="${hoverIn('#8e44ad')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">🗄️</div>
@@ -134,7 +134,7 @@ App.renderizarPlanejamentosSalvos = async () => {
         const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
         
         if(planosAtivos.length === 0) { 
-            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento ativo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planejamento ativo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
             return; 
         }
         
@@ -155,7 +155,7 @@ App.renderizarPlanejamentosSalvos = async () => {
             <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <span style="font-size: 18px; color: #aaa;">🔍</span>
                 <input type="text" id="input-busca-plan-ativos" 
-                       placeholder="Pesquisar planeamento ativo pelo nome do aluno ou curso..." 
+                       placeholder="Pesquisar planejamento ativo pelo nome do aluno ou curso..." 
                        oninput="App.filtrarTabela('input-busca-plan-ativos', 'tabela-plan-ativos')" 
                        style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
             </div>
@@ -163,7 +163,7 @@ App.renderizarPlanejamentosSalvos = async () => {
 
         div.innerHTML = App.UI.card('', '', `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:#27ae60;">Planeamentos Ativos</h3>
+                <h3 style="margin:0; color:#27ae60;">Planejamentos Ativos</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
             ${buscaHtml}
@@ -182,7 +182,7 @@ App.renderizarPlanejamentosArquivados = async () => {
         const planosArquivados = planos.filter(p => p.status === 'Arquivado');
         
         if(planosArquivados.length === 0) { 
-            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planeamento no arquivo morto.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planejamento no arquivo morto.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
             return; 
         }
         
@@ -211,10 +211,10 @@ App.renderizarPlanejamentosArquivados = async () => {
 
         div.innerHTML = App.UI.card('', '', `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="margin:0; color:#8e44ad;">🗄️ Planeamentos Arquivados</h3>
+                <h3 style="margin:0; color:#8e44ad;">🗄️ Planejamentos Arquivados</h3>
                 <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
             </div>
-            <p style="color:#666; font-size:13px; margin-bottom:20px;">Estes planeamentos foram finalizados/arquivados. Não são contabilizados no boletim nem no auto-ajuste de presenças.</p>
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">Estes planejamentos foram finalizados/arquivados. Não são contabilizados no boletim nem no auto-ajuste de presenças.</p>
             ${buscaHtml}
             <div class="table-responsive-wrapper">
                 <table id="tabela-plan-arquivados" style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
@@ -294,7 +294,7 @@ App.renderizarTelaEdicao = (plano, isReadOnly = false) => {
         <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
             <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
                 <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome||'ESCOLA')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj||'')}</div></div></div>
-                <div style="text-align:right;"><div><b>Planeamento Pedagógico</b> ${tagArquivado}</div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
+                <div style="text-align:right;"><div><b>Planejamento Pedagógico</b> ${tagArquivado}</div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
             </div>
             
             <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px; background:#fafafa;">
@@ -351,7 +351,7 @@ App.salvarPlanejamentoBanco = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        // 1. Salva o Planeamento (Base de tudo)
+        // 1. Salva o Planejamento (Base de tudo)
         await App.api(url, met, App.planoAtual); 
         
         // 2. GESTÃO DE SINCRONIZAÇÃO (Cria, Atualiza ou Remove Presenças)
@@ -416,7 +416,7 @@ App.salvarPlanejamentoBanco = async () => {
             await Promise.all(promessasSincronizacao);
         }
 
-        let msg = "Planeamento Salvo!";
+        let msg = "Planejamento Salvo!";
         if(totalCriadas > 0 || totalAtualizadas > 0 || totalRemovidas > 0) {
             msg += ` Sincronizado: ${totalCriadas}✅ | ${totalAtualizadas}✏️ | ${totalRemovidas}🗑️`;
         }
@@ -434,13 +434,13 @@ App.salvarPlanejamentoBanco = async () => {
 };
 
 App.arquivarPlanejamento = (id) => {
-    App.confirmar("Arquivar Planeamento", "Tem a certeza que deseja enviar este planeamento para o arquivo morto? Ele deixará de aparecer na sua lista principal.", "Sim, Arquivar", "#8e44ad", async () => {
+    App.confirmar("Arquivar Planejamento", "Tem a certeza que deseja enviar este planejamento para o arquivo morto? Ele deixará de aparecer na sua lista principal.", "Sim, Arquivar", "#8e44ad", async () => {
         try {
             // Busca a lista segura e localiza o plano (evita bugs de API com query params)
             const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
             const planoAtual = planos.find(p => String(p.id) === String(id));
             
-            if (!planoAtual) return App.showToast("Planeamento não encontrado.", "error");
+            if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
 
             // Atualiza o status
             planoAtual.status = 'Arquivado';
@@ -448,7 +448,7 @@ App.arquivarPlanejamento = (id) => {
             // Salva a alteração de forma limpa na base de dados
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
-            App.showToast("Planeamento Arquivado com sucesso!", "success");
+            App.showToast("Planejamento Arquivado com sucesso!", "success");
             App.renderizarPlanejamentosSalvos(); // Remove da tela na hora
         } catch(e) { 
             App.showToast("Erro ao arquivar.", "error"); 
@@ -457,13 +457,13 @@ App.arquivarPlanejamento = (id) => {
 };
 
 App.restaurarPlanejamento = (id) => {
-    App.confirmar("Restaurar Planeamento", "Deseja reativar este planeamento e devolvê-lo para a lista ativa?", "Restaurar", "#27ae60", async () => {
+    App.confirmar("Restaurar Planejamento", "Deseja reativar este planejamento e devolvê-lo para a lista ativa?", "Restaurar", "#27ae60", async () => {
         try {
             // Mesma lógica segura para restaurar
             const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
             const planoAtual = planos.find(p => String(p.id) === String(id));
             
-            if (!planoAtual) return App.showToast("Planeamento não encontrado.", "error");
+            if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
 
             // Volta para ativo
             planoAtual.status = 'Ativo';
@@ -471,7 +471,7 @@ App.restaurarPlanejamento = (id) => {
             // Salva a alteração
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
-            App.showToast("Planeamento Reativado com sucesso!", "success");
+            App.showToast("Planejamento Reativado com sucesso!", "success");
             App.renderizarPlanejamentosArquivados(); // Remove do arquivo morto
         } catch(e) { 
             App.showToast("Erro ao reativar.", "error"); 
@@ -480,7 +480,7 @@ App.restaurarPlanejamento = (id) => {
 };
 
 App.excluirPlanejamento = (id) => { 
-    App.confirmar("Atenção!", "Deseja excluir DEFINITIVAMENTE este planeamento? Esta ação é irreversível.", "Excluir", "#e74c3c", async () => {
+    App.confirmar("Atenção!", "Deseja excluir DEFINITIVAMENTE este planejamento? Esta ação é irreversível.", "Excluir", "#e74c3c", async () => {
         await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); 
     });
 };
@@ -578,7 +578,7 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
         App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
         App.renderizarTelaEdicao(App.planoAtual);
         App.showToast("Datas, Tempos e Aulas Extra Sincronizados! 🎉", "success");
-    } catch (e) { App.showToast("Erro ao sincronizar planeamento.", "error"); } 
+    } catch (e) { App.showToast("Erro ao sincronizar planejamento.", "error"); } 
     finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
@@ -1093,7 +1093,7 @@ App.salvarChamadaLote = async () => {
     const txt = btn.innerText; btn.innerText = "A validar dados... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
-        // 🚀 NOVA REGRA 1: VERIFICAR PLANEAMENTO ATIVO ANTES DE GRAVAR
+        // 🚀 NOVA REGRA 1: VERIFICAR PLANEJAMENTO ATIVO ANTES DE GRAVAR
         const planejamentos = await App.api(`/planejamentos?_t=${Date.now()}`);
         const alunosSemPlano = [];
 
@@ -1101,16 +1101,16 @@ App.salvarChamadaLote = async () => {
             const idAluno = linha.getAttribute('data-id');
             const nomeAluno = linha.getAttribute('data-nome');
             
-            // Verifica se o aluno tem pelo menos um planeamento que NÃO esteja arquivado
+            // Verifica se o aluno tem pelo menos um planejamento que NÃO esteja arquivado
             const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
             if (!temPlanoAtivo) {
                 alunosSemPlano.push(nomeAluno);
             }
         });
 
-        // Se encontrou alunos sem planeamento, ABORTA o salvamento!
+        // Se encontrou alunos sem planejamento, ABORTA o salvamento!
         if (alunosSemPlano.length > 0) {
-            App.showToast(`Bloqueado: Crie um Planeamento para: ${alunosSemPlano.join(', ')}`, "error");
+            App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
             if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
             return; 
         }
@@ -1155,7 +1155,7 @@ App.salvarChamadaLote = async () => {
                 }
             });
 
-            if (promessasPlano.length > 0) { await Promise.all(promessasPlano); avisoExtra = " e Planeamento(s) Auto-Ajustado(s)!"; }
+            if (promessasPlano.length > 0) { await Promise.all(promessasPlano); avisoExtra = " e Planejamento(s) Auto-Ajustado(s)!"; }
         } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
 
         App.showToast(`Frequência registada${avisoExtra}`, "success");
