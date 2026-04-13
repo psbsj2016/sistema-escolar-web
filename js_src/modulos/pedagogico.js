@@ -351,10 +351,8 @@ App.salvarPlanejamentoBanco = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        // 1. Salva o Planeamento (Base de tudo)
         await App.api(url, met, App.planoAtual); 
         
-        // 🚀 2. GESTÃO DE SINCRONIZAÇÃO (Cria, Atualiza ou Remove Presenças)
         const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
         const chamadasDoAluno = chamadasExistentes.filter(c => c.idAluno === App.planoAtual.idAluno);
         
@@ -367,14 +365,12 @@ App.salvarPlanejamentoBanco = async () => {
             if(partesData.length === 3) {
                 const dataAulaISO = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
                 
-                // 🛡️ SÓ PROCESSA DATAS PASSADAS OU HOJE
                 if (dataAulaISO <= hojeStr) {
                     const regExistente = chamadasDoAluno.find(c => c.data === dataAulaISO);
 
                     if (aula.visto === true) {
-                        // CASO A: Marcou OK ou Atualizou dados
                         if (!regExistente) {
-                            // Criar nova presença
+                            // Cria presença nova
                             const payload = {
                                 id: Date.now().toString() + Math.floor(Math.random()*1000) + index,
                                 idAluno: App.planoAtual.idAluno,
@@ -386,29 +382,35 @@ App.salvarPlanejamentoBanco = async () => {
                             promessasSincronizacao.push(App.api('/chamadas', 'POST', payload));
                             totalCriadas++;
                         } else {
-                            // Atualizar presença se a duração mudou
-                            if (regExistente.duracao !== aula.duracao) {
+                            // Se o prof marcou visto manual num dia que tinha "Falta", converte para "Presença"
+                            if (regExistente.status !== 'Presença' && regExistente.status !== 'Reposição') {
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status: 'Presença', duracao: aula.duracao }));
+                                totalAtualizadas++;
+                            } else if (regExistente.duracao !== aula.duracao) {
                                 promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, duracao: aula.duracao }));
                                 totalAtualizadas++;
                             }
                         }
                     } else {
-                        // CASO B: Desmarcou o visto (Remover do diário)
+                        // CASO B: Desmarcou o visto
                         if (regExistente) {
-                            promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'DELETE'));
-                            totalRemovidas++;
+                            // 🛡️ O ESCUDO MÁGICO:
+                            // Só apaga do banco de dados se for uma "Presença" ou "Reposição".
+                            // Se houver uma "Falta" ou "Feriado" gravada nesse dia, deixa o registo em paz!
+                            if (regExistente.status === 'Presença' || regExistente.status === 'Reposição') {
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'DELETE'));
+                                totalRemovidas++;
+                            }
                         }
                     }
                 }
             }
         });
 
-        // Executa todas as mudanças em lote
         if (promessasSincronizacao.length > 0) {
             await Promise.all(promessasSincronizacao);
         }
 
-        // Feedback Inteligente
         let msg = "Planeamento Salvo!";
         if(totalCriadas > 0 || totalAtualizadas > 0 || totalRemovidas > 0) {
             msg += ` Sincronizado: ${totalCriadas}✅ | ${totalAtualizadas}✏️ | ${totalRemovidas}🗑️`;
@@ -418,7 +420,6 @@ App.salvarPlanejamentoBanco = async () => {
         App.renderizarPlanejamentosSalvos(); 
     } catch(e) { 
         App.showToast("Erro na sincronização.", "error"); 
-        console.error(e);
     } 
     finally { 
         if(btn) { btn.innerText = txtOrig; btn.disabled = false; } 
@@ -486,29 +487,40 @@ App.excluirPlanejamentoArquivado = (id) => {
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas || plano.aulas.length === 0) return plano;
 
-    // 🚀 NOVA REGRA 2: A BARREIRA DO TEMPO
-    // Descobre a data da 1ª aula do planeamento atual (converte DD/MM/YYYY para YYYY-MM-DD)
     const primeiraAulaArr = plano.aulas[0].data.split('/');
     const dataInicioPlano = `${primeiraAulaArr[2]}-${primeiraAulaArr[1]}-${primeiraAulaArr[0]}`;
 
-    // Agora só puxa as presenças que aconteceram DEPOIS do início deste planeamento! (Adeus, fantasmas do passado!)
-    const presencas = chamadas
-        .filter(c => c.idAluno === plano.idAluno && (c.status === 'Presença' || c.status === 'Reposição') && c.data >= dataInicioPlano)
+    // 1. Lemos TUDO (Presenças e Faltas) para saber a linha do tempo exata
+    const historico = chamadas
+        .filter(c => c.idAluno === plano.idAluno && c.data >= dataInicioPlano)
         .sort((a, b) => new Date(a.data) - new Date(b.data));
 
-    let diasDaSemanaAulas = [];
-    if (presencas.length > 0) {
-        const ultimas = presencas.slice(-4);
-        diasDaSemanaAulas = [...new Set(ultimas.map(p => { const [ano, mes, dia] = p.data.split('-'); const d = new Date(`${ano}-${mes}-${dia}T12:00:00`); return d.getDay(); }))];
-    }
+    // 2. MAS só as presenças vão consumir/gastar as aulas do planeamento
+    const presencas = historico.filter(c => c.status === 'Presença' || c.status === 'Reposição');
 
-    if (diasDaSemanaAulas.length === 0) {
-        diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { const parts = a.data.split('/'); if (parts.length === 3) { const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); return d.getDay(); } return -1; }).filter(d => d !== -1))];
-    }
+    let diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { 
+        const parts = a.data.split('/'); 
+        if (parts.length === 3) { 
+            const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); 
+            return d.getDay(); 
+        } 
+        return -1; 
+    }).filter(d => d !== -1))];
     
     if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
 
-    let presencasUsadas = 0; let ultimaDataBase = new Date(); ultimaDataBase.setHours(12, 0, 0, 0);
+    let presencasUsadas = 0; 
+    
+    // 3. Ponto de partida do tempo
+    let ultimaDataBase = new Date(`${dataInicioPlano}T12:00:00`);
+    ultimaDataBase.setDate(ultimaDataBase.getDate() - 1); // Recua 1 dia para que a contagem encontre o dia inicial se for válido
+    
+    if (historico.length > 0) {
+        // Se já houve Faltas ou Presenças, as aulas do futuro começam depois do ÚLTIMO registo do histórico!
+        const ultima = historico[historico.length - 1];
+        ultimaDataBase = new Date(`${ultima.data}T12:00:00`);
+    }
+
     let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
 
     for (let i = 0; i < plano.aulas.length; i++) {
@@ -516,21 +528,43 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         if (aula.hora) ultimoHorarioBase = aula.hora;
 
         if (presencasUsadas < presencas.length) {
-            const presencaDia = presencas[presencasUsadas]; const dataReal = presencaDia.data; const [ano, mes, dia] = dataReal.split('-');
+            // Se o aluno esteve presente, "gasta" a aula
+            const p = presencas[presencasUsadas]; 
+            const [ano, mes, dia] = p.data.split('-');
+            
             aula.data = `${dia}/${mes}/${ano}`;
-            if(presencaDia.duracao) aula.duracao = presencaDia.duracao;
-            aula.visto = true; ultimaDataBase = new Date(`${ano}-${mes}-${dia}T12:00:00`); presencasUsadas++;
+            if(p.duracao) aula.duracao = p.duracao;
+            aula.visto = true; 
+            presencasUsadas++;
         } else {
-            aula.visto = false; ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
-            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); }
-            const d = String(ultimaDataBase.getDate()).padStart(2, '0'); const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0'); const y = ultimaDataBase.getFullYear();
+            // Se acabaram as presenças, projeta o futuro saltando as Faltas!
+            aula.visto = false; 
+            ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { 
+                ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); 
+            }
+            
+            const d = String(ultimaDataBase.getDate()).padStart(2, '0'); 
+            const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0'); 
+            const y = ultimaDataBase.getFullYear();
+            
             aula.data = `${d}/${m}/${y}`;
         }
     }
 
+    // Aulas Extras (caso tenha vindo mais vezes que o planeado)
     while (presencasUsadas < presencas.length) {
-        const presencaDia = presencas[presencasUsadas]; const [ano, mes, dia] = presencaDia.data.split('-');
-        plano.aulas.push({ num: plano.aulas.length + 1, data: `${dia}/${mes}/${ano}`, hora: ultimoHorarioBase, duracao: presencaDia.duracao || '01:00', conteudo: 'Aula Adicional (Auto-Ajuste)', visto: true });
+        const p = presencas[presencasUsadas]; 
+        const [ano, mes, dia] = p.data.split('-');
+        
+        plano.aulas.push({ 
+            num: plano.aulas.length + 1, 
+            data: `${dia}/${mes}/${ano}`, 
+            hora: ultimoHorarioBase, 
+            duracao: p.duracao || '01:00', 
+            conteudo: 'Aula Adicional (Auto-Ajuste)', 
+            visto: true 
+        });
         presencasUsadas++;
     }
     return plano;
