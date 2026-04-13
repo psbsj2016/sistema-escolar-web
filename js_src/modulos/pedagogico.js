@@ -606,7 +606,16 @@ App.renderizarBoletimVisual = async () => {
 App.gerarBoletimTela = async () => {
     const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
     const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
+    
+    // 🧠 LER NOVAS CONFIGURAÇÕES DINÂMICAS
     const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
+    const regimeConfig = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
+    
+    let multiplicadorTotal = 4;
+    let labelCabecalho = 'BIMESTRE';
+    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 3; labelCabecalho = 'TRIMESTRE'; }
+    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
+    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
 
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
@@ -624,10 +633,11 @@ App.gerarBoletimTela = async () => {
         
         notasAluno.forEach(n => { 
             const disc = n.disciplina || 'Geral'; 
-            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, bimestres: new Set() }; 
+            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, periodosLancados: new Set() }; 
             disciplinasMap[disc].notas.push(n); 
             disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
-            if (n.bimestre) disciplinasMap[disc].bimestres.add(n.bimestre);
+            const periodoReal = n.periodo || n.bimestre; // Compatibilidade com dados antigos
+            if (periodoReal) disciplinasMap[disc].periodosLancados.add(periodoReal);
         });
         
         let linhasHTML = '';
@@ -636,21 +646,24 @@ App.gerarBoletimTela = async () => {
         } else {
             Object.keys(disciplinasMap).forEach(chave => {
                 const d = disciplinasMap[chave];
-                const qtdBimestresLancados = d.bimestres.size > 0 ? d.bimestres.size : 1;
-                const metaAtual = mediaConfig * qtdBimestresLancados;
+                const qtdPeriodos = d.periodosLancados.size > 0 ? d.periodosLancados.size : 1;
                 
-                const isAprovado = d.total >= metaAtual;
-                const corStatus = isAprovado ? '#27ae60' : '#c0392b';
+                // CÁLCULO DE APROVAÇÃO BLINDADO (Meta Proporcional e Meta do Ano)
+                const metaAtual = mediaConfig * qtdPeriodos;
+                const metaFinalAno = mediaConfig * multiplicadorTotal;
                 
-                const situacao = isAprovado ? `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">APROVADO</span>` : `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">RECUPERAÇÃO</span>`;
-                const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.bimestre)} - ${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join('<br>');
+                const isAprovadoAtual = d.total >= metaAtual;
+                const corStatus = isAprovadoAtual ? '#27ae60' : '#c0392b';
+                
+                const situacao = isAprovadoAtual ? `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">NO PADRÃO</span>` : `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">RECUPERAÇÃO</span>`;
+                const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.periodo || n.bimestre)} - ${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join('<br>');
                 
                 linhasHTML += `
                 <tr>
                     <td style="padding:10px; border-bottom:1px solid #eee; vertical-align:middle;"><b>${App.escapeHTML(d.nome)}</b></td>
                     <td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td>
                     <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;"><span style="font-size:16px; font-weight:bold; color:${corStatus};">${d.total.toFixed(1)}</span></td>
-                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;">${situacao}<br><span style="font-size:10px; color:#7f8c8d;">Meta p/ Aprovação: ${metaAtual.toFixed(1)} pts</span></td>
+                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;">${situacao}<br><span style="font-size:10px; color:#7f8c8d;">Meta Anual: ${metaFinalAno.toFixed(1)} pts</span></td>
                 </tr>`;
             });
         }
@@ -672,7 +685,7 @@ App.gerarBoletimTela = async () => {
                 </div>
                 <div class="table-responsive-wrapper">
                     <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
-                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px; width:30%;">DISCIPLINA</th><th style="padding:10px; width:30%;">AVALIAÇÕES (BIMESTRE)</th><th style="text-align:center; padding:10px; width:15%;">NOTA TOTAL</th><th style="text-align:center; padding:10px; width:25%;">RESULTADO</th></tr></thead>
+                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px; width:30%;">DISCIPLINA</th><th style="padding:10px; width:30%;">AVALIAÇÕES (${labelCabecalho})</th><th style="text-align:center; padding:10px; width:15%;">NOTA TOTAL</th><th style="text-align:center; padding:10px; width:25%;">RESULTADO</th></tr></thead>
                         <tbody>${linhasHTML}</tbody>
                     </table>
                 </div>
@@ -682,11 +695,19 @@ App.gerarBoletimTela = async () => {
 };
 
 // ---------------------------------------------------------
-// 3. AVALIAÇÕES E NOTAS (HÍBRIDO COM CONFIG. DE MÉDIA)
+// 3. AVALIAÇÕES E NOTAS (HÍBRIDO COM CONFIG. DE MÉDIA E REGIME)
 // ---------------------------------------------------------
-App.salvarMediaConfig = (val) => { 
-    localStorage.setItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao', val); 
-    App.showToast("Média atualizada!", "info"); App.renderizarAvaliacoesPro();
+App.salvarConfigNotas = () => { 
+    const media = document.getElementById('config-nota-media').value;
+    const max = document.getElementById('config-nota-max').value;
+    const regime = document.getElementById('config-nota-regime').value;
+    
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao', media); 
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima', max); 
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo', regime); 
+    
+    App.showToast("Regras de avaliação guardadas com sucesso!", "success"); 
+    App.renderizarAvaliacoesPro();
 };
 
 App.renderizarAvaliacoesPro = async () => {
@@ -694,8 +715,28 @@ App.renderizarAvaliacoesPro = async () => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     
+    // LER CONFIGURAÇÕES SALVAS (Ou assumir o padrão)
     const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
-    const percentualAprovacao = parseFloat(mediaSalva) / 10;
+    const maxSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima') || '10.0';
+    const regimeSalvo = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
+    
+    const percentualAprovacao = parseFloat(mediaSalva) / parseFloat(maxSalva);
+
+    // GERAR OPÇÕES DE PERÍODO DINAMICAMENTE
+    let opPeriodos = ''; let labelPeriodo = 'Período';
+    if (regimeSalvo === 'Bimestral') {
+        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
+        labelPeriodo = 'Bimestre';
+    } else if (regimeSalvo === 'Trimestral') {
+        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option>`;
+        labelPeriodo = 'Trimestre';
+    } else if (regimeSalvo === 'Semestral') {
+        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
+        labelPeriodo = 'Semestre';
+    } else if (regimeSalvo === 'Anual') {
+        opPeriodos = `<option value="Período Único">Período Único</option>`;
+        labelPeriodo = 'Período';
+    }
 
     try {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api(`/avaliacoes?_t=${Date.now()}`)]);
@@ -706,10 +747,19 @@ App.renderizarAvaliacoesPro = async () => {
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${App.escapeHTML(c.nome)}">${App.escapeHTML(c.nome)}</option>`).join('');
-        
         const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
-        const opBimestres = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
         const hoje = new Date().toISOString().split('T')[0];
+
+        // 🚀 NOVO PAINEL DE CONFIGURAÇÕES DE REGIME
+        const painelConfig = `
+            <div style="background:#fff; border-left:4px solid #8e44ad; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                <div style="width:100%; font-size:12px; font-weight:bold; color:#8e44ad; text-transform:uppercase; margin-bottom:-5px;">⚙️ Configuração do Sistema de Avaliação</div>
+                ${selectLocal('Regime Letivo:', 'config-nota-regime', `<option value="Bimestral" ${regimeSalvo==='Bimestral'?'selected':''}>Bimestral (4 Períodos)</option><option value="Trimestral" ${regimeSalvo==='Trimestral'?'selected':''}>Trimestral (3 Períodos)</option><option value="Semestral" ${regimeSalvo==='Semestral'?'selected':''}>Semestral (2 Períodos)</option><option value="Anual" ${regimeSalvo==='Anual'?'selected':''}>Anual (1 Período)</option>`)}
+                ${col('Média de Aprovação:', 'config-nota-media', 'number', mediaSalva, 'step="0.1"')}
+                ${col('Nota Máx. do Período:', 'config-nota-max', 'number', maxSalva, 'step="0.1"')}
+                <button onclick="App.salvarConfigNotas()" class="btn-primary" style="background:#8e44ad; border:none; height:41px; padding:0 20px; margin-bottom: 5px;">💾 SALVAR REGRAS</button>
+            </div>
+        `;
 
         const formFiltros = `
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
@@ -724,11 +774,10 @@ App.renderizarAvaliacoesPro = async () => {
                     <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Especifique:</label>
                     <input type="text" id="nota-outro-desc" placeholder="Ex: Seminário" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
                 </div>
-                ${selectLocal('Bimestre:', 'nota-bimestre', opBimestres)}
+                ${selectLocal(labelPeriodo + ':', 'nota-periodo', opPeriodos)}
             </div>
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
-                ${col('Média Mín. (Aprovação):', 'nota-media', 'number', mediaSalva, 'step="0.1" onchange="App.salvarMediaConfig(this.value)"')}
-                ${col('Valor Máximo (Pts):', 'nota-max', 'number', '10', 'step="0.1"')}
+                ${col('Valor desta Avaliação (Pts):', 'nota-max', 'number', maxSalva, 'step="0.1"')}
                 ${col('Data da Avaliação:', 'nota-data', 'date', hoje, `max="${hoje}"`)}
                 <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
                 <button onclick="App.cancelarEdicaoNota()" id="btn-cancel-nota" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
@@ -744,30 +793,35 @@ App.renderizarAvaliacoesPro = async () => {
                 <table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Bimestre</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Período</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${historico.length === 0 ? '<tr><td colspan="7" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
-                        ${historico.map(h => `
+                        ${historico.map(h => {
+                            const valMaxAval = parseFloat(h.valorMax) || parseFloat(maxSalva);
+                            const percentualAtingido = parseFloat(h.nota) / valMaxAval;
+                            const corNota = percentualAtingido >= percentualAprovacao ? '#27ae60' : '#c0392b';
+                            return `
                             <tr style="border-bottom:1px solid #eee;">
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
                                 <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
-                                <td style="padding:12px;">${App.escapeHTML(h.bimestre)}</td>
-                                <td style="padding:12px; text-align:center;"><strong style="color:${parseFloat(h.nota) >= parseFloat(h.valorMax) * percentualAprovacao ? '#27ae60' : '#c0392b'}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(h.valorMax)}</span></td>
+                                <td style="padding:12px;">${App.escapeHTML(h.periodo || h.bimestre || '-')}</td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${corNota}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(valMaxAval)}</span></td>
                                 <td style="padding:12px; text-align:right;">
                                     <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️</button>
                                     <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;" title="Excluir">🗑️</button>
                                 </td>
-                            </tr>`).join('')}
+                            </tr>`
+                        }).join('')}
                     </tbody>
                 </table>
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Lançamento de Notas', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
+        div.innerHTML = painelConfig + App.UI.card('📝 Lançamento de Notas', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
     } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
 };
 
@@ -779,7 +833,13 @@ App.editarAvaliacao = async (id) => {
     document.getElementById('nota-disc').value = n.disciplina || 'Geral';
     if(["Teste","Prova","Pesquisa","Trabalho"].includes(n.tipo)) { document.getElementById('nota-tipo').value=n.tipo; document.getElementById('div-outro-nota').style.display='none'; } 
     else { document.getElementById('nota-tipo').value='Outro'; App.toggleTipoOutroNota(); document.getElementById('nota-outro-desc').value=n.tipo; } 
-    document.getElementById('nota-max').value = n.valorMax; document.getElementById('nota-bimestre').value = n.bimestre; document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
+    document.getElementById('nota-max').value = n.valorMax; 
+    
+    // Tenta definir o valor do período, suportando registos antigos que usavam 'bimestre'
+    const selectPeriodo = document.getElementById('nota-periodo');
+    if(selectPeriodo) selectPeriodo.value = n.periodo || n.bimestre;
+    
+    document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
     
     document.getElementById('btn-cancel-nota').style.display = 'inline-block';
     App.idAvaliacaoEditando = id; 
@@ -806,11 +866,9 @@ App.carregarListaNotas = async () => {
 
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
     if(!disc || !data) return App.showToast("Preencha Disciplina e Data.", "warning");
-    // 🛡️ TRAVA ANTI-FUTURO
+    
     const hojeStr = new Date().toISOString().split('T')[0];
-    if (data > hojeStr) {
-        return App.showToast("Não é permitido abrir pautas para datas futuras.", "warning");
-    }    
+    if (data > hojeStr) return App.showToast("Não é permitido abrir pautas para datas futuras.", "warning");   
 
     const area = document.getElementById('area-lista-notas');
     area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar pauta de lançamento... ⏳</p>';
@@ -873,14 +931,13 @@ App.salvarNotasLote = async () => {
     if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
     const data = document.getElementById('nota-data').value;
     const max = document.getElementById('nota-max').value;
-    const bimestre = document.getElementById('nota-bimestre').value;
+    const periodoSelecionado = document.getElementById('nota-periodo').value; // Agora chama-se periodo
+    
     const linhas = document.querySelectorAll('.linha-nota');
     if(linhas.length === 0) return;
-    // 🛡️ TRAVA ANTI-FUTURO
+    
     const hojeStr = new Date().toISOString().split('T')[0];
-    if (data > hojeStr) {
-        return App.showToast("Bloqueado: Não é possível gravar notas com datas futuras.", "error");
-    }
+    if (data > hojeStr) return App.showToast("Bloqueado: Não é possível gravar notas com datas futuras.", "error");
 
     const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
     const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
@@ -899,10 +956,11 @@ App.salvarNotasLote = async () => {
             if (idEdicao) { regExistente = avaliacoesExistentes.find(av => av.id === idEdicao); } 
             else { regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo); }
 
-            const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, bimestre, dataLancamento: new Date().toISOString().split('T')[0] };
+            // Guardamos como "periodo" e duplicamos para "bimestre" só para não quebrar relatórios velhos se existirem
+            const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, periodo: periodoSelecionado, bimestre: periodoSelecionado, dataLancamento: new Date().toISOString().split('T')[0] };
 
             if (regExistente) { 
-                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, bimestre: bimestre })); 
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, periodo: periodoSelecionado, bimestre: periodoSelecionado })); 
             } else { 
                 payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
                 promessas.push(App.api('/avaliacoes', 'POST', payload)); 
