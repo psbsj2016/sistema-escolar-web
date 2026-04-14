@@ -977,7 +977,7 @@ var App = {
     abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
-        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A processar o planeamento atual... ⏳</p>';
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A processar o planejamento atual... ⏳</p>';
         
         const btnConfirm = document.querySelector('.btn-confirm');
         if(btnConfirm) btnConfirm.style.display = 'none'; 
@@ -997,21 +997,52 @@ var App = {
             const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
             const planosAluno = planejamentos.filter(p => p.idAluno === idAluno);
 
-            // Separa os Planeamentos
             const planosAtivos = planosAluno.filter(p => p.status !== 'Arquivado');
             const planosArquivados = planosAluno.filter(p => p.status === 'Arquivado');
+
+            // --- 🪄 GESTÃO DO RODAPÉ FIXO MÁGICO ---
+            const btnCancelFixo = document.querySelector('#modal-overlay .btn-cancel');
+            if (btnCancelFixo) {
+                const rodape = btnCancelFixo.parentNode;
+                
+                // 1. Limpar botões injetados anteriormente para não duplicar
+                document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
+                
+                // 2. Garantir que se fechar o modal, os botões extra desaparecem
+                if (!btnCancelFixo.dataset.limpezaAtiva) {
+                    const onclickOriginal = btnCancelFixo.onclick;
+                    btnCancelFixo.onclick = function(e) {
+                        document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
+                        if (onclickOriginal) onclickOriginal.apply(this, arguments);
+                    };
+                    btnCancelFixo.dataset.limpezaAtiva = "true";
+                }
+
+                // 3. Injetar o botão correto consoante o modo ao lado do "Cancelar" fixo
+                if (modo === 'ativo' && planosArquivados.length > 0) {
+                    const btnArq = document.createElement('button');
+                    btnArq.className = 'btn-modal-dinamico';
+                    btnArq.innerHTML = '🗄️ Arquivados';
+                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px;';
+                    btnArq.onclick = () => App.renderizarFrequenciaView('lista_arquivados');
+                    rodape.appendChild(btnArq);
+                } else if (modo === 'lista_arquivados' || modo === 'ver_arquivado') {
+                    const btnVoltar = document.createElement('button');
+                    btnVoltar.className = 'btn-modal-dinamico';
+                    btnVoltar.innerHTML = modo === 'lista_arquivados' ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
+                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px;';
+                    btnVoltar.onclick = () => App.renderizarFrequenciaView(modo === 'lista_arquivados' ? 'ativo' : 'lista_arquivados');
+                    rodape.appendChild(btnVoltar);
+                }
+            }
+            // ----------------------------------------
 
             // 🗄️ MODO 1: EXIBIR LISTA DE ARQUIVADOS
             if (modo === 'lista_arquivados') {
                 document.getElementById('modal-titulo').innerText = `🗄️ Histórico Arquivado: ${App.escapeHTML(nomeAluno)}`;
 
                 if (planosArquivados.length === 0) {
-                    content.innerHTML = `
-                        <p style="text-align:center; padding:30px; color:#999;">Nenhum planeamento arquivado encontrado para este aluno.</p>
-                        <div style="display:flex; justify-content:center; margin-top:20px;">
-                            <button class="btn-cancel" onclick="App.renderizarFrequenciaView('ativo')" style="padding:10px 20px; border:1px solid #ccc; border-radius:6px; cursor:pointer; background:transparent;">⬅️ Voltar ao Atual</button>
-                        </div>
-                    `;
+                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planejamento arquivado encontrado para este aluno.</p>`;
                     return;
                 }
 
@@ -1032,17 +1063,14 @@ var App = {
 
                 content.innerHTML = `
                     <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">
-                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planeamento antigo para ver o dossiê de presenças.</p>
+                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planejamento antigo para ver o dossiê de presenças.</p>
                         ${listaHTML}
-                    </div>
-                    <div style="display:flex; justify-content:center; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
-                        <button class="btn-cancel" onclick="App.renderizarFrequenciaView('ativo')" style="padding:10px 20px; border:1px solid #ccc; border-radius:6px; cursor:pointer; background:transparent;">⬅️ Voltar ao Atual</button>
                     </div>
                 `;
                 return;
             }
 
-            // ⏱️ MODO 2: EXIBIR ESTATÍSTICAS (Ativo ou Visualizando um Arquivado Específico)
+            // ⏱️ MODO 2: EXIBIR ESTATÍSTICAS (Ativo ou Visualizando um Arquivado)
             let planoFoco = null;
             let tituloModal = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
 
@@ -1055,22 +1083,15 @@ var App = {
 
             document.getElementById('modal-titulo').innerText = tituloModal;
 
-            // Converter formato PT-BR (DD/MM/YYYY) para ISO (YYYY-MM-DD) para comparar datas
             const formatarDataIso = (dataBr) => dataBr.split('/').reverse().join('-');
-
-            let chamadasFiltradas = historico; // Padrão de segurança (não esconde nada se não houver planeamento)
+            let chamadasFiltradas = historico;
 
             if (planoFoco && planoFoco.aulas && planoFoco.aulas.length > 0) {
-                // Se existe planeamento, calculamos a data da primeira e da última aula
                 const datasPlanejadas = planoFoco.aulas.map(a => formatarDataIso(a.data)).sort();
                 const dataInicio = datasPlanejadas[0];
                 const dataFim = datasPlanejadas[datasPlanejadas.length - 1];
-
-                // Filtramos APENAS as chamadas que caem dentro deste limite de tempo!
                 chamadasFiltradas = historico.filter(c => c.data >= dataInicio && c.data <= dataFim);
             } else if (modo === 'ativo' && planosArquivados.length > 0) {
-                // Se o aluno está ativo mas não tem um planeamento cadastrado ainda, 
-                // vamos esconder as chamadas que sabidamente pertencem a planeamentos velhos (arquivados).
                 const limitesArquivados = planosArquivados.map(p => {
                     if(!p.aulas || p.aulas.length === 0) return null;
                     const d = p.aulas.map(a => formatarDataIso(a.data)).sort();
@@ -1082,7 +1103,6 @@ var App = {
                 });
             }
 
-            // 📊 RENDERIZAR TABELAS E GRÁFICOS
             let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
             
             if (chamadasFiltradas.length === 0) {
@@ -1141,28 +1161,12 @@ var App = {
                         <div style="font-size:18px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
                     </div>
                 </div>`;
-            
-            // 🔘 RODAPÉ DINÂMICO (Botões)
-            let botoesFooter = '';
-            if (modo === 'ativo') {
-                botoesFooter = `
-                    <button class="btn-cancel" onclick="App.fecharModal()" style="padding:10px 20px; border:1px solid #ccc; border-radius:6px; cursor:pointer; background:transparent;">❌ Cancelar</button>
-                    ${planosArquivados.length > 0 ? `<button class="btn-primary" onclick="App.renderizarFrequenciaView('lista_arquivados')" style="background:#7f8c8d; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🗄️ Arquivados</button>` : ''}
-                `;
-            } else if (modo === 'ver_arquivado') {
-                botoesFooter = `
-                    <button class="btn-cancel" onclick="App.renderizarFrequenciaView('lista_arquivados')" style="padding:10px 20px; border:1px solid #ccc; border-radius:6px; cursor:pointer; background:transparent;">⬅️ Voltar à Lista</button>
-                `;
-            }
 
             content.innerHTML = `
-                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planeamento Letivo Atual</div>` : ''}
+                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planejamento Letivo Atual</div>` : ''}
                 ${modo === 'ver_arquivado' ? `<div style="background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🗄️ Exibindo Frequência do Histórico Arquivado</div>` : ''}
                 <div style="max-height:45vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
                 ${kpiHTML}
-                <div style="display:flex; justify-content:center; gap:15px; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
-                    ${botoesFooter}
-                </div>
             `;
         } catch(e) { 
             content.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; 
