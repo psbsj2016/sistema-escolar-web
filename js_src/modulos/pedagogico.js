@@ -1136,92 +1136,110 @@ App.carregarListaChamada = async () => {
 };
 
 App.salvarChamadaLote = async () => {
-    const data = document.getElementById('chamada-data').value;
-    const duracao = document.getElementById('chamada-duracao').value || '01:00';
-    const linhas = document.querySelectorAll('.linha-chamada');
-    if(linhas.length === 0) return;
+        const data = document.getElementById('chamada-data').value;
+        const duracao = document.getElementById('chamada-duracao').value || '01:00';
+        const linhas = document.querySelectorAll('.linha-chamada');
+        if(linhas.length === 0) return;
 
-    // 🛡️ TRAVA ANTI-FUTURO
-    const hojeStr = new Date().toISOString().split('T')[0];
-    if (data > hojeStr) {
-        return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
-    }
-
-    const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
-    const txt = btn.innerText; btn.innerText = "A validar dados... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
-
-    try {
-        // 🚀 NOVA REGRA 1: VERIFICAR PLANEJAMENTO ATIVO ANTES DE GRAVAR
-        const planejamentos = await App.api(`/planejamentos?_t=${Date.now()}`);
-        const alunosSemPlano = [];
-
-        linhas.forEach(linha => {
-            const idAluno = linha.getAttribute('data-id');
-            const nomeAluno = linha.getAttribute('data-nome');
-            
-            // Verifica se o aluno tem pelo menos um planejamento que NÃO esteja arquivado
-            const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-            if (!temPlanoAtivo) {
-                alunosSemPlano.push(nomeAluno);
-            }
-        });
-
-        // Se encontrou alunos sem planejamento, ABORTA o salvamento!
-        if (alunosSemPlano.length > 0) {
-            App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
-            if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
-            return; 
+        // 🛡️ TRAVA ANTI-FUTURO
+        const hojeStr = new Date().toISOString().split('T')[0];
+        if (data > hojeStr) {
+            return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
         }
 
-        const promessasChamadas = [];
-        const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
-        const alunosAfetados = [];
+        const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
+        const txt = btn.innerText; btn.innerText = "A processar dados... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
-        linhas.forEach(linha => {
-            const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
-            const status = linha.querySelector('.status-chamada').value;
-            const idEdicao = linha.getAttribute('data-id-chamada'); 
-            
-            alunosAfetados.push(idAluno); 
-
-            let regExistente = null;
-            if (idEdicao) { regExistente = chamadasExistentes.find(c => c.id === idEdicao); } 
-            else { regExistente = chamadasExistentes.find(c => c.idAluno === idAluno && c.data === data); }
-
-            const payload = { idAluno, nomeAluno, data, status, duracao };
-
-            if (regExistente) { 
-                promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, data: data, status: status, duracao: duracao })); 
-            } else { 
-                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
-                promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
-            }
-        });
-
-        await Promise.all(promessasChamadas);
-        
-        let avisoExtra = "";
         try {
-            const [planejamentosAjuste, chamadasAtualizadas] = await Promise.all([App.api(`/planejamentos?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`)]);
-            const promessasPlano = [];
+            // 🚀 OTIMIZAÇÃO 1: Fazer download de tudo apenas UMA vez no início!
+            const [planejamentos, chamadasExistentes] = await Promise.all([
+                App.api(`/planejamentos?_t=${Date.now()}`),
+                App.api(`/chamadas?_t=${Date.now()}`)
+            ]);
 
-            alunosAfetados.forEach(idAluno => {
-                let planoDoAluno = planejamentosAjuste.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-                if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
-                    planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadas);
-                    promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
+            const alunosSemPlano = [];
+            const alunosAfetados = [];
+            const promessasChamadas = [];
+            
+            // 🧠 Variável para guardar as chamadas atualizadas na memória (evita fazer novo download depois)
+            let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
+
+            // Validação de planeamento ativo
+            linhas.forEach(linha => {
+                const idAluno = linha.getAttribute('data-id');
+                const nomeAluno = linha.getAttribute('data-nome');
+                
+                const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                if (!temPlanoAtivo) alunosSemPlano.push(nomeAluno);
+            });
+
+            if (alunosSemPlano.length > 0) {
+                App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
+                if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
+                return; 
+            }
+
+            // 🚀 OTIMIZAÇÃO 2: Preparar as chamadas e atualizar a lista apenas em memória
+            linhas.forEach(linha => {
+                const idAluno = linha.getAttribute('data-id'); 
+                const nomeAluno = linha.getAttribute('data-nome');
+                const status = linha.querySelector('.status-chamada').value;
+                const idEdicao = linha.getAttribute('data-id-chamada'); 
+                
+                alunosAfetados.push(idAluno); 
+
+                let regExistente = null;
+                if (idEdicao) { regExistente = chamadasExistentes.find(c => String(c.id) === String(idEdicao)); } 
+                else { regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === data); }
+
+                const payload = { idAluno, nomeAluno, data, status, duracao };
+
+                if (regExistente) { 
+                    const chamadaAtualizada = { ...regExistente, data: data, status: status, duracao: duracao };
+                    promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
+                    
+                    // Substitui na nossa memória virtual
+                    const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
+                    if(idx !== -1) chamadasAtualizadasNaMemoria[idx] = chamadaAtualizada;
+                } else { 
+                    // O '+ idAluno' evita conflitos de milissegundos na criação
+                    payload.id = Date.now().toString() + Math.floor(Math.random()*1000) + idAluno; 
+                    promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
+                    
+                    // Adiciona na memória virtual
+                    chamadasAtualizadasNaMemoria.push(payload);
                 }
             });
 
-            if (promessasPlano.length > 0) { await Promise.all(promessasPlano); avisoExtra = " e Planejamento(s) Auto-Ajustado(s)!"; }
-        } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+            // Grava todas as chamadas no servidor simultaneamente
+            await Promise.all(promessasChamadas);
+            
+            // 🚀 OTIMIZAÇÃO 3: Fazer o Auto-Ajuste usando os dados da memória, sem tocar na internet!
+            let avisoExtra = "";
+            try {
+                const promessasPlano = [];
 
-        App.showToast(`Frequência registada${avisoExtra}`, "success");
-        App.cancelarEdicaoChamada(); 
-        App.renderizarChamadaPro(); 
-    } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
-    finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
-};
+                alunosAfetados.forEach(idAluno => {
+                    let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                    if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
+                        // A magia acontece aqui: Passamos os dados que já calculamos na RAM!
+                        planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadasNaMemoria);
+                        promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
+                    }
+                });
+
+                if (promessasPlano.length > 0) { 
+                    await Promise.all(promessasPlano); 
+                    avisoExtra = " e Planejamento(s) Auto-Ajustado(s)!"; 
+                }
+            } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+
+            App.showToast(`Frequência registada${avisoExtra}`, "success");
+            App.cancelarEdicaoChamada(); 
+            App.renderizarChamadaPro(); 
+        } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
+        finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
+    };
 
 App.excluirLancamentoChamada = (id) => { 
     App.confirmar("Excluir Frequência", "Tem a certeza que deseja excluir esta chamada do sistema?", "Excluir", "#e74c3c", async () => {
