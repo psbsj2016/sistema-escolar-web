@@ -993,7 +993,7 @@ var App = {
         const content = document.getElementById('modal-form-content');
 
         try {
-            // 🚀 MAGIA DA PERFORMANCE: CACHE DE MEMÓRIA (Só faz download 1 vez!)
+            // 🚀 MAGIA DA PERFORMANCE: CACHE DE MEMÓRIA
             if (!App.contextoFrequencia.dadosCache) {
                 const [chamadasFetch, planejamentosFetch] = await Promise.all([App.api('/chamadas'), App.api('/planejamentos')]);
                 App.contextoFrequencia.dadosCache = { chamadas: chamadasFetch, planejamentos: planejamentosFetch };
@@ -1025,16 +1025,26 @@ var App = {
                     btnCancelFixo.dataset.limpezaAtiva = "true";
                 }
 
+                // 🖨️ INJETAR BOTÃO IMPRIMIR NA FRENTE DO CANCELAR
+                if (modo === 'ativo' || modo === 'ver_arquivado') {
+                    const btnPrint = document.createElement('button');
+                    btnPrint.className = 'btn-modal-dinamico';
+                    btnPrint.innerHTML = '🖨️ Imprimir';
+                    btnPrint.style.cssText = 'background:#27ae60; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease;';
+                    btnPrint.onmouseover = () => btnPrint.style.background = '#1e8449';
+                    btnPrint.onmouseout = () => btnPrint.style.background = '#27ae60';
+                    btnPrint.onclick = () => App.imprimirDossieFrequencia();
+                    rodape.insertBefore(btnPrint, btnCancelFixo);
+                }
+
                 // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading
                 if (modo === 'ativo' && planosArquivados.length > 0) {
                     const btnArq = document.createElement('button');
                     btnArq.className = 'btn-modal-dinamico';
                     btnArq.innerHTML = '🗄️ Arquivados';
                     btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
-                    // Efeitos Hover
                     btnArq.onmouseover = () => btnArq.style.background = '#95a5a6';
                     btnArq.onmouseout = () => btnArq.style.background = '#7f8c8d';
-                    // Feedback de Clique
                     btnArq.onclick = (e) => {
                         e.target.innerHTML = '⏳ A abrir...'; e.target.style.opacity = '0.8';
                         setTimeout(() => App.renderizarFrequenciaView('lista_arquivados'), 10);
@@ -1046,10 +1056,8 @@ var App = {
                     btnVoltar.className = 'btn-modal-dinamico';
                     btnVoltar.innerHTML = isLista ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
                     btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
-                    // Efeitos Hover
                     btnVoltar.onmouseover = () => btnVoltar.style.background = '#2980b9';
                     btnVoltar.onmouseout = () => btnVoltar.style.background = '#3498db';
-                    // Feedback de Clique
                     btnVoltar.onclick = (e) => {
                         e.target.innerHTML = '⏳ A voltar...'; e.target.style.opacity = '0.8';
                         setTimeout(() => App.renderizarFrequenciaView(isLista ? 'ativo' : 'lista_arquivados'), 10);
@@ -1064,7 +1072,7 @@ var App = {
                 document.getElementById('modal-titulo').innerText = `🗄️ Histórico Arquivado: ${App.escapeHTML(nomeAluno)}`;
 
                 if (planosArquivados.length === 0) {
-                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planejamento arquivado encontrado para este aluno.</p>`;
+                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planeamento arquivado encontrado para este aluno.</p>`;
                     return;
                 }
 
@@ -1085,7 +1093,7 @@ var App = {
 
                 content.innerHTML = `
                     <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">
-                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planejamento antigo para ver o dossiê de presenças.</p>
+                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planeamento antigo para ver o dossiê de presenças.</p>
                         ${listaHTML}
                     </div>
                 `;
@@ -1169,7 +1177,7 @@ var App = {
             const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
             
             const kpiHTML = `
-                <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                <div class="kpi-container" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; page-break-inside: avoid;">
                     <div style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
                         <div style="font-size:10px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Presenças</div>
                         <div style="font-size:18px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
@@ -1185,7 +1193,7 @@ var App = {
                 </div>`;
 
             content.innerHTML = `
-                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planejamento Letivo Atual</div>` : ''}
+                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planeamento Letivo Atual</div>` : ''}
                 ${modo === 'ver_arquivado' ? `<div style="background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🗄️ Exibindo Frequência do Histórico Arquivado</div>` : ''}
                 <div style="max-height:45vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
                 ${kpiHTML}
@@ -1193,6 +1201,105 @@ var App = {
         } catch(e) { 
             content.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; 
         }
+    },
+
+    // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO
+    imprimirDossieFrequencia: () => {
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Instituição de Ensino';
+        const cnpjEscola = escola.cnpj ? `CNPJ: ${escola.cnpj}` : '';
+        const logoEscola = (escola.foto && escola.foto.length > 50 && !escola.foto.includes('placehold')) 
+            ? `<img src="${escola.foto}" style="max-height:80px; max-width:120px; object-fit:contain;">` 
+            : '';
+
+        const tituloModal = document.getElementById('modal-titulo').innerText;
+        const conteudoOriginal = document.getElementById('modal-form-content');
+
+        // Clonar o conteúdo para não quebrar a tela original
+        const clone = conteudoOriginal.cloneNode(true);
+
+        // Remover barras de rolagem para que saia a folha inteira na impressão
+        const divsComScroll = clone.querySelectorAll('div[style*="max-height"]');
+        divsComScroll.forEach(d => {
+            d.style.maxHeight = 'none';
+            d.style.overflowY = 'visible';
+            d.style.paddingRight = '0';
+        });
+
+        // Montar a janela virtual de impressão
+        const janelaImpressao = window.open('', '_blank');
+        janelaImpressao.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Impressão - ${tituloModal}</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        padding: 30px; 
+                        color: #333; 
+                        line-height: 1.5;
+                    }
+                    .header-escola {
+                        display: flex; 
+                        align-items: center; 
+                        border-bottom: 2px solid #3498db; 
+                        padding-bottom: 15px; 
+                        margin-bottom: 25px;
+                    }
+                    .header-escola img { margin-right: 20px; }
+                    .header-escola h2 { margin: 0; color: #2c3e50; font-size: 24px; }
+                    .header-escola p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
+                    
+                    .titulo-doc {
+                        text-align: center; 
+                        color: #2c3e50; 
+                        margin-bottom: 30px;
+                        text-transform: uppercase;
+                        font-size: 18px;
+                        background: #f4f6f7;
+                        padding: 10px;
+                        border-radius: 8px;
+                        font-weight: bold;
+                    }
+                    
+                    /* Configurações perfeitas para folha A4 */
+                    @media print {
+                        body { padding: 0; }
+                        @page { margin: 15mm; }
+                        /* Evita que o resumo fique dividido em duas folhas */
+                        .kpi-container { page-break-inside: avoid !important; margin-top: 30px !important; }
+                        table { page-break-inside: auto; width: 100%; border-collapse: collapse; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header-escola">
+                    ${logoEscola}
+                    <div>
+                        <h2>${App.escapeHTML(nomeEscola)}</h2>
+                        <p>${App.escapeHTML(cnpjEscola)}</p>
+                    </div>
+                </div>
+                
+                <div class="titulo-doc">📄 ${tituloModal}</div>
+                
+                ${clone.innerHTML}
+                
+                <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
+                    Documento gerado em ${new Date().toLocaleString('pt-BR')} pelo Sistema Escolar
+                </div>
+            </body>
+            </html>
+        `);
+        janelaImpressao.document.close();
+
+        // Aguarda 500ms para garantir que as imagens carregaram antes de invocar a impressão
+        setTimeout(() => {
+            janelaImpressao.focus();
+            janelaImpressao.print();
+        }, 500);
     },    
     
     abrirModalVenda: async (idAluno, nomeAluno) => {
