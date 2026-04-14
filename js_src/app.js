@@ -993,7 +993,14 @@ var App = {
         const content = document.getElementById('modal-form-content');
 
         try {
-            const [chamadas, planejamentos] = await Promise.all([App.api('/chamadas'), App.api('/planejamentos')]);
+            // 🚀 MAGIA DA PERFORMANCE: CACHE DE MEMÓRIA (Só faz download 1 vez!)
+            if (!App.contextoFrequencia.dadosCache) {
+                const [chamadasFetch, planejamentosFetch] = await Promise.all([App.api('/chamadas'), App.api('/planejamentos')]);
+                App.contextoFrequencia.dadosCache = { chamadas: chamadasFetch, planejamentos: planejamentosFetch };
+            }
+            const chamadas = App.contextoFrequencia.dadosCache.chamadas;
+            const planejamentos = App.contextoFrequencia.dadosCache.planejamentos;
+
             const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
             const planosAluno = planejamentos.filter(p => p.idAluno === idAluno);
 
@@ -1005,7 +1012,7 @@ var App = {
             if (btnCancelFixo) {
                 const rodape = btnCancelFixo.parentNode;
                 
-                // 1. Limpar botões injetados anteriormente para não duplicar
+                // 1. Limpar botões injetados anteriormente
                 document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
                 
                 // 2. Garantir que se fechar o modal, os botões extra desaparecem
@@ -1018,20 +1025,35 @@ var App = {
                     btnCancelFixo.dataset.limpezaAtiva = "true";
                 }
 
-                // 3. Injetar o botão correto consoante o modo ao lado do "Cancelar" fixo
+                // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading
                 if (modo === 'ativo' && planosArquivados.length > 0) {
                     const btnArq = document.createElement('button');
                     btnArq.className = 'btn-modal-dinamico';
                     btnArq.innerHTML = '🗄️ Arquivados';
-                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px;';
-                    btnArq.onclick = () => App.renderizarFrequenciaView('lista_arquivados');
+                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    // Efeitos Hover
+                    btnArq.onmouseover = () => btnArq.style.background = '#95a5a6';
+                    btnArq.onmouseout = () => btnArq.style.background = '#7f8c8d';
+                    // Feedback de Clique
+                    btnArq.onclick = (e) => {
+                        e.target.innerHTML = '⏳ A abrir...'; e.target.style.opacity = '0.8';
+                        setTimeout(() => App.renderizarFrequenciaView('lista_arquivados'), 10);
+                    };
                     rodape.appendChild(btnArq);
                 } else if (modo === 'lista_arquivados' || modo === 'ver_arquivado') {
+                    const isLista = modo === 'lista_arquivados';
                     const btnVoltar = document.createElement('button');
                     btnVoltar.className = 'btn-modal-dinamico';
-                    btnVoltar.innerHTML = modo === 'lista_arquivados' ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
-                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px;';
-                    btnVoltar.onclick = () => App.renderizarFrequenciaView(modo === 'lista_arquivados' ? 'ativo' : 'lista_arquivados');
+                    btnVoltar.innerHTML = isLista ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
+                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    // Efeitos Hover
+                    btnVoltar.onmouseover = () => btnVoltar.style.background = '#2980b9';
+                    btnVoltar.onmouseout = () => btnVoltar.style.background = '#3498db';
+                    // Feedback de Clique
+                    btnVoltar.onclick = (e) => {
+                        e.target.innerHTML = '⏳ A voltar...'; e.target.style.opacity = '0.8';
+                        setTimeout(() => App.renderizarFrequenciaView(isLista ? 'ativo' : 'lista_arquivados'), 10);
+                    };
                     rodape.appendChild(btnVoltar);
                 }
             }
@@ -1171,7 +1193,7 @@ var App = {
         } catch(e) { 
             content.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; 
         }
-    },
+    },    
     
     abrirModalVenda: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
