@@ -222,24 +222,110 @@ App.filtrarFinanceiro = () => {
     document.getElementById('fin-lista-area').innerHTML = App.gerarTabelaFinanceira(filtrados);
 };
 
+// =======================================================================
+// 💸 MOTOR INTELIGENTE DE BAIXA NO CAIXA (SISTEMA DE FILA E LOTE)
+// =======================================================================
+
+// Variável global para controlar a Fila de Pagamentos
+App.filaBaixa = { modo: '', itens: [], index: 0 };
+
 App.abrirModalBaixa = () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
 
-    // 🛡️ CORREÇÃO MATEMÁTICA: Somar em cêntimos (inteiros) para evitar erros
-    let totalCentavos = 0;
-    for(const c of checks) {
-        const item = App.financeiroCache.find(f => f.id == c.value);
-        if(item) {
-            totalCentavos += Math.round(parseFloat(item.valor) * 100);
-        }
-    }
-    const total = totalCentavos / 100;
+    // Extrair os objetos reais dos itens selecionados
+    const selecionados = Array.from(checks).map(c => App.financeiroCache.find(f => f.id == c.value)).filter(x => x);
 
+    if (selecionados.length === 1) {
+        // Se for só 1, vai direto para a tela de pagamento individual
+        App.filaBaixa = { modo: 'single', itens: selecionados, index: 0 };
+        App.montarTelaBaixa();
+    } else {
+        // Se forem múltiplos, abre a tela de decisão para o utilizador
+        App.filaBaixa = { modo: 'escolha', itens: selecionados, index: 0 };
+        const modal = document.getElementById('modal-overlay');
+        if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Múltiplas Baixas (${selecionados.length} itens)`;
+
+        document.getElementById('modal-form-content').innerHTML = `
+            <div style="text-align:center; padding:20px 10px;">
+                <div style="font-size:45px; margin-bottom:15px;">🏦</div>
+                <h3 style="color:#2c3e50; margin-bottom:20px;">Como deseja processar estes ${selecionados.length} pagamentos?</h3>
+                <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+                    <button onclick="App.definirModoBaixa('batch')" style="background:#34495e; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#2c3e50'" onmouseout="this.style.background='#34495e'">
+                        <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">📦 Somar e Pagar Tudo</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">O sistema divide os valores<br>automaticamente no relatório</div>
+                    </button>
+                    <button onclick="App.definirModoBaixa('queue')" style="background:#27ae60; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#1e8449'" onmouseout="this.style.background='#27ae60'">
+                        <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">⏭️ Pagar Um por Um</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">Cria uma fila e regista cada aluno<br>com a sua forma de pagamento</div>
+                    </button>
+                </div>
+            </div>
+        `;
+        // Esconde o botão confirmar na tela de decisão
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if (btnConfirm) btnConfirm.style.display = 'none'; 
+    }
+};
+
+App.definirModoBaixa = (modo) => {
+    App.filaBaixa.modo = modo;
+    App.filaBaixa.index = 0;
+    App.montarTelaBaixa();
+};
+
+App.montarTelaBaixa = () => {
+    const { modo, itens, index } = App.filaBaixa;
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
-    document.getElementById('modal-titulo').innerText = `Confirmar Pagamento (${checks.length} item/ns)`;
-    
+
+    // Restaura o botão confirmar
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if (btnConfirm) btnConfirm.style.display = 'inline-block'; 
+
+    let total = 0;
+    let infoExtraHTML = '';
+    let tituloModal = '';
+    let isUltimoDaFila = true;
+
+    if (modo === 'batch') {
+        tituloModal = `Pagamento em Lote (${itens.length} itens)`;
+        let totalCentavos = 0;
+        itens.forEach(i => totalCentavos += Math.round(parseFloat(i.valor) * 100));
+        total = totalCentavos / 100;
+        
+        infoExtraHTML = `
+            <div style="font-size:13px; color:#2980b9; margin-bottom:15px; background:#e8f4f8; padding:12px; border-radius:6px; border-left:4px solid #3498db;">
+                <b>ℹ️ Atenção:</b> O valor de <b>R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b> será registado e dividido nos relatórios entre os ${itens.length} lançamentos selecionados com a mesma data e forma de pagamento.
+            </div>`;
+        btnConfirm.innerText = "CONFIRMAR LOTE ✅";
+    } else {
+        // Single ou Fila
+        const itemAtual = itens[index];
+        total = parseFloat(itemAtual.valor);
+        isUltimoDaFila = (index === itens.length - 1);
+        
+        tituloModal = modo === 'queue' ? `Fila do Caixa: Lançamento ${index + 1} de ${itens.length}` : `Confirmar Pagamento`;
+        
+        infoExtraHTML = `
+            <div style="background:#fdfefe; border:1px solid #dce1e6; padding:15px; border-radius:6px; margin-bottom:15px; border-left:4px solid #27ae60; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:11px; color:#7f8c8d; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">👤 Identificação do Pagador</div>
+                    <div style="font-size:16px; font-weight:bold; color:#2c3e50; margin-bottom:4px;">${App.escapeHTML(itemAtual.alunoNome)}</div>
+                    <div style="font-size:13px; color:#555;">📄 ${App.escapeHTML(itemAtual.descricao)}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px; color:#7f8c8d; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Vencimento</div>
+                    <div style="font-size:14px; color:#c0392b; font-weight:bold;">${itemAtual.vencimento.split('-').reverse().join('/')}</div>
+                </div>
+            </div>`;
+        
+        btnConfirm.innerText = modo === 'queue' && !isUltimoDaFila ? "CONFIRMAR E PRÓXIMO ⏭️" : "CONFIRMAR PAGAMENTO ✅";
+    }
+
+    document.getElementById('modal-titulo').innerText = tituloModal;
+
     const input = App.UI.input;
     const select = (label, id, options, extraAttr='') => `
         <div class="input-group" style="margin:0;">
@@ -251,10 +337,11 @@ App.abrirModalBaixa = () => {
     const opFormas = `<option value="PIX">PIX</option><option value="Cartão de Crédito">Cartão de Crédito</option><option value="Cartão de Débito">Cartão de Débito</option><option value="Dinheiro">Dinheiro</option>`;
     
     const html = `
-        <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
+        ${infoExtraHTML}
+        <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center; border-bottom:1px solid #ddd; padding-bottom:10px;">
-                <span style="font-weight:bold; color:#2c3e50;">Total Selecionado:</span>
-                <span style="font-weight:bold; color:#27ae60; font-size:20px;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                <span style="font-weight:bold; color:#2c3e50;">Valor a Cobrar Agora:</span>
+                <span style="font-weight:bold; color:#27ae60; font-size:22px;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
             </div>
             
             ${input('Data do Pagamento', 'baixa-data', new Date().toISOString().split('T')[0], '', 'date')}
@@ -276,10 +363,7 @@ App.abrirModalBaixa = () => {
         </div>`;
         
     document.getElementById('modal-form-content').innerHTML = html;
-    
-    const btnConfirm = document.querySelector('.btn-confirm');
     btnConfirm.setAttribute('onclick', 'App.confirmarBaixa()');
-    btnConfirm.innerText = "CONFIRMAR PAGAMENTO";
 };
 
 App.mudarQtdFormasBaixa = () => {
@@ -316,40 +400,55 @@ App.confirmarBaixa = async () => {
 
     if(!dataPagamento) return App.showToast("Informe a data de pagamento.", "error");
 
-    const checks = document.querySelectorAll('.fin-check:checked');
-    const totalSelected = parseFloat(document.getElementById('baixa-total').value) || 0;
-    
     const btn = document.querySelector('.btn-confirm');
     const textoOriginal = btn.innerText;
-    btn.innerText = "Processando... ⏳"; 
+    btn.innerText = "A guardar... ⏳"; 
     btn.disabled = true;
+
+    const { modo, itens, index } = App.filaBaixa;
 
     try {
         const promessas = []; 
-        for(const c of checks) {
-            const item = App.financeiroCache.find(f => f.id == c.value);
-            if(item) {
+        
+        if (modo === 'batch') {
+            const totalSelected = parseFloat(document.getElementById('baixa-total').value) || 0;
+            for(const item of itens) {
                 const proportion = totalSelected > 0 ? (parseFloat(item.valor) / totalSelected) : 0;
                 const itemV1 = totalSelected > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
                 const itemV2 = (qtd === '2' && totalSelected > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
 
-                const payload = { ...item, status: 'Pago', dataPagamento: dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
+                const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
                 promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
             }
+        } else {
+            // Processa o item individual (Modo Single ou Queue)
+            const item = itens[index];
+            const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: v1, formaPagamento2: f2, valorPago2: (qtd === '2' ? v2 : null) };
+            promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
         }
         
         await Promise.all(promessas);
         
-        App.showToast("Pagamento registrado com sucesso!", "success");
+        // Verifica se há mais itens na fila
+        if (modo === 'queue' && index < itens.length - 1) {
+            App.showToast(`Pagamento ${index + 1} registado. Avançando...`, "success");
+            App.filaBaixa.index++;
+            App.montarTelaBaixa();
+            return; // Interrompe aqui para não fechar o modal, continua para o próximo!
+        }
+        
+        // Finalização (Se for Batch, Single, ou o último item da Queue)
+        App.showToast("Operação no caixa concluída com sucesso! 💼", "success");
         App.fecharModal();
         App.renderizarFinanceiroPro();
+        
     } catch(e) { 
         App.showToast("Erro ao processar baixa.", "error"); 
     } finally {
-        btn.innerText = textoOriginal; 
-        btn.disabled = false;
+        if (btn) { btn.innerText = textoOriginal; btn.disabled = false; }
     }
 };
+// =======================================================================
 
 App.gerarCarnes = async () => {
     const idA = document.getElementById('fin-aluno').value;
