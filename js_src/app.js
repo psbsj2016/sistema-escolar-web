@@ -343,7 +343,8 @@ var App = {
             } else {
                 if (bioId && window.PublicKeyCredential) {
                     document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none';
-                    document.getElementById('btn-biometria').style.display = 'block'; App.entrarComBiometria(); 
+                    document.getElementById('btn-biometria').style.display = 'block'; 
+setTimeout(() => { App.entrarComBiometria(); }, 600); 
                 } else { 
                     App.entrarNoSistema(); 
                 }
@@ -509,78 +510,150 @@ var App = {
         }
     },
 
-// =========================================================
-    // BIOMETRIA REAL (WEBAUTHN)
     // =========================================================
-    bufferToBase64: (buf) => { const bytes = new Uint8Array(buf); let str = ''; for (let i = 0; i < bytes.byteLength; i++) { str += String.fromCharCode(bytes[i]); } return btoa(str); },
-    base64ToBuffer: (b64) => { const bin = atob(b64); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); } return bytes; },
+// 👆 BIOMETRIA PREMIUM - EXPERIÊNCIA DE APP NATIVO
+// =========================================================
 
-    configurarBiometria: async () => {
-        if (!window.PublicKeyCredential) return App.showToast("O seu dispositivo não suporta biometria na Web.", "error");
-        try {
-            App.showToast("Aguardando verificação biométrica...", "info");
-            const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
-            const userId = new Uint8Array(16); window.crypto.getRandomValues(userId);
-            const cred = await navigator.credentials.create({
-                publicKey: {
-                    challenge: challenge, rp: { name: "Sistema Escolar" },
-                    user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
-                    pubKeyCredParams: [{type: "public-key", alg: -7}, {type: "public-key", alg: -257}],
-                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 300000
-                }
-            });
+// Utilitários de Conversão Ultra-Seguros
+App.bufferToBase64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+App.base64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
+App.configurarBiometria = async () => {
+    if (!window.PublicKeyCredential) return App.showToast("Este dispositivo não suporta biometria.", "error");
+
+    try {
+        // Interface de Antecipação Estilo App
+        App.exibirOverlayBiometria("Configurar Acesso Seguro", "Use o sensor digital ou FaceID para registrar o seu acesso neste aparelho.");
+        
+        const challenge = window.crypto.getRandomValues(new Uint8Array(32));
+        const userId = window.crypto.getRandomValues(new Uint8Array(16));
+
+        const cred = await navigator.credentials.create({
+            publicKey: {
+                challenge: challenge,
+                rp: { name: "App Gestão PTT" },
+                user: { 
+                    id: userId, 
+                    name: App.usuario.login, 
+                    displayName: App.usuario.nome 
+                },
+                pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                timeout: 60000
+            }
+        });
+
+        if (cred) {
             localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
+            App.removerOverlayBiometria();
             App.showToast("✅ Biometria ativada com sucesso!", "success");
             App.renderizarMinhaConta();
-        } catch (e) { console.error(e); App.showToast("Erro ao configurar. Verifique se tem FaceID/Digital ativo.", "error"); }
-    },
+        }
+    } catch (e) {
+        App.removerOverlayBiometria();
+        console.error(e);
+        App.showToast("Configuração cancelada ou falhou.", "warning");
+    }
+};
 
-    entrarComBiometria: async () => {
-        const bioId = localStorage.getItem('escola_bio_id');
-        if (!bioId) return App.showToast("Biometria não configurada para este utilizador.", "warning");
-        try {
-            const challenge = new Uint8Array(32); window.crypto.getRandomValues(challenge);
-            const rawId = App.base64ToBuffer(bioId);
-            const assertion = await navigator.credentials.get({
-                publicKey: { challenge: challenge, allowCredentials: [{ type: "public-key", id: rawId }], userVerification: "required" }
-            });
-            if (assertion) { App.showToast("🔓 Identidade confirmada!", "success"); App.entrarNoSistema(); }
-        } catch (e) { console.error(e); App.showToast("Falha na validação. Por favor, insira a sua senha.", "error"); }
-    },
+App.entrarComBiometria = async () => {
+    const bioId = localStorage.getItem('escola_bio_id');
+    if (!bioId) return;
 
-    // =========================================================
-    // CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
-    // =========================================================
-    abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
-    fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; },
-    voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
+    try {
+        App.exibirOverlayBiometria("Autenticação Biométrica", "Aguardando confirmação de identidade...");
+        
+        const challenge = window.crypto.getRandomValues(new Uint8Array(32));
+        const rawId = App.base64ToBuffer(bioId);
 
-    enviarCodigoInst: async () => {
-        const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
-        if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
-        const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
-        try {
-            const res = await App.api('/auth/enviar-codigo', 'POST', { email });
-            if(res && res.success) { App.showToast('Código enviado!', 'success'); document.getElementById('etapa-1-email').style.display = 'none'; document.getElementById('etapa-2-validacao').style.display = 'block'; } 
-            else { App.showToast('Erro ao enviar e-mail.', 'error'); }
-        } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
-    },
+        const assertion = await navigator.credentials.get({
+            publicKey: {
+                challenge: challenge,
+                allowCredentials: [{ type: "public-key", id: rawId }],
+                userVerification: "required",
+                timeout: 60000
+            }
+        });
 
-    validarCadastroInst: async () => {
-        const email = document.getElementById('novo-inst-email').value; const codigo = document.getElementById('novo-inst-codigo').value.trim(); const pin = document.getElementById('novo-inst-pin').value.trim(); const btn = document.querySelector('#etapa-2-validacao button');
-        if(!codigo || !pin) return App.showToast('Preencha Código e PIN.', 'error');
-        const txt = btn.innerText; btn.innerText = "A Validar... ⏳"; btn.disabled = true;
-        try {
-            const res = await App.api('/auth/validar-cadastro', 'POST', { email, codigo, pin });
-            if(res && res.success) { 
-                document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'block'; 
-                if(typeof confetti === 'function') confetti(); 
-                if (typeof gtag === 'function') gtag('event', 'generate_lead', { currency: 'BRL', value: 0.00, tipo_conta: 'Nova Escola' });
-            } 
-            else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
-        } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
-    },
+        if (assertion) {
+            App.removerOverlayBiometria();
+            App.showToast("🔓 Identidade confirmada!", "success");
+            App.entrarNoSistema();
+        }
+    } catch (e) {
+        App.removerOverlayBiometria();
+        console.error(e);
+        App.showToast("Biometria não reconhecida. Use sua senha.", "info");
+    }
+};
+
+// Interface Visual (Overlay Estilo iOS/Android)
+App.exibirOverlayBiometria = (titulo, sub) => {
+    let overlay = document.getElementById('bio-overlay-premium');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'bio-overlay-premium';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+        <div style="background: white; padding: 40px; border-radius: 28px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: slideUpBio 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div class="bio-icon-pulse" style="font-size: 65px; margin-bottom: 20px;">👤</div>
+            <h2 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px; font-family: sans-serif;">${titulo}</h2>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.5; margin-bottom: 25px; font-family: sans-serif;">${sub}</p>
+            <div style="font-size: 11px; color: #3498db; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">App Gestão PTT</div>
+        </div>
+        <style>
+            @keyframes slideUpBio { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            .bio-icon-pulse { animation: pulseBio 1.8s infinite; display: inline-block; }
+            @keyframes pulseBio { 0% { transform: scale(1); } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); } }
+        </style>
+    `;
+    overlay.style.display = 'flex';
+};
+
+App.removerOverlayBiometria = () => {
+    const overlay = document.getElementById('bio-overlay-premium');
+    if (overlay) overlay.style.display = 'none';
+};
+
+// =========================================================
+// CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
+// =========================================================
+App.abrirTelaCadastroInst = () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); };
+App.fecharModalInst = () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; };
+App.voltarEtapa1 = () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; };
+
+App.enviarCodigoInst = async () => {
+    const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
+    if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
+    const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
+    try {
+        const res = await App.api('/auth/enviar-codigo', 'POST', { email });
+        if(res && res.success) { App.showToast('Código enviado!', 'success'); document.getElementById('etapa-1-email').style.display = 'none'; document.getElementById('etapa-2-validacao').style.display = 'block'; } 
+        else { App.showToast('Erro ao enviar e-mail.', 'error'); }
+    } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
+};
+
+App.validarCadastroInst = async () => {
+    const email = document.getElementById('novo-inst-email').value; const codigo = document.getElementById('novo-inst-codigo').value.trim(); const pin = document.getElementById('novo-inst-pin').value.trim(); const btn = document.querySelector('#etapa-2-validacao button');
+    if(!codigo || !pin) return App.showToast('Preencha Código e PIN.', 'error');
+    const txt = btn.innerText; btn.innerText = "A Validar... ⏳"; btn.disabled = true;
+    try {
+        const res = await App.api('/auth/validar-cadastro', 'POST', { email, codigo, pin });
+        if(res && res.success) { 
+            document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'block'; 
+            if(typeof confetti === 'function') confetti(); 
+            if (typeof gtag === 'function') gtag('event', 'generate_lead', { currency: 'BRL', value: 0.00, tipo_conta: 'App Gestão PTT' });
+        } 
+        else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
+    } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
+};    
 
     // =========================================================
     // UTILITÁRIOS DA INTERFACE
