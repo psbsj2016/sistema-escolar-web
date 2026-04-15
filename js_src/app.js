@@ -423,13 +423,23 @@ var App = {
         }
     },
 
-    logout: () => {
+   logout: () => {
         document.documentElement.removeAttribute('style');
         localStorage.removeItem('usuario_logado'); localStorage.removeItem('token_acesso'); App.usuario = null;
         
         const inUser = document.getElementById('login-user'); if(inUser) inUser.value = ''; 
         const inPass = document.getElementById('login-pass'); if(inPass) inPass.value = '';
         
+        // 🧹 PROTOCOLO DE FAXINA TOTAL: Fechar todos os modais, menus e overlays pendentes
+        const modalPadrao = document.getElementById('modal-overlay'); if(modalPadrao) modalPadrao.style.display = 'none';
+        const modalInst = document.getElementById('modal-cadastro-inst'); if(modalInst) modalInst.style.display = 'none';
+        const modalRec = document.getElementById('modal-recuperacao-senha'); if(modalRec) modalRec.style.display = 'none';
+        
+        const sidebar = document.querySelector('.sidebar'); if(sidebar) sidebar.classList.remove('active');
+        const mobileOverlay = document.querySelector('.mobile-overlay'); if(mobileOverlay) mobileOverlay.classList.remove('active');
+        const notiDropdown = document.getElementById('noti-dropdown'); if(notiDropdown) notiDropdown.classList.remove('active');
+
+        // Esconde o sistema e mostra o login
         document.getElementById('tela-sistema').style.display = 'none';
         const telaLogin = document.getElementById('tela-login'); 
         if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
@@ -1072,7 +1082,7 @@ var App = {
                 document.getElementById('modal-titulo').innerText = `🗄️ Histórico Arquivado: ${App.escapeHTML(nomeAluno)}`;
 
                 if (planosArquivados.length === 0) {
-                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planeamento arquivado encontrado para este aluno.</p>`;
+                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planejamento arquivado encontrado para este aluno.</p>`;
                     return;
                 }
 
@@ -1093,7 +1103,7 @@ var App = {
 
                 content.innerHTML = `
                     <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">
-                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planeamento antigo para ver o dossiê de presenças.</p>
+                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planejamento antigo para ver o dossiê de presenças.</p>
                         ${listaHTML}
                     </div>
                 `;
@@ -1193,7 +1203,7 @@ var App = {
                 </div>`;
 
             content.innerHTML = `
-                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planeamento Letivo Atual</div>` : ''}
+                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planejamento Letivo Atual</div>` : ''}
                 ${modo === 'ver_arquivado' ? `<div style="background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🗄️ Exibindo Frequência do Histórico Arquivado</div>` : ''}
                 <div style="max-height:45vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
                 ${kpiHTML}
