@@ -1204,6 +1204,7 @@ var App = {
     },
 
     // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO
+    // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO INVISÍVEL (IFRAME)
     imprimirDossieFrequencia: () => {
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         const nomeEscola = escola.nome || 'Instituição de Ensino';
@@ -1226,9 +1227,19 @@ var App = {
             d.style.paddingRight = '0';
         });
 
-        // Montar a janela virtual de impressão
-        const janelaImpressao = window.open('', '_blank');
-        janelaImpressao.document.write(`
+        // 👻 CRIAR A PÁGINA FANTASMA (Iframe Invisível)
+        const iframe = document.createElement('iframe');
+        // Escondemos o iframe na tela, mas ele existe no sistema
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        // Escrever o documento dentro do iframe
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
             <!DOCTYPE html>
             <html>
             <head>
@@ -1293,14 +1304,19 @@ var App = {
             </body>
             </html>
         `);
-        janelaImpressao.document.close();
+        doc.close();
 
-        // Aguarda 500ms para garantir que as imagens carregaram antes de invocar a impressão
+        // Aguarda 500ms para garantir que as imagens carregaram no iframe
         setTimeout(() => {
-            janelaImpressao.focus();
-            janelaImpressao.print();
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // 🧹 Faxina: Remove a página fantasma assim que a impressão for concluída ou cancelada
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1500);
         }, 500);
-    },    
+    },   
     
     abrirModalVenda: async (idAluno, nomeAluno) => {
         const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
