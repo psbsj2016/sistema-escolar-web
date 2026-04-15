@@ -223,7 +223,7 @@ App.filtrarFinanceiro = () => {
 };
 
 // =======================================================================
-// 💸 MOTOR INTELIGENTE DE BAIXA NO CAIXA (SISTEMA DE FILA E LOTE)
+// 💸 MOTOR INTELIGENTE DE BAIXA NO CAIXA (SISTEMA DE FILA E JUROS)
 // =======================================================================
 
 // Variável global para controlar a Fila de Pagamentos
@@ -233,15 +233,12 @@ App.abrirModalBaixa = () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
 
-    // Extrair os objetos reais dos itens selecionados
     const selecionados = Array.from(checks).map(c => App.financeiroCache.find(f => f.id == c.value)).filter(x => x);
 
     if (selecionados.length === 1) {
-        // Se for só 1, vai direto para a tela de pagamento individual
         App.filaBaixa = { modo: 'single', itens: selecionados, index: 0 };
         App.montarTelaBaixa();
     } else {
-        // Se forem múltiplos, abre a tela de decisão para o utilizador
         App.filaBaixa = { modo: 'escolha', itens: selecionados, index: 0 };
         const modal = document.getElementById('modal-overlay');
         if(modal) modal.style.display = 'flex';
@@ -254,16 +251,15 @@ App.abrirModalBaixa = () => {
                 <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
                     <button onclick="App.definirModoBaixa('batch')" style="background:#34495e; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#2c3e50'" onmouseout="this.style.background='#34495e'">
                         <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">📦 Somar e Pagar Tudo</div>
-                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">O sistema divide os valores<br>automaticamente no relatório</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">O sistema divide os valores e juros<br>automaticamente no relatório</div>
                     </button>
                     <button onclick="App.definirModoBaixa('queue')" style="background:#27ae60; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#1e8449'" onmouseout="this.style.background='#27ae60'">
                         <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">⏭️ Pagar Um por Um</div>
-                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">Cria uma fila e regista cada aluno<br>com a sua forma de pagamento</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">Cria uma fila e regista cada aluno<br>com a sua forma de pagamento e juros</div>
                     </button>
                 </div>
             </div>
         `;
-        // Esconde o botão confirmar na tela de decisão
         const btnConfirm = document.querySelector('.btn-confirm');
         if (btnConfirm) btnConfirm.style.display = 'none'; 
     }
@@ -280,11 +276,10 @@ App.montarTelaBaixa = () => {
     const modal = document.getElementById('modal-overlay');
     if(modal) modal.style.display = 'flex';
 
-    // Restaura o botão confirmar
     const btnConfirm = document.querySelector('.btn-confirm');
     if (btnConfirm) btnConfirm.style.display = 'inline-block'; 
 
-    let total = 0;
+    let totalOriginal = 0;
     let infoExtraHTML = '';
     let tituloModal = '';
     let isUltimoDaFila = true;
@@ -293,17 +288,16 @@ App.montarTelaBaixa = () => {
         tituloModal = `Pagamento em Lote (${itens.length} itens)`;
         let totalCentavos = 0;
         itens.forEach(i => totalCentavos += Math.round(parseFloat(i.valor) * 100));
-        total = totalCentavos / 100;
+        totalOriginal = totalCentavos / 100;
         
         infoExtraHTML = `
             <div style="font-size:13px; color:#2980b9; margin-bottom:15px; background:#e8f4f8; padding:12px; border-radius:6px; border-left:4px solid #3498db;">
-                <b>ℹ️ Atenção:</b> O valor de <b>R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</b> será registado e dividido nos relatórios entre os ${itens.length} lançamentos selecionados com a mesma data e forma de pagamento.
+                <b>ℹ️ Atenção:</b> O valor final e quaisquer juros aplicados serão divididos proporcionalmente entre os ${itens.length} lançamentos.
             </div>`;
         btnConfirm.innerText = "CONFIRMAR LOTE ✅";
     } else {
-        // Single ou Fila
         const itemAtual = itens[index];
-        total = parseFloat(itemAtual.valor);
+        totalOriginal = parseFloat(itemAtual.valor);
         isUltimoDaFila = (index === itens.length - 1);
         
         tituloModal = modo === 'queue' ? `Fila do Caixa: Lançamento ${index + 1} de ${itens.length}` : `Confirmar Pagamento`;
@@ -339,31 +333,71 @@ App.montarTelaBaixa = () => {
     const html = `
         ${infoExtraHTML}
         <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px;">
+            
             <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center; border-bottom:1px solid #ddd; padding-bottom:10px;">
-                <span style="font-weight:bold; color:#2c3e50;">Valor a Cobrar Agora:</span>
-                <span style="font-weight:bold; color:#27ae60; font-size:22px;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                <div>
+                    <span style="font-weight:bold; color:#2c3e50; display:block;">Valor a Cobrar Agora:</span>
+                    <span style="font-size:12px; color:#7f8c8d;">Original: R$ ${totalOriginal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                </div>
+                <span id="baixa-display-total" style="font-weight:bold; color:#27ae60; font-size:24px;">R$ ${totalOriginal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
             </div>
             
-            ${input('Data do Pagamento', 'baixa-data', new Date().toISOString().split('T')[0], '', 'date')}
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                ${input('Data do Pagamento', 'baixa-data', new Date().toISOString().split('T')[0], '', 'date')}
+                <div class="input-group" style="margin:0;">
+                    <label style="color:#d35400;">Acréscimo/Juros (%)</label>
+                    <input type="number" id="baixa-juros" value="0" min="0" step="0.1" oninput="App.aplicarJurosBaixa()" style="width:100%; padding:10px; border-radius:5px; border:1px solid #e67e22; background:#fdf2e9;" placeholder="Ex: 5">
+                </div>
+            </div>
+
             ${select('Divisão de Pagamento', 'baixa-qtd', '<option value="1">1 Forma de Pagamento</option><option value="2">2 Formas de Pagamento (Dividir Valor)</option>', 'onchange="App.mudarQtdFormasBaixa()"')}
             
-            ${row(
-                select('Forma 1', 'baixa-forma-1', opFormas) + 
-                input('Valor (R$)', 'baixa-valor-1', total.toFixed(2), '', 'number', 'step="0.01" oninput="App.calcValorBaixa()" style="margin:0;"'),
-                'forma-1-container'
-            )}
+            <div style="margin-top:15px;">
+                ${row(
+                    select('Forma 1', 'baixa-forma-1', opFormas) + 
+                    input('Valor (R$)', 'baixa-valor-1', totalOriginal.toFixed(2), '', 'number', 'step="0.01" oninput="App.calcValorBaixa()" style="margin:0;"'),
+                    'forma-1-container'
+                )}
+                
+                ${row(
+                    select('Forma 2', 'baixa-forma-2', '<option value="Dinheiro">Dinheiro</option>' + opFormas) + 
+                    input('Valor (R$)', 'baixa-valor-2', '0.00', '', 'number', 'step="0.01" readonly style="background:#eee; margin:0;"'),
+                    'forma-2-container', 'none'
+                )}
+            </div>
             
-            ${row(
-                select('Forma 2', 'baixa-forma-2', '<option value="Dinheiro">Dinheiro</option>' + opFormas) + 
-                input('Valor (R$)', 'baixa-valor-2', '0.00', '', 'number', 'step="0.01" readonly style="background:#eee; margin:0;"'),
-                'forma-2-container', 'none'
-            )}
-            
-            <input type="hidden" id="baixa-total" value="${total}">
+            <input type="hidden" id="baixa-total-original" value="${totalOriginal}">
+            <input type="hidden" id="baixa-total" value="${totalOriginal}">
         </div>`;
         
     document.getElementById('modal-form-content').innerHTML = html;
     btnConfirm.setAttribute('onclick', 'App.confirmarBaixa()');
+};
+
+// 📈 NOVA FUNÇÃO: CALCULAR JUROS EM TEMPO REAL
+App.aplicarJurosBaixa = () => {
+    const totalOriginal = parseFloat(document.getElementById('baixa-total-original').value);
+    let jurosPct = parseFloat(document.getElementById('baixa-juros').value) || 0;
+    
+    if(jurosPct < 0) { 
+        jurosPct = 0; document.getElementById('baixa-juros').value = 0; 
+    }
+    
+    // Calcula o novo total
+    const acrescimo = totalOriginal * (jurosPct / 100);
+    const novoTotal = totalOriginal + acrescimo;
+    
+    // Atualiza a interface
+    document.getElementById('baixa-display-total').innerText = `R$ ${novoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('baixa-total').value = novoTotal.toFixed(2);
+    
+    // Distribui o novo valor pelas formas de pagamento automaticamente
+    const qtd = document.getElementById('baixa-qtd').value;
+    if(qtd === '1') {
+        document.getElementById('baixa-valor-1').value = novoTotal.toFixed(2);
+    } else {
+        App.calcValorBaixa();
+    }
 };
 
 App.mudarQtdFormasBaixa = () => {
@@ -411,19 +445,26 @@ App.confirmarBaixa = async () => {
         const promessas = []; 
         
         if (modo === 'batch') {
-            const totalSelected = parseFloat(document.getElementById('baixa-total').value) || 0;
+            const totalOriginalLote = parseFloat(document.getElementById('baixa-total-original').value) || 0;
+            
             for(const item of itens) {
-                const proportion = totalSelected > 0 ? (parseFloat(item.valor) / totalSelected) : 0;
-                const itemV1 = totalSelected > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
-                const itemV2 = (qtd === '2' && totalSelected > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
+                // Matemática blindada: Distribui os juros proporcionalmente pelo peso de cada fatura
+                const proportion = totalOriginalLote > 0 ? (parseFloat(item.valor) / totalOriginalLote) : 0;
+                const itemV1 = totalOriginalLote > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
+                const itemV2 = (qtd === '2' && totalOriginalLote > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
+                
+                // Atualiza o valor do sistema para refletir a nova arrecadação com juros
+                const novoValorItem = (parseFloat(itemV1) + (parseFloat(itemV2) || 0)).toFixed(2);
 
-                const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2 };
+                const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2, valor: novoValorItem };
                 promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
             }
         } else {
             // Processa o item individual (Modo Single ou Queue)
             const item = itens[index];
-            const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: v1, formaPagamento2: f2, valorPago2: (qtd === '2' ? v2 : null) };
+            const novoValorItem = (parseFloat(v1) + (parseFloat(v2) || 0)).toFixed(2);
+            
+            const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: v1, formaPagamento2: f2, valorPago2: (qtd === '2' ? v2 : null), valor: novoValorItem };
             promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
         }
         
@@ -434,10 +475,10 @@ App.confirmarBaixa = async () => {
             App.showToast(`Pagamento ${index + 1} registado. Avançando...`, "success");
             App.filaBaixa.index++;
             App.montarTelaBaixa();
-            return; // Interrompe aqui para não fechar o modal, continua para o próximo!
+            return; // Continua na fila!
         }
         
-        // Finalização (Se for Batch, Single, ou o último item da Queue)
+        // Finalização (Batch, Single ou último da fila)
         App.showToast("Operação no caixa concluída com sucesso! 💼", "success");
         App.fecharModal();
         App.renderizarFinanceiroPro();
