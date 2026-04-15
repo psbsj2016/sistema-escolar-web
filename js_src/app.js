@@ -1017,7 +1017,7 @@ var App = {
             const planosAtivos = planosAluno.filter(p => p.status !== 'Arquivado');
             const planosArquivados = planosAluno.filter(p => p.status === 'Arquivado');
 
-            // --- 🪄 GESTÃO DO RODAPÉ FIXO MÁGICO ---
+             // --- 🪄 GESTÃO DO RODAPÉ FIXO MÁGICO ---
             const btnCancelFixo = document.querySelector('#modal-overlay .btn-cancel');
             if (btnCancelFixo) {
                 const rodape = btnCancelFixo.parentNode;
@@ -1047,35 +1047,35 @@ var App = {
                     rodape.insertBefore(btnPrint, btnCancelFixo);
                 }
 
-                // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading
+                // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading (ANTES DO CANCELAR)
                 if (modo === 'ativo' && planosArquivados.length > 0) {
                     const btnArq = document.createElement('button');
                     btnArq.className = 'btn-modal-dinamico';
                     btnArq.innerHTML = '🗄️ Arquivados';
-                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
                     btnArq.onmouseover = () => btnArq.style.background = '#95a5a6';
                     btnArq.onmouseout = () => btnArq.style.background = '#7f8c8d';
                     btnArq.onclick = (e) => {
                         e.target.innerHTML = '⏳ A abrir...'; e.target.style.opacity = '0.8';
                         setTimeout(() => App.renderizarFrequenciaView('lista_arquivados'), 10);
                     };
-                    rodape.appendChild(btnArq);
+                    rodape.insertBefore(btnArq, btnCancelFixo);
                 } else if (modo === 'lista_arquivados' || modo === 'ver_arquivado') {
                     const isLista = modo === 'lista_arquivados';
                     const btnVoltar = document.createElement('button');
                     btnVoltar.className = 'btn-modal-dinamico';
                     btnVoltar.innerHTML = isLista ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
-                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
                     btnVoltar.onmouseover = () => btnVoltar.style.background = '#2980b9';
                     btnVoltar.onmouseout = () => btnVoltar.style.background = '#3498db';
                     btnVoltar.onclick = (e) => {
                         e.target.innerHTML = '⏳ A voltar...'; e.target.style.opacity = '0.8';
                         setTimeout(() => App.renderizarFrequenciaView(isLista ? 'ativo' : 'lista_arquivados'), 10);
                     };
-                    rodape.appendChild(btnVoltar);
+                    rodape.insertBefore(btnVoltar, btnCancelFixo);
                 }
             }
-            // ----------------------------------------
+            // ----------------------------------------            
 
             // 🗄️ MODO 1: EXIBIR LISTA DE ARQUIVADOS
             if (modo === 'lista_arquivados') {
