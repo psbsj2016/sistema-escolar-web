@@ -982,18 +982,32 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA
+// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA E LOTE (MÁXIMA PERFORMANCE)
 // ---------------------------------------------------------
+
+// 🚀 MOTOR DE CACHE: Guarda os dados temporariamente para não travar o sistema com downloads repetitivos
+App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
+
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controlo de Presença");
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
+    
     try { 
-        const [alunos, turmas, chamadas] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api(`/chamadas?_t=${Date.now()}`)]); 
-        const historico = Array.isArray(chamadas) ? chamadas.sort((a,b) => new Date(b.data) - new Date(a.data)) : []; 
-        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        // Descarrega tudo de uma vez e guarda no Cache
+        const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
+            App.api('/alunos'), App.api('/turmas'), App.api(`/chamadas?_t=${Date.now()}`), App.api(`/planejamentos?_t=${Date.now()}`)
+        ]); 
+        
+        App.cachePedagogico.alunos = alunosFetch;
+        App.cachePedagogico.turmas = turmasFetch;
+        App.cachePedagogico.chamadas = Array.isArray(chamadasFetch) ? chamadasFetch : [];
+        App.cachePedagogico.planejamentos = planosFetch;
 
-        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const historico = [...App.cachePedagogico.chamadas].sort((a,b) => new Date(b.data) - new Date(a.data)); 
+        const alunosAtivos = App.cachePedagogico.alunos.filter(a => !a.status || a.status === 'Ativo');
+
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + App.cachePedagogico.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const hoje = new Date().toISOString().split('T')[0];
 
@@ -1039,7 +1053,10 @@ App.renderizarChamadaPro = async () => {
 };
 
 App.editarLancamentoChamada = async (id) => { 
-    const registro = await App.api(`/chamadas/${id}?_t=${Date.now()}`); 
+    // Usa o cache em vez de descarregar novamente!
+    const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
+    if(!registro) return App.showToast("Erro ao localizar o registo.", "error");
+
     document.getElementById('chamada-aluno').value = registro.idAluno; 
     document.getElementById('chamada-turma').value = "";
     document.getElementById('chamada-data').value = registro.data; 
@@ -1059,6 +1076,23 @@ App.cancelarEdicaoChamada = () => {
     App.showToast("Modo de edição cancelado.", "info");
 };
 
+// 🪄 NOVA FUNÇÃO: LANÇAMENTO EM LOTE NA TELA
+App.marcarTodosChamada = (status) => {
+    const selects = document.querySelectorAll('.status-chamada');
+    if(selects.length === 0) return;
+    
+    selects.forEach(select => {
+        select.value = status;
+        // Muda a cor instantaneamente consoante a seleção
+        if(status === 'Falta') select.style.color = '#e74c3c';
+        else if(status === 'Reposição') select.style.color = '#f39c12';
+        else if(status === 'Presença') select.style.color = '#27ae60';
+        else select.style.color = '#333';
+    });
+    
+    App.showToast(`Lote aplicado: Todos como ${status}!`, "info");
+};
+
 App.carregarListaChamada = async () => {
     const turma = document.getElementById('chamada-turma').value;
     const idAluno = document.getElementById('chamada-aluno').value;
@@ -1066,6 +1100,7 @@ App.carregarListaChamada = async () => {
     
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
     if(!data) return App.showToast("Preencha a Data da aula.", "warning");
+    
     // 🛡️ TRAVA ANTI-FUTURO
     const hojeStr = new Date().toISOString().split('T')[0];
     if (data > hojeStr) {
@@ -1073,10 +1108,12 @@ App.carregarListaChamada = async () => {
     }
 
     const area = document.getElementById('area-lista-chamada');
-    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe... ⏳</p>';
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe super rápido... ⚡</p>';
 
     try {
-        const [alunos, chamadas] = await Promise.all([App.api('/alunos'), App.api(`/chamadas?_t=${Date.now()}`)]);
+        // Usa o Cache (0 milissegundos de espera!)
+        const alunos = App.cachePedagogico.alunos;
+        const chamadas = App.cachePedagogico.chamadas;
         
         let alunosAlvo = [];
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } else { alunosAlvo = alunos.filter(a => a.turma === turma); }
@@ -1090,7 +1127,7 @@ App.carregarListaChamada = async () => {
         alunosAlvo.forEach(a => {
             let regExistente = null;
             if (App.idChamadaEditando && a.id === document.getElementById('chamada-aluno').value) {
-                regExistente = chamadas.find(c => c.id === App.idChamadaEditando);
+                regExistente = chamadas.find(c => String(c.id) === String(App.idChamadaEditando));
             } else {
                 regExistente = chamadasDia.find(c => c.idAluno === a.id);
             }
@@ -1102,7 +1139,7 @@ App.carregarListaChamada = async () => {
             <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
                 <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
                 <td style="padding:12px; width:250px;">
-                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':'#27ae60'};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
                         <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
                         <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
                         <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
@@ -1116,11 +1153,22 @@ App.carregarListaChamada = async () => {
         
         let alertaEdicao = App.idChamadaEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO (A atualizar o registo existente)</div>` : '';
 
+        // 🪄 BOTÕES DE AÇÃO EM LOTE RÁPIDA
+        const botoesLote = !App.idChamadaEditando ? `
+            <div style="padding:10px 15px; background:#fff; border-bottom:1px solid #eee; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preenchimento Rápido em Lote:</span>
+                <button onclick="App.marcarTodosChamada('Presença')" style="background:#eafaf1; color:#27ae60; border:1px solid #27ae60; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#d5f5e3'" onmouseout="this.style.background='#eafaf1'">✅ Todos Presentes</button>
+                <button onclick="App.marcarTodosChamada('Falta')" style="background:#fdf2f2; color:#e74c3c; border:1px solid #e74c3c; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fadbd8'" onmouseout="this.style.background='#fdf2f2'">❌ Todos Faltaram</button>
+                <button onclick="App.marcarTodosChamada('Reposição')" style="background:#fef5e7; color:#f39c12; border:1px solid #f39c12; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fdebd0'" onmouseout="this.style.background='#fef5e7'">🔄 Todas Reposições</button>
+            </div>
+        ` : '';
+
         area.innerHTML = alertaEdicao + `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
                 <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
                     Grelha de Frequência - ${App.escapeHTML(data.split('-').reverse().join('/'))}
                 </div>
+                ${botoesLote}
                 <div class="table-responsive-wrapper" style="margin:0; border:none;">
                     <table style="width:100%; border-collapse:collapse; min-width:400px;">
                         <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">NOME DO ALUNO</th><th style="padding:15px; text-align:left;">STATUS DA AULA</th></tr></thead>
@@ -1128,11 +1176,11 @@ App.carregarListaChamada = async () => {
                     </table>
                 </div>
                 <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
-                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60;">💾 SALVAR FREQUÊNCIA</button>
+                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">💾 SALVAR FREQUÊNCIA</button>
                 </div>
             </div>
         `;
-    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a lista.</p>'; }
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar a lista.</p>'; }
 };
 
 App.salvarChamadaLote = async () => {
@@ -1148,20 +1196,18 @@ App.salvarChamadaLote = async () => {
         }
 
         const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
-        const txt = btn.innerText; btn.innerText = "A processar dados... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+        const txt = btn.innerText; btn.innerText = "A arquivar instantaneamente... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
 
         try {
-            // 🚀 OTIMIZAÇÃO 1: Fazer download de tudo apenas UMA vez no início!
-            const [planejamentos, chamadasExistentes] = await Promise.all([
-                App.api(`/planejamentos?_t=${Date.now()}`),
-                App.api(`/chamadas?_t=${Date.now()}`)
-            ]);
+            // Usa o cache (zero downloads)
+            const planejamentos = App.cachePedagogico.planejamentos;
+            const chamadasExistentes = App.cachePedagogico.chamadas;
 
             const alunosSemPlano = [];
             const alunosAfetados = [];
             const promessasChamadas = [];
             
-            // 🧠 Variável para guardar as chamadas atualizadas na memória (evita fazer novo download depois)
+            // Variável para guardar as chamadas atualizadas na memória
             let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
 
             // Validação de planeamento ativo
@@ -1179,7 +1225,7 @@ App.salvarChamadaLote = async () => {
                 return; 
             }
 
-            // 🚀 OTIMIZAÇÃO 2: Preparar as chamadas e atualizar a lista apenas em memória
+            // Preparar as chamadas e atualizar a lista
             linhas.forEach(linha => {
                 const idAluno = linha.getAttribute('data-id'); 
                 const nomeAluno = linha.getAttribute('data-nome');
@@ -1202,7 +1248,7 @@ App.salvarChamadaLote = async () => {
                     const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
                     if(idx !== -1) chamadasAtualizadasNaMemoria[idx] = chamadaAtualizada;
                 } else { 
-                    // O '+ idAluno' evita conflitos de milissegundos na criação
+                    // O '+ idAluno' evita conflitos
                     payload.id = Date.now().toString() + Math.floor(Math.random()*1000) + idAluno; 
                     promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
                     
@@ -1214,7 +1260,7 @@ App.salvarChamadaLote = async () => {
             // Grava todas as chamadas no servidor simultaneamente
             await Promise.all(promessasChamadas);
             
-            // 🚀 OTIMIZAÇÃO 3: Fazer o Auto-Ajuste usando os dados da memória, sem tocar na internet!
+            // Fazer o Auto-Ajuste usando os dados da memória, sem tocar na internet!
             let avisoExtra = "";
             try {
                 const promessasPlano = [];
@@ -1222,7 +1268,6 @@ App.salvarChamadaLote = async () => {
                 alunosAfetados.forEach(idAluno => {
                     let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
                     if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
-                        // A magia acontece aqui: Passamos os dados que já calculamos na RAM!
                         planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadasNaMemoria);
                         promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
                     }
@@ -1234,9 +1279,9 @@ App.salvarChamadaLote = async () => {
                 }
             } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
 
-            App.showToast(`Frequência registada${avisoExtra}`, "success");
+            App.showToast(`Frequência registada em tempo recorde${avisoExtra}`, "success");
             App.cancelarEdicaoChamada(); 
-            App.renderizarChamadaPro(); 
+            App.renderizarChamadaPro(); // Recarrega a tela completa (que agora é instantânea graças ao cache)
         } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
         finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
     };
