@@ -859,10 +859,21 @@ validarCadastroInst: async () => {
     cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
         if (!App.verificarPermissao('whatsapp')) return;
         if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
-        let numero = telefone.replace(/\D/g, ''); if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
-        const msg = `🔔 LEMBRETE\nHello! Are you ok?\n\nVenceu em ${dataVencimento} a mensalidade do seu curso de inglês. Para realizar o pagamento, basta enviar o valor de R$ ${valorFmt} para o PIX CELULAR abaixo:\n\n(73) 98890-9273\nPTT CURSOS\nPaulo Sérgio Bispo Santana Júnior\nCORA\n\nObs.: Após o pagamento, por favor, enviar o comprovante para baixa no sistema.\n\n🙏 Agradeço desde já e desejo a você um excelente dia! 😉✅`;
+        
+        let numero = telefone.replace(/\D/g, ''); 
+        if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
+
+        // 1. Puxar os dados da Escola registados no sistema
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Nossa Instituição';
+        const chavePix = escola.chavePix || 'Não informada';
+        const bancoPix = escola.banco || 'Não informado';
+
+        // 2. Montar a mensagem de forma dinâmica
+        const msg = `🔔 LEMBRETE DE VENCIMENTO\nOlá, ${nomeAluno}!\n\nConsta no nosso sistema que a sua mensalidade venceu no dia ${dataVencimento}. Para realizar o pagamento de forma rápida, basta enviar o valor de *R$ ${valorFmt}* para a chave PIX abaixo:\n\n*Instituição:* ${nomeEscola}\n*Banco:* ${bancoPix}\n*Chave PIX:* ${chavePix}\n\nObs.: Após o pagamento, por favor, envie o comprovativo por aqui para podermos dar baixa no sistema.\n\n🙏 Agradecemos desde já e desejamos-lhe um excelente dia! 😉✅`;
+        
         window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
-    },
+    },    
 
 // =========================================================
     // ROTEAMENTO DE TELAS E BLOQUEIO DE CARGOS
