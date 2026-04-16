@@ -1911,18 +1911,34 @@ validarCadastroInst: async () => {
                             </div>
                         </div>
                     </div>
+                    
+                    <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">📋 Dados Principais</h4>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
                         <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${App.escapeHTML(escola.nome||'')}"></div>
                         <div class="input-group"><label>CNPJ / NIF</label><input id="conf-cnpj" value="${App.escapeHTML(escola.cnpj||'')}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
                     </div>
+                    
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
                         <div class="input-group"><label>Dados Bancários (Carnê)</label><input id="conf-banco" value="${App.escapeHTML(escola.banco||'')}"></div>
                         <div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${App.escapeHTML(escola.chavePix||'')}"></div>
                     </div>
-                    <button class="btn-primary" style="width:100%; margin-top:20px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
+
+                    <h4 style="margin: 25px 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">📍 Endereço da Instituição</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:20px; margin-bottom:20px;">
+                        <div class="input-group"><label>CEP</label><input id="conf-cep" value="${App.escapeHTML(escola.cep||'')}" oninput="App.mascaraCEP(this)" maxlength="9"></div>
+                        <div class="input-group"><label>Endereço (Rua, Av.)</label><input id="conf-endereco" value="${App.escapeHTML(escola.endereco||'')}"></div>
+                        <div class="input-group"><label>Número</label><input id="conf-numero" value="${App.escapeHTML(escola.numero||'')}"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:20px;">
+                        <div class="input-group"><label>Bairro</label><input id="conf-bairro" value="${App.escapeHTML(escola.bairro||'')}"></div>
+                        <div class="input-group"><label>Cidade</label><input id="conf-cidade" value="${App.escapeHTML(escola.cidade||'')}"></div>
+                        <div class="input-group"><label>Estado (UF)</label><input id="conf-estado" value="${App.escapeHTML(escola.estado||'')}" maxlength="2" style="text-transform: uppercase;"></div>
+                    </div>
+
+                    <button class="btn-primary" style="width:100%; margin-top:25px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
                 </div>`; 
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
-    },
+    },    
 
     previewImagemLocal: (input, imgId) => {
         if (!input.files || input.files.length === 0) return;
@@ -1940,8 +1956,16 @@ validarCadastroInst: async () => {
 
     salvarConfiguracoes: async () => { 
         const p = { 
-            nome: document.getElementById('conf-nome').value, cnpj: document.getElementById('conf-cnpj').value, 
-            banco: document.getElementById('conf-banco').value, chavePix: document.getElementById('conf-pix').value 
+            nome: document.getElementById('conf-nome').value, 
+            cnpj: document.getElementById('conf-cnpj').value, 
+            banco: document.getElementById('conf-banco').value, 
+            chavePix: document.getElementById('conf-pix').value,
+            cep: document.getElementById('conf-cep').value,
+            endereco: document.getElementById('conf-endereco').value,
+            numero: document.getElementById('conf-numero').value,
+            bairro: document.getElementById('conf-bairro').value,
+            cidade: document.getElementById('conf-cidade').value,
+            estado: document.getElementById('conf-estado').value.toUpperCase()
         }; 
         
         const imgLogo = document.getElementById('conf-preview');
