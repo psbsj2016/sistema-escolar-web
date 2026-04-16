@@ -749,10 +749,13 @@ App.gerarDocumentoPrint = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        // 🚀 CORREÇÃO: Pega a lista toda e filtra para gerar os documentos perfeitamente
-        const alunosLista = await App.api('/alunos');
-        const aluno = alunosLista.find(a => a.id === idAluno) || {};
-        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+        // 🚀 CORREÇÃO: Pega a lista toda e filtra para gerar os documentos perfeitamente
+        const alunosLista = await App.api('/alunos');
+        const aluno = alunosLista.find(a => a.id === idAluno) || {};
+        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+
+        // ✨ FORMATAÇÃO DO ENDEREÇO DA ESCOLA
+        const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
 
         // 🛡️ Usa a área delimitada em vez de jogar direto no Body
         const printContainer = document.getElementById('doc-area');
@@ -760,9 +763,10 @@ App.gerarDocumentoPrint = async () => {
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         
+        // ✨ INJEÇÃO DO ENDEREÇO NO CABEÇALHO (LOGO ABAIXO DO CNPJ)
         const docHeader = `
             <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
-                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div></div>
+                <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
             </div>`;
             
