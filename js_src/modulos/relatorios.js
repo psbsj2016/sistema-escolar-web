@@ -550,12 +550,14 @@ App.gerarFichaImprimir = async () => {
     document.body.style.cursor = 'wait';
     
     try {
-        const [aluno, escola, financeiro, turmas] = await Promise.all([ 
-            App.api(`/alunos/${idAluno}`), 
-            App.api('/escola'),
-            App.api('/financeiro'),
-            App.api('/turmas')
-        ]);
+        // 🚀 CORREÇÃO: Pega a lista toda e filtra, evitando erro de ID inexistente no servidor
+        const [alunosLista, escola, financeiro, turmas] = await Promise.all([ 
+            App.api('/alunos'), 
+            App.api('/escola'),
+            App.api('/financeiro'),
+            App.api('/turmas')
+        ]);
+        const aluno = alunosLista.find(a => a.id === idAluno) || {};
         
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         const turmaObj = turmas.find(t => t.nome === aluno.turma) || { dia: '-', horario: '-' };
@@ -747,8 +749,10 @@ App.gerarDocumentoPrint = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        const aluno = await App.api(`/alunos/${idAluno}`);
-        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+        // 🚀 CORREÇÃO: Pega a lista toda e filtra para gerar os documentos perfeitamente
+        const alunosLista = await App.api('/alunos');
+        const aluno = alunosLista.find(a => a.id === idAluno) || {};
+        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
 
         // 🛡️ Usa a área delimitada em vez de jogar direto no Body
         const printContainer = document.getElementById('doc-area');

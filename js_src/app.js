@@ -510,15 +510,31 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
         }
     },
 
-    // =========================================================
+// =========================================================
 // 👆 BIOMETRIA PREMIUM - EXPERIÊNCIA DE APP NATIVO
 // =========================================================
 
 // Utilitários de Conversão Ultra-Seguros
-App.bufferToBase64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
-App.base64ToBuffer = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+bufferToBase64: function(buf) {
+    var bytes = new Uint8Array(buf);
+    var binary = '';
+    for (var i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+},
 
-App.configurarBiometria = async () => {
+base64ToBuffer: function(b64) {
+    var binary_string = atob(b64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+},
+
+configurarBiometria: async () => {
     if (!window.PublicKeyCredential) return App.showToast("Este dispositivo não suporta biometria.", "error");
 
     try {
@@ -554,9 +570,9 @@ App.configurarBiometria = async () => {
         console.error(e);
         App.showToast("Configuração cancelada ou falhou.", "warning");
     }
-};
+},
 
-App.entrarComBiometria = async () => {
+entrarComBiometria: async () => {
     const bioId = localStorage.getItem('escola_bio_id');
     if (!bioId) return;
 
@@ -585,10 +601,10 @@ App.entrarComBiometria = async () => {
         console.error(e);
         App.showToast("Biometria não reconhecida. Use sua senha.", "info");
     }
-};
+},
 
 // Interface Visual (Overlay Estilo iOS/Android)
-App.exibirOverlayBiometria = (titulo, sub) => {
+exibirOverlayBiometria: (titulo, sub) => {
     let overlay = document.getElementById('bio-overlay-premium');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -615,21 +631,21 @@ App.exibirOverlayBiometria = (titulo, sub) => {
         </style>
     `;
     overlay.style.display = 'flex';
-};
+},
 
-App.removerOverlayBiometria = () => {
+removerOverlayBiometria: () => {
     const overlay = document.getElementById('bio-overlay-premium');
     if (overlay) overlay.style.display = 'none';
-};
+},
 
 // =========================================================
 // CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
 // =========================================================
-App.abrirTelaCadastroInst = () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); };
-App.fecharModalInst = () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; };
-App.voltarEtapa1 = () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; };
+abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
+fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; },
+voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
 
-App.enviarCodigoInst = async () => {
+enviarCodigoInst: async () => {
     const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
     if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
     const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
@@ -638,9 +654,9 @@ App.enviarCodigoInst = async () => {
         if(res && res.success) { App.showToast('Código enviado!', 'success'); document.getElementById('etapa-1-email').style.display = 'none'; document.getElementById('etapa-2-validacao').style.display = 'block'; } 
         else { App.showToast('Erro ao enviar e-mail.', 'error'); }
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
-};
+},
 
-App.validarCadastroInst = async () => {
+validarCadastroInst: async () => {
     const email = document.getElementById('novo-inst-email').value; const codigo = document.getElementById('novo-inst-codigo').value.trim(); const pin = document.getElementById('novo-inst-pin').value.trim(); const btn = document.querySelector('#etapa-2-validacao button');
     if(!codigo || !pin) return App.showToast('Preencha Código e PIN.', 'error');
     const txt = btn.innerText; btn.innerText = "A Validar... ⏳"; btn.disabled = true;
@@ -653,7 +669,7 @@ App.validarCadastroInst = async () => {
         } 
         else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
-};    
+},
 
     // =========================================================
     // UTILITÁRIOS DA INTERFACE
