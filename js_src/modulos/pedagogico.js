@@ -1326,12 +1326,12 @@ App.renderizarCalendarioPro = async () => {
                 ${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">🟢 Evento</option><option value="Feriado">🔴 Feriado</option><option value="Prova">🔵 Prova</option><option value="Reunião">🟠 Reunião</option>')}
                 ${col('Descrição:', 'evt-desc', 'text', '', 'placeholder="Ex: Prova de História / Carnaval" style="flex:3;"')}
             </div>
-            <div style="display: flex; gap: 15px; margin-top: 15px; align-items: flex-end;">
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; align-items: flex-end;">
                 ${col('Início:', 'evt-inicio', 'time')}
                 ${col('Término:', 'evt-fim', 'time')}
-                <div style="flex: 1; text-align: right;">
-                    <button onclick="App.limparFormEvento()" style="background:#95a5a6; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:5px;">Cancelar</button>
-                    <button onclick="App.salvarEvento()" style="background:#6c5ce7; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold;">Salvar</button>
+                <div style="flex: 1; min-width: 200px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button onclick="App.limparFormEvento()" style="background:#95a5a6; color:white; border:none; padding:12px 20px; border-radius:5px; cursor:pointer; flex: 1;">Cancelar</button>
+                    <button onclick="App.salvarEvento()" style="background:#6c5ce7; color:white; border:none; padding:12px 20px; border-radius:5px; font-weight:bold; cursor:pointer; flex: 1;">Salvar</button>
                 </div>
             </div>
         `;
