@@ -620,13 +620,26 @@ App.gerarBoletimTela = async () => {
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
         
-        const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).map(c => c.data).sort();
-        const primAula = presencas.length > 0 ? presencas[0].split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
-        
-        let ultAula = '__/__/____';
         const planoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); } 
-        else if (presencas.length > 0) { ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); }
+        const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).map(c => c.data).sort();
+        
+        let primAula = '__/__/____';
+        let ultAula = '__/__/____';
+        
+        // 🚀 Lógica mais inteligente para puxar datas (Prioriza o Planeamento!)
+        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { 
+            primAula = App.escapeHTML(planoAluno.aulas[0].data);
+            ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); 
+        } else if (presencas.length > 0) { 
+            primAula = presencas[0].split('-').reverse().join('/');
+            ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); 
+        } else {
+            primAula = new Date().toLocaleDateString('pt-BR');
+        }
+
+        // 🚀 Lógica mais inteligente para puxar Curso e Turma (Cruza dados do Aluno e do Planeamento)
+        const cursoExibir = App.escapeHTML(aluno.curso || (planoAluno ? planoAluno.curso : 'Geral'));
+        const turmaExibir = App.escapeHTML(aluno.turma || 'Não informada');
 
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); 
         const disciplinasMap = {};
@@ -680,7 +693,7 @@ App.gerarBoletimTela = async () => {
                 </div>
                 <div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;">
                     <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${App.escapeHTML(aluno.nome).toUpperCase()}</div>
-                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${App.escapeHTML(aluno.curso || '-')} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${App.escapeHTML(aluno.turma || '-')}</div>
+                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${cursoExibir} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${turmaExibir}</div>
                     <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
                 </div>
                 <div class="table-responsive-wrapper">
