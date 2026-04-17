@@ -183,11 +183,14 @@
 
         try {
             // TROQUE LOCALHOST PELO DOMÍNIO DO SEU BACKEND QUANDO COLOCAR ONLINE
-            const resposta = await fetch('https://www.sistemaptt.com.br/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            
+const resposta = await fetch('https://sistema-escolar-api-k3o8.onrender.com/public/receber-matricula', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+});
 
             const dados = await resposta.json();
 
