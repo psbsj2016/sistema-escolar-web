@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrícula Online - PTT Cursos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f7; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #3498db; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { color: #2c3e50; margin-bottom: 5px; }
+        .header p { color: #7f8c8d; font-size: 14px; margin-top: 0; }
+        h3 { color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 30px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { border-color: #3498db; outline: none; }
+        #box-responsavel { display: none; background: #fff3e0; padding: 20px; border-radius: 8px; border: 1px dashed #e67e22; margin-top: 20px; }
+        button { width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:hover { background: #219653; }
+        .termo { font-size: 12px; color: #666; margin-top: 20px; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Ficha de Matrícula</h2>
+        <p>Preencha os dados abaixo para garantir a sua vaga na PTT Cursos</p>
+    </div>
+
+    <form id="formMatricula">
+        <h3>1. Dados Pessoais</h3>
+        <div class="input-group">
+            <label>Nome Completo *</label>
+            <input type="text" id="nome" required>
+        </div>
+        
+        <div class="grid-2">
+            <div class="input-group">
+                <label>WhatsApp *</label>
+                <input type="text" id="whatsapp" placeholder="(00) 00000-0000" required>
+            </div>
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" id="email">
+            </div>
+            <div class="input-group">
+                <label>CPF *</label>
+                <input type="text" id="cpf" required>
+            </div>
+            <div class="input-group">
+                <label>RG</label>
+                <input type="text" id="rg">
+            </div>
+            <div class="input-group">
+                <label>Data de Nascimento *</label>
+                <input type="date" id="nascimento" onchange="verificarMaioridade()" required>
+            </div>
+            <div class="input-group">
+                <label>Sexo</label>
+                <select id="sexo">
+                    <option value="">-- Selecione --</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-group">
+            <label>Profissão / Ocupação</label>
+            <input type="text" id="profissao">
+        </div>
+
+        <div id="box-responsavel">
+            <h4 style="margin-top: 0; color: #d35400;">👤 Dados do Responsável Legal</h4>
+            <div class="grid-2">
+                <div class="input-group"><label>Nome do Responsável *</label><input type="text" id="resp_nome"></div>
+                <div class="input-group">
+                    <label>Parentesco *</label>
+                    <select id="resp_parentesco">
+                        <option value="">Selecione</option>
+                        <option value="Pai">Pai</option>
+                        <option value="Mãe">Mãe</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>CPF do Responsável *</label><input type="text" id="resp_cpf"></div>
+                <div class="input-group"><label>WhatsApp do Responsável *</label><input type="text" id="resp_zap"></div>
+            </div>
+        </div>
+
+        <h3>2. Endereço Completo</h3>
+        <div class="grid-2">
+            <div class="input-group"><label>Logradouro (Rua/Av) *</label><input type="text" id="rua" required></div>
+            <div class="input-group"><label>Número *</label><input type="text" id="numero" required></div>
+            <div class="input-group"><label>Bairro *</label><input type="text" id="bairro" required></div>
+            <div class="input-group"><label>Cidade *</label><input type="text" id="cidade" required></div>
+        </div>
+
+        <h3>3. Dados do Curso</h3>
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Curso Desejado *</label>
+                <input type="text" id="curso" placeholder="Ex: Inglês Básico" required>
+            </div>
+            <div class="input-group">
+                <label>Turma / Horário Preferencial *</label>
+                <input type="text" id="turma" placeholder="Ex: Quintas das 9:30" required>
+            </div>
+        </div>
+
+        <div class="termo">
+            <input type="checkbox" id="aceito" required style="width: auto;">
+            <label for="aceito" style="font-weight: normal; margin:0;">Li e aceito os termos do contrato de prestação de serviços educacionais da PTT Cursos.</label>
+        </div>
+
+        <button type="submit" id="btnMatricular">Concluir Matrícula ✅</button>
+    </form>
+</div>
+
+<script>
+    // Inteligência: Verificar idade
+    function verificarMaioridade() {
+        const dataNasc = document.getElementById('nascimento').value;
+        const boxResp = document.getElementById('box-responsavel');
+        if (!dataNasc) return;
+
+        const hoje = new Date();
+        const nasc = new Date(dataNasc);
+        let idade = hoje.getFullYear() - nasc.getFullYear();
+        const m = hoje.getMonth() - nasc.getMonth();
+        if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+
+        if (idade < 18) {
+            boxResp.style.display = 'block';
+            document.getElementById('resp_nome').required = true;
+            document.getElementById('resp_cpf').required = true;
+        } else {
+            boxResp.style.display = 'none';
+            document.getElementById('resp_nome').required = false;
+            document.getElementById('resp_cpf').required = false;
+        }
+    }
+
+    // Envio dos dados com a MESMA estrutura do seu sistema interno!
+    document.getElementById('formMatricula').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnMatricular');
+        btn.innerText = "A processar... ⏳";
+        btn.disabled = true;
+
+        // Montamos o "Dossiê do Aluno" igualzinho ao cadastros.js
+        const payload = {
+            escolaId: 'ESC-PTTCURSOS', // O ID DA SUA ESCOLA
+            nome: document.getElementById('nome').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            email: document.getElementById('email').value,
+            cpf: document.getElementById('cpf').value,
+            rg: document.getElementById('rg').value,
+            nascimento: document.getElementById('nascimento').value,
+            sexo: document.getElementById('sexo').value,
+            profissao: document.getElementById('profissao').value,
+            rua: document.getElementById('rua').value,
+            numero: document.getElementById('numero').value,
+            bairro: document.getElementById('bairro').value,
+            cidade: document.getElementById('cidade').value,
+            estado: 'BA', // Fixo ou você pode adicionar um campo
+            pais: 'Brasil',
+            curso: document.getElementById('curso').value,
+            turma: document.getElementById('turma').value,
+            status: 'Ativo' // Status mágico
+        };
+
+        // Adiciona dados do responsável se for menor
+        if (document.getElementById('box-responsavel').style.display === 'block') {
+            payload.resp_nome = document.getElementById('resp_nome').value;
+            payload.resp_parentesco = document.getElementById('resp_parentesco').value;
+            payload.resp_cpf = document.getElementById('resp_cpf').value;
+            payload.resp_zap = document.getElementById('resp_zap').value;
+        }
+
+        try {
+            // TROQUE LOCALHOST PELO DOMÍNIO DO SEU BACKEND QUANDO COLOCAR ONLINE
+            const resposta = await fetch('https://www.sistemaptt.com.br/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const dados = await resposta.json();
+
+            if(dados.success) {
+                alert('Parabéns! Sua matrícula foi confirmada com sucesso na PTT Cursos! 🎉');
+                document.getElementById('formMatricula').reset();
+                window.location.reload();
+            } else {
+                alert('Aviso: ' + dados.error);
+            }
+        } catch(erro) {
+            alert('Erro ao conectar ao sistema. Tente novamente.');
+        } finally {
+            btn.innerText = "Concluir Matrícula ✅";
+            btn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
