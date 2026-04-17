@@ -20,7 +20,23 @@
         button { width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         button:hover { background: #219653; }
         .termo { font-size: 12px; color: #666; margin-top: 20px; display: flex; gap: 10px; }
-    </style>
+        /* Adicione este bloco no seu CSS */
+        .contrato-box { 
+            background: #f9f9f9; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            padding: 15px; 
+            height: 200px; /* Altura da caixinha */
+            overflow-y: scroll; /* Cria a barra de rolagem */
+            font-size: 12px; 
+            color: #555; 
+            margin-top: 20px; 
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .contrato-box strong { color: #2c3e50; }   
+ </style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -110,9 +126,95 @@
             </div>
         </div>
 
+        <h3>4. Contrato de Prestação de Serviços</h3>
+        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
+        
+        <div class="contrato-box">
+            <strong>CLÁUSULA PRIMEIRA – DO OBJETO</strong><br>
+            O presente contrato tem como objeto a prestação de serviços de ensino profissional de língua inglesa pela CONTRATADA, PTT CURSOS, situada no Parque Ecológico, Rua Pedro Vieira Leite, nº 491, inscrita no CNPJ sob o nº 48.939.009/0001-99, ao CONTRATANTE informado na Tabela 2 do Formulário de Matrícula.
+            <br><br>
+
+            <strong>CLÁUSULA SEGUNDA – DA DURAÇÃO E MODALIDADES DO CURSO</strong><br>
+            O formato padrão nivelado (12 meses) possui carga horária total de 96 (noventa e seis) horas, distribuídas em 2 (duas) horas de aula semanais.<br>
+            O formato intensivo nivelado (6 meses) possui carga horária total de 96 (noventa e seis) horas, distribuídas em 4 (quatro) horas de aula semanais.<br>
+            O formato personalizado padrão (5 meses) possui carga horária total de 40 (quarenta) horas, distribuídas em 2 (duas) horas de aula semanais.<br>
+            O formato personalizado intensivo (5 meses) possui carga horária total de 80 (oitenta) horas, distribuídas em 4 (quatro) horas de aula semanais.
+            <br><br>
+
+            <strong>CLÁUSULA TERCEIRA – DO PAGAMENTO</strong><br>
+            O pagamento deverá ser efetuado até a data prevista na Tabela 3 do Formulário de Matrícula, em favor de PTT CURSOS, representada por Paulo Sérgio Bispo Santana Júnior, mediante utilização da chave PIX ou dos dados oficiais fornecidos no ato da matrícula.<br>
+            Os valores das parcelas fixas são definidos conforme segue:<br>
+            • R$ 187,00 (cento e oitenta e sete reais) para o formato padrão (nível 1);<br>
+            • R$ 367,00 (trezentos e sessenta e sete reais) para o formato intensivo (nível 1);<br>
+            • R$ 297,00 (duzentos e noventa e sete reais) para o formato personalizado padrão.<br>
+            § 1º O formato padrão nivelado de continuação (nível 2) terá mensalidade de R$ 217,00 (duzentos e dezessete reais), e o nível 3, R$ 237,00 (duzentos e trinta e sete reais). O formato intensivo nivelado de continuação (níveis 2 e 3) terá mensalidades de R$ 387,00 (trezentos e oitenta e sete reais) e R$ 417,00 (quatrocentos e dezessete reais), respectivamente. O formato personalizado intensivo terá mensalidade de R$ 397,00 (trezentos e noventa e sete reais).<br>
+            § 2º O pagamento dar-se-á, prioritariamente, via PIX. Em caráter excepcional, poderá ser realizado por meio de cartão de crédito, caso em que será aplicado acréscimo de R$ 12,00 (doze reais).
+            <br><br>
+
+            <strong>CLÁUSULA QUARTA – DO ATRASO NO PAGAMENTO</strong><br>
+            Em caso de atraso no pagamento da mensalidade, eventuais benefícios concedidos serão automaticamente suspensos, passando o CONTRATANTE a ser responsável pelo pagamento do valor integral, sem a aplicação de descontos ou promoções concedidos no ato da matrícula.<br>
+            Parágrafo único: Verificado atraso superior a 10 (dez) dias, e frustradas as tentativas de regularização, a CONTRATADA poderá, após notificação prévia, suspender a prestação dos serviços.
+            <br><br>
+
+            <strong>CLÁUSULA QUINTA – DA PAUSA E CANCELAMENTO DO CURSO</strong><br>
+            O CONTRATANTE poderá solicitar a suspensão temporária do curso por período de até 40 (quarenta) dias, a qualquer tempo. Ultrapassado esse prazo, e não havendo retorno no limite máximo de 90 (noventa) dias, perderá o direito à certificação, bem como aos benefícios originalmente adquiridos na matrícula, sendo necessária a efetivação de nova matrícula para prosseguimento.<br>
+            Caso o CONTRATANTE solicite o cancelamento do curso antes da utilização integral das aulas contratadas, poderá requerer a restituição proporcional dos valores pagos, a qual será apurada a partir da data da solicitação e efetuada no prazo de até 30 (trinta) dias. A restituição proporcional dos valores pagos não incluirá valores correspondentes a aulas já ministradas, materiais disponibilizados ou custos administrativos incorridos.<br>
+            Em caso de abandono do curso, assim considerado o período superior a 30 (trinta) dias sem qualquer comunicação por parte do CONTRATANTE após o início das aulas, a matrícula será automaticamente cancelada, com devolução proporcional dos valores pagos.<br>
+            Parágrafo único: Qualquer das partes poderá requerer o cancelamento do curso a qualquer tempo, não sendo devida a cobrança de taxas ou multas por rescisão contratual.
+            <br><br>
+
+            <strong>CLÁUSULA SEXTA – DA MUDANÇA DE HORÁRIO</strong><br>
+            O CONTRATANTE poderá selecionar o horário que melhor atenda às suas necessidades, dentre as opções disponíveis no momento da matrícula. Eventual solicitação de alteração de horário após o início do curso deverá ser formalizada, pelos canais oficiais de comunicação ou presencialmente, com antecedência mínima de 2 (duas) semanas, sujeitando-se à análise de disponibilidade e posterior aprovação.<br>
+            Parágrafo único: No decorrer do curso, a CONTRATADA poderá realizar ajustes nos horários, mediante comunicação prévia ao CONTRATANTE com antecedência mínima de 1 (uma) semana, sendo a implementação do novo horário condicionada à verificação de disponibilidade e concordância do CONTRATANTE.
+            <br><br>
+
+            <strong>CLÁUSULA SÉTIMA – DAS FALTAS E REPOSIÇÕES DE AULA</strong><br>
+            As reposições de faltas só serão efetuadas mediante justificativa comprovável. Caso não seja possível atestar o motivo da ausência, a soma total das faltas acima de 6 (seis) horas será considerada perdida.<br>
+            § 1º Caso a quantidade de faltas comprometa o adequado aproveitamento dos conteúdos, o CONTRATANTE poderá autorizar a cobrança de parcela(s) adicional(is), destinadas à reposição dos conteúdos prejudicados e à complementação da carga horária contratada.<br>
+            § 2º Consideram-se justificativas passíveis de comprovação para faltas: questões de saúde, viagens de caráter emergencial, falecimento de ente querido ou situações de natureza judicial. Para ter direito à reposição sem a cobrança de parcela(s) adicional(is), todas as justificativas deverão ser devidamente apresentadas mediante atestado ou documento idôneo que comprove o motivo da ausência.
+            <br><br>
+
+            <strong>CLÁUSULA OITAVA – DOS FERIADOS E RECESSOS</strong><br>
+            A carga horária do curso é estruturada de acordo com o calendário anual vigente. Dessa forma, eventuais suspensões de aulas decorrentes de feriados e períodos de recesso não impactam o cumprimento da carga horária total, não sendo devida, nesses casos, a reposição por parte da CONTRATADA.
+            <br><br>
+
+            <strong>CLÁUSULA NONA – DAS GRAVAÇÕES</strong><br>
+            Com o objetivo de garantir a segurança dos alunos, o ambiente é integralmente monitorado por câmeras de segurança com captação de áudio. Adicionalmente, ao longo do curso, poderão ser realizadas ou solicitadas gravações de imagem e/ou voz dos alunos, para fins pedagógicos e/ou de divulgação nos canais oficiais da CONTRATADA, mediante prévia ciência do aluno.<br>
+            Parágrafo único: O CONTRATANTE autoriza, de forma gratuita, a utilização de sua imagem e voz, captadas durante as atividades do curso, para fins institucionais, pedagógicos e de divulgação, nos meios de comunicação oficiais da CONTRATADA. No caso de o CONTRATANTE ser responsável legal por menor de idade, autoriza, igualmente, o uso da imagem e voz do representado, podendo tal autorização ser revogada mediante solicitação expressa.
+            <br><br>
+
+            <strong>CLÁUSULA DÉCIMA – DOS INTERVALOS</strong><br>
+            Haverá intervalo de aproximadamente 10 minutos entre uma hora e outra no turno da aula. Esse tempo acumulado será utilizado para revisões, aplicação de testes, provas e possíveis reforços de conteúdo.
+            <br><br>
+
+            <strong>CLÁUSULA DÉCIMA PRIMEIRA – DO MATERIAL DIDÁTICO</strong><br>
+            Estão incluídos no valor do curso os seguintes materiais e instrumentos de estudo: apostila em formato PDF, slides didáticos com áudios em inglês e vídeos complementares. O material didático disponibilizado é de uso exclusivo do CONTRATANTE, sendo vedada sua reprodução, distribuição ou compartilhamento sem autorização expressa da CONTRATADA.<br>
+            Parágrafo único: O CONTRATANTE deverá possuir o material impresso para adequado aproveitamento das aulas. Caso opte pela versão impressa e encadernada fornecida pela CONTRATADA, deverá solicitá-la previamente, mediante pagamento do valor correspondente à parte.
+            <br><br>
+
+            <strong>CLÁUSULA DÉCIMA SEGUNDA – DA TOLERÂNCIA</strong><br>
+            Eventual tolerância por parte da CONTRATADA quanto ao descumprimento de quaisquer obrigações contratuais não implicará novação ou renúncia de direitos, permanecendo todas as disposições plenamente exigíveis.
+            <br><br>
+
+            <strong>CLÁUSULA DÉCIMA TERCEIRA – DA CERTIFICAÇÃO</strong><br>
+            O certificado de conclusão será emitido no prazo de até 30 (trinta) dias, contados a partir da aprovação do aluno. Para fins de certificação, o cursante deverá cumprir os seguintes requisitos:<br>
+            • Ter cumprido, no mínimo, 90 (noventa) horas da carga horária prevista;<br>
+            • Obter aproveitamento mínimo, conforme critérios definidos pela CONTRATADA.<br>
+            Na hipótese de o aluno não alcançar a pontuação mínima exigida, poderá aderir a um plano de recuperação personalizado, nos termos definidos pela CONTRATADA.<br>
+            Parágrafo único: O cumprimento do período de recuperação será obrigatório, constituindo requisito para a devida avaliação do cursante e para sua aprovação no curso de continuidade, conforme o pacote contratado.
+            <br><br>
+
+            <strong>CLÁUSULA DÉCIMA QUARTA – DO FORO</strong><br>
+            Fica eleito o foro da comarca de Porto Seguro, com renúncia de qualquer outro, por mais privilegiado que seja, para dirimir eventuais controvérsias oriundas deste contrato.
+            <br><br>
+
+            <strong>DECLARAÇÃO FINAL</strong><br>
+            Ao selecionar a opção abaixo, o CONTRATANTE manifesta sua concordância integral com todas as cláusulas aqui estabelecidas, bem como declara serem verdadeiras as informações prestadas.
+        </div>
+
         <div class="termo">
-            <input type="checkbox" id="aceito" required style="width: auto;">
-            <label for="aceito" style="font-weight: normal; margin:0;">Li e aceito os termos do contrato de prestação de serviços educacionais da PTT Cursos.</label>
+            <input type="checkbox" id="aceito" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
+            <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que li e aceito todos os termos do contrato de prestação de serviços educacionais da PTT Cursos.</label>
         </div>
 
         <button type="submit" id="btnMatricular">Concluir Matrícula ✅</button>
@@ -183,26 +285,48 @@
 
         try {
             // TROQUE LOCALHOST PELO DOMÍNIO DO SEU BACKEND QUANDO COLOCAR ONLINE
-            
-const resposta = await fetch('https://sistema-escolar-api-k3o8.onrender.com/public/receber-matricula', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-});
+            const resposta = await fetch('https://sistema-escolar-api-k3o8.onrender.com/public/receber-matricula', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
             const dados = await resposta.json();
 
             if(dados.success) {
-                alert('Parabéns! Sua matrícula foi confirmada com sucesso na PTT Cursos! 🎉');
-                document.getElementById('formMatricula').reset();
-                window.location.reload();
+                // 🎉 NOVO AVISO BONITO DE SUCESSO
+                Swal.fire({
+                    title: 'Matrícula Confirmada!',
+                    text: 'Parabéns! Sua matrícula foi realizada com sucesso na PTT Cursos! 🎉',
+                    icon: 'success',
+                    confirmButtonText: 'Maravilha!',
+                    confirmButtonColor: '#27ae60',
+                    background: '#ffffff',
+                    backdrop: `rgba(0,0,0,0.4)`
+                }).then(() => {
+                    // Só recarrega a página DEPOIS que o aluno clicar em "Maravilha!"
+                    document.getElementById('formMatricula').reset();
+                    window.location.reload();
+                });
             } else {
-                alert('Aviso: ' + dados.error);
+                // Aviso de erro do sistema
+                Swal.fire({
+                    title: 'Ops! Algo deu errado.',
+                    text: dados.error,
+                    icon: 'warning',
+                    confirmButtonColor: '#e67e22'
+                });
             }
         } catch(erro) {
-            alert('Erro ao conectar ao sistema. Tente novamente.');
+            // Aviso de erro de conexão
+            Swal.fire({
+                title: 'Erro de Conexão',
+                text: 'Não foi possível conectar ao sistema. Tente novamente.',
+                icon: 'error',
+                confirmButtonColor: '#e74c3c'
+            });
         } finally {
             btn.innerText = "Concluir Matrícula ✅";
             btn.disabled = false;
