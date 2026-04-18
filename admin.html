@@ -472,7 +472,40 @@
                     const data = await res.json();
                     if(data.success) { Admin.showToast('Conta bloqueada.', 'success'); Admin.carregarDados(); }
                 } catch(e) { Admin.showToast('Erro ao bloquear.', 'error'); }
+            },
+            
+            excluir: async (email) => {
+                const msg = `⚠️ ALERTA VERMELHO: Você está prestes a EXCLUIR DEFINITIVAMENTE a conta de ${email}.\n\nIsso apagará TODOS os alunos, turmas, dados financeiros e acessos desta escola. Esta ação NÃO pode ser desfeita.\n\nCONSELHO: Certifique-se de avisar o cliente para realizar o DOWNLOAD DO BACKUP no painel dele antes de confirmar.\n\nTem certeza absoluta que deseja prosseguir?`;
+                
+                if(!confirm(msg)) return;
+
+                const confirmacao = prompt('Para confirmar a exclusão TOTAL, digite EXCLUIR no campo abaixo:');
+                if(confirmacao !== "EXCLUIR") {
+                    return Admin.showToast("Exclusão cancelada. Palavra de segurança incorreta.", "warning");
+                }
+
+                const token = sessionStorage.getItem('token_master');
+                try {
+                    Admin.showToast("Apagando todos os dados do servidor... ⏳", "info");
+                    
+                    const res = await fetch(`${API_URL}/master/excluir-conta`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ email: email.trim().toLowerCase() })
+                    });
+                    
+                    const data = await res.json();
+                    if(data.success) { 
+                        Admin.showToast('Conta e dados foram obliterados com sucesso!', 'success'); 
+                        Admin.carregarDados(); 
+                    } else {
+                        Admin.showToast(data.error || 'Erro ao excluir conta.', 'error');
+                    }
+                } catch(e) { 
+                    Admin.showToast('Erro crítico de comunicação com o servidor.', 'error'); 
+                }
             }
+ 
         };
 
         document.addEventListener('DOMContentLoaded', Admin.init);
