@@ -1076,6 +1076,37 @@ validarCadastroInst: async () => {
         }
     },
 
+    // 🔗 LINK EXCLUSIVO DE MATRÍCULA
+    copiarLinkMatricula: () => {
+        const token = localStorage.getItem('token_acesso');
+        if(!token) return App.showToast("Erro: Sessão inválida.", "error");
+
+        try {
+            // Decodifica o token para pegar o ID exato da escola no banco de dados
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const meuEscolaId = payload.escolaId;
+
+            // Monta o link considerando a URL atual do navegador
+            const linkBase = window.location.origin; 
+            const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
+            const linkExclusivo = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}`;
+
+            // Tenta copiar silenciosamente
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(linkExclusivo).then(() => {
+                    App.showToast("✅ Link copiado com sucesso! Envie para os alunos.", "success");
+                }).catch(() => {
+                    prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
+                });
+            } else {
+                // Fallback para navegadores mais antigos
+                prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
+            }
+        } catch(e) {
+            App.showToast("Erro ao gerar o link.", "error");
+        }
+    },
+
     abrirModalCadastro: async (tipo, id) => { 
         if (!id && (tipo === 'aluno')) {
             const podeCadastrar = await App.verificarLimites('aluno');

@@ -211,6 +211,26 @@
 </div>
 
 <script>
+    // 🔍 1. CAPTURAR O ID DA ESCOLA PELA URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const escolaIdDaURL = urlParams.get('escola');
+
+    // 🛡️ 2. TRAVAR A PÁGINA SE NÃO TIVER ID
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!escolaIdDaURL) {
+            Swal.fire({
+                title: 'Link Inválido',
+                text: 'Por favor, solicite o link de matrícula correto para a secretaria da escola.',
+                icon: 'error',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                background: '#ffffff',
+                backdrop: `rgba(0,0,0,0.8)`
+            });
+            document.getElementById('formMatricula').style.display = 'none'; // Esconde o formulário
+        }
+    });
+
     // Inteligência: Verificar idade
     function verificarMaioridade() {
         const dataNasc = document.getElementById('nascimento').value;
@@ -234,17 +254,20 @@
         }
     }
 
-    // Envio dos dados com a MESMA estrutura do seu sistema interno!
+    // Envio dos dados
     document.getElementById('formMatricula').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // Segurança extra: se de alguma forma tentarem burlar
+        if (!escolaIdDaURL) return alert("Link de escola inválido.");
+
         const btn = document.getElementById('btnMatricular');
         btn.innerText = "A processar... ⏳";
         btn.disabled = true;
 
-        // Montamos o "Dossiê do Aluno" igualzinho ao cadastros.js
+        // Montamos o "Dossiê do Aluno"
         const payload = {
-            escolaId: 'ESC-PTTCURSOS', // O ID DA SUA ESCOLA
+            escolaId: escolaIdDaURL, // 🚀 A MÁGICA ACONTECE AQUI: O ID VEM DA URL!
             nome: document.getElementById('nome').value,
             whatsapp: document.getElementById('whatsapp').value,
             email: document.getElementById('email').value,
@@ -257,11 +280,11 @@
             numero: document.getElementById('numero').value,
             bairro: document.getElementById('bairro').value,
             cidade: document.getElementById('cidade').value,
-            estado: 'BA', // Fixo ou você pode adicionar um campo
+            estado: 'BA', 
             pais: 'Brasil',
-            curso: 'A definir', // Substituído para não dar erro
-            turma: 'A definir', // Substituído para não dar erro
-            status: 'Ativo' // Status mágico
+            curso: 'A definir', 
+            turma: 'A definir', 
+            status: 'Ativo' 
         };
 
         // Adiciona dados do responsável se for menor
@@ -273,7 +296,6 @@
         }
 
         try {
-            // TROQUE LOCALHOST PELO DOMÍNIO DO SEU BACKEND QUANDO COLOCAR ONLINE
             const resposta = await fetch('https://sistema-escolar-api-k3o8.onrender.com/public/receber-matricula', {
                 method: 'POST',
                 headers: {
@@ -285,22 +307,19 @@
             const dados = await resposta.json();
 
             if(dados.success) {
-                // 🎉 NOVO AVISO BONITO DE SUCESSO
                 Swal.fire({
                     title: 'Matrícula Confirmada!',
-                    text: 'Parabéns! Sua matrícula foi realizada com sucesso na PTT Cursos! 🎉',
+                    text: 'Parabéns! Sua matrícula foi realizada com sucesso! 🎉',
                     icon: 'success',
                     confirmButtonText: 'Maravilha!',
                     confirmButtonColor: '#27ae60',
                     background: '#ffffff',
                     backdrop: `rgba(0,0,0,0.4)`
                 }).then(() => {
-                    // Só recarrega a página DEPOIS que o aluno clicar em "Maravilha!"
                     document.getElementById('formMatricula').reset();
                     window.location.reload();
                 });
             } else {
-                // Aviso de erro do sistema
                 Swal.fire({
                     title: 'Ops! Algo deu errado.',
                     text: dados.error,
@@ -309,7 +328,6 @@
                 });
             }
         } catch(erro) {
-            // Aviso de erro de conexão
             Swal.fire({
                 title: 'Erro de Conexão',
                 text: 'Não foi possível conectar ao sistema. Tente novamente.',
@@ -322,5 +340,6 @@
         }
     });
 </script>
+
 </body>
 </html>
