@@ -161,6 +161,27 @@
             </div>
         </div>
     </div>
+    
+    <div id="modal-excluir" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:450px; text-align:left; border:1px solid #dc2626; box-shadow: 0 10px 40px rgba(220, 38, 38, 0.3);">
+            <h3 style="margin-top:0; color:var(--danger); border-bottom:1px solid #334155; padding-bottom:15px;">⚠️ EXCLUSÃO DEFINITIVA</h3>
+            <p style="font-size:14px; color:#cbd5e1; margin-bottom:15px;">Você está prestes a apagar <strong>TODOS</strong> os dados, alunos, financeiro e o acesso da conta:</p>
+            <p id="excluir-email-display" style="font-weight:bold; color:var(--warning); font-size:16px; margin-bottom:15px; text-align:center;"></p>
+            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px; background:#0f172a; padding:10px; border-radius:6px; border-left:3px solid var(--warning);">
+                <strong>CONSELHO:</strong> Certifique-se de avisar o cliente para realizar o DOWNLOAD DO BACKUP antes de confirmar. Esta ação NÃO pode ser desfeita.
+            </p>
+            
+            <input type="hidden" id="excluir-email">
+            
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Para confirmar, digite EXCLUIR abaixo:</label>
+            <input type="text" id="input-confirmar-exclusao" placeholder="EXCLUIR" autocomplete="off" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; text-transform:uppercase;">
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="Admin.fecharModalExcluir()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
+                <button id="btn-confirmar-exclusao" onclick="Admin.confirmarExclusao()" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='var(--danger)'">Apagar Tudo</button>
+            </div>
+        </div>
+    </div>    
 
     <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
@@ -474,38 +495,55 @@
                 } catch(e) { Admin.showToast('Erro ao bloquear.', 'error'); }
             },
             
-            excluir: async (email) => {
-                const msg = `⚠️ ALERTA VERMELHO: Você está prestes a EXCLUIR DEFINITIVAMENTE a conta de ${email}.\n\nIsso apagará TODOS os alunos, turmas, dados financeiros e acessos desta escola. Esta ação NÃO pode ser desfeita.\n\nCONSELHO: Certifique-se de avisar o cliente para realizar o DOWNLOAD DO BACKUP no painel dele antes de confirmar.\n\nTem certeza absoluta que deseja prosseguir?`;
-                
-                if(!confirm(msg)) return;
+            // NOVAS FUNÇÕES DE EXCLUSÃO SEGURA
+            abrirModalExcluir: (email) => {
+                document.getElementById('excluir-email').value = email;
+                document.getElementById('excluir-email-display').innerText = email;
+                document.getElementById('input-confirmar-exclusao').value = '';
+                document.getElementById('modal-excluir').style.display = 'flex';
+            },
 
-                const confirmacao = prompt('Para confirmar a exclusão TOTAL, digite EXCLUIR no campo abaixo:');
+            fecharModalExcluir: () => {
+                document.getElementById('modal-excluir').style.display = 'none';
+            },
+
+            excluir: (email) => {
+                Admin.abrirModalExcluir(email);
+            },
+
+            confirmarExclusao: async () => {
+                const email = document.getElementById('excluir-email').value;
+                const confirmacao = document.getElementById('input-confirmar-exclusao').value.trim().toUpperCase();
+
                 if(confirmacao !== "EXCLUIR") {
-                    return Admin.showToast("Exclusão cancelada. Palavra de segurança incorreta.", "warning");
+                    return Admin.showToast("Palavra de segurança incorreta. Digite EXCLUIR.", "warning");
                 }
 
                 const token = sessionStorage.getItem('token_master');
+                const btn = document.getElementById('btn-confirmar-exclusao');
+                btn.innerText = "Apagando... ⏳"; btn.disabled = true;
+
                 try {
-                    Admin.showToast("Apagando todos os dados do servidor... ⏳", "info");
-                    
                     const res = await fetch(`${API_URL}/master/excluir-conta`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ email: email.trim().toLowerCase() })
+                        body: JSON.stringify({ email: email })
                     });
                     
                     const data = await res.json();
                     if(data.success) { 
-                        Admin.showToast('Conta e dados foram obliterados com sucesso!', 'success'); 
+                        Admin.showToast('Conta obliterada com sucesso!', 'success'); 
+                        Admin.fecharModalExcluir();
                         Admin.carregarDados(); 
                     } else {
                         Admin.showToast(data.error || 'Erro ao excluir conta.', 'error');
                     }
                 } catch(e) { 
                     Admin.showToast('Erro crítico de comunicação com o servidor.', 'error'); 
+                } finally {
+                    btn.innerText = "Apagar Tudo"; btn.disabled = false;
                 }
             }
- 
         };
 
         document.addEventListener('DOMContentLoaded', Admin.init);
