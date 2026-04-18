@@ -113,20 +113,9 @@
             <div class="input-group"><label>Bairro *</label><input type="text" id="bairro" required></div>
             <div class="input-group"><label>Cidade *</label><input type="text" id="cidade" required></div>
         </div>
+        
 
-        <h3>3. Dados do Curso</h3>
-        <div class="grid-2">
-            <div class="input-group">
-                <label>Curso Desejado *</label>
-                <input type="text" id="curso" placeholder="Ex: Inglês Básico" required>
-            </div>
-            <div class="input-group">
-                <label>Turma / Horário Preferencial *</label>
-                <input type="text" id="turma" placeholder="Ex: Quintas das 9:30" required>
-            </div>
-        </div>
-
-        <h3>4. Contrato de Prestação de Serviços</h3>
+        <h3>3. Contrato de Prestação de Serviços</h3>
         <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
         
         <div class="contrato-box">
@@ -270,8 +259,8 @@
             cidade: document.getElementById('cidade').value,
             estado: 'BA', // Fixo ou você pode adicionar um campo
             pais: 'Brasil',
-            curso: document.getElementById('curso').value,
-            turma: document.getElementById('turma').value,
+            curso: 'A definir', // Substituído para não dar erro
+            turma: 'A definir', // Substituído para não dar erro
             status: 'Ativo' // Status mágico
         };
 
