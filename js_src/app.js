@@ -2494,9 +2494,14 @@ validarCadastroInst: async () => {
                         <div style="font-weight:bold; color:#2c3e50; font-size:15px;">📄 ${App.escapeHTML(c.nomeAluno)}</div>
                         <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido e carimbado em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
                     </div>
-                    <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;" onmouseover="this.style.background='#1a252f'" onmouseout="this.style.background='#2c3e50'">
-                        👁️ Ver Documento
-                    </button>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">
+                            👁️ Ver
+                        </button>
+                        <button onclick="App.excluirContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">
+                            🗑️ Apagar
+                        </button>
+                    </div>
                 </div>`;
             }).join('');
 
@@ -2512,7 +2517,7 @@ validarCadastroInst: async () => {
         }
     },
 
-    abrirVisualizacaoContrato: (id) => {
+abrirVisualizacaoContrato: (id) => {
         const contrato = App.listaCacheContratos.find(c => c.id === id);
         if(!contrato) return;
 
@@ -2524,13 +2529,11 @@ validarCadastroInst: async () => {
         const dataBr = new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR');
         let detalhesHtml = '';
 
-        // Varre tudo o que o aluno preencheu e monta a folha
         for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
-            if(chave === 'escolaId' || chave === 'status' || chave === 'id') continue; // Oculta chaves do sistema
+            if(chave === 'escolaId' || chave === 'status' || chave === 'id') continue; 
             
-            const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); // Formata de camelCase para Normal
+            const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); 
             
-            // 🔄 Lógica Mágica de Datas: Deteta "AAAA-MM-DD" e vira para "DD/MM/AAAA"
             let valorFormatado = String(valor);
             if (/^\d{4}-\d{2}-\d{2}$/.test(valorFormatado)) {
                 valorFormatado = valorFormatado.split('-').reverse().join('/');
@@ -2546,7 +2549,6 @@ validarCadastroInst: async () => {
 
         document.getElementById('modal-form-content').innerHTML = `
             <div id="area-impressao-contrato" style="border: 2px solid #bdc3c7; border-radius: 8px; padding: 25px; background: #fafafa; pointer-events:none; position:relative;">
-                
                 <div style="position:absolute; top:20px; right:20px; font-size:40px; opacity:0.1; transform:rotate(15deg);">📑</div>
                 
                 <div style="text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
@@ -2576,13 +2578,97 @@ validarCadastroInst: async () => {
             </div>
         `;
 
-        // Modifica o botão de Salvar (pois é um documento de leitura)
         const btnConfirm = document.querySelector('.btn-confirm');
         if(btnConfirm) {
-            btnConfirm.style.display = 'none'; // Esconde o botão Salvar para não editar
+            btnConfirm.style.display = 'inline-flex';
+            btnConfirm.style.background = '#27ae60';
+            btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
+            btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
         }
-      }
-    };
+    }, // <-- A FAMOSA VÍRGULA QUE FALTAVA ESTÁ AQUI AGORA!
+
+    excluirContrato: async (id) => {
+        if(confirm("Tem a certeza que deseja apagar este documento? Esta ação é irreversível.")) {
+            document.body.style.cursor = 'wait';
+            try {
+                const res = await App.api(`/contratos/${id}`, 'DELETE');
+                if (res && res.error) {
+                    App.showToast(res.error, "error");
+                } else {
+                    App.showToast("Contrato apagado com sucesso!", "success");
+                    App.renderizarContratos();
+                }
+            } catch(e) { 
+                App.showToast("Erro ao apagar o contrato.", "error"); 
+            } finally { 
+                document.body.style.cursor = 'default'; 
+            }
+        }
+    },
+
+    imprimirContrato: () => {
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Instituição de Ensino';
+        const cnpjEscola = escola.cnpj ? `CNPJ: ${escola.cnpj}` : '';
+        const logoEscola = (escola.foto && escola.foto.length > 50 && !escola.foto.includes('placehold')) 
+            ? `<img src="${escola.foto}" style="max-height:80px; max-width:120px; object-fit:contain;">` 
+            : '';
+
+        const conteudoOriginal = document.getElementById('area-impressao-contrato');
+        const clone = conteudoOriginal.cloneNode(true);
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Impressão - Contrato</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #333; line-height: 1.5; }
+                    .header-escola { display: flex; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header-escola img { margin-right: 20px; }
+                    .header-escola h2 { margin: 0; color: #2c3e50; font-size: 24px; }
+                    .header-escola p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
+                    @media print { body { padding: 0; } @page { margin: 15mm; } }
+                </style>
+            </head>
+            <body>
+                <div class="header-escola">
+                    ${logoEscola}
+                    <div>
+                        <h2>${App.escapeHTML(nomeEscola)}</h2>
+                        <p>${App.escapeHTML(cnpjEscola)}</p>
+                    </div>
+                </div>
+                ${clone.innerHTML}
+                <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
+                    Documento autenticado digitalmente em ${new Date().toLocaleString('pt-BR')} pelo Sistema Escolar
+                </div>
+            </body>
+            </html>
+        `);
+        doc.close();
+
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => { document.body.removeChild(iframe); }, 1500);
+        }, 500);
+    }
+
+};
+
+// =========================================================
+// EVENTOS DE ARRANQUE E PWA
+// =========================================================    
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
