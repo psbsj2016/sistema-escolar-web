@@ -2334,6 +2334,36 @@ validarCadastroInst: async () => {
                     }
                 });
             }
+           
+            // ==========================================
+            // 🆕 ALERTA DE NOVAS MATRÍCULAS (HOJE)
+            // ==========================================
+            if (Array.isArray(alunos)) {
+                alunos.forEach(a => {
+                    // Verifica se a dataMatricula existe e se começa com a data de hoje (YYYY-MM-DD)
+                    if (a.dataMatricula && a.dataMatricula.startsWith(hojeStr)) {
+                        alertas.push({ 
+                            icon: '🎉', 
+                            texto: `<b>Nova Matrícula!</b> O aluno <b>${App.escapeHTML(a.nome)}</b> foi registado hoje.`,
+                            acao: "App.renderizarContratos()" // Leva direto para o cofre de contratos
+                        });
+                    }
+                });
+            }
+
+            // ==========================================
+            // 💸 MENSALIDADES A VENCER HOJE
+            // ==========================================
+            if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro)) {
+                const vencemHoje = financeiro.filter(f => f.vencimento === hojeStr && f.status === 'Pendente');
+                if (vencemHoje.length > 0) {
+                    alertas.push({ 
+                        icon: '💲', 
+                        texto: `<b>Caixa de Hoje:</b> Existem <b>${vencemHoje.length}</b> mensalidades a vencer no dia de hoje.`,
+                        acao: "App.renderizarTela('mensalidades')" 
+                    });
+                }
+            }
 
             if (Array.isArray(eventos)) {
                 eventos.forEach(e => {
