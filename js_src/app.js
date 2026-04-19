@@ -2434,8 +2434,117 @@ validarCadastroInst: async () => {
                 if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
             }
         } catch (e) { console.error("Erro nas notificações", e); }
-    }
-};
+},
+
+// =========================================================
+    // 📂 COFRE DE CONTRATOS DIGITAIS E LEITURA IMUTÁVEL
+    // =========================================================
+    renderizarContratos: async () => {
+        App.setTitulo("Contratos e Matrículas Digitais");
+        const div = document.getElementById('app-content');
+        div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar o cofre de documentos... ⏳</p>';
+
+        try {
+            const contratos = await App.api('/contratos');
+            const lista = Array.isArray(contratos) ? contratos : [];
+
+            if(lista.length === 0) {
+                div.innerHTML = `<div class="card" style="text-align:center; padding:40px;"><span style="font-size:50px;">🗄️</span><h3 style="color:#666;">Cofre Vazio</h3><p style="font-size:13px; color:#999;">Quando os alunos preencherem o formulário no Link de Matrícula, os recibos imutáveis aparecerão aqui.</p></div>`;
+                return;
+            }
+
+            // Ordena do mais recente para o mais antigo
+            lista.sort((a, b) => new Date(b.dataHoraRegistro) - new Date(a.dataHoraRegistro));
+
+            let htmlLista = lista.map(c => {
+                const dataBr = new Date(c.dataHoraRegistro).toLocaleString('pt-BR');
+                return `
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid #2c3e50; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div>
+                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">📄 ${App.escapeHTML(c.nomeAluno)}</div>
+                        <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido e carimbado em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                    </div>
+                    <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;" onmouseover="this.style.background='#1a252f'" onmouseout="this.style.background='#2c3e50'">
+                        👁️ Ver Documento
+                    </button>
+                </div>`;
+            }).join('');
+
+            div.innerHTML = `<div class="card" style="max-width:850px; margin:0 auto;">
+                <div style="background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px; text-align:center;">
+                    🔒 <strong>Zona de Segurança Jurídica:</strong> Os documentos listados abaixo são registos oficiais imutáveis criados pelo sistema. Eles não podem ser editados.
+                </div>
+                ${htmlLista}
+            </div>`;
+            App.listaCacheContratos = lista; // Guarda na memória para leitura rápida
+        } catch(e) {
+            div.innerHTML = "<p style='text-align:center; color:red;'>Erro ao comunicar com o cofre.</p>";
+        }
+    },
+
+    abrirVisualizacaoContrato: (id) => {
+        const contrato = App.listaCacheContratos.find(c => c.id === id);
+        if(!contrato) return;
+
+        const modal = document.getElementById('modal-overlay'); 
+        if(modal) modal.style.display = 'flex';
+        
+        document.getElementById('modal-titulo').innerText = `Termo Digital Oficial`;
+
+        const dataBr = new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR');
+        let detalhesHtml = '';
+
+        // Varre tudo o que o aluno preencheu e monta a folha
+        for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
+            if(chave === 'escolaId' || chave === 'status' || chave === 'id') continue; // Oculta chaves do sistema
+            
+            const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); // Formata de camelCase para Normal
+            
+            detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:flex-start; gap: 15px;">
+                <span style="color:#7f8c8d; font-weight:bold; font-size:12px; white-space: nowrap;">${App.escapeHTML(chaveFormatada)}:</span>
+                <span style="color:#2c3e50; font-size:13px; text-align:right; font-weight:500; word-break: break-word;">${App.escapeHTML(String(valor) || 'Não informado')}</span>
+            </div>`;
+        }
+
+        document.getElementById('modal-form-content').innerHTML = `
+            <div id="area-impressao-contrato" style="border: 2px solid #bdc3c7; border-radius: 8px; padding: 25px; background: #fafafa; pointer-events:none; position:relative;">
+                
+                <div style="position:absolute; top:20px; right:20px; font-size:40px; opacity:0.1; transform:rotate(15deg);">📑</div>
+                
+                <div style="text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
+                    <h3 style="margin:0; color:#2c3e50; font-size:18px; text-transform:uppercase;">${contrato.tipoDocumento}</h3>
+                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:5px; display:inline-block; border:1px solid #27ae60; padding:3px 10px; border-radius:20px; background:#eafaf1;">
+                        ✅ AUTENTICADO PELO SISTEMA
+                    </div>
+                    <div style="color:#7f8c8d; font-size:10px; margin-top:8px;">Protocolo: ${contrato.id}</div>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    ${detalhesHtml}
+                </div>
+                
+                <div style="margin-top:20px; padding:20px; background:#e8f8f5; border-radius:6px; border:1px dashed #1abc9c;">
+                    <div style="font-size:13px; color:#117864; font-weight:900; text-align:center; text-transform:uppercase; letter-spacing:1px;">
+                        Carimbo de Tempo e Aceite Eletrônico
+                    </div>
+                    <p style="font-size:11px; color:#148f77; text-align:center; margin:10px 0 0 0; line-height: 1.5;">
+                        A presente matrícula foi submetida pelo aluno via link público de inscrição. 
+                        Os dados acima foram criptografados e registrados no banco de dados na exata data e hora indicadas abaixo:
+                    </p>
+                    <div style="font-size:18px; color:#0e6655; text-align:center; margin-top:10px; font-weight:900; background:white; padding:8px; border-radius:4px; display:inline-block; width:100%; box-sizing:border-box;">
+                        📅 ${dataBr}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Modifica o botão de Salvar (pois é um documento de leitura)
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) {
+            btnConfirm.style.display = 'none'; // Esconde o botão Salvar para não editar
+        }
+      }
+    };
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
