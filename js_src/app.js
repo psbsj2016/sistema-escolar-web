@@ -2500,9 +2500,17 @@ validarCadastroInst: async () => {
             
             const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); // Formata de camelCase para Normal
             
+            // 🔄 Lógica Mágica de Datas: Deteta "AAAA-MM-DD" e vira para "DD/MM/AAAA"
+            let valorFormatado = String(valor);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(valorFormatado)) {
+                valorFormatado = valorFormatado.split('-').reverse().join('/');
+            } else if (!valorFormatado || valorFormatado === 'undefined' || valorFormatado === 'null') {
+                valorFormatado = 'Não informado';
+            }
+            
             detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:flex-start; gap: 15px;">
                 <span style="color:#7f8c8d; font-weight:bold; font-size:12px; white-space: nowrap;">${App.escapeHTML(chaveFormatada)}:</span>
-                <span style="color:#2c3e50; font-size:13px; text-align:right; font-weight:500; word-break: break-word;">${App.escapeHTML(String(valor) || 'Não informado')}</span>
+                <span style="color:#2c3e50; font-size:13px; text-align:right; font-weight:500; word-break: break-word;">${App.escapeHTML(valorFormatado)}</span>
             </div>`;
         }
 
