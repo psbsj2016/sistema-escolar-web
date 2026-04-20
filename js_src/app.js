@@ -2699,10 +2699,8 @@ abrirVisualizacaoContrato: (id) => {
             iframe.contentWindow.print();
             setTimeout(() => { document.body.removeChild(iframe); }, 1500);
         }, 800);
-    }
-
-}; 
-
+    },
+ 
 // =========================================================
     // 🎨 MODAL DE CONFIRMAÇÃO BONITO E ANIMADO
     // =========================================================
@@ -2745,6 +2743,7 @@ abrirVisualizacaoContrato: (id) => {
             acaoConfirmar(modal); // Roda a exclusão em si
         };
     },
+};
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
