@@ -2535,10 +2535,18 @@ abrirVisualizacaoContrato: (id) => {
             const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); 
             
             let valorFormatado = String(valor);
+            
+            // 🛡️ APLICAÇÃO INTELIGENTE DE MÁSCARAS
             if (/^\d{4}-\d{2}-\d{2}$/.test(valorFormatado)) {
                 valorFormatado = valorFormatado.split('-').reverse().join('/');
             } else if (!valorFormatado || valorFormatado === 'undefined' || valorFormatado === 'null') {
                 valorFormatado = 'Não informado';
+            } else if (chave.toLowerCase().includes('cpf')) {
+                let v = valorFormatado.replace(/\D/g, "");
+                if (v.length === 11) valorFormatado = v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            } else if (chave.toLowerCase().includes('celular') || chave.toLowerCase().includes('whatsapp') || chave.toLowerCase().includes('telefone')) {
+                let v = valorFormatado.replace(/\D/g, "");
+                if (v.length >= 10) valorFormatado = v.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
             }
             
             detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:flex-start; gap: 15px;">
@@ -2585,7 +2593,7 @@ abrirVisualizacaoContrato: (id) => {
             btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
             btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
         }
-    }, // <-- A FAMOSA VÍRGULA QUE FALTAVA ESTÁ AQUI AGORA!
+    },
 
     excluirContrato: async (id) => {
         if(confirm("Tem a certeza que deseja apagar este documento? Esta ação é irreversível.")) {
@@ -2618,9 +2626,12 @@ abrirVisualizacaoContrato: (id) => {
         const clone = conteudoOriginal.cloneNode(true);
 
         const iframe = document.createElement('iframe');
+        // 🚀 O SEGREDO AQUI: Um tamanho virtual para forçar o navegador a criar a página antes de imprimir
         iframe.style.position = 'absolute';
-        iframe.style.width = '0px';
-        iframe.style.height = '0px';
+        iframe.style.top = '-10000px';
+        iframe.style.left = '-10000px';
+        iframe.style.width = '800px';
+        iframe.style.height = '1000px';
         iframe.style.border = 'none';
         document.body.appendChild(iframe);
 
@@ -2632,7 +2643,7 @@ abrirVisualizacaoContrato: (id) => {
             <head>
                 <title>Impressão - Contrato</title>
                 <style>
-                    body { font-family: Arial, sans-serif; padding: 30px; color: #333; line-height: 1.5; }
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #333; line-height: 1.5; background: #fff; }
                     .header-escola { display: flex; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; }
                     .header-escola img { margin-right: 20px; }
                     .header-escola h2 { margin: 0; color: #2c3e50; font-size: 24px; }
@@ -2657,18 +2668,15 @@ abrirVisualizacaoContrato: (id) => {
         `);
         doc.close();
 
+        // Aguardamos 800ms para a página em branco não aparecer
         setTimeout(() => {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
             setTimeout(() => { document.body.removeChild(iframe); }, 1500);
-        }, 500);
+        }, 800);
     }
 
-};
-
-// =========================================================
-// EVENTOS DE ARRANQUE E PWA
-// =========================================================    
+}; 
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA

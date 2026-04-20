@@ -56,7 +56,7 @@
         <div class="grid-2">
             <div class="input-group">
                 <label>WhatsApp *</label>
-                <input type="text" id="whatsapp" placeholder="(00) 00000-0000" required>
+<input type="text" id="whatsapp" placeholder="(00) 00000-0000" oninput="mascaraCelular(this)" maxlength="15" required>
             </div>
             <div class="input-group">
                 <label>E-mail</label>
@@ -102,7 +102,8 @@
                     </select>
                 </div>
                 <div class="input-group"><label>CPF do Responsável *</label><input type="text" id="resp_cpf" oninput="mascaraCPF(this)" maxlength="14"></div>
-                <div class="input-group"><label>WhatsApp do Responsável *</label><input type="text" id="resp_zap"></div>
+                <label>WhatsApp do Responsável *</label>
+<input type="text" id="resp_zap" placeholder="(00) 00000-0000" oninput="mascaraCelular(this)" maxlength="15">
             </div>
         </div>
 
@@ -211,13 +212,20 @@
 </div>
 
 <script>
-    <script>
     // 🎭 MÁSCARA DE CPF AUTOMÁTICA
     function mascaraCPF(i) {
         let v = i.value.replace(/\D/g, ""); // Remove tudo o que não é número
         v = v.replace(/(\d{3})(\d)/, "$1.$2"); // Coloca um ponto entre o 3º e 4º números
         v = v.replace(/(\d{3})(\d)/, "$1.$2"); // Coloca um ponto entre o 6º e 7º números
         v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); // Coloca um traço antes dos últimos 2 números
+        i.value = v;
+    }
+
+    // 📱 MÁSCARA DE CELULAR/WHATSAPP AUTOMÁTICA
+    function mascaraCelular(i) {
+        let v = i.value.replace(/\D/g, "");
+        v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+        v = v.replace(/(\d)(\d{4})$/, "$1-$2");
         i.value = v;
     }
 
