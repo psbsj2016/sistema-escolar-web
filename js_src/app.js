@@ -316,7 +316,19 @@ var App = {
     // =========================================================
     mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
     mascaraCPF: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; },
-    mascaraCelular: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d)(\d{4})$/, "$1-$2"); i.value = v; },
+   mascaraCelular: (i) => { 
+        let v = i.value;
+        if (v.startsWith('+')) {
+            // Formato Internacional: Mantém o '+' e os números livres
+            i.value = '+' + v.replace(/\D/g, "");
+        } else {
+            // Formato Brasil: Aplica a máscara padrão (XX) XXXXX-XXXX
+            v = v.replace(/\D/g, ""); 
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); 
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2"); 
+            i.value = v; 
+        }
+    },
     mascaraCEP: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; },
     mascaraValor: (i) => { let v = i.value.replace(/\D/g, ""); v = (v / 100).toFixed(2) + ""; i.value = v; },
 
@@ -861,7 +873,13 @@ validarCadastroInst: async () => {
         if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
         
         let numero = telefone.replace(/\D/g, ''); 
-        if (numero.length === 10 || numero.length === 11) numero = '55' + numero;
+        if (telefone.trim().startsWith('+')) {
+            // Se já tem '+', usamos exatamente os números com o DDI que foi digitado
+            numero = telefone.replace(/\D/g, ''); 
+        } else if (numero.length === 10 || numero.length === 11) {
+            // Se for nacional (sem DDI), injeta o 55 por defeito
+            numero = '55' + numero;
+        }
 
         // 1. Puxar os dados da Escola registados no sistema
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
@@ -2565,8 +2583,14 @@ abrirVisualizacaoContrato: (id) => {
                 let v = valorFormatado.replace(/\D/g, "");
                 if (v.length === 11) valorFormatado = v.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
             } else if (chave.toLowerCase().includes('celular') || chave.toLowerCase().includes('whatsapp') || chave.toLowerCase().includes('telefone')) {
-                let v = valorFormatado.replace(/\D/g, "");
-                if (v.length >= 10) valorFormatado = v.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
+                if (valorFormatado.trim().startsWith('+')) {
+                    // Protege o formato internacional no documento impresso
+                    valorFormatado = '+' + valorFormatado.replace(/\D/g, "");
+                } else {
+                    // Aplica máscara BR se for um número nacional
+                    let v = valorFormatado.replace(/\D/g, "");
+                    if (v.length >= 10) valorFormatado = v.replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
+                }
             }
             
             detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:flex-start; gap: 15px;">
@@ -2784,7 +2808,7 @@ abrirVisualizacaoContrato: (id) => {
                 </div>
                 ${clone.innerHTML}
                 <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
-                    Documento autenticado digitalmente em ${new Date().toLocaleString('pt-BR')} pelo Sistema Escolar
+                    Documento impresso em ${new Date().toLocaleString('pt-BR')} pelo SISTEMA PTT
                 </div>
             </body>
             </html>
