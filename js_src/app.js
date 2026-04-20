@@ -1699,20 +1699,28 @@ validarCadastroInst: async () => {
         return TB.estrutura(cabecalho, corpo);
     },
 
-    excluir: async (endpoint, id) => {
-        if(confirm("Tem a certeza absoluta? Esta ação não pode ser desfeita.")) {
-            document.body.style.cursor = 'wait';
-            try {
-                const res = await App.api(`/${endpoint}/${id}`, 'DELETE');
-                if (res && res.error) {
-                    App.showToast(res.error, "error");
-                } else {
-                    App.showToast("Excluído com sucesso!", "success");
-                    App.renderizarLista(endpoint.slice(0, -1));
+  excluir: (endpoint, id) => {
+        App.abrirModalConfirmacao(
+            "Tem a certeza absoluta?", 
+            "Esta ação apagará este registro permanentemente. Não é possível desfazer.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/${endpoint}/${id}`, 'DELETE');
+                    if (res && res.error) {
+                        App.showToast(res.error, "error");
+                    } else {
+                        App.showToast("Excluído com sucesso!", "success");
+                        App.renderizarLista(endpoint.slice(0, -1));
+                    }
+                } catch(e) { 
+                    App.showToast("Erro ao excluir.", "error"); 
+                } finally { 
+                    document.body.style.cursor = 'default'; 
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
                 }
-            } catch(e) { App.showToast("Erro ao excluir.", "error"); } 
-            finally { document.body.style.cursor = 'default'; }
-        }
+            }
+        );
     },
 
     alterarStatusAluno: (id, statusAtual) => {
@@ -2142,12 +2150,24 @@ validarCadastroInst: async () => {
 
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
-    excluirUsuario: async (id) => { 
-        if(confirm("Deseja excluir este usuário?")) { 
-            const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
-            if(res && res.error) { App.showToast(res.error, "error"); }
-            else { App.showToast("Excluído.", "success"); App.renderizarMinhaConta(); }
-        } 
+    
+excluirUsuario: (id) => { 
+        App.abrirModalConfirmacao(
+            "Apagar Utilizador?", 
+            "Deseja remover o acesso deste membro da equipa? A ação não pode ser desfeita.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
+                    if(res && res.error) { App.showToast(res.error, "error"); }
+                    else { App.showToast("Utilizador excluído.", "success"); App.renderizarMinhaConta(); }
+                } catch(e) { App.showToast("Erro ao excluir.", "error"); }
+                finally {
+                    document.body.style.cursor = 'default';
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
     },
 
     renderizarBackup: () => { 
@@ -2595,23 +2615,28 @@ abrirVisualizacaoContrato: (id) => {
         }
     },
 
-    excluirContrato: async (id) => {
-        if(confirm("Tem a certeza que deseja apagar este documento? Esta ação é irreversível.")) {
-            document.body.style.cursor = 'wait';
-            try {
-                const res = await App.api(`/contratos/${id}`, 'DELETE');
-                if (res && res.error) {
-                    App.showToast(res.error, "error");
-                } else {
-                    App.showToast("Contrato apagado com sucesso!", "success");
-                    App.renderizarContratos();
+    excluirContrato: (id) => {
+        App.abrirModalConfirmacao(
+            "Apagar Contrato Oficial?", 
+            "Tem a certeza que deseja apagar este documento assinado? Esta ação é irreversível.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/contratos/${id}`, 'DELETE');
+                    if (res && res.error) {
+                        App.showToast(res.error, "error");
+                    } else {
+                        App.showToast("Contrato apagado com sucesso!", "success");
+                        App.renderizarContratos();
+                    }
+                } catch(e) { 
+                    App.showToast("Erro ao apagar o contrato.", "error"); 
+                } finally { 
+                    document.body.style.cursor = 'default'; 
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
                 }
-            } catch(e) { 
-                App.showToast("Erro ao apagar o contrato.", "error"); 
-            } finally { 
-                document.body.style.cursor = 'default'; 
             }
-        }
+        );
     },
 
     imprimirContrato: () => {
@@ -2677,6 +2702,49 @@ abrirVisualizacaoContrato: (id) => {
     }
 
 }; 
+
+// =========================================================
+    // 🎨 MODAL DE CONFIRMAÇÃO BONITO E ANIMADO
+    // =========================================================
+    abrirModalConfirmacao: (titulo, subtitulo, acaoConfirmar) => {
+        let modal = document.getElementById('modal-confirmacao-bonito');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-confirmacao-bonito';
+            // CSS embutido para criar o fundo escuro e o efeito de desfoque (blur)
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; justify-content:center; align-items:center; z-index:10000; opacity:0; transition:opacity 0.3s ease;';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:24px; width:90%; max-width:380px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);" id="box-confirmacao-interno">
+                <div style="width:80px; height:80px; border-radius:50%; background:#fdedec; color:#e74c3c; font-size:40px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:4px solid #f9ebea;">
+                    🗑️
+                </div>
+                <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size:22px; font-weight:800;">${titulo}</h3>
+                <p style="color:#7f8c8d; font-size:14px; margin-bottom:25px; line-height:1.5;">${subtitulo}</p>
+                <div style="display:flex; gap:12px; justify-content:center;">
+                    <button onclick="document.getElementById('modal-confirmacao-bonito').style.opacity='0'; setTimeout(()=>document.getElementById('modal-confirmacao-bonito').style.display='none', 300);" style="flex:1; padding:12px; background:#f4f6f7; color:#7f8c8d; border:1px solid #d5dbdb; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px; transition:background 0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">Cancelar</button>
+                    <button id="btn-confirmar-acao-bonita" style="flex:1; padding:12px; background:#e74c3c; color:#fff; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(231,76,60,0.3); transition:background 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">Sim, Apagar</button>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        // Pequeno atraso para as animações de popup (pulo) acontecerem com perfeição
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            document.getElementById('box-confirmacao-interno').style.transform = 'scale(1)';
+        }, 10);
+
+        document.getElementById('btn-confirmar-acao-bonita').onclick = function() {
+            const btn = this;
+            btn.innerHTML = "A apagar... ⏳";
+            btn.style.opacity = '0.8';
+            btn.disabled = true;
+            acaoConfirmar(modal); // Roda a exclusão em si
+        };
+    },
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
