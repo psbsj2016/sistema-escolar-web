@@ -2871,7 +2871,9 @@ abrirVisualizacaoContrato: (id) => {
 // =========================================================
 
 App.renderizarHubContratos = () => {
-    App.atualizarTitulo("Links e Contratos");
+    // ⬇️ AQUI ESTÁ A CORREÇÃO (App.setTitulo) ⬇️
+    App.setTitulo("Links e Contratos");
+    
     const container = document.getElementById('app-content');
     
     container.innerHTML = `
