@@ -2942,34 +2942,39 @@ App.mostrarAreaLinks = () => {
 };
 
 App.gerarNovoLinkUnico = () => {
-    // Gera um identificador único para este link
-    const idUnico = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
-    const dominio = window.location.origin;
-    // Pega o ID da escola dinamicamente (usa o ID do usuário logado)
-    const escolaId = App.user ? App.user.escolaId : 'ESC-DESCONHECIDA';
-    
-    // Monta o link único
-    const linkFinal = `${dominio}/matricula.html?esc=${escolaId}&ref=${idUnico}`;
-    
-    // Guarda no histórico local (poderia ser na base de dados se quisesse)
-    const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
-    historico.push({
-        data: new Date().toLocaleString('pt-BR'),
-        link: linkFinal,
-        ref: idUnico
-    });
-    localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
-    
-    App.showToast("Novo link único gerado com sucesso!", "success");
-    App.mostrarAreaLinks(); // Atualiza a tabela imediatamente
-};
+    // 1. Pega o token de segurança para extrair o ID da escola de forma 100% segura
+    const token = localStorage.getItem('token_acesso');
+    if (!token) return App.showToast("Erro: Sessão inválida.", "error");
 
-App.copiarTextoHub = (texto) => {
-    navigator.clipboard.writeText(texto).then(() => {
-        App.showToast("Link copiado! Envie para o aluno.", "success");
-    }).catch(() => {
-        App.showToast("Erro ao copiar o link.", "error");
-    });
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const meuEscolaId = payload.escolaId;
+
+        // 2. Monta o caminho base respeitando a URL onde o sistema está hospedado
+        const linkBase = window.location.origin; 
+        const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
+        
+        // 3. Gera a referência única para este link específico
+        const idUnico = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+        
+        // 4. Monta o link final EXATAMENTE como o seu server.js e matricula.html exigem
+        const linkFinal = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}&ref=${idUnico}`;
+        
+        // 5. Salva no histórico
+        const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
+        historico.push({
+            data: new Date().toLocaleString('pt-BR'),
+            link: linkFinal,
+            ref: idUnico
+        });
+        localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
+        
+        App.showToast("Novo link gerado com sucesso!", "success");
+        App.mostrarAreaLinks(); // Atualiza a tabela
+        
+    } catch(e) {
+        App.showToast("Erro ao gerar o link único.", "error");
+    }
 };
 
 // =========================================================
