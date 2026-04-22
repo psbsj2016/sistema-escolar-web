@@ -2867,6 +2867,110 @@ abrirVisualizacaoContrato: (id) => {
 };
 
 // =========================================================
+// HUB DE LINKS E CONTRATOS (NOVO)
+// =========================================================
+
+App.renderizarHubContratos = () => {
+    App.atualizarTitulo("Links e Contratos");
+    const container = document.getElementById('app-content');
+    
+    container.innerHTML = `
+        <div style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                <div onclick="App.mostrarAreaLinks()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #3498db; transition: transform 0.2s;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🔗</div>
+                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Links de Matrícula</h3>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Gerar e gerir links únicos</p>
+                </div>
+
+                <div onclick="App.renderizarContratos()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #2c3e50; transition: transform 0.2s;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
+                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Contratos Digitais</h3>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Visualizar todos os contratos</p>
+                </div>
+            </div>
+            
+            <div id="area-dinamica-hub">
+                <div style="text-align:center; padding: 40px; color: #bdc3c7; background: white; border-radius: 12px; border: 1px dashed #ccc;">
+                    <p>Selecione uma das opções acima 👆</p>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+App.mostrarAreaLinks = () => {
+    const area = document.getElementById('area-dinamica-hub');
+    const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
+
+    area.innerHTML = `
+        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0; color: #2c3e50;">Histórico de Links</h3>
+                <button onclick="App.gerarNovoLinkUnico()" class="btn-primary" style="background: #27ae60; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px;">
+                    ➕ Gerar Novo Link
+                </button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Data e Hora</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Link Único</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center; color: #555;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="3" style="padding:20px; text-align:center; color:#999;">Nenhum link gerado até ao momento.</td></tr>' : ''}
+                        ${historico.map(item => `
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #666;">${item.data}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee; font-family: monospace; color: #3498db; font-size: 13px;">${item.link}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">
+                                    <button onclick="App.copiarTextoHub('${item.link}')" style="background:#f1f2f6; color: #333; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight: bold;">📋 Copiar</button>
+                                </td>
+                            </tr>
+                        `).reverse().join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+};
+
+App.gerarNovoLinkUnico = () => {
+    // Gera um identificador único para este link
+    const idUnico = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+    const dominio = window.location.origin;
+    // Pega o ID da escola dinamicamente (usa o ID do usuário logado)
+    const escolaId = App.user ? App.user.escolaId : 'ESC-DESCONHECIDA';
+    
+    // Monta o link único
+    const linkFinal = `${dominio}/matricula.html?esc=${escolaId}&ref=${idUnico}`;
+    
+    // Guarda no histórico local (poderia ser na base de dados se quisesse)
+    const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
+    historico.push({
+        data: new Date().toLocaleString('pt-BR'),
+        link: linkFinal,
+        ref: idUnico
+    });
+    localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
+    
+    App.showToast("Novo link único gerado com sucesso!", "success");
+    App.mostrarAreaLinks(); // Atualiza a tabela imediatamente
+};
+
+App.copiarTextoHub = (texto) => {
+    navigator.clipboard.writeText(texto).then(() => {
+        App.showToast("Link copiado! Envie para o aluno.", "success");
+    }).catch(() => {
+        App.showToast("Erro ao copiar o link.", "error");
+    });
+};
+
+// =========================================================
 // EVENTOS DE ARRANQUE E PWA
 // =========================================================
 document.addEventListener('DOMContentLoaded', App.init);

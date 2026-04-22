@@ -72,14 +72,12 @@
                 <ul class="menu-lista">
                     <li><button onclick="App.renderizarInicio()">🏠 Visão Geral</button></li>
                     
+                    <li><button onclick="App.renderizarHubContratos()" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; margin-top: 10px; margin-bottom: 5px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">🔗 Links e Contratos</button></li>
+
                     <li><button onclick="App.toggleSub('sub-alunos')">🎓 Alunos ▼</button></li>
                     <ul id="sub-alunos" class="submenu" style="display:none;">
                         <li><button onclick="App.abrirModalCadastro('aluno')">➕ Novo Aluno</button></li>
-                        <li><button onclick="App.renderizarLista('aluno')">📋 Gerenciar Lista</button></li>
-                        <li><button onclick="App.copiarLinkMatricula()" style="background:#25D366; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 15px; box-shadow: 0 4px 6px rgba(37,211,102,0.3);">
-            📋 Copiar Link de Matrícula</button></li>
-                    <li><button onclick="App.renderizarContratos()" style="background:#2c3e50; color:white; padding:10px 15px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; width: 100%; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">📂 Contratos Digitais</button>
-                    </li>
+                        <li><button onclick="App.renderizarLista('aluno')">📋 Gerenciar Lista</button></li>       
                     </ul>
 
                     <li><button onclick="App.toggleSub('sub-turmas')">🏫 Turmas ▼</button></li>

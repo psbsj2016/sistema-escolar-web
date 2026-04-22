@@ -75,7 +75,7 @@ App.renderizarPlanejamentoPro = () => {
     div.innerHTML = `
         <div class="card" style="text-align:center; padding:50px;">
             <h2 style="color:#2c3e50; margin-bottom:10px;">Planejamento Pedagógico</h2>
-            <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controlo de aulas.</p>
+            <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controle de aulas.</p>
             <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
                 <div onclick="App.renderizarNovoPlanejamento()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
                     <div style="font-size:50px; margin-bottom:15px;">📝</div>
@@ -1002,7 +1002,7 @@ App.excluirAvaliacao = (id) => {
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
 
 App.renderizarChamadaPro = async () => { 
-    App.setTitulo("Controlo de Presença");
+    App.setTitulo("Controle de Presença");
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
     
