@@ -2906,10 +2906,31 @@ App.mostrarAreaLinks = () => {
     const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
 
     area.innerHTML = `
+        <style>
+            /* 🎨 ESTILOS E ANIMAÇÕES DOS BOTÕES */
+            .btn-hub {
+                border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;
+                font-weight: bold; font-size: 12px; transition: all 0.2s ease;
+                display: flex; align-items: center; gap: 5px;
+            }
+            /* Efeito ao Clicar (Dá um pulinho para baixo) */
+            .btn-hub:active { transform: scale(0.92); } 
+
+            /* Cores individuais com efeito Hover */
+            .btn-hub-copiar { background: #f1f2f6; color: #2c3e50; }
+            .btn-hub-copiar:hover { background: #dfe4ea; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+            .btn-hub-ver { background: #e8f8f5; color: #16a085; }
+            .btn-hub-ver:hover { background: #d1f2eb; box-shadow: 0 2px 5px rgba(22,160,133,0.2); }
+
+            .btn-hub-apagar { background: #fdedec; color: #e74c3c; }
+            .btn-hub-apagar:hover { background: #fadbd8; box-shadow: 0 2px 5px rgba(231,76,60,0.2); }
+        </style>
+
         <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin:0; color: #2c3e50;">Histórico de Links</h3>
-                <button onclick="App.gerarNovoLinkUnico()" class="btn-primary" style="background: #27ae60; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px;">
+                <button onclick="App.gerarNovoLinkUnico()" class="btn-primary" style="background: #27ae60; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
                     ➕ Gerar Novo Link
                 </button>
             </div>
@@ -2920,7 +2941,7 @@ App.mostrarAreaLinks = () => {
                         <tr style="background: #f8f9fa; text-align: left;">
                             <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Data e Hora</th>
                             <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Link Único</th>
-                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center; color: #555;">Ação</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center; color: #555;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2929,8 +2950,12 @@ App.mostrarAreaLinks = () => {
                             <tr>
                                 <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #666;">${item.data}</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #eee; font-family: monospace; color: #3498db; font-size: 13px;">${item.link}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">
-                                    <button onclick="App.copiarTextoHub('${item.link}')" style="background:#f1f2f6; color: #333; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight: bold;">📋 Copiar</button>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <div style="display:flex; gap:8px; justify-content:center;">
+                                        <button class="btn-hub btn-hub-copiar" onclick="App.copiarTextoHub('${item.link}')" title="Copiar Link">📋 Copiar</button>
+                                        <button class="btn-hub btn-hub-ver" onclick="window.open('${item.link}', '_blank')" title="Abrir Formulário">👁️ Abrir</button>
+                                        <button class="btn-hub btn-hub-apagar" onclick="App.apagarLinkUnico('${item.ref}')" title="Apagar do Histórico">🗑️ Apagar</button>
+                                    </div>
                                 </td>
                             </tr>
                         `).reverse().join('')}
@@ -2939,6 +2964,24 @@ App.mostrarAreaLinks = () => {
             </div>
         </div>
     `;
+};
+
+// ==========================================
+// NOVA FUNÇÃO: Adicione logo abaixo do código acima
+// ==========================================
+App.apagarLinkUnico = (ref) => {
+    if(!confirm("Tem a certeza que deseja apagar este link do histórico?")) return;
+    
+    // Puxa o histórico atual
+    let historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
+    
+    // Filtra removendo o link que tem a referência clicada
+    historico = historico.filter(item => item.ref !== ref);
+    
+    // Guarda de novo e atualiza a tela
+    localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
+    App.showToast("Link apagado com sucesso!", "success");
+    App.mostrarAreaLinks();
 };
 
 App.gerarNovoLinkUnico = () => {
