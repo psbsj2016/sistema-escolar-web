@@ -241,6 +241,7 @@
     // 🔍 1. CAPTURAR O ID DA ESCOLA PELA URL
     const urlParams = new URLSearchParams(window.location.search);
     const escolaIdDaURL = urlParams.get('escola');
+    const referenciaLink = urlParams.get('ref'); // <-- NOVA LINHA: Captura o ID único do link
 
     // 🛡️ 2. TRAVAR A PÁGINA SE NÃO TIVER ID
     document.addEventListener('DOMContentLoaded', () => {
@@ -295,6 +296,7 @@
         // Montamos o "Dossiê do Aluno"
         const payload = {
             escolaId: escolaIdDaURL, // 🚀 A MÁGICA ACONTECE AQUI: O ID VEM DA URL!
+            refLink: referenciaLink, // <-- NOVA LINHA: Envia a referência para o servidor
             nome: document.getElementById('nome').value,
             whatsapp: document.getElementById('whatsapp').value,
             email: document.getElementById('email').value,

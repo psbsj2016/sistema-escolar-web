@@ -2953,7 +2953,7 @@ App.mostrarAreaLinks = () => {
                                 <td style="padding: 12px; border-bottom: 1px solid #eee;">
                                     <div style="display:flex; gap:8px; justify-content:center;">
                                         <button class="btn-hub btn-hub-copiar" onclick="App.copiarTextoHub('${item.link}')" title="Copiar Link">📋 Copiar</button>
-                                        <button class="btn-hub btn-hub-ver" onclick="window.open('${item.link}', '_blank')" title="Abrir Formulário">👁️ Abrir</button>
+                                        <button class="btn-hub btn-hub-ver" onclick="App.verContratoPeloLink('${item.ref}')" title="Ver Contrato Digital">📄 Ver Contrato</button>
                                         <button class="btn-hub btn-hub-apagar" onclick="App.apagarLinkUnico('${item.ref}')" title="Apagar do Histórico">🗑️ Apagar</button>
                                     </div>
                                 </td>
@@ -2964,6 +2964,14 @@ App.mostrarAreaLinks = () => {
             </div>
         </div>
     `;
+};
+
+App.copiarTextoHub = (texto) => {
+    navigator.clipboard.writeText(texto).then(() => {
+        App.showToast("📋 Link copiado com sucesso!", "success");
+    }).catch(() => {
+        App.showToast("Erro ao copiar. Tente selecionar o texto.", "error");
+    });
 };
 
 // ==========================================
@@ -3017,6 +3025,96 @@ App.gerarNovoLinkUnico = () => {
         
     } catch(e) {
         App.showToast("Erro ao gerar o link único.", "error");
+    }
+};
+
+// ==========================================
+// FUNÇÕES DO RASTREADOR DE CONTRATOS
+// ==========================================
+App.verContratoPeloLink = async (ref) => {
+    try {
+        App.showToast("A verificar status do contrato...", "info");
+        
+        // Vai ao banco de dados buscar todos os contratos da escola
+        const token = localStorage.getItem('token_acesso');
+        const resposta = await fetch(`${API_URL}/contratos`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!resposta.ok) throw new Error("Erro ao buscar contratos");
+        const contratos = await resposta.json();
+        
+        // Procura se algum contrato salvo tem a mesma referência do link gerado
+        const contratoEncontrado = contratos.find(c => c.dadosCompletos && c.dadosCompletos.refLink === ref);
+        
+        if (contratoEncontrado) {
+            // Contrato assinado encontrado! Exibe na tela.
+            App.mostrarContratoNaTela(contratoEncontrado);
+        } else {
+            // Ainda não preenchido
+            App.showToast("⏳ Aguardando... O aluno ainda não assinou/preencheu este contrato.", "warning");
+        }
+    } catch (erro) {
+        console.error("Erro na verificação:", erro);
+        App.showToast("Erro ao verificar o status do contrato.", "error");
+    }
+};
+
+App.mostrarContratoNaTela = (contrato) => {
+    const dados = contrato.dadosCompletos || {};
+    
+    // Constrói o visual do documento
+    const html = `
+        <div style="padding: 20px; font-family: sans-serif; width: 100%; max-width: 600px; margin: auto; background: white; border-radius: 12px; box-sizing: border-box; text-align: left;">
+            <div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
+                <h2 style="color: #2c3e50; margin: 0;">Contrato Digital de Matrícula</h2>
+                <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 12px;">ID do Doc: ${contrato.id}</p>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dados do Aluno</h4>
+                <p style="margin: 5px 0;"><strong>Nome:</strong> ${contrato.nomeAluno || 'Não informado'}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${dados.email || 'Não informado'}</p>
+                <p style="margin: 5px 0;"><strong>Telefone:</strong> ${dados.telefone || dados.whatsapp || 'Não informado'}</p>
+                <p style="margin: 5px 0;"><strong>Curso/Turma:</strong> ${dados.curso || dados.turma || 'Não informado'}</p>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Status Jurídico</h4>
+                <p style="margin: 5px 0;"><strong>Data da Assinatura:</strong> ${new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR')}</p>
+                <p style="margin: 8px 0; color: #27ae60; font-weight: bold; background: #eaaf; padding: 8px; border-radius: 5px; display: inline-block;">✅ Recebido e Assinado Digitalmente</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 25px;">
+                <button id="btn-fechar-contrato" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">Fechar Documento</button>
+            </div>
+        </div>
+    `;
+    
+    // Verifica se o sistema usa SweetAlert2 (comum na sua stack)
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            html: html,
+            showConfirmButton: false,
+            width: '600px',
+            background: 'transparent',
+            didOpen: () => {
+                const btn = document.getElementById('btn-fechar-contrato');
+                btn.onclick = () => Swal.close();
+                btn.onmousedown = () => btn.style.transform = 'scale(0.95)';
+                btn.onmouseup = () => btn.style.transform = 'scale(1)';
+            }
+        });
+    } else {
+        // Fallback: Cria um modal nativo escuro por cima da tela
+        const div = document.createElement('div');
+        div.id = 'modal-contrato-temp';
+        div.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);';
+        div.innerHTML = html;
+        document.body.appendChild(div);
+        
+        document.getElementById('btn-fechar-contrato').onclick = () => div.remove();
+        div.onclick = (e) => { if(e.target === div) div.remove(); };
     }
 };
 
