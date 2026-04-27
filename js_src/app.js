@@ -2975,21 +2975,31 @@ App.copiarTextoHub = (texto) => {
 };
 
 // ==========================================
-// NOVA FUNÇÃO: Adicione logo abaixo do código acima
+// FUNÇÃO DE APAGAR COM O MODAL BONITO
 // ==========================================
 App.apagarLinkUnico = (ref) => {
-    if(!confirm("Tem a certeza que deseja apagar este link do histórico?")) return;
-    
-    // Puxa o histórico atual
-    let historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
-    
-    // Filtra removendo o link que tem a referência clicada
-    historico = historico.filter(item => item.ref !== ref);
-    
-    // Guarda de novo e atualiza a tela
-    localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
-    App.showToast("Link apagado com sucesso!", "success");
-    App.mostrarAreaLinks();
+    App.abrirModalConfirmacao(
+        "Apagar Link?", 
+        "Tem a certeza que deseja remover este link do histórico? Os alunos que já tiverem o link ainda poderão usá-lo, mas ele não aparecerá mais aqui.", 
+        (modal) => {
+            // 1. Puxa o histórico atual
+            let historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
+            
+            // 2. Filtra removendo o link que tem a referência clicada
+            historico = historico.filter(item => item.ref !== ref);
+            
+            // 3. Guarda de novo na memória
+            localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
+            
+            // 4. Fecha o modal de forma suave
+            modal.style.opacity = '0'; 
+            setTimeout(() => {
+                modal.style.display = 'none';
+                App.showToast("Link apagado com sucesso!", "success");
+                App.mostrarAreaLinks(); // Atualiza a tabela na tela
+            }, 300);
+        }
+    );
 };
 
 App.gerarNovoLinkUnico = () => {
