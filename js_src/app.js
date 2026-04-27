@@ -2567,10 +2567,41 @@ abrirVisualizacaoContrato: (id) => {
         const dataBr = new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR');
         let detalhesHtml = '';
 
+        // 📚 DICIONÁRIO DE TRADUÇÃO: Transforma variáveis feias em nomes profissionais
+        const dicionarioTermos = {
+            'nome': 'Nome do Aluno',
+            'whatsapp': 'WhatsApp do Aluno',
+            'email': 'E-mail',
+            'cpf': 'CPF do Aluno',
+            'rg': 'RG do Aluno',
+            'nascimento': 'Data de Nascimento',
+            'sexo': 'Género',
+            'profissao': 'Profissão',
+            'rua': 'Endereço (Rua/Av)',
+            'numero': 'Número',
+            'bairro': 'Bairro',
+            'cidade': 'Cidade',
+            'estado': 'Estado',
+            'pais': 'País',
+            'curso': 'Curso',
+            'turma': 'Turma',
+            'planoCurso': 'Plano de Curso Escolhido',
+            'diaVencimento': 'Dia de Vencimento',
+            'Resp_nome': 'Nome do Responsável',
+            'Resp_parentesco': 'Grau de Parentesco',
+            'Resp_cpf': 'CPF do Responsável',
+            'Resp_zap': 'WhatsApp do Responsável'
+        };
+
         for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
-            if(chave === 'escolaId' || chave === 'status' || chave === 'id') continue; 
+            // Ignora campos de controle do sistema para não aparecerem no documento
+            if(['escolaId', 'status', 'id', 'refLink'].includes(chave)) continue; 
             
-            const chaveFormatada = chave.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); 
+            // Tenta achar no dicionário. Se não achar, faz uma limpeza automática tirando os "_"
+            let chaveFormatada = dicionarioTermos[chave];
+            if (!chaveFormatada) {
+                chaveFormatada = chave.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            }
             
             let valorFormatado = String(valor);
             
