@@ -3082,11 +3082,12 @@ App.mostrarContratoNaTela = (contrato) => {
             </div>
             
             <div style="margin-bottom: 15px;">
-                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dados do Aluno</h4>
+                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dados da Matrícula</h4>
                 <p style="margin: 5px 0;"><strong>Nome:</strong> ${contrato.nomeAluno || 'Não informado'}</p>
                 <p style="margin: 5px 0;"><strong>Email:</strong> ${dados.email || 'Não informado'}</p>
                 <p style="margin: 5px 0;"><strong>Telefone:</strong> ${dados.telefone || dados.whatsapp || 'Não informado'}</p>
-                <p style="margin: 5px 0;"><strong>Curso/Turma:</strong> ${dados.curso || dados.turma || 'Não informado'}</p>
+                <p style="margin: 5px 0;"><strong>Plano de Curso:</strong> <span style="background:#eafaf1; color:#27ae60; padding:2px 6px; border-radius:4px; font-weight:bold;">${dados.planoCurso || 'Não informado'}</span></p>
+                <p style="margin: 5px 0;"><strong>Dia de Vencimento:</strong> Dia ${dados.diaVencimento || 'Não informado'}</p>
             </div>
 
             <div style="margin-bottom: 15px;">
