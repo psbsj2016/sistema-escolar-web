@@ -611,11 +611,11 @@ App.gerarBoletimTela = async () => {
     const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
     const regimeConfig = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
     
-    let multiplicadorTotal = 4;
-    let labelCabecalho = 'BIMESTRE';
-    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 3; labelCabecalho = 'TRIMESTRE'; }
-    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
-    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
+    let multiplicadorTotal = 6; // Agora o padrão Bimestral exige 6 notas
+    let labelCabecalho = 'BIMESTRE';
+    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 4; labelCabecalho = 'TRIMESTRE'; }
+    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
+    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
 
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
@@ -736,20 +736,20 @@ App.renderizarAvaliacoesPro = async () => {
     const percentualAprovacao = parseFloat(mediaSalva) / parseFloat(maxSalva);
 
     // GERAR OPÇÕES DE PERÍODO DINAMICAMENTE
-    let opPeriodos = ''; let labelPeriodo = 'Período';
-    if (regimeSalvo === 'Bimestral') {
-        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option>`;
-        labelPeriodo = 'Bimestre';
-    } else if (regimeSalvo === 'Trimestral') {
-        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option>`;
-        labelPeriodo = 'Trimestre';
-    } else if (regimeSalvo === 'Semestral') {
-        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
-        labelPeriodo = 'Semestre';
-    } else if (regimeSalvo === 'Anual') {
-        opPeriodos = `<option value="Período Único">Período Único</option>`;
-        labelPeriodo = 'Período';
-    }
+    let opPeriodos = ''; let labelPeriodo = 'Período';
+    if (regimeSalvo === 'Bimestral') {
+        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option><option value="5º Bimestre">5º Bimestre</option><option value="6º Bimestre">6º Bimestre</option>`;
+        labelPeriodo = 'Bimestre';
+    } else if (regimeSalvo === 'Trimestral') {
+        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option><option value="4º Trimestre">4º Trimestre</option>`;
+        labelPeriodo = 'Trimestre';
+    } else if (regimeSalvo === 'Semestral') {
+        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
+        labelPeriodo = 'Semestre';
+    } else if (regimeSalvo === 'Anual') {
+        opPeriodos = `<option value="Período Único">Período Único</option>`;
+        labelPeriodo = 'Período';
+    }
 
     try {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api(`/avaliacoes?_t=${Date.now()}`)]);
@@ -767,7 +767,7 @@ App.renderizarAvaliacoesPro = async () => {
         const painelConfig = `
             <div style="background:#fff; border-left:4px solid #8e44ad; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
                 <div style="width:100%; font-size:12px; font-weight:bold; color:#8e44ad; text-transform:uppercase; margin-bottom:-5px;">⚙️ Configuração do Sistema de Avaliação</div>
-                ${selectLocal('Regime Letivo:', 'config-nota-regime', `<option value="Bimestral" ${regimeSalvo==='Bimestral'?'selected':''}>Bimestral (4 Períodos)</option><option value="Trimestral" ${regimeSalvo==='Trimestral'?'selected':''}>Trimestral (3 Períodos)</option><option value="Semestral" ${regimeSalvo==='Semestral'?'selected':''}>Semestral (2 Períodos)</option><option value="Anual" ${regimeSalvo==='Anual'?'selected':''}>Anual (1 Período)</option>`)}
+                ${selectLocal('Regime Letivo:', 'config-nota-regime', `<option value="Bimestral" ${regimeSalvo==='Bimestral'?'selected':''}>Bimestral (6 Períodos)</option><option value="Trimestral" ${regimeSalvo==='Trimestral'?'selected':''}>Trimestral (4 Períodos)</option><option value="Semestral" ${regimeSalvo==='Semestral'?'selected':''}>Semestral (2 Períodos)</option><option value="Anual" ${regimeSalvo==='Anual'?'selected':''}>Anual (1 Período)</option>`)}
                 ${col('Média de Aprovação:', 'config-nota-media', 'number', mediaSalva, 'step="0.1"')}
                 ${col('Nota Máx. do Período:', 'config-nota-max', 'number', maxSalva, 'step="0.1"')}
                 <button onclick="App.salvarConfigNotas()" class="btn-primary" style="background:#8e44ad; border:none; height:41px; padding:0 20px; margin-bottom: 5px;">💾 SALVAR REGRAS</button>
