@@ -323,43 +323,41 @@
                         }
                     }
                     
-                   // 4. Atualiza o Texto do Contrato (Versão Anti-Tags)
-                  if (config.textoContrato) {
-                  const divContrato = document.getElementById('texto-contrato');
-                  if (divContrato) {
-                  // Criamos um elemento temporário para converter entidades HTML se necessário
-                  const txt = document.createElement("textarea");
-                  txt.innerHTML = config.textoContrato;
-                  divContrato.innerHTML = txt.value; 
-                  }
-             }
+                   // 4. Atualiza o Texto do Contrato (Renderização Limpa de HTML)
+                   if (config.textoContrato) {
+                   const divContrato = document.getElementById('texto-contrato');
+                   if (divContrato) {
+                   // Agora injetamos o HTML diretamente. Isso garante que os negritos e quebras 
+                   // de linha do seu configurador apareçam perfeitos para o aluno ler.
+                   divContrato.innerHTML = config.textoContrato; 
+                   }
+              }
         } catch(e) {
             console.log("Aviso: Não foi possível carregar o layout personalizado. Mantendo o design padrão.", e);
         }
     });
 
-    // Inteligência: Verificar idade
-    function verificarMaioridade() {
-        const dataNasc = document.getElementById('nascimento').value;
-        const boxResp = document.getElementById('box-responsavel');
-        if (!dataNasc) return;
+   // Inteligência: Verificar idade
+function verificarMaioridade() {
+    const dataNasc = document.getElementById('nascimento').value;
+    const boxResp = document.getElementById('box-responsavel');
+    if (!dataNasc) return;
 
-        const hoje = new Date();
-        const nasc = new Date(dataNasc);
-        let idade = hoje.getFullYear() - nasc.getFullYear();
-        const m = hoje.getMonth() - nasc.getMonth();
-        if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+    const hoje = new Date();
+    const nasc = new Date(dataNasc);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
 
-        if (idade < 18) {
-            boxResp.style.display = 'block';
-            document.getElementById('resp_nome').required = true;
-            document.getElementById('resp_cpf').required = true;
-        } else {
-            boxResp.style.display = 'none';
-            document.getElementById('resp_nome').required = false;
-            document.getElementById('resp_cpf').required = false;
-        }
-    }
+    const isMenor = idade < 18;
+    boxResp.style.display = isMenor ? 'block' : 'none';
+    
+    // Ativa/desativa o required de TODOS os campos do responsável
+    document.getElementById('resp_nome').required = isMenor;
+    document.getElementById('resp_parentesco').required = isMenor;
+    document.getElementById('resp_cpf').required = isMenor;
+    document.getElementById('resp_zap').required = isMenor;
+}
 
     // Envio dos dados
     document.getElementById('formMatricula').addEventListener('submit', async function(e) {
