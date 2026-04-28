@@ -2839,42 +2839,128 @@ abrirVisualizacaoContrato: (id) => {
 };
 
 // =========================================================
-// HUB DE LINKS E CONTRATOS (ATUALIZADO COM CONFIGURADOR)
+// 📂 COFRE DE CONTRATOS DIGITAIS E ÁREA DE LINKS
 // =========================================================
 
-App.renderizarHubContratos = () => {
-    App.setTitulo("Links e Contratos");
-    const container = document.getElementById('app-content');
-    
-    container.innerHTML = `
-        <div style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                <div onclick="App.mostrarAreaLinks()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #3498db; transition: transform 0.2s;">
-                    <div style="font-size: 40px; margin-bottom: 10px;">🔗</div>
-                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Links de Matrícula</h3>
-                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Gerar e gerir links</p>
-                </div>
+// 🔗 1. NOVA FUNÇÃO: Exibe o link na área dinâmica do Hub
+App.mostrarAreaLinks = () => {
+    const area = document.getElementById('area-dinamica-hub');
+    const token = localStorage.getItem('token_acesso');
+    if(!token) return App.showToast("Erro: Sessão inválida.", "error");
 
-                <div onclick="App.renderizarContratos()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #2c3e50; transition: transform 0.2s;">
-                    <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
-                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Contratos Digitais</h3>
-                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Visualizar e Imprimir</p>
-                </div>
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const meuEscolaId = payload.escolaId;
+        const linkBase = window.location.origin; 
+        const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
+        const linkExclusivo = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}`;
 
-                <div onclick="App.renderizarConfiguradorMatricula()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #f39c12; transition: transform 0.2s;">
-                    <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
-                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Configurar Contrato</h3>
-                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Personalizar layout e textos</p>
+        area.innerHTML = `
+            <div class="card" style="text-align:center; animation: fadeIn 0.3s ease; border: 1px solid #eee; padding:30px;">
+                <div style="font-size: 50px; margin-bottom: 15px;">🔗</div>
+                <h3 style="margin-top:0; color:#2c3e50;">Seu Link de Matrícula</h3>
+                <p style="font-size:13px; color:#7f8c8d; margin-bottom:20px;">Envie este link para os alunos realizarem a matrícula online.</p>
+                
+                <div style="background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom: 25px; word-break: break-all; font-family: monospace; font-size: 14px; color: #2c3e50; font-weight: bold;">
+                    ${linkExclusivo}
+                </div>
+                
+                <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="App.copiarLinkMatricula()" style="width:auto; padding: 12px 25px; background:#3498db; border:none;">📋 Copiar Link</button>
+                    <button class="btn-primary" onclick="window.open('${linkExclusivo}', '_blank')" style="width:auto; padding: 12px 25px; background:#27ae60; border:none;">🌐 Testar (Abrir Link)</button>
                 </div>
             </div>
-            
-            <div id="area-dinamica-hub">
-                <div style="text-align:center; padding: 40px; color: #bdc3c7; background: white; border-radius: 12px; border: 1px dashed #ccc;">
-                    <p>Selecione uma das opções acima 👆</p>
+        `;
+    } catch(e) {
+        App.showToast("Erro ao gerar link de matrícula.", "error");
+    }
+};
+
+// 📂 2. AJUSTE: Renderizar lista dentro do HUB (não na tela toda)
+App.renderizarContratos = async () => {
+    const area = document.getElementById('area-dinamica-hub') || document.getElementById('app-content');
+    area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar o cofre... ⏳</p>';
+
+    try {
+        const contratos = await App.api('/contratos');
+        const lista = Array.isArray(contratos) ? contratos : [];
+
+        if(lista.length === 0) {
+            area.innerHTML = `<div style="text-align:center; padding:40px;"><span style="font-size:50px;">🗄️</span><h3 style="color:#666;">Cofre Vazio</h3></div>`;
+            return;
+        }
+
+        lista.sort((a, b) => new Date(b.dataHoraRegistro) - new Date(a.dataHoraRegistro));
+
+        let htmlLista = lista.map(c => {
+            const dataBr = new Date(c.dataHoraRegistro).toLocaleString('pt-BR');
+            return `
+            <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid #2c3e50;">
+                <div>
+                    <div style="font-weight:bold; color:#2c3e50; font-size:15px;">📄 ${App.escapeHTML(c.nomeAluno)}</div>
+                    <div style="font-size:12px; color:#7f8c8d;">⏱️ ${dataBr}</div>
                 </div>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="App.abrirVisualizacaoContrato('${c.id}')" class="btn-edit" style="background:#2c3e50;">👁️ Ver</button>
+                    <button onclick="App.excluirContrato('${c.id}')" class="btn-del">🗑️</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        area.innerHTML = `<div>${htmlLista}</div>`;
+        App.listaCacheContratos = lista;
+    } catch(e) {
+        area.innerHTML = "<p style='color:red;'>Erro ao carregar cofre.</p>";
+    }
+};
+
+// 👁️ 3. AJUSTE: Visualização com Contrato DINÂMICO (conforme configurado)
+App.abrirVisualizacaoContrato = (id) => {
+    const contrato = App.listaCacheContratos.find(c => c.id === id);
+    if(!contrato) return;
+
+    // BUSCA O TEXTO SALVO NO CONFIGURADOR (IMPORTANTE!)
+    const escolaConfig = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+    const contratoCorpo = (escolaConfig.configMatricula && escolaConfig.configMatricula.textoContrato) 
+        ? escolaConfig.configMatricula.textoContrato 
+        : "O texto do contrato não foi configurado.";
+
+    const modal = document.getElementById('modal-overlay'); 
+    if(modal) modal.style.display = 'flex';
+    document.getElementById('modal-titulo').innerText = `Termo Digital Oficial`;
+
+    const dataBr = new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR');
+    let detalhesHtml = '';
+    
+    // ... (Aqui continua o dicionário de termos que você já tem ...)
+    for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
+        if(['escolaId', 'status', 'id', 'refLink'].includes(chave)) continue;
+        detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;">
+            <span style="color:#7f8c8d; font-weight:bold; font-size:12px;">${chave.toUpperCase()}:</span>
+            <span style="font-size:13px;">${App.escapeHTML(String(valor))}</span>
+        </div>`;
+    }
+
+    document.getElementById('modal-form-content').innerHTML = `
+        <div id="area-impressao-contrato" style="padding: 20px; border: 1px solid #ccc; background: #fff;">
+            <h4 style="text-align:center; border-bottom: 2px solid #eee; padding-bottom: 10px;">DADOS DO ALUNO</h4>
+            ${detalhesHtml}
+            <h4 style="text-align:center; margin-top:30px; border-bottom: 2px solid #eee; padding-bottom: 10px;">TERMOS ACEITOS</h4>
+            <div style="font-size:11px; text-align:justify; line-height:1.5; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee;">
+                ${contratoCorpo}
+            </div>
+            <div style="margin-top:20px; padding:10px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px;">
+                ✅ <b>ACEITE DIGITAL REGISTRADO:</b> ${dataBr}
             </div>
         </div>
     `;
+
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if(btnConfirm) {
+        btnConfirm.style.display = 'inline-flex';
+        btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
+        btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
+    }
 };
 
 // =========================================================
