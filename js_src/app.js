@@ -2630,75 +2630,16 @@ abrirVisualizacaoContrato: (id) => {
             </div>`;
         }
 
-        // ==========================================
-        // TEXTO COMPLETO DO CONTRATO
-        // ==========================================
+        // 📚 Buscamos o texto do contrato configurado na escola (ou o padrão)
+        const escolaConfig = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const contratoCorpo = (escolaConfig.configMatricula && escolaConfig.configMatricula.textoContrato) 
+            ? escolaConfig.configMatricula.textoContrato 
+            : "Texto do contrato não configurado no sistema.";
+
         const textoContrato = `
             <div class="box-contrato-print" style="background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 6px; margin-top: 10px; font-size: 11px; color: #555; text-align: justify; max-height: 250px; overflow-y: auto; line-height: 1.5;">
                 <h4 style="text-align: center; margin-top: 0; margin-bottom: 15px; color: #2c3e50; font-size: 14px;">TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS</h4>
-                <strong>CLÁUSULA PRIMEIRA – DO OBJETO</strong><br>
-                O presente contrato tem como objeto a prestação de serviços de ensino profissional de língua inglesa pela CONTRATADA, PTT CURSOS, situada no Parque Ecológico, Rua Pedro Vieira Leite, nº 491, inscrita no CNPJ sob o nº 48.939.009/0001-99, ao CONTRATANTE informado no Formulário de Matrícula.
-                <br><br>
-                <strong>CLÁUSULA SEGUNDA – DA DURAÇÃO E MODALIDADES DO CURSO</strong><br>
-                O formato padrão nivelado (12 meses) possui carga horária total de 96 (noventa e seis) horas, distribuídas em 2 (duas) horas de aula semanais.<br>
-                O formato intensivo nivelado (6 meses) possui carga horária total de 96 (noventa e seis) horas, distribuídas em 4 (quatro) horas de aula semanais.<br>
-                O formato personalizado padrão (5 meses) possui carga horária total de 40 (quarenta) horas, distribuídas em 2 (duas) horas de aula semanais.<br>
-                O formato personalizado intensivo (5 meses) possui carga horária total de 80 (oitenta) horas, distribuídas em 4 (quatro) horas de aula semanais.
-                <br><br>
-                <strong>CLÁUSULA TERCEIRA – DO PAGAMENTO</strong><br>
-                O pagamento deverá ser efetuado até a data prevista conforme selecionado no Formulário de Matrícula, e será em favor de PTT CURSOS, representada por Paulo Sérgio Bispo Santana Júnior, mediante utilização da chave PIX ou dos dados oficiais fornecidos no ato da matrícula.<br>
-                Os valores das parcelas fixas são definidos conforme segue:<br>
-                • R$ 187,00 (cento e oitenta e sete reais) para o formato padrão (nível 1);<br>
-                • R$ 367,00 (trezentos e sessenta e sete reais) para o formato intensivo (nível 1);<br>
-                • R$ 297,00 (duzentos e noventa e sete reais) para o formato personalizado padrão.<br>
-                <strong>§ 1º</strong> O formato padrão nivelado de continuação (nível 2) terá mensalidade de R$ 217,00 (duzentos e dezessete reais), e o nível 3, R$ 237,00 (duzentos e trinta e sete reais). O formato intensivo nivelado de continuação (níveis 2 e 3) terá mensalidades de R$ 387,00 (trezentos e oitenta e sete reais) e R$ 417,00 (quatrocentos e dezessete reais), respectivamente. O formato personalizado intensivo terá mensalidade de R$ 397,00 (trezentos e noventa e sete reais).<br>
-                <strong>§ 2º</strong> O pagamento dar-se-á, prioritariamente, via PIX. Em caráter excepcional, poderá ser realizado por meio de cartão de crédito, caso em que será aplicado acréscimo de R$ 12,00 (doze reais).
-                <br><br>
-                <strong>CLÁUSULA QUARTA – DO ATRASO NO PAGAMENTO</strong><br>
-                Em caso de atraso no pagamento da mensalidade, eventuais benefícios concedidos serão automaticamente suspensos, passando o CONTRATANTE a ser responsável pelo pagamento do valor integral, sem a aplicação de descontos ou promoções concedidos no ato da matrícula.<br>
-                <strong>Parágrafo único:</strong> Verificado atraso superior a 10 (dez) dias, e frustradas as tentativas de regularização, a CONTRATADA poderá, após notificação prévia, suspender a prestação dos serviços.
-                <br><br>
-                <strong>CLÁUSULA QUINTA – DA PAUSA E CANCELAMENTO DO CURSO</strong><br>
-                O CONTRATANTE poderá solicitar a suspensão temporária do curso por período de até 40 (quarenta) dias, a qualquer tempo. Ultrapassado esse prazo, e não havendo retorno no limite máximo de 90 (noventa) dias, perderá o direito à certificação, bem como aos benefícios originalmente adquiridos na matrícula, sendo necessária a efetivação de nova matrícula para prosseguimento.<br>
-                Caso o CONTRATANTE solicite o cancelamento do curso antes da utilização integral das aulas contratadas, poderá requerer a restituição proporcional dos valores pagos, a qual será apurada a partir da data da solicitação e efetuada no prazo de até 30 (trinta) dias. A restituição proporcional dos valores pagos não incluirá valores correspondentes a aulas já ministradas, materiais disponibilizados ou custos administrativos incorridos.<br>
-                Em caso de abandono do curso, assim considerado o período superior a 30 (trinta) dias sem qualquer comunicação por parte do CONTRATANTE após o início das aulas, a matrícula será automaticamente cancelada, com devolução proporcional dos valores pagos.<br>
-                <strong>Parágrafo único:</strong> Qualquer das partes poderá requerer o cancelamento do curso a qualquer tempo, não sendo devida a cobrança de taxas ou multas por rescisão contratual.
-                <br><br>
-                <strong>CLÁUSULA SEXTA – DA MUDANÇA DE HORÁRIO</strong><br>
-                O CONTRATANTE poderá selecionar o horário que melhor atenda às suas necessidades, dentre as opções disponíveis no momento da matrícula. Eventual solicitação de alteração de horário após o início do curso deverá ser formalizada, pelos canais oficiais de comunicação ou presencialmente, com antecedência mínima de 2 (duas) semanas, sujeitando-se à análise de disponibilidade e posterior aprovação.<br>
-                <strong>Parágrafo único:</strong> No decorrer do curso, a CONTRATADA poderá realizar ajustes nos horários, mediante comunicação prévia ao CONTRATANTE com antecedência mínima de 1 (uma) semana, sendo a implementação do novo horário condicionada à verificação de disponibilidade e concordância do CONTRATANTE.
-                <br><br>
-                <strong>CLÁUSULA SÉTIMA – DAS FALTAS E REPOSIÇÕES DE AULA</strong><br>
-                As reposições de faltas só serão efetuadas mediante justificativa comprovável. Caso não seja possível atestar o motivo da ausência, a soma total das faltas acima de 6 (seis) horas será considerada perdida.<br>
-                <strong>§ 1º</strong> Caso a quantidade de faltas comprometa o adequado aproveitamento dos conteúdos, o CONTRATANTE poderá autorizar a cobrança de parcela(s) adicional(is), destinadas à reposição dos conteúdos prejudicados e à complementação da carga horária contratada.<br>
-                <strong>§ 2º</strong> Consideram-se justificativas passíveis de comprovação para faltas: questões de saúde, viagens de caráter emergencial, falecimento de ente querido ou situações de natureza judicial. Para ter direito à reposição sem a cobrança de parcela(s) adicional(is), todas as justificativas deverão ser devidamente apresentadas mediante atestado ou documento idôneo que comprove o motivo da ausência.
-                <br><br>
-                <strong>CLÁUSULA OITAVA – DOS FERIADOS E RECESSOS</strong><br>
-                A carga horária do curso é estruturada de acordo com o calendário anual vigente. Dessa forma, eventuais suspensões de aulas decorrentes de feriados e períodos de recesso não impactam o cumprimento da carga horária total, não sendo devida, nesses casos, a reposição por parte da CONTRATADA.
-                <br><br>
-                <strong>CLÁUSULA NONA – DAS GRAVAÇÕES</strong><br>
-                Com o objetivo de garantir a segurança dos alunos, o ambiente é integralmente monitorado por câmeras de segurança com captação de áudio. Adicionalmente, ao longo do curso, poderão ser realizadas ou solicitadas gravações de imagem e/ou voz dos alunos, para fins pedagógicos e/ou de divulgação nos canais oficiais da CONTRATADA, mediante prévia ciência do aluno.<br>
-                <strong>Parágrafo único:</strong> O CONTRATANTE autoriza, de forma gratuita, a utilização de sua imagem e voz, captadas durante as atividades do curso, para fins institucionais, pedagógicos e de divulgação, nos meios de comunicação oficiais da CONTRATADA. No caso de o CONTRATANTE ser responsável legal por menor de idade, autoriza, igualmente, o uso da imagem e voz do representado, podendo tal autorização ser revogada mediante solicitação expressa.
-                <br><br>
-                <strong>CLÁUSULA DÉCIMA – DOS INTERVALOS</strong><br>
-                Haverá intervalo de aproximadamente 10 minutos entre uma hora e outra no turno da aula. Esse tempo acumulado será utilizado para revisões, aplicação de testes, provas e possíveis reforços de conteúdo.
-                <br><br>
-                <strong>CLÁUSULA DÉCIMA PRIMEIRA – DO MATERIAL DIDÁTICO</strong><br>
-                Estão incluídos no valor do curso os seguintes materiais e instrumentos de estudo: apostila em formato PDF, slides didáticos com áudios em inglês e vídeos complementares. O material didático disponibilizado é de uso exclusivo do CONTRATANTE, sendo vedada sua reprodução, distribuição ou compartilhamento sem autorização expressa da CONTRATADA.<br>
-                <strong>Parágrafo único:</strong> O CONTRATANTE deverá possuir o material impresso para adequado aproveitamento das aulas. Caso opte pela versão impressa e encadernada fornecida pela CONTRATADA, deverá solicitá-la previamente, mediante pagamento do valor correspondente à parte.
-                <br><br>
-                <strong>CLÁUSULA DÉCIMA SEGUNDA – DA TOLERÂNCIA</strong><br>
-                Eventual tolerância por parte da CONTRATADA quanto ao descumprimento de quaisquer obrigações contratuais não implicará novação ou renúncia de direitos, permanecendo todas as disposições plenamente exigíveis.
-                <br><br>
-                <strong>CLÁUSULA DÉCIMA TERCEIRA – DA CERTIFICAÇÃO</strong><br>
-                O certificado de conclusão será emitido no prazo de até 30 (trinta) dias, contados a partir da aprovação do aluno. Para fins de certificação, o cursante deverá cumprir os seguintes requisitos:<br>
-                • Ter cumprido, no mínimo, 90 (noventa) horas da carga horária prevista;<br>
-                • Obter aproveitamento mínimo, conforme critérios definidos pela CONTRATADA.<br>
-                Na hipótese de o aluno não alcançar a pontuação mínima exigida, poderá aderir a um plano de recuperação personalizado, nos termos definidos pela CONTRATADA.<br>
-                <strong>Parágrafo único:</strong> O cumprimento do período de recuperação será obrigatório, constituindo requisito para a devida avaliação do cursante e para sua aprovação no curso de continuidade, conforme o pacote contratado.
-                <br><br>
-                <strong>CLÁUSULA DÉCIMA QUARTA – DO FORO</strong><br>
-                Fica eleito o foro da comarca de Porto Seguro, com renúncia de qualquer outro, por mais privilegiado que seja, para dirimir eventuais controvérsias oriundas deste contrato.
+                ${contratoCorpo}
             </div>
         `;
 
