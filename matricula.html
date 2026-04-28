@@ -34,7 +34,6 @@
             margin-top: 20px; 
             margin-bottom: 10px;
             line-height: 1.5;
-            white-space: pre-wrap; /* Permite que as quebras de linha do painel funcionem aqui */
         }
         .contrato-box strong { color: #2c3e50; }   
     </style>
@@ -324,12 +323,12 @@
                         }
                     }
                     
-                    // 4. Atualiza o Texto do Contrato
-                    if (config.textoContrato) {
-                    const divContrato = document.getElementById('texto-contrato');
-                    if (divContrato) divContrato.innerHTML = config.textoContrato; // <-- AGORA COM innerHTML
-                    }
-                }
+                   // 4. Atualiza o Texto do Contrato
+                   if (config.textoContrato) {
+                   const divContrato = document.getElementById('texto-contrato');
+                   // Usamos innerHTML para que as tags <b>, <i>, etc. sejam interpretadas corretamente
+                   if (divContrato) divContrato.innerHTML = config.textoContrato; 
+                 }
             }
         } catch(e) {
             console.log("Aviso: Não foi possível carregar o layout personalizado. Mantendo o design padrão.", e);
