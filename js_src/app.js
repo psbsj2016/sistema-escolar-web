@@ -2962,7 +2962,7 @@ App.renderizarConfiguradorMatricula = async () => {
         // Colocamos numa variável temporária para a pré-visualização em tempo real
         App.configTemp = { ...escola.configMatricula };
 
-        App.atualizarPreviewConfigurador = () => {
+App.atualizarPreviewConfigurador = () => {
             const preview = document.getElementById('preview-word-doc');
             if(preview) {
                 preview.innerHTML = `
@@ -2982,33 +2982,28 @@ App.renderizarConfiguradorMatricula = async () => {
                             </select>
                         </div>
                         <h4 style="color:#2980b9;">📑 Texto do Contrato</h4>
-                        <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; white-space: pre-wrap; height:200px; overflow-y:auto; text-align:justify;">${App.escapeHTML(App.configTemp.textoContrato)}</div>
+                        <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; white-space: pre-wrap; height:300px; overflow-y:auto; text-align:justify;">${App.configTemp.textoContrato}</div>
                     </div>
                 `;
             }
         };
 
         area.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 250px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-self: flex-start;">
+            <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
+                <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
                     <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
                     
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
-                    
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
-                    
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
-                    
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
-                    
                     <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
-                    
                     <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
                 </div>
 
-                <div style="flex: 2; min-width: 350px;">
-                    <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center;">
-                        <div id="preview-word-doc" style="background:white; width:100%; max-width:800px; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
+                        <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
                             </div>
                     </div>
                 </div>
@@ -3020,7 +3015,7 @@ App.renderizarConfiguradorMatricula = async () => {
     } catch (e) {
         area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o configurador.</p>';
     }
-};
+};        
 
 App.editarConfig = (tipo) => {
     if (tipo === 'imagem') {
@@ -3049,16 +3044,26 @@ App.editarConfig = (tipo) => {
         const modal = document.getElementById('modal-overlay'); 
         if(modal) modal.style.display = 'flex';
         document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
+        
+        // AQUI ADICIONAMOS A BARRA DE FERRAMENTAS E TROCAMOS O TEXTAREA POR UMA DIV EDITÁVEL
         document.getElementById('modal-form-content').innerHTML = `
-            <p style="font-size:12px; color:#666; margin-top:0;">Edite as cláusulas abaixo. Use parágrafos normais.</p>
-            <textarea id="txt-edicao-contrato" style="width:100%; height:400px; padding:15px; border-radius:8px; border:1px solid #ccc; font-family:sans-serif; line-height:1.5;">${App.configTemp.textoContrato}</textarea>
+            <p style="font-size:12px; color:#666; margin-top:0;">Formate as cláusulas abaixo como desejar.</p>
+            
+            <div style="background:#f8f9fa; border:1px solid #ccc; border-bottom:none; padding:8px; display:flex; gap:8px; border-radius:6px 6px 0 0;">
+                <button type="button" onclick="document.execCommand('bold', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; font-weight:bold;" title="Negrito">B</button>
+                <button type="button" onclick="document.execCommand('italic', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; font-style:italic;" title="Itálico">I</button>
+                <button type="button" onclick="document.execCommand('underline', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; text-decoration:underline;" title="Sublinhado">U</button>
+            </div>
+            
+            <div id="txt-edicao-contrato" contenteditable="true" style="width:100%; height:400px; padding:15px; border-radius:0 0 8px 8px; border:1px solid #ccc; font-family:sans-serif; line-height:1.5; overflow-y:auto; background:#fff; outline:none; box-sizing:border-box;">${App.configTemp.textoContrato}</div>
         `;
         
         const btnConfirm = document.querySelector('.btn-confirm');
         btnConfirm.style.display = 'inline-flex';
         btnConfirm.innerHTML = "Aplicar ao Preview";
         btnConfirm.onclick = () => {
-            App.configTemp.textoContrato = document.getElementById('txt-edicao-contrato').value;
+            // AQUI MUDAMOS DE .value PARA .innerHTML PARA CAPTURAR A FORMATAÇÃO (NEGRITO/ITALICO)
+            App.configTemp.textoContrato = document.getElementById('txt-edicao-contrato').innerHTML;
             App.atualizarPreviewConfigurador();
             App.fecharModal();
         };

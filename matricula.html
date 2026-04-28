@@ -326,8 +326,8 @@
                     
                     // 4. Atualiza o Texto do Contrato
                     if (config.textoContrato) {
-                        const divContrato = document.getElementById('texto-contrato');
-                        if (divContrato) divContrato.innerText = config.textoContrato;
+                    const divContrato = document.getElementById('texto-contrato');
+                    if (divContrato) divContrato.innerHTML = config.textoContrato; // <-- AGORA COM innerHTML
                     }
                 }
             }
