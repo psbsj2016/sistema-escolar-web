@@ -22,30 +22,32 @@
         button { width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
         button:hover { background: #219653; }
         .termo { font-size: 12px; color: #666; margin-top: 20px; display: flex; gap: 10px; }
-        /* Adicione este bloco no seu CSS */
         .contrato-box { 
             background: #f9f9f9; 
             border: 1px solid #ccc; 
             border-radius: 6px; 
             padding: 15px; 
-            height: 200px; /* Altura da caixinha */
-            overflow-y: scroll; /* Cria a barra de rolagem */
+            height: 200px; 
+            overflow-y: auto; 
             font-size: 12px; 
             color: #555; 
             margin-top: 20px; 
             margin-bottom: 10px;
             line-height: 1.5;
+            white-space: pre-wrap; /* Permite que as quebras de linha do painel funcionem aqui */
         }
         .contrato-box strong { color: #2c3e50; }   
- </style>
+    </style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
 <div class="container">
+    <div id="header-imagem" style="width: 100%; height: 150px; background: #eee; border-radius: 12px 12px 0 0; margin-bottom: 20px; display: none;"></div>
+        
     <div class="header">
-        <h2>Ficha de Matrícula</h2>
-        <p>Preencha os dados abaixo para garantir a sua vaga na PTT Cursos</p>
+        <h2 id="titulo-matricula">Matrícula Online</h2>
+        <p id="desc-matricula">Preencha os dados abaixo com atenção para garantir a sua vaga.</p>
     </div>
 
     <form id="formMatricula">
@@ -58,7 +60,7 @@
         <div class="grid-2">
             <div class="input-group">
                 <label>WhatsApp *</label>
-<input type="text" id="whatsapp" placeholder="Ex: (11) 99999-9999 ou +351..." oninput="mascaraCelular(this)" maxlength="20" required>
+                <input type="text" id="whatsapp" placeholder="Ex: (11) 99999-9999 ou +351..." oninput="mascaraCelular(this)" maxlength="20" required>
             </div>
             <div class="input-group">
                 <label>E-mail</label>
@@ -104,8 +106,10 @@
                     </select>
                 </div>
                 <div class="input-group"><label>CPF do Responsável *</label><input type="text" id="resp_cpf" oninput="mascaraCPF(this)" maxlength="14"></div>
-                <label>WhatsApp do Responsável *</label>
-<input type="text" id="resp_zap" placeholder="Ex: (11) 99999-9999 ou +351..." oninput="mascaraCelular(this)" maxlength="20">
+                <div class="input-group">
+                    <label>WhatsApp do Responsável *</label>
+                    <input type="text" id="resp_zap" placeholder="Ex: (11) 99999-9999" oninput="mascaraCelular(this)" maxlength="20">
+                </div>
             </div>
         </div>
 
@@ -141,7 +145,7 @@
         <h3>4. Contrato de Prestação de Serviços</h3>
         <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
         
-        <div class="contrato-box">
+        <div id="texto-contrato" class="contrato-box">
             <strong>CLÁUSULA PRIMEIRA – DO OBJETO</strong><br>
             O presente contrato tem como objeto a prestação de serviços de ensino profissional de língua inglesa pela CONTRATADA, PTT CURSOS, situada no Parque Ecológico, Rua Pedro Vieira Leite, nº 491, inscrita no CNPJ sob o nº 48.939.009/0001-99, ao CONTRATANTE informado no Formulário de Matrícula.
             <br><br>
@@ -205,7 +209,7 @@
             <br><br>
 
             <strong>CLÁUSULA DÉCIMA SEGUNDA – DA TOLERÂNCIA</strong><br>
-             O certificado de conclusão será emitido no prazo de até 30 (trinta) dias, contados a partir da data de aprovação final do aluno. Para fins de certificação, o cursante deverá cumprir os seguintes requisitos:<br>
+            O certificado de conclusão será emitido no prazo de até 30 (trinta) dias, contados a partir da data de aprovação final do aluno. Para fins de certificação, o cursante deverá cumprir os seguintes requisitos:<br>
             • Ter cumprido, no mínimo, 94% (noventa e quatro por cento) da carga horária prevista;<br>
             • Obter aproveitamento mínimo, conforme critérios definidos pela CONTRATADA.<br>
             Na hipótese de o aluno não alcançar a pontuação mínima exigida, poderá aderir a um plano de recuperação personalizado, nos termos definidos pela CONTRATADA.<br>
@@ -244,27 +248,27 @@
     }
 
     // 📱 MÁSCARA DE CELULAR/WHATSAPP AUTOMÁTICA (COM SUPORTE INTERNACIONAL)
-    function mascaraCelular(i) {
-        let v = i.value;
-        if (v.startsWith('+')) {
-            // Formato Internacional: Mantém o '+' e os números
-            i.value = '+' + v.replace(/\D/g, "");
-        } else {
-            // Formato Brasil: Aplica a máscara padrão (XX) XXXXX-XXXX
-            v = v.replace(/\D/g, "");
-            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
-            i.value = v;
-        }
-    }
+    function mascaraCelular(i) {
+        let v = i.value;
+        if (v.startsWith('+')) {
+            // Formato Internacional: Mantém o '+' e os números
+            i.value = '+' + v.replace(/\D/g, "");
+        } else {
+            // Formato Brasil: Aplica a máscara padrão (XX) XXXXX-XXXX
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+            i.value = v;
+        }
+    }
 
     // 🔍 1. CAPTURAR O ID DA ESCOLA PELA URL
     const urlParams = new URLSearchParams(window.location.search);
     const escolaIdDaURL = urlParams.get('escola');
-    const referenciaLink = urlParams.get('ref'); // <-- NOVA LINHA: Captura o ID único do link
+    const referenciaLink = urlParams.get('ref'); // Captura o ID único do link
 
-    // 🛡️ 2. TRAVAR A PÁGINA SE NÃO TIVER ID
-    document.addEventListener('DOMContentLoaded', () => {
+    // 🛡️ 2. TRAVAR A PÁGINA E BUSCAR DADOS DA ESCOLA (O CÓDIGO NOVO FICA AQUI!)
+    document.addEventListener('DOMContentLoaded', async () => {
         if (!escolaIdDaURL) {
             Swal.fire({
                 title: 'Link Inválido',
@@ -276,6 +280,59 @@
                 backdrop: `rgba(0,0,0,0.8)`
             });
             document.getElementById('formMatricula').style.display = 'none'; // Esconde o formulário
+            return; // Impede que o código continue a executar
+        }
+
+        // ==========================================
+        // 🔮 MAGIA: BUSCAR E APLICAR AS CONFIGURAÇÕES
+        // ==========================================
+        try {
+            // Chamada à API para obter as definições públicas da escola
+            const resposta = await fetch(`https://sistema-escolar-api-k3o8.onrender.com/public/escola/${escolaIdDaURL}`);
+            
+            if (resposta.ok) {
+                const dadosEscola = await resposta.json();
+
+                // Se a API devolver os dados e existirem configurações salvas
+                if (dadosEscola && dadosEscola.configMatricula) {
+                    const config = dadosEscola.configMatricula;
+                    
+                    // 1. Atualiza a Imagem e os Textos do Cabeçalho
+                    if (config.imagemHeader && !config.imagemHeader.includes('placehold')) {
+                        const divImg = document.getElementById('header-imagem');
+                        divImg.style.background = `url('${config.imagemHeader}') center/cover no-repeat`;
+                        divImg.style.display = 'block';
+                    }
+                    if (config.tituloHeader) document.getElementById('titulo-matricula').innerText = config.tituloHeader;
+                    if (config.descHeader) document.getElementById('desc-matricula').innerText = config.descHeader;
+                    
+                    // 2. Atualiza as Opções do Plano de Curso
+                    if (config.opcoesPlano) {
+                        const selectPlano = document.getElementById('plano_curso');
+                        if (selectPlano) {
+                            selectPlano.innerHTML = '<option value="">-- Selecione --</option>' + 
+                                config.opcoesPlano.split(',').map(p => `<option value="${p.trim()}">${p.trim()}</option>`).join('');
+                        }
+                    }
+
+                    // 3. Atualiza as Opções de Vencimento
+                    if (config.opcoesVencimento) {
+                        const selectVencimento = document.getElementById('dia_vencimento');
+                        if (selectVencimento) {
+                            selectVencimento.innerHTML = '<option value="">-- Selecione --</option>' + 
+                                config.opcoesVencimento.split(',').map(d => `<option value="${d.trim()}">Dia ${d.trim()}</option>`).join('');
+                        }
+                    }
+                    
+                    // 4. Atualiza o Texto do Contrato
+                    if (config.textoContrato) {
+                        const divContrato = document.getElementById('texto-contrato');
+                        if (divContrato) divContrato.innerText = config.textoContrato;
+                    }
+                }
+            }
+        } catch(e) {
+            console.log("Aviso: Não foi possível carregar o layout personalizado. Mantendo o design padrão.", e);
         }
     });
 
@@ -330,10 +387,8 @@
             bairro: document.getElementById('bairro').value,
             cidade: document.getElementById('cidade').value,
             
-            // === NOVOS CAMPOS AQUI ===
             planoCurso: document.getElementById('plano_curso').value,
             diaVencimento: document.getElementById('dia_vencimento').value,
-            // =========================
 
             estado: 'BA', 
             pais: 'Brasil',

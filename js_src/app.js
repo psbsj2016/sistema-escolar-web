@@ -2587,10 +2587,10 @@ abrirVisualizacaoContrato: (id) => {
             'turma': 'Turma',
             'planoCurso': 'Plano de Curso Escolhido',
             'diaVencimento': 'Dia de Vencimento',
-            'Resp_nome': 'Nome do Responsável',
-            'Resp_parentesco': 'Grau de Parentesco',
-            'Resp_cpf': 'CPF do Responsável',
-            'Resp_zap': 'WhatsApp do Responsável'
+            'resp_nome': 'Nome do Responsável',
+            'resp_parentesco': 'Grau de Parentesco',
+            'resp_cpf': 'CPF do Responsável',
+            'resp_zap': 'WhatsApp do Responsável'
         };
 
         for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
@@ -2898,28 +2898,32 @@ abrirVisualizacaoContrato: (id) => {
 };
 
 // =========================================================
-// HUB DE LINKS E CONTRATOS (NOVO)
+// HUB DE LINKS E CONTRATOS (ATUALIZADO COM CONFIGURADOR)
 // =========================================================
 
 App.renderizarHubContratos = () => {
-    // ⬇️ AQUI ESTÁ A CORREÇÃO (App.setTitulo) ⬇️
     App.setTitulo("Links e Contratos");
-    
     const container = document.getElementById('app-content');
     
     container.innerHTML = `
         <div style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
                 <div onclick="App.mostrarAreaLinks()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #3498db; transition: transform 0.2s;">
                     <div style="font-size: 40px; margin-bottom: 10px;">🔗</div>
                     <h3 style="color: #2c3e50; margin-bottom: 5px;">Links de Matrícula</h3>
-                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Gerar e gerir links únicos</p>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Gerar e gerir links</p>
                 </div>
 
                 <div onclick="App.renderizarContratos()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #2c3e50; transition: transform 0.2s;">
                     <div style="font-size: 40px; margin-bottom: 10px;">📄</div>
                     <h3 style="color: #2c3e50; margin-bottom: 5px;">Contratos Digitais</h3>
-                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Visualizar todos os contratos</p>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Visualizar e Imprimir</p>
+                </div>
+
+                <div onclick="App.renderizarConfiguradorMatricula()" style="cursor:pointer; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-bottom: 5px solid #f39c12; transition: transform 0.2s;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
+                    <h3 style="color: #2c3e50; margin-bottom: 5px;">Configurar Contrato</h3>
+                    <p style="color: #7f8c8d; font-size: 14px; margin: 0;">Personalizar layout e textos</p>
                 </div>
             </div>
             
@@ -2932,231 +2936,146 @@ App.renderizarHubContratos = () => {
     `;
 };
 
-App.mostrarAreaLinks = () => {
+// =========================================================
+// O NOVO EDITOR TIPO WORD (CONFIGURADOR DE MATRÍCULA)
+// =========================================================
+
+App.renderizarConfiguradorMatricula = async () => {
     const area = document.getElementById('area-dinamica-hub');
-    const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
-
-    area.innerHTML = `
-        <style>
-            /* 🎨 ESTILOS E ANIMAÇÕES DOS BOTÕES */
-            .btn-hub {
-                border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;
-                font-weight: bold; font-size: 12px; transition: all 0.2s ease;
-                display: flex; align-items: center; gap: 5px;
-            }
-            /* Efeito ao Clicar (Dá um pulinho para baixo) */
-            .btn-hub:active { transform: scale(0.92); } 
-
-            /* Cores individuais com efeito Hover */
-            .btn-hub-copiar { background: #f1f2f6; color: #2c3e50; }
-            .btn-hub-copiar:hover { background: #dfe4ea; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-            .btn-hub-ver { background: #e8f8f5; color: #16a085; }
-            .btn-hub-ver:hover { background: #d1f2eb; box-shadow: 0 2px 5px rgba(22,160,133,0.2); }
-
-            .btn-hub-apagar { background: #fdedec; color: #e74c3c; }
-            .btn-hub-apagar:hover { background: #fadbd8; box-shadow: 0 2px 5px rgba(231,76,60,0.2); }
-        </style>
-
-        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin:0; color: #2c3e50;">Histórico de Links</h3>
-                <button onclick="App.gerarNovoLinkUnico()" class="btn-primary" style="background: #27ae60; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-                    ➕ Gerar Novo Link
-                </button>
-            </div>
-            
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #f8f9fa; text-align: left;">
-                            <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Data e Hora</th>
-                            <th style="padding: 12px; border-bottom: 2px solid #eee; color: #555;">Link Único</th>
-                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center; color: #555;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${historico.length === 0 ? '<tr><td colspan="3" style="padding:20px; text-align:center; color:#999;">Nenhum link gerado até ao momento.</td></tr>' : ''}
-                        ${historico.map(item => `
-                            <tr>
-                                <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #666;">${item.data}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #eee; font-family: monospace; color: #3498db; font-size: 13px;">${item.link}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                    <div style="display:flex; gap:8px; justify-content:center;">
-                                        <button class="btn-hub btn-hub-copiar" onclick="App.copiarTextoHub('${item.link}')" title="Copiar Link">📋 Copiar</button>
-                                        <button class="btn-hub btn-hub-ver" onclick="App.verContratoPeloLink('${item.ref}')" title="Ver Contrato Digital">📄 Ver Contrato</button>
-                                        <button class="btn-hub btn-hub-apagar" onclick="App.apagarLinkUnico('${item.ref}')" title="Apagar do Histórico">🗑️ Apagar</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).reverse().join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-};
-
-App.copiarTextoHub = (texto) => {
-    navigator.clipboard.writeText(texto).then(() => {
-        App.showToast("📋 Link copiado com sucesso!", "success");
-    }).catch(() => {
-        App.showToast("Erro ao copiar. Tente selecionar o texto.", "error");
-    });
-};
-
-// ==========================================
-// FUNÇÃO DE APAGAR COM O MODAL BONITO
-// ==========================================
-App.apagarLinkUnico = (ref) => {
-    App.abrirModalConfirmacao(
-        "Apagar Link?", 
-        "Tem a certeza que deseja remover este link do histórico? Os alunos que já tiverem o link ainda poderão usá-lo, mas ele não aparecerá mais aqui.", 
-        (modal) => {
-            // 1. Puxa o histórico atual
-            let historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
-            
-            // 2. Filtra removendo o link que tem a referência clicada
-            historico = historico.filter(item => item.ref !== ref);
-            
-            // 3. Guarda de novo na memória
-            localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
-            
-            // 4. Fecha o modal de forma suave
-            modal.style.opacity = '0'; 
-            setTimeout(() => {
-                modal.style.display = 'none';
-                App.showToast("Link apagado com sucesso!", "success");
-                App.mostrarAreaLinks(); // Atualiza a tabela na tela
-            }, 300);
-        }
-    );
-};
-
-App.gerarNovoLinkUnico = () => {
-    // 1. Pega o token de segurança para extrair o ID da escola de forma 100% segura
-    const token = localStorage.getItem('token_acesso');
-    if (!token) return App.showToast("Erro: Sessão inválida.", "error");
+    area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do contrato... ⏳</p>';
 
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const meuEscolaId = payload.escolaId;
+        const escola = await App.api('/escola') || {};
+        
+        // Dados Padrão (caso a escola ainda não tenha configurado)
+        if (!escola.configMatricula) {
+            escola.configMatricula = {
+                imagemHeader: 'https://placehold.co/800x200?text=Sua+Imagem+de+Cabecalho',
+                tituloHeader: 'Matrícula Online - PTT Cursos',
+                descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
+                opcoesPlano: 'Padrão, Intensivo, Personalizado',
+                opcoesVencimento: '08, 20',
+                textoContrato: `TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS\n\nCLÁUSULA PRIMEIRA – DO OBJETO\nO presente contrato tem como objeto a prestação de serviços educacionais... (Edite este texto clicando no botão ao lado).`
+            };
+        }
 
-        // 2. Monta o caminho base respeitando a URL onde o sistema está hospedado
-        const linkBase = window.location.origin; 
-        const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
+        // Colocamos numa variável temporária para a pré-visualização em tempo real
+        App.configTemp = { ...escola.configMatricula };
+
+        App.atualizarPreviewConfigurador = () => {
+            const preview = document.getElementById('preview-word-doc');
+            if(preview) {
+                preview.innerHTML = `
+                    <div style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') center/cover no-repeat; border-radius:8px 8px 0 0;"></div>
+                    <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
+                        <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(App.configTemp.tituloHeader)}</h2>
+                        <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(App.configTemp.descHeader)}</p>
+                    </div>
+                    <div style="padding: 25px;">
+                        <h4 style="color:#2980b9; margin-top:0;">📋 Dados Editáveis (Preview)</h4>
+                        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                            <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
+                                <option>Plano de Curso: ${App.configTemp.opcoesPlano}</option>
+                            </select>
+                            <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
+                                <option>Vencimento: ${App.configTemp.opcoesVencimento}</option>
+                            </select>
+                        </div>
+                        <h4 style="color:#2980b9;">📑 Texto do Contrato</h4>
+                        <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; white-space: pre-wrap; height:200px; overflow-y:auto; text-align:justify;">${App.escapeHTML(App.configTemp.textoContrato)}</div>
+                    </div>
+                `;
+            }
+        };
+
+        area.innerHTML = `
+            <div style="display:flex; gap:20px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 250px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); align-self: flex-start;">
+                    <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
+                    
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
+                    
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
+                    
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
+                    
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
+                    
+                    <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
+                    
+                    <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 SALVAR TUDO</button>
+                </div>
+
+                <div style="flex: 2; min-width: 350px;">
+                    <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center;">
+                        <div id="preview-word-doc" style="background:white; width:100%; max-width:800px; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        App.atualizarPreviewConfigurador();
+
+    } catch (e) {
+        area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o configurador.</p>';
+    }
+};
+
+App.editarConfig = (tipo) => {
+    if (tipo === 'imagem') {
+        const url = prompt("Cole o link (URL) da nova imagem de cabeçalho:", App.configTemp.imagemHeader);
+        if (url !== null) { App.configTemp.imagemHeader = url; App.atualizarPreviewConfigurador(); }
+    } 
+    else if (tipo === 'titulo') {
+        const txt = prompt("Digite o novo Título Principal:", App.configTemp.tituloHeader);
+        if (txt !== null) { App.configTemp.tituloHeader = txt; App.atualizarPreviewConfigurador(); }
+    }
+    else if (tipo === 'descricao') {
+        const txt = prompt("Digite a nova Descrição:", App.configTemp.descHeader);
+        if (txt !== null) { App.configTemp.descHeader = txt; App.atualizarPreviewConfigurador(); }
+    }
+    else if (tipo === 'opcoes') {
+        const planos = prompt("Digite as opções de PLANO DE CURSO separadas por vírgula:", App.configTemp.opcoesPlano);
+        if (planos !== null) App.configTemp.opcoesPlano = planos;
         
-        // 3. Gera a referência única para este link específico
-        const idUnico = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+        const dias = prompt("Digite as opções de DIA DE VENCIMENTO separadas por vírgula:", App.configTemp.opcoesVencimento);
+        if (dias !== null) App.configTemp.opcoesVencimento = dias;
         
-        // 4. Monta o link final EXATAMENTE como o seu server.js e matricula.html exigem
-        const linkFinal = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}&ref=${idUnico}`;
+        App.atualizarPreviewConfigurador();
+    }
+    else if (tipo === 'contrato') {
+        // Criamos um modal grande para editar o contrato
+        const modal = document.getElementById('modal-overlay'); 
+        if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
+        document.getElementById('modal-form-content').innerHTML = `
+            <p style="font-size:12px; color:#666; margin-top:0;">Edite as cláusulas abaixo. Use parágrafos normais.</p>
+            <textarea id="txt-edicao-contrato" style="width:100%; height:400px; padding:15px; border-radius:8px; border:1px solid #ccc; font-family:sans-serif; line-height:1.5;">${App.configTemp.textoContrato}</textarea>
+        `;
         
-        // 5. Salva no histórico
-        const historico = JSON.parse(localStorage.getItem('historico_links_ptt') || '[]');
-        historico.push({
-            data: new Date().toLocaleString('pt-BR'),
-            link: linkFinal,
-            ref: idUnico
-        });
-        localStorage.setItem('historico_links_ptt', JSON.stringify(historico));
-        
-        App.showToast("Novo link gerado com sucesso!", "success");
-        App.mostrarAreaLinks(); // Atualiza a tabela
-        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        btnConfirm.style.display = 'inline-flex';
+        btnConfirm.innerHTML = "Aplicar ao Preview";
+        btnConfirm.onclick = () => {
+            App.configTemp.textoContrato = document.getElementById('txt-edicao-contrato').value;
+            App.atualizarPreviewConfigurador();
+            App.fecharModal();
+        };
+    }
+};
+
+App.salvarConfiguradorMatricula = async () => {
+    document.body.style.cursor = 'wait';
+    try {
+        const escola = await App.api('/escola') || {};
+        escola.configMatricula = App.configTemp;
+        await App.api('/escola', 'PUT', escola);
+        App.showToast("Configurações da matrícula salvas com sucesso!", "success");
     } catch(e) {
-        App.showToast("Erro ao gerar o link único.", "error");
-    }
-};
-
-// ==========================================
-// FUNÇÕES DO RASTREADOR DE CONTRATOS
-// ==========================================
-App.verContratoPeloLink = async (ref) => {
-    try {
-        App.showToast("A verificar status do contrato...", "info");
-        
-        // Vai ao banco de dados buscar todos os contratos da escola
-        const token = localStorage.getItem('token_acesso');
-        const resposta = await fetch(`${API_URL}/contratos`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (!resposta.ok) throw new Error("Erro ao buscar contratos");
-        const contratos = await resposta.json();
-        
-        // Procura se algum contrato salvo tem a mesma referência do link gerado
-        const contratoEncontrado = contratos.find(c => c.dadosCompletos && c.dadosCompletos.refLink === ref);
-        
-        if (contratoEncontrado) {
-            // Contrato assinado encontrado! Exibe na tela.
-            App.mostrarContratoNaTela(contratoEncontrado);
-        } else {
-            // Ainda não preenchido
-            App.showToast("⏳ Aguardando... O aluno ainda não assinou/preencheu este contrato.", "warning");
-        }
-    } catch (erro) {
-        console.error("Erro na verificação:", erro);
-        App.showToast("Erro ao verificar o status do contrato.", "error");
-    }
-};
-
-App.mostrarContratoNaTela = (contrato) => {
-    const dados = contrato.dadosCompletos || {};
-    
-    // Constrói o visual do documento
-    const html = `
-        <div style="padding: 20px; font-family: sans-serif; width: 100%; max-width: 600px; margin: auto; background: white; border-radius: 12px; box-sizing: border-box; text-align: left;">
-            <div style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 15px;">
-                <h2 style="color: #2c3e50; margin: 0;">Contrato Digital de Matrícula</h2>
-                <p style="color: #7f8c8d; margin: 5px 0 0 0; font-size: 12px;">ID do Doc: ${contrato.id}</p>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Dados da Matrícula</h4>
-                <p style="margin: 5px 0;"><strong>Nome:</strong> ${contrato.nomeAluno || 'Não informado'}</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${dados.email || 'Não informado'}</p>
-                <p style="margin: 5px 0;"><strong>Telefone:</strong> ${dados.telefone || dados.whatsapp || 'Não informado'}</p>
-                <p style="margin: 5px 0;"><strong>Plano de Curso:</strong> <span style="background:#eafaf1; color:#27ae60; padding:2px 6px; border-radius:4px; font-weight:bold;">${dados.planoCurso || 'Não informado'}</span></p>
-                <p style="margin: 5px 0;"><strong>Dia de Vencimento:</strong> Dia ${dados.diaVencimento || 'Não informado'}</p>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <h4 style="color: #2980b9; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Status Jurídico</h4>
-                <p style="margin: 5px 0;"><strong>Data da Assinatura:</strong> ${new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR')}</p>
-                <p style="margin: 8px 0; color: #27ae60; font-weight: bold; background: #eaaf; padding: 8px; border-radius: 5px; display: inline-block;">✅ Recebido e Assinado Digitalmente</p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 25px;">
-                <button id="btn-fechar-contrato" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: transform 0.2s;">Fechar Documento</button>
-            </div>
-        </div>
-    `;
-    
-    // Verifica se o sistema usa SweetAlert2 (comum na sua stack)
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            html: html,
-            showConfirmButton: false,
-            width: '600px',
-            background: 'transparent',
-            didOpen: () => {
-                const btn = document.getElementById('btn-fechar-contrato');
-                btn.onclick = () => Swal.close();
-                btn.onmousedown = () => btn.style.transform = 'scale(0.95)';
-                btn.onmouseup = () => btn.style.transform = 'scale(1)';
-            }
-        });
-    } else {
-        // Fallback: Cria um modal nativo escuro por cima da tela
-        const div = document.createElement('div');
-        div.id = 'modal-contrato-temp';
-        div.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(3px);';
-        div.innerHTML = html;
-        document.body.appendChild(div);
-        
-        document.getElementById('btn-fechar-contrato').onclick = () => div.remove();
-        div.onclick = (e) => { if(e.target === div) div.remove(); };
+        App.showToast("Erro ao guardar as configurações.", "error");
+    } finally {
+        document.body.style.cursor = 'default';
     }
 };
 
