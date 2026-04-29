@@ -323,15 +323,17 @@
                         }
                     }
                     
-                   // 4. Atualiza o Texto do Contrato (Renderização Limpa de HTML)
-                   if (config.textoContrato) {
-                   const divContrato = document.getElementById('texto-contrato');
-                   if (divContrato) {
-                   // Agora injetamos o HTML diretamente. Isso garante que os negritos e quebras 
-                   // de linha do seu configurador apareçam perfeitos para o aluno ler.
-                   divContrato.innerHTML = config.textoContrato; 
-                   }
-              }
+                   // 4. Motor de Renderização do Contrato "Ao Vivo"
+                    if (config.textoContrato) {
+                        window.textoContratoOriginal = config.textoContrato;
+                        atualizarContratoAoVivo(); // Renderiza a 1ª vez
+
+                        // Escuta tudo o que o aluno digita para atualizar o contrato instantaneamente
+                        document.querySelectorAll('#nome, #cpf, #rg, #resp_nome, #plano_curso').forEach(el => {
+                            el.addEventListener('input', atualizarContratoAoVivo);
+                            el.addEventListener('change', atualizarContratoAoVivo);
+                        });
+                    }
         } catch(e) {
             console.log("Aviso: Não foi possível carregar o layout personalizado. Mantendo o design padrão.", e);
         }
@@ -449,6 +451,26 @@ function verificarMaioridade() {
             btn.disabled = false;
         }
     });
+             // 🪄 FUNÇÃO MÁGICA: Atualiza as tags do contrato em tempo real enquanto o aluno digita
+    function atualizarContratoAoVivo() {
+        if(!window.textoContratoOriginal) return;
+        let texto = window.textoContratoOriginal;
+        
+        const nome = document.getElementById('nome').value || '_______________________';
+        const cpf = document.getElementById('cpf').value || '_______________________';
+        const rg = document.getElementById('rg').value || '_______________________';
+        const resp = document.getElementById('resp_nome').value || '_______________________';
+        const plano = document.getElementById('plano_curso').value || '_______________________';
+
+        texto = texto.replace(/\[NOME_ALUNO\]/g, `<strong style="color:#2c3e50; text-decoration:underline;">${nome.toUpperCase()}</strong>`);
+        texto = texto.replace(/\[CPF_ALUNO\]/g, `<strong style="color:#2c3e50;">${cpf}</strong>`);
+        texto = texto.replace(/\[RG_ALUNO\]/g, `<strong style="color:#2c3e50;">${rg}</strong>`);
+        texto = texto.replace(/\[NOME_RESPONSAVEL\]/g, `<strong style="color:#2c3e50;">${resp}</strong>`);
+        texto = texto.replace(/\[PLANO_CURSO\]/g, `<strong style="color:#2c3e50;">${plano}</strong>`);
+
+        document.getElementById('texto-contrato').innerHTML = texto;
+    }             
+
 </script>
 
 </body>
