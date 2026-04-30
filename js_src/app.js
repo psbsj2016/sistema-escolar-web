@@ -1729,7 +1729,9 @@ validarCadastroInst: async () => {
                         App.showToast(res.error, "error");
                     } else {
                         App.showToast("Excluído com sucesso!", "success");
-                        App.renderizarLista(endpoint.slice(0, -1));
+                        // Se for financeiro não corta letras, caso contrário tira o "s" final
+                        const tipoLista = endpoint === 'financeiro' ? 'financeiro' : endpoint.slice(0, -1);
+                        App.renderizarLista(tipoLista);
                     }
                 } catch(e) { 
                     App.showToast("Erro ao excluir.", "error"); 
@@ -2504,6 +2506,147 @@ excluirUsuario: (id) => {
             }
         } catch (e) { console.error("Erro nas notificações", e); }
     },
+
+
+// ==========================================
+// MÓDULO: LINKS DE MATRÍCULA E CUSTOMIZAÇÃO
+// ==========================================
+
+// 1. Função para Gerar Link e guardar no Histórico
+gerarLinkMatricula: function() {
+    const escolaId = App.usuario.id; 
+    const urlBase = window.location.origin + "/matricula.html";
+    const linkGerado = `${urlBase}?escola=${escolaId}`;
+    
+    // Exibe o link no input principal para o Gestor copiar
+    const inputLink = document.getElementById('inputLinkMatricula');
+    if(inputLink) inputLink.value = linkGerado;
+    
+    // Guarda no histórico (usando o LocalStorage da escola ou a tua API)
+    let historico = JSON.parse(localStorage.getItem(App.getTenantKey('historico_links')) || "[]");
+    
+    // Evita duplicados seguidos
+    if(historico.length === 0 || historico[0].link !== linkGerado) {
+        historico.unshift({
+            data: new Date().toLocaleString('pt-PT'),
+            link: linkGerado
+        });
+        // Mantém apenas os últimos 10 links para não sobrecarregar
+        if(historico.length > 10) historico.pop(); 
+        localStorage.setItem(App.getTenantKey('historico_links'), JSON.stringify(historico));
+    }
+    
+    App.renderizarHistoricoLinks();
+    if (typeof App.showToast === 'function') App.showToast("Link gerado com sucesso!", "success");
+},
+
+// 2. Função para Renderizar o Histórico abaixo do botão
+renderizarHistoricoLinks: function() {
+    const container = document.getElementById('containerHistoricoLinks');
+    if(!container) return; // Se o container não existir na tela atual, ignora
+    
+    const historico = JSON.parse(localStorage.getItem(App.getTenantKey('historico_links')) || "[]");
+    
+    if(historico.length === 0) {
+        container.innerHTML = "<p style='color:#7f8c8d; font-size:14px;'>Nenhum link gerado recentemente.</p>";
+        return;
+    }
+    
+    let html = `<ul style="list-style:none; padding:0; margin-top:15px;">`;
+    historico.forEach(item => {
+        html += `
+        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13px;">
+                <strong style="color:#2c3e50;">${item.data}</strong><br>
+                <a href="${item.link}" target="_blank" style="color:#3498db; text-decoration:none;">${item.link}</a>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${item.link}'); App.showToast('Copiado!', 'success');" 
+                    style="background:#f4f6f7; border:1px solid #ddd; padding:5px 10px; border-radius:5px; cursor:pointer; color:#333;">
+                Copiar
+            </button>
+        </li>`;
+    });
+    html += `</ul>`;
+    container.innerHTML = html;
+},
+
+// 3. Função para Salvar a Customização da Área Externa
+salvarCustomizacaoMatricula: function() {
+    const config = {
+        titulo: document.getElementById('customTitulo').value || 'Matrícula Online',
+        corSecundaria: document.getElementById('customCor').value || '#3498db',
+        logoUrl: document.getElementById('customLogoUrl').value || 'https://cdn-icons-png.flaticon.com/512/3074/3074058.png'
+    };
+    
+    localStorage.setItem(App.getTenantKey('custom_matricula'), JSON.stringify(config));
+    App.showToast("Página de matrícula personalizada salva!", "success");
+},
+
+// ==========================================
+// MÓDULO: COFRE DE CONTRATOS DIGITAIS
+// ==========================================
+
+renderizarCofreContratos: function() {
+    const container = document.getElementById('conteudoPrincipal');
+    if(!container) return;
+
+    // Busca os contratos enviados pelos alunos
+    const contratos = JSON.parse(localStorage.getItem(App.getTenantKey('contratos_enviados')) || "[]");
+    
+    let html = `
+        <div class="header-tela">
+            <h2>🔒 Cofre de Contratos Digitais</h2>
+            <p>Documentos com validade gerados automaticamente nas matrículas online.</p>
+        </div>
+        <div class="card-tabela">
+            <table style="width:100%; text-align:left; border-collapse: collapse;">
+                <tr style="background:#f4f6f7; border-bottom:2px solid #ddd;">
+                    <th style="padding:10px;">Data/Hora</th>
+                    <th style="padding:10px;">Aluno</th>
+                    <th style="padding:10px;">Nº Documento (CPF)</th>
+                    <th style="padding:10px;">Ação</th>
+                </tr>`;
+                
+    if(contratos.length === 0) {
+        html += `<tr><td colspan="4" style="text-align:center; padding:20px;">Nenhum contrato digitalizado ainda.</td></tr>`;
+    } else {
+        contratos.forEach(c => {
+            html += `
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px;">${c.data}</td>
+                <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno)}</strong></td>
+                <td style="padding:10px;">${App.escapeHTML(c.cpfAluno)}</td>
+                <td style="padding:10px;">
+                    <button onclick="App.visualizarContratoFechado('${c.id}')" 
+                            style="background:#2c3e50; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                        Ver Contrato
+                    </button>
+                </td>
+            </tr>`;
+        });
+    }
+    
+    html += `</table></div>`;
+    container.innerHTML = html;
+},
+
+// Visualização do Contrato (Somente Leitura)
+visualizarContratoFechado: function(idContrato) {
+    const contratos = JSON.parse(localStorage.getItem(App.getTenantKey('contratos_enviados')) || "[]");
+    const contrato = contratos.find(c => c.id == idContrato);
+    
+    if(!contrato) return;
+    
+    Swal.fire({
+        title: `Contrato: ${contrato.nomeAluno}`,
+        html: `<div style="text-align:justify; max-height:400px; overflow-y:auto; padding:15px; background:#f9f9f9; border:1px solid #ddd; pointer-events:none;">
+                ${contrato.conteudoHTML}
+               </div>`,
+        width: '800px',
+        confirmButtonText: 'Fechar Cofre',
+        confirmButtonColor: '#2c3e50'
+    });
+},
 
     // =========================================================
     // 🧩 HUB CENTRAL DE CONTRATOS (CORRIGIDO E INTEGRADO)

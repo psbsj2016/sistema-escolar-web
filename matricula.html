@@ -361,16 +361,90 @@ function verificarMaioridade() {
     document.getElementById('resp_zap').required = isMenor;
 }
 
-    // Envio dos dados
     document.getElementById('formMatricula').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    e.preventDefault();
+    
+    const btn = document.getElementById('btnSubmit');
+    btn.innerText = "A Processar...";
+    btn.disabled = true;
+    
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const escolaId = urlParams.get('escola');
         
-        // Segurança extra: se de alguma forma tentarem burlar
-        if (!escolaIdDaURL) return alert("Link de escola inválido.");
+        // 1. Recolher os dados do Aluno
+        const payloadAluno = {
+            id: 'al_' + Date.now(), // ID único
+            nome: document.getElementById('nome').value,
+            cpf: document.getElementById('cpf').value,
+            rg: document.getElementById('rg').value,
+            telefone: document.getElementById('telefone').value || '',
+            curso: document.getElementById('plano_curso').value,
+            status: 'Ativo',
+            dataMatricula: new Date().toISOString().split('T')[0]
+        };
 
-        const btn = document.getElementById('btnMatricular');
-        btn.innerText = "A processar... ⏳";
-        btn.disabled = true;
+        // 2. Recolher o Contrato "Mágico" já preenchido
+        const contratoPreenchidoHTML = document.getElementById('textoContrato').innerHTML;
+
+        // ====================================================================
+        // 🚀 INTEGRAÇÃO AUTOMÁTICA (Simulando a inserção direta na BD da escola)
+        // Nota: Num ambiente real com servidor, enviarias isto via FETCH para a API.
+        // Como o teu app.js gere localmente por escola, sincronizamos assim:
+        // ====================================================================
+        
+        // A) Cai na lista de alunos do sistema
+        let listaAlunos = JSON.parse(localStorage.getItem(`alunos_${escolaId}`) || "[]");
+        listaAlunos.push(payloadAluno);
+        localStorage.setItem(`alunos_${escolaId}`, JSON.stringify(listaAlunos));
+
+        // B) Cai no Cofre de Contratos
+        let cofre = JSON.parse(localStorage.getItem(`contratos_enviados_${escolaId}`) || "[]");
+        cofre.push({
+            id: Date.now(),
+            data: new Date().toLocaleString('pt-PT'),
+            nomeAluno: payloadAluno.nome,
+            cpfAluno: payloadAluno.cpf,
+            conteudoHTML: contratoPreenchidoHTML // Imutável
+        });
+        localStorage.setItem(`contratos_enviados_${escolaId}`, JSON.stringify(cofre));
+
+        // 3. Feedback Profissional para o Aluno (Sem recarregar imediatamente)
+        Swal.fire({
+            title: 'Matrícula Confirmada!',
+            html: `Parabéns, <b>${payloadAluno.nome.split(' ')[0]}</b>! A tua matrícula foi realizada com sucesso! 🎉<br><br>
+                   <div style="background:#f4f6f7; padding:10px; border-radius:8px; border:1px dashed #3498db; margin-top:10px;">
+                       <b>Número de Protocolo:</b> #${Date.now()}<br>
+                       <small>O teu contrato digital já foi guardado com segurança.</small>
+                   </div>`,
+            icon: 'success',
+            confirmButtonText: 'Concluir',
+            confirmButtonColor: '#27ae60',
+            showCancelButton: true,
+            cancelButtonText: 'Imprimir Recibo',
+            cancelButtonColor: '#34495e',
+            allowOutsideClick: false
+        }).then((result) => {
+            if (result.dismiss === Swal.DismissReason.cancel) {
+                window.print(); // Permite ao aluno imprimir o recibo/tela
+            }
+            document.getElementById('formMatricula').reset();
+            window.location.reload(); // Só recarrega depois de ele ler e fechar
+        });
+
+    } catch(erro) {
+        console.error(erro);
+        Swal.fire({
+            title: 'Erro no Sistema',
+            text: 'Não foi possível concluir a matrícula. Tente novamente.',
+            icon: 'error',
+            confirmButtonColor: '#e74c3c'
+        });
+    } finally {
+        btn.innerText = "Concluir Matrícula";
+        btn.disabled = false;
+    }
+});
 
        // Montamos o "Dossiê do Aluno"
         const payload = {
