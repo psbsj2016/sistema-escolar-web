@@ -375,7 +375,8 @@ function verificarMaioridade() {
        // Montamos o "Dossiê do Aluno"
         const payload = {
             escolaId: escolaIdDaURL, 
-            refLink: referenciaLink, 
+            // 🪄 NOVA LINHA: Captura a tag da URL (Ex: Promoção Maio) e envia pro servidor
+            refLink: new URLSearchParams(window.location.search).get('ref') || 'Direto', 
             nome: document.getElementById('nome').value,
             whatsapp: document.getElementById('whatsapp').value,
             email: document.getElementById('email').value,
