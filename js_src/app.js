@@ -32,6 +32,11 @@ var App = {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     },
+    
+    unescapeHTML: (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+    },
 
     criarElemento: (tag, classes = [], atributos = {}, texto = '') => {
         const elemento = document.createElement(tag);
@@ -3039,6 +3044,11 @@ abrirVisualizacaoContrato: async function(idContrato) {
             }
 
             App.configTemp = { ...escola.configMatricula };
+
+            // 🔥 CORREÇÃO: Converte as tags protegidas da base de dados de volta para formatação visual
+            if (App.configTemp.textoContrato) {
+                App.configTemp.textoContrato = App.unescapeHTML(App.configTemp.textoContrato);
+            }
 
             area.innerHTML = `
                 <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
