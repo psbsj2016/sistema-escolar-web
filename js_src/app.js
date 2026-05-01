@@ -2570,82 +2570,114 @@ renderizarHistoricoLinks: function() {
     container.innerHTML = html;
 },
 
-// 3. Função para Salvar a Customização da Área Externa
-salvarCustomizacaoMatricula: function() {
+    // ==========================================
+// MÓDULO: SALVAR CUSTOMIZAÇÃO NA API
+// ==========================================
+salvarCustomizacaoMatricula: async function() {
+    // Monta o objeto que vai para dentro da tua coleção "escola"
     const config = {
-        titulo: document.getElementById('customTitulo').value || 'Matrícula Online',
-        corSecundaria: document.getElementById('customCor').value || '#3498db',
-        logoUrl: document.getElementById('customLogoUrl').value || 'https://cdn-icons-png.flaticon.com/512/3074/3074058.png'
+        configMatricula: {
+            titulo: document.getElementById('customTitulo').value || 'Matrícula Online',
+            corSecundaria: document.getElementById('customCor').value || '#3498db',
+            logoUrl: document.getElementById('customLogoUrl').value || '',
+            textoContrato: document.getElementById('editorContratoHtml').value // O ID da tua textarea do contrato
+        }
     };
     
-    localStorage.setItem(App.getTenantKey('custom_matricula'), JSON.stringify(config));
-    App.showToast("Página de matrícula personalizada salva!", "success");
+    try {
+        Swal.fire({ title: 'A Sincronizar com a Nuvem...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        // Usa a tua rota existente "PUT /escola"
+        const res = await fetch(`${CONFIG.API_URL}/escola`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` 
+            },
+            body: JSON.stringify(config)
+        });
+        
+        if(res.ok) Swal.fire('Perfeito!', 'Configurações e Contrato atualizados online.', 'success');
+        else throw new Error("Falha no servidor.");
+    } catch(e) {
+        Swal.fire('Erro', 'Não foi possível sincronizar com o servidor.', 'error');
+    }
 },
 
 // ==========================================
 // MÓDULO: COFRE DE CONTRATOS DIGITAIS
 // ==========================================
-
-renderizarCofreContratos: function() {
+renderizarCofreContratos: async function() {
     const container = document.getElementById('conteudoPrincipal');
     if(!container) return;
+    container.innerHTML = `<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>A ligar ao cofre blindado...</div>`;
 
-    // Busca os contratos enviados pelos alunos
-    const contratos = JSON.parse(localStorage.getItem(App.getTenantKey('contratos_enviados')) || "[]");
-    
-    let html = `
-        <div class="header-tela">
-            <h2>🔒 Cofre de Contratos Digitais</h2>
-            <p>Documentos com validade gerados automaticamente nas matrículas online.</p>
-        </div>
-        <div class="card-tabela">
-            <table style="width:100%; text-align:left; border-collapse: collapse;">
-                <tr style="background:#f4f6f7; border-bottom:2px solid #ddd;">
-                    <th style="padding:10px;">Data/Hora</th>
-                    <th style="padding:10px;">Aluno</th>
-                    <th style="padding:10px;">Nº Documento (CPF)</th>
-                    <th style="padding:10px;">Ação</th>
-                </tr>`;
-                
-    if(contratos.length === 0) {
-        html += `<tr><td colspan="4" style="text-align:center; padding:20px;">Nenhum contrato digitalizado ainda.</td></tr>`;
-    } else {
-        contratos.forEach(c => {
-            html += `
-            <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px;">${c.data}</td>
-                <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno)}</strong></td>
-                <td style="padding:10px;">${App.escapeHTML(c.cpfAluno)}</td>
-                <td style="padding:10px;">
-                    <button onclick="App.visualizarContratoFechado('${c.id}')" 
-                            style="background:#2c3e50; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                        Ver Contrato
-                    </button>
-                </td>
-            </tr>`;
+    try {
+        // Usa o teu CRUD dinâmico para puxar os contratos
+        const res = await fetch(`${CONFIG.API_URL}/contratos`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
+        if(!res.ok) throw new Error("Erro no servidor");
+        const contratos = await res.json();
+        
+        let html = `
+            <div class="header-tela">
+                <h2>🔒 Cofre de Contratos Digitais</h2>
+                <p>Aqui estão todos os contratos recebidos em tempo real das matrículas online.</p>
+            </div>
+            <div class="card-tabela">
+                <table style="width:100%; text-align:left; border-collapse: collapse;">
+                    <tr style="background:#f4f6f7; border-bottom:2px solid #ddd;">
+                        <th style="padding:10px;">Data/Hora</th>
+                        <th style="padding:10px;">Aluno</th>
+                        <th style="padding:10px;">Ação</th>
+                    </tr>`;
+                    
+        if(contratos.length === 0) {
+            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum contrato recebido até agora.</td></tr>`;
+        } else {
+            // Ordena do mais recente para o mais antigo
+            contratos.reverse().forEach(c => {
+                html += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:10px;">${new Date(c.dataHoraRegistro).toLocaleString('pt-BR')}</td>
+                    <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno)}</strong></td>
+                    <td style="padding:10px;">
+                        <button onclick="App.visualizarContratoFechadoAPI('${c.id}')" 
+                                style="background:#2c3e50; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                            Ver Contrato
+                        </button>
+                    </td>
+                </tr>`;
+            });
+        }
+        html += `</table></div>`;
+        container.innerHTML = html;
+    } catch(error) {
+        container.innerHTML = `<div style="padding: 20px; color: red;"><b>Erro:</b> ${error.message}</div>`;
     }
-    
-    html += `</table></div>`;
-    container.innerHTML = html;
 },
 
-// Visualização do Contrato (Somente Leitura)
-visualizarContratoFechado: function(idContrato) {
-    const contratos = JSON.parse(localStorage.getItem(App.getTenantKey('contratos_enviados')) || "[]");
-    const contrato = contratos.find(c => c.id == idContrato);
-    
-    if(!contrato) return;
-    
-    Swal.fire({
-        title: `Contrato: ${contrato.nomeAluno}`,
-        html: `<div style="text-align:justify; max-height:400px; overflow-y:auto; padding:15px; background:#f9f9f9; border:1px solid #ddd; pointer-events:none;">
-                ${contrato.conteudoHTML}
-               </div>`,
-        width: '800px',
-        confirmButtonText: 'Fechar Cofre',
-        confirmButtonColor: '#2c3e50'
-    });
+visualizarContratoFechadoAPI: async function(idContrato) {
+    Swal.fire({ title: 'A abrir...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+        const res = await fetch(`${CONFIG.API_URL}/contratos/${idContrato}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
+        });
+        const contrato = await res.json();
+        
+        Swal.fire({
+            title: `Contrato Oficial: ${contrato.nomeAluno}`,
+            html: `<div style="text-align:justify; max-height:450px; overflow-y:auto; padding:15px; background:#f9f9f9; border:1px solid #ddd; pointer-events:none; color:black;">
+                    ${contrato.conteudoHTML || '<p>Erro: Documento sem corpo de texto HTML.</p>'}
+                   </div>`,
+            width: '800px',
+            confirmButtonText: 'Fechar Cofre',
+            confirmButtonColor: '#2c3e50'
+        });
+    } catch(e) {
+        Swal.fire('Erro', 'Não foi possível carregar as informações do contrato.', 'error');
+    }
 },
 
     // =========================================================
