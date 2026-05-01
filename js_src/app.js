@@ -2613,7 +2613,7 @@ renderizarCofreContratos: async function() {
     container.innerHTML = `<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>A ligar ao cofre blindado...</div>`;
 
     try {
-        // Usa o teu CRUD dinâmico para puxar os contratos
+        // Puxa os contratos em tempo real da API
         const res = await fetch(`${CONFIG.API_URL}/contratos`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
@@ -2641,9 +2641,9 @@ renderizarCofreContratos: async function() {
                 html += `
                 <tr style="border-bottom:1px solid #eee;">
                     <td style="padding:10px;">${new Date(c.dataHoraRegistro).toLocaleString('pt-BR')}</td>
-                    <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno)}</strong></td>
+                    <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno || 'Sem Nome')}</strong></td>
                     <td style="padding:10px;">
-                        <button onclick="App.visualizarContratoFechadoAPI('${c.id}')" 
+                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" 
                                 style="background:#2c3e50; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
                             Ver Contrato
                         </button>
@@ -2658,25 +2658,31 @@ renderizarCofreContratos: async function() {
     }
 },
 
-visualizarContratoFechadoAPI: async function(idContrato) {
-    Swal.fire({ title: 'A abrir...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+// Função ajustada com o nome que o teu sistema espera!
+abrirVisualizacaoContrato: async function(idContrato) {
+    Swal.fire({ title: 'A abrir documento...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
+        // Vai buscar o contrato específico à API
         const res = await fetch(`${CONFIG.API_URL}/contratos/${idContrato}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
         const contrato = await res.json();
         
+        // Tratamento seguro caso a API retorne algo inesperado
+        const nomeDoAluno = contrato.nomeAluno || 'Nome não informado';
+        const conteudo = contrato.conteudoHTML || '<p style="color:red;">Aviso: O texto deste contrato não foi capturado no formato esperado.</p>';
+
         Swal.fire({
-            title: `Contrato Oficial: ${contrato.nomeAluno}`,
+            title: `Contrato: ${nomeDoAluno}`,
             html: `<div style="text-align:justify; max-height:450px; overflow-y:auto; padding:15px; background:#f9f9f9; border:1px solid #ddd; pointer-events:none; color:black;">
-                    ${contrato.conteudoHTML || '<p>Erro: Documento sem corpo de texto HTML.</p>'}
+                    ${conteudo}
                    </div>`,
             width: '800px',
             confirmButtonText: 'Fechar Cofre',
             confirmButtonColor: '#2c3e50'
         });
     } catch(e) {
-        Swal.fire('Erro', 'Não foi possível carregar as informações do contrato.', 'error');
+        Swal.fire('Erro', 'Não foi possível carregar o corpo do contrato.', 'error');
     }
 },
 
