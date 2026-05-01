@@ -2604,48 +2604,48 @@ salvarCustomizacaoMatricula: async function() {
     }
 },
 
-// ==========================================
+     // ==========================================
 // MÓDULO: COFRE DE CONTRATOS DIGITAIS
 // ==========================================
 renderizarCofreContratos: async function() {
     const container = document.getElementById('conteudoPrincipal');
     if(!container) return;
-    container.innerHTML = `<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>A ligar ao cofre blindado...</div>`;
+    container.innerHTML = `<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>A aceder ao cofre...</div>`;
 
     try {
-        // Puxa os contratos em tempo real da API
         const res = await fetch(`${CONFIG.API_URL}/contratos`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
-        if(!res.ok) throw new Error("Erro no servidor");
+        if(!res.ok) throw new Error("Erro ao carregar contratos");
         const contratos = await res.json();
         
         let html = `
             <div class="header-tela">
                 <h2>🔒 Cofre de Contratos Digitais</h2>
-                <p>Aqui estão todos os contratos recebidos em tempo real das matrículas online.</p>
+                <p>Documentos assinados em tempo real via matrícula online.</p>
             </div>
             <div class="card-tabela">
                 <table style="width:100%; text-align:left; border-collapse: collapse;">
                     <tr style="background:#f4f6f7; border-bottom:2px solid #ddd;">
-                        <th style="padding:10px;">Data/Hora</th>
-                        <th style="padding:10px;">Aluno</th>
-                        <th style="padding:10px;">Ação</th>
+                        <th style="padding:12px;">Data/Hora</th>
+                        <th style="padding:12px;">Aluno</th>
+                        <th style="padding:12px;">Ação</th>
                     </tr>`;
                     
         if(contratos.length === 0) {
-            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum contrato recebido até agora.</td></tr>`;
+            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum contrato encontrado.</td></tr>`;
         } else {
-            // Ordena do mais recente para o mais antigo
+            // Inverte a lista para mostrar o mais recente primeiro
             contratos.reverse().forEach(c => {
+                const dataFormatada = c.dataHoraRegistro ? new Date(c.dataHoraRegistro).toLocaleString('pt-BR') : '---';
                 html += `
                 <tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:10px;">${new Date(c.dataHoraRegistro).toLocaleString('pt-BR')}</td>
-                    <td style="padding:10px;"><strong>${App.escapeHTML(c.nomeAluno || 'Sem Nome')}</strong></td>
-                    <td style="padding:10px;">
+                    <td style="padding:12px;">${dataFormatada}</td>
+                    <td style="padding:12px;"><strong>${App.escapeHTML(c.nomeAluno || 'Aluno sem nome')}</strong></td>
+                    <td style="padding:12px;">
                         <button onclick="App.abrirVisualizacaoContrato('${c.id}')" 
-                                style="background:#2c3e50; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                            Ver Contrato
+                                style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+                            👁️ Ver
                         </button>
                     </td>
                 </tr>`;
@@ -2654,35 +2654,36 @@ renderizarCofreContratos: async function() {
         html += `</table></div>`;
         container.innerHTML = html;
     } catch(error) {
-        container.innerHTML = `<div style="padding: 20px; color: red;"><b>Erro:</b> ${error.message}</div>`;
+        container.innerHTML = `<div style="padding: 20px; color: red;">Erro ao carregar o cofre: ${error.message}</div>`;
     }
 },
 
-// Função ajustada com o nome que o teu sistema espera!
+// ESTA É A FUNÇÃO QUE ESTAVA COM O ERRO DE "UNDEFINED"
 abrirVisualizacaoContrato: async function(idContrato) {
-    Swal.fire({ title: 'A abrir documento...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: 'A processar...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
     try {
-        // Vai buscar o contrato específico à API
         const res = await fetch(`${CONFIG.API_URL}/contratos/${idContrato}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
         const contrato = await res.json();
         
-        // Tratamento seguro caso a API retorne algo inesperado
-        const nomeDoAluno = contrato.nomeAluno || 'Nome não informado';
-        const conteudo = contrato.conteudoHTML || '<p style="color:red;">Aviso: O texto deste contrato não foi capturado no formato esperado.</p>';
+        // CORREÇÃO: Usamos nomeAluno e conteudoHTML diretamente da raiz do objeto
+        const nomeParaExibir = contrato.nomeAluno || "Contrato";
+        const htmlDoContrato = contrato.conteudoHTML || "<p>Erro: Conteúdo do contrato não encontrado.</p>";
 
         Swal.fire({
-            title: `Contrato: ${nomeDoAluno}`,
-            html: `<div style="text-align:justify; max-height:450px; overflow-y:auto; padding:15px; background:#f9f9f9; border:1px solid #ddd; pointer-events:none; color:black;">
-                    ${conteudo}
+            title: `Visualizar Contrato: ${nomeParaExibir}`,
+            html: `<div style="text-align:justify; max-height:450px; overflow-y:auto; padding:20px; background:#fff; border:1px solid #eee; color:black; font-family:serif; line-height:1.6;">
+                    ${htmlDoContrato}
                    </div>`,
-            width: '800px',
-            confirmButtonText: 'Fechar Cofre',
+            width: '850px',
+            confirmButtonText: 'Fechar Documento',
             confirmButtonColor: '#2c3e50'
         });
     } catch(e) {
-        Swal.fire('Erro', 'Não foi possível carregar o corpo do contrato.', 'error');
+        console.error("Erro no Cofre:", e);
+        Swal.fire('Erro', 'Não foi possível ler os dados do contrato na API.', 'error');
     }
 },
 
