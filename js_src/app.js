@@ -2671,13 +2671,15 @@ abrirVisualizacaoContrato: async function(idContrato) {
     if(btnConfirm) btnConfirm.style.display = 'none';
 
     try {
-        // 2. Vai buscar os dados limpos ao backend
-        const res = await fetch(`${CONFIG.API_URL}/contratos/${idContrato}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
-        });
-        const contrato = await res.json();
+        // 2. MAGIA: Usamos o App.api que já injeta o token de acesso automaticamente!
+        const contrato = await App.api(`/contratos/${idContrato}`);
         
-        // 3. Lê diretamente da raiz do MongoDB (A tal correção do erro "nome")
+        // Se a API devolver erro ou vazio, forçamos a paragem
+        if (!contrato || contrato.error) {
+            throw new Error(contrato ? contrato.error : "Documento não encontrado");
+        }
+        
+        // 3. Lê diretamente da raiz do objeto vindo do MongoDB
         const tituloAluno = contrato.nomeAluno || "Aluno não identificado";
         const corpoContrato = contrato.conteudoHTML || "<p>O contrato não possui texto legível.</p>";
         const dataBr = contrato.dataHoraRegistro ? new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR') : 'Data não registada';
@@ -2714,8 +2716,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
         
     } catch(e) {
         console.error("Falha ao abrir contrato:", e);
-        document.getElementById('modal-titulo').innerText = 'Erro Crítico';
-        document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Não foi possível ligar ao servidor de contratos.</p>';
+        document.getElementById('modal-titulo').innerText = 'Erro de Autenticação / Leitura';
+        document.getElementById('modal-form-content').innerHTML = `<p style="color:red; text-align:center;">Não foi possível carregar o documento.<br><small>${e.message}</small></p>`;
     }
 },
 
