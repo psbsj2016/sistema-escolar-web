@@ -3117,11 +3117,12 @@ abrirVisualizacaoContrato: async function(idContrato) {
             
             App.atualizarPreviewConfigurador();
         }
-        else if (tipo === 'contrato') {
+       else if (tipo === 'contrato') {
             const modal = document.getElementById('modal-overlay'); 
             if(modal) modal.style.display = 'flex';
             document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
             
+            // Construção do modal com o novo Editor Quill
             document.getElementById('modal-form-content').innerHTML = `
                 <div style="background:#eafaf1; border:1px solid #27ae60; padding:10px; border-radius:6px; margin-bottom:15px;">
                     <p style="font-size:12px; color:#1e8449; margin:0 0 5px 0;"><strong>🪄 TAGS MÁGICAS:</strong> Escreva exatamente como está abaixo e o sistema substituirá pelos dados reais do aluno:</p>
@@ -3134,26 +3135,36 @@ abrirVisualizacaoContrato: async function(idContrato) {
                     </div>
                 </div>
                 
-                <div style="background:#f8f9fa; border:1px solid #ccc; border-bottom:none; padding:8px; display:flex; gap:8px; border-radius:6px 6px 0 0;">
-                    <button type="button" onclick="document.execCommand('bold', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; font-weight:bold;" title="Negrito">B</button>
-                    <button type="button" onclick="document.execCommand('italic', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; font-style:italic;" title="Itálico">I</button>
-                    <button type="button" onclick="document.execCommand('underline', false, null)" style="padding:5px 10px; cursor:pointer; background:#fff; border:1px solid #ddd; border-radius:4px; text-decoration:underline;" title="Sublinhado">U</button>
-                </div>
-                
-                <div id="txt-edicao-contrato" contenteditable="true" style="width:100%; height:350px; padding:15px; border-radius:0 0 8px 8px; border:1px solid #ccc; font-family:sans-serif; line-height:1.5; overflow-y:auto; background:#fff; outline:none; box-sizing:border-box;">${App.configTemp.textoContrato}</div>
+                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.configTemp.textoContrato}</div>
             `;
             
+            // Inicializar o Editor e a sua barra de ferramentas
+            setTimeout(() => {
+                window.quillContrato = new Quill('#editor-contrato-quill', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            [{ 'size': ['small', false, 'large', 'huge'] }],
+                            ['clean'] // Botão mágico "Tx" que remove códigos lixo do Word!
+                        ]
+                    }
+                });
+            }, 100);
+
             const btnConfirm = document.querySelector('.btn-confirm');
             btnConfirm.style.display = 'inline-flex';
             btnConfirm.innerHTML = "Aplicar ao Preview";
             btnConfirm.onclick = () => {
-                App.configTemp.textoContrato = document.getElementById('txt-edicao-contrato').innerHTML;
+                // Ao clicar em aplicar, ele vai buscar o HTML perfeitamente limpo do Quill
+                App.configTemp.textoContrato = window.quillContrato.root.innerHTML;
                 App.atualizarPreviewConfigurador();
                 App.fecharModal();
             };
         }
-    },
-
+   },
     salvarConfiguradorMatricula: async () => {
         document.body.style.cursor = 'wait';
         try {
