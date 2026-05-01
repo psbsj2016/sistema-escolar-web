@@ -2660,64 +2660,110 @@ renderizarCofreContratos: async function() {
 
 // ESTA É A FUNÇÃO QUE ESTAVA COM O ERRO DE "UNDEFINED"
 abrirVisualizacaoContrato: async function(idContrato) {
-    // 1. Abre o teu modal nativo a mostrar estado de carregamento
+    // 1. Mostrar estado de carregamento no modal
     const modal = document.getElementById('modal-overlay'); 
     if(modal) modal.style.display = 'flex';
-    document.getElementById('modal-titulo').innerText = 'A aceder ao cofre... ⏳';
-    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A ler dados encriptados e imutáveis da base de dados...</p>';
+    document.getElementById('modal-titulo').innerText = 'A abrir Ficha Completa... ⏳';
+    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A extrair todos os dados do aluno e contrato da base de dados...</p>';
     
-    // Esconde o botão confirmar temporariamente
     const btnConfirm = document.querySelector('.btn-confirm');
     if(btnConfirm) btnConfirm.style.display = 'none';
 
     try {
-        // 2. MAGIA: Usamos o App.api que já injeta o token de acesso automaticamente!
+        // 2. Procurar os dados com o motor automático (já com token)
         const contrato = await App.api(`/contratos/${idContrato}`);
         
-        // Se a API devolver erro ou vazio, forçamos a paragem
         if (!contrato || contrato.error) {
             throw new Error(contrato ? contrato.error : "Documento não encontrado");
         }
         
-        // 3. Lê diretamente da raiz do objeto vindo do MongoDB
-        const tituloAluno = contrato.nomeAluno || "Aluno não identificado";
+        // 3. Mapear todos os dados do aluno (com fallback para "Não informado" caso algum campo esteja vazio)
+        const nomeAluno = contrato.nome || contrato.nomeAluno || "Aluno não identificado";
+        const cpf = contrato.cpf || contrato.cpfAluno || "Não informado";
+        const rg = contrato.rg || contrato.rgAluno || "Não informado";
+        const dataNascimento = contrato.dataNascimento || contrato.dataNasc || "Não informada";
+        const responsavel = contrato.responsavel || contrato.nomeResponsavel || contrato.resp_nome || "O Próprio / Não informado";
+        const telefone = contrato.telefone || contrato.celular || "Não informado";
+        const email = contrato.email || "Não informado";
+        const endereco = contrato.endereco || "Não informado";
+        const curso = contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
+        
         const corpoContrato = contrato.conteudoHTML || "<p>O contrato não possui texto legível.</p>";
-        const dataBr = contrato.dataHoraRegistro ? new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR') : 'Data não registada';
+        const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
+            ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
+            : 'Data não registada';
 
-        // 4. Injeta os dados no HTML do teu modal nativo
-        document.getElementById('modal-titulo').innerText = `Contrato Oficial: ${tituloAluno}`;
+        // 4. Montar o HTML super otimizado para Impressão e Ecrã
+        document.getElementById('modal-titulo').innerText = `Matrícula: ${nomeAluno}`;
         document.getElementById('modal-form-content').innerHTML = `
-            <div id="area-impressao-contrato" style="padding: 20px; border: 1px solid #ccc; background: #fff; position:relative;">
-                <div style="position:absolute; top:20px; right:20px; font-size:40px; opacity:0.1; transform:rotate(15deg);">📑</div>
-                <div style="text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
-                    <h3 style="margin:0; color:#2c3e50; font-size:18px; text-transform:uppercase;">Matrícula Online</h3>
-                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:5px; display:inline-block; border:1px solid #27ae60; padding:3px 10px; border-radius:20px; background:#eafaf1;">✅ AUTENTICADO E CONFIRMADO</div>
+            <div id="area-impressao-contrato" style="padding: 30px; border: 1px solid #ccc; background: #fff; position:relative; color: #333; font-family: Arial, sans-serif;">
+                
+                <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:15px;">
+                    <h2 style="margin:0; color:#2c3e50; font-size:22px; text-transform:uppercase;">Ficha de Matrícula e Contrato</h2>
+                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px; display:inline-block; border:1px solid #27ae60; padding:4px 12px; border-radius:20px; background:#eafaf1;">
+                        ✅ AUTENTICADO DIGITALMENTE
+                    </div>
                 </div>
                 
-                <h4 style="text-align:center; border-bottom: 2px solid #eee; padding-bottom: 10px; color:#2c3e50;">TERMOS ACEITES (CONTRATO)</h4>
-                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.5; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; max-height:400px; overflow-y:auto;">
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno e Matrícula</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome do Aluno:</b> ${nomeAluno}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>CPF:</b> ${cpf}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>RG:</b> ${rg}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Data Nasc.:</b> ${dataNascimento}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Responsável:</b> ${responsavel}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Telefone:</b> ${telefone}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Curso/Plano:</b> ${curso}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço:</b> ${endereco}</td>
+                    </tr>
+                </table>
+                
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #e67e22; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📜 Termos do Contrato</h4>
+                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.6; padding:10px; max-height:350px; overflow-y:auto; border: 1px solid #eee; background: #fafafa; border-radius: 4px; margin-bottom:20px;">
                     ${corpoContrato}
                 </div>
                 
-                <div style="margin-top:20px; padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px;">
-                    ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
+                <div style="padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px; page-break-inside: avoid;">
+                    <p style="margin:0 0 5px 0; color:#333;">Pelo presente instrumento, as partes concordam com todos os termos acima descritos.</p>
+                    ✅ <b>ACEITE DIGITAL REGISTADO COM VALIDADE JURÍDICA:</b><br>
                     <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
+                    <p style="margin:10px 0 0 0; font-size:10px; color:#7f8c8d;">ID da Transação: ${contrato._id || idContrato}</p>
                 </div>
+                
+                <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; page-break-inside: avoid; color: #333;">
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura do Responsável / Aluno</div>
+                    </div>
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura da Instituição</div>
+                    </div>
+                </div>
+
             </div>
         `;
 
-        // 5. Mostra o teu botão verde bonito para impressão
+        // 5. Mostrar o botão de impressão
         if(btnConfirm) {
             btnConfirm.style.display = 'inline-flex';
-            btnConfirm.style.background = '#27ae60';
-            btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
+            btnConfirm.style.background = '#2c3e50';
+            btnConfirm.innerHTML = '🖨️ Imprimir Ficha Completa';
             btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
         }
         
     } catch(e) {
         console.error("Falha ao abrir contrato:", e);
-        document.getElementById('modal-titulo').innerText = 'Erro de Autenticação / Leitura';
-        document.getElementById('modal-form-content').innerHTML = `<p style="color:red; text-align:center;">Não foi possível carregar o documento.<br><small>${e.message}</small></p>`;
+        document.getElementById('modal-titulo').innerText = 'Erro de Leitura';
+        document.getElementById('modal-form-content').innerHTML = `<p style="color:red; text-align:center;">Não foi possível carregar a ficha completa.<br><small>${e.message}</small></p>`;
     }
 },
 
