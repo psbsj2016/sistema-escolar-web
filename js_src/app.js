@@ -2660,30 +2660,62 @@ renderizarCofreContratos: async function() {
 
 // ESTA É A FUNÇÃO QUE ESTAVA COM O ERRO DE "UNDEFINED"
 abrirVisualizacaoContrato: async function(idContrato) {
-    Swal.fire({ title: 'A processar...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    // 1. Abre o teu modal nativo a mostrar estado de carregamento
+    const modal = document.getElementById('modal-overlay'); 
+    if(modal) modal.style.display = 'flex';
+    document.getElementById('modal-titulo').innerText = 'A aceder ao cofre... ⏳';
+    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A ler dados encriptados e imutáveis da base de dados...</p>';
+    
+    // Esconde o botão confirmar temporariamente
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if(btnConfirm) btnConfirm.style.display = 'none';
 
     try {
+        // 2. Vai buscar os dados limpos ao backend
         const res = await fetch(`${CONFIG.API_URL}/contratos/${idContrato}`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
         });
         const contrato = await res.json();
         
-        // CORREÇÃO: Usamos nomeAluno e conteudoHTML diretamente da raiz do objeto
-        const nomeParaExibir = contrato.nomeAluno || "Contrato";
-        const htmlDoContrato = contrato.conteudoHTML || "<p>Erro: Conteúdo do contrato não encontrado.</p>";
+        // 3. Lê diretamente da raiz do MongoDB (A tal correção do erro "nome")
+        const tituloAluno = contrato.nomeAluno || "Aluno não identificado";
+        const corpoContrato = contrato.conteudoHTML || "<p>O contrato não possui texto legível.</p>";
+        const dataBr = contrato.dataHoraRegistro ? new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR') : 'Data não registada';
 
-        Swal.fire({
-            title: `Visualizar Contrato: ${nomeParaExibir}`,
-            html: `<div style="text-align:justify; max-height:450px; overflow-y:auto; padding:20px; background:#fff; border:1px solid #eee; color:black; font-family:serif; line-height:1.6;">
-                    ${htmlDoContrato}
-                   </div>`,
-            width: '850px',
-            confirmButtonText: 'Fechar Documento',
-            confirmButtonColor: '#2c3e50'
-        });
+        // 4. Injeta os dados no HTML do teu modal nativo
+        document.getElementById('modal-titulo').innerText = `Contrato Oficial: ${tituloAluno}`;
+        document.getElementById('modal-form-content').innerHTML = `
+            <div id="area-impressao-contrato" style="padding: 20px; border: 1px solid #ccc; background: #fff; position:relative;">
+                <div style="position:absolute; top:20px; right:20px; font-size:40px; opacity:0.1; transform:rotate(15deg);">📑</div>
+                <div style="text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
+                    <h3 style="margin:0; color:#2c3e50; font-size:18px; text-transform:uppercase;">Matrícula Online</h3>
+                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:5px; display:inline-block; border:1px solid #27ae60; padding:3px 10px; border-radius:20px; background:#eafaf1;">✅ AUTENTICADO E CONFIRMADO</div>
+                </div>
+                
+                <h4 style="text-align:center; border-bottom: 2px solid #eee; padding-bottom: 10px; color:#2c3e50;">TERMOS ACEITES (CONTRATO)</h4>
+                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.5; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; max-height:400px; overflow-y:auto;">
+                    ${corpoContrato}
+                </div>
+                
+                <div style="margin-top:20px; padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px;">
+                    ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
+                    <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
+                </div>
+            </div>
+        `;
+
+        // 5. Mostra o teu botão verde bonito para impressão
+        if(btnConfirm) {
+            btnConfirm.style.display = 'inline-flex';
+            btnConfirm.style.background = '#27ae60';
+            btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
+            btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
+        }
+        
     } catch(e) {
-        console.error("Erro no Cofre:", e);
-        Swal.fire('Erro', 'Não foi possível ler os dados do contrato na API.', 'error');
+        console.error("Falha ao abrir contrato:", e);
+        document.getElementById('modal-titulo').innerText = 'Erro Crítico';
+        document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Não foi possível ligar ao servidor de contratos.</p>';
     }
 },
 
