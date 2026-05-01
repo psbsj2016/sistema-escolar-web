@@ -2374,7 +2374,7 @@ excluirUsuario: (id) => {
                     }
                 });
             }
-           
+            
             // ==========================================
             // 🆕 ALERTA DE NOVAS MATRÍCULAS (HOJE)
             // ==========================================
@@ -2488,7 +2488,7 @@ excluirUsuario: (id) => {
                 }
             }
 
-      
+       
             const badge = document.getElementById('noti-badge');
             const list = document.getElementById('noti-list');
             
@@ -2658,7 +2658,6 @@ renderizarCofreContratos: async function() {
     }
 },
 
-// ESTA É A FUNÇÃO QUE ESTAVA COM O ERRO DE "UNDEFINED"
 abrirVisualizacaoContrato: async function(idContrato) {
     // 1. Mostrar estado de carregamento no modal
     const modal = document.getElementById('modal-overlay'); 
@@ -3122,19 +3121,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
             if(modal) modal.style.display = 'flex';
             document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
             
-            // Construção do modal com o novo Editor Quill
+            // Construção do modal com o novo Editor Quill (LIMPO: Sem caixa de tags mágicas)
             document.getElementById('modal-form-content').innerHTML = `
-                <div style="background:#eafaf1; border:1px solid #27ae60; padding:10px; border-radius:6px; margin-bottom:15px;">
-                    <p style="font-size:12px; color:#1e8449; margin:0 0 5px 0;"><strong>🪄 TAGS MÁGICAS:</strong> Escreva exatamente como está abaixo e o sistema substituirá pelos dados reais do aluno:</p>
-                    <div style="font-size:12px; color:#2c3e50; font-family:monospace; display:flex; flex-wrap:wrap; gap:10px;">
-                        <span style="background:#fff; padding:2px 5px; border-radius:3px; border:1px solid #ccc;">[NOME_ALUNO]</span>
-                        <span style="background:#fff; padding:2px 5px; border-radius:3px; border:1px solid #ccc;">[CPF_ALUNO]</span>
-                        <span style="background:#fff; padding:2px 5px; border-radius:3px; border:1px solid #ccc;">[RG_ALUNO]</span>
-                        <span style="background:#fff; padding:2px 5px; border-radius:3px; border:1px solid #ccc;">[NOME_RESPONSAVEL]</span>
-                        <span style="background:#fff; padding:2px 5px; border-radius:3px; border:1px solid #ccc;">[PLANO_CURSO]</span>
-                    </div>
-                </div>
-                
                 <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.configTemp.textoContrato}</div>
             `;
             
@@ -3158,7 +3146,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             btnConfirm.style.display = 'inline-flex';
             btnConfirm.innerHTML = "Aplicar ao Preview";
             btnConfirm.onclick = () => {
-                // Ao clicar em aplicar, ele vai buscar o HTML perfeitamente limpo do Quill
+                // Ao clicar em aplicar, ele vai buscar o HTML perfeitamente formatado gerado pelo Quill
                 App.configTemp.textoContrato = window.quillContrato.root.innerHTML;
                 App.atualizarPreviewConfigurador();
                 App.fecharModal();
