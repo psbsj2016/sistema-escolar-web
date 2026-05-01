@@ -2818,68 +2818,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
         }
     },
 
-    abrirVisualizacaoContrato: (id) => {
-        const contrato = App.listaCacheContratos.find(c => c.id === id);
-        if(!contrato) return;
-
-        const escolaConfig = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-        let contratoCorpo = (escolaConfig.configMatricula && escolaConfig.configMatricula.textoContrato) 
-            ? escolaConfig.configMatricula.textoContrato 
-            : "O texto do contrato não foi configurado.";
-
-        // 🪄 MAGIA: Substituir as tags dinâmicas pelos dados reais do aluno na visualização
-        const d = contrato.dadosCompletos;
-        contratoCorpo = contratoCorpo.replace(/\[NOME_ALUNO\]/g, `<strong style="text-transform:uppercase; color:#2c3e50;">${App.escapeHTML(d.nome || '')}</strong>`);
-        contratoCorpo = contratoCorpo.replace(/\[CPF_ALUNO\]/g, `<strong>${App.escapeHTML(d.cpf || '')}</strong>`);
-        contratoCorpo = contratoCorpo.replace(/\[RG_ALUNO\]/g, `<strong>${App.escapeHTML(d.rg || 'Não informado')}</strong>`);
-        contratoCorpo = contratoCorpo.replace(/\[NOME_RESPONSAVEL\]/g, `<strong>${App.escapeHTML(d.resp_nome || 'O próprio aluno')}</strong>`);
-        contratoCorpo = contratoCorpo.replace(/\[PLANO_CURSO\]/g, `<strong>${App.escapeHTML(d.planoCurso || '')}</strong>`);
-
-        const modal = document.getElementById('modal-overlay'); 
-        if(modal) modal.style.display = 'flex';
-        document.getElementById('modal-titulo').innerText = `Termo Digital Oficial`;
-
-        const dataBr = new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR');
-        let detalhesHtml = '';
-        
-        for (const [chave, valor] of Object.entries(contrato.dadosCompletos)) {
-            if(['escolaId', 'status', 'id', 'refLink'].includes(chave)) continue;
-            detalhesHtml += `<div style="border-bottom:1px solid #eee; padding:8px 0; display:flex; justify-content:space-between;">
-                <span style="color:#7f8c8d; font-weight:bold; font-size:12px;">${chave.toUpperCase()}:</span>
-                <span style="font-size:13px; max-width:60%; text-align:right; word-wrap:break-word;">${App.escapeHTML(String(valor))}</span>
-            </div>`;
-        }
-
-        document.getElementById('modal-form-content').innerHTML = `
-            <div id="area-impressao-contrato" style="padding: 20px; border: 1px solid #ccc; background: #fff; position:relative;">
-                <div style="position:absolute; top:20px; right:20px; font-size:40px; opacity:0.1; transform:rotate(15deg);">📑</div>
-                <div style="text-align:center; margin-bottom:20px; border-bottom:2px dashed #ccc; padding-bottom:15px;">
-                    <h3 style="margin:0; color:#2c3e50; font-size:18px; text-transform:uppercase;">Matrícula Online</h3>
-                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:5px; display:inline-block; border:1px solid #27ae60; padding:3px 10px; border-radius:20px; background:#eafaf1;">✅ AUTENTICADO E CONFIRMADO</div>
-                </div>
-                <h4 style="text-align:center; border-bottom: 2px solid #eee; padding-bottom: 10px; color:#2c3e50;">DADOS SUBMETIDOS</h4>
-                ${detalhesHtml}
-                <h4 style="text-align:center; margin-top:30px; border-bottom: 2px solid #eee; padding-bottom: 10px; color:#2c3e50;">TERMOS ACEITES (CONTRATO)</h4>
-                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.5; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee;">
-                    ${contratoCorpo}
-                </div>
-                <div style="margin-top:20px; padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px;">
-                    ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
-                    <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span><br>
-                    <span style="font-size:10px; color:#27ae60;">Referência da Campanha: ${d.refLink || 'Direto'}</span>
-                </div>
-            </div>
-        `;
-
-        const btnConfirm = document.querySelector('.btn-confirm');
-        if(btnConfirm) {
-            btnConfirm.style.display = 'inline-flex';
-            btnConfirm.style.background = '#27ae60';
-            btnConfirm.innerHTML = '🖨️ Imprimir Contrato';
-            btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
-        }
-    },   
-
+   
     renderizarContratos: async () => {
         const area = document.getElementById('area-dinamica-hub') || document.getElementById('app-content');
         area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar o cofre... ⏳</p>';
