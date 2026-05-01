@@ -257,8 +257,18 @@
                 imgLogo.style.display = 'block';
             }
             
-            // Prepara o contrato criado no gestor (ou o fallback modificado caso falhe)
-            window.textoContratoOriginal = config.textoContrato || document.getElementById('previewContrato').innerHTML;
+            // ---> AQUI É A ÚNICA MUDANÇA (A FUNÇÃO QUE "LIMPA" AS TAGS HTML E MOSTRA O TEXTO PURO/FORMATADO) <--- //
+            function formatarHTML(htmlTexto) {
+                var txt = document.createElement("textarea");
+                txt.innerHTML = htmlTexto;
+                return txt.value;
+            }
+
+            // Pega o contrato salvo na API, converte o código HTML em formato real visual, e injeta na tela
+            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
+            window.textoContratoOriginal = contratoFormatado;
+            // ------------------------------------------------------------------------------------------------ //
+
             atualizarContratoAoVivo();
             
         } catch (error) {
