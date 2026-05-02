@@ -3129,24 +3129,98 @@ abrirVisualizacaoContrato: async function(idContrato) {
             // Aciona o clique automático para abrir a janela
             input.click();
         } 
-        else if (tipo === 'titulo') {
-            const txt = prompt("Digite o novo Título Principal:", App.configTemp.tituloHeader);
-            if (txt !== null) { App.configTemp.tituloHeader = txt; App.atualizarPreviewConfigurador(); }
+        else if (tipo === 'titulo' || tipo === 'descricao' || tipo === 'opcoes') {
+            // Função para gerar modais bonitos
+            const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
+                
+                const modal = document.createElement('div');
+                modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
+                
+                modal.innerHTML = `
+                    <style>
+                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                        .modal-custom-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 15px; margin-top: 6px; transition: border-color 0.2s; }
+                        .modal-custom-input:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.2); }
+                        .modal-custom-label { font-weight: 600; color: #495057; font-size: 14px; }
+                        .modal-btn-cancel { padding: 10px 18px; background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-cancel:hover { background: #e2e6ea; }
+                        .modal-btn-save { padding: 10px 18px; background: #0d6efd; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-save:hover { background: #0b5ed7; }
+                    </style>
+                    <h3 style="margin-top:0; color:#212529; font-size:20px; border-bottom:1px solid #f1f3f5; padding-bottom:15px; margin-bottom:20px;">${tituloModal}</h3>
+                    <div style="margin-bottom:24px;">
+                        ${conteudoHTML}
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:12px;">
+                        <button id="btnCancelarModal" class="modal-btn-cancel">Cancelar</button>
+                        <button id="btnSalvarModal" class="modal-btn-save">Salvar Alterações</button>
+                    </div>
+                `;
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                const fecharModal = () => {
+                    overlay.style.animation = "fadeIn 0.2s ease reverse forwards";
+                    modal.style.animation = "scaleUp 0.2s ease reverse forwards";
+                    setTimeout(() => document.body.removeChild(overlay), 200);
+                };
+
+                modal.querySelector('#btnCancelarModal').onclick = fecharModal;
+                modal.querySelector('#btnSalvarModal').onclick = () => {
+                    onSave(modal);
+                    fecharModal();
+                };
+            };
+
+            // MODAIS ESPECÍFICOS USANDO AS TUAS VARIÁVEIS EXATAS
+            if (tipo === 'titulo') {
+                abrirModalBonito(
+                    "✏️ Editar Título",
+                    `<label class="modal-custom-label">Título do Documento:</label>
+                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${App.configTemp.tituloHeader || ''}">`,
+                    (modal) => {
+                        App.configTemp.tituloHeader = modal.querySelector('#inputTitulo').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'descricao') {
+                abrirModalBonito(
+                    "📝 Editar Descrição",
+                    `<label class="modal-custom-label">Subtítulo ou Descrição:</label>
+                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${App.configTemp.descHeader || ''}</textarea>`,
+                    (modal) => {
+                        App.configTemp.descHeader = modal.querySelector('#inputDescricao').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'opcoes') {
+                abrirModalBonito(
+                    "⚙️ Dados Complementares",
+                    `<div style="margin-bottom:16px;">
+                        <label class="modal-custom-label">Planos de Curso</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.configTemp.opcoesPlano || ''}">
+                     </div>
+                     <div>
+                        <label class="modal-custom-label">Dias de Vencimento</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.configTemp.opcoesVencimento || ''}">
+                     </div>`,
+                    (modal) => {
+                        App.configTemp.opcoesPlano = modal.querySelector('#inputCursos').value;
+                        App.configTemp.opcoesVencimento = modal.querySelector('#inputDias').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            }
         }
-        else if (tipo === 'descricao') {
-            const txt = prompt("Digite a nova Descrição:", App.configTemp.descHeader);
-            if (txt !== null) { App.configTemp.descHeader = txt; App.atualizarPreviewConfigurador(); }
-        }
-        else if (tipo === 'opcoes') {
-            const planos = prompt("Digite as opções de PLANO DE CURSO separadas por vírgula:", App.configTemp.opcoesPlano);
-            if (planos !== null) App.configTemp.opcoesPlano = planos;
-            
-            const dias = prompt("Digite as opções de DIA DE VENCIMENTO separadas por vírgula:", App.configTemp.opcoesVencimento);
-            if (dias !== null) App.configTemp.opcoesVencimento = dias;
-            
-            App.atualizarPreviewConfigurador();
-        }
-       else if (tipo === 'contrato') {
+        else if (tipo === 'contrato') {
             const modal = document.getElementById('modal-overlay'); 
             if(modal) modal.style.display = 'flex';
             document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
@@ -3182,7 +3256,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 App.fecharModal();
             };
         }
-   },
+    },
+
     salvarConfiguradorMatricula: async () => {
         document.body.style.cursor = 'wait';
         try {
