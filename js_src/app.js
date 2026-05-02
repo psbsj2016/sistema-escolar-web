@@ -3106,8 +3106,28 @@ abrirVisualizacaoContrato: async function(idContrato) {
 
     editarConfig: (tipo) => {
         if (tipo === 'imagem') {
-            const url = prompt("Cole o link (URL) da nova imagem de cabeçalho:", App.configTemp.imagemHeader);
-            if (url !== null) { App.configTemp.imagemHeader = url; App.atualizarPreviewConfigurador(); }
+            // Cria um input de arquivo invisível
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*'; // Aceita apenas imagens
+            
+            // O que acontece quando o utilizador escolhe a foto:
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    App.showToast("A processar e otimizar a imagem... ⏳", "info");
+                    
+                    // Envia para a tua função de compressão (máx 800px de largura)
+                    App.otimizarImagem(file, 800, (imgBase64) => {
+                        App.configTemp.imagemHeader = imgBase64;
+                        App.atualizarPreviewConfigurador();
+                        App.showToast("Imagem aplicada com sucesso!", "success");
+                    });
+                }
+            };
+            
+            // Aciona o clique automático para abrir a janela
+            input.click();
         } 
         else if (tipo === 'titulo') {
             const txt = prompt("Digite o novo Título Principal:", App.configTemp.tituloHeader);
