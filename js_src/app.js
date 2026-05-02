@@ -3035,6 +3035,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             if (!escola.configMatricula) {
                 escola.configMatricula = {
                     imagemHeader: 'https://placehold.co/800x200?text=Sua+Imagem+de+Cabecalho',
+                    imagemPosicao: '50% 50%', // Nova variável para guardar a posição
                     tituloHeader: 'Matrícula Online - PTT Cursos',
                     descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
                     opcoesPlano: 'Padrão, Intensivo, Personalizado',
@@ -3044,8 +3045,10 @@ abrirVisualizacaoContrato: async function(idContrato) {
             }
 
             App.configTemp = { ...escola.configMatricula };
+            // Garante que a posição existe mesmo para quem já tinha gravado antes
+            if (!App.configTemp.imagemPosicao) App.configTemp.imagemPosicao = '50% 50%';
 
-            // 🔥 CORREÇÃO: Converte as tags protegidas da base de dados de volta para formatação visual
+            // Converte as tags protegidas da base de dados de volta para formatação visual
             if (App.configTemp.textoContrato) {
                 App.configTemp.textoContrato = App.unescapeHTML(App.configTemp.textoContrato);
             }
@@ -3054,7 +3057,10 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
                     <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
                         <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
-                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
+                        
+                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
+                        <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">800 x 200px</b></div>
+
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
@@ -3078,11 +3084,16 @@ abrirVisualizacaoContrato: async function(idContrato) {
         }
     },
 
-    atualizarPreviewConfigurador: () => {
+   atualizarPreviewConfigurador: () => {
         const preview = document.getElementById('preview-word-doc');
         if(preview) {
             preview.innerHTML = `
-                <div style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') center/cover no-repeat; border-radius:8px 8px 0 0;"></div>
+                <div id="preview-header-img" 
+                     onmousedown="App.iniciarArraste(event)" 
+                     ontouchstart="App.iniciarArraste(event)"
+                     style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') no-repeat; background-size: cover; background-position: ${App.configTemp.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
+                     <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.2);">🖐️ Arraste para reposicionar</div>
+                </div>
                 <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
                     <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(App.configTemp.tituloHeader)}</h2>
                     <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(App.configTemp.descHeader)}</p>
@@ -3323,6 +3334,83 @@ abrirVisualizacaoContrato: async function(idContrato) {
             btn.disabled = true;
             acaoConfirmar(modal); 
         };
+    },
+
+    // =========================================================
+    // 🖐️ MOTOR DE ARRASTE DA IMAGEM DO CABEÇALHO (DRAG & DROP)
+    // =========================================================
+    dragState: { isDragging: false, startX: 0, startY: 0, bgX: 50, bgY: 50 },
+
+    iniciarArraste: (e) => {
+        App.dragState.isDragging = true;
+        
+        // Pega a posição inicial do clique (rato ou dedo)
+        App.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        App.dragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Descobre a posição atual que está guardada (ex: "50% 50%")
+        let pos = App.configTemp.imagemPosicao || '50% 50%';
+        let parts = pos.split(' ');
+        App.dragState.bgX = parseFloat(parts[0]) || 50;
+        App.dragState.bgY = parseFloat(parts[1]) || 50;
+
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.cursor = 'grabbing';
+
+        // Escuta os movimentos em todo o documento para não perder o rato se sair da div
+        document.addEventListener('mousemove', App.arrastarImagem);
+        document.addEventListener('mouseup', App.pararArraste);
+        document.addEventListener('touchmove', App.arrastarImagem, { passive: false });
+        document.addEventListener('touchend', App.pararArraste);
+    },
+
+    arrastarImagem: (e) => {
+        if (!App.dragState.isDragging) return;
+        e.preventDefault(); // Evita que a página faça scroll no telemóvel enquanto arrasta
+
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Calcula a distância que o rato percorreu
+        const dx = clientX - App.dragState.startX;
+        const dy = clientY - App.dragState.startY;
+
+        // Sensibilidade. Valores menores deixam o movimento mais suave (ideal entre 0.1 e 0.3)
+        const sensibilidade = 0.2;
+
+        let newX = App.dragState.bgX - (dx * sensibilidade);
+        let newY = App.dragState.bgY - (dy * sensibilidade);
+
+        // Bloqueia entre 0% e 100% para a imagem não fugir da div
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        // Guarda a nova posição
+        App.configTemp.imagemPosicao = `${newX.toFixed(2)}% ${newY.toFixed(2)}%`;
+
+        // Aplica o movimento na tela em tempo real
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.backgroundPosition = App.configTemp.imagemPosicao;
+
+        // Atualiza a origem para o próximo frame de movimento ser contínuo
+        App.dragState.startX = clientX;
+        App.dragState.startY = clientY;
+        App.dragState.bgX = newX;
+        App.dragState.bgY = newY;
+    },
+
+    pararArraste: () => {
+        if (App.dragState.isDragging) {
+            App.dragState.isDragging = false;
+            const el = document.getElementById('preview-header-img');
+            if(el) el.style.cursor = 'grab';
+
+            // Limpa a memória libertando os eventos
+            document.removeEventListener('mousemove', App.arrastarImagem);
+            document.removeEventListener('mouseup', App.pararArraste);
+            document.removeEventListener('touchmove', App.arrastarImagem);
+            document.removeEventListener('touchend', App.pararArraste);
+        }
     }
 
 }; // <--- O OBJETO APP FECHA CORRETAMENTE AQUI!
