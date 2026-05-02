@@ -3259,7 +3259,18 @@ abrirVisualizacaoContrato: async function(idContrato) {
     },
 
     salvarConfiguradorMatricula: async () => {
+        // Captura o botão exato que disparou a função
+        const btn = document.querySelector('button[onclick="App.salvarConfiguradorMatricula()"]');
+        const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Tudo';
+        
+        // Dá o feedback visual imediato: muda o texto, desativa o clique e põe o rato a carregar
+        if (btn) { 
+            btn.innerHTML = "A salvar... ⏳"; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.8'; 
+        }
         document.body.style.cursor = 'wait';
+
         try {
             const escola = await App.api('/escola') || {};
             escola.configMatricula = App.configTemp;
@@ -3268,6 +3279,12 @@ abrirVisualizacaoContrato: async function(idContrato) {
         } catch(e) {
             App.showToast("Erro ao guardar as configurações.", "error");
         } finally {
+            // Devolve o botão ao normal, independentemente de ter dado erro ou sucesso
+            if (btn) { 
+                btn.innerHTML = txtOriginal; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+            }
             document.body.style.cursor = 'default';
         }
     },
