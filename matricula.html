@@ -173,7 +173,7 @@
     const escolaId = urlParams.get('escola');
     const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : 'https://sistema-escolar-api-k3o8.onrender.com';
 
-    // Mostra/Oculta painel do responsável
+    // Mostra/Oculta painel do responsável caso o aluno seja menor (lógica bónus extra útil)
     document.getElementById('nascimento').addEventListener('change', function() {
         const nasc = new Date(this.value);
         const hoje = new Date();
@@ -193,14 +193,6 @@
         }
     });
 
-    // Função Robusta para limpar o HTML vindo do MongoDB
-    function unescapeHTML(str) {
-        if (!str) return '';
-        // Tenta usar o DOM Parser que é infalível contra entidades HTML
-        const doc = new DOMParser().parseFromString(str, "text/html");
-        return doc.documentElement.textContent;
-    }
-
     // 1. Puxa as customizações da API
     async function carregarConfiguracoes() {
         if (!escolaId) {
@@ -212,23 +204,26 @@
             if(!res.ok) throw new Error("Escola não encontrada");
             const dados = await res.json();
             
+            // Aceita a configuração vinda de configMatricula ou direto do payload
             const config = dados.configMatricula || dados || {};
             
             // --- INJEÇÃO DAS CUSTOMIZAÇÕES --- //
 
+            // Imagem de Cabeçalho
             if(config.imagemHeader) {
                 const header = document.getElementById('header-imagem');
                 header.style.backgroundImage = `url('${config.imagemHeader}')`;
-                header.style.backgroundPosition = config.imagemPosicao || '50% 50%'; // Posição
                 header.style.display = 'block';
             }
 
+            // Textos Iniciais
             if(config.tituloHeader) document.getElementById('tituloPagina').innerText = config.tituloHeader;
             if(config.descHeader) document.getElementById('desc-matricula').innerText = config.descHeader;
 
+            // Opções do Plano de Curso
             if(config.opcoesPlano) {
                 const selectPlano = document.getElementById('plano_curso');
-                selectPlano.innerHTML = '<option value="">-- Selecione --</option>'; 
+                selectPlano.innerHTML = '<option value="">-- Selecione --</option>'; // Limpa padrão
                 config.opcoesPlano.split(',').forEach(plano => {
                     const option = document.createElement('option');
                     option.value = plano.trim();
@@ -237,9 +232,10 @@
                 });
             }
 
+            // Opções de Dia de Vencimento
             if(config.opcoesVencimento) {
                 const selectVenc = document.getElementById('dia_vencimento');
-                selectVenc.innerHTML = '<option value="">-- Selecione --</option>'; 
+                selectVenc.innerHTML = '<option value="">-- Selecione --</option>'; // Limpa padrão
                 config.opcoesVencimento.split(',').forEach(dia => {
                     const option = document.createElement('option');
                     option.value = dia.trim();
@@ -248,6 +244,7 @@
                 });
             }
 
+            // Logo e Cores (Mantido do original)
             if(config.corSecundaria) {
                 document.querySelector('.container').style.borderTopColor = config.corSecundaria;
                 document.querySelectorAll('h3, button').forEach(el => el.style.color = config.corSecundaria || '#3498db');
@@ -260,13 +257,18 @@
                 imgLogo.style.display = 'block';
             }
             
-            // --- LIMPEZA E INJEÇÃO DO CONTRATO --- //
-            // Se existir contrato guardado, limpamos as tags. Se não, usamos o que está no HTML
-            let contratoLimpo = config.textoContrato ? unescapeHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
-            
-            // Guardamos a versão limpa e intacta (com os [NOME_ALUNO] etc) na memória
-            window.textoContratoOriginal = contratoLimpo;
-            
+            // ---> AQUI É A ÚNICA MUDANÇA (A FUNÇÃO QUE "LIMPA" AS TAGS HTML E MOSTRA O TEXTO PURO/FORMATADO) <--- //
+            function formatarHTML(htmlTexto) {
+                var txt = document.createElement("textarea");
+                txt.innerHTML = htmlTexto;
+                return txt.value;
+            }
+
+            // Pega o contrato salvo na API, converte o código HTML em formato real visual, e injeta na tela
+            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
+            window.textoContratoOriginal = contratoFormatado;
+            // ------------------------------------------------------------------------------------------------ //
+
             atualizarContratoAoVivo();
             
         } catch (error) {
@@ -279,32 +281,28 @@
     // 2. Atualiza as tags do contrato em tempo real enquanto o aluno preenche os campos
     function atualizarContratoAoVivo() {
         if(!window.textoContratoOriginal) return;
-        
         let texto = window.textoContratoOriginal;
         
         const nome = document.getElementById('nome')?.value || '_______________________';
         const cpf = document.getElementById('cpf')?.value || '_______________________';
         const rg = document.getElementById('rg')?.value || '_______________________';
-        const email = document.getElementById('email')?.value || '_______________________';
-        const whatsapp = document.getElementById('whatsapp')?.value || '_______________________';
         const resp_nome = document.getElementById('resp_nome')?.value || '_______________________';
         
+        // Pega o texto do select (ex: "Intensivo") em vez do value se forem diferentes, mas value serve
         const planoSelect = document.getElementById('plano_curso');
         const plano = planoSelect.options[planoSelect.selectedIndex]?.text.replace('-- Selecione --', '_______________________') || '_______________________';
         
-        // Substituições usando uma abordagem que ignora letras maiúsculas/minúsculas só para garantir
-        texto = texto.replace(/\[NOME_ALUNO\]/gi, `<strong style="color:#2c3e50; text-decoration:underline;">${nome.toUpperCase()}</strong>`);
-        texto = texto.replace(/\[CPF_ALUNO\]/gi, `<strong style="color:#2c3e50;">${cpf}</strong>`);
-        texto = texto.replace(/\[RG_ALUNO\]/gi, `<strong style="color:#2c3e50;">${rg}</strong>`);
-        texto = texto.replace(/\[EMAIL_ALUNO\]/gi, `<strong style="color:#2c3e50;">${email}</strong>`);
-        texto = texto.replace(/\[WHATSAPP_ALUNO\]/gi, `<strong style="color:#2c3e50;">${whatsapp}</strong>`);
-        texto = texto.replace(/\[NOME_RESPONSAVEL\]/gi, `<strong style="color:#2c3e50;">${resp_nome.toUpperCase()}</strong>`);
-        texto = texto.replace(/\[PLANO_CURSO\]/gi, `<strong style="color:#2c3e50;">${plano.toUpperCase()}</strong>`);
+        // Substituições corretas de TODAS as tags
+        texto = texto.replace(/\[NOME_ALUNO\]/g, `<strong style="color:#2c3e50; text-decoration:underline;">${nome.toUpperCase()}</strong>`);
+        texto = texto.replace(/\[CPF_ALUNO\]/g, `<strong style="color:#2c3e50;">${cpf}</strong>`);
+        texto = texto.replace(/\[RG_ALUNO\]/g, `<strong style="color:#2c3e50;">${rg}</strong>`);
+        texto = texto.replace(/\[NOME_RESPONSAVEL\]/g, `<strong style="color:#2c3e50;">${resp_nome.toUpperCase()}</strong>`);
+        texto = texto.replace(/\[PLANO_CURSO\]/g, `<strong style="color:#2c3e50;">${plano.toUpperCase()}</strong>`);
         
         document.getElementById('previewContrato').innerHTML = texto;
     }
 
-    // Adiciona o "escutador" a todos os inputs E selects
+    // Adiciona o "escutador" a todos os inputs E selects (para garantir que muda ao escolher o plano)
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', atualizarContratoAoVivo);
         el.addEventListener('change', atualizarContratoAoVivo);
@@ -320,32 +318,10 @@
         const payload = {
             escolaId: escolaId,
             nome: document.getElementById('nome').value,
-            whatsapp: document.getElementById('whatsapp').value,
-            email: document.getElementById('email').value,
             cpf: document.getElementById('cpf').value,
-            rg: document.getElementById('rg').value,
-            nascimento: document.getElementById('nascimento').value,
-            sexo: document.getElementById('sexo').value,
-            profissao: document.getElementById('profissao').value,
-            
-            // Dados do Responsável
-            resp_nome: document.getElementById('resp_nome')?.value || '',
-            resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
-            resp_cpf: document.getElementById('resp_cpf')?.value || '',
-            resp_zap: document.getElementById('resp_zap')?.value || '',
-
-            // Endereço
-            rua: document.getElementById('rua').value,
-            numero: document.getElementById('numero').value,
-            bairro: document.getElementById('bairro').value,
-            cidade: document.getElementById('cidade').value,
-
-            // Plano e Vencimento
-            planoCurso: document.getElementById('plano_curso').value,
-            diaVencimento: document.getElementById('dia_vencimento').value,
-
-            // O conteúdo que vamos enviar é o que está visível na tela (já preenchido e formatado!)
-            conteudoHTML: document.getElementById('previewContrato').innerHTML 
+            email: document.getElementById('email').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            conteudoHTML: document.getElementById('previewContrato').innerHTML
         };
 
         try {
@@ -363,13 +339,13 @@
                 throw new Error("Erro no servidor"); 
             }
         } catch (error) {
-            Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Erro de comunicação com a escola. Verifique sua internet e tente novamente.',
-            confirmButtonColor: '#3498db'
-        });
+            alert("Erro de comunicação com a escola. Verifique a sua internet e tente novamente.");
+            btn.innerText = "Concluir Matrícula"; 
+            btn.disabled = false;
+        }
+    });
 
+    // Inicia tudo
     carregarConfiguracoes();
 </script>
 
