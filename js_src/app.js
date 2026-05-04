@@ -2664,55 +2664,110 @@ renderizarCofreContratos: async function() {
 },
 
 abrirVisualizacaoContrato: async function(idContrato) {
+    // 1. Mostrar estado de carregamento no modal
     const modal = document.getElementById('modal-overlay'); 
     if(modal) modal.style.display = 'flex';
-    document.getElementById('modal-titulo').innerText = 'A carregar... ⏳';
+    document.getElementById('modal-titulo').innerText = 'A abrir Ficha Completa... ⏳';
+    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A extrair todos os dados do aluno e contrato da base de dados...</p>';
     
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if(btnConfirm) btnConfirm.style.display = 'none';
+
     try {
+        // 2. Procurar os dados com o motor automático (já com token)
         const contrato = await App.api(`/contratos/${idContrato}`);
-        if (!contrato || contrato.error) throw new Error("Não encontrado");
-
-        // Mapeamento dos dados que enviamos pelo matricula.html
-        const nome = contrato.nome || "Não informado";
-        const cpf = contrato.cpf || "Não informado";
-        const responsavel = contrato.resp_nome || "O Próprio";
-        const curso = contrato.curso || "Não informado";
-        const endereco = contrato.endereco || "Não informado";
         
-        // Texto limpo do contrato
-        // Usamos unescapeHTML para garantir que qualquer resíduo de tag antiga seja limpo
-        const corpoContrato = App.unescapeHTML(contrato.conteudoHTML || "");
+        if (!contrato || contrato.error) {
+            throw new Error(contrato ? contrato.error : "Documento não encontrado");
+        }
+        
+        // 3. Mapear todos os dados do aluno (com fallback para "Não informado" caso algum campo esteja vazio)
+        const nomeAluno = contrato.nome || contrato.nomeAluno || "Aluno não identificado";
+        const cpf = contrato.cpf || contrato.cpfAluno || "Não informado";
+        const rg = contrato.rg || contrato.rgAluno || "Não informado";
+        const dataNascimento = contrato.dataNascimento || contrato.dataNasc || "Não informada";
+        const responsavel = contrato.responsavel || contrato.nomeResponsavel || contrato.resp_nome || "O Próprio / Não informado";
+        const telefone = contrato.telefone || contrato.celular || "Não informado";
+        const email = contrato.email || "Não informado";
+        const endereco = contrato.endereco || "Não informado";
+        const curso = contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
+        
+        const corpoContrato = contrato.conteudoHTML || "<p>O contrato não possui texto legível.</p>";
+        const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
+            ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
+            : 'Data não registada';
 
-        document.getElementById('modal-titulo').innerText = `Ficha de Matrícula: ${nome}`;
+        // 4. Montar o HTML super otimizado para Impressão e Ecrã
+        document.getElementById('modal-titulo').innerText = `Matrícula: ${nomeAluno}`;
         document.getElementById('modal-form-content').innerHTML = `
-            <div id="area-impressao-contrato" style="padding: 20px; background: #fff; color: #333;">
-                <h3 style="text-align:center; border-bottom:2px solid #333; padding-bottom:10px;">FICHA DE MATRÍCULA ONLINE</h3>
+            <div id="area-impressao-contrato" style="padding: 30px; border: 1px solid #ccc; background: #fff; position:relative; color: #333; font-family: Arial, sans-serif;">
                 
-                <table style="width:100%; margin-bottom:20px; font-size:13px;">
-                    <tr><td><b>Aluno:</b> ${nome}</td><td><b>CPF:</b> ${cpf}</td></tr>
-                    <tr><td><b>Responsável:</b> ${responsavel}</td><td><b>Curso:</b> ${curso}</td></tr>
-                    <tr><td colspan="2"><b>Endereço:</b> ${endereco}</td></tr>
+                <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:15px;">
+                    <h2 style="margin:0; color:#2c3e50; font-size:22px; text-transform:uppercase;">Ficha de Matrícula e Contrato</h2>
+                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px; display:inline-block; border:1px solid #27ae60; padding:4px 12px; border-radius:20px; background:#eafaf1;">
+                        ✅ AUTENTICADO DIGITALMENTE
+                    </div>
+                </div>
+                
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno e Matrícula</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome do Aluno:</b> ${nomeAluno}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>CPF:</b> ${cpf}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>RG:</b> ${rg}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Data Nasc.:</b> ${dataNascimento}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Responsável:</b> ${responsavel}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Telefone:</b> ${telefone}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Curso/Plano:</b> ${curso}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço:</b> ${endereco}</td>
+                    </tr>
                 </table>
-
-                <div style="border:1px solid #eee; padding:15px; background:#f9f9f9; font-size:12px; line-height:1.6;">
+                
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #e67e22; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📜 Termos do Contrato</h4>
+                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.6; padding:10px; max-height:350px; overflow-y:auto; border: 1px solid #eee; background: #fafafa; border-radius: 4px; margin-bottom:20px;">
                     ${corpoContrato}
                 </div>
-
-                <div style="margin-top:20px; padding:10px; border:1px solid #27ae60; background:#eafaf1; text-align:center;">
-                    ✅ Assinado digitalmente em: ${new Date(contrato.dataHoraRegistro).toLocaleString('pt-BR')}
+                
+                <div style="padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px; page-break-inside: avoid;">
+                    <p style="margin:0 0 5px 0; color:#333;">Pelo presente instrumento, as partes concordam com todos os termos acima descritos.</p>
+                    ✅ <b>ACEITE DIGITAL REGISTADO COM VALIDADE JURÍDICA:</b><br>
+                    <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
+                    <p style="margin:10px 0 0 0; font-size:10px; color:#7f8c8d;">ID da Transação: ${contrato._id || idContrato}</p>
                 </div>
+                
+                <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; page-break-inside: avoid; color: #333;">
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura do Responsável / Aluno</div>
+                    </div>
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura da Instituição</div>
+                    </div>
+                </div>
+
             </div>
         `;
 
-        const btnConfirm = document.querySelector('.btn-confirm');
+        // 5. Mostrar o botão de impressão
         if(btnConfirm) {
             btnConfirm.style.display = 'inline-flex';
-            btnConfirm.innerHTML = '🖨️ Imprimir Contrato Agora';
+            btnConfirm.style.background = '#2c3e50';
+            btnConfirm.innerHTML = '🖨️ Imprimir Ficha Completa';
             btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
         }
         
     } catch(e) {
-        App.showToast("Erro ao carregar contrato.", "error");
+        console.error("Falha ao abrir contrato:", e);
+        document.getElementById('modal-titulo').innerText = 'Erro de Leitura';
+        document.getElementById('modal-form-content').innerHTML = `<p style="color:red; text-align:center;">Não foi possível carregar a ficha completa.<br><small>${e.message}</small></p>`;
     }
 },
 
@@ -2980,6 +3035,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             if (!escola.configMatricula) {
                 escola.configMatricula = {
                     imagemHeader: 'https://placehold.co/800x200?text=Sua+Imagem+de+Cabecalho',
+                    imagemPosicao: '50% 50%', // Nova variável para guardar a posição
                     tituloHeader: 'Matrícula Online - PTT Cursos',
                     descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
                     opcoesPlano: 'Padrão, Intensivo, Personalizado',
@@ -2989,15 +3045,17 @@ abrirVisualizacaoContrato: async function(idContrato) {
             }
 
             App.configTemp = { ...escola.configMatricula };
+            // Garante que a posição existe mesmo para quem já tinha gravado antes
+            if (!App.configTemp.imagemPosicao) App.configTemp.imagemPosicao = '50% 50%';
 
-            // 🔥 CORREÇÃO: Converte as tags protegidas da base de dados de volta para formatação visual
+            // Converte as tags protegidas da base de dados de volta para formatação visual
             if (App.configTemp.textoContrato) {
                 App.configTemp.textoContrato = App.unescapeHTML(App.configTemp.textoContrato);
             }
 
-           area.innerHTML = `
-                <div style="display:flex; gap:20px; flex-wrap: wrap; align-items: flex-start; width: 100%;">
-                    <div style="flex: 1 1 260px; min-width: 260px; max-width: 100%; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+            area.innerHTML = `
+                <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
+                    <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
                         <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
                         
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
@@ -3007,12 +3065,12 @@ abrirVisualizacaoContrato: async function(idContrato) {
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
                         <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
-                        <button class="btn-primary" id="btn-salvar-config" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
+                        <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
                     </div>
 
-                    <div style="flex: 999 1 400px; min-width: 0; width: 100%;">
-                        <div style="background:#e0e6ed; padding:15px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
-                            <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:450px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px; overflow: hidden;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
+                            <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
                                 </div>
                         </div>
                     </div>
@@ -3026,11 +3084,16 @@ abrirVisualizacaoContrato: async function(idContrato) {
         }
     },
 
-    atualizarPreviewConfigurador: () => {
+   atualizarPreviewConfigurador: () => {
         const preview = document.getElementById('preview-word-doc');
         if(preview) {
             preview.innerHTML = `
-                <div style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') center/cover no-repeat; border-radius:8px 8px 0 0;"></div>
+                <div id="preview-header-img" 
+                     onmousedown="App.iniciarArraste(event)" 
+                     ontouchstart="App.iniciarArraste(event)"
+                     style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') no-repeat; background-size: cover; background-position: ${App.configTemp.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
+                     <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.2);">🖐️ Arraste para reposicionar</div>
+                </div>
                 <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
                     <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(App.configTemp.tituloHeader)}</h2>
                     <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(App.configTemp.descHeader)}</p>
@@ -3054,27 +3117,121 @@ abrirVisualizacaoContrato: async function(idContrato) {
 
     editarConfig: (tipo) => {
         if (tipo === 'imagem') {
-            const url = prompt("Cole o link (URL) da nova imagem de cabeçalho:", App.configTemp.imagemHeader);
-            if (url !== null) { App.configTemp.imagemHeader = url; App.atualizarPreviewConfigurador(); }
+            // Cria um input de arquivo invisível
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*'; // Aceita apenas imagens
+            
+            // O que acontece quando o utilizador escolhe a foto:
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    App.showToast("A processar e otimizar a imagem... ⏳", "info");
+                    
+                    // Envia para a tua função de compressão (máx 800px de largura)
+                    App.otimizarImagem(file, 800, (imgBase64) => {
+                        App.configTemp.imagemHeader = imgBase64;
+                        App.atualizarPreviewConfigurador();
+                        App.showToast("Imagem aplicada com sucesso!", "success");
+                    });
+                }
+            };
+            
+            // Aciona o clique automático para abrir a janela
+            input.click();
         } 
-        else if (tipo === 'titulo') {
-            const txt = prompt("Digite o novo Título Principal:", App.configTemp.tituloHeader);
-            if (txt !== null) { App.configTemp.tituloHeader = txt; App.atualizarPreviewConfigurador(); }
+        else if (tipo === 'titulo' || tipo === 'descricao' || tipo === 'opcoes') {
+            // Função para gerar modais bonitos
+            const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
+                
+                const modal = document.createElement('div');
+                modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
+                
+                modal.innerHTML = `
+                    <style>
+                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                        .modal-custom-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 15px; margin-top: 6px; transition: border-color 0.2s; }
+                        .modal-custom-input:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.2); }
+                        .modal-custom-label { font-weight: 600; color: #495057; font-size: 14px; }
+                        .modal-btn-cancel { padding: 10px 18px; background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-cancel:hover { background: #e2e6ea; }
+                        .modal-btn-save { padding: 10px 18px; background: #0d6efd; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-save:hover { background: #0b5ed7; }
+                    </style>
+                    <h3 style="margin-top:0; color:#212529; font-size:20px; border-bottom:1px solid #f1f3f5; padding-bottom:15px; margin-bottom:20px;">${tituloModal}</h3>
+                    <div style="margin-bottom:24px;">
+                        ${conteudoHTML}
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:12px;">
+                        <button id="btnCancelarModal" class="modal-btn-cancel">Cancelar</button>
+                        <button id="btnSalvarModal" class="modal-btn-save">Salvar Alterações</button>
+                    </div>
+                `;
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                const fecharModal = () => {
+                    overlay.style.animation = "fadeIn 0.2s ease reverse forwards";
+                    modal.style.animation = "scaleUp 0.2s ease reverse forwards";
+                    setTimeout(() => document.body.removeChild(overlay), 200);
+                };
+
+                modal.querySelector('#btnCancelarModal').onclick = fecharModal;
+                modal.querySelector('#btnSalvarModal').onclick = () => {
+                    onSave(modal);
+                    fecharModal();
+                };
+            };
+
+            // MODAIS ESPECÍFICOS USANDO AS TUAS VARIÁVEIS EXATAS
+            if (tipo === 'titulo') {
+                abrirModalBonito(
+                    "✏️ Editar Título",
+                    `<label class="modal-custom-label">Título do Documento:</label>
+                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${App.configTemp.tituloHeader || ''}">`,
+                    (modal) => {
+                        App.configTemp.tituloHeader = modal.querySelector('#inputTitulo').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'descricao') {
+                abrirModalBonito(
+                    "📝 Editar Descrição",
+                    `<label class="modal-custom-label">Subtítulo ou Descrição:</label>
+                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${App.configTemp.descHeader || ''}</textarea>`,
+                    (modal) => {
+                        App.configTemp.descHeader = modal.querySelector('#inputDescricao').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'opcoes') {
+                abrirModalBonito(
+                    "⚙️ Dados Complementares",
+                    `<div style="margin-bottom:16px;">
+                        <label class="modal-custom-label">Planos de Curso</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.configTemp.opcoesPlano || ''}">
+                     </div>
+                     <div>
+                        <label class="modal-custom-label">Dias de Vencimento</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.configTemp.opcoesVencimento || ''}">
+                     </div>`,
+                    (modal) => {
+                        App.configTemp.opcoesPlano = modal.querySelector('#inputCursos').value;
+                        App.configTemp.opcoesVencimento = modal.querySelector('#inputDias').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            }
         }
-        else if (tipo === 'descricao') {
-            const txt = prompt("Digite a nova Descrição:", App.configTemp.descHeader);
-            if (txt !== null) { App.configTemp.descHeader = txt; App.atualizarPreviewConfigurador(); }
-        }
-        else if (tipo === 'opcoes') {
-            const planos = prompt("Digite as opções de PLANO DE CURSO separadas por vírgula:", App.configTemp.opcoesPlano);
-            if (planos !== null) App.configTemp.opcoesPlano = planos;
-            
-            const dias = prompt("Digite as opções de DIA DE VENCIMENTO separadas por vírgula:", App.configTemp.opcoesVencimento);
-            if (dias !== null) App.configTemp.opcoesVencimento = dias;
-            
-            App.atualizarPreviewConfigurador();
-        }
-       else if (tipo === 'contrato') {
+        else if (tipo === 'contrato') {
             const modal = document.getElementById('modal-overlay'); 
             if(modal) modal.style.display = 'flex';
             document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
@@ -3110,9 +3267,21 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 App.fecharModal();
             };
         }
-   },
+    },
+
     salvarConfiguradorMatricula: async () => {
+        // Captura o botão exato que disparou a função
+        const btn = document.querySelector('button[onclick="App.salvarConfiguradorMatricula()"]');
+        const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Tudo';
+        
+        // Dá o feedback visual imediato: muda o texto, desativa o clique e põe o rato a carregar
+        if (btn) { 
+            btn.innerHTML = "A salvar... ⏳"; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.8'; 
+        }
         document.body.style.cursor = 'wait';
+
         try {
             const escola = await App.api('/escola') || {};
             escola.configMatricula = App.configTemp;
@@ -3121,6 +3290,12 @@ abrirVisualizacaoContrato: async function(idContrato) {
         } catch(e) {
             App.showToast("Erro ao guardar as configurações.", "error");
         } finally {
+            // Devolve o botão ao normal, independentemente de ter dado erro ou sucesso
+            if (btn) { 
+                btn.innerHTML = txtOriginal; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+            }
             document.body.style.cursor = 'default';
         }
     },
@@ -3159,6 +3334,83 @@ abrirVisualizacaoContrato: async function(idContrato) {
             btn.disabled = true;
             acaoConfirmar(modal); 
         };
+    },
+
+    // =========================================================
+    // 🖐️ MOTOR DE ARRASTE DA IMAGEM DO CABEÇALHO (DRAG & DROP)
+    // =========================================================
+    dragState: { isDragging: false, startX: 0, startY: 0, bgX: 50, bgY: 50 },
+
+    iniciarArraste: (e) => {
+        App.dragState.isDragging = true;
+        
+        // Pega a posição inicial do clique (rato ou dedo)
+        App.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        App.dragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Descobre a posição atual que está guardada (ex: "50% 50%")
+        let pos = App.configTemp.imagemPosicao || '50% 50%';
+        let parts = pos.split(' ');
+        App.dragState.bgX = parseFloat(parts[0]) || 50;
+        App.dragState.bgY = parseFloat(parts[1]) || 50;
+
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.cursor = 'grabbing';
+
+        // Escuta os movimentos em todo o documento para não perder o rato se sair da div
+        document.addEventListener('mousemove', App.arrastarImagem);
+        document.addEventListener('mouseup', App.pararArraste);
+        document.addEventListener('touchmove', App.arrastarImagem, { passive: false });
+        document.addEventListener('touchend', App.pararArraste);
+    },
+
+    arrastarImagem: (e) => {
+        if (!App.dragState.isDragging) return;
+        e.preventDefault(); // Evita que a página faça scroll no telemóvel enquanto arrasta
+
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Calcula a distância que o rato percorreu
+        const dx = clientX - App.dragState.startX;
+        const dy = clientY - App.dragState.startY;
+
+        // Sensibilidade. Valores menores deixam o movimento mais suave (ideal entre 0.1 e 0.3)
+        const sensibilidade = 0.2;
+
+        let newX = App.dragState.bgX - (dx * sensibilidade);
+        let newY = App.dragState.bgY - (dy * sensibilidade);
+
+        // Bloqueia entre 0% e 100% para a imagem não fugir da div
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        // Guarda a nova posição
+        App.configTemp.imagemPosicao = `${newX.toFixed(2)}% ${newY.toFixed(2)}%`;
+
+        // Aplica o movimento na tela em tempo real
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.backgroundPosition = App.configTemp.imagemPosicao;
+
+        // Atualiza a origem para o próximo frame de movimento ser contínuo
+        App.dragState.startX = clientX;
+        App.dragState.startY = clientY;
+        App.dragState.bgX = newX;
+        App.dragState.bgY = newY;
+    },
+
+    pararArraste: () => {
+        if (App.dragState.isDragging) {
+            App.dragState.isDragging = false;
+            const el = document.getElementById('preview-header-img');
+            if(el) el.style.cursor = 'grab';
+
+            // Limpa a memória libertando os eventos
+            document.removeEventListener('mousemove', App.arrastarImagem);
+            document.removeEventListener('mouseup', App.pararArraste);
+            document.removeEventListener('touchmove', App.arrastarImagem);
+            document.removeEventListener('touchend', App.pararArraste);
+        }
     }
 
 }; // <--- O OBJETO APP FECHA CORRETAMENTE AQUI!
