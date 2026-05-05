@@ -377,13 +377,22 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
         
         // ⏰ MOTOR DE TEMPO REAL DO SININHO E CÃO DE GUARDA
         if (!App.motorTempoRealLigado) {
-            setInterval(() => {
+            
+            // 1. Separamos a lógica numa função para poder chamar na hora
+            const checarSistema = () => {
                 const telaSistema = document.getElementById('tela-sistema');
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
                     App.verificarNotificacoes();
                     App.carregarDadosEscola(); 
                 }
-            }, 300000); 
+            };
+
+            // 2. Roda a primeira vez quase que imediatamente (2 seg) após o login
+            setTimeout(checarSistema, 2000);
+
+            // 3. Depois, fica rodando a cada 30 segundos (30000 milissegundos)
+            setInterval(checarSistema, 30000); 
+            
             App.motorTempoRealLigado = true;
         }
     },
