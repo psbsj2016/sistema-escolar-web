@@ -173,7 +173,7 @@
     const escolaId = urlParams.get('escola');
     const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : 'https://sistema-escolar-api-k3o8.onrender.com';
 
-    // Mostra/Oculta painel do responsável caso o aluno seja menor (lógica bónus extra útil)
+    // Mostra/Oculta painel do responsável caso o aluno seja menor
     document.getElementById('nascimento').addEventListener('change', function() {
         const nasc = new Date(this.value);
         const hoje = new Date();
@@ -204,11 +204,8 @@
             if(!res.ok) throw new Error("Escola não encontrada");
             const dados = await res.json();
             
-            // Aceita a configuração vinda de configMatricula ou direto do payload
             const config = dados.configMatricula || dados || {};
             
-            // --- INJEÇÃO DAS CUSTOMIZAÇÕES --- //
-
             // Imagem de Cabeçalho
             if(config.imagemHeader) {
                 const header = document.getElementById('header-imagem');
@@ -223,7 +220,7 @@
             // Opções do Plano de Curso
             if(config.opcoesPlano) {
                 const selectPlano = document.getElementById('plano_curso');
-                selectPlano.innerHTML = '<option value="">-- Selecione --</option>'; // Limpa padrão
+                selectPlano.innerHTML = '<option value="">-- Selecione --</option>';
                 config.opcoesPlano.split(',').forEach(plano => {
                     const option = document.createElement('option');
                     option.value = plano.trim();
@@ -235,7 +232,7 @@
             // Opções de Dia de Vencimento
             if(config.opcoesVencimento) {
                 const selectVenc = document.getElementById('dia_vencimento');
-                selectVenc.innerHTML = '<option value="">-- Selecione --</option>'; // Limpa padrão
+                selectVenc.innerHTML = '<option value="">-- Selecione --</option>';
                 config.opcoesVencimento.split(',').forEach(dia => {
                     const option = document.createElement('option');
                     option.value = dia.trim();
@@ -244,7 +241,7 @@
                 });
             }
 
-            // Logo e Cores (Mantido do original)
+            // Logo e Cores
             if(config.corSecundaria) {
                 document.querySelector('.container').style.borderTopColor = config.corSecundaria;
                 document.querySelectorAll('h3, button').forEach(el => el.style.color = config.corSecundaria || '#3498db');
@@ -257,17 +254,15 @@
                 imgLogo.style.display = 'block';
             }
             
-            // ---> AQUI É A ÚNICA MUDANÇA (A FUNÇÃO QUE "LIMPA" AS TAGS HTML E MOSTRA O TEXTO PURO/FORMATADO) <--- //
+            // Decodifica HTML do banco
             function formatarHTML(htmlTexto) {
                 var txt = document.createElement("textarea");
                 txt.innerHTML = htmlTexto;
                 return txt.value;
             }
 
-            // Pega o contrato salvo na API, converte o código HTML em formato real visual, e injeta na tela
             let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
             window.textoContratoOriginal = contratoFormatado;
-            // ------------------------------------------------------------------------------------------------ //
 
             atualizarContratoAoVivo();
             
@@ -278,7 +273,7 @@
         }
     }
 
-    // 2. Atualiza as tags do contrato em tempo real enquanto o aluno preenche os campos
+    // 2. Atualiza as tags do contrato em tempo real
     function atualizarContratoAoVivo() {
         if(!window.textoContratoOriginal) return;
         let texto = window.textoContratoOriginal;
@@ -288,11 +283,9 @@
         const rg = document.getElementById('rg')?.value || '_______________________';
         const resp_nome = document.getElementById('resp_nome')?.value || '_______________________';
         
-        // Pega o texto do select (ex: "Intensivo") em vez do value se forem diferentes, mas value serve
         const planoSelect = document.getElementById('plano_curso');
         const plano = planoSelect.options[planoSelect.selectedIndex]?.text.replace('-- Selecione --', '_______________________') || '_______________________';
         
-        // Substituições corretas de TODAS as tags
         texto = texto.replace(/\[NOME_ALUNO\]/g, `<strong style="color:#2c3e50; text-decoration:underline;">${nome.toUpperCase()}</strong>`);
         texto = texto.replace(/\[CPF_ALUNO\]/g, `<strong style="color:#2c3e50;">${cpf}</strong>`);
         texto = texto.replace(/\[RG_ALUNO\]/g, `<strong style="color:#2c3e50;">${rg}</strong>`);
@@ -302,7 +295,6 @@
         document.getElementById('previewContrato').innerHTML = texto;
     }
 
-    // Adiciona o "escutador" a todos os inputs E selects (para garantir que muda ao escolher o plano)
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('input', atualizarContratoAoVivo);
         el.addEventListener('change', atualizarContratoAoVivo);
@@ -315,35 +307,33 @@
         btn.innerText = "A Enviar ao Sistema..."; 
         btn.disabled = true;
 
-        // 1. Primeiro, juntamos o endereço numa linha só
+        // ---- AQUI ESTÁ A CORREÇÃO PRINCIPAL: NOMES EXATOS QUE O APP.JS ESPERA ----
         const enderecoCompleto = document.getElementById('rua').value + ', ' + 
                                  document.getElementById('numero').value + ' - ' + 
                                  document.getElementById('bairro').value + ', ' + 
                                  document.getElementById('cidade').value;
 
-        // 2. Montamos o pacote com os nomes EXATOS que o sistema espera
         const payload = {
             escolaId: escolaId,
             nome: document.getElementById('nome').value,
             cpf: document.getElementById('cpf').value,
             rg: document.getElementById('rg').value,
-            dataNascimento: document.getElementById('nascimento').value, // Renomeado
+            dataNascimento: document.getElementById('nascimento').value, // Renomeado para o app.js
             sexo: document.getElementById('sexo').value,
             profissao: document.getElementById('profissao').value,
             
             email: document.getElementById('email').value,
+            telefone: document.getElementById('whatsapp').value, // Renomeado para o app.js
             whatsapp: document.getElementById('whatsapp').value,
-            telefone: document.getElementById('whatsapp').value, // Adicionado para o cofre
             
-            responsavel: document.getElementById('resp_nome').value, // Renomeado
-            // Pode enviar os outros de responsável também se o banco aceitar:
+            responsavel: document.getElementById('resp_nome').value, // Renomeado para o app.js
             resp_parentesco: document.getElementById('resp_parentesco').value,
             resp_cpf: document.getElementById('resp_cpf').value,
             resp_zap: document.getElementById('resp_zap').value,
             
-            endereco: enderecoCompleto, // Envia tudo junto na chave 'endereco'
+            endereco: enderecoCompleto, // Envia o endereço numa linha só
             
-            curso: document.getElementById('plano_curso').value, // Renomeado de plano_curso para curso
+            curso: document.getElementById('plano_curso').value, // Renomeado para o app.js
             dia_vencimento: document.getElementById('dia_vencimento').value,
             
             conteudoHTML: document.getElementById('previewContrato').innerHTML
