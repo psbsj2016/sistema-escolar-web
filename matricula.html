@@ -300,43 +300,49 @@
         el.addEventListener('change', atualizarContratoAoVivo);
     });
 
-    // 3. Envia a matrícula para o Sistema
+     // 3. Envia a matrícula para o Sistema
     document.getElementById('formMatricula').addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnSubmit');
         btn.innerText = "A Enviar ao Sistema..."; 
         btn.disabled = true;
 
-        // ---- AQUI ESTÁ A CORREÇÃO PRINCIPAL: NOMES EXATOS QUE O APP.JS ESPERA ----
-        const enderecoCompleto = document.getElementById('rua').value + ', ' + 
-                                 document.getElementById('numero').value + ' - ' + 
-                                 document.getElementById('bairro').value + ', ' + 
-                                 document.getElementById('cidade').value;
-
+        // 🚀 PAYLOAD CORRIGIDO (IDs agora batem 100% com o seu HTML)
         const payload = {
             escolaId: escolaId,
-            nome: document.getElementById('nome').value,
-            cpf: document.getElementById('cpf').value,
-            rg: document.getElementById('rg').value,
-            dataNascimento: document.getElementById('nascimento').value, // Renomeado para o app.js
-            sexo: document.getElementById('sexo').value,
-            profissao: document.getElementById('profissao').value,
+            nome: document.getElementById('nome')?.value || '',
+            cpf: document.getElementById('cpf')?.value || '',
+            email: document.getElementById('email')?.value || '',
+            whatsapp: document.getElementById('whatsapp')?.value || '',
             
-            email: document.getElementById('email').value,
-            telefone: document.getElementById('whatsapp').value, // Renomeado para o app.js
-            whatsapp: document.getElementById('whatsapp').value,
+            // Dados para o Cofre de Contratos e Ficha do Aluno
+            rg: document.getElementById('rg')?.value || '',
+            nascimento: document.getElementById('nascimento')?.value || '',
+            sexo: document.getElementById('sexo')?.value || '',
+            profissao: document.getElementById('profissao')?.value || '',
             
-            responsavel: document.getElementById('resp_nome').value, // Renomeado para o app.js
-            resp_parentesco: document.getElementById('resp_parentesco').value,
-            resp_cpf: document.getElementById('resp_cpf').value,
-            resp_zap: document.getElementById('resp_zap').value,
+            // Endereço
+            rua: document.getElementById('rua')?.value || '',
+            numero: document.getElementById('numero')?.value || '',
+            bairro: document.getElementById('bairro')?.value || '',
+            cidade: document.getElementById('cidade')?.value || '',
+            estado: document.getElementById('estado')?.value || '', // Se não houver no form, vai vazio
+            pais: document.getElementById('pais')?.value || 'Brasil',
             
-            endereco: enderecoCompleto, // Envia o endereço numa linha só
+            // Dados Académicos e Financeiros (IDs CORRIGIDOS AQUI 👇)
+            curso: document.getElementById('curso')?.value || '', // Se não houver, vai vazio
+            turma: document.getElementById('turma')?.value || '', // Se não houver, vai vazio
+            planoCurso: document.getElementById('plano_curso')?.value || '', 
+            diaVencimento: document.getElementById('dia_vencimento')?.value || '',
             
-            curso: document.getElementById('plano_curso').value, // Renomeado para o app.js
-            dia_vencimento: document.getElementById('dia_vencimento').value,
+            // Dados do Responsável Legal
+            resp_nome: document.getElementById('resp_nome')?.value || '',
+            resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
+            resp_cpf: document.getElementById('resp_cpf')?.value || '',
+            resp_zap: document.getElementById('resp_zap')?.value || '',
             
-            conteudoHTML: document.getElementById('previewContrato').innerHTML
+            // O Contrato assinado/gerado
+            conteudoHTML: document.getElementById('previewContrato')?.innerHTML || '<p>Contrato não gerado.</p>'
         };
 
         try {
@@ -358,7 +364,7 @@
             btn.innerText = "Concluir Matrícula"; 
             btn.disabled = false;
         }
-    });
+    });    
 
     // Inicia tudo
     carregarConfiguracoes();
