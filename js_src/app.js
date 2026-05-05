@@ -2690,18 +2690,19 @@ abrirVisualizacaoContrato: async function(idContrato) {
             throw new Error(contrato ? contrato.error : "Documento não encontrado");
         }
         
-        // 3. Mapear todos os dados do aluno (com fallback para "Não informado" caso algum campo esteja vazio)
+        // 3. Mapear todos os dados do aluno (com fallback estendido para garantir captura exata do matricula.html)
         const nomeAluno = contrato.nome || contrato.nomeAluno || "Aluno não identificado";
         const cpf = contrato.cpf || contrato.cpfAluno || "Não informado";
         const rg = contrato.rg || contrato.rgAluno || "Não informado";
-        const dataNascimento = contrato.dataNascimento || contrato.dataNasc || "Não informada";
+        const dataNascimento = contrato.nascimento || contrato.dataNascimento || contrato.dataNasc || "Não informada";
         const responsavel = contrato.responsavel || contrato.nomeResponsavel || contrato.resp_nome || "O Próprio / Não informado";
-        const telefone = contrato.telefone || contrato.celular || "Não informado";
+        const telefone = contrato.whatsapp || contrato.telefone || contrato.celular || "Não informado";
         const email = contrato.email || "Não informado";
-        const endereco = contrato.endereco || "Não informado";
-        const curso = contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
+        const endereco = contrato.enderecoCompleto || contrato.endereco || "Não informado";
+        const curso = contrato.plano || contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
+        const vencimento = contrato.diaVencimento || contrato.vencimento || contrato.dataVencimento || "Não informado";
         
-        // 👇 CORREÇÃO: Usamos o App.unescapeHTML para transformar as tags de volta em layout (negrito, parágrafos, etc)
+        // Transformar as tags de volta em layout (negrito, parágrafos, etc)
         const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
         
         const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
@@ -2732,14 +2733,15 @@ abrirVisualizacaoContrato: async function(idContrato) {
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Responsável:</b> ${responsavel}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Telefone:</b> ${telefone}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${telefone}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Curso/Plano:</b> ${curso}</td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço:</b> ${endereco}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço:</b> ${endereco}</td>
                     </tr>
                 </table>
                 
@@ -2750,7 +2752,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 
                 <div style="padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px; page-break-inside: avoid;">
                     <p style="margin:0 0 5px 0; color:#333;">Pelo presente instrumento, as partes concordam com todos os termos acima descritos.</p>
-                    ✅ <b>ACEITE DIGITAL REGISTADO COM VALIDADE JURÍDICA:</b><br>
+                    ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
                     <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
                     <p style="margin:10px 0 0 0; font-size:10px; color:#7f8c8d;">ID da Transação: ${contrato._id || idContrato}</p>
                 </div>
@@ -2771,7 +2773,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
         if(btnConfirm) {
             btnConfirm.style.display = 'inline-flex';
             btnConfirm.style.background = '#2c3e50';
-            btnConfirm.innerHTML = '🖨️ Imprimir Ficha Completa';
+            btnConfirm.innerHTML = '🖨️ Imprimir Ficha';
             btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
         }
         
