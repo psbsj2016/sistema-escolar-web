@@ -3,20 +3,20 @@
 // =========================================================
 
 const APP_PREFIX = 'escola-pwa-';
-const VERSION = 'v1777946537'; // O seu robô vai mudar isto automaticamente
+const VERSION = 'v1777946571'; // O seu robô vai mudar isto automaticamente
 const CACHE_NAME = APP_PREFIX + VERSION;
 
 // ⚠️ As tags ?v= estão aqui para o seu robô as poder atualizar
 const ASSETS_TO_CACHE = [
     '/',
     '/index.html',
-    '/css/site.css?v=1777946537', 
-    '/js/config.js?v=1777946537',
-    '/js/app.js?v=1777946537',
-    '/js/modulos/cadastros.js?v=1777946537',
-    '/js/modulos/financeiro.js?v=1777946537',
-    '/js/modulos/pedagogico.js?v=1777946537',
-    '/js/modulos/relatorios.js?v=1777946537'
+    '/css/site.css?v=1777946571', 
+    '/js/config.js?v=1777946571',
+    '/js/app.js?v=1777946571',
+    '/js/modulos/cadastros.js?v=1777946571',
+    '/js/modulos/financeiro.js?v=1777946571',
+    '/js/modulos/pedagogico.js?v=1777946571',
+    '/js/modulos/relatorios.js?v=1777946571'
 ];
 
 self.addEventListener('install', (event) => {
