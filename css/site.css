@@ -531,3 +531,107 @@ tr:hover td { background: rgba(0,0,0,0.02); }
     border-color: #3498db;
     box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
 }
+
+/* =========================================================
+   📱 BLINDAGEM MOBILE DEFINITIVA: CABEÇALHO E CONFIGURADOR
+   ========================================================= */
+@media (max-width: 768px) {
+    /* 1. Ajuste do Cabeçalho (Título vs Sino) */
+    .header-left {
+        min-width: 0 !important; 
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+    }
+    header h2 {
+        font-size: 16px !important; 
+        min-width: 0 !important; 
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+    }
+    /* Protege o grupo da direita (Sino, Data, Menu) para não ser esmagado */
+    header > div:last-child,
+    .notification-container, 
+    .mobile-menu-btn {
+        flex-shrink: 0 !important; 
+    }
+
+    /* 2. Ajuste do Configurador (Força o Empilhamento e Trava a Largura) */
+    .config-container-layout {
+        flex-direction: column !important;
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        overflow: hidden !important; /* Evita que o layout quebre para os lados */
+    }
+    .config-sidebar-tools, 
+    .config-preview-area {
+        width: 100% !important;
+        flex: none !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+    #preview-word-doc {
+        min-height: 400px !important; 
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+}
+
+/* =========================================================
+   📱 MODO FORÇA BRUTA: CABEÇALHO E CONFIGURADOR MOBILE
+   ========================================================= */
+@media (max-width: 768px) {
+    /* 1. CABEÇALHO - TRAVANDO O TAMANHO DO TÍTULO */
+    header {
+        flex-wrap: nowrap !important;
+        overflow: hidden !important;
+        padding-right: 15px !important;
+    }
+    .header-left {
+        flex: 1 !important;
+        min-width: 0 !important; /* O SEGREDO DOS 3 PONTINHOS ESTÁ AQUI */
+        overflow: hidden !important;
+    }
+    header h2 {
+        font-size: 15px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    /* Proteção Absoluta do Sininho */
+    header > div:last-child, 
+    .notification-container, 
+    .btn-bell {
+        flex-shrink: 0 !important;
+        min-width: 45px !important;
+    }
+
+    /* 2. CONFIGURADOR - EMPILHAMENTO FORÇADO PELA ESTRUTURA */
+    /* Este código ataca as DIVs diretamente, não depende de classes do app.js! */
+    #area-dinamica-hub > div[style*="display:flex"] {
+        flex-direction: column !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    #area-dinamica-hub > div > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+        margin-bottom: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Ajuste da altura da folha no telemóvel */
+    #preview-word-doc {
+        min-height: 450px !important;
+        width: 100% !important;
+    }
+}
