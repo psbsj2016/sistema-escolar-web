@@ -315,33 +315,35 @@
         btn.innerText = "A Enviar ao Sistema..."; 
         btn.disabled = true;
 
+        // 1. Primeiro, juntamos o endereço numa linha só
+        const enderecoCompleto = document.getElementById('rua').value + ', ' + 
+                                 document.getElementById('numero').value + ' - ' + 
+                                 document.getElementById('bairro').value + ', ' + 
+                                 document.getElementById('cidade').value;
+
+        // 2. Montamos o pacote com os nomes EXATOS que o sistema espera
         const payload = {
             escolaId: escolaId,
             nome: document.getElementById('nome').value,
             cpf: document.getElementById('cpf').value,
-            email: document.getElementById('email').value,
-            whatsapp: document.getElementById('whatsapp').value,
-            
-            // Novos campos adicionados para chegarem ao sistema
             rg: document.getElementById('rg').value,
-            nascimento: document.getElementById('nascimento').value,
+            dataNascimento: document.getElementById('nascimento').value, // Renomeado
             sexo: document.getElementById('sexo').value,
             profissao: document.getElementById('profissao').value,
             
-            // Dados do Responsável
-            resp_nome: document.getElementById('resp_nome').value,
+            email: document.getElementById('email').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            telefone: document.getElementById('whatsapp').value, // Adicionado para o cofre
+            
+            responsavel: document.getElementById('resp_nome').value, // Renomeado
+            // Pode enviar os outros de responsável também se o banco aceitar:
             resp_parentesco: document.getElementById('resp_parentesco').value,
             resp_cpf: document.getElementById('resp_cpf').value,
             resp_zap: document.getElementById('resp_zap').value,
             
-            // Endereço
-            rua: document.getElementById('rua').value,
-            numero: document.getElementById('numero').value,
-            bairro: document.getElementById('bairro').value,
-            cidade: document.getElementById('cidade').value,
+            endereco: enderecoCompleto, // Envia tudo junto na chave 'endereco'
             
-            // Curso e Pagamento
-            plano_curso: document.getElementById('plano_curso').value,
+            curso: document.getElementById('plano_curso').value, // Renomeado de plano_curso para curso
             dia_vencimento: document.getElementById('dia_vencimento').value,
             
             conteudoHTML: document.getElementById('previewContrato').innerHTML
