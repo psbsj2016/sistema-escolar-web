@@ -2691,16 +2691,16 @@ abrirVisualizacaoContrato: async function(idContrato) {
         }
         
         // 3. Mapear todos os dados do aluno (com fallback estendido para garantir captura exata do matricula.html)
-        const nomeAluno = contrato.nome || contrato.nomeAluno || "Aluno não identificado";
-        const cpf = contrato.cpf || contrato.cpfAluno || "Não informado";
-        const rg = contrato.rg || contrato.rgAluno || "Não informado";
-        const dataNascimento = contrato.nascimento || contrato.dataNascimento || contrato.dataNasc || "Não informada";
-        const responsavel = contrato.responsavel || contrato.nomeResponsavel || contrato.resp_nome || "O Próprio / Não informado";
-        const telefone = contrato.whatsapp || contrato.telefone || contrato.celular || "Não informado";
+        const nomeAluno = contrato.nomeAluno || contrato.nome || "Aluno não identificado";
+        const cpf = contrato.cpf || "Não informado";
+        const rg = contrato.rg || "Não informado"; 
+        const dataNascimento = contrato.nascimento || "Não informada";
+        const responsavel = contrato.resp_nome || "O Próprio / Não informado";
+        const telefone = contrato.whatsapp || "Não informado";
         const email = contrato.email || "Não informado";
-        const endereco = contrato.enderecoCompleto || contrato.endereco || "Não informado";
-        const curso = contrato.plano || contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
-        const vencimento = contrato.diaVencimento || contrato.vencimento || contrato.dataVencimento || "Não informado";
+        const curso = contrato.planoCurso || contrato.curso || "Não informado"; // <-- Deixe apenas esta linha do curso
+        const vencimento = contrato.diaVencimento || "Não informado";
+        const endereco = contrato.enderecoCompleto || "Não informado";
         
         // Transformar as tags de volta em layout (negrito, parágrafos, etc)
         const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
