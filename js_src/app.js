@@ -2692,7 +2692,9 @@ abrirVisualizacaoContrato: async function(idContrato) {
         const endereco = contrato.endereco || "Não informado";
         const curso = contrato.curso || contrato.plano_curso || contrato.planoCurso || "Não informado";
         
-        const corpoContrato = contrato.conteudoHTML || "<p>O contrato não possui texto legível.</p>";
+        // 👇 CORREÇÃO: Usamos o App.unescapeHTML para transformar as tags de volta em layout (negrito, parágrafos, etc)
+        const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
+        
         const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
             ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
             : 'Data não registada';
