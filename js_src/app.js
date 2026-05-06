@@ -2695,10 +2695,13 @@ abrirVisualizacaoContrato: async function(idContrato) {
         const cpf = contrato.cpf || "Não informado";
         const rg = contrato.rg || "Não informado"; 
         const dataNascimento = contrato.nascimento || "Não informada";
-        const responsavel = contrato.resp_nome || "O Próprio / Não informado";
+        const resp_nome = contrato.resp_nome || "Não informado";
+        const resp_parentesco = contrato.resp_parentesco || "Não informado";
+        const resp_cpf = contrato.resp_cpf || "Não informado";
+        const resp_zap = contrato.resp_zap || "Não informado";
         const telefone = contrato.whatsapp || "Não informado";
         const email = contrato.email || "Não informado";
-        const curso = contrato.planoCurso || contrato.curso || "Não informado"; // <-- Deixe apenas esta linha do curso
+        const curso = contrato.planoCurso || contrato.curso || "Não informado"; 
         const vencimento = contrato.diaVencimento || "Não informado";
         const endereco = contrato.enderecoCompleto || "Não informado";
         
