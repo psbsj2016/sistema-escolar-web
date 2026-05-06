@@ -2694,7 +2694,14 @@ abrirVisualizacaoContrato: async function(idContrato) {
         const nomeAluno = contrato.nomeAluno || contrato.nome || "Aluno não identificado";
         const cpf = contrato.cpf || "Não informado";
         const rg = contrato.rg || "Não informado"; 
-        const dataNascimento = contrato.nascimento || "Não informada";
+        // 🔄 CORREÇÃO: FORMATANDO A DATA PARA DIA/MÊS/ANO
+        let dataNascimento = contrato.nascimento || "Não informada";
+        if (dataNascimento !== "Não informada" && dataNascimento.includes('-')) {
+            const partes = dataNascimento.split('-'); // Separa o Ano-Mês-Dia
+            if (partes.length === 3) {
+                dataNascimento = `${partes[2]}/${partes[1]}/${partes[0]}`; // Remonta como Dia/Mês/Ano
+            }
+        }
         const sexo = contrato.sexo || "Não informado";
         const profissao = contrato.profissao || "Não informada";
         const email = contrato.email || "Não informado";
@@ -2732,7 +2739,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${nomeAluno}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Data Nasc.:</b> ${dataNascimento}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Data Nascimento:</b> ${dataNascimento}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${cpf}</td>
@@ -2763,14 +2770,14 @@ abrirVisualizacaoContrato: async function(idContrato) {
                     </tr>
                 </table>
 
-                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #2ecc71; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">🎓 Dados Académicos e Financeiros</h4>
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #2ecc71; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">🎓 Dados Acadêmicos e Financeiros</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Curso:</b> ${curso}</td>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Turma:</b> ${turma}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano/Mensalidade:</b> ${planoCurso}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
                     </tr>
                 </table>
