@@ -2690,29 +2690,33 @@ abrirVisualizacaoContrato: async function(idContrato) {
             throw new Error(contrato ? contrato.error : "Documento não encontrado");
         }
         
-        // 3. Mapear todos os dados do aluno (com fallback estendido para garantir captura exata do matricula.html)
+        // 3. Mapear TODOS OS DADOS com exatidão do server.js
         const nomeAluno = contrato.nomeAluno || contrato.nome || "Aluno não identificado";
         const cpf = contrato.cpf || "Não informado";
         const rg = contrato.rg || "Não informado"; 
         const dataNascimento = contrato.nascimento || "Não informada";
-        const resp_nome = contrato.resp_nome || "Não informado";
-        const resp_parentesco = contrato.resp_parentesco || "Não informado";
-        const resp_cpf = contrato.resp_cpf || "Não informado";
-        const resp_zap = contrato.resp_zap || "Não informado";
-        const telefone = contrato.whatsapp || "Não informado";
+        const sexo = contrato.sexo || "Não informado";
+        const profissao = contrato.profissao || "Não informada";
         const email = contrato.email || "Não informado";
-        const curso = contrato.planoCurso || contrato.curso || "Não informado"; 
-        const vencimento = contrato.diaVencimento || "Não informado";
+        const telefone = contrato.whatsapp || "Não informado";
         const endereco = contrato.enderecoCompleto || "Não informado";
         
-        // Transformar as tags de volta em layout (negrito, parágrafos, etc)
-        const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
+        const curso = contrato.curso || "Não informado";
+        const turma = contrato.turma || "Não informada";
+        const planoCurso = contrato.planoCurso || "Não informado";
+        const vencimento = contrato.diaVencimento || "Não informado";
         
+        const responsavel = contrato.resp_nome || "O Próprio / Não informado";
+        const respParentesco = contrato.resp_parentesco || "Não informado";
+        const respCpf = contrato.resp_cpf || "Não informado";
+        const respZap = contrato.resp_zap || "Não informado";
+
+        const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
         const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
             ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
             : 'Data não registada';
 
-        // 4. Montar o HTML super otimizado para Impressão e Ecrã
+        // 4. Montar o HTML super otimizado e segmentado
         document.getElementById('modal-titulo').innerText = `Matrícula: ${nomeAluno}`;
         document.getElementById('modal-form-content').innerHTML = `
             <div id="area-impressao-contrato" style="padding: 30px; border: 1px solid #ccc; background: #fff; position:relative; color: #333; font-family: Arial, sans-serif;">
@@ -2724,27 +2728,50 @@ abrirVisualizacaoContrato: async function(idContrato) {
                     </div>
                 </div>
                 
-                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno e Matrícula</h4>
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${nomeAluno}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Data Nasc.:</b> ${dataNascimento}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${cpf}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>RG:</b> ${rg}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Sexo:</b> ${sexo}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Profissão:</b> ${profissao}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${telefone}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço Completo:</b> ${endereco}</td>
+                    </tr>
+                </table>
+
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #9b59b6; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">👨‍👩‍👧 Dados do Responsável</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${responsavel}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Parentesco:</b> ${respParentesco}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${respCpf}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${respZap}</td>
+                    </tr>
+                </table>
+
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #2ecc71; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">🎓 Dados Académicos e Financeiros</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome do Aluno:</b> ${nomeAluno}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>CPF:</b> ${cpf}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Curso:</b> ${curso}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Turma:</b> ${turma}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>RG:</b> ${rg}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Data Nasc.:</b> ${dataNascimento}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Responsável:</b> ${responsavel}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${telefone}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Curso/Plano:</b> ${curso}</td>
-                    </tr>
-                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano/Mensalidade:</b> ${planoCurso}</td>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço:</b> ${endereco}</td>
                     </tr>
                 </table>
                 
@@ -2770,7 +2797,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 </div>
 
             </div>
-        `;
+        `;        
 
         // 5. Mostrar o botão de impressão
         if(btnConfirm) {
