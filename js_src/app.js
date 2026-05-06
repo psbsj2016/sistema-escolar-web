@@ -3086,7 +3086,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 escola.configMatricula = {
                     imagemHeader: 'https://placehold.co/800x200?text=Sua+Imagem+de+Cabecalho',
                     imagemPosicao: '50% 50%', // Nova variável para guardar a posição
-                    tituloHeader: 'Matrícula Online - PTT Cursos',
+                    tituloHeader: 'Matrícula Digital',
                     descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
                     opcoesPlano: 'Padrão, Intensivo, Personalizado',
                     opcoesVencimento: '08, 20',
