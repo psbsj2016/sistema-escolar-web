@@ -3084,7 +3084,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             
             if (!escola.configMatricula) {
                 escola.configMatricula = {
-                    imagemHeader: 'https://placehold.co/800x200?text=Sua+Imagem+de+Cabecalho',
+                    imagemHeader: 'https://placehold.co/800x400?text=Sua+Imagem+de+Cabecalho',
                     imagemPosicao: '50% 50%', // Nova variável para guardar a posição
                     tituloHeader: 'Matrícula Digital',
                     descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
@@ -3109,7 +3109,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                         <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
                         
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
-                        <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">800 x 200px</b></div>
+                        <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">800 x 400px</b></div>
 
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
                         <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
