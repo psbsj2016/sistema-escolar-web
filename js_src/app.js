@@ -342,6 +342,20 @@ var App = {
     // =========================================================
     init: async () => {
         localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
+         
+        const resetToken = new URLSearchParams(window.location.search).get('reset');
+        if (resetToken) {
+        document.documentElement.removeAttribute('style');
+        document.getElementById('tela-login').style.display = 'flex';
+        document.getElementById('tela-sistema').style.display = 'none';
+
+        setTimeout(() => {
+        App.abrirModalNovaSenha(resetToken);
+        }, 300);
+
+        return;
+        } 
+
         const salvo = localStorage.getItem('usuario_logado'); const token = localStorage.getItem('token_acesso'); const bioId = localStorage.getItem('escola_bio_id');
 
         if (salvo && token) { 
@@ -489,52 +503,166 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
     },
 
     abrirModalRecuperacao: (event) => {
-        if(event) event.preventDefault();
-        let modal = document.getElementById('modal-recuperacao-senha');
-        
-        // Cria a janela de popup dinamicamente se não existir
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'modal-recuperacao-senha';
-            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;';
-            modal.innerHTML = `
-                <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-                    <span style="font-size: 40px; display:block; margin-bottom:10px;">🔐</span>
-                    <h3 style="margin-top:0; color:#2c3e50;">Recuperar Senha</h3>
-                    <p style="font-size:13px; color:#666; margin-bottom:20px;">Insira o e-mail registado na sua conta. Vamos gerar uma nova senha temporária e enviar para lá.</p>
-                    <input type="email" id="recuperar-email-input" placeholder="O seu e-mail de acesso..." style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
-                    <button class="btn-primary" onclick="App.enviarRecuperacaoSenha()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">✉️ Enviar Nova Senha</button>
-                    <button class="btn-cancel" onclick="document.getElementById('modal-recuperacao-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">Cancelar e Voltar</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
+    if(event) event.preventDefault();
+
+    let modal = document.getElementById('modal-recuperacao-senha');
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-recuperacao-senha';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;';
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                <span style="font-size: 40px; display:block; margin-bottom:10px;">🔐</span>
+                <h3 style="margin-top:0; color:#2c3e50;">Recuperar Senha</h3>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">
+                    Insira o e-mail registado na sua conta. Enviaremos um link seguro para criar uma nova senha.
+                </p>
+
+                <input type="email" id="recuperar-email-input" placeholder="O seu e-mail de acesso" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
+
+                <button class="btn-primary" onclick="App.enviarRecuperacaoSenha()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">
+                    ✉️ Enviar Link de Recuperação
+                </button>
+
+                <button class="btn-cancel" onclick="document.getElementById('modal-recuperacao-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                    Cancelar e Voltar
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    document.getElementById('recuperar-email-input').value = '';
+    modal.style.display = 'flex';
+},  
+      
+  enviarRecuperacaoSenha: async () => {
+    const email = document.getElementById('recuperar-email-input')?.value.trim();
+
+    if (!email) {
+        return App.showToast("Informe o e-mail de acesso.", "warning");
+    }
+
+    const btn = document.querySelector('#modal-recuperacao-senha .btn-primary');
+    const textoOriginal = btn.innerText;
+
+    btn.innerText = "Enviando link... ⏳";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/recuperar-senha`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            App.showToast(data.message || "Se este e-mail estiver cadastrado, enviaremos um link.", "success");
+            document.getElementById('modal-recuperacao-senha').style.display = 'none';
+        } else {
+            App.showToast(data.error || "Não foi possível solicitar a recuperação.", "error");
         }
-        document.getElementById('recuperar-email-input').value = '';
-        modal.style.display = 'flex';
-    },
 
-    enviarRecuperacaoSenha: async () => {
-        const email = document.getElementById('recuperar-email-input').value.trim();
-        if(!email || !email.includes('@')) return App.showToast("Por favor, introduza um e-mail válido.", "warning");
+    } catch (e) {
+        App.showToast("Erro de comunicação com o servidor.", "error");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+},
 
-        const btn = document.querySelector('#modal-recuperacao-senha .btn-primary');
-        const txtOriginal = btn.innerText;
-        btn.innerText = "A enviar e-mail... ⏳"; btn.disabled = true;
+abrirModalNovaSenha: (token) => {
+    let modal = document.getElementById('modal-nova-senha');
 
-        try {
-            const res = await App.api('/auth/recuperar-senha', 'POST', { email });
-            if (res && res.success) {
-                App.showToast("Sucesso! Verifique a sua caixa de entrada (e o Spam).", "success");
-                document.getElementById('modal-recuperacao-senha').style.display = 'none';
-            } else {
-                App.showToast(res.error || "E-mail não encontrado no sistema.", "error");
-            }
-        } catch(e) {
-            App.showToast("Erro ao tentar comunicar com o servidor.", "error");
-        } finally {
-            btn.innerText = txtOriginal; btn.disabled = false;
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-nova-senha';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10000;';
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:12px; max-width:420px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                <span style="font-size: 40px; display:block; margin-bottom:10px;">🔑</span>
+                <h3 style="margin-top:0; color:#2c3e50;">Criar Nova Senha</h3>
+
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">
+                    Digite a sua nova senha de acesso.
+                </p>
+
+                <input type="password" id="nova-senha-reset" placeholder="Nova senha" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:12px; text-align:center;">
+
+                <input type="password" id="confirma-senha-reset" placeholder="Confirmar nova senha" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
+
+                <button class="btn-primary" onclick="App.confirmarNovaSenhaReset()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">
+                    ✅ Salvar Nova Senha
+                </button>
+
+                <button class="btn-cancel" onclick="document.getElementById('modal-nova-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    App.tokenResetSenha = token;
+    modal.style.display = 'flex';
+},
+
+confirmarNovaSenhaReset: async () => {
+    const novaSenha = document.getElementById('nova-senha-reset')?.value || '';
+    const confirmaSenha = document.getElementById('confirma-senha-reset')?.value || '';
+
+    if (novaSenha.length < 6) {
+        return App.showToast("A nova senha deve ter pelo menos 6 caracteres.", "warning");
+    }
+
+    if (novaSenha !== confirmaSenha) {
+        return App.showToast("As senhas não conferem.", "warning");
+    }
+
+    const btn = document.querySelector('#modal-nova-senha .btn-primary');
+    const textoOriginal = btn.innerText;
+
+    btn.innerText = "Salvando... ⏳";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/redefinir-senha`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: App.tokenResetSenha,
+                novaSenha
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            App.showToast("Senha redefinida com sucesso. Faça login com a nova senha.", "success");
+            document.getElementById('modal-nova-senha').style.display = 'none';
+
+            App.tokenResetSenha = null;
+
+            const novaUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, novaUrl);
+        } else {
+            App.showToast(data.error || "Não foi possível redefinir a senha.", "error");
         }
-    },
+
+    } catch (e) {
+        App.showToast("Erro de comunicação com o servidor.", "error");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+},
 
 // =========================================================
 // 👆 BIOMETRIA PREMIUM - EXPERIÊNCIA DE APP NATIVO
