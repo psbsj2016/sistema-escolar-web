@@ -300,10 +300,13 @@ var App = {
 
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
-        const token = localStorage.getItem('token_acesso');
-        if (token) { headers['Authorization'] = `Bearer ${token}`; }
         
-        const options = { method, headers }; 
+        
+        const options = {
+    method,
+    headers,
+    credentials: 'include'
+}; 
         if (body) options.body = JSON.stringify(body);
         
         try {
@@ -379,9 +382,9 @@ var App = {
         return;
         } 
 
-        const salvo = localStorage.getItem('usuario_logado'); const token = localStorage.getItem('token_acesso'); const bioId = localStorage.getItem('escola_bio_id');
+        const salvo = localStorage.getItem('usuario_logado'); const bioId = localStorage.getItem('escola_bio_id');
 
-        if (salvo && token) { 
+        if (salvo) { 
             App.usuario = JSON.parse(salvo); 
             App.aplicarTemaSalvo();
 
@@ -449,7 +452,7 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
             if(res && res.success) {
                 App.usuario = res.usuario;
                 localStorage.setItem('usuario_logado', JSON.stringify(res.usuario));
-                localStorage.setItem('token_acesso', res.token);
+                
                 
                 if (typeof gtag === 'function') gtag('event', 'login', { method: 'Sistema PTT' });
                 
@@ -487,35 +490,56 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
         }
     },
 
-   logout: () => {
-        document.documentElement.removeAttribute('style');
-        localStorage.removeItem('usuario_logado'); localStorage.removeItem('token_acesso'); App.usuario = null;
-        
-        const inUser = document.getElementById('login-user'); if(inUser) inUser.value = ''; 
-        const inPass = document.getElementById('login-pass'); if(inPass) inPass.value = '';
-        
-        // 🧹 PROTOCOLO DE FAXINA TOTAL: Fechar todos os modais, menus e overlays pendentes
-        const modalPadrao = document.getElementById('modal-overlay'); if(modalPadrao) modalPadrao.style.display = 'none';
-        const modalInst = document.getElementById('modal-cadastro-inst'); if(modalInst) modalInst.style.display = 'none';
-        const modalRec = document.getElementById('modal-recuperacao-senha'); if(modalRec) modalRec.style.display = 'none';
-        
-        const sidebar = document.querySelector('.sidebar'); if(sidebar) sidebar.classList.remove('active');
-        const mobileOverlay = document.querySelector('.mobile-overlay'); if(mobileOverlay) mobileOverlay.classList.remove('active');
-        const notiDropdown = document.getElementById('noti-dropdown'); if(notiDropdown) notiDropdown.classList.remove('active');
-
-        // Esconde o sistema e mostra o login
-        document.getElementById('tela-sistema').style.display = 'none';
-        const telaLogin = document.getElementById('tela-login'); 
-        if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
-
-        const blockBox = document.getElementById('box-bloqueio-conta');
-        if(blockBox) blockBox.style.display = 'none';
-        
-        const loginForms = document.querySelectorAll('#tela-login .login-box, #tela-login .box-login');
-        loginForms.forEach(form => {
-            if (form.id !== 'box-bloqueio-conta') form.style.display = '';
+   logout: async () => {
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
         });
-    },
+    } catch(e) {}
+
+    document.documentElement.removeAttribute('style');
+    localStorage.removeItem('usuario_logado');
+    localStorage.removeItem('token_acesso');
+    App.usuario = null;
+
+    const inUser = document.getElementById('login-user');
+    if (inUser) inUser.value = '';
+
+    const inPass = document.getElementById('login-pass');
+    if (inPass) inPass.value = '';
+
+    const modalPadrao = document.getElementById('modal-overlay');
+    if (modalPadrao) modalPadrao.style.display = 'none';
+
+    const modalInst = document.getElementById('modal-cadastro-inst');
+    if (modalInst) modalInst.style.display = 'none';
+
+    const modalRec = document.getElementById('modal-recuperacao-senha');
+    if (modalRec) modalRec.style.display = 'none';
+
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.classList.remove('active');
+
+    const mobileOverlay = document.querySelector('.mobile-overlay');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+
+    const notiDropdown = document.getElementById('noti-dropdown');
+    if (notiDropdown) notiDropdown.classList.remove('active');
+
+    document.getElementById('tela-sistema').style.display = 'none';
+
+    const telaLogin = document.getElementById('tela-login');
+    if (telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+
+    const blockBox = document.getElementById('box-bloqueio-conta');
+    if (blockBox) blockBox.style.display = 'none';
+
+    const loginForms = document.querySelectorAll('#tela-login .login-box, #tela-login .box-login');
+    loginForms.forEach(form => {
+        if (form.id !== 'box-bloqueio-conta') form.style.display = '';
+    });
+},
      
         // =========================================================
     // 👁️ OLHINHO E RECUPERAÇÃO DE SENHA
