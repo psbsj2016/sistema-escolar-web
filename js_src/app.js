@@ -25,6 +25,29 @@ const LISTA_FUNCIONALIDADES = [
 
 var App = {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
+    
+    sanitizeHTML: (html) => {
+    if (!html) return '';
+
+    if (typeof DOMPurify === 'undefined') {
+        console.warn('DOMPurify não carregado. Usando escapeHTML como fallback.');
+        return App.escapeHTML(html);
+    }
+
+    return DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: [
+            'p', 'br', 'strong', 'b', 'em', 'i', 'u',
+            'h1', 'h2', 'h3', 'h4',
+            'ul', 'ol', 'li',
+            'div', 'span',
+            'table', 'thead', 'tbody', 'tr', 'td', 'th',
+            'blockquote'
+        ],
+        ALLOWED_ATTR: ['style', 'class']
+    });
+},    
+
     motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
@@ -2846,7 +2869,9 @@ abrirVisualizacaoContrato: async function(idContrato) {
         const respCpf = contrato.resp_cpf || "Não informado";
         const respZap = contrato.resp_zap || "Não informado";
 
-        const corpoContrato = contrato.conteudoHTML ? App.unescapeHTML(contrato.conteudoHTML) : "<p>O contrato não possui texto legível.</p>";
+        const corpoContrato = contrato.conteudoHTML
+    ? App.sanitizeHTML(App.unescapeHTML(contrato.conteudoHTML))
+    : "<p>O contrato não possui texto legível.</p>";
         const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
             ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
             : 'Data não registada';
@@ -3416,7 +3441,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             
             // Construção do modal com o novo Editor Quill (LIMPO: Sem caixa de tags mágicas)
             document.getElementById('modal-form-content').innerHTML = `
-                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.configTemp.textoContrato}</div>
+                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.sanitizeHTML(App.configTemp.textoContrato || '')}</div>
             `;
             
             // Inicializar o Editor e a sua barra de ferramentas

@@ -38,8 +38,8 @@
         .contrato-box strong { color: #2c3e50; }   
     </style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js_src/config.js"></script>
-</head>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="js_src/config.js"></script></head>
 <body>
 
 <div class="container">
@@ -292,7 +292,11 @@
         texto = texto.replace(/\[NOME_RESPONSAVEL\]/g, `<strong style="color:#2c3e50;">${resp_nome.toUpperCase()}</strong>`);
         texto = texto.replace(/\[PLANO_CURSO\]/g, `<strong style="color:#2c3e50;">${plano.toUpperCase()}</strong>`);
         
-        document.getElementById('previewContrato').innerHTML = texto;
+        document.getElementById('previewContrato').innerHTML = DOMPurify.sanitize(texto, {
+    USE_PROFILES: { html: true },
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
+    ALLOWED_ATTR: ['style', 'class']
+});
     }
 
     document.querySelectorAll('input, select').forEach(el => {
@@ -342,7 +346,14 @@
             resp_zap: document.getElementById('resp_zap')?.value || '',
             
             // O Contrato assinado/gerado
-            conteudoHTML: document.getElementById('previewContrato')?.innerHTML || '<p>Contrato não gerado.</p>'
+            conteudoHTML: DOMPurify.sanitize(
+    document.getElementById('previewContrato')?.innerHTML || '<p>Contrato não gerado.</p>',
+    {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
+        ALLOWED_ATTR: ['style', 'class']
+    }
+)
         };
 
         try {
