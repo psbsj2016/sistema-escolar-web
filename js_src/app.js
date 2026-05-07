@@ -1121,7 +1121,7 @@ validarCadastroInst: async () => {
             // Monta o link considerando a URL atual do navegador
             const linkBase = window.location.origin; 
             const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
-            const linkExclusivo = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}`;
+            const linkExclusivo = `${linkBase}${urlPath}matricula.html?escola=${meuEscolaId}`;
 
             // Tenta copiar silenciosamente
             if (navigator.clipboard && window.isSecureContext) {
@@ -2529,7 +2529,7 @@ excluirUsuario: (id) => {
 // 1. Função para Gerar Link e guardar no Histórico
 gerarLinkMatricula: function() {
     const escolaId = App.usuario.id; 
-    const urlBase = window.location.origin + "/matricula.html";
+    const urlBase = window.location.origin + "matricula.html";
     const linkGerado = `${urlBase}?escola=${escolaId}`;
     
     // Exibe o link no input principal para o Gestor copiar
@@ -2857,7 +2857,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
             const meuEscolaId = payload.escolaId;
             const linkBase = window.location.origin; 
             const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
-            const linkBaseEscola = `${linkBase}${urlPath}/matricula.html?escola=${meuEscolaId}`;
+            const linkBaseEscola = `${linkBase}${urlPath}matricula.html?escola=${meuEscolaId}`;
 
             // Puxar links salvos na escola
             const escola = await App.api('/escola') || {};
