@@ -421,8 +421,13 @@ App.salvarPlanejamentoBanco = async () => {
             msg += ` Sincronizado: ${totalCriadas}✅ | ${totalAtualizadas}✏️ | ${totalRemovidas}🗑️`;
         }
         App.showToast(msg, "success");
-        
-        App.renderizarPlanejamentosSalvos(); 
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+        await App.renderizarPlanejamentosSalvos(); 
     } catch(e) { 
         App.showToast("Erro na sincronização.", "error"); 
         console.error(e);
@@ -449,7 +454,13 @@ App.arquivarPlanejamento = (id) => {
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
             App.showToast("Planejamento Arquivado com sucesso!", "success");
-            App.renderizarPlanejamentosSalvos(); // Remove da tela na hora
+
+            const area = document.getElementById('app-content');
+            if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+            await App.renderizarPlanejamentosSalvos();
         } catch(e) { 
             App.showToast("Erro ao arquivar.", "error"); 
         }
@@ -472,7 +483,13 @@ App.restaurarPlanejamento = (id) => {
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
             App.showToast("Planejamento Reativado com sucesso!", "success");
-            App.renderizarPlanejamentosArquivados(); // Remove do arquivo morto
+
+            const area = document.getElementById('app-content');
+            if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
+}
+
+            await App.renderizarPlanejamentosArquivados();
         } catch(e) { 
             App.showToast("Erro ao reativar.", "error"); 
         }
@@ -481,12 +498,27 @@ App.restaurarPlanejamento = (id) => {
 
 App.excluirPlanejamento = (id) => { 
     App.confirmar("Atenção!", "Deseja excluir DEFINITIVAMENTE este planejamento? Esta ação é irreversível.", "Excluir", "#e74c3c", async () => {
-        await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosSalvos(); 
+        await App.api(`/planejamentos/${id}`, 'DELETE');
+
+    const area = document.getElementById('app-content');
+    if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+    await App.renderizarPlanejamentosSalvos(); 
     });
 };
+
 App.excluirPlanejamentoArquivado = (id) => { 
     App.confirmar("Atenção!", "Deseja limpar este registo do arquivo morto para sempre?", "Excluir", "#e74c3c", async () => {
-        await App.api(`/planejamentos/${id}`, 'DELETE'); App.renderizarPlanejamentosArquivados(); 
+        await App.api(`/planejamentos/${id}`, 'DELETE');
+
+    const area = document.getElementById('app-content');
+    if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
+}
+
+    await App.renderizarPlanejamentosArquivados(); 
     });
 };
 
@@ -982,15 +1014,28 @@ App.salvarNotasLote = async () => {
 
         await Promise.all(promessas);
         App.showToast("Pauta de notas arquivada com sucesso!", "success");
-        App.cancelarEdicaoNota(); 
-        App.renderizarAvaliacoesPro(); 
+        App.cancelarEdicaoNota();
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
+}
+
+        await App.renderizarAvaliacoesPro();
     } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
     finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
 };
 
 App.excluirAvaliacao = (id) => { 
     App.confirmar("Excluir Nota", "Deseja mesmo excluir esta avaliação? Isto irá afetar o boletim do aluno.", "Excluir", "#e74c3c", async () => {
-        await App.api(`/avaliacoes/${id}`, 'DELETE'); App.renderizarAvaliacoesPro(); 
+        await App.api(`/avaliacoes/${id}`, 'DELETE');
+
+       const area = document.getElementById('app-content');
+       if (area) {
+       area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
+}
+
+       await App.renderizarAvaliacoesPro(); 
     });
 };
 
@@ -1292,16 +1337,29 @@ App.salvarChamadaLote = async () => {
                 }
             } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
 
-            App.showToast(`Frequência registada em tempo recorde${avisoExtra}`, "success");
-            App.cancelarEdicaoChamada(); 
-            App.renderizarChamadaPro(); // Recarrega a tela completa (que agora é instantânea graças ao cache)
+           App.showToast(`Frequência registada em tempo recorde${avisoExtra}`, "success");
+           App.cancelarEdicaoChamada();
+
+           const area = document.getElementById('app-content');
+           if (area) {
+           area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
+}
+
+           await App.renderizarChamadaPro();
         } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
         finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
     };
 
 App.excluirLancamentoChamada = (id) => { 
     App.confirmar("Excluir Frequência", "Tem a certeza que deseja excluir esta chamada do sistema?", "Excluir", "#e74c3c", async () => {
-        await App.api(`/chamadas/${id}`, 'DELETE'); App.renderizarChamadaPro(); 
+        await App.api(`/chamadas/${id}`, 'DELETE');
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
+}
+
+        await App.renderizarChamadaPro(); 
     });
 };
 
@@ -1405,13 +1463,38 @@ App.salvarEvento = async () => {
     try {
         if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); 
         else await App.api('/eventos', 'POST', pl); 
-        App.idEdicaoEvento=null; 
-        setTimeout(() => { App.renderizarCalendarioPro(); setTimeout(() => { const tabelaEventos = document.querySelector('.table-responsive-wrapper'); if(tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 100); }, 300);
-        App.showToast("Evento salvo com sucesso!", "success");
+       App.idEdicaoEvento = null;
+
+const area = document.getElementById('app-content');
+if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
+}
+
+await App.renderizarCalendarioPro();
+
+setTimeout(() => {
+    const tabelaEventos = document.querySelector('.table-responsive-wrapper');
+    if (tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}, 100);
+
+App.showToast("Evento salvo com sucesso!", "success");
+
     } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
 App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-App.excluirEvento = (id) => { App.confirmar("Excluir Evento", "Pretende remover este evento do calendário?", "Excluir", "#e74c3c", async () => { await App.api(`/eventos/${id}`, 'DELETE'); App.renderizarCalendarioPro(); }); };
+App.excluirEvento = (id) => {
+    App.confirmar("Excluir Evento", "Pretende remover este evento do calendário?", "Excluir", "#e74c3c", async () => {
+        await App.api(`/eventos/${id}`, 'DELETE');
+
+        const area = document.getElementById('app-content');
+        if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
+        }
+
+        await App.renderizarCalendarioPro();
+    });
+};
+
 App.limparFormEvento = () => { document.getElementById('evt-desc').value=''; App.idEdicaoEvento=null; };
