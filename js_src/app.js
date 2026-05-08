@@ -3875,34 +3875,27 @@ document.addEventListener('click', (e) => {
 // 🔔 MOTOR DO SININHO DE NOTIFICAÇÕES (TEMPO REAL)
 // =========================================================
 
-// Função que vai ao servidor ver se há matrículas novas
 async function verificarNotificacoes() {
-    // Só verifica se o utilizador estiver logado (tiver token)
-    const token = localStorage.getItem('tokenEscolar');
-    if (!token) return; 
-
     try {
+        // credentials: 'include' envia o Cookie HTTPOnly de forma invisível e segura!
         const resposta = await fetch(`${API_URL}/sistema/notificacoes/nao-lidas`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            method: 'GET',
+            credentials: 'include' 
         });
         
         if (!resposta.ok) return;
         const notificacoes = await resposta.json();
         
-        // Substitua 'contador-sininho' pelo ID real do seu contador no HTML do painel
         const badgeContador = document.getElementById('contador-sininho');
-        // Substitua 'lista-notificacoes' pelo ID real da <ul> ou <div> onde caem as mensagens
         const caixaLista = document.getElementById('lista-notificacoes'); 
         
-        // 1. Atualizar a Bolinha Vermelha com o Número
         if (badgeContador) {
             badgeContador.innerText = notificacoes.length;
             badgeContador.style.display = notificacoes.length > 0 ? 'inline-block' : 'none';
         }
         
-        // 2. Atualizar a lista de mensagens no dropdown do sininho
         if (caixaLista) {
-            caixaLista.innerHTML = ''; // Limpa as antigas
+            caixaLista.innerHTML = ''; 
             
             if (notificacoes.length === 0) {
                 caixaLista.innerHTML = '<li style="padding: 15px; text-align: center; color: #7f8c8d; font-size: 13px;">Nenhuma novidade por enquanto.</li>';
@@ -3914,7 +3907,6 @@ async function verificarNotificacoes() {
                     item.style.cursor = "pointer";
                     item.style.transition = "background 0.2s";
                     
-                    // Efeito Hover
                     item.onmouseover = () => item.style.background = "#f4f6f7";
                     item.onmouseout = () => item.style.background = "transparent";
                     
@@ -3923,31 +3915,28 @@ async function verificarNotificacoes() {
                         <div style="color: #7f8c8d; font-size: 12px;">${notif.mensagem}</div>
                     `;
                     
-                    // Ação ao clicar na notificação
                     item.onclick = () => marcarNotificacaoLida(notif.id);
                     caixaLista.appendChild(item);
                 });
             }
         }
     } catch (error) {
-        console.log("A aguardar estabilidade para verificar notificações...");
+        // Ignora os erros silenciosamente para não poluir a consola
     }
 }
 
-// Função para limpar o aviso quando o utilizador clica nele
 async function marcarNotificacaoLida(idNotificacao) {
-    const token = localStorage.getItem('tokenEscolar');
     try {
         await fetch(`${API_URL}/sistema/notificacoes/lida/${idNotificacao}`, {
             method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include' 
         });
         
-        // Recarrega o sininho instantaneamente para a bolinha diminuir
         verificarNotificacoes(); 
         
-        // Opcional: Se quiser que ao clicar na notificação, a página mude para a Lista de Alunos
         if(typeof App !== 'undefined' && App.renderizarTela) {
+            // 🚀 ISTO RESOLVE A LISTA DE ALUNOS: Limpa o cache para forçar a atualização imediata!
+            App.listaCache = []; 
             App.renderizarTela('alunos'); 
         }
     } catch (error) {
