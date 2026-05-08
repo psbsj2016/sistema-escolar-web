@@ -448,8 +448,8 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
             // 2. Roda a primeira vez quase que imediatamente (2 seg) após o login
             setTimeout(checarSistema, 2000);
 
-            // 3. Depois, fica rodando a cada 30 segundos (30000 milissegundos)
-            setInterval(checarSistema, 30000); 
+            // 3. Depois, fica rodando a cada 10 segundos (10000 milissegundos)
+            setInterval(checarSistema, 10000); 
             
             App.motorTempoRealLigado = true;
         }
@@ -2532,19 +2532,72 @@ excluirUsuario: (id) => {
         if (dropdown) dropdown.classList.toggle('active');
     },
 
+   marcarNotificacoesComoLidas: async () => {
+    try {
+        const notificacoes = await App.api('/notificacoes');
+
+        if (!Array.isArray(notificacoes)) {
+            return App.showToast("Não foi possível carregar notificações.", "error");
+        }
+
+        const naoLidas = notificacoes.filter(n => !n.lida);
+
+        if (naoLidas.length === 0) {
+            return App.showToast("Não há notificações novas.", "info");
+        }
+
+        await Promise.all(
+            naoLidas.map(n =>
+                App.api(`/notificacoes/${n.id}`, 'PUT', {
+                    ...n,
+                    lida: true,
+                    dataLeitura: new Date().toISOString()
+                })
+            )
+        );
+
+        App.showToast("Notificações marcadas como lidas.", "success");
+        await App.verificarNotificacoes();
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao marcar notificações.", "error");
+    }
+},
+
    verificarNotificacoes: async () => {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            let [alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
-                App.api('/alunos'), App.api('/eventos'), App.api('/financeiro'), App.api('/planejamentos'), App.api('/estoques'), App.api('/escola')
-            ]);
+            let [notificacoesBanco, alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
+    App.api('/notificacoes'),
+    App.api('/alunos'),
+    App.api('/eventos'),
+    App.api('/financeiro'),
+    App.api('/planejamentos'),
+    App.api('/estoques'),
+    App.api('/escola')
+]);
             
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
             }
             
             let alertas = [];
+            if (Array.isArray(notificacoesBanco)) {
+    notificacoesBanco
+        .filter(n => !n.lida)
+        .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
+        .slice(0, 10)
+        .forEach(n => {
+            alertas.push({
+    icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
+    texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
+    prioridade: 1,
+    acao: "App.renderizarContratos()"
+});
+        });
+}
             const hoje = new Date();
             const ano = hoje.getFullYear();
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
@@ -2718,7 +2771,33 @@ excluirUsuario: (id) => {
             
             if (alertas.length > 0) {
                 if (badge) { badge.innerText = alertas.length; badge.style.display = 'block'; }
-                if (list) list.innerHTML = alertas.map(a => `
+                const btnMarcarLidas = alertas.length > 0
+    ? `
+        <div style="padding:8px; border-bottom:1px solid #eee;">
+            <button
+                onclick="App.marcarNotificacoesComoLidas()"
+                style="
+                    width:100%;
+                    border:none;
+                    background:#f4f6f7;
+                    color:#2c3e50;
+                    padding:10px;
+                    border-radius:8px;
+                    font-size:12px;
+                    font-weight:bold;
+                    cursor:pointer;
+                    transition:0.2s;
+                "
+                onmouseover="this.style.background='#e5e7e9'"
+                onmouseout="this.style.background='#f4f6f7'"
+            >
+                ✅ Marcar notificações como lidas
+            </button>
+        </div>
+    `
+    : '';
+                
+if (list) list.innerHTML = btnMarcarLidas + alertas.map(a => `
                     <div class="noti-item" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
                         <span class="noti-icon">${a.icon}</span>
                         <div>${a.texto}</div>
@@ -2951,7 +3030,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${nomeAluno}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Data Nascimento:</b> ${dataNascimento}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Data Nascimento:</b> ${dataNascimento}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${cpf}</td>
@@ -2974,7 +3053,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${responsavel}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Parentesco:</b> ${respParentesco}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Parentesco:</b> ${respParentesco}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${respCpf}</td>
@@ -2986,7 +3065,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Curso:</b> ${curso}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Turma:</b> ${turma}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Turma:</b> ${turma}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
