@@ -392,7 +392,24 @@ var App = {
             if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
             let escola = await App.api('/escola');
-            if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+if (!escola || escola.error) {
+
+    // 🚨 Se a sessão expirou ou não existe
+    if (
+        escola?.error === 'Sessão não encontrada.' ||
+        escola?.error === 'Sessão expirada.'
+    ) {
+
+        await App.logout();
+        return;
+    }
+
+    // 📦 fallback offline/cache
+    escola = JSON.parse(
+        localStorage.getItem(App.getTenantKey('escola_perfil'))
+    ) || {};
+}
 
             if (App.verificarBloqueioGeral(escola)) {
                 document.documentElement.removeAttribute('style'); 
@@ -461,7 +478,24 @@ setTimeout(() => { App.entrarComBiometria(); }, 600);
                 if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
 
                 let escola = await App.api('/escola');
-                if (!escola || escola.error) escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+
+if (!escola || escola.error) {
+
+    // 🚨 Se a sessão expirou ou não existe
+    if (
+        escola?.error === 'Sessão não encontrada.' ||
+        escola?.error === 'Sessão expirada.'
+    ) {
+
+        await App.logout();
+        return;
+    }
+
+    // 📦 fallback offline/cache
+    escola = JSON.parse(
+        localStorage.getItem(App.getTenantKey('escola_perfil'))
+    ) || {};
+}
 
                 if (App.verificarBloqueioGeral(escola)) {
                     App.mostrarTelaBloqueioLogin(escola);
