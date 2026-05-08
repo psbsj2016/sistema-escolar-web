@@ -2582,7 +2582,24 @@ excluirUsuario: (id) => {
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
             }
-            
+            // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
+if (
+    App.entidadeAtual === 'aluno' &&
+    Array.isArray(alunos) &&
+    Array.isArray(App.listaCache)
+) {
+    const idsAtuais = App.listaCache.map(a => a.id);
+    const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
+
+    if (existeNovoAluno) {
+        App.listaCache = alunos;
+        if (typeof App.filtrarTabelaReativa === 'function') {
+            App.filtrarTabelaReativa();
+        }
+        App.showToast("Novo aluno recebido pela matrícula online.", "success");
+    }
+}            
+
             let alertas = [];
             if (Array.isArray(notificacoesBanco)) {
     notificacoesBanco
@@ -3029,8 +3046,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${nomeAluno}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Data Nascimento:</b> ${dataNascimento}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Nome:</b> ${nomeAluno}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Data de Nascimento:</b> ${dataNascimento}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${cpf}</td>
@@ -3052,8 +3069,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #9b59b6; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">👨‍👩‍👧 Dados do Responsável</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Nome:</b> ${responsavel}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Parentesco:</b> ${respParentesco}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Nome:</b> ${responsavel}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Parentesco:</b> ${respParentesco}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${respCpf}</td>
@@ -3064,8 +3081,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
                 <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #2ecc71; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">🎓 Dados Acadêmicos e Financeiros</h4>
                 <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
                     <tr>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 50%;"><b>Curso:</b> ${curso}</td>
-                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Turma:</b> ${turma}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Curso:</b> ${curso}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Turma:</b> ${turma}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
