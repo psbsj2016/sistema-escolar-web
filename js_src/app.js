@@ -1112,7 +1112,7 @@ validarCadastroInst: async () => {
         const bancoPix = escola.banco || 'Não informado';
 
         // 2. Montar a mensagem de forma dinâmica
-        const msg = `🔔 LEMBRETE DE VENCIMENTO\nOlá, ${nomeAluno}!\n\nConsta no nosso sistema que a sua mensalidade venceu no dia ${dataVencimento}. Para realizar o pagamento de forma rápida, basta enviar o valor de *R$ ${valorFmt}* para a chave PIX abaixo:\n\n*Instituição:* ${nomeEscola}\n*Banco:* ${bancoPix}\n*Chave PIX:* ${chavePix}\n\nObs.: Após o pagamento, por favor, envie o comprovativo por aqui para podermos dar baixa no sistema.\n\n🙏 Agradecemos desde já e desejamos-lhe um excelente dia! 😉✅`;
+        const msg = `🔔 *LEMBRETE DE VENCIMENTO*\nOlá, ${nomeAluno}!\n\nConsta no nosso sistema que a sua mensalidade venceu no dia ${dataVencimento}. Para realizar o pagamento de forma rápida, basta enviar o valor de *R$ ${valorFmt}* para a chave PIX abaixo:\n\n*Instituição:* ${nomeEscola}\n*Banco:* ${bancoPix}\n*Chave PIX:* ${chavePix}\n\n*Obs.:* _Após o pagamento, por favor, envie o comprovante por aqui para podermos dar baixa no sistema._\n\n🙏 Agradecemos desde já e desejamos-lhe um excelente dia! 😉✅`;
         
         window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
     },    
@@ -2569,15 +2569,13 @@ excluirUsuario: (id) => {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            let [notificacoesBanco, alunos, eventos, financeiro, planejamentos, estoque, escola] = await Promise.all([
-    App.api('/notificacoes'),
-    App.api('/alunos'),
-    App.api('/eventos'),
-    App.api('/financeiro'),
-    App.api('/planejamentos'),
-    App.api('/estoques'),
-    App.api('/escola')
-]);
+            const notificacoesBanco = await App.api('/notificacoes');
+let alunos = await App.api('/alunos');
+const eventos = await App.api('/eventos');
+const financeiro = await App.api('/financeiro');
+const planejamentos = await App.api('/planejamentos');
+const estoque = await App.api('/estoques');
+const escola = await App.api('/escola');
             
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
@@ -2592,12 +2590,17 @@ if (
     const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
 
     if (existeNovoAluno) {
+    App.showToast("Novo aluno recebido pela matrícula online.", "success");
+
+    if (typeof App.renderizarLista === 'function') {
+        await App.renderizarLista('aluno');
+    } else {
         App.listaCache = alunos;
         if (typeof App.filtrarTabelaReativa === 'function') {
             App.filtrarTabelaReativa();
         }
-        App.showToast("Novo aluno recebido pela matrícula online.", "success");
     }
+}
 }            
 
             let alertas = [];

@@ -364,15 +364,17 @@
                 body: JSON.stringify(payload)
             });
 
-            if(resposta.ok) {
+            const resultado = await resposta.json().catch(() => ({}));
+
+            if(resposta.ok && resultado.success) {
                 document.getElementById('formMatricula').style.display = 'none';
                 document.getElementById('mensagemSucesso').style.display = 'block';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else { 
-                throw new Error("Erro no servidor"); 
+                throw new Error(resultado.error || "Erro no servidor"); 
             }
         } catch (error) {
-            alert("Erro de comunicação com a escola. Verifique a sua internet e tente novamente.");
+            alert("Erro ao enviar matrícula: " + error.message);
             btn.innerText = "Concluir Matrícula"; 
             btn.disabled = false;
         }
