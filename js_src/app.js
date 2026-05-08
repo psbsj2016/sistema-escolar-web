@@ -305,7 +305,7 @@ var App = {
         const options = {
     method,
     headers,
-    credentials: 'include'
+    credentials: 'include',
     cache: 'no-store'
 }; 
         if (body) options.body = JSON.stringify(body);
