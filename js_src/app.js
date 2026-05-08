@@ -306,6 +306,7 @@ var App = {
     method,
     headers,
     credentials: 'include'
+    cache: 'no-store'
 }; 
         if (body) options.body = JSON.stringify(body);
         

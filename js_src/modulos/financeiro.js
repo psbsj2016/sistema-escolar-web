@@ -481,7 +481,11 @@ App.confirmarBaixa = async () => {
         // Finalização (Batch, Single ou último da fila)
         App.showToast("Operação no caixa concluída com sucesso! 💼", "success");
         App.fecharModal();
-        App.renderizarFinanceiroPro();
+
+        document.getElementById('app-content').innerHTML =
+        '<p style="text-align:center; color:#666; padding:20px;">Atualizando financeiro... ⏳</p>';
+
+        await App.renderizarFinanceiroPro();
         
     } catch(e) { 
         App.showToast("Erro ao processar baixa.", "error"); 
