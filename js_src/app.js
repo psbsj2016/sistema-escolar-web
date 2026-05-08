@@ -2561,76 +2561,63 @@ excluirUsuario: (id) => {
     }
 },
 
-   verificarNotificacoes: async () => {
-        try {
-            const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
-            
-           const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
-let alunos = await App.api('/alunos');
-const eventos = await App.api('/eventos');
-const financeiro = await App.api('/financeiro');
-const planejamentos = await App.api('/planejamentos');
-const estoque = await App.api('/estoques');
-const escola = await App.api('/escola');
-            
-            if (Array.isArray(alunos)) {
-                alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
+verificarNotificacoes: async () => {
+    try {
+        const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+
+        const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
+        let alunos = await App.api('/alunos');
+        const eventos = await App.api('/eventos');
+        const financeiro = await App.api('/financeiro');
+        const planejamentos = await App.api('/planejamentos');
+        const estoque = await App.api('/estoques');
+        const escola = await App.api('/escola');
+
+        if (Array.isArray(alunos)) {
+            alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        }
+
+        // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
+        if (
+            App.entidadeAtual === 'aluno' &&
+            Array.isArray(alunos) &&
+            Array.isArray(App.listaCache)
+        ) {
+            const idsAtuais = App.listaCache.map(a => a.id);
+            const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
+
+            if (existeNovoAluno) {
+                App.showToast("Novo aluno recebido pela matrícula online.", "success");
+
+                App.listaCache = alunos;
+
+                const inputBusca = document.getElementById('input-busca');
+                if (inputBusca) inputBusca.value = '';
+
+                if (typeof App.filtrarTabelaReativa === 'function') {
+                    App.filtrarTabelaReativa();
+                }
             }
-            // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
-// 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
-if (
-    App.entidadeAtual === 'aluno' &&
-    Array.isArray(alunos) &&
-    Array.isArray(App.listaCache)
-) {
-    const idsAtuais = App.listaCache.map(a => a.id);
-    const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
-
-    if (existeNovoAluno) {
-        App.showToast("Novo aluno recebido pela matrícula online.", "success");
-
-        App.listaCache = alunos;
-
-        const inputBusca = document.getElementById('input-busca');
-        if (inputBusca) inputBusca.value = '';
-
-        if (typeof App.filtrarTabelaReativa === 'function') {
-            App.filtrarTabelaReativa();
         }
-    }
-}
-    const idsAtuais = App.listaCache.map(a => a.id);
-    const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
 
-    if (existeNovoAluno) {
-    App.showToast("Novo aluno recebido pela matrícula online.", "success");
+        let alertas = [];
 
-    if (typeof App.renderizarLista === 'function') {
-        await App.renderizarLista('aluno');
-    } else {
-        App.listaCache = alunos;
-        if (typeof App.filtrarTabelaReativa === 'function') {
-            App.filtrarTabelaReativa();
+        if (Array.isArray(notificacoesBanco)) {
+            notificacoesBanco
+                .filter(n => !n.lida)
+                .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
+                .slice(0, 10)
+                .forEach(n => {
+                    alertas.push({
+                        icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
+                        texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
+                        prioridade: 1,
+                        acao: "App.renderizarContratos()"
+                    });
+                });
         }
-    }
-}
-}            
+   
 
-            let alertas = [];
-            if (Array.isArray(notificacoesBanco)) {
-    notificacoesBanco
-        .filter(n => !n.lida)
-        .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
-        .slice(0, 10)
-        .forEach(n => {
-            alertas.push({
-    icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
-    texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
-    prioridade: 1,
-    acao: "App.renderizarContratos()"
-});
-        });
-}
             const hoje = new Date();
             const ano = hoje.getFullYear();
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
