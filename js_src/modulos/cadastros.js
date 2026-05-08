@@ -344,11 +344,16 @@ App.salvarCadastro = async () => {
         App.showToast('Registo salvo com sucesso! 🎉', 'success');
         App.fecharModal();
         
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando lista... ⏳</p>';
+   }
+
         if (typeof App.renderizarLista === 'function') {
-            App.renderizarLista(t);
+        await App.renderizarLista(t);
         } else if (typeof App.renderizarInicio === 'function') {
-            App.renderizarInicio();
-        }
+        await App.renderizarInicio();
+   }
 
     } catch (err) {
         if(err.message !== "Validação Falhou") {

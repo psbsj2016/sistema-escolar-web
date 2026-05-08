@@ -1947,9 +1947,15 @@ validarCadastroInst: async () => {
                         App.showToast(res.error, "error");
                     } else {
                         App.showToast("Excluído com sucesso!", "success");
-                        // Se for financeiro não corta letras, caso contrário tira o "s" final
-                        const tipoLista = endpoint === 'financeiro' ? 'financeiro' : endpoint.slice(0, -1);
-                        App.renderizarLista(tipoLista);
+
+                       const tipoLista = endpoint === 'financeiro' ? 'financeiro' : endpoint.slice(0, -1);
+
+                       const area = document.getElementById('app-content');
+                       if (area) {
+                       area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando lista... ⏳</p>';
+                    }
+
+                       await App.renderizarLista(tipoLista);
                     }
                 } catch(e) { 
                     App.showToast("Erro ao excluir.", "error"); 
