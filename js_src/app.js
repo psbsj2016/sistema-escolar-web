@@ -2534,7 +2534,7 @@ excluirUsuario: (id) => {
 
    marcarNotificacoesComoLidas: async () => {
     try {
-        const notificacoes = await App.api('/notificacoes');
+        const notificacoes = await App.api('/sistema/notificacoes/nao-lidas');
 
         if (!Array.isArray(notificacoes)) {
             return App.showToast("Não foi possível carregar notificações.", "error");
@@ -2546,15 +2546,11 @@ excluirUsuario: (id) => {
             return App.showToast("Não há notificações novas.", "info");
         }
 
-        await Promise.all(
-            naoLidas.map(n =>
-                App.api(`/notificacoes/${n.id}`, 'PUT', {
-                    ...n,
-                    lida: true,
-                    dataLeitura: new Date().toISOString()
-                })
-            )
-        );
+       await Promise.all(
+    naoLidas.map(n =>
+        App.api(`/sistema/notificacoes/lida/${n.id}`, 'PUT')
+    )
+);
 
         App.showToast("Notificações marcadas como lidas.", "success");
         await App.verificarNotificacoes();
@@ -2569,7 +2565,7 @@ excluirUsuario: (id) => {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
             
-            const notificacoesBanco = await App.api('/notificacoes');
+           const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
 let alunos = await App.api('/alunos');
 const eventos = await App.api('/eventos');
 const financeiro = await App.api('/financeiro');
@@ -2581,11 +2577,28 @@ const escola = await App.api('/escola');
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
             }
             // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
+// 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
 if (
     App.entidadeAtual === 'aluno' &&
     Array.isArray(alunos) &&
     Array.isArray(App.listaCache)
 ) {
+    const idsAtuais = App.listaCache.map(a => a.id);
+    const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
+
+    if (existeNovoAluno) {
+        App.showToast("Novo aluno recebido pela matrícula online.", "success");
+
+        App.listaCache = alunos;
+
+        const inputBusca = document.getElementById('input-busca');
+        if (inputBusca) inputBusca.value = '';
+
+        if (typeof App.filtrarTabelaReativa === 'function') {
+            App.filtrarTabelaReativa();
+        }
+    }
+}
     const idsAtuais = App.listaCache.map(a => a.id);
     const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
 
@@ -3871,84 +3884,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// =========================================================
-// 🔔 MOTOR DO SININHO DE NOTIFICAÇÕES (TEMPO REAL)
-// =========================================================
-
-async function verificarNotificacoes() {
-    try {
-        // credentials: 'include' envia o Cookie HTTPOnly de forma invisível e segura!
-        const resposta = await fetch(`${API_URL}/sistema/notificacoes/nao-lidas`, {
-            method: 'GET',
-            credentials: 'include' 
-        });
-        
-        if (!resposta.ok) return;
-        const notificacoes = await resposta.json();
-        
-        const badgeContador = document.getElementById('contador-sininho');
-        const caixaLista = document.getElementById('lista-notificacoes'); 
-        
-        if (badgeContador) {
-            badgeContador.innerText = notificacoes.length;
-            badgeContador.style.display = notificacoes.length > 0 ? 'inline-block' : 'none';
-        }
-        
-        if (caixaLista) {
-            caixaLista.innerHTML = ''; 
-            
-            if (notificacoes.length === 0) {
-                caixaLista.innerHTML = '<li style="padding: 15px; text-align: center; color: #7f8c8d; font-size: 13px;">Nenhuma novidade por enquanto.</li>';
-            } else {
-                notificacoes.forEach(notif => {
-                    const item = document.createElement('li');
-                    item.style.padding = "10px 15px";
-                    item.style.borderBottom = "1px solid #eee";
-                    item.style.cursor = "pointer";
-                    item.style.transition = "background 0.2s";
-                    
-                    item.onmouseover = () => item.style.background = "#f4f6f7";
-                    item.onmouseout = () => item.style.background = "transparent";
-                    
-                    item.innerHTML = `
-                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px; margin-bottom: 3px;">${notif.titulo}</div>
-                        <div style="color: #7f8c8d; font-size: 12px;">${notif.mensagem}</div>
-                    `;
-                    
-                    item.onclick = () => marcarNotificacaoLida(notif.id);
-                    caixaLista.appendChild(item);
-                });
-            }
-        }
-    } catch (error) {
-        // Ignora os erros silenciosamente para não poluir a consola
-    }
-}
-
-async function marcarNotificacaoLida(idNotificacao) {
-    try {
-        await fetch(`${API_URL}/sistema/notificacoes/lida/${idNotificacao}`, {
-            method: 'PUT',
-            credentials: 'include' 
-        });
-        
-        verificarNotificacoes(); 
-        
-        if(typeof App !== 'undefined' && App.renderizarTela) {
-            // 🚀 ISTO RESOLVE A LISTA DE ALUNOS: Limpa o cache para forçar a atualização imediata!
-            App.listaCache = []; 
-            App.renderizarTela('alunos'); 
-        }
-    } catch (error) {
-        console.error("Erro ao limpar notificação:", error);
-    }
-}
-
-// ⏰ INICIAR O "RADAR" DO SININHO
-// Verifica na hora que a página carrega
-setTimeout(verificarNotificacoes, 2000); 
-// Continua a verificar silenciosamente a cada 15 segundos
-setInterval(verificarNotificacoes, 15000);
 
 // =========================================================
 // 📡 DETEÇÃO DE LIGAÇÃO (ONLINE / OFFLINE)
