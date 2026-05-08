@@ -314,6 +314,7 @@
         // 🚀 PAYLOAD CORRIGIDO (IDs agora batem 100% com o seu HTML)
         const payload = {
             escolaId: escolaId,
+            refLink: urlParams.get('ref') || 'Direto',
             nome: document.getElementById('nome')?.value || '',
             cpf: document.getElementById('cpf')?.value || '',
             email: document.getElementById('email')?.value || '',

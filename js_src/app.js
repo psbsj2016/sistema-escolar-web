@@ -1318,35 +1318,29 @@ validarCadastroInst: async () => {
     },
 
     // 🔗 LINK EXCLUSIVO DE MATRÍCULA
-    copiarLinkMatricula: () => {
-        const token = localStorage.getItem('token_acesso');
-        if(!token) return App.showToast("Erro: Sessão inválida.", "error");
+   copiarLinkMatricula: async () => {
+    try {
+        const escola = await App.api('/escola');
 
-        try {
-            // Decodifica o token para pegar o ID exato da escola no banco de dados
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const meuEscolaId = payload.escolaId;
-
-            // Monta o link considerando a URL atual do navegador
-            const linkBase = window.location.origin; 
-            const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
-            const linkExclusivo = `${linkBase}${urlPath}matricula.html?escola=${meuEscolaId}`;
-
-            // Tenta copiar silenciosamente
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(linkExclusivo).then(() => {
-                    App.showToast("✅ Link copiado com sucesso! Envie para os alunos.", "success");
-                }).catch(() => {
-                    prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
-                });
-            } else {
-                // Fallback para navegadores mais antigos
-                prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
-            }
-        } catch(e) {
-            App.showToast("Erro ao gerar o link.", "error");
+        if (!escola || escola.error || !escola.escolaId) {
+            return App.showToast("Não foi possível identificar a instituição.", "error");
         }
-    },
+
+        const linkBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}`;
+        const linkExclusivo = `${linkBase}matricula.html?escola=${encodeURIComponent(escola.escolaId)}`;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(linkExclusivo);
+            App.showToast("✅ Link copiado com sucesso! Envie para os alunos.", "success");
+        } else {
+            prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
+        }
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao gerar o link.", "error");
+    }
+},
 
     abrirModalCadastro: async (tipo, id) => { 
         if (!id && (tipo === 'aluno')) {
@@ -3057,65 +3051,146 @@ abrirVisualizacaoContrato: async function(idContrato) {
     },
 
     mostrarAreaLinks: async () => {
-        const area = document.getElementById('area-dinamica-hub');
-        const token = localStorage.getItem('token_acesso');
-        if(!token) return App.showToast("Erro: Sessão inválida.", "error");
+    const area = document.getElementById('area-dinamica-hub');
+    area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar links... ⏳</p>';
 
-        area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar campanhas... ⏳</p>';
+    try {
+        const escola = await App.api('/escola');
 
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const meuEscolaId = payload.escolaId;
-            const linkBase = window.location.origin; 
-            const urlPath = window.location.pathname.replace('/index.html', '').replace('/app.html', '');
-            const linkBaseEscola = `${linkBase}${urlPath}matricula.html?escola=${meuEscolaId}`;
-
-            // Puxar links salvos na escola
-            const escola = await App.api('/escola') || {};
-            const links = escola.linksMatricula || [];
-
-            let htmlLista = links.length === 0 
-                ? '<p style="text-align:center; color:#999; font-size:13px; padding:20px; border: 1px dashed #ccc; border-radius: 8px;">Nenhum link gerado ainda. Crie o seu primeiro link acima!</p>' 
-                : links.map(link => {
-                const urlCompleta = `${linkBaseEscola}&ref=${link.id}`;
-                return `
-                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <div>
-                        <div style="font-weight:bold; color:#2c3e50; font-size:14px;">🏷️ ${App.escapeHTML(link.nome)}</div>
-                        <div style="font-size:11px; color:#7f8c8d; margin-top:4px;">📅 Gerado em: ${link.data}</div>
-                        <div style="font-size:11px; color:#3498db; margin-top:4px; font-family:monospace; background:#f4f6f7; padding:4px; border-radius:4px;">...&ref=${link.id}</div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="navigator.clipboard.writeText('${urlCompleta}'); App.showToast('Link copiado!', 'success');" style="padding:8px 12px; font-size:12px; background:#3498db; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📋 Copiar</button>
-                        <button onclick="window.open('${urlCompleta}', '_blank')" style="padding:8px 12px; font-size:12px; background:#27ae60; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🌐 Testar</button>
-                        <button onclick="App.excluirLinkMatricula('${link.id}')" style="padding:8px 12px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🗑️</button>
-                    </div>
-                </div>`;
-            }).join('');
-
+        if (!escola || escola.error || !escola.escolaId) {
             area.innerHTML = `
-                <div class="card" style="animation: fadeIn 0.3s ease; border: 1px solid #eee; padding:30px;">
-                    <div style="text-align:center;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🔗</div>
-                        <h3 style="margin-top:0; color:#2c3e50;">Gerador de Links Rastreados</h3>
-                        <p style="font-size:13px; color:#7f8c8d; margin-bottom:20px;">Crie links personalizados para saber de onde vêm os seus alunos (Ex: Instagram, Panfleto).</p>
-                        
-                        <div style="display:flex; gap:10px; justify-content:center; margin-bottom: 30px; flex-wrap:wrap;">
-                            <input type="text" id="nome-novo-link" placeholder="Nome da Campanha (Ex: Promoção Maio)" style="padding:12px; border-radius:6px; border:1px solid #ccc; width: 100%; max-width: 350px;">
-                            <button class="btn-primary" onclick="App.gerarNovoLinkMatricula()" style="width:auto; padding: 12px 25px; background:#27ae60; border:none;">➕ Gerar Novo Link</button>
-                        </div>
-                    </div>
-
-                    <h4 style="text-align:left; border-bottom: 2px solid #eee; padding-bottom: 10px; color:#2c3e50;">📜 Histórico de Links</h4>
-                    <div style="text-align:left; max-height: 350px; overflow-y: auto; padding-right: 5px;">
-                        ${htmlLista}
-                    </div>
+                <div class="card" style="text-align:center; color:#e74c3c;">
+                    <h3>Erro ao carregar links</h3>
+                    <p>Não foi possível identificar o ID da instituição.</p>
                 </div>
             `;
-        } catch(e) {
-            App.showToast("Erro ao carregar área de links.", "error");
+            return;
         }
-    },
+
+        const meuEscolaId = escola.escolaId;
+
+        const linkBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}`;
+        const linkBaseEscola = `${linkBase}matricula.html?escola=${encodeURIComponent(meuEscolaId)}`;
+
+        const links = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
+
+        const htmlLista = links.length === 0
+            ? `<p style="text-align:center; color:#999; font-size:13px; padding:20px; border:1px dashed #ccc; border-radius:8px;">
+                    Nenhum link/campanha gerado ainda.
+               </p>`
+            : links.map(link => {
+                const urlCompleta = `${linkBaseEscola}&ref=${encodeURIComponent(link.id)}`;
+                return `
+                    <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:12px;">
+                        <strong>${App.escapeHTML(link.nome || 'Link sem nome')}</strong>
+                        <p style="font-size:12px; color:#777; margin:6px 0;">
+                            Criado em: ${App.escapeHTML(link.criadoEm || '-')}
+                        </p>
+
+                        <input value="${urlCompleta}" readonly style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:12px; margin-bottom:10px;">
+
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="navigator.clipboard.writeText('${urlCompleta}'); App.showToast('Link copiado!', 'success');" style="width:auto;">
+                                📋 Copiar
+                            </button>
+
+                            <button class="btn-cancel" onclick="window.open('${urlCompleta}', '_blank')" style="width:auto;">
+                                🔎 Abrir
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        area.innerHTML = `
+            <div class="card">
+                <h3>🔗 Links de Matrícula</h3>
+                <p style="font-size:13px; color:#666;">
+                    Gere links públicos para matrícula online. Cada link abre o <strong>matricula.html</strong> com o ID desta instituição.
+                </p>
+
+                <div style="background:#f8f9fa; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <label style="font-weight:bold; display:block; margin-bottom:8px;">Link principal da instituição</label>
+                    <input id="link-principal-matricula" value="${linkBaseEscola}" readonly style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('link-principal-matricula').value); App.showToast('Link principal copiado!', 'success');" style="width:auto;">
+                            📋 Copiar Link Principal
+                        </button>
+
+                        <button class="btn-cancel" onclick="window.open(document.getElementById('link-principal-matricula').value, '_blank')" style="width:auto;">
+                            🔎 Abrir Link
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <label style="font-weight:bold; display:block; margin-bottom:8px;">Criar link personalizado / campanha</label>
+                    <input id="nome-novo-link-matricula" placeholder="Ex: Instagram, WhatsApp, Turma Sábado, Campanha Maio..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+
+                    <button class="btn-primary" onclick="App.criarLinkMatriculaCampanha()" style="width:auto;">
+                        ➕ Gerar Link Personalizado
+                    </button>
+                </div>
+
+                <h4>Links gerados</h4>
+                ${htmlLista}
+            </div>
+        `;
+
+    } catch (e) {
+        console.error(e);
+        area.innerHTML = `
+            <div class="card" style="text-align:center; color:#e74c3c;">
+                <h3>Erro</h3>
+                <p>Não foi possível carregar a área de links.</p>
+            </div>
+        `;
+    }
+},    
+
+    criarLinkMatriculaCampanha: async () => {
+    const input = document.getElementById('nome-novo-link-matricula');
+    const nome = input?.value?.trim();
+
+    if (!nome) {
+        return App.showToast("Digite um nome para o link.", "warning");
+    }
+
+    try {
+        const escola = await App.api('/escola');
+
+        if (!escola || escola.error || !escola.escolaId) {
+            return App.showToast("Não foi possível carregar os dados da instituição.", "error");
+        }
+
+        const linksAtuais = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
+
+        const novoLink = {
+            id: 'REF_' + Date.now(),
+            nome,
+            criadoEm: new Date().toLocaleString('pt-BR')
+        };
+
+        const payload = {
+            ...escola,
+            linksMatricula: [novoLink, ...linksAtuais]
+        };
+
+        const res = await App.api('/escola', 'PUT', payload);
+
+        if (res && res.error) {
+            return App.showToast(res.error, "error");
+        }
+
+        App.showToast("Link personalizado criado com sucesso!", "success");
+        App.mostrarAreaLinks();
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao criar link personalizado.", "error");
+    }
+},
 
     gerarNovoLinkMatricula: async () => {
         const nomeInput = document.getElementById('nome-novo-link').value.trim();
