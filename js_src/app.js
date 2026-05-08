@@ -3872,6 +3872,96 @@ document.addEventListener('click', (e) => {
 });
 
 // =========================================================
+// 🔔 MOTOR DO SININHO DE NOTIFICAÇÕES (TEMPO REAL)
+// =========================================================
+
+// Função que vai ao servidor ver se há matrículas novas
+async function verificarNotificacoes() {
+    // Só verifica se o utilizador estiver logado (tiver token)
+    const token = localStorage.getItem('tokenEscolar');
+    if (!token) return; 
+
+    try {
+        const resposta = await fetch(`${API_URL}/sistema/notificacoes/nao-lidas`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!resposta.ok) return;
+        const notificacoes = await resposta.json();
+        
+        // Substitua 'contador-sininho' pelo ID real do seu contador no HTML do painel
+        const badgeContador = document.getElementById('contador-sininho');
+        // Substitua 'lista-notificacoes' pelo ID real da <ul> ou <div> onde caem as mensagens
+        const caixaLista = document.getElementById('lista-notificacoes'); 
+        
+        // 1. Atualizar a Bolinha Vermelha com o Número
+        if (badgeContador) {
+            badgeContador.innerText = notificacoes.length;
+            badgeContador.style.display = notificacoes.length > 0 ? 'inline-block' : 'none';
+        }
+        
+        // 2. Atualizar a lista de mensagens no dropdown do sininho
+        if (caixaLista) {
+            caixaLista.innerHTML = ''; // Limpa as antigas
+            
+            if (notificacoes.length === 0) {
+                caixaLista.innerHTML = '<li style="padding: 15px; text-align: center; color: #7f8c8d; font-size: 13px;">Nenhuma novidade por enquanto.</li>';
+            } else {
+                notificacoes.forEach(notif => {
+                    const item = document.createElement('li');
+                    item.style.padding = "10px 15px";
+                    item.style.borderBottom = "1px solid #eee";
+                    item.style.cursor = "pointer";
+                    item.style.transition = "background 0.2s";
+                    
+                    // Efeito Hover
+                    item.onmouseover = () => item.style.background = "#f4f6f7";
+                    item.onmouseout = () => item.style.background = "transparent";
+                    
+                    item.innerHTML = `
+                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px; margin-bottom: 3px;">${notif.titulo}</div>
+                        <div style="color: #7f8c8d; font-size: 12px;">${notif.mensagem}</div>
+                    `;
+                    
+                    // Ação ao clicar na notificação
+                    item.onclick = () => marcarNotificacaoLida(notif.id);
+                    caixaLista.appendChild(item);
+                });
+            }
+        }
+    } catch (error) {
+        console.log("A aguardar estabilidade para verificar notificações...");
+    }
+}
+
+// Função para limpar o aviso quando o utilizador clica nele
+async function marcarNotificacaoLida(idNotificacao) {
+    const token = localStorage.getItem('tokenEscolar');
+    try {
+        await fetch(`${API_URL}/sistema/notificacoes/lida/${idNotificacao}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        // Recarrega o sininho instantaneamente para a bolinha diminuir
+        verificarNotificacoes(); 
+        
+        // Opcional: Se quiser que ao clicar na notificação, a página mude para a Lista de Alunos
+        if(typeof App !== 'undefined' && App.renderizarTela) {
+            App.renderizarTela('alunos'); 
+        }
+    } catch (error) {
+        console.error("Erro ao limpar notificação:", error);
+    }
+}
+
+// ⏰ INICIAR O "RADAR" DO SININHO
+// Verifica na hora que a página carrega
+setTimeout(verificarNotificacoes, 2000); 
+// Continua a verificar silenciosamente a cada 15 segundos
+setInterval(verificarNotificacoes, 15000);
+
+// =========================================================
 // 📡 DETEÇÃO DE LIGAÇÃO (ONLINE / OFFLINE)
 // =========================================================
 
