@@ -1,1 +1,1137 @@
-function a3_0x4ea1(_0x3890c1,_0x551596){_0x3890c1=_0x3890c1-0x83;const _0x48fe2c=a3_0x48fe();let _0x4ea153=_0x48fe2c[_0x3890c1];return _0x4ea153;}const a3_0xd763b0=a3_0x4ea1;(function(_0x2d21a8,_0x3ff4f2){const _0x584159=a3_0x4ea1,_0x3dd8c7=_0x2d21a8();while(!![]){try{const _0x2b6350=-parseInt(_0x584159(0xf0))/0x1*(parseInt(_0x584159(0x150))/0x2)+-parseInt(_0x584159(0x204))/0x3+parseInt(_0x584159(0x104))/0x4*(-parseInt(_0x584159(0x119))/0x5)+parseInt(_0x584159(0xf9))/0x6+-parseInt(_0x584159(0x140))/0x7+-parseInt(_0x584159(0x130))/0x8*(-parseInt(_0x584159(0x12a))/0x9)+parseInt(_0x584159(0xfd))/0xa;if(_0x2b6350===_0x3ff4f2)break;else _0x3dd8c7['push'](_0x3dd8c7['shift']());}catch(_0x5265d9){_0x3dd8c7['push'](_0x3dd8c7['shift']());}}}(a3_0x48fe,0x914c1),App[a3_0xd763b0(0x1aa)]=async()=>{const _0x235b20=a3_0xd763b0;App[_0x235b20(0x87)]('Financeiro');const _0x479d29=document[_0x235b20(0x207)]('app-content');_0x479d29['innerHTML']=_0x235b20(0x19b);try{const [_0x5953b2,_0xb77480,_0x42cffa]=await Promise[_0x235b20(0x14b)]([App[_0x235b20(0x88)](_0x235b20(0x1be)),App[_0x235b20(0x88)](_0x235b20(0xdb)),App[_0x235b20(0x88)](_0x235b20(0xce))]),_0x3e26ce=_0x42cffa['filter'](_0x3778e4=>!_0x3778e4[_0x235b20(0x1a6)]||_0x3778e4[_0x235b20(0x1a6)]===_0x235b20(0x171))['map'](_0x42a8dd=>_0x42a8dd['id']),_0x2497c2=_0xb77480[_0x235b20(0x16b)](_0x401e56=>{const _0xc4317d=_0x235b20;if(_0x401e56['status']==='Pendente'&&!_0x3e26ce[_0xc4317d(0x1a5)](_0x401e56[_0xc4317d(0x107)]))return![];return!![];});App['financeiroCache']=_0x2497c2[_0x235b20(0x1ca)]((_0x242a66,_0x44b034)=>{const _0x5b58c7=_0x235b20;if(_0x242a66[_0x5b58c7(0x1a6)]===_0x44b034[_0x5b58c7(0x1a6)])return new Date(_0x242a66[_0x5b58c7(0xd1)])-new Date(_0x44b034['vencimento']);return _0x242a66['status']===_0x5b58c7(0x190)?-0x1:0x1;});const _0x252841=App['UI']['input'],_0x597c70=App['UI'][_0x235b20(0x1f2)],_0x3b8b3f=(_0x329e4e,_0x5da330,_0x188dd7)=>_0x235b20(0xb6)+_0x329e4e+'</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22'+_0x5da330+_0x235b20(0x19c)+_0x188dd7+_0x235b20(0x19a),_0xf3376a=(_0x329fcd,_0x4894e0,_0x4b4c34=_0x235b20(0xe0),_0x11002a='',_0x40f985='')=>_0x235b20(0xb6)+_0x329fcd+'</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22'+_0x4b4c34+_0x235b20(0xbb)+_0x4894e0+_0x235b20(0xea)+_0x11002a+_0x235b20(0x20e)+_0x40f985+_0x235b20(0x136),_0x50fe8c=_0x42cffa['filter'](_0x2d6261=>!_0x2d6261['status']||_0x2d6261[_0x235b20(0x1a6)]===_0x235b20(0x171)),_0x12a6eb=_0x235b20(0x191)+_0x50fe8c[_0x235b20(0x10d)](_0x4a8fce=>_0x235b20(0x1ee)+_0x4a8fce['id']+'\x22>'+App[_0x235b20(0x92)](_0x4a8fce[_0x235b20(0x20f)])+'</option>')[_0x235b20(0xaf)](''),_0x8795ca='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20align-items:center;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:24px;\x20margin-right:10px;\x22>💰</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><h3\x20style=\x22margin:0;\x20color:#2c3e50;\x22>Gerar\x20Mensalidades</h3><p\x20style=\x22margin:0;\x20color:#666;\x20font-size:14px;\x22>Preencha\x20para\x20gerar\x20carnê.</p></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:20px;\x20align-items:flex-end;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:2;\x20min-width:250px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22display:block;\x20font-weight:bold;\x20margin-bottom:8px;\x20font-size:13px;\x20color:#555;\x22>Selecione\x20o\x20Aluno:</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22fin-aluno\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22>'+_0x12a6eb+_0x235b20(0x170)+_0x3b8b3f(_0x235b20(0x138),'fin-tipo',_0x235b20(0x1a8))+_0x235b20(0x116)+_0xf3376a(_0x235b20(0x156),_0x235b20(0x1ef),_0x235b20(0xfc),'','0,00')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0xf3376a('Parcelas:',_0x235b20(0xa3),_0x235b20(0xfc),'12')+_0x235b20(0x116)+_0xf3376a('1º\x20Vencimento:',_0x235b20(0x90),'date',new Date()[_0x235b20(0x1f4)]()[_0x235b20(0x1f7)]('T')[0x0])+_0x235b20(0x113);let _0x297d61=new Set();const _0x4a6a8f=new Date()[_0x235b20(0x8d)]();_0x297d61[_0x235b20(0x100)](_0x4a6a8f),_0x2497c2[_0x235b20(0x152)](_0x35a95f=>{const _0x173e58=_0x235b20;if(_0x35a95f[_0x173e58(0xd1)])_0x297d61['add'](parseInt(_0x35a95f[_0x173e58(0xd1)][_0x173e58(0x1f7)]('-')[0x0]));});const _0x22fe1d=Array[_0x235b20(0x17b)](_0x297d61)[_0x235b20(0x1ca)]((_0x554178,_0xfb09c6)=>_0xfb09c6-_0x554178),_0x1934f3='<option\x20value=\x22\x22>Todos\x20os\x20Status</option><option\x20value=\x22Pago\x22>🟢\x20Pagos</option><option\x20value=\x22Pendente\x22>🟠\x20Pendentes</option>',_0xaa0ecc=_0x235b20(0xdd)+_0x22fe1d[_0x235b20(0x10d)](_0x497d81=>_0x235b20(0x1ee)+_0x497d81+'\x22>'+_0x497d81+_0x235b20(0x13b))['join'](''),_0x5edbfc=['Janeiro',_0x235b20(0xb1),'Março',_0x235b20(0x187),_0x235b20(0x158),'Junho',_0x235b20(0x18e),_0x235b20(0x13f),'Setembro',_0x235b20(0x1a3),_0x235b20(0x1e6),_0x235b20(0xee)],_0x52b2cf=_0x235b20(0x128)+_0x5edbfc[_0x235b20(0x10d)]((_0x5a10a8,_0x20b7ac)=>'<option\x20value=\x22'+(_0x20b7ac+0x1)[_0x235b20(0x185)]()[_0x235b20(0xad)](0x2,'0')+'\x22>'+_0x5a10a8+'</option>')[_0x235b20(0xaf)](''),_0x43faf2=_0x235b20(0x143)+_0x597c70(_0x235b20(0x17c),_0x235b20(0x121),_0x235b20(0x155),'✅')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x597c70(_0x235b20(0x12e),_0x235b20(0x12b),_0x235b20(0x118),'↩️')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x597c70('EXCLUIR','App.acaoLote(\x27excluir\x27)',_0x235b20(0x1b4),_0x235b20(0x1c4))+_0x235b20(0x129)+_0x1934f3+_0x235b20(0xd2)+_0x52b2cf+_0x235b20(0x1f3)+_0xaa0ecc+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22fin-lista-area\x22\x20class=\x22table-responsive-wrapper\x22\x20style=\x22overflow-x:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+App[_0x235b20(0x13c)](App[_0x235b20(0x164)])+_0x235b20(0xd7);_0x479d29[_0x235b20(0xf4)]=_0x235b20(0xc6)+_0x8795ca+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+App['UI'][_0x235b20(0x127)]('','',_0x43faf2)+_0x235b20(0xf7);}catch(_0x23d846){_0x479d29[_0x235b20(0xf4)]='Erro\x20ao\x20carregar\x20dados\x20financeiros.';}},App[a3_0xd763b0(0x13c)]=_0x2fa924=>{const _0x4749b3=a3_0xd763b0;if(!_0x2fa924||_0x2fa924['length']===0x0)return _0x4749b3(0x1fe);const _0x5a4bf7=(_0x583be9,_0x35641b='center')=>_0x4749b3(0xf8)+_0x35641b+_0x4749b3(0xfa)+_0x583be9+_0x4749b3(0xa4),_0x4dd89a=_0x4749b3(0x125)+_0x5a4bf7('Aluno',_0x4749b3(0x163))+_0x5a4bf7(_0x4749b3(0x1d9))+_0x5a4bf7(_0x4749b3(0x1c7))+_0x5a4bf7(_0x4749b3(0x15a))+_0x5a4bf7(_0x4749b3(0xa6))+_0x5a4bf7('Ações')+_0x4749b3(0x18a),_0x4c67d9=new Date();_0x4c67d9[_0x4749b3(0xf1)](0x0,0x0,0x0,0x0);const _0x6b9483=_0x2fa924[_0x4749b3(0x10d)](_0x28f692=>{const _0x288730=_0x4749b3,_0x4ac669=_0x28f692['status']==='Pago',_0x22f840=_0x28f692[_0x288730(0x1a6)]===_0x288730(0x190),_0x4dee2c=new Date(_0x28f692[_0x288730(0xd1)]+'T00:00:00'),_0x1907e5=_0x22f840&&_0x4dee2c<_0x4c67d9;let _0x57aba9=_0x4ac669?'#1e8449':_0x22f840?_0x288730(0x11b):_0x288730(0x1bb);if(_0x1907e5)_0x57aba9=_0x288730(0x102);let _0x217348='';if(_0x4ac669)_0x217348='background-color:#eafaf1;';else _0x1907e5&&(_0x217348=_0x288730(0xec));const _0x28eca2=_0x1907e5?_0x288730(0x1a0):_0x28f692[_0x288730(0x1a6)],_0x52eb0f=_0x4ac669?_0x288730(0x17a):_0x1907e5?_0x288730(0xb7):_0x288730(0x83),_0xb3cf5='<span\x20style=\x22background:'+_0x52eb0f+_0x288730(0xd9)+_0x28eca2+_0x288730(0x14c),_0x453010=_0x28f692[_0x288730(0x1c2)][_0x288730(0x1a5)]('/')?_0x28f692[_0x288730(0x1c2)]['split']('\x20')['pop']():'-',_0x36e947=_0x28f692[_0x288730(0xd1)][_0x288730(0x1f7)]('-')[_0x288730(0x20d)]()['join']('/'),_0x11db24=parseFloat(_0x28f692[_0x288730(0x20a)])[_0x288730(0x180)](_0x288730(0xd5),{'minimumFractionDigits':0x2}),_0x1b3368=!_0x4ac669?_0x288730(0xe5)+_0x28f692[_0x288730(0x107)]+_0x288730(0x1bf)+_0x11db24+'\x27)\x22\x20style=\x22background:#27ae60;\x20color:white;\x20border:none;\x20padding:5px\x208px;\x20border-radius:4px;\x20cursor:pointer;\x20margin-left:5px;\x22\x20title=\x22Cobrar\x20no\x20WhatsApp\x22>💬</button>':'';return _0x288730(0x1df)+_0x217348+_0x288730(0x84)+_0x28f692['id']+_0x288730(0x93)+App['escapeHTML'](_0x28f692[_0x288730(0x18f)])+_0x288730(0x108)+App[_0x288730(0x92)](_0x453010)+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x20'+(_0x1907e5?'color:#c0392b;\x20font-weight:bold;':'')+'\x22>'+_0x36e947+_0x288730(0x11a)+_0x11db24+_0x288730(0x1eb)+_0x57aba9+';\x22>'+_0xb3cf5+_0x288730(0x110)+_0x28f692[_0x288730(0x1b7)]+_0x288730(0x1c5)+_0x28f692['id']+_0x288730(0xb8)+_0x1b3368+_0x288730(0x1e8);})[_0x4749b3(0xaf)]('');return _0x4749b3(0x1f0)+_0x4dd89a+_0x4749b3(0x13a)+_0x6b9483+_0x4749b3(0x196);},App['filtrarFinanceiro']=()=>{const _0x119c14=a3_0xd763b0,_0x3652a5=document[_0x119c14(0x207)](_0x119c14(0x15e)),_0x1213c3=document[_0x119c14(0x207)](_0x119c14(0x1ac)),_0x5c5e9c=document[_0x119c14(0x207)](_0x119c14(0x188)),_0x2008f2=document[_0x119c14(0x207)](_0x119c14(0xd0)),_0x5aacdd=_0x3652a5?_0x3652a5['value'][_0x119c14(0x1fd)]():'',_0x1f6f70=_0x1213c3?_0x1213c3[_0x119c14(0x15c)]:'',_0x536aa3=_0x5c5e9c?_0x5c5e9c[_0x119c14(0x15c)]:'',_0x1efe8b=_0x2008f2?_0x2008f2[_0x119c14(0x15c)]:'';let _0x988f09=App[_0x119c14(0x164)][_0x119c14(0x16b)](_0x1bf97d=>{const _0x49fb8f=_0x119c14,_0x264525=!_0x5aacdd||_0x1bf97d[_0x49fb8f(0x18f)]&&_0x1bf97d['alunoNome'][_0x49fb8f(0x1fd)]()[_0x49fb8f(0x1a5)](_0x5aacdd)||_0x1bf97d[_0x49fb8f(0x1c2)]&&_0x1bf97d[_0x49fb8f(0x1c2)]['toLowerCase']()[_0x49fb8f(0x1a5)](_0x5aacdd),_0x111201=_0x1bf97d[_0x49fb8f(0xd1)]||'',_0x1d0e73=_0x111201[_0x49fb8f(0x101)](0x0,0x4),_0x3195c7=_0x111201[_0x49fb8f(0x101)](0x5,0x7),_0x595e31=!_0x536aa3||_0x1d0e73===_0x536aa3,_0x187afc=!_0x1f6f70||_0x3195c7===_0x1f6f70,_0x3dd3c6=!_0x1efe8b||_0x1bf97d[_0x49fb8f(0x1a6)]===_0x1efe8b;return _0x264525&&_0x595e31&&_0x187afc&&_0x3dd3c6;});_0x1f6f70||_0x536aa3||_0x1efe8b?_0x988f09[_0x119c14(0x1ca)]((_0xb180d1,_0x32703a)=>new Date(_0x32703a[_0x119c14(0xd1)])-new Date(_0xb180d1[_0x119c14(0xd1)])):_0x988f09[_0x119c14(0x1ca)]((_0x2092cf,_0x2ffaeb)=>{const _0x47ae2e=_0x119c14;if(_0x2092cf['status']===_0x2ffaeb[_0x47ae2e(0x1a6)])return new Date(_0x2092cf[_0x47ae2e(0xd1)])-new Date(_0x2ffaeb[_0x47ae2e(0xd1)]);return _0x2092cf['status']===_0x47ae2e(0x190)?-0x1:0x1;}),document[_0x119c14(0x207)](_0x119c14(0x14f))['innerHTML']=App[_0x119c14(0x13c)](_0x988f09);},App['filaBaixa']={'modo':'','itens':[],'index':0x0},App[a3_0xd763b0(0xd4)]=()=>{const _0x5db2ab=a3_0xd763b0,_0x1fb7eb=document[_0x5db2ab(0x9a)](_0x5db2ab(0x10b));if(_0x1fb7eb[_0x5db2ab(0x135)]===0x0)return App[_0x5db2ab(0xa9)](_0x5db2ab(0x8e),_0x5db2ab(0x98));const _0x47f768=Array[_0x5db2ab(0x17b)](_0x1fb7eb)[_0x5db2ab(0x10d)](_0x37bbc9=>App['financeiroCache']['find'](_0x408468=>_0x408468['id']==_0x37bbc9['value']))[_0x5db2ab(0x16b)](_0x397096=>_0x397096);if(_0x47f768['length']===0x1)App[_0x5db2ab(0x86)]={'modo':_0x5db2ab(0x111),'itens':_0x47f768,'index':0x0},App[_0x5db2ab(0x162)]();else{App[_0x5db2ab(0x86)]={'modo':_0x5db2ab(0x1d3),'itens':_0x47f768,'index':0x0};const _0x169fba=document['getElementById']('modal-overlay');if(_0x169fba)_0x169fba[_0x5db2ab(0x97)][_0x5db2ab(0x19d)]=_0x5db2ab(0x1ce);document[_0x5db2ab(0x207)](_0x5db2ab(0x1c1))['innerText']=_0x5db2ab(0x13e)+_0x47f768[_0x5db2ab(0x135)]+_0x5db2ab(0x183),document['getElementById'](_0x5db2ab(0x1c9))['innerHTML']=_0x5db2ab(0x1d7)+_0x47f768[_0x5db2ab(0x135)]+_0x5db2ab(0x112);const _0xfa2c4d=document[_0x5db2ab(0x114)](_0x5db2ab(0x1d5));if(_0xfa2c4d)_0xfa2c4d[_0x5db2ab(0x97)][_0x5db2ab(0x19d)]=_0x5db2ab(0xe9);}},App[a3_0xd763b0(0x1e1)]=_0x5d2675=>{const _0x1adff7=a3_0xd763b0;App['filaBaixa']['modo']=_0x5d2675,App[_0x1adff7(0x86)][_0x1adff7(0x18d)]=0x0,App[_0x1adff7(0x162)]();},App[a3_0xd763b0(0x162)]=()=>{const _0x11dceb=a3_0xd763b0,{modo:_0x1d7782,itens:_0x34653d,index:_0xdebc60}=App[_0x11dceb(0x86)],_0xfab5e8=document['getElementById'](_0x11dceb(0xd6));if(_0xfab5e8)_0xfab5e8[_0x11dceb(0x97)]['display']=_0x11dceb(0x1ce);const _0x5c7c14=document[_0x11dceb(0x114)](_0x11dceb(0x1d5));if(_0x5c7c14)_0x5c7c14[_0x11dceb(0x97)][_0x11dceb(0x19d)]=_0x11dceb(0x16e);let _0x1b1e4d=0x0,_0xb2565f='',_0x213c63='',_0xd7d2d4=!![];if(_0x1d7782===_0x11dceb(0x96)){_0x213c63=_0x11dceb(0x17f)+_0x34653d[_0x11dceb(0x135)]+_0x11dceb(0x183);let _0xd1faf5=0x0;_0x34653d[_0x11dceb(0x152)](_0x3f8c2b=>_0xd1faf5+=Math[_0x11dceb(0x161)](parseFloat(_0x3f8c2b[_0x11dceb(0x20a)])*0x64)),_0x1b1e4d=_0xd1faf5/0x64,_0xb2565f=_0x11dceb(0xc4)+_0x34653d[_0x11dceb(0x135)]+_0x11dceb(0x18c),_0x5c7c14[_0x11dceb(0x115)]=_0x11dceb(0x1ad);}else{const _0x278cdb=_0x34653d[_0xdebc60];_0x1b1e4d=parseFloat(_0x278cdb['valor']),_0xd7d2d4=_0xdebc60===_0x34653d[_0x11dceb(0x135)]-0x1,_0x213c63=_0x1d7782===_0x11dceb(0x1e2)?_0x11dceb(0x142)+(_0xdebc60+0x1)+_0x11dceb(0x17d)+_0x34653d[_0x11dceb(0x135)]:_0x11dceb(0x1c6),_0xb2565f='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fdfefe;\x20border:1px\x20solid\x20#dce1e6;\x20padding:15px;\x20border-radius:6px;\x20margin-bottom:15px;\x20border-left:4px\x20solid\x20#27ae60;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20color:#7f8c8d;\x20text-transform:uppercase;\x20font-weight:bold;\x20margin-bottom:6px;\x22>👤\x20Identificação\x20do\x20Pagador</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:16px;\x20font-weight:bold;\x20color:#2c3e50;\x20margin-bottom:4px;\x22>'+App[_0x11dceb(0x92)](_0x278cdb[_0x11dceb(0x18f)])+_0x11dceb(0x1a2)+App[_0x11dceb(0x92)](_0x278cdb[_0x11dceb(0x1c2)])+_0x11dceb(0x194)+_0x278cdb[_0x11dceb(0xd1)][_0x11dceb(0x1f7)]('-')[_0x11dceb(0x20d)]()[_0x11dceb(0xaf)]('/')+_0x11dceb(0x89),_0x5c7c14[_0x11dceb(0x115)]=_0x1d7782==='queue'&&!_0xd7d2d4?_0x11dceb(0x151):_0x11dceb(0x1fa);}document[_0x11dceb(0x207)]('modal-titulo')[_0x11dceb(0x115)]=_0x213c63;const _0x10ea79=App['UI'][_0x11dceb(0x8b)],_0x22caed=(_0x1d9063,_0x41f2dc,_0xb32093,_0x91813f='')=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22\x20style=\x22margin:0;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>'+_0x1d9063+'</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22'+_0x41f2dc+'\x22\x20'+_0x91813f+'>'+_0xb32093+'</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>',_0x4f922d=(_0x1b831c,_0x155ae1='',_0x5796f4=_0x11dceb(0x13d))=>_0x11dceb(0xca)+_0x155ae1+_0x11dceb(0x147)+_0x5796f4+';\x20grid-template-columns:2fr\x201fr;\x20gap:10px;\x20margin-bottom:10px;\x22>'+_0x1b831c+'</div>',_0x25aadb='<option\x20value=\x22PIX\x22>PIX</option><option\x20value=\x22Cartão\x20de\x20Crédito\x22>Cartão\x20de\x20Crédito</option><option\x20value=\x22Cartão\x20de\x20Débito\x22>Cartão\x20de\x20Débito</option><option\x20value=\x22Dinheiro\x22>Dinheiro</option>',_0x189095='\x0a\x20\x20\x20\x20\x20\x20\x20\x20'+_0xb2565f+_0x11dceb(0x14d)+_0x1b1e4d['toLocaleString'](_0x11dceb(0xd5),{'minimumFractionDigits':0x2})+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20id=\x22baixa-display-total\x22\x20style=\x22font-weight:bold;\x20color:#27ae60;\x20font-size:24px;\x22>R$\x20'+_0x1b1e4d[_0x11dceb(0x180)](_0x11dceb(0xd5),{'minimumFractionDigits':0x2})+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:10px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x10ea79(_0x11dceb(0xf2),_0x11dceb(0x203),new Date()[_0x11dceb(0x1f4)]()[_0x11dceb(0x1f7)]('T')[0x0],'','date')+_0x11dceb(0x179)+_0x22caed('Divisão\x20de\x20Pagamento',_0x11dceb(0x1e7),_0x11dceb(0x201),'onchange=\x22App.mudarQtdFormasBaixa()\x22')+_0x11dceb(0xac)+_0x4f922d(_0x22caed(_0x11dceb(0x1cf),_0x11dceb(0xa5),_0x25aadb)+_0x10ea79(_0x11dceb(0xda),_0x11dceb(0x202),_0x1b1e4d[_0x11dceb(0xc8)](0x2),'',_0x11dceb(0xfc),'step=\x220.01\x22\x20oninput=\x22App.calcValorBaixa()\x22\x20style=\x22margin:0;\x22'),_0x11dceb(0x1fc))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x4f922d(_0x22caed('Forma\x202','baixa-forma-2',_0x11dceb(0xeb)+_0x25aadb)+_0x10ea79(_0x11dceb(0xda),'baixa-valor-2',_0x11dceb(0xcc),'',_0x11dceb(0xfc),'step=\x220.01\x22\x20readonly\x20style=\x22background:#eee;\x20margin:0;\x22'),_0x11dceb(0x8c),_0x11dceb(0xe9))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22baixa-total-original\x22\x20value=\x22'+_0x1b1e4d+_0x11dceb(0x206)+_0x1b1e4d+_0x11dceb(0x12c);document[_0x11dceb(0x207)]('modal-form-content')[_0x11dceb(0xf4)]=_0x189095,_0x5c7c14[_0x11dceb(0x1b6)]('onclick',_0x11dceb(0x11c));},App[a3_0xd763b0(0xfe)]=()=>{const _0x1e3c73=a3_0xd763b0,_0x102f1e=parseFloat(document[_0x1e3c73(0x207)]('baixa-total-original')['value']);let _0x70eb14=parseFloat(document[_0x1e3c73(0x207)]('baixa-juros')['value'])||0x0;_0x70eb14<0x0&&(_0x70eb14=0x0,document[_0x1e3c73(0x207)]('baixa-juros')['value']=0x0);const _0x42a68c=_0x102f1e*(_0x70eb14/0x64),_0x1ba290=_0x102f1e+_0x42a68c;document['getElementById']('baixa-display-total')[_0x1e3c73(0x115)]=_0x1e3c73(0x1e5)+_0x1ba290[_0x1e3c73(0x180)]('pt-BR',{'minimumFractionDigits':0x2}),document[_0x1e3c73(0x207)]('baixa-total')['value']=_0x1ba290[_0x1e3c73(0xc8)](0x2);const _0x373788=document[_0x1e3c73(0x207)](_0x1e3c73(0x1e7))[_0x1e3c73(0x15c)];_0x373788==='1'?document[_0x1e3c73(0x207)](_0x1e3c73(0x202))['value']=_0x1ba290[_0x1e3c73(0xc8)](0x2):App[_0x1e3c73(0x8a)]();},App[a3_0xd763b0(0x192)]=()=>{const _0x1fa55b=a3_0xd763b0,_0x5198d5=document[_0x1fa55b(0x207)](_0x1fa55b(0x1e7))[_0x1fa55b(0x15c)],_0x5cc8a1=document['getElementById']('forma-2-container'),_0x36e09c=document[_0x1fa55b(0x207)]('baixa-valor-1'),_0x34a177=parseFloat(document[_0x1fa55b(0x207)](_0x1fa55b(0x1ec))[_0x1fa55b(0x15c)]);_0x5198d5==='2'?(_0x5cc8a1[_0x1fa55b(0x97)][_0x1fa55b(0x19d)]='grid',_0x36e09c[_0x1fa55b(0x15c)]=(_0x34a177/0x2)[_0x1fa55b(0xc8)](0x2),App[_0x1fa55b(0x8a)]()):(_0x5cc8a1[_0x1fa55b(0x97)][_0x1fa55b(0x19d)]=_0x1fa55b(0xe9),_0x36e09c['value']=_0x34a177[_0x1fa55b(0xc8)](0x2));},App[a3_0xd763b0(0x8a)]=()=>{const _0x4dcf98=a3_0xd763b0,_0x517950=document[_0x4dcf98(0x207)](_0x4dcf98(0x1e7))['value'];if(_0x517950==='2'){const _0x23b81f=Math[_0x4dcf98(0x161)](parseFloat(document[_0x4dcf98(0x207)](_0x4dcf98(0x1ec))[_0x4dcf98(0x15c)])*0x64),_0x48c711=Math[_0x4dcf98(0x161)](parseFloat(document[_0x4dcf98(0x207)](_0x4dcf98(0x202))[_0x4dcf98(0x15c)])*0x64)||0x0;let _0x1f2c74=_0x23b81f-_0x48c711;if(_0x1f2c74<0x0)_0x1f2c74=0x0;document['getElementById'](_0x4dcf98(0x120))[_0x4dcf98(0x15c)]=(_0x1f2c74/0x64)[_0x4dcf98(0xc8)](0x2);}},App[a3_0xd763b0(0xb0)]=async()=>{const _0x2fdc17=a3_0xd763b0,_0x5c951c=document[_0x2fdc17(0x207)](_0x2fdc17(0x203))[_0x2fdc17(0x15c)],_0x1ed81d=document[_0x2fdc17(0x207)](_0x2fdc17(0x1e7))[_0x2fdc17(0x15c)],_0x58f8b6=document['getElementById'](_0x2fdc17(0xa5))[_0x2fdc17(0x15c)],_0x2e3115=document[_0x2fdc17(0x207)](_0x2fdc17(0x202))[_0x2fdc17(0x15c)],_0x23ca99=_0x1ed81d==='2'?document[_0x2fdc17(0x207)](_0x2fdc17(0xc7))[_0x2fdc17(0x15c)]:null,_0x14cf3c=_0x1ed81d==='2'?document[_0x2fdc17(0x207)](_0x2fdc17(0x120))[_0x2fdc17(0x15c)]:null;if(!_0x5c951c)return App['showToast']('Informe\x20a\x20data\x20de\x20pagamento.','error');const _0x1154cc=document[_0x2fdc17(0x114)](_0x2fdc17(0x1d5)),_0x144e69=_0x1154cc[_0x2fdc17(0x115)];_0x1154cc[_0x2fdc17(0x115)]=_0x2fdc17(0x168),_0x1154cc[_0x2fdc17(0x205)]=!![];const {modo:_0xa1905f,itens:_0x17b89e,index:_0x451d66}=App[_0x2fdc17(0x86)];try{const _0x5cf53a=[];if(_0xa1905f==='batch'){const _0x465204=parseFloat(document[_0x2fdc17(0x207)](_0x2fdc17(0xed))[_0x2fdc17(0x15c)])||0x0;for(const _0x4b2ec0 of _0x17b89e){const _0x4fd938=_0x465204>0x0?parseFloat(_0x4b2ec0['valor'])/_0x465204:0x0,_0x189024=_0x465204>0x0?(parseFloat(_0x2e3115)*_0x4fd938)[_0x2fdc17(0xc8)](0x2):_0x2fdc17(0xcc),_0xc12138=_0x1ed81d==='2'&&_0x465204>0x0?(parseFloat(_0x14cf3c)*_0x4fd938)[_0x2fdc17(0xc8)](0x2):null,_0x2e9dc3=(parseFloat(_0x189024)+(parseFloat(_0xc12138)||0x0))[_0x2fdc17(0xc8)](0x2),_0x31001b={..._0x4b2ec0,'status':_0x2fdc17(0x126),'dataPagamento':_0x5c951c,'formaPagamento':_0x58f8b6,'valorPago1':_0x189024,'formaPagamento2':_0x23ca99,'valorPago2':_0xc12138,'valor':_0x2e9dc3};_0x5cf53a[_0x2fdc17(0xc1)](App[_0x2fdc17(0x88)]('/financeiro/'+_0x4b2ec0['id'],_0x2fdc17(0x1dc),_0x31001b));}}else{const _0x768085=_0x17b89e[_0x451d66],_0x4b73a7=(parseFloat(_0x2e3115)+(parseFloat(_0x14cf3c)||0x0))[_0x2fdc17(0xc8)](0x2),_0x4070e7={..._0x768085,'status':'Pago','dataPagamento':_0x5c951c,'formaPagamento':_0x58f8b6,'valorPago1':_0x2e3115,'formaPagamento2':_0x23ca99,'valorPago2':_0x1ed81d==='2'?_0x14cf3c:null,'valor':_0x4b73a7};_0x5cf53a[_0x2fdc17(0xc1)](App['api'](_0x2fdc17(0x165)+_0x768085['id'],_0x2fdc17(0x1dc),_0x4070e7));}await Promise['all'](_0x5cf53a);if(_0xa1905f===_0x2fdc17(0x1e2)&&_0x451d66<_0x17b89e['length']-0x1){App['showToast'](_0x2fdc17(0x145)+(_0x451d66+0x1)+'\x20registado.\x20Avançando...',_0x2fdc17(0x1a7)),App[_0x2fdc17(0x86)]['index']++,App[_0x2fdc17(0x162)]();return;}App[_0x2fdc17(0xa9)](_0x2fdc17(0xef),_0x2fdc17(0x1a7)),App[_0x2fdc17(0xbf)](),document[_0x2fdc17(0x207)](_0x2fdc17(0x184))['innerHTML']=_0x2fdc17(0x200),await App[_0x2fdc17(0x1aa)]();}catch(_0x4dc405){App['showToast'](_0x2fdc17(0x9b),_0x2fdc17(0x1d1));}finally{_0x1154cc&&(_0x1154cc['innerText']=_0x144e69,_0x1154cc[_0x2fdc17(0x205)]=![]);}},App['gerarCarnes']=async()=>{const _0x51d967=a3_0xd763b0,_0x3b2551=document[_0x51d967(0x207)]('fin-aluno')[_0x51d967(0x15c)],_0x51ee5c=document[_0x51d967(0x207)](_0x51d967(0x1ef))[_0x51d967(0x15c)],_0x1d5872=parseInt(document[_0x51d967(0x207)](_0x51d967(0xa3))[_0x51d967(0x15c)]),_0x2330c9=document['getElementById']('fin-vencimento')['value'],_0x1e7686=document[_0x51d967(0x207)]('fin-tipo')[_0x51d967(0x15c)];if(!_0x3b2551||!_0x51ee5c||!_0x1d5872||!_0x2330c9)return App[_0x51d967(0xa9)](_0x51d967(0x1a4),_0x51d967(0x1d1));if(parseFloat(_0x51ee5c)<=0x0)return App[_0x51d967(0xa9)](_0x51d967(0x133),_0x51d967(0x98));const _0x25a758=document['getElementById'](_0x51d967(0x11e))[_0x51d967(0x1af)][document[_0x51d967(0x207)](_0x51d967(0x11e))['selectedIndex']]['text'],_0x58baae=Date[_0x51d967(0x20c)]()[_0x51d967(0x185)](),_0x4125ff=new Date()[_0x51d967(0x1b5)]('pt-BR'),_0x14e824=document[_0x51d967(0x207)](_0x51d967(0x1b1)),_0x4d5146=_0x14e824[_0x51d967(0x115)];_0x14e824['innerText']=_0x51d967(0x1b8)+_0x1d5872+_0x51d967(0x159),_0x14e824[_0x51d967(0x205)]=!![],document[_0x51d967(0xde)]['style']['cursor']=_0x51d967(0xa8);try{const _0x325edb=[],_0x54c768=new Date(_0x2330c9+_0x51d967(0x181)),_0x3d1a4b=_0x54c768[_0x51d967(0x189)]();for(let _0x34de95=0x1;_0x34de95<=_0x1d5872;_0x34de95++){let _0x2cc0e5=new Date(_0x54c768[_0x51d967(0x157)]());_0x2cc0e5['setMonth'](_0x54c768[_0x51d967(0x1b3)]()+(_0x34de95-0x1));_0x2cc0e5[_0x51d967(0x189)]()!==_0x3d1a4b&&_0x2cc0e5[_0x51d967(0x195)](0x0);const _0x6beacf=_0x2cc0e5['toISOString']()[_0x51d967(0x1f7)]('T')[0x0];let _0x4da9bd=_0x51d967(0x122)+_0x34de95+'/'+_0x1d5872;_0x1e7686===_0x51d967(0xb4)&&(_0x4da9bd=_0x51d967(0x134)+_0x34de95+'/'+_0x1d5872);const _0x117a5d={'id':_0x58baae+'_'+_0x34de95,'idCarne':_0x58baae,'dataGeracao':_0x4125ff,'idAluno':_0x3b2551,'alunoNome':_0x25a758,'valor':_0x51ee5c,'vencimento':_0x6beacf,'status':_0x51d967(0x190),'descricao':_0x4da9bd,'tipo':_0x51d967(0x99)};_0x325edb[_0x51d967(0xc1)](App[_0x51d967(0x88)]('/financeiro',_0x51d967(0x199),_0x117a5d));}await Promise['all'](_0x325edb),App[_0x51d967(0xa9)]('Carnê\x20gerado\x20com\x20sucesso!',_0x51d967(0x1a7)),App[_0x51d967(0x12d)](_0x58baae);}catch(_0x526854){App[_0x51d967(0xa9)](_0x51d967(0x149),_0x51d967(0x1d1));}finally{_0x14e824[_0x51d967(0x115)]=_0x4d5146,_0x14e824[_0x51d967(0x205)]=![],document[_0x51d967(0xde)][_0x51d967(0x97)]['cursor']=_0x51d967(0xbc);}},App[a3_0xd763b0(0x1ed)]=_0x4c950e=>{const _0x58e4b1=a3_0xd763b0;document['querySelectorAll'](_0x58e4b1(0x1bc))[_0x58e4b1(0x152)](_0x370b01=>_0x370b01[_0x58e4b1(0x1db)]=_0x4c950e[_0x58e4b1(0x1db)]);},App[a3_0xd763b0(0xcf)]=async _0x31942c=>{const _0x38f425=a3_0xd763b0,_0x5f3c07=document[_0x38f425(0x9a)]('.fin-check:checked');if(_0x5f3c07[_0x38f425(0x135)]===0x0)return App[_0x38f425(0xa9)](_0x38f425(0x11f),_0x38f425(0x98));const _0x3060d6=_0x31942c===_0x38f425(0x1d8)?'EXCLUIR':_0x38f425(0x9f);if(!confirm(_0x38f425(0x1dd)+_0x3060d6+_0x38f425(0xe1)+_0x5f3c07[_0x38f425(0x135)]+_0x38f425(0x14e)))return;App[_0x38f425(0xa9)](_0x38f425(0x16a),'info'),document[_0x38f425(0xde)][_0x38f425(0x97)]['cursor']='wait';try{const _0x15abf5=Array[_0x38f425(0x17b)](_0x5f3c07)[_0x38f425(0x10d)](async _0x2b71c4=>{const _0x4e17d7=_0x38f425,_0x38e2c2=_0x2b71c4[_0x4e17d7(0x15c)];if(_0x31942c===_0x4e17d7(0x1d8))return App[_0x4e17d7(0x88)](_0x4e17d7(0x165)+_0x38e2c2,_0x4e17d7(0x174));else{const _0x28b560=App[_0x4e17d7(0x164)][_0x4e17d7(0x1ea)](_0x371b8c=>_0x371b8c['id']==_0x38e2c2);if(_0x28b560)return App[_0x4e17d7(0x88)](_0x4e17d7(0x165)+_0x38e2c2,'PUT',{..._0x28b560,'status':_0x31942c==='baixar'?_0x4e17d7(0x126):_0x4e17d7(0x190)});}});await Promise[_0x38f425(0x14b)](_0x15abf5),App[_0x38f425(0xa9)](_0x38f425(0x1a1),'success'),App[_0x38f425(0x1aa)]();}catch(_0x699b72){App[_0x38f425(0xa9)](_0x38f425(0xe2),_0x38f425(0x1d1));}finally{document[_0x38f425(0xde)][_0x38f425(0x97)][_0x38f425(0x1da)]='default';}},App[a3_0xd763b0(0x12d)]=async _0x274300=>{const _0x28dec9=a3_0xd763b0,_0x100cf1=document[_0x28dec9(0x207)](_0x28dec9(0x184));_0x100cf1[_0x28dec9(0xf4)]=_0x28dec9(0x1e3);try{const [_0xf9e5b,_0x469265,_0xc5e822]=await Promise[_0x28dec9(0x14b)]([App[_0x28dec9(0x88)](_0x28dec9(0xdb)),App[_0x28dec9(0x88)](_0x28dec9(0xce)),App[_0x28dec9(0x88)](_0x28dec9(0x1a9))]),_0x380693=_0xf9e5b[_0x28dec9(0x16b)](_0x3e4055=>_0x3e4055[_0x28dec9(0x1b7)]===_0x274300)[_0x28dec9(0x1ca)]((_0x390f44,_0x443a2c)=>new Date(_0x390f44[_0x28dec9(0xd1)])-new Date(_0x443a2c['vencimento']));if(_0x380693[_0x28dec9(0x135)]===0x0)return App['showToast'](_0x28dec9(0xdf),_0x28dec9(0x1d1));const _0x4e65c7=_0x469265[_0x28dec9(0x1ea)](_0x233825=>_0x233825['id']===_0x380693[0x0][_0x28dec9(0x107)])||{'nome':_0x28dec9(0x123),'cpf':'Não\x20informado'},_0x349db4=_0xc5e822[_0x28dec9(0x103)]?_0x28dec9(0xfb)+_0xc5e822[_0x28dec9(0x103)]+_0x28dec9(0xe6):'',_0x89a68f=(_0xc5e822[_0x28dec9(0x20f)]||_0x28dec9(0x1b2))[_0x28dec9(0x101)](0x0,0x14),_0x1e4175=(_0x4e65c7[_0x28dec9(0x20f)]||'Aluno')['split']('\x20')[0x0],_0xa582fd=_0xc5e822[_0x28dec9(0x1ab)]||_0x28dec9(0x177),_0x524fd6=_0xc5e822[_0x28dec9(0xe3)]||_0x28dec9(0x10f),_0x15cef3=_0x380693['map'](_0xb6dd94=>{const _0x355cad=_0x28dec9,_0x14cca3=_0xb6dd94[_0x355cad(0xd1)][_0x355cad(0x1f7)]('-')['reverse']()['join']('/'),_0x570da6=parseFloat(_0xb6dd94[_0x355cad(0x20a)])[_0x355cad(0x180)](_0x355cad(0xd5),{'minimumFractionDigits':0x2}),_0x3a6bde=_0xb6dd94['id']['slice'](-0x8)[_0x355cad(0x94)](),_0x2319a1=_0xc5e822['qrCodeImagem']&&_0xc5e822[_0x355cad(0xaa)][_0x355cad(0x135)]>0x32&&!_0xc5e822[_0x355cad(0xaa)]['includes'](_0x355cad(0x175))?_0x355cad(0xfb)+_0xc5e822[_0x355cad(0xaa)]+_0x355cad(0x153):'<div\x20id=\x22qr-'+_0xb6dd94['id']+_0x355cad(0x1f8);return _0x355cad(0xa1)+_0x349db4+_0x355cad(0xc5)+App['escapeHTML'](_0x89a68f)+_0x355cad(0x14a)+App[_0x355cad(0x92)](_0xb6dd94[_0x355cad(0x1c2)])+_0x355cad(0xf6)+_0x14cca3+'</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20margin-bottom:\x203px;\x22><b>Valor:</b>\x20R$\x20'+_0x570da6+_0x355cad(0x9c)+_0x3a6bde+_0x355cad(0xc2)+App[_0x355cad(0x92)](_0x1e4175)+_0x355cad(0x1d2)+_0x349db4+_0x355cad(0x17e)+App[_0x355cad(0x92)](_0xc5e822[_0x355cad(0x20f)]||_0x355cad(0x1b2))+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x209px;\x20color:\x20#555;\x22>CNPJ:\x20'+App[_0x355cad(0x92)](_0xc5e822[_0x355cad(0x197)]||_0x355cad(0xc0))+_0x355cad(0xb5)+App['escapeHTML'](_0xa582fd)+_0x355cad(0x1de)+_0x3a6bde+'</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><div\x20style=\x22font-size:\x209px;\x20color:\x20#777;\x20text-transform:\x20uppercase;\x22>Vencimento</div><div\x20style=\x22font-weight:\x20bold;\x20font-size:\x2012px;\x20color:\x20#c0392b;\x22>'+_0x14cca3+_0x355cad(0x1e9)+_0x570da6+_0x355cad(0x15b)+App['escapeHTML'](_0xb6dd94[_0x355cad(0x1c2)])+'\x20&nbsp;|&nbsp;\x20<b>Pagador:</b>\x20'+App['escapeHTML'](_0x4e65c7[_0x355cad(0x20f)])+'\x20&nbsp;|&nbsp;\x20<b>CPF:</b>\x20'+App[_0x355cad(0x92)](_0x4e65c7['cpf']||_0x355cad(0xe7))+_0x355cad(0x18b)+App['escapeHTML'](_0x524fd6)+_0x355cad(0xdc)+_0x2319a1+_0x355cad(0x198);})[_0x28dec9(0xaf)]('');_0x100cf1['innerHTML']=_0x28dec9(0x1f1)+_0x15cef3+_0x28dec9(0x209),(!_0xc5e822[_0x28dec9(0xaa)]||_0xc5e822[_0x28dec9(0xaa)][_0x28dec9(0x135)]<=0x32||_0xc5e822['qrCodeImagem'][_0x28dec9(0x1a5)](_0x28dec9(0x175)))&&_0x380693[_0x28dec9(0x152)](_0x18d1b7=>{const _0x2111d1=_0x28dec9,_0x57571b=document[_0x2111d1(0x207)](_0x2111d1(0x15f)+_0x18d1b7['id']);if(_0x57571b&&typeof QRCode!==_0x2111d1(0x1bd))new QRCode(_0x57571b,{'text':_0x524fd6,'width':0x3c,'height':0x3c,'colorDark':_0x2111d1(0x10e),'colorLight':'#ffffff','correctLevel':QRCode['CorrectLevel']['L']});else _0x57571b&&(_0x57571b['innerHTML']=_0x2111d1(0x16f));});}catch(_0x3e9d7f){console[_0x28dec9(0x1d1)](_0x3e9d7f),App[_0x28dec9(0xa9)](_0x28dec9(0x1ba),_0x28dec9(0x1d1));}},App[a3_0xd763b0(0x178)]=async()=>{const _0x2b7947=a3_0xd763b0;App[_0x2b7947(0x87)](_0x2b7947(0x12f));const _0x9854a0=document[_0x2b7947(0x207)](_0x2b7947(0x184));_0x9854a0[_0x2b7947(0xf4)]=_0x2b7947(0x1c8);try{const [_0x4c56ea,_0x53746b,_0x55a2e0]=await Promise['all']([App[_0x2b7947(0x88)](_0x2b7947(0xdb)),App['api'](_0x2b7947(0xce)),App[_0x2b7947(0x88)](_0x2b7947(0x1a9))]),_0x4863a8=_0x53746b[_0x2b7947(0x16b)](_0x41e19b=>!_0x41e19b[_0x2b7947(0x1a6)]||_0x41e19b[_0x2b7947(0x1a6)]===_0x2b7947(0x171))['map'](_0x3ee331=>_0x3ee331['id']),_0x4cd3d9=new Date(),_0x4b9450=_0x4c56ea['filter'](_0x1fc8a7=>_0x1fc8a7[_0x2b7947(0x1a6)]!=='Pago'&&new Date(_0x1fc8a7[_0x2b7947(0xd1)]+_0x2b7947(0x181))<_0x4cd3d9&&_0x4863a8[_0x2b7947(0x1a5)](_0x1fc8a7[_0x2b7947(0x107)]));let _0x460676=0x0;const _0xa178f9={};_0x4b9450[_0x2b7947(0x152)](_0x5b566c=>{const _0x1a6ec0=_0x2b7947,_0x5f3ca3=Math['round'](parseFloat(_0x5b566c['valor'])*0x64);if(!_0xa178f9[_0x5b566c['idAluno']]){const _0x2f3739=_0x53746b[_0x1a6ec0(0x1ea)](_0x498de2=>_0x498de2['id']==_0x5b566c[_0x1a6ec0(0x107)]);_0xa178f9[_0x5b566c['idAluno']]={'idAluno':_0x5b566c[_0x1a6ec0(0x107)],'nome':_0x5b566c[_0x1a6ec0(0x18f)],'curso':_0x2f3739?_0x2f3739['curso']:'-','totalCentavos':0x0,'detalhes':[]};}_0xa178f9[_0x5b566c[_0x1a6ec0(0x107)]][_0x1a6ec0(0x117)]+=_0x5f3ca3,_0xa178f9[_0x5b566c['idAluno']][_0x1a6ec0(0x106)]['push'](_0x5b566c[_0x1a6ec0(0xd1)][_0x1a6ec0(0x1f7)]('-')[_0x1a6ec0(0x20d)]()['join']('/')+_0x1a6ec0(0x160)+parseFloat(_0x5b566c[_0x1a6ec0(0x20a)])[_0x1a6ec0(0x180)]('pt-BR',{'minimumFractionDigits':0x2})+')'),_0x460676+=_0x5f3ca3;});const _0x5cbee4=Object[_0x2b7947(0x1d0)](_0xa178f9)[_0x2b7947(0x10d)](_0x4327d6=>({..._0x4327d6,'total':_0x4327d6['totalCentavos']/0x64})),_0xbeb240=_0x460676/0x64,_0xd3a463=new Date()[_0x2b7947(0x1b5)](_0x2b7947(0xd5)),_0x2fdbbc=_0x55a2e0['foto']?_0x2b7947(0xfb)+_0x55a2e0[_0x2b7947(0x103)]+_0x2b7947(0x124):'',_0x526f89=_0x2b7947(0xc9),_0x2191df=_0x5cbee4[_0x2b7947(0x135)]===0x0?'<tr><td\x20colspan=\x225\x22\x20style=\x22text-align:center;\x20padding:20px;\x20color:#999;\x22>Nenhuma\x20pendência\x20encontrada.</td></tr>':_0x5cbee4[_0x2b7947(0x10d)](_0x369397=>'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22font-weight:bold;\x22>'+App['escapeHTML'](_0x369397[_0x2b7947(0x20f)])+_0x2b7947(0x1cc)+App[_0x2b7947(0x92)](_0x369397['curso'])+_0x2b7947(0xba)+_0x369397[_0x2b7947(0x106)][_0x2b7947(0xaf)](_0x2b7947(0x91))+_0x2b7947(0x169)+_0x369397['total'][_0x2b7947(0x180)](_0x2b7947(0xd5),{'minimumFractionDigits':0x2})+_0x2b7947(0x16c)+_0x369397[_0x2b7947(0x107)]+'\x27,\x20\x27'+_0x369397[_0x2b7947(0x10a)][_0x2b7947(0x180)](_0x2b7947(0xd5),{'minimumFractionDigits':0x2})+_0x2b7947(0xb3))[_0x2b7947(0xaf)]('');_0x9854a0['innerHTML']=_0x526f89+_0x2b7947(0x109)+_0x2fdbbc+_0x2b7947(0x132)+App[_0x2b7947(0x92)](_0x55a2e0[_0x2b7947(0x20f)]||'')+_0x2b7947(0x105)+App[_0x2b7947(0x92)](_0x55a2e0[_0x2b7947(0x197)]||'')+_0x2b7947(0xcb)+_0xd3a463+_0x2b7947(0xff)+_0xbeb240[_0x2b7947(0x180)](_0x2b7947(0xd5),{'minimumFractionDigits':0x2})+_0x2b7947(0x1c0)+_0x5cbee4['length']+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:center;\x20margin-top:30px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20class=\x22inad-list-title\x22>Lista\x20de\x20Pendências\x20Vencidas</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22window.print()\x22\x20class=\x22no-print\x22\x20style=\x22background:#34495e;\x20color:white;\x20border:none;\x20padding:10px\x2020px;\x20border-radius:5px;\x20cursor:pointer;\x22>🖨️\x20IMPRIMIR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20class=\x22inad-table\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES</th><th>TOTAL\x20DEVIDO</th><th\x20class=\x22no-print\x22>AÇÃO</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>'+_0x2191df+'</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>';}catch(_0x541a6d){console[_0x2b7947(0x1d1)](_0x541a6d),App[_0x2b7947(0xa9)]('Erro\x20ao\x20calcular\x20inadimplência.',_0x2b7947(0x1d1));}},App[a3_0xd763b0(0x172)]=async _0x5a84b1=>{const _0x1461c8=a3_0xd763b0;App['idEdicaoFinanceiro']=_0x5a84b1;const _0x8cf386=document[_0x1461c8(0x207)]('modal-overlay');if(_0x8cf386)_0x8cf386[_0x1461c8(0x97)][_0x1461c8(0x19d)]=_0x1461c8(0x1ce);const _0x1f4d4e=document['getElementById']('modal-titulo'),_0x4067e1=document[_0x1461c8(0x207)](_0x1461c8(0x1c9));if(_0x1f4d4e)_0x1f4d4e[_0x1461c8(0x115)]=_0x1461c8(0x186);if(_0x4067e1)_0x4067e1['innerHTML']=_0x1461c8(0xd8);try{const _0x4259e3=await App[_0x1461c8(0x88)](_0x1461c8(0x165)+_0x5a84b1);App[_0x1461c8(0x1e4)]=_0x4259e3;const _0x17615b=_0x4259e3[_0x1461c8(0x1a6)]===_0x1461c8(0x126),_0x2eb8d6=_0x17615b?'Data\x20Efetiva\x20do\x20Pagamento':_0x1461c8(0x16d),_0x530b88=_0x17615b?_0x4259e3[_0x1461c8(0x1cd)]||_0x4259e3['vencimento']:_0x4259e3[_0x1461c8(0xd1)],_0x445c40=_0x17615b?_0x1461c8(0x1f6):'<div\x20style=\x22background:#fff3e0;\x20color:#d35400;\x20padding:12px;\x20border-radius:5px;\x20margin-bottom:15px;\x20font-size:13px;\x20border-left:4px\x20solid\x20#d35400;\x22>⚠️\x20<b>Parcela\x20Pendente:</b>\x20Alterar\x20a\x20data\x20mudará\x20o\x20dia\x20de\x20vencimento\x20no\x20carnê\x20do\x20aluno.</div>';let _0x4945e1=_0x1461c8(0x131)+_0x445c40+_0x1461c8(0xbd)+_0x2eb8d6+_0x1461c8(0x193)+(_0x530b88||'')+'\x22\x20style=\x22width:100%;\x20padding:10px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x20font-size:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22\x20style=\x22margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20color:#2c3e50;\x22>Valor\x20Registado\x20(R$)</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20step=\x220.01\x22\x20id=\x22edit-fin-valor\x22\x20value=\x22'+(_0x4259e3[_0x1461c8(0x20a)]||'')+_0x1461c8(0x11d);_0x4067e1[_0x1461c8(0xf4)]=_0x4945e1;const _0x11f8df=document[_0x1461c8(0x114)]('.btn-confirm');_0x11f8df&&(_0x11f8df[_0x1461c8(0x1b6)](_0x1461c8(0xb2),_0x1461c8(0x10c)),_0x11f8df[_0x1461c8(0xf4)]=_0x1461c8(0x148));}catch(_0x413ea1){console[_0x1461c8(0x1d1)](_0x1461c8(0xb9),_0x413ea1);if(_0x4067e1)_0x4067e1[_0x1461c8(0xf4)]='<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20carregar\x20dados.\x20Tente\x20novamente.</p>';}},App[a3_0xd763b0(0xe8)]=async()=>{const _0x498cc2=a3_0xd763b0,_0x125fda=document['getElementById'](_0x498cc2(0xae))[_0x498cc2(0x15c)],_0x1018bb=document[_0x498cc2(0x207)](_0x498cc2(0x19e))[_0x498cc2(0x15c)];if(!_0x125fda||!_0x1018bb)return App['showToast']('Por\x20favor,\x20preencha\x20a\x20data\x20e\x20o\x20valor.',_0x498cc2(0x98));let _0x5ebf11=_0x1018bb[_0x498cc2(0x185)]()[_0x498cc2(0x1b0)]();if(_0x5ebf11[_0x498cc2(0x1a5)](',')&&_0x5ebf11[_0x498cc2(0x1a5)]('.'))_0x5ebf11=_0x5ebf11[_0x498cc2(0x1ff)](/\./g,'')[_0x498cc2(0x1ff)](',','.');else _0x5ebf11[_0x498cc2(0x1a5)](',')&&(_0x5ebf11=_0x5ebf11[_0x498cc2(0x1ff)](',','.'));_0x5ebf11=parseFloat(_0x5ebf11)||0x0;const _0x27bd76=document[_0x498cc2(0x114)](_0x498cc2(0x1d5)),_0x356373=_0x27bd76?_0x27bd76[_0x498cc2(0xf4)]:_0x498cc2(0xf3);_0x27bd76&&(_0x27bd76[_0x498cc2(0xf4)]=_0x498cc2(0xa0),_0x27bd76['disabled']=!![]);document[_0x498cc2(0xde)]['style']['cursor']=_0x498cc2(0xa8);try{const _0x32c451=App[_0x498cc2(0x1e4)][_0x498cc2(0x1a6)]==='Pago',_0x35708f={...App[_0x498cc2(0x1e4)],'valor':_0x5ebf11};_0x32c451?(_0x35708f[_0x498cc2(0x1cd)]=_0x125fda,_0x35708f[_0x498cc2(0x1f5)]=_0x5ebf11,_0x35708f[_0x498cc2(0xa7)]=0x0):_0x35708f[_0x498cc2(0xd1)]=_0x125fda;await App[_0x498cc2(0x88)](_0x498cc2(0x165)+App[_0x498cc2(0x1b9)],_0x498cc2(0x1dc),_0x35708f),App[_0x498cc2(0xa9)](_0x498cc2(0x166),_0x498cc2(0x1a7)),App[_0x498cc2(0xbf)]();if(typeof App[_0x498cc2(0x1aa)]===_0x498cc2(0x1fb)&&document['getElementById'](_0x498cc2(0x15d))[_0x498cc2(0x115)][_0x498cc2(0x1a5)]('Financeiro'))App[_0x498cc2(0x1aa)]();else typeof App[_0x498cc2(0x1ae)]===_0x498cc2(0x1fb)&&App[_0x498cc2(0x19f)](_0x498cc2(0x8f));}catch(_0x2ec835){console[_0x498cc2(0x1d1)](_0x498cc2(0x139),_0x2ec835),App['showToast'](_0x498cc2(0xcd),_0x498cc2(0x1d1));}finally{_0x27bd76&&(_0x27bd76[_0x498cc2(0xf4)]=_0x356373,_0x27bd76[_0x498cc2(0x205)]=![]),document[_0x498cc2(0xde)]['style'][_0x498cc2(0x1da)]='default';}},App[a3_0xd763b0(0x85)]=async()=>{const _0x5af076=a3_0xd763b0;App['setTitulo'](_0x5af076(0xe4));const _0x474375=document[_0x5af076(0x207)](_0x5af076(0x184));_0x474375['innerHTML']=_0x5af076(0xd3);try{const [_0xaa9359,_0xa071c5]=await Promise[_0x5af076(0x14b)]([App[_0x5af076(0x88)](_0x5af076(0xdb)),App[_0x5af076(0x88)](_0x5af076(0xce))]),_0x252fc5=_0xa071c5[_0x5af076(0x16b)](_0x309529=>!_0x309529['status']||_0x309529[_0x5af076(0x1a6)]===_0x5af076(0x171))[_0x5af076(0x10d)](_0x2f5cb2=>_0x2f5cb2['id']),_0x583c87=_0xaa9359[_0x5af076(0x16b)](_0x566c3c=>{const _0x3454b5=_0x5af076;if(_0x566c3c[_0x3454b5(0x1a6)]==='Pendente'&&!_0x252fc5[_0x3454b5(0x1a5)](_0x566c3c[_0x3454b5(0x107)]))return![];return!![];});App[_0x5af076(0x164)]=_0x583c87['sort']((_0x538f78,_0x496895)=>{const _0x38bd76=_0x5af076;if(_0x538f78[_0x38bd76(0x1a6)]===_0x496895['status'])return new Date(_0x538f78['vencimento'])-new Date(_0x496895['vencimento']);return _0x538f78[_0x38bd76(0x1a6)]===_0x38bd76(0x190)?-0x1:0x1;});const _0x5b35ad=App['UI'][_0x5af076(0x1f2)];let _0x22c9db=new Set();const _0x1cdcb6=new Date()['getFullYear']();_0x22c9db[_0x5af076(0x100)](_0x1cdcb6),_0x583c87[_0x5af076(0x152)](_0x29d733=>{const _0x1393c8=_0x5af076;if(_0x29d733[_0x1393c8(0xd1)])_0x22c9db[_0x1393c8(0x100)](parseInt(_0x29d733[_0x1393c8(0xd1)][_0x1393c8(0x1f7)]('-')[0x0]));});const _0x59e873=Array[_0x5af076(0x17b)](_0x22c9db)[_0x5af076(0x1ca)]((_0x2819fc,_0x207011)=>_0x207011-_0x2819fc),_0x18b7e5='<option\x20value=\x22\x22>Todos\x20os\x20Status</option><option\x20value=\x22Pago\x22>🟢\x20Pagos</option><option\x20value=\x22Pendente\x22>🟠\x20Pendentes</option>',_0x4ff7b7=_0x5af076(0xdd)+_0x59e873[_0x5af076(0x10d)](_0x5cbb52=>_0x5af076(0x1ee)+_0x5cbb52+'\x22>'+_0x5cbb52+_0x5af076(0x13b))['join'](''),_0x2c3f47=[_0x5af076(0x9d),_0x5af076(0xb1),'Março',_0x5af076(0x187),_0x5af076(0x158),_0x5af076(0xc3),_0x5af076(0x18e),_0x5af076(0x13f),'Setembro',_0x5af076(0x1a3),_0x5af076(0x1e6),'Dezembro'],_0x38d888=_0x5af076(0x128)+_0x2c3f47['map']((_0x881dc8,_0x10f0f0)=>'<option\x20value=\x22'+(_0x10f0f0+0x1)[_0x5af076(0x185)]()['padStart'](0x2,'0')+'\x22>'+_0x881dc8+'</option>')[_0x5af076(0xaf)](''),_0x3a64f2=_0x5af076(0x143)+_0x5b35ad(_0x5af076(0x17c),_0x5af076(0x121),_0x5af076(0x155),'✅')+_0x5af076(0x146)+_0x5b35ad(_0x5af076(0x12e),_0x5af076(0x12b),'edit','↩️')+_0x5af076(0x146)+_0x5b35ad(_0x5af076(0x95),_0x5af076(0xbe),'cancel',_0x5af076(0x1c4))+_0x5af076(0x129)+_0x18b7e5+_0x5af076(0xd2)+_0x38d888+_0x5af076(0x1f3)+_0x4ff7b7+_0x5af076(0x1f9)+App[_0x5af076(0x13c)](App[_0x5af076(0x164)])+_0x5af076(0xd7);_0x474375[_0x5af076(0xf4)]=_0x5af076(0x208)+App['UI'][_0x5af076(0x127)]('','',_0x3a64f2)+_0x5af076(0xd7);}catch(_0x27553e){_0x474375[_0x5af076(0xf4)]=_0x5af076(0x176);}});if(typeof App[a3_0xd763b0(0x19f)]===a3_0xd763b0(0x1fb)){const _renderizarListaOriginal=App[a3_0xd763b0(0x19f)];App[a3_0xd763b0(0x19f)]=_0x4b24c6=>{const _0x4b3ba2=a3_0xd763b0;if(_0x4b24c6===_0x4b3ba2(0x8f))return App[_0x4b3ba2(0x85)]();return _renderizarListaOriginal(_0x4b24c6);};}App[a3_0xd763b0(0x141)]=async(_0x2d7a40,_0x35c598)=>{const _0x38fa43=a3_0xd763b0;try{App[_0x38fa43(0xa9)](_0x38fa43(0x1cb),'info');const [_0x5e7f62,_0x25a4b4]=await Promise['all']([App['api'](_0x38fa43(0xce)),App['api']('/escola')]),_0x1abc24=_0x5e7f62['find'](_0x32eab6=>_0x32eab6['id']===_0x2d7a40);if(!_0x1abc24)return App[_0x38fa43(0xa9)](_0x38fa43(0x9e),_0x38fa43(0x1d1));let _0x2e5fb7=_0x1abc24['whatsapp']||_0x1abc24[_0x38fa43(0x182)]||_0x1abc24[_0x38fa43(0x167)]||_0x1abc24[_0x38fa43(0x154)]||'',_0x26096a=_0x2e5fb7[_0x38fa43(0x1ff)](/\D/g,'');if(_0x26096a[_0x38fa43(0x135)]<0xa)return App[_0x38fa43(0xa9)](_0x38fa43(0x173),_0x38fa43(0x98));(_0x26096a[_0x38fa43(0x135)]===0xa||_0x26096a[_0x38fa43(0x135)]===0xb)&&(_0x26096a='55'+_0x26096a);const _0x5a92ad=_0x1abc24[_0x38fa43(0x20f)]?_0x1abc24[_0x38fa43(0x20f)][_0x38fa43(0x1f7)]('\x20')[0x0]:_0x38fa43(0x123),_0x3e685e=_0x25a4b4['nome']||_0x38fa43(0xf5),_0x4ee35e=_0x25a4b4[_0x38fa43(0x197)]||'Não\x20informado',_0x58c7fc=_0x25a4b4['banco']||_0x38fa43(0xe7),_0x30a73c=_0x25a4b4[_0x38fa43(0xe3)]||'Não\x20informada',_0x7ee906=_0x38fa43(0x144)+_0x5a92ad+_0x38fa43(0x1d6)+_0x35c598+'*,\x20que\x20se\x20encontra\x20em\x20aberto\x20no\x20nosso\x20sistema.\x0a\x0aPara\x20sua\x20maior\x20comodidade,\x20deixamos\x20abaixo\x20os\x20nossos\x20dados\x20para\x20pagamento\x20via\x20PIX:\x0a\x0a🏦\x20*Dados\x20da\x20Instituição:*\x0a*Instituição:*\x20_'+_0x3e685e+'_\x0a*CNPJ:*\x20_'+_0x4ee35e+_0x38fa43(0x1d4)+_0x58c7fc+_0x38fa43(0x1c3)+_0x30a73c+_0x38fa43(0xab),_0x409455=encodeURIComponent(_0x7ee906),_0x49b6ab=_0x38fa43(0xa2)+_0x26096a+'&text='+_0x409455;window[_0x38fa43(0x1e0)](_0x49b6ab,_0x38fa43(0x20b));}catch(_0x19b56f){console[_0x38fa43(0x1d1)](_0x38fa43(0x137),_0x19b56f),App[_0x38fa43(0xa9)]('Erro\x20ao\x20processar\x20a\x20mensagem.',_0x38fa43(0x1d1));}};function a3_0x48fe(){const _0x21724e=['display','edit-fin-valor','renderizarLista','Atrasado','Ação\x20concluída\x20com\x20sucesso!','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:13px;\x20color:#555;\x22>📄\x20','Outubro','Preencha\x20todos\x20os\x20campos\x20do\x20gerador.','includes','status','success','<option\x20value=\x22padrao\x22>🟢\x20Mensalidade\x20Padrão</option><option\x20value=\x22extra\x22>🟠\x20Parcela\x20Extra\x20(Reposição)</option>','/escola','renderizarFinanceiroPro','banco','fin-filtro-mes','CONFIRMAR\x20LOTE\x20✅','filtrarTabelaReativa','options','trim','btn-gerar-carne','INSTITUIÇÃO','getMonth','cancel','toLocaleDateString','setAttribute','idCarne','Gerando\x20','idEdicaoFinanceiro','Erro\x20ao\x20gerar\x20carnê.','#e74c3c','.fin-check','undefined','/turmas','\x27,\x20\x27','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi-label\x22>ALUNOS\x20DEVEDORES</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi-val\x22>','modal-titulo','descricao','_\x0a\x0a🔑\x20*Chave\x20PIX:*\x20*','🗑️','\x27)\x22\x20style=\x22background:#3498db;\x20color:white;\x20border:none;\x20padding:5px\x208px;\x20border-radius:4px;\x20cursor:pointer;\x22\x20title=\x22Ver\x20Carnê\x22>📄</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirEdicaoFinanceiro(\x27','Confirmar\x20Pagamento','Vencimento','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Calculando\x20inadimplência...\x20⏳</p>','modal-form-content','sort','A\x20preparar\x20mensagem...','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td>','dataPagamento','flex','Forma\x201','values','error','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22carne-recibo\x22\x20style=\x22width:\x2072%;\x20padding:\x206px\x2015px;\x20display:\x20flex;\x20flex-direction:\x20column;\x20position:\x20relative;\x20box-sizing:\x20border-box;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20justify-content:\x20space-between;\x20border-bottom:\x202px\x20solid\x20#333;\x20padding-bottom:\x204px;\x20margin-bottom:\x206px;\x20align-items:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20align-items:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','escolha','_\x0a*Banco:*\x20_','.btn-confirm','*!\x20Tudo\x20bem?\x20✨\x0a\x0aPassando\x20apenas\x20para\x20deixar\x20um\x20lembrete\x20sobre\x20a\x20sua\x20mensalidade\x20no\x20valor\x20de\x20*R$\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:center;\x20padding:20px\x2010px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:45px;\x20margin-bottom:15px;\x22>🏦</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:#2c3e50;\x20margin-bottom:20px;\x22>Como\x20deseja\x20processar\x20estes\x20','excluir','Parcela','cursor','checked','PUT','Tem\x20certeza\x20que\x20deseja\x20','</b></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:\x20right;\x20font-size:\x2010px;\x20font-weight:\x20bold;\x20color:\x20#555;\x20border-left:\x202px\x20solid\x20#ccc;\x20padding-left:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20RECIBO\x20DO<br>PAGADOR\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20justify-content:\x20space-between;\x20margin-bottom:\x205px;\x20background:\x20#fdfdfd;\x20border:\x201px\x20solid\x20#ddd;\x20padding:\x204px\x2010px;\x20border-radius:\x204px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><div\x20style=\x22font-size:\x209px;\x20color:\x20#777;\x20text-transform:\x20uppercase;\x22>Nosso\x20Número</div><div\x20style=\x22font-weight:\x20bold;\x20font-size:\x2012px;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x20','open','definirModoBaixa','queue','<p\x20style=\x22text-align:center;\x20padding:20px;\x22>Gerando\x20Carnê\x20Profissional...</p>','parcelaEdicaoAtual','R$\x20','Novembro','baixa-qtd','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</tr>','</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><div\x20style=\x22font-size:\x209px;\x20color:\x20#777;\x20text-transform:\x20uppercase;\x22>Valor\x20do\x20Documento</div><div\x20style=\x22font-weight:\x20bold;\x20font-size:\x2012px;\x22>R$\x20','find','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x20font-weight:bold;\x20color:','baixa-total','toggleCheck','<option\x20value=\x22','fin-valor','<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:14px;\x20color:#555;\x20min-width:600px;\x22><thead>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@media\x20print\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20body,\x20html\x20{\x20background:\x20white\x20!important;\x20margin:\x200\x20!important;\x20padding:\x200\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.no-print\x20{\x20display:\x20none\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.print-bg\x20{\x20background:\x20transparent\x20!important;\x20padding:\x200\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.print-sheet\x20{\x20box-shadow:\x20none\x20!important;\x20border:\x20none\x20!important;\x20margin:\x200\x20!important;\x20padding:\x200\x20!important;\x20max-width:\x20100%\x20!important;\x20width:\x20100%\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@page\x20{\x20size:\x20A4\x20portrait;\x20margin:\x2010mm;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-wrapper\x20{\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:\x201px\x20solid\x20#000\x20!important;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20box-shadow:\x20none\x20!important;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x205mm\x20!important;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20height:\x2065mm\x20!important;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20flex-direction:\x20row\x20!important;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20page-break-inside:\x20avoid\x20!important;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-canhoto\x20{\x20width:\x2028%\x20!important;\x20border-right:\x202px\x20dashed\x20#999\x20!important;\x20border-bottom:\x20none\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-recibo\x20{\x20width:\x2072%\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20*\x20{\x20-webkit-print-color-adjust:\x20exact\x20!important;\x20print-color-adjust:\x20exact\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@media\x20(max-width:\x20768px)\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-wrapper\x20{\x20flex-direction:\x20column\x20!important;\x20height:\x20auto\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-canhoto\x20{\x20width:\x20100%\x20!important;\x20border-right:\x20none\x20!important;\x20border-bottom:\x202px\x20dashed\x20#999\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.carne-recibo\x20{\x20width:\x20100%\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.print-sheet\x20{\x20padding:\x2010px\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22no-print\x22\x20style=\x22text-align:center;\x20padding:20px;\x20background:#fff;\x20border-radius:\x208px;\x20margin-bottom:\x2020px;\x20border:\x201px\x20solid\x20#eee;\x20box-shadow:\x200\x204px\x206px\x20rgba(0,0,0,0.05);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22margin-top:0;\x20color:#2c3e50;\x22>Carnê\x20Gerado\x20com\x20Sucesso!\x20🎉</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x2014px;\x20color:\x20#666;\x20margin-bottom:\x2020px;\x22>O\x20layout\x20foi\x20refinado.\x20O\x20bloco\x20PIX\x20subiu\x20para\x20evitar\x20cortes\x20na\x20linha\x20final.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22window.print()\x22\x20class=\x22btn-primary\x22\x20style=\x22padding:12px\x2025px;\x20font-size:16px;\x20width:auto;\x22>🖨️\x20IMPRIMIR\x20CARNÊ</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarFinanceiroPro()\x22\x20class=\x22btn-cancel\x22\x20style=\x22margin-left:10px;\x20padding:12px\x2025px;\x20width:auto;\x22>VOLTAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22print-bg\x22\x20style=\x22background:\x20#f4f6f7;\x20padding:\x2030px\x2015px;\x20border-radius:\x208px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22print-sheet\x22\x20style=\x22background:\x20white;\x20max-width:\x20210mm;\x20margin:\x200\x20auto;\x20padding:\x2020px\x2010px;\x20box-shadow:\x200\x205px\x2015px\x20rgba(0,0,0,0.1);\x20border-radius:\x208px;\x20box-sizing:\x20border-box;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','botao','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22fin-filtro-ano\x22\x20onchange=\x22App.filtrarFinanceiro()\x22\x20style=\x22flex:1;\x20min-width:100px;\x20padding:10px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:5px;\x20background:white;\x20font-size:13px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','toISOString','valorPago1','<div\x20style=\x22background:#e8f4f8;\x20color:#2980b9;\x20padding:12px;\x20border-radius:5px;\x20margin-bottom:15px;\x20font-size:13px;\x20border-left:4px\x20solid\x20#2980b9;\x22>ℹ️\x20<b>Parcela\x20Paga:</b>\x20Você\x20está\x20alterando\x20apenas\x20o\x20dia\x20em\x20que\x20o\x20aluno\x20efetuou\x20o\x20pagamento.\x20<b>O\x20vencimento\x20original\x20do\x20carnê\x20ficará\x20intacto.</b></div>','split','\x22\x20style=\x22width:\x2060px;\x20height:\x2060px;\x20padding:\x205px;\x20background:\x20#fff;\x20border:\x201px\x20solid\x20#ccc;\x20border-radius:\x204px;\x20display:flex;\x20align-items:center;\x20justify-content:center;\x22></div>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22fin-lista-area\x22\x20class=\x22table-responsive-wrapper\x22\x20style=\x22overflow-x:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','CONFIRMAR\x20PAGAMENTO\x20✅','function','forma-1-container','toLowerCase','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#999;\x22>Nenhum\x20lançamento\x20encontrado.</p>','replace','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20financeiro...\x20⏳</p>','<option\x20value=\x221\x22>1\x20Forma\x20de\x20Pagamento</option><option\x20value=\x222\x22>2\x20Formas\x20de\x20Pagamento\x20(Dividir\x20Valor)</option>','baixa-valor-1','baixa-data','2287218dNBLol','disabled','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22baixa-total\x22\x20value=\x22','getElementById','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x2020px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','valor','_blank','now','reverse','\x22\x20placeholder=\x22','nome','#fcf3cf','\x20transition:background\x200.2s;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x22><input\x20type=\x22checkbox\x22\x20class=\x22fin-check\x22\x20value=\x22','renderizarHistoricoFinanceiro','filaBaixa','setTitulo','api','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','calcValorBaixa','input','forma-2-container','getFullYear','Selecione\x20pelo\x20menos\x20um\x20lançamento\x20para\x20dar\x20baixa.','financeiro','fin-vencimento','<br>','escapeHTML','\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20font-weight:bold;\x22>','toUpperCase','EXCLUIR','batch','style','warning','Receita','querySelectorAll','Erro\x20ao\x20processar\x20baixa.','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20margin-bottom:\x203px;\x22><b>Nº\x20Doc:</b>\x20','Janeiro','Erro:\x20Aluno\x20não\x20encontrado.','ALTERAR','⏳\x20A\x20guardar...','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22carne-wrapper\x22\x20style=\x22display:\x20flex;\x20border:\x201px\x20solid\x20#000;\x20margin-bottom:\x205mm;\x20font-family:\x20Arial,\x20sans-serif;\x20background:\x20#fff;\x20color:\x20#000;\x20border-radius:\x208px;\x20overflow:\x20hidden;\x20width:\x20100%;\x20max-width:\x20210mm;\x20height:\x2065mm;\x20margin-left:\x20auto;\x20margin-right:\x20auto;\x20page-break-inside:\x20avoid;\x20box-sizing:\x20border-box;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22carne-canhoto\x22\x20style=\x22width:\x2028%;\x20border-right:\x202px\x20dashed\x20#999;\x20padding:\x208px;\x20display:\x20flex;\x20flex-direction:\x20column;\x20background:\x20#fafafa;\x20box-sizing:\x20border-box;\x20justify-content:\x20space-between;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22border-bottom:\x201px\x20solid\x20#ccc;\x20padding-bottom:\x203px;\x20margin-bottom:\x205px;\x20text-align:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','https://api.whatsapp.com/send?phone=','fin-parcelas','</th>','baixa-forma-1','Status','valorPago2','wait','showToast','qrCodeImagem','*\x0a\x0a_Caso\x20o\x20pagamento\x20já\x20tenha\x20sido\x20realizado,\x20por\x20favor,\x20desconsidere\x20esta\x20mensagem._\x20🙏\x0a\x0aQualquer\x20dúvida,\x20estamos\x20à\x20inteira\x20disposição.\x20Tenha\x20um\x20excelente\x20dia!\x20🌟','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','padStart','edit-fin-data','join','confirmarBaixa','Fevereiro','onclick','\x27)\x22\x20class=\x22btn-cobrar\x22>💬\x20Cobrar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','extra','\x20|\x20Banco:\x20<b>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:120px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22display:block;\x20font-weight:bold;\x20margin-bottom:8px;\x20font-size:13px;\x20color:#555;\x22>','#fadbd8','\x27)\x22\x20style=\x22background:#f39c12;\x20color:white;\x20border:none;\x20padding:5px\x208px;\x20border-radius:4px;\x20cursor:pointer;\x20margin-left:5px;\x22\x20title=\x22Editar\x20Valor\x22>✏️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Erro\x20ao\x20carregar\x20edição:','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22font-size:11px;\x20color:#666;\x22>','\x22\x20id=\x22','default','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22\x20style=\x22margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20color:#2c3e50;\x22>','App.acaoLote(\x27excluir\x27)','fecharModal','00.000.000/0000-00','push','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x20auto;\x20font-size:\x209px;\x20border-top:\x201px\x20solid\x20#ccc;\x20padding-top:\x205px;\x22><b>Sacado:</b>\x20','Junho','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:13px;\x20color:#2980b9;\x20margin-bottom:15px;\x20background:#e8f4f8;\x20padding:12px;\x20border-radius:6px;\x20border-left:4px\x20solid\x20#3498db;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<b>ℹ️\x20Atenção:</b>\x20O\x20valor\x20final\x20e\x20quaisquer\x20juros\x20aplicados\x20serão\x20divididos\x20proporcionalmente\x20entre\x20os\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:\x20bold;\x20font-size:\x2010px;\x20text-transform:\x20uppercase;\x20margin-top:3px;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:20px;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarTela(\x27inadimplencia\x27)\x22\x20style=\x22background:#c0392b;\x20color:white;\x20border:none;\x20padding:10px\x2020px;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x20box-shadow:\x200\x204px\x206px\x20rgba(192,\x2057,\x2043,\x200.3);\x22>📉\x20RELATÓRIO\x20DE\x20INADIMPLÊNCIA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22border-left:5px\x20solid\x20#2980b9;\x20padding:25px;\x20margin-bottom:30px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','baixa-forma-2','toFixed','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-card-top\x20{\x20border-left:\x205px\x20solid\x20#c0392b;\x20padding:\x2025px;\x20border-radius:\x208px;\x20background:\x20white;\x20box-shadow:\x200\x202px\x2010px\x20rgba(0,0,0,0.05);\x20margin-bottom:\x2020px;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi-box\x20{\x20display:\x20flex;\x20gap:\x2020px;\x20margin-top:\x2020px;\x20flex-wrap:wrap;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi\x20{\x20flex:\x201;\x20text-align:\x20center;\x20padding:\x2020px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#eee;\x20min-width:150px;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi-red\x20{\x20background:\x20#fdf2f2;\x20border-color:\x20#f5b7b1;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi-label\x20{\x20font-size:\x2011px;\x20font-weight:\x20bold;\x20text-transform:\x20uppercase;\x20margin-bottom:\x205px;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi-val\x20{\x20font-size:\x2024px;\x20font-weight:\x20bold;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-list-title\x20{\x20color:\x20#c0392b;\x20font-size:\x2018px;\x20margin:\x200;\x20font-weight:\x20600;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-table\x20{\x20width:\x20100%;\x20border-collapse:\x20collapse;\x20font-size:\x2013px;\x20margin-top:\x2015px;\x20min-width:600px;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-table\x20th\x20{\x20background:\x20#f9f9f9;\x20padding:\x2012px;\x20text-align:\x20left;\x20color:\x20#888;\x20font-size:\x2011px;\x20text-transform:\x20uppercase;\x20border-bottom:\x202px\x20solid\x20#eee;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-table\x20td\x20{\x20padding:\x2012px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20color:\x20#333;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.btn-cobrar\x20{\x20background:\x20#27ae60;\x20color:\x20white;\x20border:\x20none;\x20padding:\x206px\x2012px;\x20border-radius:\x204px;\x20font-weight:\x20bold;\x20cursor:\x20pointer;\x20display:\x20inline-flex;\x20align-items:\x20center;\x20gap:\x205px;\x20font-size:\x2011px;\x20text-decoration:\x20none;\x20white-space:nowrap;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@media\x20print\x20{\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.no-print\x20{\x20display:\x20none\x20!important;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-card-top\x20{\x20border:\x201px\x20solid\x20#000;\x20box-shadow:\x20none;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.inad-kpi-red\x20{\x20background:\x20#eee\x20!important;\x20-webkit-print-color-adjust:\x20exact;\x20}\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20</style>','<div\x20id=\x22','</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:12px;\x20color:#666;\x22>Emissão:\x20','0.00','Ocorreu\x20um\x20erro\x20ao\x20atualizar.','/alunos','acaoLote','fin-filtro-status','vencimento','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22fin-filtro-mes\x22\x20onchange=\x22App.filtrarFinanceiro()\x22\x20style=\x22flex:1;\x20min-width:130px;\x20padding:10px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:5px;\x20background:white;\x20font-size:13px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Carregando\x20histórico\x20financeiro...\x20⏳</p>','abrirModalBaixa','pt-BR','modal-overlay','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','<p\x20style=\x22padding:20px;\x20text-align:center;\x20color:#666;\x22>Carregando\x20dados\x20da\x20parcela...\x20⏳</p>',';\x20padding:4px\x208px;\x20border-radius:4px;\x20font-size:12px;\x22>','Valor\x20(R$)','/financeiro','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20flex-direction:\x20column;\x20align-items:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','<option\x20value=\x22\x22\x20selected>Todos\x20os\x20Anos</option>','body','Carnê\x20não\x20encontrado.','text','\x20os\x20','Erro\x20ao\x20processar\x20lote.','chavePix','Histórico\x20de\x20Lançamentos','<button\x20onclick=\x22App.cobrarWhatsApp(\x27','\x22\x20style=\x22height:35px;\x20object-fit:contain;\x20margin-right:10px;\x22>','Não\x20informado','salvarEdicaoFinanceiro','none','\x22\x20value=\x22','<option\x20value=\x22Dinheiro\x22>Dinheiro</option>','background-color:#fdf2f2;','baixa-total-original','Dezembro','Operação\x20no\x20caixa\x20concluída\x20com\x20sucesso!\x20💼','124571idfAom','setHours','Data\x20do\x20Pagamento','Salvar','innerHTML','Nossa\x20Instituição','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20margin-bottom:\x203px;\x22><b>Vencimento:</b>\x20<span\x20style=\x22color:\x20red;\x20font-weight:\x20bold;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20','<th\x20style=\x22padding:12px;\x20text-align:','17688aeOAJY',';\x20border-bottom:2px\x20solid\x20#eee;\x22>','<img\x20src=\x22','number','29337030BesipS','aplicarJurosBaixa','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:#2c3e50;\x20margin-bottom:20px;\x22>📉\x20Relatório\x20de\x20Inadimplência</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-card-top\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi-box\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi\x20inad-kpi-red\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi-label\x22\x20style=\x22color:#c0392b;\x22>TOTAL\x20EM\x20ATRASO</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22inad-kpi-val\x22\x20style=\x22color:#c0392b;\x22>R$\x20','add','substring','#c0392b','foto','12bhOxxo','</h2><div\x20style=\x22font-size:12px;\x22>CNPJ:\x20','detalhes','idAluno','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:\x2020px;\x22\x20class=\x22no-print\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarFinanceiroPro()\x22\x20style=\x22background:#7f8c8d;\x20color:white;\x20border:none;\x20padding:8px\x2015px;\x20border-radius:5px;\x20cursor:pointer;\x22>⬅\x20VOLTAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22print-sheet\x22\x20style=\x22background:white;\x20padding:30px;\x20border-radius:8px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20align-items:center;\x20justify-content:space-between;\x20border-bottom:2px\x20solid\x20#eee;\x20padding-bottom:15px;\x20margin-bottom:30px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20align-items:center;\x20gap:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','total','.fin-check:checked','App.salvarEdicaoFinanceiro()','map','#000000','Não\x20Configurada','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x20white-space:nowrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirCarneExistente(\x27','single','\x20pagamentos?</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:15px;\x20justify-content:center;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.definirModoBaixa(\x27batch\x27)\x22\x20style=\x22background:#34495e;\x20color:white;\x20border:none;\x20padding:15px\x2020px;\x20border-radius:8px;\x20cursor:pointer;\x20flex:1;\x20min-width:200px;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#2c3e50\x27\x22\x20onmouseout=\x22this.style.background=\x27#34495e\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:bold;\x20font-size:15px;\x20margin-bottom:4px;\x22>📦\x20Somar\x20e\x20Pagar\x20Tudo</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20font-weight:normal;\x20opacity:0.8;\x22>O\x20sistema\x20divide\x20os\x20valores\x20e\x20juros<br>automaticamente\x20no\x20relatório</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.definirModoBaixa(\x27queue\x27)\x22\x20style=\x22background:#27ae60;\x20color:white;\x20border:none;\x20padding:15px\x2020px;\x20border-radius:8px;\x20cursor:pointer;\x20flex:1;\x20min-width:200px;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#1e8449\x27\x22\x20onmouseout=\x22this.style.background=\x27#27ae60\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:bold;\x20font-size:15px;\x20margin-bottom:4px;\x22>⏭️\x20Pagar\x20Um\x20por\x20Um</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20font-weight:normal;\x20opacity:0.8;\x22>Cria\x20uma\x20fila\x20e\x20regista\x20cada\x20aluno<br>com\x20a\x20sua\x20forma\x20de\x20pagamento\x20e\x20juros</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-gerar-carne\x22\x20onclick=\x22App.gerarCarnes()\x22\x20style=\x22margin-top:25px;\x20width:100%;\x20background:linear-gradient(90deg,#2980b9,#3498db);\x20color:white;\x20padding:12px;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x20text-transform:uppercase;\x20box-shadow:\x200\x204px\x2010px\x20rgba(52,152,219,0.3);\x22>Gerar\x20e\x20Imprimir\x20Carnê</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','querySelector','innerText','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','totalCentavos','edit','885765QSeHoq','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x22>R$\x20','#f39c12','App.confirmarBaixa()','\x22\x20style=\x22width:100%;\x20padding:10px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x20font-size:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','fin-aluno','Selecione\x20pelo\x20menos\x20um\x20lançamento.','baixa-valor-2','App.abrirModalBaixa()','Mensalidade\x20','Aluno','\x22\x20style=\x22height:50px;\x22>','<tr\x20style=\x22background:#f4f6f7;\x20color:#7f8c8d;\x20text-transform:uppercase;\x20font-size:12px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x20width:40px;\x20text-align:center;\x20border-bottom:2px\x20solid\x20#eee;\x22><input\x20type=\x22checkbox\x22\x20onchange=\x22App.toggleCheck(this)\x22></th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Pago','card','<option\x20value=\x22\x22\x20selected>Todos\x20os\x20Meses</option>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20flex-direction:column;\x20gap:10px;\x20flex:1;\x20min-width:300px;\x20max-width:650px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22search-wrapper\x22\x20style=\x22width:\x20100%;\x20position:relative;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22position:\x20absolute;\x20left:\x2010px;\x20top:\x2050%;\x20transform:\x20translateY(-50%);\x20opacity:0.5;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22fin-busca\x22\x20placeholder=\x22Pesquisar\x20por\x20nome\x20ou\x20descrição...\x22\x20oninput=\x22App.filtrarFinanceiro()\x22\x20style=\x22width:100%;\x20padding:10px\x2010px\x2010px\x2035px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22fin-filtro-status\x22\x20onchange=\x22App.filtrarFinanceiro()\x22\x20style=\x22flex:1;\x20min-width:130px;\x20padding:10px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:5px;\x20background:white;\x20font-size:13px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','11133BeaEMX','App.acaoLote(\x27pendente\x27)','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>','abrirCarneExistente','DESFAZER','Relatório\x20de\x20Inadimplência','264BVAJSC','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><h2\x20style=\x22margin:0;\x22>','O\x20valor\x20da\x20mensalidade\x20deve\x20ser\x20maior\x20que\x20zero.','Parcela\x20Extra\x20(Extensão\x20de\x20Curso)\x20-\x20','length','\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','Erro\x20ao\x20gerar\x20link\x20do\x20WhatsApp:','Tipo\x20de\x20Faturação:','Erro\x20ao\x20guardar\x20edição:','</thead><tbody>','</option>','gerarTabelaFinanceira','grid','Múltiplas\x20Baixas\x20(','Agosto','5875296fChrxv','cobrarWhatsApp','Fila\x20do\x20Caixa:\x20Lançamento\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22toolbar\x22\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:flex-start;\x20margin-bottom:15px;\x20flex-wrap:wrap;\x20gap:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x20margin-top:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Olá,\x20*','Pagamento\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x22\x20style=\x22display:','💾\x20Salvar\x20Alterações','Erro\x20ao\x20gerar\x20parcelas.','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20margin-bottom:\x203px;\x22><b>Parcela:</b>\x20','all','</span>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f4f6f7;\x20padding:15px;\x20border-radius:8px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20margin-bottom:15px;\x20align-items:center;\x20border-bottom:1px\x20solid\x20#ddd;\x20padding-bottom:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-weight:bold;\x20color:#2c3e50;\x20display:block;\x22>Valor\x20a\x20Cobrar\x20Agora:</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:12px;\x20color:#7f8c8d;\x22>Original:\x20R$\x20','\x20itens\x20selecionados?','fin-lista-area','4kafzcp','CONFIRMAR\x20E\x20PRÓXIMO\x20⏭️','forEach','\x22\x20style=\x22width:\x2060px;\x20height:\x2060px;\x20object-fit:\x20contain;\x20border:\x201px\x20solid\x20#ccc;\x20border-radius:\x204px;\x20padding:\x202px;\x20background:\x20#fff;\x22>','contato','primary','Valor\x20(R$):','getTime','Maio','\x20parcelas...\x20⏳','Valor','</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fff8e1;\x20border:\x201px\x20solid\x20#f1c40f;\x20padding:\x204px\x208px;\x20border-radius:\x204px;\x20margin-bottom:\x205px;\x20text-align:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x209px;\x20font-weight:\x20bold;\x20color:\x20#d35400;\x22>⚠️\x20Informação\x20Importante:</span>\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x209px;\x20color:\x20#555;\x22>Evite\x20a\x20perda\x20de\x20descontos\x20e\x20benefícios.\x20Após\x20o\x20vencimento,\x20o\x20valor\x20da\x20mensalidade\x20será\x20atualizado.</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20margin-bottom:\x205px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20padding-bottom:\x204px;\x20line-height:1.4;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><b>Ref:</b>\x20','value','titulo-pagina','fin-busca','qr-','\x20(R$\x20','round','montarTelaBaixa','left','financeiroCache','/financeiro/','Alteração\x20financeira\x20guardada\x20com\x20sucesso!\x20💼','telefone','A\x20guardar...\x20⏳','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22color:#c0392b;\x20font-weight:bold;\x20white-space:nowrap;\x22>R$\x20','Processando\x20requisições\x20em\x20lote...\x20⏳','filter','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20class=\x22no-print\x22\x20style=\x22text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.cobrarWhatsApp(\x27','Nova\x20Data\x20de\x20Vencimento','inline-block','<span\x20style=\x22font-size:8px;\x20color:#999;\x20text-align:center;\x22>QR\x20Code<br>Indisponível</span>','</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Ativo','abrirEdicaoFinanceiro','O\x20aluno\x20não\x20tem\x20um\x20número\x20válido\x20registado.','DELETE','placehold','Erro\x20ao\x20carregar\x20dados\x20financeiros.','Não\x20Configurado','renderizarInadimplencia','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22\x20style=\x22margin:0;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22color:#d35400;\x22>Acréscimo/Juros\x20(%)</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20id=\x22baixa-juros\x22\x20value=\x220\x22\x20min=\x220\x22\x20step=\x220.1\x22\x20oninput=\x22App.aplicarJurosBaixa()\x22\x20style=\x22width:100%;\x20padding:10px;\x20border-radius:5px;\x20border:1px\x20solid\x20#e67e22;\x20background:#fdf2e9;\x22\x20placeholder=\x22Ex:\x205\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','#d4efdf','from','BAIXAR','\x20de\x20','\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:\x20bold;\x20font-size:\x2012px;\x20text-transform:\x20uppercase;\x22>','Pagamento\x20em\x20Lote\x20(','toLocaleString','T00:00:00','celular','\x20itens)','app-content','toString','Editar\x20Lançamento','Abril','fin-filtro-ano','getDate','\x0a\x20\x20\x20\x20</tr>','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20justify-content:\x20space-between;\x20align-items:\x20flex-end;\x20gap:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2010px;\x20font-weight:\x20bold;\x20margin-bottom:\x202px;\x20color:#27ae60;\x22>PAGAMENTO\x20VIA\x20PIX</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x209px;\x20margin-bottom:\x203px;\x20color:#555;\x22>Leia\x20o\x20QR\x20Code\x20ao\x20lado\x20ou\x20utilize\x20a\x20chave\x20manual\x20abaixo:</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#eee;\x20padding:\x204px\x206px;\x20border-radius:\x204px;\x20font-size:\x2010px;\x20font-weight:\x20bold;\x20word-break:\x20break-all;\x20border:1px\x20dashed\x20#ccc;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20🔑\x20','\x20lançamentos.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','index','Julho','alunoNome','Pendente','<option\x20value=\x22\x22>--\x20Selecione\x20--</option>','mudarQtdFormasBaixa','</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22date\x22\x20id=\x22edit-fin-data\x22\x20value=\x22','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20color:#7f8c8d;\x20text-transform:uppercase;\x20font-weight:bold;\x20margin-bottom:6px;\x22>Vencimento</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:14px;\x20color:#c0392b;\x20font-weight:bold;\x22>','setDate','</tbody></table>','cnpj','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x208px;\x20color:\x20#999;\x20margin-top:\x202px;\x22>Autenticação\x20Mecânica</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','POST','</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Carregando\x20dados\x20financeiros...</p>','\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22>'];a3_0x48fe=function(){return _0x21724e;};return a3_0x48fe();}
+window.App = window.App || {};
+const App = window.App;
+// =========================================================
+// MÓDULO FINANCEIRO V162 (CARNÊ BANCÁRIO A4 BLINDADO E QR OFICIAL)
+// =========================================================
+
+// --- 1. PAINEL PRINCIPAL ---
+App.renderizarFinanceiroPro = async () => {
+    App.setTitulo("Financeiro");
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Carregando dados financeiros...</p>';
+    
+    try {
+        const [turmas, financeiro, alunos] = await Promise.all([App.api('/turmas'), App.api('/financeiro'), App.api('/alunos')]);
+        
+        // 🛡️ BLINDAGEM FINANCEIRA: 
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+
+        const financeiroLimpo = financeiro.filter(f => {
+            if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) {
+                return false;
+            }
+            return true; 
+        });
+
+        App.financeiroCache = financeiroLimpo.sort((a,b) => { 
+            if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
+            return a.status === 'Pendente' ? -1 : 1; 
+        });
+        
+        const input = App.UI.input;
+        const botao = App.UI.botao;
+        const select = (label, id, options) => `
+            <div style="flex:1; min-width:120px;">
+                <label style="display:block; font-weight:bold; margin-bottom:8px; font-size:13px; color:#555;">${label}</label>
+                <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">${options}</select>
+            </div>`;
+        const col = (label, id, tipo='text', val='', placeholder='') => `
+            <div style="flex:1; min-width:120px;">
+                <label style="display:block; font-weight:bold; margin-bottom:8px; font-size:13px; color:#555;">${label}</label>
+                <input type="${tipo}" id="${id}" value="${val}" placeholder="${placeholder}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
+            </div>`;
+
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const formGerador = `
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="font-size:24px; margin-right:10px;">💰</div>
+                <div><h3 style="margin:0; color:#2c3e50;">Gerar Mensalidades</h3><p style="margin:0; color:#666; font-size:14px;">Preencha para gerar carnê.</p></div>
+            </div>
+            <div style="display:flex; gap:20px; align-items:flex-end; flex-wrap:wrap;">
+                <div style="flex:2; min-width:250px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:8px; font-size:13px; color:#555;">Selecione o Aluno:</label>
+                    <select id="fin-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select>
+                </div>
+                ${select('Tipo de Faturação:', 'fin-tipo', '<option value="padrao">🟢 Mensalidade Padrão</option><option value="extra">🟠 Parcela Extra (Reposição)</option>')}
+                ${col('Valor (R$):', 'fin-valor', 'number', '', '0,00')}
+                ${col('Parcelas:', 'fin-parcelas', 'number', '12')}
+                ${col('1º Vencimento:', 'fin-vencimento', 'date', new Date().toISOString().split('T')[0])}
+            </div>
+            <button id="btn-gerar-carne" onclick="App.gerarCarnes()" style="margin-top:25px; width:100%; background:linear-gradient(90deg,#2980b9,#3498db); color:white; padding:12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; text-transform:uppercase; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">Gerar e Imprimir Carnê</button>
+        `;
+
+        // 🧠 Gerar lista de Anos e Meses dinamicamente para os filtros
+        let anosSet = new Set();
+        const anoAtual = new Date().getFullYear();
+        anosSet.add(anoAtual);
+        financeiroLimpo.forEach(f => {
+            if (f.vencimento) anosSet.add(parseInt(f.vencimento.split('-')[0]));
+        });
+        const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
+        
+        const opStatusBusca = '<option value="">Todos os Status</option><option value="Pago">🟢 Pagos</option><option value="Pendente">🟠 Pendentes</option>';
+        const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
+        const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
+
+        const barraFerramentas = `
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
+                    <div class="search-wrapper" style="width: 100%; position:relative;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opStatusBusca}
+                        </select>
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opMesesBusca}
+                        </select>
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:100px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opAnosBusca}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
+                ${App.gerarTabelaFinanceira(App.financeiroCache)}
+            </div>
+        `;
+
+        div.innerHTML = `
+            <div style="margin-bottom:20px; text-align:right;">
+                <button onclick="App.renderizarTela('inadimplencia')" style="background:#c0392b; color:white; border:none; padding:10px 20px; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 6px rgba(192, 57, 43, 0.3);">📉 RELATÓRIO DE INADIMPLÊNCIA</button>
+            </div>
+            <div class="card" style="border-left:5px solid #2980b9; padding:25px; margin-bottom:30px;">
+                ${formGerador}
+            </div>
+            ${App.UI.card('', '', barraFerramentas)}
+        `;
+    } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
+};
+
+App.gerarTabelaFinanceira = (dados) => {
+    if(!dados || dados.length === 0) return '<p style="text-align:center; padding:20px; color:#999;">Nenhum lançamento encontrado.</p>';
+    
+    const th = (texto, align='center') => `<th style="padding:12px; text-align:${align}; border-bottom:2px solid #eee;">${texto}</th>`;
+    const cabecalho = `<tr style="background:#f4f6f7; color:#7f8c8d; text-transform:uppercase; font-size:12px;">
+        <th style="padding:12px; width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheck(this)"></th>
+        ${th('Aluno', 'left')}${th('Parcela')}${th('Vencimento')}${th('Valor')}${th('Status')}${th('Ações')}
+    </tr>`;
+
+    // 🧠 Inteligência de Datas (Para pintar os atrasados)
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const corpo = dados.map(p => { 
+        const isPago = p.status === 'Pago'; 
+        const isPendente = p.status === 'Pendente';
+        const dataVencimento = new Date(p.vencimento + 'T00:00:00');
+        
+        // Verifica se a parcela está pendente E o vencimento já passou
+        const isAtrasado = isPendente && dataVencimento < hoje;
+
+        // Regras de Cores do Status
+        let color = isPago ? '#1e8449' : (isPendente ? '#f39c12' : '#e74c3c'); 
+        if (isAtrasado) color = '#c0392b'; // Vermelho mais forte se atrasar
+
+        // 🎨 GESTÃO À VISTA: Regras de fundo da linha
+        let bgRow = '';
+        if (isPago) {
+            bgRow = 'background-color:#eafaf1;'; // Verde claro para Pagos
+        } else if (isAtrasado) {
+            bgRow = 'background-color:#fdf2f2;'; // Vermelho claro para Atrasados
+        }
+
+        const textoStatus = isAtrasado ? 'Atrasado' : p.status;
+        const bgBadge = isPago ? '#d4efdf' : (isAtrasado ? '#fadbd8' : '#fcf3cf');
+        const statusBadge = `<span style="background:${bgBadge}; padding:4px 8px; border-radius:4px; font-size:12px;">${textoStatus}</span>`;
+        
+        const parcelaStr = p.descricao.includes('/') ? p.descricao.split(' ').pop() : '-';
+        const vencStr = p.vencimento.split('-').reverse().join('/');
+        const valorFormatado = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits:2});
+        
+        // 💬 Botão do WhatsApp (Só aparece se a conta NÃO estiver paga)
+        const btnWhatsApp = !isPago 
+            ? `<button onclick="App.cobrarWhatsApp('${p.idAluno}', '${valorFormatado}')" style="background:#27ae60; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Cobrar no WhatsApp">💬</button>` 
+            : '';
+
+        return `
+        <tr style="border-bottom:1px solid #eee; ${bgRow} transition:background 0.2s;">
+            <td style="padding:12px; text-align:center;"><input type="checkbox" class="fin-check" value="${p.id}"></td>
+            <td style="padding:12px; font-weight:bold;">${App.escapeHTML(p.alunoNome)}</td>
+            <td style="padding:12px; text-align:center;">${App.escapeHTML(parcelaStr)}</td>
+            <td style="padding:12px; text-align:center; ${isAtrasado ? 'color:#c0392b; font-weight:bold;' : ''}">${vencStr}</td>
+            <td style="padding:12px; text-align:center;">R$ ${valorFormatado}</td>
+            <td style="padding:12px; text-align:center; font-weight:bold; color:${color};">${statusBadge}</td>
+            <td style="padding:12px; text-align:center; white-space:nowrap;">
+                <button onclick="App.abrirCarneExistente('${p.idCarne}')" style="background:#3498db; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Ver Carnê">📄</button>
+                <button onclick="App.abrirEdicaoFinanceiro('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; margin-left:5px;" title="Editar Valor">✏️</button>
+                ${btnWhatsApp}
+            </td>
+        </tr>`; 
+    }).join('');
+
+    return `<table style="width:100%; border-collapse:collapse; font-size:14px; color:#555; min-width:600px;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>`;
+};
+
+// 🧠 O NOVO MOTOR DE BUSCA COM CRUZAMENTO QUÁDRUPLO
+App.filtrarFinanceiro = () => {
+    const inputBusca = document.getElementById('fin-busca');
+    const selectMes = document.getElementById('fin-filtro-mes');
+    const selectAno = document.getElementById('fin-filtro-ano');
+    const selectStatus = document.getElementById('fin-filtro-status');
+    
+    const termo = inputBusca ? inputBusca.value.toLowerCase() : '';
+    const mes = selectMes ? selectMes.value : '';
+    const ano = selectAno ? selectAno.value : '';
+    const status = selectStatus ? selectStatus.value : '';
+
+    let filtrados = App.financeiroCache.filter(f => {
+        const matchTermo = !termo || 
+            (f.alunoNome && f.alunoNome.toLowerCase().includes(termo)) || 
+            (f.descricao && f.descricao.toLowerCase().includes(termo));
+        
+        const dataStr = f.vencimento || '';
+        const fAno = dataStr.substring(0, 4);
+        const fMes = dataStr.substring(5, 7);
+
+        const matchAno = !ano || fAno === ano;
+        const matchMes = !mes || fMes === mes;
+        const matchStatus = !status || f.status === status;
+
+        // Cruza os 4 filtros!
+        return matchTermo && matchAno && matchMes && matchStatus;
+    });
+
+    if (mes || ano || status) {
+        filtrados.sort((a, b) => new Date(b.vencimento) - new Date(a.vencimento));
+    } else {
+        filtrados.sort((a, b) => { 
+            if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
+            return a.status === 'Pendente' ? -1 : 1; 
+        });
+    }
+
+    document.getElementById('fin-lista-area').innerHTML = App.gerarTabelaFinanceira(filtrados);
+};
+
+// =======================================================================
+// 💸 MOTOR INTELIGENTE DE BAIXA NO CAIXA (SISTEMA DE FILA E JUROS)
+// =======================================================================
+
+// Variável global para controlar a Fila de Pagamentos
+App.filaBaixa = { modo: '', itens: [], index: 0 };
+
+App.abrirModalBaixa = () => {
+    const checks = document.querySelectorAll('.fin-check:checked');
+    if(checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para dar baixa.", "warning");
+
+    const selecionados = Array.from(checks).map(c => App.financeiroCache.find(f => f.id == c.value)).filter(x => x);
+
+    if (selecionados.length === 1) {
+        App.filaBaixa = { modo: 'single', itens: selecionados, index: 0 };
+        App.montarTelaBaixa();
+    } else {
+        App.filaBaixa = { modo: 'escolha', itens: selecionados, index: 0 };
+        const modal = document.getElementById('modal-overlay');
+        if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Múltiplas Baixas (${selecionados.length} itens)`;
+
+        document.getElementById('modal-form-content').innerHTML = `
+            <div style="text-align:center; padding:20px 10px;">
+                <div style="font-size:45px; margin-bottom:15px;">🏦</div>
+                <h3 style="color:#2c3e50; margin-bottom:20px;">Como deseja processar estes ${selecionados.length} pagamentos?</h3>
+                <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+                    <button onclick="App.definirModoBaixa('batch')" style="background:#34495e; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#2c3e50'" onmouseout="this.style.background='#34495e'">
+                        <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">📦 Somar e Pagar Tudo</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">O sistema divide os valores e juros<br>automaticamente no relatório</div>
+                    </button>
+                    <button onclick="App.definirModoBaixa('queue')" style="background:#27ae60; color:white; border:none; padding:15px 20px; border-radius:8px; cursor:pointer; flex:1; min-width:200px; transition:0.2s;" onmouseover="this.style.background='#1e8449'" onmouseout="this.style.background='#27ae60'">
+                        <div style="font-weight:bold; font-size:15px; margin-bottom:4px;">⏭️ Pagar Um por Um</div>
+                        <div style="font-size:11px; font-weight:normal; opacity:0.8;">Cria uma fila e regista cada aluno<br>com a sua forma de pagamento e juros</div>
+                    </button>
+                </div>
+            </div>
+        `;
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if (btnConfirm) btnConfirm.style.display = 'none'; 
+    }
+};
+
+App.definirModoBaixa = (modo) => {
+    App.filaBaixa.modo = modo;
+    App.filaBaixa.index = 0;
+    App.montarTelaBaixa();
+};
+
+App.montarTelaBaixa = () => {
+    const { modo, itens, index } = App.filaBaixa;
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if (btnConfirm) btnConfirm.style.display = 'inline-block'; 
+
+    let totalOriginal = 0;
+    let infoExtraHTML = '';
+    let tituloModal = '';
+    let isUltimoDaFila = true;
+
+    if (modo === 'batch') {
+        tituloModal = `Pagamento em Lote (${itens.length} itens)`;
+        let totalCentavos = 0;
+        itens.forEach(i => totalCentavos += Math.round(parseFloat(i.valor) * 100));
+        totalOriginal = totalCentavos / 100;
+        
+        infoExtraHTML = `
+            <div style="font-size:13px; color:#2980b9; margin-bottom:15px; background:#e8f4f8; padding:12px; border-radius:6px; border-left:4px solid #3498db;">
+                <b>ℹ️ Atenção:</b> O valor final e quaisquer juros aplicados serão divididos proporcionalmente entre os ${itens.length} lançamentos.
+            </div>`;
+        btnConfirm.innerText = "CONFIRMAR LOTE ✅";
+    } else {
+        const itemAtual = itens[index];
+        totalOriginal = parseFloat(itemAtual.valor);
+        isUltimoDaFila = (index === itens.length - 1);
+        
+        tituloModal = modo === 'queue' ? `Fila do Caixa: Lançamento ${index + 1} de ${itens.length}` : `Confirmar Pagamento`;
+        
+        infoExtraHTML = `
+            <div style="background:#fdfefe; border:1px solid #dce1e6; padding:15px; border-radius:6px; margin-bottom:15px; border-left:4px solid #27ae60; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:11px; color:#7f8c8d; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">👤 Identificação do Pagador</div>
+                    <div style="font-size:16px; font-weight:bold; color:#2c3e50; margin-bottom:4px;">${App.escapeHTML(itemAtual.alunoNome)}</div>
+                    <div style="font-size:13px; color:#555;">📄 ${App.escapeHTML(itemAtual.descricao)}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px; color:#7f8c8d; text-transform:uppercase; font-weight:bold; margin-bottom:6px;">Vencimento</div>
+                    <div style="font-size:14px; color:#c0392b; font-weight:bold;">${itemAtual.vencimento.split('-').reverse().join('/')}</div>
+                </div>
+            </div>`;
+        
+        btnConfirm.innerText = modo === 'queue' && !isUltimoDaFila ? "CONFIRMAR E PRÓXIMO ⏭️" : "CONFIRMAR PAGAMENTO ✅";
+    }
+
+    document.getElementById('modal-titulo').innerText = tituloModal;
+
+    const input = App.UI.input;
+    const select = (label, id, options, extraAttr='') => `
+        <div class="input-group" style="margin:0;">
+            <label>${label}</label>
+            <select id="${id}" ${extraAttr}>${options}</select>
+        </div>`;
+    const row = (conteudo, id='', display='grid') => `<div id="${id}" style="display:${display}; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:10px;">${conteudo}</div>`;
+
+    const opFormas = `<option value="PIX">PIX</option><option value="Cartão de Crédito">Cartão de Crédito</option><option value="Cartão de Débito">Cartão de Débito</option><option value="Dinheiro">Dinheiro</option>`;
+    
+    const html = `
+        ${infoExtraHTML}
+        <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px;">
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center; border-bottom:1px solid #ddd; padding-bottom:10px;">
+                <div>
+                    <span style="font-weight:bold; color:#2c3e50; display:block;">Valor a Cobrar Agora:</span>
+                    <span style="font-size:12px; color:#7f8c8d;">Original: R$ ${totalOriginal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                </div>
+                <span id="baixa-display-total" style="font-weight:bold; color:#27ae60; font-size:24px;">R$ ${totalOriginal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                ${input('Data do Pagamento', 'baixa-data', new Date().toISOString().split('T')[0], '', 'date')}
+                <div class="input-group" style="margin:0;">
+                    <label style="color:#d35400;">Acréscimo/Juros (%)</label>
+                    <input type="number" id="baixa-juros" value="0" min="0" step="0.1" oninput="App.aplicarJurosBaixa()" style="width:100%; padding:10px; border-radius:5px; border:1px solid #e67e22; background:#fdf2e9;" placeholder="Ex: 5">
+                </div>
+            </div>
+
+            ${select('Divisão de Pagamento', 'baixa-qtd', '<option value="1">1 Forma de Pagamento</option><option value="2">2 Formas de Pagamento (Dividir Valor)</option>', 'onchange="App.mudarQtdFormasBaixa()"')}
+            
+            <div style="margin-top:15px;">
+                ${row(
+                    select('Forma 1', 'baixa-forma-1', opFormas) + 
+                    input('Valor (R$)', 'baixa-valor-1', totalOriginal.toFixed(2), '', 'number', 'step="0.01" oninput="App.calcValorBaixa()" style="margin:0;"'),
+                    'forma-1-container'
+                )}
+                
+                ${row(
+                    select('Forma 2', 'baixa-forma-2', '<option value="Dinheiro">Dinheiro</option>' + opFormas) + 
+                    input('Valor (R$)', 'baixa-valor-2', '0.00', '', 'number', 'step="0.01" readonly style="background:#eee; margin:0;"'),
+                    'forma-2-container', 'none'
+                )}
+            </div>
+            
+            <input type="hidden" id="baixa-total-original" value="${totalOriginal}">
+            <input type="hidden" id="baixa-total" value="${totalOriginal}">
+        </div>`;
+        
+    document.getElementById('modal-form-content').innerHTML = html;
+    btnConfirm.setAttribute('onclick', 'App.confirmarBaixa()');
+};
+
+// 📈 NOVA FUNÇÃO: CALCULAR JUROS EM TEMPO REAL
+App.aplicarJurosBaixa = () => {
+    const totalOriginal = parseFloat(document.getElementById('baixa-total-original').value);
+    let jurosPct = parseFloat(document.getElementById('baixa-juros').value) || 0;
+    
+    if(jurosPct < 0) { 
+        jurosPct = 0; document.getElementById('baixa-juros').value = 0; 
+    }
+    
+    // Calcula o novo total
+    const acrescimo = totalOriginal * (jurosPct / 100);
+    const novoTotal = totalOriginal + acrescimo;
+    
+    // Atualiza a interface
+    document.getElementById('baixa-display-total').innerText = `R$ ${novoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+    document.getElementById('baixa-total').value = novoTotal.toFixed(2);
+    
+    // Distribui o novo valor pelas formas de pagamento automaticamente
+    const qtd = document.getElementById('baixa-qtd').value;
+    if(qtd === '1') {
+        document.getElementById('baixa-valor-1').value = novoTotal.toFixed(2);
+    } else {
+        App.calcValorBaixa();
+    }
+};
+
+App.mudarQtdFormasBaixa = () => {
+    const qtd = document.getElementById('baixa-qtd').value;
+    const container2 = document.getElementById('forma-2-container');
+    const valor1 = document.getElementById('baixa-valor-1');
+    const total = parseFloat(document.getElementById('baixa-total').value);
+
+    if(qtd === '2') {
+        container2.style.display = 'grid'; valor1.value = (total / 2).toFixed(2); App.calcValorBaixa();
+    } else { container2.style.display = 'none'; valor1.value = total.toFixed(2); }
+};
+
+App.calcValorBaixa = () => {
+    const qtd = document.getElementById('baixa-qtd').value;
+    if(qtd === '2') {
+        const totalCentavos = Math.round(parseFloat(document.getElementById('baixa-total').value) * 100);
+        const val1Centavos = Math.round(parseFloat(document.getElementById('baixa-valor-1').value) * 100) || 0;
+        
+        let val2Centavos = totalCentavos - val1Centavos;
+        if(val2Centavos < 0) val2Centavos = 0; 
+        
+        document.getElementById('baixa-valor-2').value = (val2Centavos / 100).toFixed(2);
+    }
+};
+
+App.confirmarBaixa = async () => {
+    const dataPagamento = document.getElementById('baixa-data').value;
+    const qtd = document.getElementById('baixa-qtd').value;
+    const f1 = document.getElementById('baixa-forma-1').value;
+    const v1 = document.getElementById('baixa-valor-1').value;
+    const f2 = qtd === '2' ? document.getElementById('baixa-forma-2').value : null;
+    const v2 = qtd === '2' ? document.getElementById('baixa-valor-2').value : null;
+
+    if(!dataPagamento) return App.showToast("Informe a data de pagamento.", "error");
+
+    const btn = document.querySelector('.btn-confirm');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "A guardar... ⏳"; 
+    btn.disabled = true;
+
+    const { modo, itens, index } = App.filaBaixa;
+
+    try {
+        const promessas = []; 
+        
+        if (modo === 'batch') {
+            const totalOriginalLote = parseFloat(document.getElementById('baixa-total-original').value) || 0;
+            
+            for(const item of itens) {
+                // Matemática blindada: Distribui os juros proporcionalmente pelo peso de cada fatura
+                const proportion = totalOriginalLote > 0 ? (parseFloat(item.valor) / totalOriginalLote) : 0;
+                const itemV1 = totalOriginalLote > 0 ? (parseFloat(v1) * proportion).toFixed(2) : "0.00";
+                const itemV2 = (qtd === '2' && totalOriginalLote > 0) ? (parseFloat(v2) * proportion).toFixed(2) : null;
+                
+                // Atualiza o valor do sistema para refletir a nova arrecadação com juros
+                const novoValorItem = (parseFloat(itemV1) + (parseFloat(itemV2) || 0)).toFixed(2);
+
+                const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: itemV1, formaPagamento2: f2, valorPago2: itemV2, valor: novoValorItem };
+                promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
+            }
+        } else {
+            // Processa o item individual (Modo Single ou Queue)
+            const item = itens[index];
+            const novoValorItem = (parseFloat(v1) + (parseFloat(v2) || 0)).toFixed(2);
+            
+            const payload = { ...item, status: 'Pago', dataPagamento, formaPagamento: f1, valorPago1: v1, formaPagamento2: f2, valorPago2: (qtd === '2' ? v2 : null), valor: novoValorItem };
+            promessas.push(App.api(`/financeiro/${item.id}`, 'PUT', payload));
+        }
+        
+        await Promise.all(promessas);
+        
+        // Verifica se há mais itens na fila
+        if (modo === 'queue' && index < itens.length - 1) {
+            App.showToast(`Pagamento ${index + 1} registado. Avançando...`, "success");
+            App.filaBaixa.index++;
+            App.montarTelaBaixa();
+            return; // Continua na fila!
+        }
+        
+        // Finalização (Batch, Single ou último da fila)
+        App.showToast("Operação no caixa concluída com sucesso! 💼", "success");
+        App.fecharModal();
+
+        document.getElementById('app-content').innerHTML =
+        '<p style="text-align:center; color:#666; padding:20px;">Atualizando financeiro... ⏳</p>';
+
+        await App.renderizarFinanceiroPro();
+        
+    } catch(e) { 
+        App.showToast("Erro ao processar baixa.", "error"); 
+    } finally {
+        if (btn) { btn.innerText = textoOriginal; btn.disabled = false; }
+    }
+};
+// =======================================================================
+
+App.gerarCarnes = async () => {
+    const idA = document.getElementById('fin-aluno').value;
+    const val = document.getElementById('fin-valor').value;
+    const parc = parseInt(document.getElementById('fin-parcelas').value);
+    const dataIni = document.getElementById('fin-vencimento').value;
+    const tipoFaturamento = document.getElementById('fin-tipo').value; 
+    
+    if(!idA || !val || !parc || !dataIni) return App.showToast("Preencha todos os campos do gerador.", "error");
+    if(parseFloat(val) <= 0) return App.showToast("O valor da mensalidade deve ser maior que zero.", "warning");
+
+    const alunoNome = document.getElementById('fin-aluno').options[document.getElementById('fin-aluno').selectedIndex].text;
+    const idLote = Date.now().toString();
+    const dataGeracao = new Date().toLocaleDateString('pt-BR');
+
+    const btn = document.getElementById('btn-gerar-carne');
+    const txtOrig = btn.innerText;
+    btn.innerText = `Gerando ${parc} parcelas... ⏳`;
+    btn.disabled = true;
+    document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = [];
+        
+        const dataBaseOriginal = new Date(dataIni + 'T00:00:00');
+        const diaEsperado = dataBaseOriginal.getDate();
+
+        for(let i = 1; i <= parc; i++) {
+            let db = new Date(dataBaseOriginal.getTime());
+            db.setMonth(dataBaseOriginal.getMonth() + (i - 1));
+            
+            if (db.getDate() !== diaEsperado) {
+                db.setDate(0); 
+            }
+            
+            const vencUS = db.toISOString().split('T')[0];
+            
+            let descricaoParcela = `Mensalidade ${i}/${parc}`;
+            if (tipoFaturamento === 'extra') {
+                descricaoParcela = `Parcela Extra (Extensão de Curso) - ${i}/${parc}`;
+            }
+
+            const payload = {
+                id: idLote + "_" + i, idCarne: idLote, dataGeracao, idAluno: idA, 
+                alunoNome, valor: val, vencimento: vencUS, status: 'Pendente', 
+                descricao: descricaoParcela, tipo: 'Receita'
+            };
+            promessas.push(App.api('/financeiro', 'POST', payload));
+        }
+
+        await Promise.all(promessas);
+        App.showToast("Carnê gerado com sucesso!", "success");
+        App.abrirCarneExistente(idLote);
+    } catch(e) {
+        App.showToast("Erro ao gerar parcelas.", "error");
+    } finally {
+        btn.innerText = txtOrig;
+        btn.disabled = false;
+        document.body.style.cursor = 'default';
+    }
+};
+
+App.toggleCheck = (s) => { document.querySelectorAll('.fin-check').forEach(c => c.checked = s.checked); };
+
+App.acaoLote = async (acao) => {
+    const checks = document.querySelectorAll('.fin-check:checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um lançamento.", "warning");
+    
+    const acaoTexto = acao === 'excluir' ? 'EXCLUIR' : 'ALTERAR';
+    if (!confirm(`Tem certeza que deseja ${acaoTexto} os ${checks.length} itens selecionados?`)) return;
+
+    App.showToast("Processando requisições em lote... ⏳", "info");
+    document.body.style.cursor = 'wait';
+
+    try {
+        const operacoes = Array.from(checks).map(async (check) => {
+            const id = check.value;
+            if (acao === 'excluir') {
+                return App.api(`/financeiro/${id}`, 'DELETE');
+            } else {
+                const item = App.financeiroCache.find(f => f.id == id);
+                if (item) {
+                    return App.api(`/financeiro/${id}`, 'PUT', { ...item, status: (acao === 'baixar' ? 'Pago' : 'Pendente') });
+                }
+            }
+        });
+
+        await Promise.all(operacoes);
+        App.showToast(`Ação concluída com sucesso!`, "success");
+        App.renderizarFinanceiroPro(); 
+    } catch (e) {
+        App.showToast("Erro ao processar lote.", "error");
+    } finally { document.body.style.cursor = 'default'; }
+};
+
+// ---------------------------------------------------------
+// 🚀 RENDERIZAÇÃO DO CARNÊ (AGORA SUBINDO O BLOCO DO PIX)
+// ---------------------------------------------------------
+App.abrirCarneExistente = async (idLote) => {
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Carnê Profissional...</p>';
+    try {
+        const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
+        const parcelas = financeiro.filter(x => x.idCarne === idLote).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        if(parcelas.length === 0) return App.showToast("Carnê não encontrado.", "error");
+
+        const aluno = alunos.find(a => a.id === parcelas[0].idAluno) || { nome: 'Aluno', cpf: 'Não informado' };
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:35px; object-fit:contain; margin-right:10px;">` : '';
+        const nomeEscolaResumo = (escola.nome || 'INSTITUIÇÃO').substring(0, 20);
+        const primeiroNomeAluno = (aluno.nome || 'Aluno').split(' ')[0];
+        const bancoNome = escola.banco || 'Não Configurado';
+        const chavePix = escola.chavePix || 'Não Configurada';
+
+        const carnesHTML = parcelas.map((p) => {
+            const dataVenc = p.vencimento.split('-').reverse().join('/');
+            const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            const nossoNumero = p.id.slice(-8).toUpperCase();
+            
+            // Reduzido para 60px para criar folga inferior e subir todo o bloco
+            const qrCodeDisplay = (escola.qrCodeImagem && escola.qrCodeImagem.length > 50 && !escola.qrCodeImagem.includes('placehold'))
+                ? `<img src="${escola.qrCodeImagem}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
+                : `<div id="qr-${p.id}" style="width: 60px; height: 60px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
+
+            return `
+            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 5mm; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; height: 65mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
+                
+                <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 8px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px; text-align: center;">
+                        ${logo}
+                        <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${App.escapeHTML(nomeEscolaResumo)}</div>
+                    </div>
+                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
+                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
+                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Nº Doc:</b> ${nossoNumero}</div>
+                    <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${App.escapeHTML(primeiroNomeAluno)}</div>
+                </div>
+                
+                <div class="carne-recibo" style="width: 72%; padding: 6px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
+                    
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 6px; align-items: center;">
+                        <div style="display: flex; align-items: center;">
+                            ${logo} 
+                            <div>
+                                <div style="font-weight: bold; font-size: 12px; text-transform: uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div>
+                                <div style="font-size: 9px; color: #555;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')} | Banco: <b>${App.escapeHTML(bancoNome)}</b></div>
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 10px; font-weight: bold; color: #555; border-left: 2px solid #ccc; padding-left:10px;">
+                            RECIBO DO<br>PAGADOR
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; background: #fdfdfd; border: 1px solid #ddd; padding: 4px 10px; border-radius: 4px;">
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 12px;">${nossoNumero}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 12px; color: #c0392b;">${dataVenc}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
+                    </div>
+
+                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 5px; text-align: center;">
+                        <span style="font-size: 9px; font-weight: bold; color: #d35400;">⚠️ Informação Importante:</span> 
+                        <span style="font-size: 9px; color: #555;">Evite a perda de descontos e benefícios. Após o vencimento, o valor da mensalidade será atualizado.</span>
+                    </div>
+                    
+                    <div style="font-size: 10px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 4px; line-height:1.4;">
+                        <div><b>Ref:</b> ${App.escapeHTML(p.descricao)} &nbsp;|&nbsp; <b>Pagador:</b> ${App.escapeHTML(aluno.nome)} &nbsp;|&nbsp; <b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap:15px;">
+                        <div style="flex:1;">
+                            <div style="font-size: 10px; font-weight: bold; margin-bottom: 2px; color:#27ae60;">PAGAMENTO VIA PIX</div>
+                            <div style="font-size: 9px; margin-bottom: 3px; color:#555;">Leia o QR Code ao lado ou utilize a chave manual abaixo:</div>
+                            <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; word-break: break-all; border:1px dashed #ccc;">
+                                🔑 ${App.escapeHTML(chavePix)}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            ${qrCodeDisplay}
+                            <div style="font-size: 8px; color: #999; margin-top: 2px;">Autenticação Mecânica</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        div.innerHTML = `
+            <style>
+                @media print {
+                    body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+                    .no-print { display: none !important; }
+                    .print-bg { background: transparent !important; padding: 0 !important; }
+                    .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
+                    
+                    @page { size: A4 portrait; margin: 10mm; }
+                    .carne-wrapper { 
+                        border: 1px solid #000 !important; 
+                        box-shadow: none !important; 
+                        margin-bottom: 5mm !important; 
+                        height: 65mm !important; 
+                        flex-direction: row !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
+                    .carne-recibo { width: 72% !important; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+                @media (max-width: 768px) {
+                    .carne-wrapper { flex-direction: column !important; height: auto !important; }
+                    .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
+                    .carne-recibo { width: 100% !important; }
+                    .print-sheet { padding: 10px !important; }
+                }
+            </style>
+            
+            <div class="no-print" style="text-align:center; padding:20px; background:#fff; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h2 style="margin-top:0; color:#2c3e50;">Carnê Gerado com Sucesso! 🎉</h2>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">O layout foi refinado. O bloco PIX subiu para evitar cortes na linha final.</p>
+                <button onclick="window.print()" class="btn-primary" style="padding:12px 25px; font-size:16px; width:auto;">🖨️ IMPRIMIR CARNÊ</button>
+                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px; padding:12px 25px; width:auto;">VOLTAR</button>
+            </div>
+            
+            <div class="print-bg" style="background: #f4f6f7; padding: 30px 15px; border-radius: 8px;">
+                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 20px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box;">
+                    ${carnesHTML}
+                </div>
+            </div>`;
+
+        if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50 || escola.qrCodeImagem.includes('placehold')) {
+            parcelas.forEach(p => {
+                const el = document.getElementById(`qr-${p.id}`);
+                if(el && typeof QRCode !== 'undefined') {
+                    // Ajustado para 60x60 aqui também
+                    new QRCode(el, { text: chavePix, width: 60, height: 60, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
+                } else if(el) {
+                    el.innerHTML = '<span style="font-size:8px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
+                }
+            });
+        }
+    } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
+};
+
+// ---------------------------------------------------------
+// 📉 RELATÓRIO DE INADIMPLÊNCIA (CORRIGIDO)
+// ---------------------------------------------------------
+App.renderizarInadimplencia = async () => {
+    App.setTitulo("Relatório de Inadimplência");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Calculando inadimplência... ⏳</p>';
+
+    try {
+        const [financeiro, alunos, escola] = await Promise.all([
+            App.api('/financeiro'), 
+            App.api('/alunos'), 
+            App.api('/escola')
+        ]);
+
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+
+        const hoje = new Date(); 
+        const vencidos = financeiro.filter(f => 
+            f.status !== 'Pago' && 
+            new Date(f.vencimento + 'T00:00:00') < hoje &&
+            alunosAtivosIds.includes(f.idAluno) 
+        );
+        
+        let totalAtrasoCentavos = 0; 
+        const devedoresMap = {};
+        
+        vencidos.forEach(f => { 
+            const valorCentavos = Math.round(parseFloat(f.valor) * 100);
+
+            if(!devedoresMap[f.idAluno]) { 
+                const aluno = alunos.find(a => a.id == f.idAluno); 
+                devedoresMap[f.idAluno] = { 
+                    idAluno: f.idAluno, 
+                    nome: f.alunoNome, 
+                    curso: aluno ? aluno.curso : '-', 
+                    totalCentavos: 0, 
+                    detalhes: [] 
+                }; 
+            } 
+            devedoresMap[f.idAluno].totalCentavos += valorCentavos;
+            devedoresMap[f.idAluno].detalhes.push(`${f.vencimento.split('-').reverse().join('/')} (R$ ${parseFloat(f.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})})`); 
+            totalAtrasoCentavos += valorCentavos;
+        });
+        
+        const listaDevedores = Object.values(devedoresMap).map(d => ({ ...d, total: d.totalCentavos / 100 }));
+        const totalAtraso = totalAtrasoCentavos / 100;
+
+        const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+                
+        const style = `
+        <style>
+            .inad-card-top { border-left: 5px solid #c0392b; padding: 25px; border-radius: 8px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; } 
+            .inad-kpi-box { display: flex; gap: 20px; margin-top: 20px; flex-wrap:wrap; } 
+            .inad-kpi { flex: 1; text-align: center; padding: 20px; border-radius: 8px; border: 1px solid #eee; min-width:150px; } 
+            .inad-kpi-red { background: #fdf2f2; border-color: #f5b7b1; } 
+            .inad-kpi-label { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; } 
+            .inad-kpi-val { font-size: 24px; font-weight: bold; } 
+            .inad-list-title { color: #c0392b; font-size: 18px; margin: 0; font-weight: 600; } 
+            .inad-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; min-width:600px; } 
+            .inad-table th { background: #f9f9f9; padding: 12px; text-align: left; color: #888; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #eee; } 
+            .inad-table td { padding: 12px; border-bottom: 1px solid #eee; color: #333; } 
+            .btn-cobrar { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; text-decoration: none; white-space:nowrap; } 
+            @media print { 
+                .no-print { display: none !important; } 
+                .inad-card-top { border: 1px solid #000; box-shadow: none; } 
+                .inad-kpi-red { background: #eee !important; -webkit-print-color-adjust: exact; } 
+            }
+        </style>`;
+        
+        const linhasTabela = listaDevedores.length === 0 
+            ? '<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">Nenhuma pendência encontrada.</td></tr>' 
+            : listaDevedores.map(d => `
+                <tr>
+                    <td style="font-weight:bold;">${App.escapeHTML(d.nome)}</td>
+                    <td>${App.escapeHTML(d.curso)}</td>
+                    <td style="font-size:11px; color:#666;">${d.detalhes.join('<br>')}</td>
+                    <td style="color:#c0392b; font-weight:bold; white-space:nowrap;">R$ ${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                    <td class="no-print" style="text-align:right;">
+                        <button onclick="App.cobrarWhatsApp('${d.idAluno}', '${d.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}')" class="btn-cobrar">💬 Cobrar</button>
+                    </td>
+                </tr>`).join('');
+
+        div.innerHTML = `${style}
+            <div style="margin-bottom: 20px;" class="no-print">
+                <button onclick="App.renderizarFinanceiroPro()" style="background:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">⬅ VOLTAR</button>
+            </div>
+            
+            <div class="print-sheet" style="background:white; padding:30px; border-radius:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #eee; padding-bottom:15px; margin-bottom:30px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        ${logo}
+                        <div><h2 style="margin:0;">${App.escapeHTML(escola.nome || '')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '')}</div></div>
+                    </div>
+                    <div style="font-size:12px; color:#666;">Emissão: ${dataHojeStr}</div>
+                </div>
+                
+                <h2 style="color:#2c3e50; margin-bottom:20px;">📉 Relatório de Inadimplência</h2>
+                
+                <div class="inad-card-top">
+                    <div class="inad-kpi-box">
+                        <div class="inad-kpi inad-kpi-red">
+                            <div class="inad-kpi-label" style="color:#c0392b;">TOTAL EM ATRASO</div>
+                            <div class="inad-kpi-val" style="color:#c0392b;">R$ ${totalAtraso.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                        </div>
+                        <div class="inad-kpi">
+                            <div class="inad-kpi-label">ALUNOS DEVEDORES</div>
+                            <div class="inad-kpi-val">${listaDevedores.length}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:30px;">
+                    <h3 class="inad-list-title">Lista de Pendências Vencidas</h3>
+                    <button onclick="window.print()" class="no-print" style="background:#34495e; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">🖨️ IMPRIMIR</button>
+                </div>
+                
+                <table class="inad-table">
+                    <thead><tr><th>ALUNO</th><th>CURSO</th><th>DETALHES</th><th>TOTAL DEVIDO</th><th class="no-print">AÇÃO</th></tr></thead>
+                    <tbody>${linhasTabela}</tbody>
+                </table>
+            </div>`;
+    } catch(e) { 
+        console.error(e);
+        App.showToast("Erro ao calcular inadimplência.", "error"); 
+    }
+};
+
+// =======================================================================
+// NOVAS FUNÇÕES DE EDIÇÃO INTELIGENTE (PROTEÇÃO DE VENCIMENTO)
+// =======================================================================
+
+App.abrirEdicaoFinanceiro = async (id) => {
+    App.idEdicaoFinanceiro = id;
+    
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+    
+    if(titulo) titulo.innerText = "Editar Lançamento";
+    if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando dados da parcela... ⏳</p>';
+
+    try {
+        const parcela = await App.api(`/financeiro/${id}`);
+        App.parcelaEdicaoAtual = parcela;
+
+        const isPago = parcela.status === 'Pago';
+        
+        const labelData = isPago ? 'Data Efetiva do Pagamento' : 'Nova Data de Vencimento';
+        const dataAtual = isPago ? (parcela.dataPagamento || parcela.vencimento) : parcela.vencimento;
+        
+        const aviso = isPago 
+            ? '<div style="background:#e8f4f8; color:#2980b9; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #2980b9;">ℹ️ <b>Parcela Paga:</b> Você está alterando apenas o dia em que o aluno efetuou o pagamento. <b>O vencimento original do carnê ficará intacto.</b></div>'
+            : '<div style="background:#fff3e0; color:#d35400; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #d35400;">⚠️ <b>Parcela Pendente:</b> Alterar a data mudará o dia de vencimento no carnê do aluno.</div>';
+
+        let html = `
+            ${aviso}
+            <div class="input-group" style="margin-bottom:15px;">
+                <label style="font-weight:bold; color:#2c3e50;">${labelData}</label>
+                <input type="date" id="edit-fin-data" value="${dataAtual || ''}" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
+            </div>
+            <div class="input-group" style="margin-bottom:15px;">
+                <label style="font-weight:bold; color:#2c3e50;">Valor Registado (R$)</label>
+                <input type="number" step="0.01" id="edit-fin-valor" value="${parcela.valor || ''}" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
+            </div>
+        `;
+
+        conteudo.innerHTML = html;
+
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) {
+            btnConfirm.setAttribute('onclick', 'App.salvarEdicaoFinanceiro()');
+            btnConfirm.innerHTML = "💾 Salvar Alterações";
+        }
+    } catch (e) {
+        console.error("Erro ao carregar edição:", e);
+        if(conteudo) conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar dados. Tente novamente.</p>';
+    }
+};
+
+App.salvarEdicaoFinanceiro = async () => {
+    const novaData = document.getElementById('edit-fin-data').value;
+    const novoValorStr = document.getElementById('edit-fin-valor').value;
+
+    if (!novaData || !novoValorStr) {
+        return App.showToast("Por favor, preencha a data e o valor.", "warning");
+    }
+
+    let novoValor = novoValorStr.toString().trim();
+    if (novoValor.includes(',') && novoValor.includes('.')) {
+        novoValor = novoValor.replace(/\./g, '').replace(',', '.'); 
+    } else if (novoValor.includes(',')) {
+        novoValor = novoValor.replace(',', '.'); 
+    }
+    novoValor = parseFloat(novoValor) || 0;
+
+    const btn = document.querySelector('.btn-confirm');
+    const txtOrig = btn ? btn.innerHTML : 'Salvar';
+    if (btn) { btn.innerHTML = "⏳ A guardar..."; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        const isPago = App.parcelaEdicaoAtual.status === 'Pago';
+        
+        const parcelaAtualizada = {
+            ...App.parcelaEdicaoAtual,
+            valor: novoValor
+        };
+
+        if (isPago) {
+            parcelaAtualizada.dataPagamento = novaData;
+            parcelaAtualizada.valorPago1 = novoValor;
+            parcelaAtualizada.valorPago2 = 0; 
+        } else {
+            parcelaAtualizada.vencimento = novaData;
+        }
+
+        await App.api(`/financeiro/${App.idEdicaoFinanceiro}`, 'PUT', parcelaAtualizada);
+        
+        App.showToast("Alteração financeira guardada com sucesso! 💼", "success");
+        App.fecharModal();
+        
+        if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
+            App.renderizarFinanceiroPro();
+        } else if (typeof App.filtrarTabelaReativa === 'function') {
+            App.renderizarLista('financeiro');
+        }
+
+    } catch (e) {
+        console.error("Erro ao guardar edição:", e);
+        App.showToast("Ocorreu um erro ao atualizar.", "error");
+    } finally {
+        if (btn) { btn.innerHTML = txtOrig; btn.disabled = false; }
+        document.body.style.cursor = 'default';
+    }
+};
+
+// =======================================================================
+// 🗂️ TELA EXCLUSIVA DE HISTÓRICO DE LANÇAMENTOS (COM FILTROS AVANÇADOS)
+// =======================================================================
+
+App.renderizarHistoricoFinanceiro = async () => {
+    App.setTitulo("Histórico de Lançamentos");
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Carregando histórico financeiro... ⏳</p>';
+    
+    try {
+        const [financeiro, alunos] = await Promise.all([App.api('/financeiro'), App.api('/alunos')]);
+        
+        const alunosAtivosIds = alunos.filter(a => !a.status || a.status === 'Ativo').map(a => a.id);
+        const financeiroLimpo = financeiro.filter(f => {
+            if (f.status === 'Pendente' && !alunosAtivosIds.includes(f.idAluno)) return false;
+            return true; 
+        });
+
+        App.financeiroCache = financeiroLimpo.sort((a,b) => { 
+            if(a.status === b.status) return new Date(a.vencimento) - new Date(b.vencimento); 
+            return a.status === 'Pendente' ? -1 : 1; 
+        });
+        
+        const botao = App.UI.botao;
+
+        let anosSet = new Set();
+        const anoAtual = new Date().getFullYear();
+        anosSet.add(anoAtual);
+        financeiroLimpo.forEach(f => {
+            if (f.vencimento) anosSet.add(parseInt(f.vencimento.split('-')[0]));
+        });
+        const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
+        
+        const opStatusBusca = '<option value="">Todos os Status</option><option value="Pago">🟢 Pagos</option><option value="Pendente">🟠 Pendentes</option>';
+        const opAnosBusca = '<option value="" selected>Todos os Anos</option>' + anosOrdenados.map(a => `<option value="${a}">${a}</option>`).join('');
+        const mesesNome = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
+
+        const barraFerramentas = `
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
+                    <div class="search-wrapper" style="width: 100%; position:relative;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opStatusBusca}
+                        </select>
+                        <select id="fin-filtro-mes" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opMesesBusca}
+                        </select>
+                        <select id="fin-filtro-ano" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:100px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
+                            ${opAnosBusca}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
+                ${App.gerarTabelaFinanceira(App.financeiroCache)}
+            </div>
+        `;
+
+        div.innerHTML = `
+            <div style="margin-top: 20px;">
+                ${App.UI.card('', '', barraFerramentas)}
+            </div>
+        `;
+    } catch(e) { div.innerHTML = "Erro ao carregar dados financeiros."; }
+};
+
+// 🔗 INTERCEPTADOR (HOOK)
+if (typeof App.renderizarLista === 'function') {
+    const _renderizarListaOriginal = App.renderizarLista;
+    App.renderizarLista = (colecao) => {
+        if (colecao === 'financeiro') {
+            return App.renderizarHistoricoFinanceiro();
+        }
+        return _renderizarListaOriginal(colecao);
+    };
+}
+
+// =======================================================================
+// 💬 INTEGRAÇÃO DE COBRANÇA PROFISSIONAL VIA WHATSAPP (CORRIGIDA)
+// =======================================================================
+
+App.cobrarWhatsApp = async (idAluno, valorPendente) => {
+    try {
+        App.showToast("A preparar mensagem...", "info");
+
+        // 1. Buscar os dados atualizados do aluno e da instituição
+        const [alunos, escola] = await Promise.all([
+            App.api('/alunos'), 
+            App.api('/escola')
+        ]);
+
+        const aluno = alunos.find(a => a.id === idAluno);
+        if (!aluno) return App.showToast("Erro: Aluno não encontrado.", "error");
+
+        // 🕵️‍♂️ 2. BUSCA INTELIGENTE: Procura o número em todos os campos possíveis
+        let numeroBruto = aluno.whatsapp || aluno.celular || aluno.telefone || aluno.contato || '';
+        
+        // Remove tudo o que não for número (limpa parênteses, traços, espaços)
+        let telefone = numeroBruto.replace(/\D/g, '');
+
+        // Se, depois de limpar, não sobrar um número válido (mínimo de 10 dígitos)
+        if (telefone.length < 10) {
+            return App.showToast("O aluno não tem um número válido registado.", "warning");
+        }
+        
+        // Se o número for do Brasil e não tiver o DDI (55), o sistema adiciona automaticamente
+        if (telefone.length === 10 || telefone.length === 11) {
+            telefone = '55' + telefone;
+        }
+
+        // 3. Organizar as variáveis para o texto
+        const primeiroNome = aluno.nome ? aluno.nome.split(' ')[0] : 'Aluno'; // Pega só o primeiro nome
+        const nomeEscola = escola.nome || 'Nossa Instituição';
+        const cnpjEscola = escola.cnpj || 'Não informado';
+        const bancoEscola = escola.banco || 'Não informado';
+        const pixEscola = escola.chavePix || 'Não informada';
+
+        // 4. Montar a mensagem de "Lembrete" (Formatada com Negritos e Itálicos)
+        const mensagem = 
+`Olá, *${primeiroNome}*! Tudo bem? ✨
+
+Passando apenas para deixar um lembrete sobre a sua mensalidade no valor de *R$ ${valorPendente}*, que se encontra em aberto no nosso sistema.
+
+Para sua maior comodidade, deixamos abaixo os nossos dados para pagamento via PIX:
+
+🏦 *Dados da Instituição:*
+*Instituição:* _${nomeEscola}_
+*CNPJ:* _${cnpjEscola}_
+*Banco:* _${bancoEscola}_
+
+🔑 *Chave PIX:* *${pixEscola}*
+
+_Caso o pagamento já tenha sido realizado, por favor, desconsidere esta mensagem._ 🙏
+
+Qualquer dúvida, estamos à inteira disposição. Tenha um excelente dia! 🌟`;
+
+        // 5. Transformar o texto num link válido para a internet e abrir o WhatsApp
+        const textoCodificado = encodeURIComponent(mensagem);
+        const urlWhatsApp = `https://api.whatsapp.com/send?phone=${telefone}&text=${textoCodificado}`;
+        
+        window.open(urlWhatsApp, '_blank'); // Abre em nova aba (ou App do celular)
+
+    } catch (error) {
+        console.error("Erro ao gerar link do WhatsApp:", error);
+        App.showToast("Erro ao processar a mensagem.", "error");
+    }
+};

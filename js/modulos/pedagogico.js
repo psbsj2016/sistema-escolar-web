@@ -1,1 +1,1502 @@
-function a4_0x2d7d(){const _0x65552c=['valorMax','salvarPlanejamentoBanco','</h2><div\x20style=\x22font-size:12px;\x22>CNPJ:\x20','size','\x27)\x22\x20style=\x22background:#e74c3c;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20cursor:pointer;\x22\x20title=\x22Excluir\x22>🗑️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','gerarBoletimTela','padStart','toggleTipoOutroNota','Início:','nota-tipo','<tr><td\x20colspan=\x225\x22\x20style=\x22padding:20px;\x20text-align:center;\x20color:#999;\x22>Nenhum\x20registo\x20encontrado.</td></tr>','options','Preencha\x20os\x20dados\x20corretamente.','background:#fff;\x20width:90%;\x20max-width:400px;\x20border-radius:12px;\x20padding:30px;\x20text-align:center;\x20box-shadow:0\x2010px\x2030px\x20rgba(0,0,0,0.3);\x20transform:scale(0.9);\x20transition:transform\x200.2s;','<option\x20value=\x22\x22>--\x20Selecione\x20o\x20Aluno\x20--</option>','config-nota-max','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22text-align:center;\x20padding:10px;\x20border-bottom:1px\x20solid\x20#eee;\x20vertical-align:middle;\x22><span\x20style=\x22font-size:16px;\x20font-weight:bold;\x20color:','carregarListaChamada','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','mudarMes','Selecione\x20um\x20aluno.','<option\x20value=\x22\x22>--\x20Aluno\x20Específico\x20--</option>','Preencha\x20a\x20Data\x20da\x20aula.','warning','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20width:150px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22number\x22\x20class=\x22valor-nota\x22\x20style=\x22width:100%;\x20padding:8px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x20text-align:center;\x20font-weight:bold;\x20color:var(--accent);\x22\x20step=\x220.1\x22\x20max=\x22','Avaliações\x20e\x20Notas','Presença','\x27)\x22\x20style=\x22background:#f39c12;\x20color:white;\x20border:none;\x20padding:5px\x208px;\x20border-radius:4px;\x20margin-right:5px;\x20cursor:pointer;\x22>✏️</button><button\x20onclick=\x22App.excluirEvento(\x27','>🔄\x20Reposição</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Falta\x20Justificada\x22\x20','A\x20sincronizar\x20tudo...\x20⏳',',\x27conteudo\x27,this.value)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22text-align:center;\x20padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22><input\x20type=\x22checkbox\x22\x20','</strong>\x20<span\x20style=\x22color:#999;\x20font-size:11px;\x22>/\x20','slice','num','forEach','data-id-chamada=\x22','style=\x22margin-bottom:15px;\x22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20id=\x22tabela-plan-arquivados\x22\x20style=\x22width:100%;\x20border-collapse:collapse;\x22><thead>','random','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20border-bottom:1px\x20solid\x20#eee;\x20vertical-align:middle;\x22><b>','/planejamentos?_t=','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:12px;\x20text-align:left;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead><tr\x20style=\x22border-bottom:1px\x20solid\x20#000;\x22><th\x20style=\x22width:5%;\x20padding:8px;\x22>Nº</th><th\x20style=\x22width:15%;\x20padding:8px;\x22>DATA</th><th\x20style=\x22width:12%;\x20padding:8px;\x22>HORÁRIO</th><th\x20style=\x22width:12%;\x20padding:8px;\x22>DURAÇÃO</th><th\x20style=\x22padding:8px;\x22>CONTEÚDO\x20/\x20OBS</th><th\x20style=\x22width:5%;\x20padding:8px;\x22>OK</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','/chamadas','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:20px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20flex-wrap:\x20wrap;\x20gap:\x2020px;\x20align-items:\x20flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','</span></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22text-align:center;\x20padding:10px;\x20border-bottom:1px\x20solid\x20#eee;\x20vertical-align:middle;\x22>','toString','>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20font-weight:500;\x22>','Selecione\x20uma\x20Turma\x20OU\x20um\x20Aluno\x20específico.','wait','cancelarEdicaoChamada','>❌\x20Falta</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Reposição\x22\x20','</td><td\x20style=\x22padding:10px;\x22>','button[onclick=\x22App.salvarNotasLote()\x22]','all','#e74c3c','position:fixed;\x20top:0;\x20left:0;\x20width:100%;\x20height:100%;\x20background:rgba(0,0,0,0.6);\x20display:flex;\x20align-items:center;\x20justify-content:center;\x20z-index:99999;\x20backdrop-filter:blur(3px);\x20opacity:0;\x20transition:opacity\x200.2s;','Lote\x20aplicado:\x20Todos\x20como\x20','nota-aluno','>📅\x20Feriado</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Recesso\x22\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22\x20class=\x22linha-chamada\x22\x20data-id=\x22','A\x20arquivar\x20instantaneamente...\x20⚡','ESCOLA','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x22>','</select>\x0a\x20\x20\x20\x20</div>','style','hoje','smooth','cachePedagogico','Excluir\x20Evento','descricao','</div>','value','Tem\x20a\x20certeza\x20que\x20deseja\x20enviar\x20este\x20planejamento\x20para\x20o\x20arquivo\x20morto?\x20Ele\x20deixará\x20de\x20aparecer\x20na\x20sua\x20lista\x20principal.','info','toISOString','2540286VdpNEO','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22padding:0;\x20overflow:hidden;\x20border:2px\x20solid\x20#2980b9;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:15px;\x20background:#e8f4f8;\x20border-bottom:1px\x20solid\x20#d1e8f0;\x20font-size:13px;\x20color:#2980b9;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span><b>Lançamento:</b>\x20','Salvar','now','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20min-width:\x20200px;\x20display:\x20flex;\x20justify-content:\x20flex-end;\x20gap:\x2010px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.limparFormEvento()\x22\x20style=\x22background:#95a5a6;\x20color:white;\x20border:none;\x20padding:12px\x2020px;\x20border-radius:5px;\x20cursor:pointer;\x20flex:\x201;\x22>Cancelar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.salvarEvento()\x22\x20style=\x22background:#6c5ce7;\x20color:white;\x20border:none;\x20padding:12px\x2020px;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x20flex:\x201;\x22>Salvar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','#3498db','setDate','PERÍODO\x20ÚNICO','turmas','/planejamentos/','\x22\x20style=\x22flex:1;\x20padding:12px;\x20border:none;\x20background:#ecf0f1;\x20color:#7f8c8d;\x20border-radius:8px;\x20font-weight:bold;\x20cursor:pointer;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#bdc3c7\x27\x22\x20onmouseout=\x22this.style.background=\x27#ecf0f1\x27\x22>Cancelar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-yes-','Data:','Recesso','800px','toFixed','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20font-weight:bold;\x22>','plan-hora','Deseja\x20mesmo\x20excluir\x20esta\x20avaliação?\x20Isto\x20irá\x20afetar\x20o\x20boletim\x20do\x20aluno.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Falta','calendarState','Erro\x20ao\x20carregar\x20módulo\x20de\x20chamada.','\x27)\x22\x20style=\x22background:none;\x20border:none;\x20cursor:pointer;\x20font-size:16px;\x20margin-right:5px;\x22\x20title=\x22Editar\x22>✏️</button><button\x20onclick=\x22App.excluirLancamentoChamada(\x27','<div\x20class=\x22evt-pilula\x22\x20style=\x22--bg-cor:\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:15px;\x20flex-wrap:wrap;\x20align-items:flex-end;\x20margin-bottom:15px;\x20background:#f9f9f9;\x20padding:15px;\x20border-radius:8px;\x20border:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','evt-data','</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22border:1px\x20solid\x20#000;\x20padding:10px;\x20font-size:12px;\x20margin-bottom:15px;\x20background:#fafafa;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:flex-start;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:60%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:5px;\x22><b>ALUNO:</b>\x20','\x20pts</span></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','evt-inicio','Junho','<div\x20style=\x22background:#f39c12;\x20color:#fff;\x20padding:10px;\x20text-align:center;\x20font-weight:bold;\x20margin-bottom:10px;\x20border-radius:5px;\x20animation:\x20pop\x200.3s;\x22>⚠️\x20MODO\x20DE\x20EDIÇÃO\x20ATIVO\x20(A\x20atualizar\x20o\x20registo\x20existente)</div>','toUpperCase','<option\x20value=\x221º\x20Trimestre\x22>1º\x20Trimestre</option><option\x20value=\x222º\x20Trimestre\x22>2º\x20Trimestre</option><option\x20value=\x223º\x20Trimestre\x22>3º\x20Trimestre</option><option\x20value=\x224º\x20Trimestre\x22>4º\x20Trimestre</option>','button[onclick=\x22App.salvarPlanejamentoBanco()\x22]','salvarEvento','Disciplina/Curso:','this.style.borderColor=\x27#eee\x27;\x20this.style.transform=\x27translateY(0)\x27','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.carregarListaChamada()\x22\x20class=\x22btn-primary\x22\x20style=\x22height:41px;\x20padding:0\x2020px;\x22>📋\x20ABRIR\x20CHAMADA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.cancelarEdicaoChamada()\x22\x20id=\x22btn-cancel-chamada\x22\x20style=\x22height:41px;\x20padding:0\x2020px;\x20background:#95a5a6;\x20color:white;\x20border:none;\x20border-radius:5px;\x20display:none;\x20cursor:pointer;\x22>❌\x20Cancelar\x20Edição</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','POST','Tipo\x20de\x20Avaliação:','none','#8e44ad','Julho','chamada-turma','Não\x20informada','__/__/____','includes','Ativo','Histórico\x20de\x20Notas\x20Lançadas','\x20&nbsp;&nbsp;|&nbsp;&nbsp;\x20<b>TURMA:</b>\x20','number','btn-sync-plan','Arquivar\x20Planejamento','✅\x20|\x20','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:50px;\x20margin-bottom:15px;\x22>🗄️</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#8e44ad;\x22>Arquivados</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>','Restaurar','<option\x20value=\x22','513624dwrtXM','<br><span\x20style=\x22font-size:10px;\x20color:#7f8c8d;\x22>Meta\x20Anual:\x20','alunos','getElementById','Preencha\x20data\x20e\x20descrição.','🗑️','activeElement','setTitulo','\x22\x20id=\x22','selected','innerHTML','config-nota-media','split','<br>','<div\x20style=\x22margin-top:20px;\x22>','6140jYYznr','data-id','</b></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20border-bottom:1px\x20solid\x20#eee;\x22>','.linha-chamada','<option\x20value=\x221º\x20Bimestre\x22>1º\x20Bimestre</option><option\x20value=\x222º\x20Bimestre\x22>2º\x20Bimestre</option><option\x20value=\x223º\x20Bimestre\x22>3º\x20Bimestre</option><option\x20value=\x224º\x20Bimestre\x22>4º\x20Bimestre</option><option\x20value=\x225º\x20Bimestre\x22>5º\x20Bimestre</option><option\x20value=\x226º\x20Bimestre\x22>6º\x20Bimestre</option>','tipo','Erro\x20ao\x20gerar\x20boletim.','1879066EMpPSV','>⚠️\x20Falta\x20Justificada</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Feriado\x22\x20','plan-inicio','filtrarTabela','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:center;\x20margin-bottom:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#8e44ad;\x22>🗄️\x20Planejamentos\x20Arquivados</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarPlanejamentoPro()\x22\x20style=\x22background:#ddd;\x20border:none;\x20padding:8px\x2015px;\x20border-radius:5px;\x20cursor:pointer;\x22>Voltar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#666;\x20font-size:13px;\x20margin-bottom:20px;\x22>Estes\x20planejamentos\x20foram\x20finalizados/arquivados.\x20Não\x20são\x20contabilizados\x20no\x20boletim\x20nem\x20no\x20auto-ajuste\x20de\x20presenças.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','limparFormEvento','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:13px;\x20margin-bottom:10px;\x22><b>CURSO:</b>\x20','279906SeiPYE','<p\x20style=\x22text-align:center;\x20padding:20px;\x22>A\x20preparar\x20pauta\x20de\x20lançamento...\x20⏳</p>','<p\x20style=\x22text-align:center;\x22>A\x20gerar\x20boletim...</p>','\x22\x20class=\x22cal-day\x20','\x20style=\x22width:100%;\x20border:none;\x20border-bottom:1px\x20dashed\x20#ccc;\x20text-align:center;\x20background:transparent;\x22\x20value=\x22','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirPlanejamentoVisualizacao(\x27','</option>','\x27)\x22\x20style=\x22background:#e74c3c;\x20color:white;\x20border:none;\x20padding:5px\x208px;\x20border-radius:4px;\x20cursor:pointer;\x22>🗑️</button></td></tr>','</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22\x20','TRIMESTRE','</td><td\x20style=\x22padding:12px;\x20text-align:right;\x22><button\x20onclick=\x22App.editarLancamentoChamada(\x27','renderizarAvaliacoesPro','nota-disc','appendChild','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22window.print()\x22\x20style=\x22background:#3498db;\x20color:white;\x20padding:10px\x2020px;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x22>🖨️\x20IMPRIMIR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22','salvarChamadaLote','<div\x20id=\x22area-lista-notas\x22\x20style=\x22margin-top:20px;\x22></div>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20id=\x22tabela-plan-ativos\x22\x20style=\x22width:100%;\x20border-collapse:collapse;\x22><thead>','getFullYear','salvarConfigNotas','Sim,\x20Arquivar','Nenhum','nota-periodo','</td><td\x20style=\x22padding:12px;\x20color:#555;\x22>','.status-chamada','status','body','planejamentos','>✅\x20Presença</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Falta\x22\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20font-weight:500;\x22>','nota_maxima','inline-block','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20planejamentos...\x20⏳</p>','Tipo:','Filtrar\x20por\x20Turma:','Aluno:','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:14px;\x20text-align:left;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead><tr\x20style=\x22background:#f8f9fa;\x20color:#7f8c8d;\x20border-bottom:2px\x20solid\x20#eee;\x22><th\x20style=\x22padding:10px;\x22>DIA</th><th\x20style=\x22padding:10px;\x22>HORÁRIO</th><th\x20style=\x22padding:10px;\x22>TIPO</th><th\x20style=\x22padding:10px;\x22>DESCRIÇÃO</th><th\x20style=\x22padding:10px;\x20text-align:right;\x22>AÇÕES</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>','evt-desc','area-lista-notas','turma','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:15px;\x20flex-wrap:wrap;\x20align-items:flex-end;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','editarAvaliacao','nota-outro-desc','disabled','chamadas','\x20style=\x22width:100%;\x20border:none;\x20border-bottom:1px\x20dashed\x20#ccc;\x20text-align:center;\x20background:transparent;\x20font-weight:bold;\x20color:#2980b9;\x22\x20value=\x22','<h3>Nenhum\x20planejamento\x20ativo.</h3><button\x20onclick=\x22App.renderizarPlanejamentoPro()\x22\x20class=\x22btn-primary\x22>Voltar</button>','<option\x20value=\x22Geral\x22>Geral\x20/\x20Curso\x20Padrão</option>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22text-align:center;\x20padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22>','Deseja\x20reativar\x20este\x20planejamento\x20e\x20devolvê-lo\x20para\x20a\x20lista\x20ativa?','getDate','escola_perfil','232888iVsVRi','card','evt-tipo','<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20processar\x20a\x20lista.</p>','renderizarTelaEdicao','Valor\x20desta\x20Avaliação\x20(Pts):','btn-cancel-nota','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22\x20class=\x22linha-nota\x22\x20data-id=\x22','renderizarPlanejamentosSalvos','<option\x20value=\x22Teste\x22>Teste</option><option\x20value=\x22Prova\x22>Prova</option><option\x20value=\x22Pesquisa\x22>Pesquisa</option><option\x20value=\x22Trabalho\x22>Trabalho</option><option\x20value=\x22Outro\x22>Outro\x20(Especificar)</option>','</span></div>','error','</span></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.editarAvaliacao(\x27','Evento\x20salvo\x20com\x20sucesso!','aulas','\x22\x20style=\x22height:50px;\x22>','total','step=\x220.1\x22','</td><td\x20style=\x22padding:10px;\x20text-align:right;\x22><button\x20onclick=\x22App.preencherEdicaoEvento(\x27','</b></div><div>PREVISÃO\x20DE\x20TÉRMINO:\x20<b>','color','transform','Feriado',',\x27visto\x27,this.checked)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','<option\x20value=\x221º\x20Semestre\x22>1º\x20Semestre</option><option\x20value=\x222º\x20Semestre\x22>2º\x20Semestre</option>','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22><input\x20','Aviso:\x20Falha\x20no\x20auto-ajuste\x20de\x20fundo.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','\x27)\x22><div\x20class=\x22dia-num\x22>','>\x0a\x20\x20\x20\x20</div>','Data\x20da\x20Aula:','Prova','onchange=\x22App.toggleTipoOutroNota()\x22','/turmas','\x20tbody\x20tr','renderizarBoletimVisual','</div></div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:right;\x22><div><b>BOLETIM\x20ESCOLAR</b></div><div\x20style=\x22font-size:10px;\x20color:#999;\x22>Emissão:\x20','length','Dezembro','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22div-outro-nota\x22\x20style=\x22flex:\x201;\x20min-width:\x20150px;\x20display:none;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20font-size:12px;\x20color:#555;\x20display:block;\x20margin-bottom:5px;\x22>Especifique:</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22nota-outro-desc\x22\x20placeholder=\x22Ex:\x20Seminário\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','100%','bol-aluno','Total\x20Aulas:','<div\x20style=\x22background:#f39c12;\x20color:#fff;\x20padding:10px;\x20text-align:center;\x20font-weight:bold;\x20margin-bottom:10px;\x20border-radius:5px;\x20animation:\x20pop\x200.3s;\x22>⚠️\x20MODO\x20DE\x20EDIÇÃO\x20ATIVO</div>','1357224zcBsHl','inicio','idEdicaoEvento','3MxPGLg','/eventos?_t=','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#ddd;\x20background:#f9f9f9;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20color:#7f8c8d;\x20font-weight:500;\x22>','block','floor','excluirAvaliacao','toLocaleDateString','Março','this.style.borderColor=\x27','A\x20carregar\x20calendário...','Pauta\x20de\x20notas\x20arquivada\x20com\x20sucesso!','start','arquivarPlanejamento','Teste','Trimestral','Outubro','<div\x20id=\x22area-lista-chamada\x22\x20style=\x22margin-top:20px;\x22></div>','Erro\x20ao\x20carregar\x20calendário.','data-id-chamada','/alunos/','SEMESTRE','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fff;\x20padding:\x2010px\x2015px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#eee;\x20margin-bottom:\x2015px;\x20display:\x20flex;\x20align-items:\x20center;\x20gap:\x2010px;\x20box-shadow:\x200\x202px\x204px\x20rgba(0,0,0,0.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2018px;\x20color:\x20#aaa;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-busca-notas\x22\x20placeholder=\x22Pesquisar\x20histórico...\x22\x20oninput=\x22App.filtrarTabela(\x27input-busca-notas\x27,\x20\x27tabela-historico-notas\x27)\x22\x20style=\x22flex:\x201;\x20border:\x20none;\x20outline:\x20none;\x20font-size:\x2014px;\x20padding:\x205px;\x20background:\x20transparent;\x20width:\x20100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20id=\x22tabela-historico-notas\x22\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:13px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22background:#f4f6f7;\x20color:#7f8c8d;\x20text-align:left;\x20text-transform:uppercase;\x20font-size:11px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x22>Aluno</th><th\x20style=\x22padding:12px;\x22>Curso/Disc.</th><th\x20style=\x22padding:12px;\x22>Data</th><th\x20style=\x22padding:12px;\x22>Avaliação</th><th\x20style=\x22padding:12px;\x22>Período</th><th\x20style=\x22padding:12px;\x20text-align:center;\x22>Nota\x20/\x20Valor</th><th\x20style=\x22padding:12px;\x20text-align:right;\x22>Ações</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','showToast','foto','<div><h2\x20style=\x22margin:0;\x20text-transform:uppercase;\x20font-size:18px;\x22>','Outro','<div\x20class=\x22cal-day\x20empty\x22></div>','filter',';\x20font-weight:bold;\x20font-size:14px;\x22>NO\x20PADRÃO</span>','duracao','\x0a\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:150px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20font-size:12px;\x20color:#555;\x20display:block;\x20margin-bottom:5px;\x22>','Erro\x20ao\x20ler\x20arquivados.','Período','toLowerCase','Erro\x20ao\x20salvar\x20evento.','?_t=','A\x20salvar...\x20⏳','regime_letivo','Horário:','renderizarPlanejamentoPro','10.0',';\x20font-weight:bold;\x20font-size:14px;\x22>RECUPERAÇÃO</span>','\x20Sincronizado:\x20','📝\x20Lançamento\x20de\x20Notas','renderizarPlanejamentosArquivados','</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20','media_aprovacao','carregarListaNotas','join','</div></div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:right;\x22><div><b>Planejamento\x20Pedagógico</b>\x20','onclick','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20calendário...\x20⏳</p>','✏️\x20|\x20','chamada-data','<p\x20style=\x22text-align:center;\x20padding:20px;\x22>A\x20preparar\x20diário\x20de\x20classe\x20super\x20rápido...\x20⚡</p>','cnpj','\x22\x20value=\x22','A\x20carregar\x20arquivados...','getTenantKey','Erro\x20na\x20sincronização.','\x22\x20onmouseout=\x22','</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:20px;\x20background:#f9f9f9;\x20border-top:1px\x20solid\x20#eee;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.salvarChamadaLote()\x22\x20class=\x22btn-primary\x22\x20style=\x22background:#27ae60;\x20border-color:#27ae60;\x20box-shadow:\x200\x204px\x2010px\x20rgba(39,\x20174,\x2096,\x200.3);\x22>💾\x20SALVAR\x20FREQUÊNCIA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Pesquisa','\x27)\x22\x20style=\x22background:#e74c3c;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20cursor:pointer;\x22\x20title=\x22Excluir\x20Definitivamente\x22>🗑️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','Boletim\x20Escolar','curso','.card','getDay','pt-BR','idChamadaEditando','💾\x20SALVAR','.valor-nota','Excluir\x20Frequência','</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:15px;\x20background:#fafafa;\x20border:1px\x20solid\x20#000;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:bold;\x20font-size:16px;\x20margin-bottom:5px;\x22>ALUNO:\x20','cursor:pointer;\x20background:white;\x20border:2px\x20solid\x20#eee;\x20padding:30px;\x20border-radius:15px;\x20width:220px;\x20transition:0.3s;\x20box-shadow:0\x205px\x2015px\x20rgba(0,0,0,0.05);','querySelectorAll','Bloqueado:\x20Não\x20é\x20possível\x20registar\x20frequência\x20em\x20datas\x20futuras.','periodo','Regras\x20de\x20avaliação\x20guardadas\x20com\x20sucesso!','📝\x20Registo\x20de\x20Frequência','chamada-aluno','</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:40px\x2030px\x2010px\x2030px;\x20text-align:center;\x22><div\x20style=\x22width:300px;\x20margin:0\x20auto;\x20border-top:1px\x20solid\x20#333;\x20padding-top:5px;\x20font-size:12px;\x22>Coordenação\x20Pedagógica</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','api','date','\x20pts</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22\x20style=\x22margin:0;\x20border:none;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20min-width:400px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead\x20style=\x22background:#f8f9fa;\x22><tr><th\x20style=\x22padding:15px;\x20text-align:left;\x22>ALUNO</th><th\x20style=\x22padding:15px;\x20text-align:center;\x22>NOTA\x20OBTIDA</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>','📄\x20Emitir\x20Boletim\x20Escolar','<tr><td\x20colspan=\x227\x22\x20style=\x22padding:20px;\x20text-align:center;\x20color:#999;\x22>Nenhuma\x20nota\x20lançada.</td></tr>','trim','Planejamento\x20Salvo!','/avaliacoes/','Frequência\x20registada\x20em\x20tempo\x20recorde','BIMESTRE','innerText','add','isArray','Evento','Qua','nota','Erro.','</thead><tbody>','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20avaliações...\x20⏳</p>','/chamadas/','Tem\x20a\x20certeza\x20que\x20deseja\x20excluir\x20esta\x20chamada\x20do\x20sistema?','<label><input\x20type=\x22checkbox\x22\x20class=\x22plan-dia\x22\x20value=\x22','Erro\x20ao\x20localizar\x20o\x20registo.','data','salvarNotasLote','editarLancamentoChamada','data-id-avaliacao','A\x20analisar\x20Padrões...\x20⏳','#2ecc71','#fff','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:center;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#27ae60;\x22>Planejamentos\x20Ativos</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarPlanejamentoPro()\x22\x20style=\x22background:#ddd;\x20border:none;\x20padding:8px\x2015px;\x20border-radius:5px;\x20cursor:pointer;\x22>Voltar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','box-gerir-evento','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fff;\x20padding:\x2010px\x2015px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#eee;\x20margin-bottom:\x2015px;\x20display:\x20flex;\x20align-items:\x20center;\x20gap:\x2010px;\x20box-shadow:\x200\x202px\x204px\x20rgba(0,0,0,0.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2018px;\x20color:\x20#aaa;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-busca-plan-arquivados\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20placeholder=\x22Pesquisar\x20arquivo\x20morto...\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20oninput=\x22App.filtrarTabela(\x27input-busca-plan-arquivados\x27,\x20\x27tabela-plan-arquivados\x27)\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22flex:\x201;\x20border:\x20none;\x20outline:\x20none;\x20font-size:\x2014px;\x20padding:\x205px;\x20background:\x20transparent;\x20width:\x20100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','App.renderizarPlanejamentosSalvos()','cursor','Datas,\x20Tempos\x20e\x20Aulas\x20Extra\x20Sincronizados!\x20🎉','nomeAluno','keys','</tbody></table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','<h3>Nenhum\x20planejamento\x20no\x20arquivo\x20morto.</h3><button\x20onclick=\x22App.renderizarPlanejamentoPro()\x22\x20class=\x22btn-primary\x22>Voltar</button>','T12:00:00','</div><div\x20class=\x22evt-container\x22>','</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#7f8c8d;\x20margin-bottom:25px;\x20line-height:1.5;\x20font-size:14px;\x22>','plan-qtd','div','btn-no-','</div><div\x20style=\x22font-size:12px;\x22>Emissão:\x20','green','DELETE','>Trimestral\x20(4\x20Períodos)</option><option\x20value=\x22Semestral\x22\x20','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20color:#555;\x22>','#c0392b','push','fim','nota-data','red','/avaliacoes?_t=','Lista\x20de\x20Eventos\x20(','selectedIndex','renderizarChamadaPro','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20arquivo\x20morto...\x20⏳</p>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.salvarPlanejamentoBanco()\x22\x20style=\x22background:#27ae60;\x20color:white;\x20padding:10px\x2020px;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x22>💾\x20SALVAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-sync-plan\x22\x20onclick=\x22App.sincronizarPlanejamentoComChamadasUI()\x22\x20style=\x22background:#8e44ad;\x20color:white;\x20padding:10px\x2020px;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x20box-shadow:\x200\x204px\x2010px\x20rgba(142,68,173,0.3);\x22\x20title=\x22Ajusta\x20datas\x20e\x20a\x20duração\x20exata\x20registada\x20na\x20chamada\x20de\x20presença!\x22>🤖\x20AUTO-AJUSTAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Controle\x20de\x20Presença','</td><td\x20style=\x22padding:12px;\x20font-weight:bold;\x22>','Erro\x20ao\x20sincronizar\x20planejamento.','08:00','Fevereiro','Término:',';\x22>','/eventos/','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22background:#2980b9;\x20color:white;\x20padding:4px\x2010px;\x20border-radius:12px;\x20font-weight:bold;\x22>Máx:\x20','468pWApHU','getMonth','Pretende\x20remover\x20este\x20evento\x20do\x20calendário?','#2980b9','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20color:#7f8c8d;\x22>','getItem','setItem','<span\x20style=\x22font-size:11px;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.gerarGridEditavel()\x22\x20style=\x22width:100%;\x20margin-top:20px;\x20padding:15px;\x20background:#3498db;\x20color:white;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x22>CRIAR\x20TABELA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.salvarConfigNotas()\x22\x20class=\x22btn-primary\x22\x20style=\x22background:#8e44ad;\x20border:none;\x20height:41px;\x20padding:0\x2020px;\x20margin-bottom:\x205px;\x22>💾\x20SALVAR\x20REGRAS</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','function','<option\x20value=\x22Bimestral\x22\x20','idAvaliacaoEditando','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20border-left:4px\x20solid\x20#8e44ad;\x20padding:15px;\x20border-radius:8px;\x20box-shadow:0\x202px\x205px\x20rgba(0,0,0,0.05);\x20margin-bottom:20px;\x20display:flex;\x20gap:15px;\x20flex-wrap:wrap;\x20align-items:flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:100%;\x20font-size:12px;\x20font-weight:bold;\x20color:#8e44ad;\x20text-transform:uppercase;\x20margin-bottom:-5px;\x22>⚙️\x20Configuração\x20do\x20Sistema\x20de\x20Avaliação</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','preencherEdicaoEvento','Bimestre','Planejamento','scrollIntoView','Buscar\x20Aluno\x20Único:','Deseja\x20excluir\x20DEFINITIVAMENTE\x20este\x20planejamento?\x20Esta\x20ação\x20é\x20irreversível.','#f39c12','some','gerarListaEventosHTML','01:00','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:15px;\x20flex-wrap:wrap;\x20align-items:flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','selecionarDia','Planejamento\x20Reativado\x20com\x20sucesso!','button[onclick=\x22App.salvarEvento()\x22]','\x22\x20placeholder=\x220.0\x22\x20value=\x22','Semestral','<option\x20value=\x22\x22>--\x20Turma\x20Completa\x20--</option>','#333','hora','data-nome','Trimestre','abrirPlanejamentoEditavel','\x22\x20data-curso=\x22','atualizarAula','area-lista-chamada','planoAtual','plan-aluno','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22background:#eee;\x20font-weight:bold;\x20border-top:2px\x20solid\x20#000;\x22><td\x20colspan=\x223\x22\x20style=\x22text-align:right;\x20padding:10px;\x22>Carga\x20Horária\x20Total\x20=</td><td\x20style=\x22text-align:center;\x20padding:10px;\x20color:#2980b9;\x22>','cssText','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22text-align:center;\x20padding:50px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:#2c3e50;\x20margin-bottom:10px;\x22>Planejamento\x20Pedagógico</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#7f8c8d;\x20margin-bottom:40px;\x22>Gira\x20o\x20conteúdo\x20programático\x20e\x20o\x20controle\x20de\x20aulas.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:center;\x20gap:20px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20onclick=\x22App.renderizarNovoPlanejamento()\x22\x20style=\x22','Reposição','</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:45px;\x20margin-bottom:15px;\x20animation:\x20pop\x200.3s\x20ease;\x22>⚠️</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0\x200\x2010px\x200;\x20color:#2c3e50;\x20font-size:20px;\x22>','month','</div></div>','\x27)\x22\x20style=\x22background:#3498db;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20margin-right:5px;\x20cursor:pointer;\x22\x20title=\x22Visualizar\x22>👁️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.restaurarPlanejamento(\x27','Nota\x20Máx.\x20do\x20Período:','plan-duracao','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','getAttribute',',\x27duracao\x27,this.value)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22><input\x20','default','</td><td\x20style=\x22padding:10px;\x20font-weight:bold;\x20color:','/planejamentos','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20frequência...\x20⏳</p>','.plan-dia:checked','renderizarCalendarioPro','reverse','<div\x20id=\x22boletim-area\x22\x20style=\x22margin-top:30px;\x22></div>','T00:00:00','gerarGridEditavel','Regime\x20Letivo:','.linha-nota','notas','scale(1)','idAluno','excluirEvento','</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.gerarBoletimTela()\x22\x20style=\x22background:#2c3e50;\x20color:white;\x20border:none;\x20padding:12px\x2025px;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x22>GERAR\x20BOLETIM</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','max=\x22','app-content','periodosLancados','find','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22\x20style=\x22margin:0;\x20border:none;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20min-width:400px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead\x20style=\x22background:#f8f9fa;\x22><tr><th\x20style=\x22padding:15px;\x20text-align:left;\x22>NOME\x20DO\x20ALUNO</th><th\x20style=\x22padding:15px;\x20text-align:left;\x22>STATUS\x20DA\x20AULA</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20carregar\x20dados...</p>','Duração:','Arquivado','\x22>\x20','\x22\x20onmouseover=\x22','Excluir\x20Nota','\x22\x20onchange=\x22App.atualizarAula(','Setembro','Nenhuma','PUT','\x22><span\x20class=\x22evt-texto\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20flex-wrap:\x20wrap;\x20gap:\x2015px;\x20margin-top:\x2015px;\x20align-items:\x20flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Trabalho','Janeiro',';\x22\x20title=\x22','Geral','Calendário','nota-turma','visto','year','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><b>TOTAL\x20DE\x20AULAS:</b>\x20','/alunos','Novembro','text-align:center;\x20padding:40px;','Erro\x20ao\x20salvar\x20as\x20notas.','log','\x20de\x20','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-no-','\x22\x20style=\x22background:#7f8c8d;\x20color:white;\x20padding:10px\x2020px;\x20border:none;\x20border-radius:5px;\x20font-weight:bold;\x20cursor:pointer;\x22>FECHAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22print-sheet\x22\x20style=\x22background:\x20white;\x20max-width:\x20210mm;\x20margin:\x200\x20auto;\x20padding:\x2040px;\x20box-shadow:\x200\x205px\x2015px\x20rgba(0,0,0,0.1);\x20border-radius:\x208px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22doc-header\x22\x20style=\x22display:flex;\x20justify-content:space-between;\x20border-bottom:2px\x20solid\x20#333;\x20padding-bottom:15px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20align-items:center;\x20gap:15px;\x22>','</td><td\x20colspan=\x222\x22></td></tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>','<img\x20src=\x22','data-id-avaliacao=\x22','display','map','confirmar','nome','#27ae60','Erro\x20ao\x20reativar.','conteudo','processarAutoAjustePlano','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x22>','</b></span>','<br><span\x20style=\x22color:#e74c3c;\x20font-size:12px;\x22>(ARQUIVADO\x20-\x20APENAS\x20LEITURA)</span>','Média\x20de\x20Aprovação:',',\x27hora\x27,this.value)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22><input\x20','escapeHTML','/chamadas?_t=','sort','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','config-nota-regime','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22no-print\x22\x20style=\x22margin-bottom:20px;\x20background:#f4f4f4;\x20padding:15px;\x20border-radius:10px;\x20display:flex;\x20justify-content:center;\x20gap:10px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',',\x27data\x27,this.value)\x22></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22><input\x20','\x27)\x22\x20style=\x22background:none;\x20border:none;\x20cursor:pointer;\x20font-size:16px;\x20color:#999;\x22\x20title=\x22Excluir\x22>🗑️</button></td></tr>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Excluir','nota-max','div-outro-nota','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:40%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:5px;\x22><b>CURSO:</b>\x20','createElement','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-size:12px;\x20font-weight:bold;\x20color:#666;\x20display:block;\x20margin-bottom:8px;\x22>Dias\x20da\x20Semana:</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x20background:white;\x20padding:10px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','.cal-day','Planejamento\x20Arquivado\x20com\x20sucesso!','A\x20carregar...','disciplina','\x27)\x22\x20style=\x22background:#f39c12;\x20color:white;\x20border:none;\x20padding:4px\x208px;\x20border-radius:3px;\x20cursor:pointer;\x20margin-right:5px;\x22\x20title=\x22Editar\x22>✏️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.excluirAvaliacao(\x27','>Semestral\x20(2\x20Períodos)</option><option\x20value=\x22Anual\x22\x20','scale(0.9)','text','Anual','Não\x20é\x20permitido\x20abrir\x20grelhas\x20de\x20frequência\x20para\x20datas\x20futuras.','data-curso','opacity',';\x20color:white;\x20border-radius:8px;\x20font-weight:bold;\x20cursor:pointer;\x20transition:0.2s;\x20opacity:0.9;\x22\x20onmouseover=\x22this.style.opacity=\x271\x27\x22\x20onmouseout=\x22this.style.opacity=\x270.9\x27\x22>','bimestre','</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.mudarMes(1)\x22\x20style=\x22background:none;\x20border:none;\x20font-size:24px;\x20cursor:pointer;\x20color:#555;\x22>▶</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20grid;\x20grid-template-columns:\x20repeat(7,\x201fr);\x20text-align:\x20center;\x20font-weight:\x20bold;\x20color:\x20#7f8c8d;\x20margin-bottom:\x2010px;\x20font-size:12px;\x20text-transform:uppercase;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22calendar-grid\x22\x20style=\x22display:\x20grid;\x20grid-template-columns:\x20repeat(7,\x201fr);\x20gap:\x202px;\x20background:\x20#eee;\x20border:\x201px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','success','\x22\x20data-nome=\x22','\x27)\x22\x20style=\x22background:#e74c3c;\x20color:white;\x20border:none;\x20padding:4px\x208px;\x20border-radius:3px;\x20cursor:pointer;\x22\x20title=\x22Excluir\x22>🗑️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','querySelector','\x27)\x22\x20style=\x22background:#f39c12;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20margin-right:5px;\x20cursor:pointer;\x22\x20title=\x22Editar\x22>✏️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.arquivarPlanejamento(\x27','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.carregarListaNotas()\x22\x20class=\x22btn-primary\x22\x20style=\x22height:41px;\x20padding:0\x2020px;\x22>📋\x20ABRIR\x20PAUTA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.cancelarEdicaoNota()\x22\x20id=\x22btn-cancel-nota\x22\x20style=\x22height:41px;\x20padding:0\x2020px;\x20background:#95a5a6;\x20color:white;\x20border:none;\x20border-radius:5px;\x20display:none;\x20cursor:pointer;\x22>❌\x20Cancelar\x20Edição</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Data\x20da\x20Avaliação:','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Modo\x20de\x20edição\x20cancelado.','time','Bloqueado:\x20Não\x20é\x20possível\x20gravar\x20notas\x20com\x20datas\x20futuras.','Bimestral','INSTITUIÇÃO',';\x22\x20onchange=\x22this.style.color\x20=\x20this.value===\x27Falta\x27?\x27#e74c3c\x27:\x20(this.value===\x27Reposição\x27?\x27#f39c12\x27:\x27#27ae60\x27)\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Presença\x22\x20','focus','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22padding-bottom:10px;\x20font-weight:bold;\x20color:#999;\x20text-transform:uppercase;\x20font-size:12px;\x22>Ou</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','checked'];a4_0x2d7d=function(){return _0x65552c;};return a4_0x2d7d();}const a4_0x1b6d4e=a4_0x49cb;(function(_0x5a2c42,_0x2d9450){const _0x54b0a5=a4_0x49cb,_0x4e5dc4=_0x5a2c42();while(!![]){try{const _0x103207=parseInt(_0x54b0a5(0x334))/0x1+-parseInt(_0x54b0a5(0x2ff))/0x2*(parseInt(_0x54b0a5(0x363))/0x3)+-parseInt(_0x54b0a5(0x2e2))/0x4+-parseInt(_0x54b0a5(0x2f1))/0x5*(-parseInt(_0x54b0a5(0x1b4))/0x6)+-parseInt(_0x54b0a5(0x2f8))/0x7+parseInt(_0x54b0a5(0x360))/0x8+parseInt(_0x54b0a5(0x2a9))/0x9;if(_0x103207===_0x2d9450)break;else _0x4e5dc4['push'](_0x4e5dc4['shift']());}catch(_0x67fb93){_0x4e5dc4['push'](_0x4e5dc4['shift']());}}}(a4_0x2d7d,0x3b846));const EVENTO_CORES={'Evento':{'bg':a4_0x1b6d4e(0x189),'text':a4_0x1b6d4e(0x18a)},'Feriado':{'bg':'#e74c3c','text':a4_0x1b6d4e(0x18a)},'Prova':{'bg':a4_0x1b6d4e(0x2ae),'text':'#fff'},'Reunião':{'bg':'#f39c12','text':a4_0x1b6d4e(0x18a)}},col=(_0x30c5c7,_0x354ee7,_0x10c4a4=a4_0x1b6d4e(0x244),_0x15b727='',_0x9bf913='')=>a4_0x1b6d4e(0x381)+_0x30c5c7+'</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22'+_0x10c4a4+a4_0x1b6d4e(0x2ea)+_0x354ee7+a4_0x1b6d4e(0x153)+_0x15b727+'\x22\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22\x20'+_0x9bf913+a4_0x1b6d4e(0x351),selectLocal=(_0x1492d9,_0x4fee36,_0x3edb80,_0x134492='')=>'\x0a\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:150px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20font-size:12px;\x20color:#555;\x20display:block;\x20margin-bottom:5px;\x22>'+_0x1492d9+a4_0x1b6d4e(0x1e1)+_0x4fee36+a4_0x1b6d4e(0x308)+_0x134492+'>'+_0x3edb80+a4_0x1b6d4e(0x29d);function a4_0x49cb(_0x401efc,_0x3686d4){_0x401efc=_0x401efc-0x13c;const _0x2d7d9b=a4_0x2d7d();let _0x49cbe8=_0x2d7d9b[_0x401efc];return _0x49cbe8;}App[a4_0x1b6d4e(0x223)]=(_0x4b9f3e,_0xa44dae,_0x4b9837,_0x3ba243,_0x3c699f)=>{const _0x5ec4eb=a4_0x1b6d4e,_0x30093a='modal-confirm-'+Date['now'](),_0x501484=document[_0x5ec4eb(0x23b)]('div');_0x501484['id']=_0x30093a,_0x501484['style'][_0x5ec4eb(0x1de)]=_0x5ec4eb(0x295);const _0x585ae4=document[_0x5ec4eb(0x23b)](_0x5ec4eb(0x199));_0x585ae4['style'][_0x5ec4eb(0x1de)]=_0x5ec4eb(0x26a),_0x585ae4['innerHTML']=_0x5ec4eb(0x1e2)+_0x4b9f3e+_0x5ec4eb(0x197)+_0xa44dae+_0x5ec4eb(0x21c)+_0x30093a+_0x5ec4eb(0x2b3)+_0x30093a+'\x22\x20style=\x22flex:1;\x20padding:12px;\x20border:none;\x20background:'+_0x3ba243+_0x5ec4eb(0x249)+_0x4b9837+_0x5ec4eb(0x148),_0x501484[_0x5ec4eb(0x30d)](_0x585ae4),document[_0x5ec4eb(0x31a)][_0x5ec4eb(0x30d)](_0x501484),setTimeout(()=>{const _0x34ab78=_0x5ec4eb;_0x501484[_0x34ab78(0x29e)][_0x34ab78(0x248)]='1',_0x585ae4[_0x34ab78(0x29e)][_0x34ab78(0x349)]=_0x34ab78(0x1f8);},0xa);const _0xf1e70f=()=>{const _0x1650c4=_0x5ec4eb;_0x501484[_0x1650c4(0x29e)]['opacity']='0',_0x585ae4[_0x1650c4(0x29e)][_0x1650c4(0x349)]=_0x1650c4(0x243),setTimeout(()=>document[_0x1650c4(0x31a)]['removeChild'](_0x501484),0xc8);};document[_0x5ec4eb(0x2e5)](_0x5ec4eb(0x19a)+_0x30093a)['onclick']=_0xf1e70f,document[_0x5ec4eb(0x2e5)]('btn-yes-'+_0x30093a)[_0x5ec4eb(0x14d)]=()=>{_0xf1e70f(),_0x3c699f();};},App[a4_0x1b6d4e(0x2fb)]=(_0x34ba81,_0x471ff8)=>{const _0x3e238a=a4_0x1b6d4e,_0x24d364=document['getElementById'](_0x34ba81)[_0x3e238a(0x2a5)][_0x3e238a(0x172)]()[_0x3e238a(0x13c)](),_0xab9b0=document['querySelectorAll']('#'+_0x471ff8+_0x3e238a(0x356));if(!_0xab9b0||_0xab9b0[_0x3e238a(0x359)]===0x0)return;_0xab9b0[_0x3e238a(0x27f)](_0x2bf3cf=>{const _0x4e8610=_0x3e238a;if(_0x2bf3cf[_0x4e8610(0x177)][_0x4e8610(0x2d7)](_0x4e8610(0x315))||_0x2bf3cf[_0x4e8610(0x177)][_0x4e8610(0x2d7)](_0x4e8610(0x209)))return;const _0x276b1a=_0x2bf3cf[_0x4e8610(0x177)][_0x4e8610(0x13c)]();_0x2bf3cf[_0x4e8610(0x29e)][_0x4e8610(0x221)]=_0x276b1a[_0x4e8610(0x2d7)](_0x24d364)?'':_0x4e8610(0x2d1);});},App[a4_0x1b6d4e(0x142)]=()=>{const _0xbe1756=a4_0x1b6d4e;App['setTitulo'](_0xbe1756(0x1c4));const _0x194373=document[_0xbe1756(0x2e5)](_0xbe1756(0x1fd)),_0x547618=_0x5f4075=>_0xbe1756(0x165),_0x1c9132=_0x5ae1bc=>_0xbe1756(0x36b)+_0x5ae1bc+'\x27;\x20this.style.transform=\x27translateY(-5px)\x27',_0xb1a38c=_0xbe1756(0x2cd);_0x194373[_0xbe1756(0x2ec)]=_0xbe1756(0x1df)+_0x547618(_0xbe1756(0x2ae))+_0xbe1756(0x205)+_0x1c9132(_0xbe1756(0x2ae))+_0xbe1756(0x157)+_0xb1a38c+'\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:50px;\x20margin-bottom:15px;\x22>📝</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#3498db;\x22>Novo\x20Planejamento</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20onclick=\x22App.renderizarPlanejamentosSalvos()\x22\x20style=\x22'+_0x547618(_0xbe1756(0x225))+_0xbe1756(0x205)+_0x1c9132(_0xbe1756(0x225))+'\x22\x20onmouseout=\x22'+_0xb1a38c+'\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:50px;\x20margin-bottom:15px;\x22>📂</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#27ae60;\x22>Planejamentos\x20Ativos</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20onclick=\x22App.renderizarPlanejamentosArquivados()\x22\x20style=\x22'+_0x547618(_0xbe1756(0x2d2))+_0xbe1756(0x205)+_0x1c9132(_0xbe1756(0x2d2))+_0xbe1756(0x157)+_0xb1a38c+_0xbe1756(0x2df);},App['renderizarNovoPlanejamento']=async()=>{const _0x127903=a4_0x1b6d4e,_0x1962e8=document[_0x127903(0x2e5)]('app-content');_0x1962e8[_0x127903(0x2ec)]=_0x127903(0x23f);try{const _0x53e0c9=await App[_0x127903(0x16d)](_0x127903(0x216)),_0x44d063=_0x53e0c9[_0x127903(0x37e)](_0x883a84=>!_0x883a84[_0x127903(0x319)]||_0x883a84[_0x127903(0x319)]==='Ativo'),_0x5cb10f='<option\x20value=\x22\x22>--\x20Selecione\x20--</option>'+_0x44d063[_0x127903(0x222)](_0x504e68=>_0x127903(0x2e1)+_0x504e68['id']+_0x127903(0x1d8)+App['escapeHTML'](_0x504e68[_0x127903(0x15c)]||_0x127903(0x210))+'\x22>'+App[_0x127903(0x22e)](_0x504e68[_0x127903(0x224)])+_0x127903(0x305))[_0x127903(0x14b)](''),_0xb24f90='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:center;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin:0;\x20color:#2c3e50;\x22>Configurar\x20Novo\x20Cronograma</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.renderizarPlanejamentoPro()\x22\x20style=\x22background:#ddd;\x20border:none;\x20padding:8px\x2015px;\x20border-radius:5px;\x20cursor:pointer;\x22>Voltar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f9f9f9;\x20padding:20px;\x20border-radius:8px;\x20border:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+selectLocal(_0x127903(0x323),_0x127903(0x1dc),_0x5cb10f,_0x127903(0x281))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:20px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+col(_0x127903(0x265),_0x127903(0x2fa),_0x127903(0x16e))+_0x127903(0x253)+col(_0x127903(0x35e),_0x127903(0x198),_0x127903(0x2db),'10')+_0x127903(0x288)+col(_0x127903(0x141),'plan-hora','time',_0x127903(0x1ae))+_0x127903(0x253)+col(_0x127903(0x202),'plan-duracao',_0x127903(0x255),_0x127903(0x1cb))+_0x127903(0x23c)+['Seg','Ter',_0x127903(0x17b),'Qui','Sex','Sáb'][_0x127903(0x222)]((_0x2cd803,_0x5c2dff)=>_0x127903(0x182)+(_0x5c2dff+0x1)+_0x127903(0x204)+_0x2cd803+'</label>')['join']('')+_0x127903(0x1bc);_0x1962e8['innerHTML']=App['UI'][_0x127903(0x335)]('','',_0xb24f90,'800px');}catch(_0x1c71f9){_0x1962e8['innerHTML']='Erro.';}},App[a4_0x1b6d4e(0x33c)]=async()=>{const _0x238601=a4_0x1b6d4e,_0x3ff65e=document[_0x238601(0x2e5)](_0x238601(0x1fd));_0x3ff65e[_0x238601(0x2ec)]=_0x238601(0x23f);try{const _0x2cd01a=await App[_0x238601(0x16d)]('/planejamentos?_t='+Date[_0x238601(0x2ac)]()),_0x5a15cb=_0x2cd01a[_0x238601(0x37e)](_0x2ff582=>_0x2ff582[_0x238601(0x319)]!==_0x238601(0x203));if(_0x5a15cb[_0x238601(0x359)]===0x0){_0x3ff65e[_0x238601(0x2ec)]=App['UI'][_0x238601(0x335)]('','',_0x238601(0x32e),_0x238601(0x218));return;}const _0x539a65='<tr><th\x20style=\x22padding:10px;\x20text-align:left;\x20border-bottom:2px\x20solid\x20#eee;\x22>Aluno</th><th\x20style=\x22padding:10px;\x20text-align:left;\x20border-bottom:2px\x20solid\x20#eee;\x22>Curso</th><th\x20style=\x22padding:10px;\x20border-bottom:2px\x20solid\x20#eee;\x20text-align:center;\x22>Aulas</th><th\x20style=\x22padding:10px;\x20text-align:right;\x20border-bottom:2px\x20solid\x20#eee;\x22>Ações</th></tr>',_0x8b225a=_0x5a15cb['map'](_0x360f89=>_0x238601(0x31d)+App[_0x238601(0x22e)](_0x360f89['nomeAluno'])+_0x238601(0x229)+App[_0x238601(0x22e)](_0x360f89[_0x238601(0x15c)])+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20text-align:center;\x22>'+(_0x360f89[_0x238601(0x342)]?_0x360f89[_0x238601(0x342)][_0x238601(0x359)]:0x0)+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirPlanejamentoEditavel(\x27'+_0x360f89['id']+_0x238601(0x250)+_0x360f89['id']+'\x27)\x22\x20style=\x22background:#8e44ad;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20margin-right:5px;\x20cursor:pointer;\x22\x20title=\x22Arquivar\x22>🗄️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.excluirPlanejamento(\x27'+_0x360f89['id']+_0x238601(0x261))[_0x238601(0x14b)](''),_0x5b4de6='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fff;\x20padding:\x2010px\x2015px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#eee;\x20margin-bottom:\x2015px;\x20display:\x20flex;\x20align-items:\x20center;\x20gap:\x2010px;\x20box-shadow:\x200\x202px\x204px\x20rgba(0,0,0,0.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2018px;\x20color:\x20#aaa;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-busca-plan-ativos\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20placeholder=\x22Pesquisar\x20planejamento\x20ativo\x20pelo\x20nome\x20do\x20aluno\x20ou\x20curso...\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20oninput=\x22App.filtrarTabela(\x27input-busca-plan-ativos\x27,\x20\x27tabela-plan-ativos\x27)\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22flex:\x201;\x20border:\x20none;\x20outline:\x20none;\x20font-size:\x2014px;\x20padding:\x205px;\x20background:\x20transparent;\x20width:\x20100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';_0x3ff65e[_0x238601(0x2ec)]=App['UI'][_0x238601(0x335)]('','',_0x238601(0x18b)+_0x5b4de6+_0x238601(0x311)+_0x539a65+'</thead><tbody>'+_0x8b225a+_0x238601(0x193));}catch(_0xd70a7){_0x3ff65e['innerHTML']='Erro.';}},App[a4_0x1b6d4e(0x147)]=async()=>{const _0x118811=a4_0x1b6d4e,_0x1d645f=document[_0x118811(0x2e5)](_0x118811(0x1fd));_0x1d645f[_0x118811(0x2ec)]=_0x118811(0x154);try{const _0x4c3a25=await App[_0x118811(0x16d)](_0x118811(0x285)+Date['now']()),_0x5c6d64=_0x4c3a25[_0x118811(0x37e)](_0x174ceb=>_0x174ceb[_0x118811(0x319)]===_0x118811(0x203));if(_0x5c6d64['length']===0x0){_0x1d645f['innerHTML']=App['UI'][_0x118811(0x335)]('','',_0x118811(0x194),_0x118811(0x218));return;}const _0x14343d='<tr><th\x20style=\x22padding:10px;\x20text-align:left;\x20border-bottom:2px\x20solid\x20#eee;\x22>Aluno</th><th\x20style=\x22padding:10px;\x20text-align:left;\x20border-bottom:2px\x20solid\x20#eee;\x22>Curso</th><th\x20style=\x22padding:10px;\x20border-bottom:2px\x20solid\x20#eee;\x20text-align:center;\x22>Aulas</th><th\x20style=\x22padding:10px;\x20text-align:right;\x20border-bottom:2px\x20solid\x20#eee;\x22>Ações</th></tr>',_0x59b114=_0x5c6d64['map'](_0x2f3b1c=>_0x118811(0x365)+App[_0x118811(0x22e)](_0x2f3b1c['nomeAluno'])+_0x118811(0x1b8)+App[_0x118811(0x22e)](_0x2f3b1c['curso'])+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px;\x20text-align:center;\x20color:#7f8c8d;\x22>'+(_0x2f3b1c['aulas']?_0x2f3b1c[_0x118811(0x342)]['length']:0x0)+_0x118811(0x304)+_0x2f3b1c['id']+_0x118811(0x1e5)+_0x2f3b1c['id']+'\x27)\x22\x20style=\x22background:#27ae60;\x20color:white;\x20border:none;\x20padding:5px\x2010px;\x20border-radius:4px;\x20margin-right:5px;\x20cursor:pointer;\x22\x20title=\x22Restaurar\x20/\x20Reativar\x22>♻️</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.excluirPlanejamentoArquivado(\x27'+_0x2f3b1c['id']+_0x118811(0x15a))[_0x118811(0x14b)](''),_0x20dd63=_0x118811(0x18d);_0x1d645f['innerHTML']=App['UI'][_0x118811(0x335)]('','',_0x118811(0x2fc)+_0x20dd63+_0x118811(0x282)+_0x14343d+_0x118811(0x17e)+_0x59b114+_0x118811(0x193));}catch(_0xc94265){_0x1d645f[_0x118811(0x2ec)]=_0x118811(0x382);}},App[a4_0x1b6d4e(0x1f4)]=()=>{const _0x13a196=a4_0x1b6d4e,_0x5b6986=document[_0x13a196(0x2e5)](_0x13a196(0x1dc)),_0x2266ed=_0x5b6986[_0x13a196(0x2a5)];if(!_0x2266ed)return alert(_0x13a196(0x271));const _0x2c8bb9=_0x5b6986[_0x13a196(0x268)][_0x5b6986[_0x13a196(0x1a7)]][_0x13a196(0x244)],_0x1d690b=_0x5b6986['options'][_0x5b6986[_0x13a196(0x1a7)]][_0x13a196(0x1e9)](_0x13a196(0x247))||'Geral',_0xfbbb85=document[_0x13a196(0x2e5)](_0x13a196(0x2fa))[_0x13a196(0x2a5)],_0x3b329c=parseInt(document['getElementById']('plan-qtd')['value']),_0x315248=document['getElementById'](_0x13a196(0x2b9))[_0x13a196(0x2a5)],_0x599b98=document[_0x13a196(0x2e5)](_0x13a196(0x1e7))[_0x13a196(0x2a5)],_0x4aaf93=Array['from'](document[_0x13a196(0x166)](_0x13a196(0x1ef)))[_0x13a196(0x222)](_0x406a24=>parseInt(_0x406a24[_0x13a196(0x2a5)]));if(!_0xfbbb85||_0x4aaf93[_0x13a196(0x359)]===0x0)return alert(_0x13a196(0x269));const _0x1d1ecb=[];let _0x282d27=new Date(_0xfbbb85+_0x13a196(0x1f3)),_0xa1aff6=0x0;while(_0xa1aff6<_0x3b329c){if(_0x4aaf93[_0x13a196(0x2d7)](_0x282d27[_0x13a196(0x15e)]())){_0xa1aff6++;const _0x5a9601=String(_0x282d27[_0x13a196(0x332)]())[_0x13a196(0x263)](0x2,'0'),_0x5609b4=String(_0x282d27[_0x13a196(0x1b5)]()+0x1)[_0x13a196(0x263)](0x2,'0'),_0x3d7187=_0x282d27[_0x13a196(0x312)]();_0x1d1ecb[_0x13a196(0x1a1)]({'num':_0xa1aff6,'data':_0x5a9601+'/'+_0x5609b4+'/'+_0x3d7187,'hora':_0x315248,'duracao':_0x599b98,'conteudo':'','visto':![]});}_0x282d27[_0x13a196(0x2af)](_0x282d27['getDate']()+0x1);}App['renderizarTelaEdicao']({'id':null,'idAluno':_0x2266ed,'nomeAluno':_0x2c8bb9,'curso':_0x1d690b,'status':'Ativo','aulas':_0x1d1ecb});},App[a4_0x1b6d4e(0x1d7)]=async _0x173c73=>{const _0x525e34=a4_0x1b6d4e;try{const _0x598d3d=await App['api'](_0x525e34(0x2b2)+_0x173c73+_0x525e34(0x13e)+Date['now']());App[_0x525e34(0x338)](_0x598d3d);}catch(_0x33aa81){alert(_0x525e34(0x17d));}},App['abrirPlanejamentoVisualizacao']=async _0x1b17a8=>{const _0x71783=a4_0x1b6d4e;try{const _0x5f0593=await App['api'](_0x71783(0x2b2)+_0x1b17a8+'?_t='+Date[_0x71783(0x2ac)]());App[_0x71783(0x338)](_0x5f0593,!![]);}catch(_0x441737){alert('Erro\x20ao\x20abrir.');}},App[a4_0x1b6d4e(0x338)]=(_0x9bb91,_0x4a29ca=![])=>{const _0x1171b4=a4_0x1b6d4e;App[_0x1171b4(0x1db)]=_0x9bb91;const _0x1b262a=document[_0x1171b4(0x2e5)](_0x1171b4(0x1fd));let _0x1613b4=0x0;_0x9bb91['aulas']['forEach'](_0x275df1=>{const _0x234ed1=_0x1171b4;if(_0x275df1[_0x234ed1(0x380)]&&_0x275df1[_0x234ed1(0x380)][_0x234ed1(0x2d7)](':')){const [_0x22988e,_0x133ab1]=_0x275df1[_0x234ed1(0x380)]['split'](':')[_0x234ed1(0x222)](Number);_0x1613b4+=_0x22988e*0x3c+(_0x133ab1||0x0);}});const _0x5d02d6=Math[_0x1171b4(0x367)](_0x1613b4/0x3c),_0x3b232a=_0x1613b4%0x3c,_0x48ecbe=_0x3b232a>0x0?_0x5d02d6+'h\x20'+_0x3b232a+'m':_0x5d02d6+'H',_0xce8185=JSON['parse'](localStorage[_0x1171b4(0x1b9)](App[_0x1171b4(0x155)]?App['getTenantKey'](_0x1171b4(0x333)):_0x1171b4(0x333)))||{},_0x159ebe=_0xce8185['foto']?_0x1171b4(0x21f)+_0xce8185[_0x1171b4(0x37a)]+_0x1171b4(0x343):'',_0x5aa075=_0x4a29ca?'App.renderizarPlanejamentosArquivados()':_0x1171b4(0x18e),_0xfced8c=_0x4a29ca?_0x1171b4(0x22b):'';_0x1b262a[_0x1171b4(0x2ec)]=_0x1171b4(0x233)+(!_0x4a29ca?_0x1171b4(0x1aa):'')+_0x1171b4(0x30e)+_0x5aa075+_0x1171b4(0x21d)+_0x159ebe+_0x1171b4(0x37b)+App[_0x1171b4(0x22e)](_0xce8185[_0x1171b4(0x224)]||_0x1171b4(0x29b))+_0x1171b4(0x25f)+App[_0x1171b4(0x22e)](_0xce8185[_0x1171b4(0x152)]||'')+_0x1171b4(0x14c)+_0xfced8c+_0x1171b4(0x19b)+new Date()[_0x1171b4(0x369)](_0x1171b4(0x15f))+_0x1171b4(0x2c3)+App['escapeHTML'](_0x9bb91[_0x1171b4(0x191)])+_0x1171b4(0x215)+_0x9bb91[_0x1171b4(0x342)][_0x1171b4(0x359)]+_0x1171b4(0x23a)+App[_0x1171b4(0x22e)](_0x9bb91['curso'])+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div><b>CARGA\x20HORÁRIA\x20PREVISTA:</b>\x20'+_0x48ecbe+_0x1171b4(0x286)+_0x9bb91[_0x1171b4(0x342)][_0x1171b4(0x222)]((_0x2a4ceb,_0x1dc730)=>_0x1171b4(0x330)+_0x2a4ceb[_0x1171b4(0x27e)]+_0x1171b4(0x34d)+(_0x4a29ca?'disabled':'')+'\x20style=\x22width:100%;\x20border:none;\x20border-bottom:1px\x20dashed\x20#ccc;\x20text-align:center;\x20background:transparent;\x22\x20value=\x22'+App[_0x1171b4(0x22e)](_0x2a4ceb[_0x1171b4(0x184)])+_0x1171b4(0x207)+_0x1dc730+_0x1171b4(0x234)+(_0x4a29ca?_0x1171b4(0x32b):'')+_0x1171b4(0x303)+App['escapeHTML'](_0x2a4ceb[_0x1171b4(0x1d4)])+'\x22\x20onchange=\x22App.atualizarAula('+_0x1dc730+_0x1171b4(0x22d)+(_0x4a29ca?_0x1171b4(0x32b):'')+_0x1171b4(0x32d)+App[_0x1171b4(0x22e)](_0x2a4ceb[_0x1171b4(0x380)])+_0x1171b4(0x207)+_0x1dc730+_0x1171b4(0x1ea)+(_0x4a29ca?_0x1171b4(0x32b):'')+'\x20style=\x22width:100%;\x20border:none;\x20border-bottom:1px\x20dashed\x20#ccc;\x20background:transparent;\x22\x20placeholder=\x22...\x22\x20value=\x22'+App[_0x1171b4(0x22e)](_0x2a4ceb[_0x1171b4(0x227)])+'\x22\x20onchange=\x22App.atualizarAula('+_0x1dc730+_0x1171b4(0x27b)+(_0x4a29ca?'disabled':'')+'\x20'+(_0x2a4ceb[_0x1171b4(0x213)]?_0x1171b4(0x25c):'')+'\x20onchange=\x22App.atualizarAula('+_0x1dc730+_0x1171b4(0x34b))[_0x1171b4(0x14b)]('')+_0x1171b4(0x1dd)+_0x48ecbe+_0x1171b4(0x21e);},App[a4_0x1b6d4e(0x1d9)]=(_0x329999,_0x4ad98b,_0x44fbd0)=>{const _0x5aa735=a4_0x1b6d4e;if(App[_0x5aa735(0x1db)]&&App[_0x5aa735(0x1db)][_0x5aa735(0x342)][_0x329999])App[_0x5aa735(0x1db)][_0x5aa735(0x342)][_0x329999][_0x4ad98b]=_0x44fbd0;if(_0x4ad98b===_0x5aa735(0x380))App[_0x5aa735(0x338)](App[_0x5aa735(0x1db)]);},App[a4_0x1b6d4e(0x25e)]=async()=>{const _0x8e33c6=a4_0x1b6d4e;if(!App['planoAtual'])return;if(document[_0x8e33c6(0x2e8)])document[_0x8e33c6(0x2e8)]['blur']();const _0x598db1=App[_0x8e33c6(0x1db)]['id']?'PUT':_0x8e33c6(0x2cf),_0x416ef9=App[_0x8e33c6(0x1db)]['id']?_0x8e33c6(0x2b2)+App[_0x8e33c6(0x1db)]['id']:_0x8e33c6(0x1ed);if(!App[_0x8e33c6(0x1db)]['id'])App[_0x8e33c6(0x1db)]['id']=Date[_0x8e33c6(0x2ac)]()[_0x8e33c6(0x28b)]();if(!App[_0x8e33c6(0x1db)][_0x8e33c6(0x319)])App[_0x8e33c6(0x1db)][_0x8e33c6(0x319)]=_0x8e33c6(0x2d8);const _0x3d7562=document[_0x8e33c6(0x24f)](_0x8e33c6(0x2ca)),_0x52d282=_0x3d7562?_0x3d7562[_0x8e33c6(0x177)]:_0x8e33c6(0x161);_0x3d7562&&(_0x3d7562[_0x8e33c6(0x177)]=_0x8e33c6(0x27a),_0x3d7562[_0x8e33c6(0x32b)]=!![]);document['body'][_0x8e33c6(0x29e)][_0x8e33c6(0x18f)]=_0x8e33c6(0x28e);try{await App[_0x8e33c6(0x16d)](_0x416ef9,_0x598db1,App[_0x8e33c6(0x1db)]);const _0x323530=await App[_0x8e33c6(0x16d)](_0x8e33c6(0x22f)+Date[_0x8e33c6(0x2ac)]()),_0x15ca4d=_0x323530[_0x8e33c6(0x37e)](_0x3653f2=>_0x3653f2[_0x8e33c6(0x1f9)]===App[_0x8e33c6(0x1db)][_0x8e33c6(0x1f9)]),_0x2e45f1=new Date()[_0x8e33c6(0x2a8)]()[_0x8e33c6(0x2ee)]('T')[0x0],_0xa2f914=[];let _0x19da43=0x0,_0x732d6d=0x0,_0x463eef=0x0;App[_0x8e33c6(0x1db)]['aulas'][_0x8e33c6(0x27f)]((_0x37c9a1,_0x259323)=>{const _0x441db5=_0x8e33c6,_0x206f7e=_0x37c9a1['data'][_0x441db5(0x2ee)]('/');if(_0x206f7e[_0x441db5(0x359)]===0x3){const _0x36de9c=_0x206f7e[0x2]+'-'+_0x206f7e[0x1]+'-'+_0x206f7e[0x0];if(_0x36de9c<=_0x2e45f1){const _0x4dc6c0=_0x15ca4d[_0x441db5(0x1ff)](_0x1493d4=>_0x1493d4['data']===_0x36de9c);if(_0x37c9a1[_0x441db5(0x213)]===!![]){if(!_0x4dc6c0){const _0x5ec472={'id':Date[_0x441db5(0x2ac)]()[_0x441db5(0x28b)]()+Math[_0x441db5(0x367)](Math[_0x441db5(0x283)]()*0x3e8)+_0x259323,'idAluno':App[_0x441db5(0x1db)][_0x441db5(0x1f9)],'nomeAluno':App[_0x441db5(0x1db)][_0x441db5(0x191)],'data':_0x36de9c,'status':_0x441db5(0x277),'duracao':_0x37c9a1['duracao']||_0x441db5(0x1cb)};_0xa2f914[_0x441db5(0x1a1)](App[_0x441db5(0x16d)](_0x441db5(0x287),_0x441db5(0x2cf),_0x5ec472)),_0x19da43++;}else{if(_0x4dc6c0['status']!==_0x441db5(0x277)&&_0x4dc6c0[_0x441db5(0x319)]!==_0x441db5(0x1e0))_0xa2f914[_0x441db5(0x1a1)](App['api'](_0x441db5(0x180)+_0x4dc6c0['id'],_0x441db5(0x20a),{..._0x4dc6c0,'status':'Presença','duracao':_0x37c9a1[_0x441db5(0x380)]})),_0x732d6d++;else _0x4dc6c0[_0x441db5(0x380)]!==_0x37c9a1['duracao']&&(_0xa2f914['push'](App[_0x441db5(0x16d)]('/chamadas/'+_0x4dc6c0['id'],'PUT',{..._0x4dc6c0,'duracao':_0x37c9a1['duracao']})),_0x732d6d++);}}else _0x4dc6c0&&((_0x4dc6c0['status']===_0x441db5(0x277)||_0x4dc6c0[_0x441db5(0x319)]===_0x441db5(0x1e0))&&(_0xa2f914[_0x441db5(0x1a1)](App[_0x441db5(0x16d)](_0x441db5(0x180)+_0x4dc6c0['id'],_0x441db5(0x19d))),_0x463eef++));}}});_0xa2f914[_0x8e33c6(0x359)]>0x0&&await Promise[_0x8e33c6(0x293)](_0xa2f914);let _0x4a338d=_0x8e33c6(0x173);(_0x19da43>0x0||_0x732d6d>0x0||_0x463eef>0x0)&&(_0x4a338d+=_0x8e33c6(0x145)+_0x19da43+_0x8e33c6(0x2de)+_0x732d6d+_0x8e33c6(0x14f)+_0x463eef+_0x8e33c6(0x2e7));App[_0x8e33c6(0x379)](_0x4a338d,_0x8e33c6(0x24c));const _0x2309da=document['getElementById'](_0x8e33c6(0x1fd));_0x2309da&&(_0x2309da['innerHTML']=_0x8e33c6(0x320)),await App[_0x8e33c6(0x33c)]();}catch(_0x16f492){App[_0x8e33c6(0x379)](_0x8e33c6(0x156),_0x8e33c6(0x33f)),console[_0x8e33c6(0x33f)](_0x16f492);}finally{_0x3d7562&&(_0x3d7562['innerText']=_0x52d282,_0x3d7562[_0x8e33c6(0x32b)]=![]),document['body'][_0x8e33c6(0x29e)]['cursor']='default';}},App[a4_0x1b6d4e(0x36f)]=_0x25c70d=>{const _0x259726=a4_0x1b6d4e;App['confirmar'](_0x259726(0x2dd),_0x259726(0x2a6),_0x259726(0x314),'#8e44ad',async()=>{const _0x3df447=_0x259726;try{const _0x2f4a05=await App[_0x3df447(0x16d)](_0x3df447(0x285)+Date[_0x3df447(0x2ac)]()),_0x50ef7e=_0x2f4a05[_0x3df447(0x1ff)](_0x4497ce=>String(_0x4497ce['id'])===String(_0x25c70d));if(!_0x50ef7e)return App[_0x3df447(0x379)]('Planejamento\x20não\x20encontrado.',_0x3df447(0x33f));_0x50ef7e['status']=_0x3df447(0x203),await App['api'](_0x3df447(0x2b2)+_0x25c70d,_0x3df447(0x20a),_0x50ef7e),App[_0x3df447(0x379)](_0x3df447(0x23e),_0x3df447(0x24c));const _0x50255d=document['getElementById']('app-content');_0x50255d&&(_0x50255d[_0x3df447(0x2ec)]=_0x3df447(0x320)),await App[_0x3df447(0x33c)]();}catch(_0x35e0ce){App[_0x3df447(0x379)]('Erro\x20ao\x20arquivar.',_0x3df447(0x33f));}});},App['restaurarPlanejamento']=_0x428616=>{const _0x3f86df=a4_0x1b6d4e;App[_0x3f86df(0x223)]('Restaurar\x20Planejamento',_0x3f86df(0x331),_0x3f86df(0x2e0),_0x3f86df(0x225),async()=>{const _0x4e5416=_0x3f86df;try{const _0x56d492=await App['api']('/planejamentos?_t='+Date[_0x4e5416(0x2ac)]()),_0x14b05e=_0x56d492[_0x4e5416(0x1ff)](_0x15070b=>String(_0x15070b['id'])===String(_0x428616));if(!_0x14b05e)return App[_0x4e5416(0x379)]('Planejamento\x20não\x20encontrado.','error');_0x14b05e[_0x4e5416(0x319)]=_0x4e5416(0x2d8),await App[_0x4e5416(0x16d)](_0x4e5416(0x2b2)+_0x428616,_0x4e5416(0x20a),_0x14b05e),App[_0x4e5416(0x379)](_0x4e5416(0x1ce),_0x4e5416(0x24c));const _0x5567d7=document[_0x4e5416(0x2e5)](_0x4e5416(0x1fd));_0x5567d7&&(_0x5567d7['innerHTML']=_0x4e5416(0x1a9)),await App[_0x4e5416(0x147)]();}catch(_0x485fad){App[_0x4e5416(0x379)](_0x4e5416(0x226),'error');}});},App['excluirPlanejamento']=_0x2667f9=>{const _0x291882=a4_0x1b6d4e;App[_0x291882(0x223)]('Atenção!',_0x291882(0x1c7),_0x291882(0x237),_0x291882(0x294),async()=>{const _0x171cc3=_0x291882;await App[_0x171cc3(0x16d)](_0x171cc3(0x2b2)+_0x2667f9,'DELETE');const _0x5d11c3=document[_0x171cc3(0x2e5)](_0x171cc3(0x1fd));_0x5d11c3&&(_0x5d11c3[_0x171cc3(0x2ec)]=_0x171cc3(0x320)),await App[_0x171cc3(0x33c)]();});},App['excluirPlanejamentoArquivado']=_0xce29ba=>{const _0x7b561f=a4_0x1b6d4e;App[_0x7b561f(0x223)]('Atenção!','Deseja\x20limpar\x20este\x20registo\x20do\x20arquivo\x20morto\x20para\x20sempre?','Excluir','#e74c3c',async()=>{const _0x311129=_0x7b561f;await App[_0x311129(0x16d)](_0x311129(0x2b2)+_0xce29ba,_0x311129(0x19d));const _0x4c3c81=document['getElementById'](_0x311129(0x1fd));_0x4c3c81&&(_0x4c3c81[_0x311129(0x2ec)]=_0x311129(0x1a9)),await App[_0x311129(0x147)]();});},App['processarAutoAjustePlano']=(_0x4eb198,_0x286d72)=>{const _0x293b87=a4_0x1b6d4e;if(!_0x4eb198||!_0x4eb198[_0x293b87(0x342)]||_0x4eb198['aulas'][_0x293b87(0x359)]===0x0)return _0x4eb198;const _0xbbfb01=_0x4eb198['aulas'][0x0][_0x293b87(0x184)][_0x293b87(0x2ee)]('/'),_0xbb46d5=_0xbbfb01[0x2]+'-'+_0xbbfb01[0x1]+'-'+_0xbbfb01[0x0],_0x2f6781=_0x286d72[_0x293b87(0x37e)](_0x7e88b5=>_0x7e88b5[_0x293b87(0x1f9)]===_0x4eb198[_0x293b87(0x1f9)]&&_0x7e88b5[_0x293b87(0x184)]>=_0xbb46d5)[_0x293b87(0x230)]((_0x185eee,_0x2f1e7d)=>new Date(_0x185eee[_0x293b87(0x184)])-new Date(_0x2f1e7d[_0x293b87(0x184)])),_0x3260f1=_0x2f6781[_0x293b87(0x37e)](_0x15d13e=>_0x15d13e['status']==='Presença'||_0x15d13e[_0x293b87(0x319)]==='Reposição');let _0x262c6b=[];if(_0x3260f1[_0x293b87(0x359)]>0x0){const _0xa6dd13=_0x3260f1[_0x293b87(0x27d)](-0x4);_0x262c6b=[...new Set(_0xa6dd13['map'](_0x49a640=>{const _0xea7e5e=_0x293b87,[_0x5a6994,_0x1645b6,_0x429984]=_0x49a640[_0xea7e5e(0x184)]['split']('-'),_0x343b8a=new Date(_0x5a6994+'-'+_0x1645b6+'-'+_0x429984+_0xea7e5e(0x195));return _0x343b8a[_0xea7e5e(0x15e)]();}))];}_0x262c6b[_0x293b87(0x359)]===0x0&&(_0x262c6b=[...new Set(_0x4eb198[_0x293b87(0x342)][_0x293b87(0x222)](_0x5ae62e=>{const _0x3fb879=_0x293b87,_0x189da2=_0x5ae62e['data']['split']('/');if(_0x189da2[_0x3fb879(0x359)]===0x3){const _0x4b8a4f=new Date(_0x189da2[0x2]+'-'+_0x189da2[0x1]+'-'+_0x189da2[0x0]+'T12:00:00');return _0x4b8a4f[_0x3fb879(0x15e)]();}return-0x1;})[_0x293b87(0x37e)](_0x26e5ad=>_0x26e5ad!==-0x1))]);if(_0x262c6b[_0x293b87(0x359)]===0x0)_0x262c6b=[0x1];let _0xab59b8=0x0,_0x359cf6=_0x4eb198[_0x293b87(0x342)][_0x293b87(0x359)]>0x0?_0x4eb198[_0x293b87(0x342)][0x0][_0x293b87(0x1d4)]:_0x293b87(0x1ae),_0x5d4047=new Date(_0xbb46d5+_0x293b87(0x195));_0x5d4047['setDate'](_0x5d4047[_0x293b87(0x332)]()-0x1);if(_0x2f6781[_0x293b87(0x359)]>0x0){const _0x2fc9e9=_0x2f6781[_0x2f6781[_0x293b87(0x359)]-0x1];_0x5d4047=new Date(_0x2fc9e9['data']+_0x293b87(0x195));}for(let _0x57760d=0x0;_0x57760d<_0x4eb198[_0x293b87(0x342)][_0x293b87(0x359)];_0x57760d++){const _0x5b810b=_0x4eb198['aulas'][_0x57760d];if(_0x5b810b[_0x293b87(0x1d4)])_0x359cf6=_0x5b810b[_0x293b87(0x1d4)];if(_0xab59b8<_0x3260f1[_0x293b87(0x359)]){const _0x5909d4=_0x3260f1[_0xab59b8],_0x43c4b0=_0x5909d4[_0x293b87(0x184)],[_0x2a80bd,_0x2f0eff,_0x1333cb]=_0x43c4b0[_0x293b87(0x2ee)]('-');_0x5b810b['data']=_0x1333cb+'/'+_0x2f0eff+'/'+_0x2a80bd;if(_0x5909d4[_0x293b87(0x380)])_0x5b810b[_0x293b87(0x380)]=_0x5909d4[_0x293b87(0x380)];_0x5b810b[_0x293b87(0x213)]=!![],_0xab59b8++;}else{_0x5b810b[_0x293b87(0x213)]=![],_0x5d4047[_0x293b87(0x2af)](_0x5d4047[_0x293b87(0x332)]()+0x1);while(!_0x262c6b[_0x293b87(0x2d7)](_0x5d4047[_0x293b87(0x15e)]())){_0x5d4047[_0x293b87(0x2af)](_0x5d4047[_0x293b87(0x332)]()+0x1);}const _0x17907f=String(_0x5d4047[_0x293b87(0x332)]())[_0x293b87(0x263)](0x2,'0'),_0x33664f=String(_0x5d4047[_0x293b87(0x1b5)]()+0x1)[_0x293b87(0x263)](0x2,'0'),_0x132821=_0x5d4047[_0x293b87(0x312)]();_0x5b810b[_0x293b87(0x184)]=_0x17907f+'/'+_0x33664f+'/'+_0x132821;}}while(_0xab59b8<_0x3260f1[_0x293b87(0x359)]){const _0x3c9c6f=_0x3260f1[_0xab59b8],[_0x3d0e32,_0x205c4a,_0x9055a4]=_0x3c9c6f['data']['split']('-');_0x4eb198['aulas']['push']({'num':_0x4eb198[_0x293b87(0x342)][_0x293b87(0x359)]+0x1,'data':_0x9055a4+'/'+_0x205c4a+'/'+_0x3d0e32,'hora':_0x359cf6,'duracao':_0x3c9c6f['duracao']||'01:00','conteudo':'Aula\x20Adicional\x20(Auto-Ajuste)','visto':!![]}),_0xab59b8++;}return _0x4eb198;},App['sincronizarPlanejamentoComChamadasUI']=async()=>{const _0x95fea5=a4_0x1b6d4e;if(!App[_0x95fea5(0x1db)]||!App[_0x95fea5(0x1db)]['idAluno'])return;const _0x247dd6=document['getElementById'](_0x95fea5(0x2dc)),_0x26b3ab=_0x247dd6[_0x95fea5(0x2ec)];_0x247dd6['innerHTML']=_0x95fea5(0x188),_0x247dd6[_0x95fea5(0x32b)]=!![],document['body'][_0x95fea5(0x29e)][_0x95fea5(0x18f)]=_0x95fea5(0x28e);try{const _0x511551=await App['api']('/chamadas?_t='+Date[_0x95fea5(0x2ac)]());App[_0x95fea5(0x1db)]=App[_0x95fea5(0x228)](App[_0x95fea5(0x1db)],_0x511551),App[_0x95fea5(0x338)](App[_0x95fea5(0x1db)]),App[_0x95fea5(0x379)](_0x95fea5(0x190),_0x95fea5(0x24c));}catch(_0x2d0f9b){App[_0x95fea5(0x379)](_0x95fea5(0x1ad),_0x95fea5(0x33f));}finally{_0x247dd6&&(_0x247dd6[_0x95fea5(0x2ec)]=_0x26b3ab,_0x247dd6[_0x95fea5(0x32b)]=![]),document[_0x95fea5(0x31a)][_0x95fea5(0x29e)]['cursor']=_0x95fea5(0x1eb);}},App[a4_0x1b6d4e(0x357)]=async()=>{const _0xc9c39b=a4_0x1b6d4e;App[_0xc9c39b(0x2e9)](_0xc9c39b(0x15b));const _0x906acd=document[_0xc9c39b(0x2e5)](_0xc9c39b(0x1fd));_0x906acd[_0xc9c39b(0x2ec)]=_0xc9c39b(0x23f);try{const _0x506697=await App[_0xc9c39b(0x16d)](_0xc9c39b(0x216)),_0x38897f=_0x506697[_0xc9c39b(0x37e)](_0x31d5a0=>!_0x31d5a0[_0xc9c39b(0x319)]||_0x31d5a0['status']===_0xc9c39b(0x2d8)),_0x58b4f8=_0xc9c39b(0x26b)+_0x38897f[_0xc9c39b(0x222)](_0x17a0f2=>_0xc9c39b(0x2e1)+_0x17a0f2['id']+'\x22>'+App['escapeHTML'](_0x17a0f2[_0xc9c39b(0x224)])+'</option>')[_0xc9c39b(0x14b)](''),_0x227723='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20align-items:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22bol-aluno\x22\x20style=\x22flex:1;\x20padding:12px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:5px;\x22>'+_0x58b4f8+_0xc9c39b(0x1fb);_0x906acd[_0xc9c39b(0x2ec)]=App['UI'][_0xc9c39b(0x335)](_0xc9c39b(0x170),'',_0x227723,_0xc9c39b(0x2b6))+_0xc9c39b(0x1f2);}catch(_0x26d8b5){_0x906acd[_0xc9c39b(0x2ec)]=_0xc9c39b(0x17d);}},App[a4_0x1b6d4e(0x262)]=async()=>{const _0x3a4ca1=a4_0x1b6d4e,_0x41fae7=document[_0x3a4ca1(0x2e5)](_0x3a4ca1(0x35d))[_0x3a4ca1(0x2a5)];if(!_0x41fae7)return App[_0x3a4ca1(0x379)](_0x3a4ca1(0x271),_0x3a4ca1(0x33f));const _0x4d5798=document[_0x3a4ca1(0x2e5)]('boletim-area');_0x4d5798[_0x3a4ca1(0x2ec)]=_0x3a4ca1(0x301);const _0x376bc0=parseFloat(localStorage[_0x3a4ca1(0x1b9)](App[_0x3a4ca1(0x155)]?App[_0x3a4ca1(0x155)](_0x3a4ca1(0x149)):_0x3a4ca1(0x149)))||0x6,_0x57819f=localStorage[_0x3a4ca1(0x1b9)](App[_0x3a4ca1(0x155)]?App[_0x3a4ca1(0x155)](_0x3a4ca1(0x140)):_0x3a4ca1(0x140))||_0x3a4ca1(0x257);let _0x5bc5e7=0x6,_0x2a6ace=_0x3a4ca1(0x176);if(_0x57819f===_0x3a4ca1(0x371))_0x5bc5e7=0x4,_0x2a6ace=_0x3a4ca1(0x309);else{if(_0x57819f===_0x3a4ca1(0x1d1))_0x5bc5e7=0x2,_0x2a6ace=_0x3a4ca1(0x377);else _0x57819f==='Anual'&&(_0x5bc5e7=0x1,_0x2a6ace=_0x3a4ca1(0x2b0));}try{const [_0xf60a,_0x4225e2,_0xa76660,_0x1d8878,_0x45e16c]=await Promise[_0x3a4ca1(0x293)]([App[_0x3a4ca1(0x16d)](_0x3a4ca1(0x376)+_0x41fae7),App[_0x3a4ca1(0x16d)]('/avaliacoes?_t='+Date['now']()),App['api'](_0x3a4ca1(0x22f)+Date['now']()),App[_0x3a4ca1(0x16d)]('/escola'),App['api'](_0x3a4ca1(0x285)+Date[_0x3a4ca1(0x2ac)]())]),_0x5f182a=_0x45e16c['find'](_0x4e08dc=>_0x4e08dc[_0x3a4ca1(0x1f9)]===_0x41fae7&&_0x4e08dc[_0x3a4ca1(0x319)]!=='Arquivado'),_0x23e737=_0xa76660[_0x3a4ca1(0x37e)](_0x3b4e81=>_0x3b4e81[_0x3a4ca1(0x1f9)]===_0x41fae7&&(_0x3b4e81[_0x3a4ca1(0x319)]===_0x3a4ca1(0x277)||_0x3b4e81[_0x3a4ca1(0x319)]===_0x3a4ca1(0x1e0)))[_0x3a4ca1(0x222)](_0x3f85a3=>_0x3f85a3['data'])[_0x3a4ca1(0x230)]();let _0x10bd97=_0x3a4ca1(0x2d6),_0x36fbdb=_0x3a4ca1(0x2d6);if(_0x5f182a&&_0x5f182a[_0x3a4ca1(0x342)]&&_0x5f182a[_0x3a4ca1(0x342)]['length']>0x0)_0x10bd97=App[_0x3a4ca1(0x22e)](_0x5f182a['aulas'][0x0][_0x3a4ca1(0x184)]),_0x36fbdb=App[_0x3a4ca1(0x22e)](_0x5f182a['aulas'][_0x5f182a[_0x3a4ca1(0x342)][_0x3a4ca1(0x359)]-0x1][_0x3a4ca1(0x184)]);else _0x23e737[_0x3a4ca1(0x359)]>0x0?(_0x10bd97=_0x23e737[0x0][_0x3a4ca1(0x2ee)]('-')[_0x3a4ca1(0x1f1)]()['join']('/'),_0x36fbdb=_0x23e737[_0x23e737[_0x3a4ca1(0x359)]-0x1][_0x3a4ca1(0x2ee)]('-')[_0x3a4ca1(0x1f1)]()[_0x3a4ca1(0x14b)]('/')):_0x10bd97=new Date()[_0x3a4ca1(0x369)](_0x3a4ca1(0x15f));const _0xa7ba81=App['escapeHTML'](_0xf60a['curso']||(_0x5f182a?_0x5f182a[_0x3a4ca1(0x15c)]:_0x3a4ca1(0x210))),_0x5ad8e9=App[_0x3a4ca1(0x22e)](_0xf60a[_0x3a4ca1(0x327)]||_0x3a4ca1(0x2d5)),_0x88ffd6=_0x4225e2[_0x3a4ca1(0x37e)](_0x57293a=>_0x57293a[_0x3a4ca1(0x1f9)]===_0x41fae7),_0x1151eb={};_0x88ffd6[_0x3a4ca1(0x27f)](_0x2ec152=>{const _0x41c388=_0x3a4ca1,_0x27567b=_0x2ec152['disciplina']||_0x41c388(0x210);if(!_0x1151eb[_0x27567b])_0x1151eb[_0x27567b]={'nome':_0x27567b,'notas':[],'total':0x0,'periodosLancados':new Set()};_0x1151eb[_0x27567b][_0x41c388(0x1f7)][_0x41c388(0x1a1)](_0x2ec152),_0x1151eb[_0x27567b][_0x41c388(0x344)]+=parseFloat(_0x2ec152['nota'])||0x0;const _0x2509d4=_0x2ec152[_0x41c388(0x168)]||_0x2ec152[_0x41c388(0x24a)];if(_0x2509d4)_0x1151eb[_0x27567b][_0x41c388(0x1fe)][_0x41c388(0x178)](_0x2509d4);});let _0x37512b='';Object[_0x3a4ca1(0x192)](_0x1151eb)[_0x3a4ca1(0x359)]===0x0?_0x37512b='<tr><td\x20colspan=\x224\x22\x20style=\x22text-align:center;\x20padding:15px;\x20color:#999;\x22>Sem\x20notas\x20lançadas\x20para\x20este\x20aluno.</td></tr>':Object[_0x3a4ca1(0x192)](_0x1151eb)[_0x3a4ca1(0x27f)](_0x1dd9af=>{const _0x1b65a2=_0x3a4ca1,_0x444d58=_0x1151eb[_0x1dd9af],_0x524e26=_0x444d58[_0x1b65a2(0x1fe)][_0x1b65a2(0x260)]>0x0?_0x444d58[_0x1b65a2(0x1fe)][_0x1b65a2(0x260)]:0x1,_0x29120f=_0x376bc0*_0x524e26,_0x2b57d8=_0x376bc0*_0x5bc5e7,_0x2687cb=_0x444d58[_0x1b65a2(0x344)]>=_0x29120f,_0x1499ad=_0x2687cb?_0x1b65a2(0x225):_0x1b65a2(0x1a0),_0x5a0767=_0x2687cb?'<span\x20style=\x22color:'+_0x1499ad+_0x1b65a2(0x37f):'<span\x20style=\x22color:'+_0x1499ad+_0x1b65a2(0x144),_0x2a3183=_0x444d58[_0x1b65a2(0x1f7)][_0x1b65a2(0x222)](_0x7be1b0=>_0x1b65a2(0x1bb)+App[_0x1b65a2(0x22e)](_0x7be1b0[_0x1b65a2(0x168)]||_0x7be1b0['bimestre'])+'\x20-\x20'+App[_0x1b65a2(0x22e)](_0x7be1b0['tipo'])+':\x20<b>'+App['escapeHTML'](_0x7be1b0['nota'])+_0x1b65a2(0x22a))[_0x1b65a2(0x14b)](_0x1b65a2(0x2ef));_0x37512b+=_0x1b65a2(0x284)+App[_0x1b65a2(0x22e)](_0x444d58['nome'])+_0x1b65a2(0x2f3)+_0x2a3183+_0x1b65a2(0x26d)+_0x1499ad+_0x1b65a2(0x1b1)+_0x444d58[_0x1b65a2(0x344)][_0x1b65a2(0x2b7)](0x1)+_0x1b65a2(0x28a)+_0x5a0767+_0x1b65a2(0x2e3)+_0x2b57d8['toFixed'](0x1)+_0x1b65a2(0x2c4);});const _0x5f1e7a=_0x1d8878[_0x3a4ca1(0x37a)]?'<img\x20src=\x22'+_0x1d8878[_0x3a4ca1(0x37a)]+'\x22\x20style=\x22height:60px;\x20object-fit:contain;\x22>':'',_0xbb2eca=new Date()['toLocaleDateString'](_0x3a4ca1(0x15f));_0x4d5798['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22no-print\x22\x20style=\x22text-align:center;\x20margin-bottom:20px;\x22><button\x20onclick=\x22window.print()\x22\x20class=\x22btn-primary\x22>🖨️\x20IMPRIMIR\x20BOLETIM</button></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22print-sheet\x22\x20style=\x22background:\x20white;\x20max-width:\x20210mm;\x20margin:\x200\x20auto;\x20padding:\x2040px;\x20box-shadow:\x200\x205px\x2015px\x20rgba(0,0,0,0.1);\x20border-radius:\x208px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22doc-header\x22\x20style=\x22display:flex;\x20justify-content:space-between;\x20border-bottom:2px\x20solid\x20#333;\x20padding-bottom:15px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20align-items:center;\x20gap:20px;\x22>'+_0x5f1e7a+'<div><h2\x20style=\x22margin:0;\x20text-transform:uppercase;\x22>'+App['escapeHTML'](_0x1d8878[_0x3a4ca1(0x224)]||_0x3a4ca1(0x258))+_0x3a4ca1(0x25f)+App[_0x3a4ca1(0x22e)](_0x1d8878[_0x3a4ca1(0x152)]||'')+_0x3a4ca1(0x358)+_0xbb2eca+_0x3a4ca1(0x164)+App[_0x3a4ca1(0x22e)](_0xf60a[_0x3a4ca1(0x224)])[_0x3a4ca1(0x2c8)]()+_0x3a4ca1(0x2fe)+_0xa7ba81+_0x3a4ca1(0x2da)+_0x5ad8e9+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20border-top:1px\x20solid\x20#ccc;\x20padding-top:5px;\x20font-size:12px;\x22><div>INÍCIO\x20DAS\x20AULAS:\x20<b>'+_0x10bd97+_0x3a4ca1(0x347)+_0x36fbdb+'</b></div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:13px;\x20text-align:left;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead><tr\x20style=\x22border-bottom:2px\x20solid\x20#000;\x22><th\x20style=\x22padding:10px;\x20width:30%;\x22>DISCIPLINA</th><th\x20style=\x22padding:10px;\x20width:30%;\x22>AVALIAÇÕES\x20('+_0x2a6ace+')</th><th\x20style=\x22text-align:center;\x20padding:10px;\x20width:15%;\x22>NOTA\x20TOTAL</th><th\x20style=\x22text-align:center;\x20padding:10px;\x20width:25%;\x22>RESULTADO</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>'+_0x37512b+_0x3a4ca1(0x16c);}catch(_0x484544){App[_0x3a4ca1(0x379)](_0x3a4ca1(0x2f7),_0x3a4ca1(0x33f));}},App[a4_0x1b6d4e(0x313)]=()=>{const _0x2106c8=a4_0x1b6d4e,_0x29de1f=document[_0x2106c8(0x2e5)](_0x2106c8(0x2ed))['value'],_0x140933=document[_0x2106c8(0x2e5)](_0x2106c8(0x26c))[_0x2106c8(0x2a5)],_0x1e74c8=document['getElementById'](_0x2106c8(0x232))[_0x2106c8(0x2a5)];localStorage[_0x2106c8(0x1ba)](App['getTenantKey']?App['getTenantKey'](_0x2106c8(0x149)):'media_aprovacao',_0x29de1f),localStorage[_0x2106c8(0x1ba)](App[_0x2106c8(0x155)]?App[_0x2106c8(0x155)](_0x2106c8(0x31e)):_0x2106c8(0x31e),_0x140933),localStorage[_0x2106c8(0x1ba)](App[_0x2106c8(0x155)]?App[_0x2106c8(0x155)](_0x2106c8(0x140)):_0x2106c8(0x140),_0x1e74c8),App[_0x2106c8(0x379)](_0x2106c8(0x169),'success'),App['renderizarAvaliacoesPro']();},App['renderizarAvaliacoesPro']=async()=>{const _0x205608=a4_0x1b6d4e;App[_0x205608(0x2e9)](_0x205608(0x276));const _0x52f1cb=document[_0x205608(0x2e5)](_0x205608(0x1fd));_0x52f1cb['innerHTML']=_0x205608(0x201);const _0x2b3564=localStorage['getItem'](App['getTenantKey']?App[_0x205608(0x155)](_0x205608(0x149)):_0x205608(0x149))||'6.0',_0x322a08=localStorage[_0x205608(0x1b9)](App[_0x205608(0x155)]?App['getTenantKey'](_0x205608(0x31e)):_0x205608(0x31e))||_0x205608(0x143),_0x17deac=localStorage['getItem'](App['getTenantKey']?App[_0x205608(0x155)](_0x205608(0x140)):_0x205608(0x140))||'Bimestral',_0xc90bfc=parseFloat(_0x2b3564)/parseFloat(_0x322a08);let _0xc8027b='',_0x44ec5f='Período';if(_0x17deac===_0x205608(0x257))_0xc8027b=_0x205608(0x2f5),_0x44ec5f=_0x205608(0x1c3);else{if(_0x17deac===_0x205608(0x371))_0xc8027b=_0x205608(0x2c9),_0x44ec5f=_0x205608(0x1d6);else{if(_0x17deac===_0x205608(0x1d1))_0xc8027b=_0x205608(0x34c),_0x44ec5f='Semestre';else _0x17deac===_0x205608(0x245)&&(_0xc8027b='<option\x20value=\x22Período\x20Único\x22>Período\x20Único</option>',_0x44ec5f=_0x205608(0x383));}}try{const [_0x4d4275,_0x26ca76,_0x21ad4b,_0x5845a8]=await Promise[_0x205608(0x293)]([App[_0x205608(0x16d)](_0x205608(0x216)),App[_0x205608(0x16d)](_0x205608(0x355)),App[_0x205608(0x16d)]('/cursos'),App[_0x205608(0x16d)](_0x205608(0x1a5)+Date[_0x205608(0x2ac)]())]);App['cacheAlunos']=_0x4d4275;const _0x13bcc5=_0x5845a8[_0x205608(0x230)]((_0x33c76f,_0x24d547)=>_0x24d547['id']-_0x33c76f['id']),_0x587597=_0x4d4275['filter'](_0x5e3088=>!_0x5e3088[_0x205608(0x319)]||_0x5e3088['status']==='Ativo'),_0x133cf6=_0x205608(0x1d2)+_0x26ca76['map'](_0x1fd1ab=>_0x205608(0x2e1)+App[_0x205608(0x22e)](_0x1fd1ab[_0x205608(0x224)])+'\x22>'+App[_0x205608(0x22e)](_0x1fd1ab[_0x205608(0x224)])+'</option>')['join'](''),_0x181206=_0x205608(0x272)+_0x587597[_0x205608(0x222)](_0x5437dd=>_0x205608(0x2e1)+_0x5437dd['id']+'\x22>'+App[_0x205608(0x22e)](_0x5437dd['nome'])+_0x205608(0x305))[_0x205608(0x14b)](''),_0x2c0553=_0x205608(0x32f)+_0x21ad4b['map'](_0x5df9a1=>_0x205608(0x2e1)+App[_0x205608(0x22e)](_0x5df9a1['nome'])+'\x22>'+App[_0x205608(0x22e)](_0x5df9a1[_0x205608(0x224)])+_0x205608(0x305))['join'](''),_0x248435=_0x205608(0x33d),_0x34af70=new Date()[_0x205608(0x2a8)]()[_0x205608(0x2ee)]('T')[0x0],_0x1d2d2d=_0x205608(0x1c1)+selectLocal(_0x205608(0x1f5),'config-nota-regime',_0x205608(0x1bf)+(_0x17deac===_0x205608(0x257)?'selected':'')+'>Bimestral\x20(6\x20Períodos)</option><option\x20value=\x22Trimestral\x22\x20'+(_0x17deac==='Trimestral'?_0x205608(0x2eb):'')+_0x205608(0x19e)+(_0x17deac===_0x205608(0x1d1)?_0x205608(0x2eb):'')+_0x205608(0x242)+(_0x17deac===_0x205608(0x245)?_0x205608(0x2eb):'')+'>Anual\x20(1\x20Período)</option>')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+col(_0x205608(0x22c),_0x205608(0x2ed),_0x205608(0x2db),_0x2b3564,_0x205608(0x345))+_0x205608(0x236)+col(_0x205608(0x1e6),_0x205608(0x26c),_0x205608(0x2db),_0x322a08,'step=\x220.1\x22')+_0x205608(0x1bd),_0x47af77='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:15px;\x20flex-wrap:wrap;\x20align-items:flex-end;\x20margin-bottom:15px;\x20background:#f9f9f9;\x20padding:15px;\x20border-radius:8px;\x20border:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+selectLocal(_0x205608(0x322),_0x205608(0x212),_0x133cf6)+_0x205608(0x25b)+selectLocal('Buscar\x20Aluno\x20Único:',_0x205608(0x297),_0x181206)+_0x205608(0x328)+selectLocal(_0x205608(0x2cc),'nota-disc',_0x2c0553)+_0x205608(0x236)+selectLocal(_0x205608(0x2d0),_0x205608(0x266),_0x248435,_0x205608(0x354))+_0x205608(0x35b)+selectLocal(_0x44ec5f+':',_0x205608(0x316),_0xc8027b)+_0x205608(0x1cc)+col(_0x205608(0x339),_0x205608(0x238),_0x205608(0x2db),_0x322a08,'step=\x220.1\x22')+_0x205608(0x236)+col(_0x205608(0x252),_0x205608(0x1a3),_0x205608(0x16e),_0x34af70,_0x205608(0x1fc)+_0x34af70+'\x22')+_0x205608(0x251),_0x324532=_0x205608(0x378)+(_0x13bcc5[_0x205608(0x359)]===0x0?_0x205608(0x171):'')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x13bcc5['map'](_0x4e39e8=>{const _0x3ccfe9=_0x205608,_0xa8a1e4=parseFloat(_0x4e39e8[_0x3ccfe9(0x25d)])||parseFloat(_0x322a08),_0x1772e7=parseFloat(_0x4e39e8['nota'])/_0xa8a1e4,_0x4b31aa=_0x1772e7>=_0xc90bfc?_0x3ccfe9(0x225):'#c0392b';return _0x3ccfe9(0x2b8)+App[_0x3ccfe9(0x22e)](_0x4e39e8[_0x3ccfe9(0x191)])+_0x3ccfe9(0x19f)+App['escapeHTML'](_0x4e39e8[_0x3ccfe9(0x240)]||'-')+_0x3ccfe9(0x29c)+(_0x4e39e8[_0x3ccfe9(0x184)]?App[_0x3ccfe9(0x22e)](_0x4e39e8[_0x3ccfe9(0x184)]['split']('-')['reverse']()['join']('/')):'-')+_0x3ccfe9(0x29c)+App['escapeHTML'](_0x4e39e8[_0x3ccfe9(0x2f6)])+_0x3ccfe9(0x29c)+App[_0x3ccfe9(0x22e)](_0x4e39e8[_0x3ccfe9(0x168)]||_0x4e39e8[_0x3ccfe9(0x24a)]||'-')+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20text-align:center;\x22><strong\x20style=\x22color:'+_0x4b31aa+'\x22>'+App[_0x3ccfe9(0x22e)](_0x4e39e8['nota'])+_0x3ccfe9(0x27c)+App[_0x3ccfe9(0x22e)](_0xa8a1e4)+_0x3ccfe9(0x340)+_0x4e39e8['id']+_0x3ccfe9(0x241)+_0x4e39e8['id']+_0x3ccfe9(0x24e);})['join']('')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';_0x52f1cb['innerHTML']=_0x1d2d2d+App['UI'][_0x205608(0x335)](_0x205608(0x146),'',_0x47af77,_0x205608(0x35c))+_0x205608(0x310)+_0x205608(0x2f0)+App['UI'][_0x205608(0x335)](_0x205608(0x2d9),'',_0x324532,'100%')+'</div>';}catch(_0x47226c){_0x52f1cb[_0x205608(0x2ec)]='Erro\x20ao\x20carregar\x20avaliações.';}},App[a4_0x1b6d4e(0x264)]=()=>{const _0x53b3ae=a4_0x1b6d4e,_0x30b7f7=document[_0x53b3ae(0x2e5)](_0x53b3ae(0x266))[_0x53b3ae(0x2a5)];document[_0x53b3ae(0x2e5)](_0x53b3ae(0x239))[_0x53b3ae(0x29e)][_0x53b3ae(0x221)]=_0x30b7f7===_0x53b3ae(0x37c)?_0x53b3ae(0x366):'none';},App[a4_0x1b6d4e(0x329)]=async _0x2add26=>{const _0x21cdd7=a4_0x1b6d4e,_0x440066=await App[_0x21cdd7(0x16d)]('/avaliacoes/'+_0x2add26+_0x21cdd7(0x13e)+Date[_0x21cdd7(0x2ac)]());document['getElementById'](_0x21cdd7(0x297))[_0x21cdd7(0x2a5)]=_0x440066['idAluno'],document[_0x21cdd7(0x2e5)]('nota-turma')[_0x21cdd7(0x2a5)]='',document[_0x21cdd7(0x2e5)](_0x21cdd7(0x30c))[_0x21cdd7(0x2a5)]=_0x440066[_0x21cdd7(0x240)]||_0x21cdd7(0x210);[_0x21cdd7(0x370),_0x21cdd7(0x353),_0x21cdd7(0x159),_0x21cdd7(0x20d)][_0x21cdd7(0x2d7)](_0x440066[_0x21cdd7(0x2f6)])?(document[_0x21cdd7(0x2e5)](_0x21cdd7(0x266))[_0x21cdd7(0x2a5)]=_0x440066[_0x21cdd7(0x2f6)],document[_0x21cdd7(0x2e5)](_0x21cdd7(0x239))[_0x21cdd7(0x29e)][_0x21cdd7(0x221)]=_0x21cdd7(0x2d1)):(document[_0x21cdd7(0x2e5)](_0x21cdd7(0x266))[_0x21cdd7(0x2a5)]=_0x21cdd7(0x37c),App['toggleTipoOutroNota'](),document[_0x21cdd7(0x2e5)]('nota-outro-desc')[_0x21cdd7(0x2a5)]=_0x440066['tipo']);document[_0x21cdd7(0x2e5)](_0x21cdd7(0x238))[_0x21cdd7(0x2a5)]=_0x440066[_0x21cdd7(0x25d)];const _0x591d03=document['getElementById'](_0x21cdd7(0x316));if(_0x591d03)_0x591d03[_0x21cdd7(0x2a5)]=_0x440066[_0x21cdd7(0x168)]||_0x440066['bimestre'];document[_0x21cdd7(0x2e5)](_0x21cdd7(0x1a3))['value']=_0x440066['data']||new Date()[_0x21cdd7(0x2a8)]()['split']('T')[0x0],document[_0x21cdd7(0x2e5)]('btn-cancel-nota')[_0x21cdd7(0x29e)][_0x21cdd7(0x221)]=_0x21cdd7(0x31f),App[_0x21cdd7(0x1c0)]=_0x2add26,App[_0x21cdd7(0x14a)](),document[_0x21cdd7(0x24f)](_0x21cdd7(0x15d))['scrollIntoView']({'behavior':_0x21cdd7(0x2a0)});},App['cancelarEdicaoNota']=()=>{const _0x5917cf=a4_0x1b6d4e;App[_0x5917cf(0x1c0)]=null,document[_0x5917cf(0x2e5)](_0x5917cf(0x297))[_0x5917cf(0x2a5)]='',document[_0x5917cf(0x2e5)](_0x5917cf(0x33a))['style'][_0x5917cf(0x221)]='none',document['getElementById'](_0x5917cf(0x326))[_0x5917cf(0x2ec)]='',App[_0x5917cf(0x379)](_0x5917cf(0x254),_0x5917cf(0x2a7));},App[a4_0x1b6d4e(0x14a)]=async()=>{const _0x555a43=a4_0x1b6d4e,_0x7b32f5=document[_0x555a43(0x2e5)]('nota-turma')[_0x555a43(0x2a5)],_0x37fb3c=document[_0x555a43(0x2e5)](_0x555a43(0x297))[_0x555a43(0x2a5)],_0x3059cd=document[_0x555a43(0x2e5)](_0x555a43(0x30c))[_0x555a43(0x2a5)];let _0xdc9cd4=document[_0x555a43(0x2e5)]('nota-tipo')[_0x555a43(0x2a5)];if(_0xdc9cd4==='Outro')_0xdc9cd4=document[_0x555a43(0x2e5)](_0x555a43(0x32a))[_0x555a43(0x2a5)]||'Outro';const _0x2e93cc=document[_0x555a43(0x2e5)](_0x555a43(0x1a3))['value'],_0x4826f3=document[_0x555a43(0x2e5)](_0x555a43(0x238))['value'];if(!_0x7b32f5&&!_0x37fb3c)return App[_0x555a43(0x379)](_0x555a43(0x28d),'warning');if(!_0x3059cd||!_0x2e93cc)return App['showToast']('Preencha\x20Disciplina\x20e\x20Data.','warning');const _0x2d8760=new Date()[_0x555a43(0x2a8)]()[_0x555a43(0x2ee)]('T')[0x0];if(_0x2e93cc>_0x2d8760)return App[_0x555a43(0x379)]('Não\x20é\x20permitido\x20abrir\x20pautas\x20para\x20datas\x20futuras.',_0x555a43(0x274));const _0x2b782b=document[_0x555a43(0x2e5)]('area-lista-notas');_0x2b782b[_0x555a43(0x2ec)]=_0x555a43(0x300);try{const [_0x3a1a6e,_0x154d1c]=await Promise[_0x555a43(0x293)]([App[_0x555a43(0x16d)](_0x555a43(0x216)),App[_0x555a43(0x16d)]('/avaliacoes?_t='+Date[_0x555a43(0x2ac)]())]);let _0x24f772=[];_0x37fb3c?_0x24f772=_0x3a1a6e[_0x555a43(0x37e)](_0x2ef5b6=>_0x2ef5b6['id']===_0x37fb3c):_0x24f772=_0x3a1a6e[_0x555a43(0x37e)](_0x35456d=>_0x35456d['turma']===_0x7b32f5);_0x24f772=_0x24f772[_0x555a43(0x37e)](_0x1b6ed3=>!_0x1b6ed3['status']||_0x1b6ed3[_0x555a43(0x319)]==='Ativo');if(_0x24f772[_0x555a43(0x359)]===0x0){_0x2b782b[_0x555a43(0x2ec)]='<div\x20class=\x22card\x22><p\x20style=\x22text-align:center;\x20color:#999;\x20margin:0;\x22>Nenhum\x20aluno\x20ativo\x20encontrado\x20para\x20este\x20filtro.</p></div>';return;}let _0x18b87f='';_0x24f772['forEach'](_0x26754b=>{const _0x48e61e=_0x555a43;let _0x23f102=null;App[_0x48e61e(0x1c0)]&&_0x26754b['id']===document['getElementById'](_0x48e61e(0x297))[_0x48e61e(0x2a5)]?_0x23f102=_0x154d1c[_0x48e61e(0x1ff)](_0x49e049=>_0x49e049['id']===App[_0x48e61e(0x1c0)]):_0x23f102=_0x154d1c[_0x48e61e(0x1ff)](_0x13c3bb=>_0x13c3bb['idAluno']===_0x26754b['id']&&_0x13c3bb['data']===_0x2e93cc&&_0x13c3bb['disciplina']===_0x3059cd&&_0x13c3bb[_0x48e61e(0x2f6)]===_0xdc9cd4);const _0x45f15f=_0x23f102?_0x23f102[_0x48e61e(0x17c)]:'',_0x48456a=App[_0x48e61e(0x1c0)]&&_0x23f102?_0x48e61e(0x220)+_0x23f102['id']+'\x22':'';_0x18b87f+=_0x48e61e(0x33b)+_0x26754b['id']+_0x48e61e(0x24d)+App[_0x48e61e(0x22e)](_0x26754b[_0x48e61e(0x224)])+'\x22\x20'+_0x48456a+_0x48e61e(0x28c)+App['escapeHTML'](_0x26754b[_0x48e61e(0x224)])+_0x48e61e(0x275)+_0x4826f3+_0x48e61e(0x1d0)+App[_0x48e61e(0x22e)](_0x45f15f)+_0x48e61e(0x231);});let _0x474f8b=App['idAvaliacaoEditando']?_0x555a43(0x35f):'';_0x2b782b['innerHTML']=_0x474f8b+(_0x555a43(0x2aa)+App['escapeHTML'](_0xdc9cd4)+_0x555a43(0x21b)+App[_0x555a43(0x22e)](_0x3059cd)+_0x555a43(0x1b3)+App[_0x555a43(0x22e)](_0x4826f3)+_0x555a43(0x16f)+_0x18b87f+'</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:20px;\x20background:#f9f9f9;\x20border-top:1px\x20solid\x20#eee;\x20text-align:right;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.salvarNotasLote()\x22\x20class=\x22btn-primary\x22>💾\x20SALVAR\x20NOTAS\x20NO\x20BOLETIM</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20');}catch(_0x25f4b5){_0x2b782b[_0x555a43(0x2ec)]='<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20carregar\x20a\x20pauta.</p>';}},App[a4_0x1b6d4e(0x185)]=async()=>{const _0x1d4f3b=a4_0x1b6d4e,_0x26bd3c=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x30c))[_0x1d4f3b(0x2a5)];let _0xed76fa=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x266))['value'];if(_0xed76fa===_0x1d4f3b(0x37c))_0xed76fa=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x32a))[_0x1d4f3b(0x2a5)]||_0x1d4f3b(0x37c);const _0x48f955=document[_0x1d4f3b(0x2e5)]('nota-data')[_0x1d4f3b(0x2a5)],_0x105e85=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x238))[_0x1d4f3b(0x2a5)],_0x9039eb=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x316))[_0x1d4f3b(0x2a5)],_0x56dd1d=document[_0x1d4f3b(0x166)](_0x1d4f3b(0x1f6));if(_0x56dd1d[_0x1d4f3b(0x359)]===0x0)return;const _0x1db16a=new Date()[_0x1d4f3b(0x2a8)]()[_0x1d4f3b(0x2ee)]('T')[0x0];if(_0x48f955>_0x1db16a)return App[_0x1d4f3b(0x379)](_0x1d4f3b(0x256),_0x1d4f3b(0x33f));const _0x380df3=document[_0x1d4f3b(0x24f)](_0x1d4f3b(0x292)),_0x4af508=_0x380df3[_0x1d4f3b(0x177)];_0x380df3[_0x1d4f3b(0x177)]='A\x20arquivar...\x20⏳',_0x380df3[_0x1d4f3b(0x32b)]=!![],document[_0x1d4f3b(0x31a)][_0x1d4f3b(0x29e)][_0x1d4f3b(0x18f)]='wait';try{const _0x443907=[],_0x2bcd3d=await App[_0x1d4f3b(0x16d)](_0x1d4f3b(0x1a5)+Date['now']());_0x56dd1d[_0x1d4f3b(0x27f)](_0x13f911=>{const _0x108d43=_0x1d4f3b,_0x285eb9=_0x13f911[_0x108d43(0x1e9)]('data-id'),_0x1231c8=_0x13f911['getAttribute'](_0x108d43(0x1d5)),_0x63340a=_0x13f911[_0x108d43(0x1e9)](_0x108d43(0x187)),_0x24db6a=_0x13f911[_0x108d43(0x24f)](_0x108d43(0x162))['value'];if(_0x24db6a==='')return;let _0xe55c56=null;_0x63340a?_0xe55c56=_0x2bcd3d[_0x108d43(0x1ff)](_0x3a7ca2=>_0x3a7ca2['id']===_0x63340a):_0xe55c56=_0x2bcd3d[_0x108d43(0x1ff)](_0x16e41a=>_0x16e41a[_0x108d43(0x1f9)]===_0x285eb9&&_0x16e41a[_0x108d43(0x184)]===_0x48f955&&_0x16e41a[_0x108d43(0x240)]===_0x26bd3c&&_0x16e41a[_0x108d43(0x2f6)]===_0xed76fa);const _0x4734de={'idAluno':_0x285eb9,'nomeAluno':_0x1231c8,'disciplina':_0x26bd3c,'tipo':_0xed76fa,'data':_0x48f955,'valorMax':_0x105e85,'nota':_0x24db6a,'periodo':_0x9039eb,'bimestre':_0x9039eb,'dataLancamento':new Date()[_0x108d43(0x2a8)]()[_0x108d43(0x2ee)]('T')[0x0]};_0xe55c56?_0x443907['push'](App['api'](_0x108d43(0x174)+_0xe55c56['id'],'PUT',{..._0xe55c56,'nota':_0x24db6a,'valorMax':_0x105e85,'data':_0x48f955,'disciplina':_0x26bd3c,'tipo':_0xed76fa,'periodo':_0x9039eb,'bimestre':_0x9039eb})):(_0x4734de['id']=Date[_0x108d43(0x2ac)]()[_0x108d43(0x28b)]()+Math[_0x108d43(0x367)](Math[_0x108d43(0x283)]()*0x3e8),_0x443907[_0x108d43(0x1a1)](App[_0x108d43(0x16d)]('/avaliacoes',_0x108d43(0x2cf),_0x4734de)));}),await Promise[_0x1d4f3b(0x293)](_0x443907),App[_0x1d4f3b(0x379)](_0x1d4f3b(0x36d),_0x1d4f3b(0x24c)),App['cancelarEdicaoNota']();const _0x349a41=document[_0x1d4f3b(0x2e5)](_0x1d4f3b(0x1fd));_0x349a41&&(_0x349a41[_0x1d4f3b(0x2ec)]='<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20avaliações...\x20⏳</p>'),await App[_0x1d4f3b(0x30b)]();}catch(_0x450a14){App[_0x1d4f3b(0x379)](_0x1d4f3b(0x219),_0x1d4f3b(0x33f));}finally{_0x380df3&&(_0x380df3[_0x1d4f3b(0x177)]=_0x4af508,_0x380df3[_0x1d4f3b(0x32b)]=![]),document[_0x1d4f3b(0x31a)]['style']['cursor']='default';}},App[a4_0x1b6d4e(0x368)]=_0x172ee4=>{const _0x3d5479=a4_0x1b6d4e;App[_0x3d5479(0x223)](_0x3d5479(0x206),_0x3d5479(0x2ba),'Excluir',_0x3d5479(0x294),async()=>{const _0x39d8b4=_0x3d5479;await App[_0x39d8b4(0x16d)](_0x39d8b4(0x174)+_0x172ee4,_0x39d8b4(0x19d));const _0x1112cd=document[_0x39d8b4(0x2e5)](_0x39d8b4(0x1fd));_0x1112cd&&(_0x1112cd['innerHTML']=_0x39d8b4(0x17f)),await App[_0x39d8b4(0x30b)]();});},App[a4_0x1b6d4e(0x2a1)]={'chamadas':null,'alunos':null,'turmas':null,'planejamentos':null},App[a4_0x1b6d4e(0x1a8)]=async()=>{const _0x4b3e31=a4_0x1b6d4e;App['setTitulo'](_0x4b3e31(0x1ab));const _0x2e5b78=document[_0x4b3e31(0x2e5)](_0x4b3e31(0x1fd));_0x2e5b78[_0x4b3e31(0x2ec)]='<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20carregar\x20dados\x20rapidamente...\x20⚡</p>';try{const [_0x4914eb,_0x586de2,_0x30734a,_0x169378]=await Promise[_0x4b3e31(0x293)]([App[_0x4b3e31(0x16d)](_0x4b3e31(0x216)),App[_0x4b3e31(0x16d)](_0x4b3e31(0x355)),App['api'](_0x4b3e31(0x22f)+Date[_0x4b3e31(0x2ac)]()),App[_0x4b3e31(0x16d)](_0x4b3e31(0x285)+Date['now']())]);App[_0x4b3e31(0x2a1)][_0x4b3e31(0x2e4)]=_0x4914eb,App[_0x4b3e31(0x2a1)][_0x4b3e31(0x2b1)]=_0x586de2,App[_0x4b3e31(0x2a1)][_0x4b3e31(0x32c)]=Array[_0x4b3e31(0x179)](_0x30734a)?_0x30734a:[],App['cachePedagogico'][_0x4b3e31(0x31b)]=_0x169378;const _0x423f7a=[...App['cachePedagogico'][_0x4b3e31(0x32c)]]['sort']((_0x345766,_0x19f1fd)=>new Date(_0x19f1fd[_0x4b3e31(0x184)])-new Date(_0x345766[_0x4b3e31(0x184)])),_0xa555d1=App['cachePedagogico'][_0x4b3e31(0x2e4)][_0x4b3e31(0x37e)](_0x3b8801=>!_0x3b8801[_0x4b3e31(0x319)]||_0x3b8801[_0x4b3e31(0x319)]===_0x4b3e31(0x2d8)),_0x19aa1b=_0x4b3e31(0x1d2)+App[_0x4b3e31(0x2a1)][_0x4b3e31(0x2b1)]['map'](_0x5c7448=>_0x4b3e31(0x2e1)+App[_0x4b3e31(0x22e)](_0x5c7448[_0x4b3e31(0x224)])+'\x22>'+App[_0x4b3e31(0x22e)](_0x5c7448[_0x4b3e31(0x224)])+'</option>')[_0x4b3e31(0x14b)](''),_0x1c0e2f=_0x4b3e31(0x272)+_0xa555d1[_0x4b3e31(0x222)](_0x54490b=>_0x4b3e31(0x2e1)+_0x54490b['id']+'\x22>'+App['escapeHTML'](_0x54490b[_0x4b3e31(0x224)])+'</option>')[_0x4b3e31(0x14b)](''),_0x474cba=new Date()['toISOString']()['split']('T')[0x0],_0x125265=_0x4b3e31(0x2c1)+selectLocal(_0x4b3e31(0x322),_0x4b3e31(0x2d4),_0x19aa1b)+_0x4b3e31(0x25b)+selectLocal(_0x4b3e31(0x1c6),_0x4b3e31(0x16b),_0x1c0e2f)+_0x4b3e31(0x289)+col(_0x4b3e31(0x352),_0x4b3e31(0x150),_0x4b3e31(0x16e),_0x474cba,_0x4b3e31(0x1fc)+_0x474cba+'\x22')+_0x4b3e31(0x236)+col('Duração\x20(Ex:\x2001:30):','chamada-duracao',_0x4b3e31(0x255),_0x4b3e31(0x1cb))+_0x4b3e31(0x2ce),_0x2c68ed='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fff;\x20padding:\x2010px\x2015px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#eee;\x20margin-bottom:\x2015px;\x20display:\x20flex;\x20align-items:\x20center;\x20gap:\x2010px;\x20box-shadow:\x200\x202px\x204px\x20rgba(0,0,0,0.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2018px;\x20color:\x20#aaa;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-busca-chamada\x22\x20placeholder=\x22Pesquisar\x20histórico...\x22\x20oninput=\x22App.filtrarTabela(\x27input-busca-chamada\x27,\x20\x27tabela-historico-chamadas\x27)\x22\x20style=\x22flex:\x201;\x20border:\x20none;\x20outline:\x20none;\x20font-size:\x2014px;\x20padding:\x205px;\x20background:\x20transparent;\x20width:\x20100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20id=\x22tabela-historico-chamadas\x22\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:13px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22background:#f4f6f7;\x20color:#7f8c8d;\x20text-align:left;\x20text-transform:uppercase;\x20font-size:11px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x20border-bottom:2px\x20solid\x20#eee;\x22>Data</th><th\x20style=\x22padding:12px;\x20border-bottom:2px\x20solid\x20#eee;\x22>Aluno</th><th\x20style=\x22padding:12px;\x20border-bottom:2px\x20solid\x20#eee;\x22>Status</th><th\x20style=\x22padding:12px;\x20border-bottom:2px\x20solid\x20#eee;\x22>Tempo</th><th\x20style=\x22padding:12px;\x20border-bottom:2px\x20solid\x20#eee;\x20text-align:right;\x22>Ação</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+(_0x423f7a[_0x4b3e31(0x359)]===0x0?_0x4b3e31(0x267):'')+_0x4b3e31(0x1e8)+_0x423f7a['map'](_0x4cae99=>{const _0x3bbc02=_0x4b3e31;let _0x92a97d=_0x3bbc02(0x1d3);if(_0x4cae99['status']===_0x3bbc02(0x277))_0x92a97d=_0x3bbc02(0x19c);else{if(_0x4cae99[_0x3bbc02(0x319)]==='Falta')_0x92a97d=_0x3bbc02(0x1a4);else{if(_0x4cae99['status']===_0x3bbc02(0x1e0))_0x92a97d=_0x3bbc02(0x1b7);}}return'<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22><td\x20style=\x22padding:12px;\x20color:#555;\x22>'+_0x4cae99['data'][_0x3bbc02(0x2ee)]('-')[_0x3bbc02(0x1f1)]()[_0x3bbc02(0x14b)]('/')+_0x3bbc02(0x1ac)+App[_0x3bbc02(0x22e)](_0x4cae99['nomeAluno'])+'</td><td\x20style=\x22padding:12px;\x20font-weight:bold;\x20color:'+_0x92a97d+_0x3bbc02(0x1b1)+App[_0x3bbc02(0x22e)](_0x4cae99[_0x3bbc02(0x319)])+_0x3bbc02(0x317)+App[_0x3bbc02(0x22e)](_0x4cae99[_0x3bbc02(0x380)])+_0x3bbc02(0x30a)+_0x4cae99['id']+_0x3bbc02(0x2bf)+_0x4cae99['id']+_0x3bbc02(0x235);})[_0x4b3e31(0x14b)]('')+_0x4b3e31(0x2bb);_0x2e5b78[_0x4b3e31(0x2ec)]=App['UI'][_0x4b3e31(0x335)](_0x4b3e31(0x16a),'',_0x125265,_0x4b3e31(0x35c))+_0x4b3e31(0x373)+'<div\x20style=\x22margin-top:20px;\x22>'+App['UI']['card']('Histórico\x20Completo\x20de\x20Lançamentos','',_0x2c68ed,_0x4b3e31(0x35c))+_0x4b3e31(0x2a4);}catch(_0x525baa){_0x2e5b78['innerHTML']=_0x4b3e31(0x2be);}},App[a4_0x1b6d4e(0x186)]=async _0x1e44f6=>{const _0x56b63b=a4_0x1b6d4e,_0x7db39d=App[_0x56b63b(0x2a1)][_0x56b63b(0x32c)]['find'](_0x55a7bc=>String(_0x55a7bc['id'])===String(_0x1e44f6));if(!_0x7db39d)return App[_0x56b63b(0x379)](_0x56b63b(0x183),_0x56b63b(0x33f));document[_0x56b63b(0x2e5)](_0x56b63b(0x16b))[_0x56b63b(0x2a5)]=_0x7db39d[_0x56b63b(0x1f9)],document[_0x56b63b(0x2e5)]('chamada-turma')[_0x56b63b(0x2a5)]='',document[_0x56b63b(0x2e5)](_0x56b63b(0x150))[_0x56b63b(0x2a5)]=_0x7db39d[_0x56b63b(0x184)],document[_0x56b63b(0x2e5)]('chamada-duracao')[_0x56b63b(0x2a5)]=_0x7db39d['duracao'],document[_0x56b63b(0x2e5)]('btn-cancel-chamada')[_0x56b63b(0x29e)][_0x56b63b(0x221)]='inline-block',App[_0x56b63b(0x160)]=_0x1e44f6,App[_0x56b63b(0x26e)](),document[_0x56b63b(0x24f)]('.card')[_0x56b63b(0x1c5)]({'behavior':'smooth'});},App[a4_0x1b6d4e(0x28f)]=()=>{const _0xf7e147=a4_0x1b6d4e;App[_0xf7e147(0x160)]=null,document['getElementById'](_0xf7e147(0x16b))[_0xf7e147(0x2a5)]='',document[_0xf7e147(0x2e5)]('btn-cancel-chamada')['style'][_0xf7e147(0x221)]=_0xf7e147(0x2d1),document[_0xf7e147(0x2e5)]('area-lista-chamada')['innerHTML']='',App[_0xf7e147(0x379)](_0xf7e147(0x254),_0xf7e147(0x2a7));},App['marcarTodosChamada']=_0x2042b4=>{const _0x4f81cd=a4_0x1b6d4e,_0x315f40=document['querySelectorAll']('.status-chamada');if(_0x315f40[_0x4f81cd(0x359)]===0x0)return;_0x315f40[_0x4f81cd(0x27f)](_0x6b4628=>{const _0x2929cf=_0x4f81cd;_0x6b4628[_0x2929cf(0x2a5)]=_0x2042b4;if(_0x2042b4===_0x2929cf(0x2bc))_0x6b4628[_0x2929cf(0x29e)]['color']=_0x2929cf(0x294);else{if(_0x2042b4===_0x2929cf(0x1e0))_0x6b4628[_0x2929cf(0x29e)]['color']=_0x2929cf(0x1c8);else{if(_0x2042b4==='Presença')_0x6b4628[_0x2929cf(0x29e)][_0x2929cf(0x348)]='#27ae60';else _0x6b4628['style'][_0x2929cf(0x348)]='#333';}}}),App[_0x4f81cd(0x379)](_0x4f81cd(0x296)+_0x2042b4+'!',_0x4f81cd(0x2a7));},App[a4_0x1b6d4e(0x26e)]=async()=>{const _0x474b5c=a4_0x1b6d4e,_0x104c32=document[_0x474b5c(0x2e5)](_0x474b5c(0x2d4))[_0x474b5c(0x2a5)],_0x4f481=document[_0x474b5c(0x2e5)](_0x474b5c(0x16b))[_0x474b5c(0x2a5)],_0xfa5058=document['getElementById'](_0x474b5c(0x150))[_0x474b5c(0x2a5)];if(!_0x104c32&&!_0x4f481)return App[_0x474b5c(0x379)](_0x474b5c(0x28d),_0x474b5c(0x274));if(!_0xfa5058)return App[_0x474b5c(0x379)](_0x474b5c(0x273),'warning');const _0x2e6691=new Date()['toISOString']()[_0x474b5c(0x2ee)]('T')[0x0];if(_0xfa5058>_0x2e6691)return App['showToast'](_0x474b5c(0x246),_0x474b5c(0x274));const _0x3d2160=document[_0x474b5c(0x2e5)](_0x474b5c(0x1da));_0x3d2160[_0x474b5c(0x2ec)]=_0x474b5c(0x151);try{const _0x34adb2=App[_0x474b5c(0x2a1)][_0x474b5c(0x2e4)],_0x57d800=App[_0x474b5c(0x2a1)][_0x474b5c(0x32c)];let _0x416876=[];_0x4f481?_0x416876=_0x34adb2[_0x474b5c(0x37e)](_0x3f5faa=>_0x3f5faa['id']===_0x4f481):_0x416876=_0x34adb2['filter'](_0x92eb54=>_0x92eb54[_0x474b5c(0x327)]===_0x104c32);_0x416876=_0x416876[_0x474b5c(0x37e)](_0x19c89c=>!_0x19c89c[_0x474b5c(0x319)]||_0x19c89c[_0x474b5c(0x319)]===_0x474b5c(0x2d8));if(_0x416876[_0x474b5c(0x359)]===0x0){_0x3d2160[_0x474b5c(0x2ec)]='<div\x20class=\x22card\x22><p\x20style=\x22text-align:center;\x20color:#999;\x20margin:0;\x22>Nenhum\x20aluno\x20ativo\x20encontrado\x20para\x20este\x20filtro.</p></div>';return;}const _0x5a73ba=_0x57d800['filter'](_0x1a9996=>_0x1a9996['data']===_0xfa5058);let _0x444ea9='';_0x416876[_0x474b5c(0x27f)](_0x3026a0=>{const _0x412d4c=_0x474b5c;let _0x296b78=null;App[_0x412d4c(0x160)]&&_0x3026a0['id']===document[_0x412d4c(0x2e5)](_0x412d4c(0x16b))['value']?_0x296b78=_0x57d800[_0x412d4c(0x1ff)](_0x104498=>String(_0x104498['id'])===String(App['idChamadaEditando'])):_0x296b78=_0x5a73ba[_0x412d4c(0x1ff)](_0xc69513=>_0xc69513['idAluno']===_0x3026a0['id']);const _0x4e57ac=_0x296b78?_0x296b78[_0x412d4c(0x319)]:_0x412d4c(0x277),_0x382c2d=App[_0x412d4c(0x160)]&&_0x296b78?_0x412d4c(0x280)+_0x296b78['id']+'\x22':'';_0x444ea9+=_0x412d4c(0x299)+_0x3026a0['id']+_0x412d4c(0x24d)+App['escapeHTML'](_0x3026a0[_0x412d4c(0x224)])+'\x22\x20'+_0x382c2d+_0x412d4c(0x28c)+App[_0x412d4c(0x22e)](_0x3026a0['nome'])+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x20width:250px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20class=\x22status-chamada\x22\x20style=\x22width:100%;\x20padding:8px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x20font-weight:bold;\x20color:'+(_0x4e57ac==='Falta'?_0x412d4c(0x294):_0x4e57ac===_0x412d4c(0x1e0)?'#f39c12':_0x412d4c(0x225))+_0x412d4c(0x259)+(_0x4e57ac===_0x412d4c(0x277)?_0x412d4c(0x2eb):'')+_0x412d4c(0x31c)+(_0x4e57ac===_0x412d4c(0x2bc)?_0x412d4c(0x2eb):'')+_0x412d4c(0x290)+(_0x4e57ac===_0x412d4c(0x1e0)?_0x412d4c(0x2eb):'')+_0x412d4c(0x279)+(_0x4e57ac==='Falta\x20Justificada'?'selected':'')+_0x412d4c(0x2f9)+(_0x4e57ac===_0x412d4c(0x34a)?_0x412d4c(0x2eb):'')+_0x412d4c(0x298)+(_0x4e57ac===_0x412d4c(0x2b5)?_0x412d4c(0x2eb):'')+'>🏖️\x20Recesso</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>';});let _0x1f66ae=App[_0x474b5c(0x160)]?_0x474b5c(0x2c7):'';const _0x14db52=!App['idChamadaEditando']?'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:10px\x2015px;\x20background:#fff;\x20border-bottom:1px\x20solid\x20#eee;\x20display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x20justify-content:flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:12px;\x20color:#999;\x20margin-top:8px;\x20margin-right:auto;\x22>Preenchimento\x20Rápido\x20em\x20Lote:</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.marcarTodosChamada(\x27Presença\x27)\x22\x20style=\x22background:#eafaf1;\x20color:#27ae60;\x20border:1px\x20solid\x20#27ae60;\x20padding:6px\x2012px;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x20font-size:12px;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#d5f5e3\x27\x22\x20onmouseout=\x22this.style.background=\x27#eafaf1\x27\x22>✅\x20Todos\x20Presentes</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.marcarTodosChamada(\x27Falta\x27)\x22\x20style=\x22background:#fdf2f2;\x20color:#e74c3c;\x20border:1px\x20solid\x20#e74c3c;\x20padding:6px\x2012px;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x20font-size:12px;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#fadbd8\x27\x22\x20onmouseout=\x22this.style.background=\x27#fdf2f2\x27\x22>❌\x20Todos\x20Faltaram</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.marcarTodosChamada(\x27Reposição\x27)\x22\x20style=\x22background:#fef5e7;\x20color:#f39c12;\x20border:1px\x20solid\x20#f39c12;\x20padding:6px\x2012px;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x20font-size:12px;\x20transition:0.2s;\x22\x20onmouseover=\x22this.style.background=\x27#fdebd0\x27\x22\x20onmouseout=\x22this.style.background=\x27#fef5e7\x27\x22>🔄\x20Todas\x20Reposições</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20':'';_0x3d2160['innerHTML']=_0x1f66ae+('\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22padding:0;\x20overflow:hidden;\x20border:2px\x20solid\x20#27ae60;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:15px;\x20background:#eafaf1;\x20border-bottom:1px\x20solid\x20#d5f5e3;\x20font-size:13px;\x20color:#27ae60;\x20font-weight:bold;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Grelha\x20de\x20Frequência\x20-\x20'+App[_0x474b5c(0x22e)](_0xfa5058[_0x474b5c(0x2ee)]('-')['reverse']()[_0x474b5c(0x14b)]('/'))+_0x474b5c(0x34f)+_0x14db52+_0x474b5c(0x200)+_0x444ea9+_0x474b5c(0x158));}catch(_0x5b10e8){_0x3d2160[_0x474b5c(0x2ec)]=_0x474b5c(0x337);}},App[a4_0x1b6d4e(0x30f)]=async()=>{const _0x1ffa12=a4_0x1b6d4e,_0x36feca=document[_0x1ffa12(0x2e5)](_0x1ffa12(0x150))[_0x1ffa12(0x2a5)],_0x3e7bf8=document[_0x1ffa12(0x2e5)]('chamada-duracao')[_0x1ffa12(0x2a5)]||_0x1ffa12(0x1cb),_0x2d280d=document[_0x1ffa12(0x166)](_0x1ffa12(0x2f4));if(_0x2d280d['length']===0x0)return;const _0x270a19=new Date()['toISOString']()[_0x1ffa12(0x2ee)]('T')[0x0];if(_0x36feca>_0x270a19)return App['showToast'](_0x1ffa12(0x167),'error');const _0x908ae3=document[_0x1ffa12(0x24f)]('button[onclick=\x22App.salvarChamadaLote()\x22]'),_0x1fb07e=_0x908ae3['innerText'];_0x908ae3['innerText']=_0x1ffa12(0x29a),_0x908ae3[_0x1ffa12(0x32b)]=!![],document[_0x1ffa12(0x31a)][_0x1ffa12(0x29e)]['cursor']=_0x1ffa12(0x28e);try{const _0x2f18ea=App[_0x1ffa12(0x2a1)][_0x1ffa12(0x31b)],_0x13dcf7=App[_0x1ffa12(0x2a1)]['chamadas'],_0x2cf9d7=[],_0x4853fd=[],_0xed5ae8=[];let _0x4107ee=[..._0x13dcf7];_0x2d280d['forEach'](_0x2365dc=>{const _0x398884=_0x1ffa12,_0x282390=_0x2365dc['getAttribute'](_0x398884(0x2f2)),_0x40affd=_0x2365dc[_0x398884(0x1e9)](_0x398884(0x1d5)),_0x491a59=_0x2f18ea[_0x398884(0x1c9)](_0x5805b4=>_0x5805b4[_0x398884(0x1f9)]===_0x282390&&_0x5805b4[_0x398884(0x319)]!==_0x398884(0x203));if(!_0x491a59)_0x2cf9d7[_0x398884(0x1a1)](_0x40affd);});if(_0x2cf9d7[_0x1ffa12(0x359)]>0x0){App[_0x1ffa12(0x379)]('Bloqueado:\x20Crie\x20um\x20Planejamento\x20para:\x20'+_0x2cf9d7['join'](',\x20'),'error');_0x908ae3&&(_0x908ae3['innerText']=_0x1fb07e,_0x908ae3[_0x1ffa12(0x32b)]=![]);document[_0x1ffa12(0x31a)][_0x1ffa12(0x29e)]['cursor']='default';return;}_0x2d280d[_0x1ffa12(0x27f)](_0x3dc287=>{const _0x4587d8=_0x1ffa12,_0x4beb0f=_0x3dc287[_0x4587d8(0x1e9)]('data-id'),_0x51d3f9=_0x3dc287[_0x4587d8(0x1e9)](_0x4587d8(0x1d5)),_0x6df169=_0x3dc287[_0x4587d8(0x24f)](_0x4587d8(0x318))[_0x4587d8(0x2a5)],_0x10debf=_0x3dc287[_0x4587d8(0x1e9)](_0x4587d8(0x375));_0x4853fd[_0x4587d8(0x1a1)](_0x4beb0f);let _0x2b7c00=null;_0x10debf?_0x2b7c00=_0x13dcf7[_0x4587d8(0x1ff)](_0x53d388=>String(_0x53d388['id'])===String(_0x10debf)):_0x2b7c00=_0x13dcf7[_0x4587d8(0x1ff)](_0x49910e=>String(_0x49910e['idAluno'])===String(_0x4beb0f)&&_0x49910e['data']===_0x36feca);const _0x556fd6={'idAluno':_0x4beb0f,'nomeAluno':_0x51d3f9,'data':_0x36feca,'status':_0x6df169,'duracao':_0x3e7bf8};if(_0x2b7c00){const _0x2cb9ea={..._0x2b7c00,'data':_0x36feca,'status':_0x6df169,'duracao':_0x3e7bf8};_0xed5ae8[_0x4587d8(0x1a1)](App['api'](_0x4587d8(0x180)+_0x2b7c00['id'],'PUT',_0x2cb9ea));const _0x24be2d=_0x4107ee['findIndex'](_0x32b4d4=>String(_0x32b4d4['id'])===String(_0x2b7c00['id']));if(_0x24be2d!==-0x1)_0x4107ee[_0x24be2d]=_0x2cb9ea;}else _0x556fd6['id']=Date[_0x4587d8(0x2ac)]()[_0x4587d8(0x28b)]()+Math['floor'](Math['random']()*0x3e8)+_0x4beb0f,_0xed5ae8[_0x4587d8(0x1a1)](App[_0x4587d8(0x16d)](_0x4587d8(0x287),_0x4587d8(0x2cf),_0x556fd6)),_0x4107ee[_0x4587d8(0x1a1)](_0x556fd6);}),await Promise[_0x1ffa12(0x293)](_0xed5ae8);let _0x83b4b4='';try{const _0x1897bf=[];_0x4853fd[_0x1ffa12(0x27f)](_0x305109=>{const _0x2ef6a0=_0x1ffa12;let _0x51d741=_0x2f18ea[_0x2ef6a0(0x1ff)](_0x3b084c=>_0x3b084c['idAluno']===_0x305109&&_0x3b084c[_0x2ef6a0(0x319)]!=='Arquivado');_0x51d741&&typeof App[_0x2ef6a0(0x228)]===_0x2ef6a0(0x1be)&&(_0x51d741=App[_0x2ef6a0(0x228)](_0x51d741,_0x4107ee),_0x1897bf[_0x2ef6a0(0x1a1)](App[_0x2ef6a0(0x16d)]('/planejamentos/'+_0x51d741['id'],_0x2ef6a0(0x20a),_0x51d741)));}),_0x1897bf['length']>0x0&&(await Promise[_0x1ffa12(0x293)](_0x1897bf),_0x83b4b4='\x20e\x20Planejamento(s)\x20Auto-Ajustado(s)!');}catch(_0x3d77e3){console[_0x1ffa12(0x21a)](_0x1ffa12(0x34e),_0x3d77e3);}App[_0x1ffa12(0x379)](_0x1ffa12(0x175)+_0x83b4b4,'success'),App[_0x1ffa12(0x28f)]();const _0x9e7335=document[_0x1ffa12(0x2e5)](_0x1ffa12(0x1fd));_0x9e7335&&(_0x9e7335['innerHTML']=_0x1ffa12(0x1ee)),await App[_0x1ffa12(0x1a8)]();}catch(_0x42b8dc){App['showToast']('Erro\x20ao\x20guardar\x20a\x20chamada.',_0x1ffa12(0x33f));}finally{_0x908ae3&&(_0x908ae3[_0x1ffa12(0x177)]=_0x1fb07e,_0x908ae3[_0x1ffa12(0x32b)]=![]),document[_0x1ffa12(0x31a)][_0x1ffa12(0x29e)]['cursor']='default';}},App['excluirLancamentoChamada']=_0x2043b2=>{const _0x4b307e=a4_0x1b6d4e;App[_0x4b307e(0x223)](_0x4b307e(0x163),_0x4b307e(0x181),'Excluir','#e74c3c',async()=>{const _0x29a9ae=_0x4b307e;await App[_0x29a9ae(0x16d)](_0x29a9ae(0x180)+_0x2043b2,_0x29a9ae(0x19d));const _0x236c78=document[_0x29a9ae(0x2e5)](_0x29a9ae(0x1fd));_0x236c78&&(_0x236c78[_0x29a9ae(0x2ec)]=_0x29a9ae(0x1ee)),await App['renderizarChamadaPro']();});},App['renderizarCalendarioPro']=async()=>{const _0x5481cc=a4_0x1b6d4e;App[_0x5481cc(0x2e9)](_0x5481cc(0x211));const _0x361ef2=document[_0x5481cc(0x2e5)]('app-content');_0x361ef2[_0x5481cc(0x2ec)]=_0x5481cc(0x36c);if(!App['calendarState'])App[_0x5481cc(0x2bd)]={'month':new Date()['getMonth'](),'year':new Date()[_0x5481cc(0x312)]()};try{const _0x3d9268=await App[_0x5481cc(0x16d)](_0x5481cc(0x364)+Date[_0x5481cc(0x2ac)]()),_0x5db346=[_0x5481cc(0x20e),_0x5481cc(0x1af),_0x5481cc(0x36a),'Abril','Maio',_0x5481cc(0x2c6),_0x5481cc(0x2d3),'Agosto',_0x5481cc(0x208),_0x5481cc(0x372),_0x5481cc(0x217),_0x5481cc(0x35a)],_0xc027a0=_0x5db346[App[_0x5481cc(0x2bd)][_0x5481cc(0x1e3)]],_0x5998b0=App['calendarState'][_0x5481cc(0x214)],_0x117a5='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20justify-content:\x20space-between;\x20align-items:\x20center;\x20margin-bottom:\x2020px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.mudarMes(-1)\x22\x20style=\x22background:none;\x20border:none;\x20font-size:24px;\x20cursor:pointer;\x20color:#555;\x22>◀</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22margin:0;\x20color:#2c3e50;\x20text-transform:uppercase;\x20font-size:22px;\x22>'+_0xc027a0+'\x20'+_0x5998b0+_0x5481cc(0x24b)+App['gerarDiasCalendario'](App[_0x5481cc(0x2bd)][_0x5481cc(0x1e3)],App[_0x5481cc(0x2bd)]['year'],_0x3d9268)+_0x5481cc(0x26f),_0x5ea2a3='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22box-gerir-evento\x22\x20style=\x22display:flex;\x20align-items:center;\x20gap:10px;\x20margin-bottom:15px;\x22><span\x20style=\x22font-size:20px;\x22>🗓️</span><h3\x20style=\x22margin:0;\x20color:#2c3e50;\x22>Gerir\x20Evento</h3></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20flex;\x20flex-wrap:\x20wrap;\x20gap:\x2015px;\x20align-items:\x20flex-end;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+col(_0x5481cc(0x2b4),_0x5481cc(0x2c2),_0x5481cc(0x16e))+_0x5481cc(0x236)+selectLocal(_0x5481cc(0x321),_0x5481cc(0x336),'<option\x20value=\x22Evento\x22>🟢\x20Evento</option><option\x20value=\x22Feriado\x22>🔴\x20Feriado</option><option\x20value=\x22Prova\x22>🔵\x20Prova</option><option\x20value=\x22Reunião\x22>🟠\x20Reunião</option>')+_0x5481cc(0x236)+col('Descrição:',_0x5481cc(0x325),_0x5481cc(0x244),'','placeholder=\x22Ex:\x20Prova\x20de\x20História\x20/\x20Carnaval\x22\x20style=\x22flex:3;\x22')+_0x5481cc(0x20c)+col(_0x5481cc(0x265),_0x5481cc(0x2c5),'time')+_0x5481cc(0x236)+col(_0x5481cc(0x1b0),'evt-fim',_0x5481cc(0x255))+_0x5481cc(0x2ad),_0x96a001=_0x5481cc(0x324)+App[_0x5481cc(0x1ca)](App[_0x5481cc(0x2bd)]['month'],App[_0x5481cc(0x2bd)][_0x5481cc(0x214)],_0x3d9268)+_0x5481cc(0x307);_0x361ef2[_0x5481cc(0x2ec)]=App['UI'][_0x5481cc(0x335)]('','',_0x117a5,_0x5481cc(0x35c))+_0x5481cc(0x2f0)+App['UI']['card']('','',_0x5ea2a3,'100%')+'</div>'+'<div\x20style=\x22margin-top:20px;\x22>'+App['UI'][_0x5481cc(0x335)](_0x5481cc(0x1a6)+_0xc027a0+')','',_0x96a001,_0x5481cc(0x35c))+_0x5481cc(0x2a4),document[_0x5481cc(0x2e5)](_0x5481cc(0x2c2))[_0x5481cc(0x2a5)]=new Date()['toISOString']()[_0x5481cc(0x2ee)]('T')[0x0];}catch(_0x1bbff9){_0x361ef2[_0x5481cc(0x2ec)]=_0x5481cc(0x374);}},App['gerarDiasCalendario']=(_0x519438,_0x172f70,_0x4fc7a9)=>{const _0x161467=a4_0x1b6d4e,_0x9abb24=new Date(_0x172f70,_0x519438,0x1)[_0x161467(0x15e)](),_0x15c471=new Date(_0x172f70,_0x519438+0x1,0x0)[_0x161467(0x332)]();let _0x4b6c3a='';for(let _0x579898=0x0;_0x579898<_0x9abb24;_0x579898++){_0x4b6c3a+=_0x161467(0x37d);}for(let _0x117018=0x1;_0x117018<=_0x15c471;_0x117018++){const _0x5b6b47=_0x172f70+'-'+String(_0x519438+0x1)[_0x161467(0x263)](0x2,'0')+'-'+String(_0x117018)[_0x161467(0x263)](0x2,'0'),_0x398057=new Date(),_0x2e7daf=_0x117018===_0x398057[_0x161467(0x332)]()&&_0x519438===_0x398057['getMonth']()&&_0x172f70===_0x398057[_0x161467(0x312)](),_0x209bfa=_0x4fc7a9[_0x161467(0x37e)](_0x235fca=>_0x235fca[_0x161467(0x184)]===_0x5b6b47),_0x179860=_0x209bfa[_0x161467(0x222)](_0x573b57=>_0x161467(0x2c0)+(EVENTO_CORES[_0x573b57['tipo']]||EVENTO_CORES[_0x161467(0x17a)])['bg']+_0x161467(0x20f)+App[_0x161467(0x22e)](_0x573b57[_0x161467(0x2a3)])+_0x161467(0x20b)+App[_0x161467(0x22e)](_0x573b57[_0x161467(0x2a3)])+_0x161467(0x33e))[_0x161467(0x14b)]('');_0x4b6c3a+='<div\x20id=\x22cal-day-'+_0x5b6b47+_0x161467(0x302)+(_0x2e7daf?_0x161467(0x29f):'')+'\x22\x20onclick=\x22App.selecionarDia(\x27'+_0x5b6b47+_0x161467(0x350)+_0x117018+_0x161467(0x196)+_0x179860+_0x161467(0x1e4);}return _0x4b6c3a;},App[a4_0x1b6d4e(0x1ca)]=(_0xf6f26d,_0x13d52d,_0x3fb4eb)=>{const _0x49aa6c=a4_0x1b6d4e,_0x37a1e0=_0x3fb4eb['filter'](_0x4de781=>{const _0x8932a=a4_0x49cb,_0x7445e9=new Date(_0x4de781['data']+_0x8932a(0x1f3));return _0x7445e9[_0x8932a(0x1b5)]()===_0xf6f26d&&_0x7445e9[_0x8932a(0x312)]()===_0x13d52d;})['sort']((_0x537c2b,_0x26682a)=>new Date(_0x537c2b['data'])-new Date(_0x26682a[_0x49aa6c(0x184)]));if(_0x37a1e0[_0x49aa6c(0x359)]===0x0)return'<tr><td\x20colspan=\x225\x22\x20style=\x22padding:20px;\x20text-align:center;\x20color:#999;\x22>Nenhum\x20evento.</td></tr>';return _0x37a1e0['map'](_0x4d54c0=>'<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22><td\x20style=\x22padding:10px;\x20font-weight:bold;\x22>'+_0x4d54c0['data']['split']('-')[0x2]+_0x49aa6c(0x291)+App[_0x49aa6c(0x22e)](_0x4d54c0[_0x49aa6c(0x361)]||'-')+_0x49aa6c(0x1ec)+(EVENTO_CORES[_0x4d54c0['tipo']]||EVENTO_CORES[_0x49aa6c(0x17a)])['bg']+'\x22>'+App[_0x49aa6c(0x22e)](_0x4d54c0['tipo'])+_0x49aa6c(0x291)+App['escapeHTML'](_0x4d54c0[_0x49aa6c(0x2a3)])+_0x49aa6c(0x346)+_0x4d54c0['id']+_0x49aa6c(0x278)+_0x4d54c0['id']+_0x49aa6c(0x306))[_0x49aa6c(0x14b)]('');},App[a4_0x1b6d4e(0x270)]=_0x5b5faf=>{const _0x5541a1=a4_0x1b6d4e;App[_0x5541a1(0x2bd)]['month']+=_0x5b5faf;if(App[_0x5541a1(0x2bd)][_0x5541a1(0x1e3)]>0xb)App[_0x5541a1(0x2bd)]['month']=0x0,App['calendarState']['year']++;else App[_0x5541a1(0x2bd)]['month']<0x0&&(App['calendarState'][_0x5541a1(0x1e3)]=0xb,App[_0x5541a1(0x2bd)][_0x5541a1(0x214)]--);;App[_0x5541a1(0x1f0)]();},App[a4_0x1b6d4e(0x1cd)]=_0x200acf=>{const _0x216c38=a4_0x1b6d4e;document['querySelectorAll'](_0x216c38(0x23d))['forEach'](_0x262dc3=>_0x262dc3['style']['border']=_0x216c38(0x2d1));const _0x219355=document['getElementById']('cal-day-'+_0x200acf);if(_0x219355)_0x219355[_0x216c38(0x29e)]['border']='2px\x20solid\x20#3498db';document[_0x216c38(0x2e5)](_0x216c38(0x2c2))[_0x216c38(0x2a5)]=_0x200acf,document[_0x216c38(0x2e5)](_0x216c38(0x325))[_0x216c38(0x2a5)]='',App['idEdicaoEvento']=null,setTimeout(()=>{const _0xd069e1=_0x216c38;document[_0xd069e1(0x2e5)](_0xd069e1(0x18c))[_0xd069e1(0x1c5)]({'behavior':_0xd069e1(0x2a0),'block':_0xd069e1(0x36e)}),document[_0xd069e1(0x2e5)](_0xd069e1(0x325))[_0xd069e1(0x25a)]();},0x64);},App[a4_0x1b6d4e(0x2cb)]=async()=>{const _0x387bd4=a4_0x1b6d4e;if(document['activeElement'])document['activeElement']['blur']();const _0x124051={'data':document[_0x387bd4(0x2e5)](_0x387bd4(0x2c2))[_0x387bd4(0x2a5)],'tipo':document['getElementById'](_0x387bd4(0x336))[_0x387bd4(0x2a5)],'descricao':document['getElementById'](_0x387bd4(0x325))[_0x387bd4(0x2a5)],'inicio':document[_0x387bd4(0x2e5)](_0x387bd4(0x2c5))[_0x387bd4(0x2a5)],'fim':document[_0x387bd4(0x2e5)]('evt-fim')[_0x387bd4(0x2a5)]};if(!_0x124051[_0x387bd4(0x184)]||!_0x124051['descricao'])return App[_0x387bd4(0x379)](_0x387bd4(0x2e6),_0x387bd4(0x33f));const _0x48b0cf=document[_0x387bd4(0x24f)](_0x387bd4(0x1cf)),_0x44a679=_0x48b0cf?_0x48b0cf[_0x387bd4(0x177)]:_0x387bd4(0x2ab);_0x48b0cf&&(_0x48b0cf[_0x387bd4(0x177)]=_0x387bd4(0x13f),_0x48b0cf[_0x387bd4(0x32b)]=!![]);document[_0x387bd4(0x31a)]['style'][_0x387bd4(0x18f)]=_0x387bd4(0x28e);try{if(App['idEdicaoEvento'])await App[_0x387bd4(0x16d)](_0x387bd4(0x1b2)+App[_0x387bd4(0x362)],_0x387bd4(0x20a),_0x124051);else await App[_0x387bd4(0x16d)]('/eventos',_0x387bd4(0x2cf),_0x124051);App[_0x387bd4(0x362)]=null;const _0x4b5622=document[_0x387bd4(0x2e5)](_0x387bd4(0x1fd));_0x4b5622&&(_0x4b5622[_0x387bd4(0x2ec)]=_0x387bd4(0x14e)),await App[_0x387bd4(0x1f0)](),setTimeout(()=>{const _0x4cc8d9=_0x387bd4,_0x2fbaab=document[_0x4cc8d9(0x24f)]('.table-responsive-wrapper');if(_0x2fbaab)_0x2fbaab[_0x4cc8d9(0x1c5)]({'behavior':_0x4cc8d9(0x2a0),'block':'end'});},0x64),App[_0x387bd4(0x379)](_0x387bd4(0x341),_0x387bd4(0x24c));}catch(_0x123eb0){App[_0x387bd4(0x379)](_0x387bd4(0x13d),'error');}finally{_0x48b0cf&&(_0x48b0cf[_0x387bd4(0x177)]=_0x44a679,_0x48b0cf['disabled']=![]),document['body']['style'][_0x387bd4(0x18f)]=_0x387bd4(0x1eb);}},App[a4_0x1b6d4e(0x1c2)]=async _0x2ca877=>{const _0x55b7fa=a4_0x1b6d4e,_0x20999b=await App['api']('/eventos/'+_0x2ca877);document[_0x55b7fa(0x2e5)](_0x55b7fa(0x2c2))['value']=_0x20999b['data'],document[_0x55b7fa(0x2e5)](_0x55b7fa(0x336))['value']=_0x20999b['tipo'],document[_0x55b7fa(0x2e5)](_0x55b7fa(0x325))[_0x55b7fa(0x2a5)]=_0x20999b['descricao'],document['getElementById'](_0x55b7fa(0x2c5))[_0x55b7fa(0x2a5)]=_0x20999b[_0x55b7fa(0x361)],document[_0x55b7fa(0x2e5)]('evt-fim')[_0x55b7fa(0x2a5)]=_0x20999b[_0x55b7fa(0x1a2)],App[_0x55b7fa(0x362)]=_0x2ca877,document[_0x55b7fa(0x2e5)](_0x55b7fa(0x18c))[_0x55b7fa(0x1c5)]({'behavior':_0x55b7fa(0x2a0),'block':_0x55b7fa(0x36e)});},App[a4_0x1b6d4e(0x1fa)]=_0x5c5b48=>{const _0x241502=a4_0x1b6d4e;App['confirmar'](_0x241502(0x2a2),_0x241502(0x1b6),'Excluir','#e74c3c',async()=>{const _0x49e032=_0x241502;await App[_0x49e032(0x16d)](_0x49e032(0x1b2)+_0x5c5b48,_0x49e032(0x19d));const _0x10b825=document['getElementById']('app-content');_0x10b825&&(_0x10b825[_0x49e032(0x2ec)]=_0x49e032(0x14e)),await App['renderizarCalendarioPro']();});},App[a4_0x1b6d4e(0x2fd)]=()=>{const _0x5b66ef=a4_0x1b6d4e;document[_0x5b66ef(0x2e5)](_0x5b66ef(0x325))[_0x5b66ef(0x2a5)]='',App[_0x5b66ef(0x362)]=null;};
+window.App = window.App || {};
+const App = window.App;
+// =========================================================
+// MÓDULO PEDAGÓGICO V162 (MODAL BONITO + MODO EDIÇÃO BLINDADO + NO CACHE)
+// =========================================================
+
+const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
+
+const col = (label, id, tipo='text', val='', extra='') => `
+    <div style="flex:1; min-width:150px;">
+        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">${label}</label>
+        <input type="${tipo}" id="${id}" value="${val}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>
+    </div>`;
+
+const selectLocal = (label, id, options, extra='') => `
+    <div style="flex:1; min-width:150px;">
+        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">${label}</label>
+        <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>${options}</select>
+    </div>`;
+
+// --- MODAL DE CONFIRMAÇÃO ELEGANTE ---
+App.confirmar = (titulo, mensagem, textoBtn, corBtn, callback) => {
+    const id = 'modal-confirm-' + Date.now();
+    const overlay = document.createElement('div');
+    overlay.id = id;
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:99999; backdrop-filter:blur(3px); opacity:0; transition:opacity 0.2s;';
+    
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff; width:90%; max-width:400px; border-radius:12px; padding:30px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.3); transform:scale(0.9); transition:transform 0.2s;';
+    
+    card.innerHTML = `
+        <div style="font-size:45px; margin-bottom:15px; animation: pop 0.3s ease;">⚠️</div>
+        <h3 style="margin:0 0 10px 0; color:#2c3e50; font-size:20px;">${titulo}</h3>
+        <p style="color:#7f8c8d; margin-bottom:25px; line-height:1.5; font-size:14px;">${mensagem}</p>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-no-${id}" style="flex:1; padding:12px; border:none; background:#ecf0f1; color:#7f8c8d; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#bdc3c7'" onmouseout="this.style.background='#ecf0f1'">Cancelar</button>
+            <button id="btn-yes-${id}" style="flex:1; padding:12px; border:none; background:${corBtn}; color:white; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s; opacity:0.9;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">${textoBtn}</button>
+        </div>
+    `;
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+    
+    setTimeout(() => { overlay.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 10);
+    
+    const close = () => {
+        overlay.style.opacity = '0'; card.style.transform = 'scale(0.9)';
+        setTimeout(() => document.body.removeChild(overlay), 200);
+    };
+    
+    document.getElementById(`btn-no-${id}`).onclick = close;
+    document.getElementById(`btn-yes-${id}`).onclick = () => { close(); callback(); };
+};
+
+// --- FUNÇÃO GERAL DE FILTRO ---
+App.filtrarTabela = (inputId, tabelaId) => {
+    const termo = document.getElementById(inputId).value.trim().toLowerCase();
+    const linhas = document.querySelectorAll(`#${tabelaId} tbody tr`);
+    if (!linhas || linhas.length === 0) return;
+    linhas.forEach(linha => {
+        if (linha.innerText.includes('Nenhum') || linha.innerText.includes('Nenhuma')) return;
+        const textoLinha = linha.innerText.toLowerCase(); 
+        linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+    });
+};
+
+// ---------------------------------------------------------
+// 1. PLANEJAMENTO (COM FOLHA A4 BLINDADA E ARQUIVAMENTO)
+// ---------------------------------------------------------
+App.renderizarPlanejamentoPro = () => {
+    App.setTitulo("Planejamento");
+    const div = document.getElementById('app-content');
+    
+    const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:30px; border-radius:15px; width:220px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05);`;
+    const hoverIn = (cor) => `this.style.borderColor='${cor}'; this.style.transform='translateY(-5px)'`;
+    const hoverOut = `this.style.borderColor='#eee'; this.style.transform='translateY(0)'`;
+
+    div.innerHTML = `
+        <div class="card" style="text-align:center; padding:50px;">
+            <h2 style="color:#2c3e50; margin-bottom:10px;">Planejamento Pedagógico</h2>
+            <p style="color:#7f8c8d; margin-bottom:40px;">Gira o conteúdo programático e o controle de aulas.</p>
+            <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                <div onclick="App.renderizarNovoPlanejamento()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
+                    <div style="font-size:50px; margin-bottom:15px;">📝</div>
+                    <h3 style="margin:0; color:#3498db;">Novo Planejamento</h3>
+                </div>
+                <div onclick="App.renderizarPlanejamentosSalvos()" style="${btnStyle('#27ae60')}" onmouseover="${hoverIn('#27ae60')}" onmouseout="${hoverOut}">
+                    <div style="font-size:50px; margin-bottom:15px;">📂</div>
+                    <h3 style="margin:0; color:#27ae60;">Planejamentos Ativos</h3>
+                </div>
+                <div onclick="App.renderizarPlanejamentosArquivados()" style="${btnStyle('#8e44ad')}" onmouseover="${hoverIn('#8e44ad')}" onmouseout="${hoverOut}">
+                    <div style="font-size:50px; margin-bottom:15px;">🗄️</div>
+                    <h3 style="margin:0; color:#8e44ad;">Arquivados</h3>
+                </div>
+            </div>
+        </div>`;
+};
+
+App.renderizarNovoPlanejamento = async () => {
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    try {
+        const alunos = await App.api('/alunos');
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione --</option>` + alunosAtivos.map(a => `<option value="${a.id}" data-curso="${App.escapeHTML(a.curso || 'Geral')}">${App.escapeHTML(a.nome)}</option>`).join('');
+        
+        const formPlan = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#2c3e50;">Configurar Novo Cronograma</h3>
+                <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
+            </div>
+            <div style="background:#f9f9f9; padding:20px; border-radius:8px; border:1px solid #eee;">
+                ${selectLocal('Aluno:', 'plan-aluno', opAlunos, 'style="margin-bottom:15px;"')}
+                <div style="display:flex; gap:20px; margin-bottom:15px;">
+                    ${col('Início:', 'plan-inicio', 'date')}
+                    ${col('Total Aulas:', 'plan-qtd', 'number', '10')}
+                </div>
+                <div style="display:flex; gap:20px; margin-bottom:15px;">
+                    ${col('Horário:', 'plan-hora', 'time', '08:00')}
+                    ${col('Duração:', 'plan-duracao', 'time', '01:00')}
+                </div>
+                <label style="font-size:12px; font-weight:bold; color:#666; display:block; margin-bottom:8px;">Dias da Semana:</label>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; background:white; padding:10px; border:1px solid #ddd; border-radius:5px;">
+                    ${['Seg','Ter','Qua','Qui','Sex','Sáb'].map((dia, i) => `<label><input type="checkbox" class="plan-dia" value="${i+1}"> ${dia}</label>`).join('')}
+                </div>
+            </div>
+            <button onclick="App.gerarGridEditavel()" style="width:100%; margin-top:20px; padding:15px; background:#3498db; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">CRIAR TABELA</button>
+        `;
+        div.innerHTML = App.UI.card('', '', formPlan, '800px');
+    } catch(e) { div.innerHTML = "Erro."; }
+};
+
+App.renderizarPlanejamentosSalvos = async () => {
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    try {
+        // Cache-buster para garantir que os dados são frescos
+        const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+        const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
+        
+        if(planosAtivos.length === 0) { 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planejamento ativo.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            return; 
+        }
+        
+        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const corpo = planosAtivos.map(p => `
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
+                <td style="padding:10px; text-align:center;">${p.aulas ? p.aulas.length : 0}</td>
+                <td style="padding:10px; text-align:right;">
+                    <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Editar">✏️</button>
+                    <button onclick="App.arquivarPlanejamento('${p.id}')" style="background:#8e44ad; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Arquivar">🗄️</button>
+                    <button onclick="App.excluirPlanejamento('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir">🗑️</button>
+                </td>
+            </tr>`).join('');
+
+        const buscaHtml = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-plan-ativos" 
+                       placeholder="Pesquisar planejamento ativo pelo nome do aluno ou curso..." 
+                       oninput="App.filtrarTabela('input-busca-plan-ativos', 'tabela-plan-ativos')" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('', '', `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:#27ae60;">Planejamentos Ativos</h3>
+                <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
+            </div>
+            ${buscaHtml}
+            <div class="table-responsive-wrapper">
+                <table id="tabela-plan-ativos" style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+            </div>
+        `);
+    } catch(e) { div.innerHTML = "Erro."; }
+};
+
+App.renderizarPlanejamentosArquivados = async () => {
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar arquivados...';
+    try {
+        // Cache-buster para fresco
+        const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+        const planosArquivados = planos.filter(p => p.status === 'Arquivado');
+        
+        if(planosArquivados.length === 0) { 
+            div.innerHTML = App.UI.card('', '', `<h3>Nenhum planejamento no arquivo morto.</h3><button onclick="App.renderizarPlanejamentoPro()" class="btn-primary">Voltar</button>`, 'text-align:center; padding:40px;'); 
+            return; 
+        }
+        
+        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const corpo = planosArquivados.map(p => `
+            <tr style="border-bottom:1px solid #ddd; background:#f9f9f9;">
+                <td style="padding:10px; color:#7f8c8d; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
+                <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.curso)}</td>
+                <td style="padding:10px; text-align:center; color:#7f8c8d;">${p.aulas ? p.aulas.length : 0}</td>
+                <td style="padding:10px; text-align:right;">
+                    <button onclick="App.abrirPlanejamentoVisualizacao('${p.id}')" style="background:#3498db; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Visualizar">👁️</button>
+                    <button onclick="App.restaurarPlanejamento('${p.id}')" style="background:#27ae60; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Restaurar / Reativar">♻️</button>
+                    <button onclick="App.excluirPlanejamentoArquivado('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir Definitivamente">🗑️</button>
+                </td>
+            </tr>`).join('');
+
+        const buscaHtml = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-plan-arquivados" 
+                       placeholder="Pesquisar arquivo morto..." 
+                       oninput="App.filtrarTabela('input-busca-plan-arquivados', 'tabela-plan-arquivados')" 
+                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('', '', `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0; color:#8e44ad;">🗄️ Planejamentos Arquivados</h3>
+                <button onclick="App.renderizarPlanejamentoPro()" style="background:#ddd; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Voltar</button>
+            </div>
+            <p style="color:#666; font-size:13px; margin-bottom:20px;">Estes planejamentos foram finalizados/arquivados. Não são contabilizados no boletim nem no auto-ajuste de presenças.</p>
+            ${buscaHtml}
+            <div class="table-responsive-wrapper">
+                <table id="tabela-plan-arquivados" style="width:100%; border-collapse:collapse;"><thead>${cabecalho}</thead><tbody>${corpo}</tbody></table>
+            </div>
+        `);
+    } catch(e) { div.innerHTML = "Erro ao ler arquivados."; }
+};
+
+App.gerarGridEditavel = () => {
+    const alunoSelect = document.getElementById('plan-aluno'); const idAluno = alunoSelect.value;
+    if(!idAluno) return alert("Selecione um aluno.");
+    const nomeAluno = alunoSelect.options[alunoSelect.selectedIndex].text;
+    const cursoAluno = alunoSelect.options[alunoSelect.selectedIndex].getAttribute('data-curso') || "Geral";
+    const dataInicio = document.getElementById('plan-inicio').value; const qtdAulas = parseInt(document.getElementById('plan-qtd').value);
+    const horario = document.getElementById('plan-hora').value; const duracao = document.getElementById('plan-duracao').value;
+    const dias = Array.from(document.querySelectorAll('.plan-dia:checked')).map(cb => parseInt(cb.value));
+    
+    if(!dataInicio || dias.length === 0) return alert("Preencha os dados corretamente.");
+    
+    const listaAulas = []; let dataAtual = new Date(dataInicio + 'T00:00:00'); let contador = 0;
+    while(contador < qtdAulas) { 
+        if(dias.includes(dataAtual.getDay())) { 
+            contador++; 
+            const d = String(dataAtual.getDate()).padStart(2, '0');
+            const m = String(dataAtual.getMonth() + 1).padStart(2, '0');
+            const y = dataAtual.getFullYear();
+            
+            listaAulas.push({ num: contador, data: `${d}/${m}/${y}`, hora: horario, duracao: duracao, conteudo: '', visto: false }); 
+        } 
+        dataAtual.setDate(dataAtual.getDate() + 1); 
+    }
+    App.renderizarTelaEdicao({ id: null, idAluno, nomeAluno, curso: cursoAluno, status: 'Ativo', aulas: listaAulas });
+};
+
+App.abrirPlanejamentoEditavel = async (id) => { try { const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`); App.renderizarTelaEdicao(plano); } catch(e) { alert("Erro."); } };
+
+App.abrirPlanejamentoVisualizacao = async (id) => { 
+    try { 
+        const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`); 
+        App.renderizarTelaEdicao(plano, true); // O 'true' ativa o Modo Blindado de Leitura!
+    } catch(e) { 
+        alert("Erro ao abrir."); 
+    } 
+};
+
+App.renderizarTelaEdicao = (plano, isReadOnly = false) => {
+    App.planoAtual = plano; const div = document.getElementById('app-content');
+    
+    let totalMinutos = 0;
+    plano.aulas.forEach(aula => { 
+        if(aula.duracao && aula.duracao.includes(':')) {
+            const [h, m] = aula.duracao.split(':').map(Number); 
+            totalMinutos += (h * 60) + (m || 0); 
+        }
+    });
+    const horasInt = Math.floor(totalMinutos / 60);
+    const minutosRest = totalMinutos % 60;
+    const totalHorasText = minutosRest > 0 ? `${horasInt}h ${minutosRest}m` : `${horasInt}H`;
+    
+    const escola = JSON.parse(localStorage.getItem(App.getTenantKey ? App.getTenantKey('escola_perfil') : 'escola_perfil')) || {}; 
+    const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+    
+    // Se for leitura, o botão fechar volta para os Arquivados, senão volta para os Ativos
+    const acaoVoltar = isReadOnly ? 'App.renderizarPlanejamentosArquivados()' : 'App.renderizarPlanejamentosSalvos()';
+    const tagArquivado = isReadOnly ? '<br><span style="color:#e74c3c; font-size:12px;">(ARQUIVADO - APENAS LEITURA)</span>' : '';
+
+    div.innerHTML = `
+        <div class="no-print" style="margin-bottom:20px; background:#f4f4f4; padding:15px; border-radius:10px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            ${!isReadOnly ? `
+            <button onclick="App.salvarPlanejamentoBanco()" style="background:#27ae60; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">💾 SALVAR</button>
+            <button id="btn-sync-plan" onclick="App.sincronizarPlanejamentoComChamadasUI()" style="background:#8e44ad; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(142,68,173,0.3);" title="Ajusta datas e a duração exata registada na chamada de presença!">🤖 AUTO-AJUSTAR</button>
+            ` : ''}
+            <button onclick="window.print()" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ IMPRIMIR</button>
+            <button onclick="${acaoVoltar}" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">FECHAR</button>
+        </div>
+        
+        <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+            <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome||'ESCOLA')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj||'')}</div></div></div>
+                <div style="text-align:right;"><div><b>Planejamento Pedagógico</b> ${tagArquivado}</div><div style="font-size:12px;">Emissão: ${new Date().toLocaleDateString('pt-BR')}</div></div>
+            </div>
+            
+            <div style="border:1px solid #000; padding:10px; font-size:12px; margin-bottom:15px; background:#fafafa;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="width:60%;">
+                        <div style="margin-bottom:5px;"><b>ALUNO:</b> ${App.escapeHTML(plano.nomeAluno)}</div>
+                        <div><b>TOTAL DE AULAS:</b> ${plano.aulas.length}</div>
+                    </div>
+                    <div style="width:40%;">
+                        <div style="margin-bottom:5px;"><b>CURSO:</b> ${App.escapeHTML(plano.curso)}</div>
+                        <div><b>CARGA HORÁRIA PREVISTA:</b> ${totalHorasText}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead><tr style="border-bottom:1px solid #000;"><th style="width:5%; padding:8px;">Nº</th><th style="width:15%; padding:8px;">DATA</th><th style="width:12%; padding:8px;">HORÁRIO</th><th style="width:12%; padding:8px;">DURAÇÃO</th><th style="padding:8px;">CONTEÚDO / OBS</th><th style="width:5%; padding:8px;">OK</th></tr></thead>
+                    <tbody>
+                        ${plano.aulas.map((a,i)=>`
+                        <tr>
+                            <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;">${a.num}</td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.data)}" onchange="App.atualizarAula(${i},'data',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent;" value="${App.escapeHTML(a.hora)}" onchange="App.atualizarAula(${i},'hora',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; text-align:center; background:transparent; font-weight:bold; color:#2980b9;" value="${App.escapeHTML(a.duracao)}" onchange="App.atualizarAula(${i},'duracao',this.value)"></td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;"><input ${isReadOnly ? 'disabled' : ''} style="width:100%; border:none; border-bottom:1px dashed #ccc; background:transparent;" placeholder="..." value="${App.escapeHTML(a.conteudo)}" onchange="App.atualizarAula(${i},'conteudo',this.value)"></td>
+                            <td style="text-align:center; padding:8px; border-bottom:1px solid #eee;"><input type="checkbox" ${isReadOnly ? 'disabled' : ''} ${a.visto?'checked':''} onchange="App.atualizarAula(${i},'visto',this.checked)"></td>
+                        </tr>`).join('')}
+                        <tr style="background:#eee; font-weight:bold; border-top:2px solid #000;"><td colspan="3" style="text-align:right; padding:10px;">Carga Horária Total =</td><td style="text-align:center; padding:10px; color:#2980b9;">${totalHorasText}</td><td colspan="2"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+};
+
+App.atualizarAula = (i,c,v) => { 
+    if(App.planoAtual && App.planoAtual.aulas[i]) App.planoAtual.aulas[i][c]=v; 
+    if(c === 'duracao') App.renderizarTelaEdicao(App.planoAtual);
+};
+
+App.salvarPlanejamentoBanco = async () => { 
+    if(!App.planoAtual) return; 
+    if (document.activeElement) document.activeElement.blur();
+
+    const met = App.planoAtual.id ? 'PUT' : 'POST'; 
+    const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
+    if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
+    
+    if(!App.planoAtual.status) App.planoAtual.status = 'Ativo'; 
+    
+    const btn = document.querySelector('button[onclick="App.salvarPlanejamentoBanco()"]');
+    const txtOrig = btn ? btn.innerText : '💾 SALVAR';
+    if(btn) { btn.innerText = "A sincronizar tudo... ⏳"; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        // 1. Salva o Planejamento (Base de tudo)
+        await App.api(url, met, App.planoAtual); 
+        
+        // 2. GESTÃO DE SINCRONIZAÇÃO (Cria, Atualiza ou Remove Presenças)
+        const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
+        const chamadasDoAluno = chamadasExistentes.filter(c => c.idAluno === App.planoAtual.idAluno);
+        
+        const hojeStr = new Date().toISOString().split('T')[0];
+        const promessasSincronizacao = [];
+        let totalCriadas = 0, totalAtualizadas = 0, totalRemovidas = 0;
+
+        App.planoAtual.aulas.forEach((aula, index) => {
+            const partesData = aula.data.split('/');
+            if(partesData.length === 3) {
+                const dataAulaISO = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+                
+                // SÓ PROCESSA DATAS PASSADAS OU HOJE
+                if (dataAulaISO <= hojeStr) {
+                    const regExistente = chamadasDoAluno.find(c => c.data === dataAulaISO);
+
+                    if (aula.visto === true) {
+                        // CASO A: Marcou OK
+                        if (!regExistente) {
+                            // Criar nova presença
+                            const payload = {
+                                id: Date.now().toString() + Math.floor(Math.random()*1000) + index,
+                                idAluno: App.planoAtual.idAluno,
+                                nomeAluno: App.planoAtual.nomeAluno,
+                                data: dataAulaISO,
+                                status: 'Presença',
+                                duracao: aula.duracao || '01:00'
+                            };
+                            promessasSincronizacao.push(App.api('/chamadas', 'POST', payload));
+                            totalCriadas++;
+                        } else {
+                            // Se o prof marcou visto manual num dia que tinha "Falta", converte para "Presença"
+                            if (regExistente.status !== 'Presença' && regExistente.status !== 'Reposição') {
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status: 'Presença', duracao: aula.duracao }));
+                                totalAtualizadas++;
+                            } else if (regExistente.duracao !== aula.duracao) {
+                                // Atualizar presença se a duração mudou
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, duracao: aula.duracao }));
+                                totalAtualizadas++;
+                            }
+                        }
+                    } else {
+                        // CASO B: Desmarcou o visto
+                        if (regExistente) {
+                            // 🛡️ O ESCUDO MÁGICO:
+                            // Só apaga do banco de dados se for uma "Presença" ou "Reposição".
+                            // Se houver uma "Falta" ou "Feriado" gravada nesse dia, deixa o registo em paz!
+                            if (regExistente.status === 'Presença' || regExistente.status === 'Reposição') {
+                                promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'DELETE'));
+                                totalRemovidas++;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (promessasSincronizacao.length > 0) {
+            await Promise.all(promessasSincronizacao);
+        }
+
+        let msg = "Planejamento Salvo!";
+        if(totalCriadas > 0 || totalAtualizadas > 0 || totalRemovidas > 0) {
+            msg += ` Sincronizado: ${totalCriadas}✅ | ${totalAtualizadas}✏️ | ${totalRemovidas}🗑️`;
+        }
+        App.showToast(msg, "success");
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+        await App.renderizarPlanejamentosSalvos(); 
+    } catch(e) { 
+        App.showToast("Erro na sincronização.", "error"); 
+        console.error(e);
+    } 
+    finally { 
+        if(btn) { btn.innerText = txtOrig; btn.disabled = false; } 
+        document.body.style.cursor = 'default'; 
+    }
+};
+
+App.arquivarPlanejamento = (id) => {
+    App.confirmar("Arquivar Planejamento", "Tem a certeza que deseja enviar este planejamento para o arquivo morto? Ele deixará de aparecer na sua lista principal.", "Sim, Arquivar", "#8e44ad", async () => {
+        try {
+            // Busca a lista segura e localiza o plano (evita bugs de API com query params)
+            const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+            const planoAtual = planos.find(p => String(p.id) === String(id));
+            
+            if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
+
+            // Atualiza o status
+            planoAtual.status = 'Arquivado';
+            
+            // Salva a alteração de forma limpa na base de dados
+            await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
+            
+            App.showToast("Planejamento Arquivado com sucesso!", "success");
+
+            const area = document.getElementById('app-content');
+            if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+            await App.renderizarPlanejamentosSalvos();
+        } catch(e) { 
+            App.showToast("Erro ao arquivar.", "error"); 
+        }
+    });
+};
+
+App.restaurarPlanejamento = (id) => {
+    App.confirmar("Restaurar Planejamento", "Deseja reativar este planejamento e devolvê-lo para a lista ativa?", "Restaurar", "#27ae60", async () => {
+        try {
+            // Mesma lógica segura para restaurar
+            const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
+            const planoAtual = planos.find(p => String(p.id) === String(id));
+            
+            if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
+
+            // Volta para ativo
+            planoAtual.status = 'Ativo';
+            
+            // Salva a alteração
+            await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
+            
+            App.showToast("Planejamento Reativado com sucesso!", "success");
+
+            const area = document.getElementById('app-content');
+            if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
+}
+
+            await App.renderizarPlanejamentosArquivados();
+        } catch(e) { 
+            App.showToast("Erro ao reativar.", "error"); 
+        }
+    });
+};
+
+App.excluirPlanejamento = (id) => { 
+    App.confirmar("Atenção!", "Deseja excluir DEFINITIVAMENTE este planejamento? Esta ação é irreversível.", "Excluir", "#e74c3c", async () => {
+        await App.api(`/planejamentos/${id}`, 'DELETE');
+
+    const area = document.getElementById('app-content');
+    if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
+}
+
+    await App.renderizarPlanejamentosSalvos(); 
+    });
+};
+
+App.excluirPlanejamentoArquivado = (id) => { 
+    App.confirmar("Atenção!", "Deseja limpar este registo do arquivo morto para sempre?", "Excluir", "#e74c3c", async () => {
+        await App.api(`/planejamentos/${id}`, 'DELETE');
+
+    const area = document.getElementById('app-content');
+    if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
+}
+
+    await App.renderizarPlanejamentosArquivados(); 
+    });
+};
+
+App.processarAutoAjustePlano = (plano, chamadas) => {
+    if (!plano || !plano.aulas || plano.aulas.length === 0) return plano;
+
+    const primeiraAulaArr = plano.aulas[0].data.split('/');
+    const dataInicioPlano = `${primeiraAulaArr[2]}-${primeiraAulaArr[1]}-${primeiraAulaArr[0]}`;
+
+    // 1. Lemos TODO o histórico a partir do início (Presenças, Faltas, Feriados, etc.)
+    const historico = chamadas
+        .filter(c => c.idAluno === plano.idAluno && c.data >= dataInicioPlano)
+        .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    // 2. MAS só as presenças vão consumir/gastar as aulas da tabela
+    const presencas = historico.filter(c => c.status === 'Presença' || c.status === 'Reposição');
+
+    let diasDaSemanaAulas = [];
+    if (presencas.length > 0) {
+        const ultimas = presencas.slice(-4);
+        diasDaSemanaAulas = [...new Set(ultimas.map(p => { const [ano, mes, dia] = p.data.split('-'); const d = new Date(`${ano}-${mes}-${dia}T12:00:00`); return d.getDay(); }))];
+    }
+
+    if (diasDaSemanaAulas.length === 0) {
+        diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { const parts = a.data.split('/'); if (parts.length === 3) { const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); return d.getDay(); } return -1; }).filter(d => d !== -1))];
+    }
+    if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
+
+    let presencasUsadas = 0; 
+    let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
+
+    // 3. Ponto de partida do tempo
+    let ultimaDataBase = new Date(`${dataInicioPlano}T12:00:00`);
+    ultimaDataBase.setDate(ultimaDataBase.getDate() - 1); 
+    
+    if (historico.length > 0) {
+        // 🚀 A MÁGICA: Se já houve histórico (Mesmo que seja FALTA), o futuro começa DEPOIS do último registo!
+        const ultima = historico[historico.length - 1];
+        ultimaDataBase = new Date(`${ultima.data}T12:00:00`);
+    }
+
+    for (let i = 0; i < plano.aulas.length; i++) {
+        const aula = plano.aulas[i];
+        if (aula.hora) ultimoHorarioBase = aula.hora;
+
+        if (presencasUsadas < presencas.length) {
+            // "Gasta" a aula com a presença
+            const presencaDia = presencas[presencasUsadas]; 
+            const dataReal = presencaDia.data; 
+            const [ano, mes, dia] = dataReal.split('-');
+            
+            aula.data = `${dia}/${mes}/${ano}`;
+            if(presencaDia.duracao) aula.duracao = presencaDia.duracao;
+            aula.visto = true; 
+            presencasUsadas++;
+        } else {
+            // Projeta o futuro! (saltando os dias já usados pelas faltas)
+            aula.visto = false; 
+            ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
+            while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { 
+                ultimaDataBase.setDate(ultimaDataBase.getDate() + 1); 
+            }
+            
+            const d = String(ultimaDataBase.getDate()).padStart(2, '0'); 
+            const m = String(ultimaDataBase.getMonth() + 1).padStart(2, '0'); 
+            const y = ultimaDataBase.getFullYear();
+            
+            aula.data = `${d}/${m}/${y}`;
+        }
+    }
+
+    // Aulas Extras
+    while (presencasUsadas < presencas.length) {
+        const presencaDia = presencas[presencasUsadas]; 
+        const [ano, mes, dia] = presencaDia.data.split('-');
+        
+        plano.aulas.push({ num: plano.aulas.length + 1, data: `${dia}/${mes}/${ano}`, hora: ultimoHorarioBase, duracao: presencaDia.duracao || '01:00', conteudo: 'Aula Adicional (Auto-Ajuste)', visto: true });
+        presencasUsadas++;
+    }
+    return plano;
+};
+
+App.sincronizarPlanejamentoComChamadasUI = async () => {
+    if(!App.planoAtual || !App.planoAtual.idAluno) return;
+    const btn = document.getElementById('btn-sync-plan');
+    const txtOrig = btn.innerHTML; btn.innerHTML = "A analisar Padrões... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    try {
+        const chamadas = await App.api(`/chamadas?_t=${Date.now()}`);
+        App.planoAtual = App.processarAutoAjustePlano(App.planoAtual, chamadas);
+        App.renderizarTelaEdicao(App.planoAtual);
+        App.showToast("Datas, Tempos e Aulas Extra Sincronizados! 🎉", "success");
+    } catch (e) { App.showToast("Erro ao sincronizar planejamento.", "error"); } 
+    finally { if(btn) { btn.innerHTML = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+};
+
+// ---------------------------------------------------------
+// 2. BOLETIM (CÁLCULO INTELIGENTE DE APROVAÇÃO E METAS)
+// ---------------------------------------------------------
+App.renderizarBoletimVisual = async () => {
+    App.setTitulo("Boletim Escolar");
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    try {
+        const alunos = await App.api('/alunos');
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const opAlunos = `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        
+        const formBoletim = `
+            <div style="display:flex; gap:10px; align-items:center;">
+                <select id="bol-aluno" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:5px;">${opAlunos}</select>
+                <button onclick="App.gerarBoletimTela()" style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:5px; font-weight:bold; cursor:pointer;">GERAR BOLETIM</button>
+            </div>
+        `;
+        div.innerHTML = App.UI.card('📄 Emitir Boletim Escolar', '', formBoletim, '800px') + `<div id="boletim-area" style="margin-top:30px;"></div>`;
+    } catch(e) { div.innerHTML = "Erro."; }
+};
+
+App.gerarBoletimTela = async () => {
+    const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
+    const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
+    
+    // 🧠 LER NOVAS CONFIGURAÇÕES DINÂMICAS
+    const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
+    const regimeConfig = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
+    
+    let multiplicadorTotal = 6; // Agora o padrão Bimestral exige 6 notas
+    let labelCabecalho = 'BIMESTRE';
+    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 4; labelCabecalho = 'TRIMESTRE'; }
+    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
+    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
+
+    try {
+        const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
+        
+        const planoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+        const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).map(c => c.data).sort();
+        
+        let primAula = '__/__/____';
+        let ultAula = '__/__/____';
+        
+        // 🚀 Lógica mais inteligente para puxar datas (Prioriza o Planeamento!)
+        if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { 
+            primAula = App.escapeHTML(planoAluno.aulas[0].data);
+            ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); 
+        } else if (presencas.length > 0) { 
+            primAula = presencas[0].split('-').reverse().join('/');
+            ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); 
+        } else {
+            primAula = new Date().toLocaleDateString('pt-BR');
+        }
+
+        // 🚀 Lógica mais inteligente para puxar Curso e Turma (Cruza dados do Aluno e do Planeamento)
+        const cursoExibir = App.escapeHTML(aluno.curso || (planoAluno ? planoAluno.curso : 'Geral'));
+        const turmaExibir = App.escapeHTML(aluno.turma || 'Não informada');
+
+        const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); 
+        const disciplinasMap = {};
+        
+        notasAluno.forEach(n => { 
+            const disc = n.disciplina || 'Geral'; 
+            if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, periodosLancados: new Set() }; 
+            disciplinasMap[disc].notas.push(n); 
+            disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
+            const periodoReal = n.periodo || n.bimestre; // Compatibilidade com dados antigos
+            if (periodoReal) disciplinasMap[disc].periodosLancados.add(periodoReal);
+        });
+        
+        let linhasHTML = '';
+        if(Object.keys(disciplinasMap).length === 0) {
+            linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">Sem notas lançadas para este aluno.</td></tr>';
+        } else {
+            Object.keys(disciplinasMap).forEach(chave => {
+                const d = disciplinasMap[chave];
+                const qtdPeriodos = d.periodosLancados.size > 0 ? d.periodosLancados.size : 1;
+                
+                // CÁLCULO DE APROVAÇÃO BLINDADO (Meta Proporcional e Meta do Ano)
+                const metaAtual = mediaConfig * qtdPeriodos;
+                const metaFinalAno = mediaConfig * multiplicadorTotal;
+                
+                const isAprovadoAtual = d.total >= metaAtual;
+                const corStatus = isAprovadoAtual ? '#27ae60' : '#c0392b';
+                
+                const situacao = isAprovadoAtual ? `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">NO PADRÃO</span>` : `<span style="color:${corStatus}; font-weight:bold; font-size:14px;">RECUPERAÇÃO</span>`;
+                const detalhe = d.notas.map(n => `<span style="font-size:11px;">${App.escapeHTML(n.periodo || n.bimestre)} - ${App.escapeHTML(n.tipo)}: <b>${App.escapeHTML(n.nota)}</b></span>`).join('<br>');
+                
+                linhasHTML += `
+                <tr>
+                    <td style="padding:10px; border-bottom:1px solid #eee; vertical-align:middle;"><b>${App.escapeHTML(d.nome)}</b></td>
+                    <td style="padding:10px; border-bottom:1px solid #eee;">${detalhe}</td>
+                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;"><span style="font-size:16px; font-weight:bold; color:${corStatus};">${d.total.toFixed(1)}</span></td>
+                    <td style="text-align:center; padding:10px; border-bottom:1px solid #eee; vertical-align:middle;">${situacao}<br><span style="font-size:10px; color:#7f8c8d;">Meta Anual: ${metaFinalAno.toFixed(1)} pts</span></td>
+                </tr>`;
+            });
+        }
+
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+        divArea.innerHTML = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px;"><button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR BOLETIM</button></div>
+            <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px;">
+                <div class="doc-header" style="display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</h2><div style="font-size:12px;">CNPJ: ${App.escapeHTML(escola.cnpj || '')}</div></div></div>
+                    <div style="text-align:right;"><div><b>BOLETIM ESCOLAR</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+                </div>
+                <div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;">
+                    <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${App.escapeHTML(aluno.nome).toUpperCase()}</div>
+                    <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${cursoExibir} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${turmaExibir}</div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
+                </div>
+                <div class="table-responsive-wrapper">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                        <thead><tr style="border-bottom:2px solid #000;"><th style="padding:10px; width:30%;">DISCIPLINA</th><th style="padding:10px; width:30%;">AVALIAÇÕES (${labelCabecalho})</th><th style="text-align:center; padding:10px; width:15%;">NOTA TOTAL</th><th style="text-align:center; padding:10px; width:25%;">RESULTADO</th></tr></thead>
+                        <tbody>${linhasHTML}</tbody>
+                    </table>
+                </div>
+                <div style="padding:40px 30px 10px 30px; text-align:center;"><div style="width:300px; margin:0 auto; border-top:1px solid #333; padding-top:5px; font-size:12px;">Coordenação Pedagógica</div></div>
+            </div>`;
+    } catch(e) { App.showToast("Erro ao gerar boletim.", "error"); }
+};
+
+// ---------------------------------------------------------
+// 3. AVALIAÇÕES E NOTAS (HÍBRIDO COM CONFIG. DE MÉDIA E REGIME)
+// ---------------------------------------------------------
+App.salvarConfigNotas = () => { 
+    const media = document.getElementById('config-nota-media').value;
+    const max = document.getElementById('config-nota-max').value;
+    const regime = document.getElementById('config-nota-regime').value;
+    
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao', media); 
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima', max); 
+    localStorage.setItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo', regime); 
+    
+    App.showToast("Regras de avaliação guardadas com sucesso!", "success"); 
+    App.renderizarAvaliacoesPro();
+};
+
+App.renderizarAvaliacoesPro = async () => {
+    App.setTitulo("Avaliações e Notas");
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
+    
+    // LER CONFIGURAÇÕES SALVAS (Ou assumir o padrão)
+    const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
+    const maxSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima') || '10.0';
+    const regimeSalvo = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
+    
+    const percentualAprovacao = parseFloat(mediaSalva) / parseFloat(maxSalva);
+
+    // GERAR OPÇÕES DE PERÍODO DINAMICAMENTE
+    let opPeriodos = ''; let labelPeriodo = 'Período';
+    if (regimeSalvo === 'Bimestral') {
+        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option><option value="5º Bimestre">5º Bimestre</option><option value="6º Bimestre">6º Bimestre</option>`;
+        labelPeriodo = 'Bimestre';
+    } else if (regimeSalvo === 'Trimestral') {
+        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option><option value="4º Trimestre">4º Trimestre</option>`;
+        labelPeriodo = 'Trimestre';
+    } else if (regimeSalvo === 'Semestral') {
+        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
+        labelPeriodo = 'Semestre';
+    } else if (regimeSalvo === 'Anual') {
+        opPeriodos = `<option value="Período Único">Período Único</option>`;
+        labelPeriodo = 'Período';
+    }
+
+    try {
+        const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api(`/avaliacoes?_t=${Date.now()}`)]);
+        App.cacheAlunos = alunos;
+        const historico = avaliacoes.sort((a,b) => b.id - a.id);
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${App.escapeHTML(c.nome)}">${App.escapeHTML(c.nome)}</option>`).join('');
+        const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
+        const hoje = new Date().toISOString().split('T')[0];
+
+        // 🚀 NOVO PAINEL DE CONFIGURAÇÕES DE REGIME
+        const painelConfig = `
+            <div style="background:#fff; border-left:4px solid #8e44ad; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                <div style="width:100%; font-size:12px; font-weight:bold; color:#8e44ad; text-transform:uppercase; margin-bottom:-5px;">⚙️ Configuração do Sistema de Avaliação</div>
+                ${selectLocal('Regime Letivo:', 'config-nota-regime', `<option value="Bimestral" ${regimeSalvo==='Bimestral'?'selected':''}>Bimestral (6 Períodos)</option><option value="Trimestral" ${regimeSalvo==='Trimestral'?'selected':''}>Trimestral (4 Períodos)</option><option value="Semestral" ${regimeSalvo==='Semestral'?'selected':''}>Semestral (2 Períodos)</option><option value="Anual" ${regimeSalvo==='Anual'?'selected':''}>Anual (1 Período)</option>`)}
+                ${col('Média de Aprovação:', 'config-nota-media', 'number', mediaSalva, 'step="0.1"')}
+                ${col('Nota Máx. do Período:', 'config-nota-max', 'number', maxSalva, 'step="0.1"')}
+                <button onclick="App.salvarConfigNotas()" class="btn-primary" style="background:#8e44ad; border:none; height:41px; padding:0 20px; margin-bottom: 5px;">💾 SALVAR REGRAS</button>
+            </div>
+        `;
+
+        const formFiltros = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                ${selectLocal('Filtrar por Turma:', 'nota-turma', opTurmas)}
+                <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
+                ${selectLocal('Buscar Aluno Único:', 'nota-aluno', opAlunos)}
+            </div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px;">
+                ${selectLocal('Disciplina/Curso:', 'nota-disc', opCursos)}
+                ${selectLocal('Tipo de Avaliação:', 'nota-tipo', opTipos, 'onchange="App.toggleTipoOutroNota()"')}
+                <div id="div-outro-nota" style="flex: 1; min-width: 150px; display:none;">
+                    <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Especifique:</label>
+                    <input type="text" id="nota-outro-desc" placeholder="Ex: Seminário" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                </div>
+                ${selectLocal(labelPeriodo + ':', 'nota-periodo', opPeriodos)}
+            </div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
+                ${col('Valor desta Avaliação (Pts):', 'nota-max', 'number', maxSalva, 'step="0.1"')}
+                ${col('Data da Avaliação:', 'nota-data', 'date', hoje, `max="${hoje}"`)}
+                <button onclick="App.carregarListaNotas()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR PAUTA</button>
+                <button onclick="App.cancelarEdicaoNota()" id="btn-cancel-nota" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
+            </div>
+        `;
+
+        const tabelaHistorico = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-notas" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-notas', 'tabela-historico-notas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+            <div class="table-responsive-wrapper">
+                <table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Período</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="7" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
+                        ${historico.map(h => {
+                            const valMaxAval = parseFloat(h.valorMax) || parseFloat(maxSalva);
+                            const percentualAtingido = parseFloat(h.nota) / valMaxAval;
+                            const corNota = percentualAtingido >= percentualAprovacao ? '#27ae60' : '#c0392b';
+                            return `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
+                                <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
+                                <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
+                                <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
+                                <td style="padding:12px;">${App.escapeHTML(h.periodo || h.bimestre || '-')}</td>
+                                <td style="padding:12px; text-align:center;"><strong style="color:${corNota}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(valMaxAval)}</span></td>
+                                <td style="padding:12px; text-align:right;">
+                                    <button onclick="App.editarAvaliacao('${h.id}')" style="background:#f39c12; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️</button>
+                                    <button onclick="App.excluirAvaliacao('${h.id}')" style="background:#e74c3c; color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;" title="Excluir">🗑️</button>
+                                </td>
+                            </tr>`
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = painelConfig + App.UI.card('📝 Lançamento de Notas', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
+    } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
+};
+
+App.toggleTipoOutroNota = () => { const tipo = document.getElementById('nota-tipo').value; document.getElementById('div-outro-nota').style.display = (tipo==='Outro')?'block':'none'; };
+
+App.editarAvaliacao = async (id) => { 
+    const n = await App.api(`/avaliacoes/${id}?_t=${Date.now()}`); 
+    document.getElementById('nota-aluno').value = n.idAluno; document.getElementById('nota-turma').value = "";
+    document.getElementById('nota-disc').value = n.disciplina || 'Geral';
+    if(["Teste","Prova","Pesquisa","Trabalho"].includes(n.tipo)) { document.getElementById('nota-tipo').value=n.tipo; document.getElementById('div-outro-nota').style.display='none'; } 
+    else { document.getElementById('nota-tipo').value='Outro'; App.toggleTipoOutroNota(); document.getElementById('nota-outro-desc').value=n.tipo; } 
+    document.getElementById('nota-max').value = n.valorMax; 
+    
+    // Tenta definir o valor do período, suportando registos antigos que usavam 'bimestre'
+    const selectPeriodo = document.getElementById('nota-periodo');
+    if(selectPeriodo) selectPeriodo.value = n.periodo || n.bimestre;
+    
+    document.getElementById('nota-data').value = n.data || new Date().toISOString().split('T')[0];
+    
+    document.getElementById('btn-cancel-nota').style.display = 'inline-block';
+    App.idAvaliacaoEditando = id; 
+    App.carregarListaNotas(); 
+    document.querySelector('.card').scrollIntoView({behavior:'smooth'}); 
+};
+
+App.cancelarEdicaoNota = () => {
+    App.idAvaliacaoEditando = null;
+    document.getElementById('nota-aluno').value = "";
+    document.getElementById('btn-cancel-nota').style.display = 'none';
+    document.getElementById('area-lista-notas').innerHTML = "";
+    App.showToast("Modo de edição cancelado.", "info");
+};
+
+App.carregarListaNotas = async () => {
+    const turma = document.getElementById('nota-turma').value;
+    const idAluno = document.getElementById('nota-aluno').value;
+    const disc = document.getElementById('nota-disc').value;
+    let tipo = document.getElementById('nota-tipo').value;
+    if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
+    const data = document.getElementById('nota-data').value;
+    const max = document.getElementById('nota-max').value;
+
+    if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
+    if(!disc || !data) return App.showToast("Preencha Disciplina e Data.", "warning");
+    
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) return App.showToast("Não é permitido abrir pautas para datas futuras.", "warning");   
+
+    const area = document.getElementById('area-lista-notas');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar pauta de lançamento... ⏳</p>';
+
+    try {
+        const [alunos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api(`/avaliacoes?_t=${Date.now()}`)]);
+        
+        let alunosAlvo = [];
+        if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } else { alunosAlvo = alunos.filter(a => a.turma === turma); }
+        alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
+        
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
+
+        let linhas = '';
+        alunosAlvo.forEach(a => {
+            let regExistente = null;
+            if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
+                regExistente = avaliacoes.find(av => av.id === App.idAvaliacaoEditando);
+            } else {
+                regExistente = avaliacoes.find(av => av.idAluno === a.id && av.data === data && av.disciplina === disc && av.tipo === tipo);
+            }
+
+            const notaAtual = regExistente ? regExistente.nota : '';
+            const idEdicaoTag = (App.idAvaliacaoEditando && regExistente) ? `data-id-avaliacao="${regExistente.id}"` : '';
+
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-nota" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:150px;">
+                    <input type="number" class="valor-nota" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; text-align:center; font-weight:bold; color:var(--accent);" step="0.1" max="${max}" placeholder="0.0" value="${App.escapeHTML(notaAtual)}">
+                </td>
+            </tr>`;
+        });
+
+        let alertaEdicao = App.idAvaliacaoEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO</div>` : '';
+
+        area.innerHTML = alertaEdicao + `
+            <div class="card" style="padding:0; overflow:hidden; border:2px solid #2980b9;">
+                <div style="padding:15px; background:#e8f4f8; border-bottom:1px solid #d1e8f0; font-size:13px; color:#2980b9; display:flex; justify-content:space-between; align-items:center;">
+                    <span><b>Lançamento:</b> ${App.escapeHTML(tipo)} de ${App.escapeHTML(disc)}</span>
+                    <span style="background:#2980b9; color:white; padding:4px 10px; border-radius:12px; font-weight:bold;">Máx: ${App.escapeHTML(max)} pts</span>
+                </div>
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">ALUNO</th><th style="padding:15px; text-align:center;">NOTA OBTIDA</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarNotasLote()" class="btn-primary">💾 SALVAR NOTAS NO BOLETIM</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a pauta.</p>'; }
+};
+
+App.salvarNotasLote = async () => {
+    const disc = document.getElementById('nota-disc').value;
+    let tipo = document.getElementById('nota-tipo').value;
+    if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
+    const data = document.getElementById('nota-data').value;
+    const max = document.getElementById('nota-max').value;
+    const periodoSelecionado = document.getElementById('nota-periodo').value; // Agora chama-se periodo
+    
+    const linhas = document.querySelectorAll('.linha-nota');
+    if(linhas.length === 0) return;
+    
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) return App.showToast("Bloqueado: Não é possível gravar notas com datas futuras.", "error");
+
+    const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
+    const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = [];
+        const avaliacoesExistentes = await App.api(`/avaliacoes?_t=${Date.now()}`);
+
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id'); const nomeAluno = linha.getAttribute('data-nome');
+            const idEdicao = linha.getAttribute('data-id-avaliacao');
+            const notaInput = linha.querySelector('.valor-nota').value;
+            if (notaInput === '') return; 
+
+            let regExistente = null;
+            if (idEdicao) { regExistente = avaliacoesExistentes.find(av => av.id === idEdicao); } 
+            else { regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo); }
+
+            // Guardamos como "periodo" e duplicamos para "bimestre" só para não quebrar relatórios velhos se existirem
+            const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, periodo: periodoSelecionado, bimestre: periodoSelecionado, dataLancamento: new Date().toISOString().split('T')[0] };
+
+            if (regExistente) { 
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, periodo: periodoSelecionado, bimestre: periodoSelecionado })); 
+            } else { 
+                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
+                promessas.push(App.api('/avaliacoes', 'POST', payload)); 
+            }
+        });
+
+        await Promise.all(promessas);
+        App.showToast("Pauta de notas arquivada com sucesso!", "success");
+        App.cancelarEdicaoNota();
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
+}
+
+        await App.renderizarAvaliacoesPro();
+    } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
+    finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
+};
+
+App.excluirAvaliacao = (id) => { 
+    App.confirmar("Excluir Nota", "Deseja mesmo excluir esta avaliação? Isto irá afetar o boletim do aluno.", "Excluir", "#e74c3c", async () => {
+        await App.api(`/avaliacoes/${id}`, 'DELETE');
+
+       const area = document.getElementById('app-content');
+       if (area) {
+       area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
+}
+
+       await App.renderizarAvaliacoesPro(); 
+    });
+};
+
+// ---------------------------------------------------------
+// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA E LOTE (MÁXIMA PERFORMANCE)
+// ---------------------------------------------------------
+
+// 🚀 MOTOR DE CACHE: Guarda os dados temporariamente para não travar o sistema com downloads repetitivos
+App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
+
+App.renderizarChamadaPro = async () => { 
+    App.setTitulo("Controle de Presença");
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
+    
+    try { 
+        // Descarrega tudo de uma vez e guarda no Cache
+        const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
+            App.api('/alunos'), App.api('/turmas'), App.api(`/chamadas?_t=${Date.now()}`), App.api(`/planejamentos?_t=${Date.now()}`)
+        ]); 
+        
+        App.cachePedagogico.alunos = alunosFetch;
+        App.cachePedagogico.turmas = turmasFetch;
+        App.cachePedagogico.chamadas = Array.isArray(chamadasFetch) ? chamadasFetch : [];
+        App.cachePedagogico.planejamentos = planosFetch;
+
+        const historico = [...App.cachePedagogico.chamadas].sort((a,b) => new Date(b.data) - new Date(a.data)); 
+        const alunosAtivos = App.cachePedagogico.alunos.filter(a => !a.status || a.status === 'Ativo');
+
+        const opTurmas = `<option value="">-- Turma Completa --</option>` + App.cachePedagogico.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
+        const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
+        const hoje = new Date().toISOString().split('T')[0];
+
+        const formChamada = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                ${selectLocal('Filtrar por Turma:', 'chamada-turma', opTurmas)}
+                <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
+                ${selectLocal('Buscar Aluno Único:', 'chamada-aluno', opAlunos)}
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
+                ${col('Data da Aula:', 'chamada-data', 'date', hoje, `max="${hoje}"`)}
+                ${col('Duração (Ex: 01:30):', 'chamada-duracao', 'time', '01:00')}
+                <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR CHAMADA</button>
+                <button onclick="App.cancelarEdicaoChamada()" id="btn-cancel-chamada" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
+            </div>
+        `;
+
+        const tabelaChamada = `
+            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <span style="font-size: 18px; color: #aaa;">🔍</span>
+                <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            </div>
+            <div class="table-responsive-wrapper">
+                <table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
+                            <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
+                        ${historico.map(h => { 
+                            let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
+                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td><td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('📝 Registo de Frequência', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
+    } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
+};
+
+App.editarLancamentoChamada = async (id) => { 
+    // Usa o cache em vez de descarregar novamente!
+    const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
+    if(!registro) return App.showToast("Erro ao localizar o registo.", "error");
+
+    document.getElementById('chamada-aluno').value = registro.idAluno; 
+    document.getElementById('chamada-turma').value = "";
+    document.getElementById('chamada-data').value = registro.data; 
+    document.getElementById('chamada-duracao').value = registro.duracao; 
+    
+    document.getElementById('btn-cancel-chamada').style.display = 'inline-block';
+    App.idChamadaEditando = id; 
+    App.carregarListaChamada(); 
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
+};
+
+App.cancelarEdicaoChamada = () => {
+    App.idChamadaEditando = null;
+    document.getElementById('chamada-aluno').value = "";
+    document.getElementById('btn-cancel-chamada').style.display = 'none';
+    document.getElementById('area-lista-chamada').innerHTML = "";
+    App.showToast("Modo de edição cancelado.", "info");
+};
+
+// 🪄 NOVA FUNÇÃO: LANÇAMENTO EM LOTE NA TELA
+App.marcarTodosChamada = (status) => {
+    const selects = document.querySelectorAll('.status-chamada');
+    if(selects.length === 0) return;
+    
+    selects.forEach(select => {
+        select.value = status;
+        // Muda a cor instantaneamente consoante a seleção
+        if(status === 'Falta') select.style.color = '#e74c3c';
+        else if(status === 'Reposição') select.style.color = '#f39c12';
+        else if(status === 'Presença') select.style.color = '#27ae60';
+        else select.style.color = '#333';
+    });
+    
+    App.showToast(`Lote aplicado: Todos como ${status}!`, "info");
+};
+
+App.carregarListaChamada = async () => {
+    const turma = document.getElementById('chamada-turma').value;
+    const idAluno = document.getElementById('chamada-aluno').value;
+    const data = document.getElementById('chamada-data').value;
+    
+    if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
+    if(!data) return App.showToast("Preencha a Data da aula.", "warning");
+    
+    // 🛡️ TRAVA ANTI-FUTURO
+    const hojeStr = new Date().toISOString().split('T')[0];
+    if (data > hojeStr) {
+        return App.showToast("Não é permitido abrir grelhas de frequência para datas futuras.", "warning");
+    }
+
+    const area = document.getElementById('area-lista-chamada');
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe super rápido... ⚡</p>';
+
+    try {
+        // Usa o Cache (0 milissegundos de espera!)
+        const alunos = App.cachePedagogico.alunos;
+        const chamadas = App.cachePedagogico.chamadas;
+        
+        let alunosAlvo = [];
+        if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } else { alunosAlvo = alunos.filter(a => a.turma === turma); }
+        alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
+
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
+
+        const chamadasDia = chamadas.filter(c => c.data === data);
+        let linhas = '';
+        
+        alunosAlvo.forEach(a => {
+            let regExistente = null;
+            if (App.idChamadaEditando && a.id === document.getElementById('chamada-aluno').value) {
+                regExistente = chamadas.find(c => String(c.id) === String(App.idChamadaEditando));
+            } else {
+                regExistente = chamadasDia.find(c => c.idAluno === a.id);
+            }
+
+            const status = regExistente ? regExistente.status : 'Presença';
+            const idEdicaoTag = (App.idChamadaEditando && regExistente) ? `data-id-chamada="${regExistente.id}"` : '';
+            
+            linhas += `
+            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
+                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
+                <td style="padding:12px; width:250px;">
+                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+                        <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
+                        <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
+                        <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
+                        <option value="Falta Justificada" ${status==='Falta Justificada'?'selected':''}>⚠️ Falta Justificada</option>
+                        <option value="Feriado" ${status==='Feriado'?'selected':''}>📅 Feriado</option>
+                        <option value="Recesso" ${status==='Recesso'?'selected':''}>🏖️ Recesso</option>
+                    </select>
+                </td>
+            </tr>`;
+        });
+        
+        let alertaEdicao = App.idChamadaEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO (A atualizar o registo existente)</div>` : '';
+
+        // 🪄 BOTÕES DE AÇÃO EM LOTE RÁPIDA
+        const botoesLote = !App.idChamadaEditando ? `
+            <div style="padding:10px 15px; background:#fff; border-bottom:1px solid #eee; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preenchimento Rápido em Lote:</span>
+                <button onclick="App.marcarTodosChamada('Presença')" style="background:#eafaf1; color:#27ae60; border:1px solid #27ae60; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#d5f5e3'" onmouseout="this.style.background='#eafaf1'">✅ Todos Presentes</button>
+                <button onclick="App.marcarTodosChamada('Falta')" style="background:#fdf2f2; color:#e74c3c; border:1px solid #e74c3c; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fadbd8'" onmouseout="this.style.background='#fdf2f2'">❌ Todos Faltaram</button>
+                <button onclick="App.marcarTodosChamada('Reposição')" style="background:#fef5e7; color:#f39c12; border:1px solid #f39c12; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fdebd0'" onmouseout="this.style.background='#fef5e7'">🔄 Todas Reposições</button>
+            </div>
+        ` : '';
+
+        area.innerHTML = alertaEdicao + `
+            <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
+                <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
+                    Grelha de Frequência - ${App.escapeHTML(data.split('-').reverse().join('/'))}
+                </div>
+                ${botoesLote}
+                <div class="table-responsive-wrapper" style="margin:0; border:none;">
+                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">NOME DO ALUNO</th><th style="padding:15px; text-align:left;">STATUS DA AULA</th></tr></thead>
+                        <tbody>${linhas}</tbody>
+                    </table>
+                </div>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
+                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">💾 SALVAR FREQUÊNCIA</button>
+                </div>
+            </div>
+        `;
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar a lista.</p>'; }
+};
+
+App.salvarChamadaLote = async () => {
+        const data = document.getElementById('chamada-data').value;
+        const duracao = document.getElementById('chamada-duracao').value || '01:00';
+        const linhas = document.querySelectorAll('.linha-chamada');
+        if(linhas.length === 0) return;
+
+        // 🛡️ TRAVA ANTI-FUTURO
+        const hojeStr = new Date().toISOString().split('T')[0];
+        if (data > hojeStr) {
+            return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
+        }
+
+        const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
+        const txt = btn.innerText; btn.innerText = "A arquivar instantaneamente... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
+
+        try {
+            // Usa o cache (zero downloads)
+            const planejamentos = App.cachePedagogico.planejamentos;
+            const chamadasExistentes = App.cachePedagogico.chamadas;
+
+            const alunosSemPlano = [];
+            const alunosAfetados = [];
+            const promessasChamadas = [];
+            
+            // Variável para guardar as chamadas atualizadas na memória
+            let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
+
+            // Validação de planeamento ativo
+            linhas.forEach(linha => {
+                const idAluno = linha.getAttribute('data-id');
+                const nomeAluno = linha.getAttribute('data-nome');
+                
+                const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                if (!temPlanoAtivo) alunosSemPlano.push(nomeAluno);
+            });
+
+            if (alunosSemPlano.length > 0) {
+                App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
+                if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
+                return; 
+            }
+
+            // Preparar as chamadas e atualizar a lista
+            linhas.forEach(linha => {
+                const idAluno = linha.getAttribute('data-id'); 
+                const nomeAluno = linha.getAttribute('data-nome');
+                const status = linha.querySelector('.status-chamada').value;
+                const idEdicao = linha.getAttribute('data-id-chamada'); 
+                
+                alunosAfetados.push(idAluno); 
+
+                let regExistente = null;
+                if (idEdicao) { regExistente = chamadasExistentes.find(c => String(c.id) === String(idEdicao)); } 
+                else { regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === data); }
+
+                const payload = { idAluno, nomeAluno, data, status, duracao };
+
+                if (regExistente) { 
+                    const chamadaAtualizada = { ...regExistente, data: data, status: status, duracao: duracao };
+                    promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
+                    
+                    // Substitui na nossa memória virtual
+                    const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
+                    if(idx !== -1) chamadasAtualizadasNaMemoria[idx] = chamadaAtualizada;
+                } else { 
+                    // O '+ idAluno' evita conflitos
+                    payload.id = Date.now().toString() + Math.floor(Math.random()*1000) + idAluno; 
+                    promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
+                    
+                    // Adiciona na memória virtual
+                    chamadasAtualizadasNaMemoria.push(payload);
+                }
+            });
+
+            // Grava todas as chamadas no servidor simultaneamente
+            await Promise.all(promessasChamadas);
+            
+            // Fazer o Auto-Ajuste usando os dados da memória, sem tocar na internet!
+            let avisoExtra = "";
+            try {
+                const promessasPlano = [];
+
+                alunosAfetados.forEach(idAluno => {
+                    let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                    if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
+                        planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadasNaMemoria);
+                        promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
+                    }
+                });
+
+                if (promessasPlano.length > 0) { 
+                    await Promise.all(promessasPlano); 
+                    avisoExtra = " e Planejamento(s) Auto-Ajustado(s)!"; 
+                }
+            } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+
+           App.showToast(`Frequência registada em tempo recorde${avisoExtra}`, "success");
+           App.cancelarEdicaoChamada();
+
+           const area = document.getElementById('app-content');
+           if (area) {
+           area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
+}
+
+           await App.renderizarChamadaPro();
+        } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
+        finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
+    };
+
+App.excluirLancamentoChamada = (id) => { 
+    App.confirmar("Excluir Frequência", "Tem a certeza que deseja excluir esta chamada do sistema?", "Excluir", "#e74c3c", async () => {
+        await App.api(`/chamadas/${id}`, 'DELETE');
+
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
+}
+
+        await App.renderizarChamadaPro(); 
+    });
+};
+
+// ---------------------------------------------------------
+// 5. CALENDÁRIO (BLINDADO COM GRID CSS INLINE E PÍLULAS)
+// ---------------------------------------------------------
+App.renderizarCalendarioPro = async () => { 
+    App.setTitulo("Calendário");
+    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar calendário...'; 
+    if (!App.calendarState) App.calendarState = { month: new Date().getMonth(), year: new Date().getFullYear() }; 
+    
+    try { 
+        const eventos = await App.api(`/eventos?_t=${Date.now()}`); 
+        const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']; 
+        const mesNome = meses[App.calendarState.month]; const ano = App.calendarState.year; 
+        
+        const gridCalendario = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <button onclick="App.mudarMes(-1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">◀</button>
+                <h2 style="margin:0; color:#2c3e50; text-transform:uppercase; font-size:22px;">${mesNome} ${ano}</h2>
+                <button onclick="App.mudarMes(1)" style="background:none; border:none; font-size:24px; cursor:pointer; color:#555;">▶</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #7f8c8d; margin-bottom: 10px; font-size:12px; text-transform:uppercase;">
+                <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+            </div>
+            <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: #eee; border: 1px solid #eee;">
+                ${App.gerarDiasCalendario(App.calendarState.month, App.calendarState.year, eventos)}
+            </div>
+        `;
+
+        const formEvento = `
+            <div id="box-gerir-evento" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><span style="font-size:20px;">🗓️</span><h3 style="margin:0; color:#2c3e50;">Gerir Evento</h3></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+                ${col('Data:', 'evt-data', 'date')}
+                ${selectLocal('Tipo:', 'evt-tipo', '<option value="Evento">🟢 Evento</option><option value="Feriado">🔴 Feriado</option><option value="Prova">🔵 Prova</option><option value="Reunião">🟠 Reunião</option>')}
+                ${col('Descrição:', 'evt-desc', 'text', '', 'placeholder="Ex: Prova de História / Carnaval" style="flex:3;"')}
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; align-items: flex-end;">
+                ${col('Início:', 'evt-inicio', 'time')}
+                ${col('Término:', 'evt-fim', 'time')}
+                <div style="flex: 1; min-width: 200px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button onclick="App.limparFormEvento()" style="background:#95a5a6; color:white; border:none; padding:12px 20px; border-radius:5px; cursor:pointer; flex: 1;">Cancelar</button>
+                    <button onclick="App.salvarEvento()" style="background:#6c5ce7; color:white; border:none; padding:12px 20px; border-radius:5px; font-weight:bold; cursor:pointer; flex: 1;">Salvar</button>
+                </div>
+            </div>
+        `;
+
+        const tabelaEventos = `
+            <div class="table-responsive-wrapper">
+                <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
+                    <thead><tr style="background:#f8f9fa; color:#7f8c8d; border-bottom:2px solid #eee;"><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
+                    <tbody>${App.gerarListaEventosHTML(App.calendarState.month, App.calendarState.year, eventos)}</tbody>
+                </table>
+            </div>
+        `;
+
+        div.innerHTML = App.UI.card('', '', gridCalendario, '100%') + '<div style="margin-top:20px;">' + App.UI.card('', '', formEvento, '100%') + '</div>' + '<div style="margin-top:20px;">' + App.UI.card(`Lista de Eventos (${mesNome})`, '', tabelaEventos, '100%') + '</div>'; 
+        document.getElementById('evt-data').value = new Date().toISOString().split('T')[0]; 
+    } catch(e) { div.innerHTML = "Erro ao carregar calendário."; } 
+};
+
+App.gerarDiasCalendario = (mes, ano, eventos) => { 
+    const startDay = new Date(ano, mes, 1).getDay(); 
+    const daysInMonth = new Date(ano, mes + 1, 0).getDate(); 
+    let html = ''; 
+    for(let i=0; i<startDay; i++) { html += `<div class="cal-day empty"></div>`; }
+    for(let d=1; d<=daysInMonth; d++){ 
+        const dataISO = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; 
+        const hojeObj = new Date();
+        const isHoje = (d === hojeObj.getDate() && mes === hojeObj.getMonth() && ano === hojeObj.getFullYear()); 
+        const evs = eventos.filter(e => e.data === dataISO); 
+        const tags = evs.map(e => `<div class="evt-pilula" style="--bg-cor: ${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg};" title="${App.escapeHTML(e.descricao)}"><span class="evt-texto">${App.escapeHTML(e.descricao)}</span></div>`).join(''); 
+        html += `<div id="cal-day-${dataISO}" class="cal-day ${isHoje ? 'hoje' : ''}" onclick="App.selecionarDia('${dataISO}')"><div class="dia-num">${d}</div><div class="evt-container">${tags}</div></div>`; 
+    } 
+    return html; 
+};
+
+App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${App.escapeHTML(e.inicio||'-')}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${App.escapeHTML(e.tipo)}</td><td style="padding:10px;">${App.escapeHTML(e.descricao)}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button></td></tr>`).join(''); };
+App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
+
+App.selecionarDia = (dt) => { 
+    document.querySelectorAll('.cal-day').forEach(el => el.style.border = 'none');
+    const diaAtivo = document.getElementById(`cal-day-${dt}`);
+    if(diaAtivo) diaAtivo.style.border = '2px solid #3498db';
+    document.getElementById('evt-data').value = dt; 
+    document.getElementById('evt-desc').value = '';
+    App.idEdicaoEvento = null; 
+    setTimeout(() => { document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('evt-desc').focus(); }, 100);
+};
+
+App.salvarEvento = async () => { 
+    if (document.activeElement) document.activeElement.blur();
+    const pl = { data: document.getElementById('evt-data').value, tipo: document.getElementById('evt-tipo').value, descricao: document.getElementById('evt-desc').value, inicio: document.getElementById('evt-inicio').value, fim: document.getElementById('evt-fim').value }; 
+    if(!pl.data || !pl.descricao) return App.showToast("Preencha data e descrição.", "error"); 
+    
+    const btn = document.querySelector('button[onclick="App.salvarEvento()"]');
+    const txtOrig = btn ? btn.innerText : 'Salvar';
+    if(btn) { btn.innerText = "A salvar... ⏳"; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        if(App.idEdicaoEvento) await App.api(`/eventos/${App.idEdicaoEvento}`, 'PUT', pl); 
+        else await App.api('/eventos', 'POST', pl); 
+       App.idEdicaoEvento = null;
+
+const area = document.getElementById('app-content');
+if (area) {
+    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
+}
+
+await App.renderizarCalendarioPro();
+
+setTimeout(() => {
+    const tabelaEventos = document.querySelector('.table-responsive-wrapper');
+    if (tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}, 100);
+
+App.showToast("Evento salvo com sucesso!", "success");
+
+    } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
+    finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
+};
+
+App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+App.excluirEvento = (id) => {
+    App.confirmar("Excluir Evento", "Pretende remover este evento do calendário?", "Excluir", "#e74c3c", async () => {
+        await App.api(`/eventos/${id}`, 'DELETE');
+
+        const area = document.getElementById('app-content');
+        if (area) {
+            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
+        }
+
+        await App.renderizarCalendarioPro();
+    });
+};
+
+App.limparFormEvento = () => { document.getElementById('evt-desc').value=''; App.idEdicaoEvento=null; };

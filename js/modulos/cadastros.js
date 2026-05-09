@@ -1,1 +1,371 @@
-const a2_0x3f337b=a2_0x43bc;(function(_0x279d7f,_0x2eafd0){const _0x26c70b=a2_0x43bc,_0x43bd4a=_0x279d7f();while(!![]){try{const _0x27c73b=parseInt(_0x26c70b(0x118))/0x1+-parseInt(_0x26c70b(0x140))/0x2*(-parseInt(_0x26c70b(0x1d2))/0x3)+parseInt(_0x26c70b(0x16b))/0x4*(parseInt(_0x26c70b(0x183))/0x5)+parseInt(_0x26c70b(0x170))/0x6*(-parseInt(_0x26c70b(0x13a))/0x7)+parseInt(_0x26c70b(0x15e))/0x8+-parseInt(_0x26c70b(0x11d))/0x9*(parseInt(_0x26c70b(0x1a5))/0xa)+-parseInt(_0x26c70b(0x13f))/0xb;if(_0x27c73b===_0x2eafd0)break;else _0x43bd4a['push'](_0x43bd4a['shift']());}catch(_0x1b1379){_0x43bd4a['push'](_0x43bd4a['shift']());}}}(a2_0x5053,0x23e88));const lerInput=_0x60af9c=>{const _0x904cf9=a2_0x43bc,_0x1330ab=document[_0x904cf9(0x108)](_0x60af9c);return _0x1330ab?_0x1330ab[_0x904cf9(0x1df)]['trim']():'';},lerNum=_0x41a683=>{const _0x43e9e4=a2_0x43bc,_0x1dca6b=document[_0x43e9e4(0x108)](_0x41a683);if(!_0x1dca6b||!_0x1dca6b[_0x43e9e4(0x1df)])return 0x0;const _0x5a4eb6=parseFloat(_0x1dca6b['value']);return isNaN(_0x5a4eb6)?0x0:_0x5a4eb6;};function a2_0x43bc(_0x2fed0e,_0x226db7){_0x2fed0e=_0x2fed0e-0xfb;const _0x505344=a2_0x5053();let _0x43bc11=_0x505344[_0x2fed0e];return _0x43bc11;}App[a2_0x3f337b(0x113)]=()=>{const _0xfb0afb=a2_0x3f337b,_0x485910=document[_0xfb0afb(0x108)](_0xfb0afb(0x180)),_0xff7238=document[_0xfb0afb(0x108)](_0xfb0afb(0x14e));if(!_0x485910||!_0xff7238)return;if(!_0x485910[_0xfb0afb(0x1df)]){_0xff7238[_0xfb0afb(0x162)][_0xfb0afb(0x16e)]=_0xfb0afb(0x1b5);return;}const _0x4a54af=new Date(),_0x272bd3=new Date(_0x485910['value']);let _0x5b2b4a=_0x4a54af[_0xfb0afb(0x1bf)]()-_0x272bd3[_0xfb0afb(0x1bf)]();const _0x4b698d=_0x4a54af[_0xfb0afb(0x156)]()-_0x272bd3[_0xfb0afb(0x156)]();(_0x4b698d<0x0||_0x4b698d===0x0&&_0x4a54af[_0xfb0afb(0x165)]()<_0x272bd3[_0xfb0afb(0x165)]())&&_0x5b2b4a--,_0x5b2b4a<0x12?(_0xff7238[_0xfb0afb(0x162)][_0xfb0afb(0x16e)]=_0xfb0afb(0x13c),_0xff7238[_0xfb0afb(0x162)][_0xfb0afb(0x127)]='fadeIn\x200.5s'):_0xff7238[_0xfb0afb(0x162)][_0xfb0afb(0x16e)]=_0xfb0afb(0x1b5);},App[a2_0x3f337b(0x18d)]=()=>{const _0x457cca=a2_0x3f337b,_0x9d6320=document[_0x457cca(0x169)](_0x457cca(0x17e)),_0x30988b=Array['from'](_0x9d6320)[_0x457cca(0x19e)](_0x29b8e5=>_0x29b8e5[_0x457cca(0x1df)]),_0x5ae41a=document['getElementById']('tur-dia-display');_0x5ae41a&&(_0x5ae41a[_0x457cca(0x17a)]=_0x30988b[_0x457cca(0x1a1)]>0x0?_0x30988b['join'](',\x20'):'--\x20Selecione\x20os\x20dias\x20--');},document['addEventListener'](a2_0x3f337b(0x1ac),function(_0x43dbe5){const _0x2c9219=a2_0x3f337b,_0x318439=document[_0x2c9219(0x108)]('tur-dia-wrapper'),_0x3951ba=document[_0x2c9219(0x108)]('tur-dia-options');_0x3951ba&&_0x318439&&!_0x318439[_0x2c9219(0x139)](_0x43dbe5[_0x2c9219(0x188)])&&(_0x3951ba[_0x2c9219(0x162)][_0x2c9219(0x16e)]=_0x2c9219(0x1b5));}),App[a2_0x3f337b(0x160)]=async(_0x7a2056,_0x3a3632)=>{const _0x46c32d=a2_0x3f337b;App[_0x46c32d(0x175)]=_0x7a2056,App[_0x46c32d(0x116)]=_0x3a3632;const _0x49166a=document[_0x46c32d(0x108)]('modal-overlay');if(_0x49166a)_0x49166a[_0x46c32d(0x162)][_0x46c32d(0x16e)]=_0x46c32d(0x110);const _0x12fa9d=document[_0x46c32d(0x108)](_0x46c32d(0x10d)),_0x3b0bd5=document[_0x46c32d(0x108)](_0x46c32d(0x192));if(_0x12fa9d)_0x12fa9d[_0x46c32d(0x17a)]=_0x3a3632?'Editar\x20'+(_0x7a2056['charAt'](0x0)[_0x46c32d(0x137)]()+_0x7a2056[_0x46c32d(0x1b4)](0x1)):'Novo\x20'+(_0x7a2056[_0x46c32d(0x198)](0x0)[_0x46c32d(0x137)]()+_0x7a2056[_0x46c32d(0x1b4)](0x1));if(_0x3b0bd5)_0x3b0bd5[_0x46c32d(0x1d7)]=_0x46c32d(0x161);let _0x2c7ca0={},_0x5e2ad5={'cursos':[],'turmas':[]};try{if(_0x3a3632){const _0x533b3d=_0x7a2056==='financeiro'?_0x46c32d(0x11f):_0x7a2056+'s';_0x2c7ca0=await App[_0x46c32d(0x18f)]('/'+_0x533b3d+'/'+_0x3a3632);}if(_0x7a2056===_0x46c32d(0x10e)||_0x7a2056===_0x46c32d(0x141)){const [_0x2295be,_0x8b9847]=await Promise[_0x46c32d(0x11a)]([App[_0x46c32d(0x18f)](_0x46c32d(0x1cf)),App[_0x46c32d(0x18f)](_0x46c32d(0x18b))]);_0x5e2ad5[_0x46c32d(0x103)]=Array[_0x46c32d(0x197)](_0x2295be)?_0x2295be:[],_0x5e2ad5[_0x46c32d(0x12c)]=Array[_0x46c32d(0x197)](_0x8b9847)?_0x8b9847:[];}const _0xe87f00=App['UI'];let _0x288618='';if(_0x7a2056==='aluno'){const _0x31ac10=_0x5e2ad5[_0x46c32d(0x12c)]['length']>0x0?'<option\x20value=\x22\x22>--\x20Selecione\x20a\x20Turma\x20--</option>'+_0x5e2ad5['turmas'][_0x46c32d(0x19e)](_0x28973b=>_0x46c32d(0x196)+_0x28973b[_0x46c32d(0x12d)]+'\x22\x20'+(_0x2c7ca0[_0x46c32d(0x141)]===_0x28973b[_0x46c32d(0x12d)]?_0x46c32d(0x120):'')+'>'+App[_0x46c32d(0x1a9)](_0x28973b[_0x46c32d(0x12d)])+_0x46c32d(0x152))['join'](''):_0x46c32d(0x102),_0x55b5c4=_0x5e2ad5['cursos'][_0x46c32d(0x1a1)]>0x0?_0x46c32d(0x130)+_0x5e2ad5['cursos'][_0x46c32d(0x19e)](_0x9ae4ca=>'<option\x20value=\x22'+_0x9ae4ca['nome']+'\x22\x20'+(_0x2c7ca0['curso']===_0x9ae4ca['nome']?_0x46c32d(0x120):'')+'>'+App[_0x46c32d(0x1a9)](_0x9ae4ca[_0x46c32d(0x12d)])+'</option>')['join'](''):_0x46c32d(0x1d1);_0x288618=_0x46c32d(0x1bb)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x142),_0x46c32d(0x176),_0x2c7ca0['nome'])+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x129),_0x46c32d(0x1ce),_0x2c7ca0[_0x46c32d(0x181)],_0x46c32d(0x154),_0x46c32d(0x181))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x15f),_0x46c32d(0x14f),_0x2c7ca0['whatsapp'],_0x46c32d(0x1d6),_0x46c32d(0x1ba),_0x46c32d(0x135))+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x105),'alu-cpf',_0x2c7ca0['cpf'],_0x46c32d(0xff),_0x46c32d(0x1ba),'oninput=\x22App.mascaraCPF(this)\x22')+_0x46c32d(0x1e2)+_0xe87f00[_0x46c32d(0x1e6)]('RG',_0x46c32d(0x178),_0x2c7ca0['rg'],'00.000.000-0','text')+_0x46c32d(0x136)+_0xe87f00['input'](_0x46c32d(0x144),_0x46c32d(0x180),_0x2c7ca0[_0x46c32d(0x104)],'',_0x46c32d(0x13b),'onchange=\x22App.verificarMaioridade()\x22\x20onblur=\x22App.verificarMaioridade()\x22')+_0x46c32d(0x1a6)+(_0x2c7ca0[_0x46c32d(0x12e)]===_0x46c32d(0x1de)?'selected':'')+_0x46c32d(0x172)+(_0x2c7ca0[_0x46c32d(0x12e)]==='Feminino'?_0x46c32d(0x120):'')+_0x46c32d(0x1aa)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1a8),_0x46c32d(0xfd),_0x2c7ca0[_0x46c32d(0x1ab)],_0x46c32d(0x1c3))+_0x46c32d(0x122)+_0xe87f00[_0x46c32d(0x1e6)]('Nome\x20do\x20Responsável',_0x46c32d(0x186),_0x2c7ca0[_0x46c32d(0x112)],'Ex:\x20Maria\x20da\x20Silva')+_0x46c32d(0x163)+(_0x2c7ca0['resp_parentesco']==='Pai'?_0x46c32d(0x120):'')+'>Pai</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Mãe\x22\x20'+(_0x2c7ca0[_0x46c32d(0x10c)]===_0x46c32d(0x1ae)?_0x46c32d(0x120):'')+_0x46c32d(0x128)+(_0x2c7ca0[_0x46c32d(0x10c)]===_0x46c32d(0x14a)?_0x46c32d(0x120):'')+_0x46c32d(0x1e9)+(_0x2c7ca0['resp_parentesco']===_0x46c32d(0x111)?'selected':'')+_0x46c32d(0x1b3)+(_0x2c7ca0[_0x46c32d(0x10c)]===_0x46c32d(0x1e4)?'selected':'')+_0x46c32d(0x171)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x19c),'alu-resp-cpf',_0x2c7ca0[_0x46c32d(0x1b9)],_0x46c32d(0xff),_0x46c32d(0x1ba),_0x46c32d(0x17d))+_0x46c32d(0x19d)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1eb),_0x46c32d(0x18a),_0x2c7ca0[_0x46c32d(0x190)],'(00)\x2000000-0000',_0x46c32d(0x1ba),_0x46c32d(0x135))+_0x46c32d(0x1c5)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x167),'alu-rua',_0x2c7ca0['rua'],_0x46c32d(0x158))+_0x46c32d(0x136)+_0xe87f00['input'](_0x46c32d(0x164),_0x46c32d(0x199),_0x2c7ca0[_0x46c32d(0x1c9)],'123','text')+_0x46c32d(0x1e2)+_0xe87f00['input'](_0x46c32d(0x1e1),_0x46c32d(0x18e),_0x2c7ca0['bairro'])+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1dc),_0x46c32d(0x149),_0x2c7ca0[_0x46c32d(0x1e7)])+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x123),_0x46c32d(0x16c),_0x2c7ca0[_0x46c32d(0x16f)],'Ex:\x20SP','text',_0x46c32d(0x195))+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1e0),_0x46c32d(0x17b),_0x2c7ca0[_0x46c32d(0x114)]||_0x46c32d(0x138))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2010px;\x20border-bottom:\x201px\x20solid\x20#ccc;\x20padding-bottom:\x205px;\x20color:#2c3e50;\x22>3.\x20Matrícula</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Turma\x20/\x20Horário</label><select\x20id=\x22alu-turma\x22>'+_0x31ac10+_0x46c32d(0x1dd)+_0x55b5c4+_0x46c32d(0x11e)+(!_0x2c7ca0[_0x46c32d(0x12b)]||_0x2c7ca0[_0x46c32d(0x12b)]===_0x46c32d(0x126)?_0x46c32d(0x120):'')+_0x46c32d(0x10a)+(_0x2c7ca0[_0x46c32d(0x12b)]==='Trancado'?_0x46c32d(0x120):'')+_0x46c32d(0x1c8)+(_0x2c7ca0[_0x46c32d(0x12b)]===_0x46c32d(0x166)?'selected':'')+_0x46c32d(0x10f);}else{if(_0x7a2056===_0x46c32d(0x141)){const _0x28fb15=_0x5e2ad5[_0x46c32d(0x103)]['length']>0x0?_0x46c32d(0x17c)+_0x5e2ad5['cursos']['map'](_0x35525a=>_0x46c32d(0x196)+_0x35525a[_0x46c32d(0x12d)]+'\x22\x20'+(_0x2c7ca0[_0x46c32d(0x11b)]===_0x35525a[_0x46c32d(0x12d)]?'selected':'')+'>'+App[_0x46c32d(0x1a9)](_0x35525a[_0x46c32d(0x12d)])+_0x46c32d(0x152))[_0x46c32d(0x10b)](''):_0x46c32d(0x1d1),_0x437bf4=_0x2c7ca0[_0x46c32d(0x14c)]?_0x2c7ca0['dia'][_0x46c32d(0x100)](',')[_0x46c32d(0x19e)](_0x345685=>_0x345685[_0x46c32d(0x1a3)]()):[],_0x3a2cb3=_0x56ca3d=>_0x46c32d(0x12f)+_0x56ca3d+'\x22\x20'+(_0x437bf4[_0x46c32d(0x1c2)](_0x56ca3d)?_0x46c32d(0x179):'')+_0x46c32d(0x1b6)+_0x56ca3d+_0x46c32d(0x1da);_0x288618='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>'+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1c6),_0x46c32d(0x174),_0x2c7ca0[_0x46c32d(0x12d)],_0x46c32d(0x1d8))+_0x46c32d(0x1cb)+(_0x437bf4[_0x46c32d(0x1a1)]>0x0?_0x437bf4[_0x46c32d(0x10b)](',\x20'):_0x46c32d(0x150))+_0x46c32d(0x1ca)+_0x3a2cb3('Segunda-feira')+_0x46c32d(0x1b2)+_0x3a2cb3(_0x46c32d(0x1b8))+_0x46c32d(0x1b2)+_0x3a2cb3(_0x46c32d(0x17f))+_0x46c32d(0x1b2)+_0x3a2cb3('Quinta-feira')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x3a2cb3(_0x46c32d(0x168))+_0x46c32d(0x1b2)+_0x3a2cb3(_0x46c32d(0x147))+_0x46c32d(0x1b2)+_0x3a2cb3(_0x46c32d(0x182))+_0x46c32d(0x193)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x119),'tur-hora',_0x2c7ca0[_0x46c32d(0x1b0)],_0x46c32d(0x1cd))+_0x46c32d(0x131)+_0x28fb15+_0x46c32d(0x185);}else{if(_0x7a2056===_0x46c32d(0x11b))_0x288618=_0x46c32d(0x1ad)+_0xe87f00[_0x46c32d(0x1e6)]('Nome\x20do\x20Curso\x20*',_0x46c32d(0x1a4),_0x2c7ca0[_0x46c32d(0x12d)],_0x46c32d(0x19a))+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1be),_0x46c32d(0x153),_0x2c7ca0[_0x46c32d(0x109)],_0x46c32d(0x1d0),_0x46c32d(0xfe))+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)]('Valor\x20Padrão\x20(Mensalidade)\x20R$','cur-valor',_0x2c7ca0[_0x46c32d(0x1c0)]||_0x46c32d(0x187),_0x46c32d(0x187),'number')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Descrição\x20Breve</label><textarea\x20id=\x22cur-desc\x22\x20rows=\x223\x22\x20style=\x22width:100%;\x20padding:10px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x22>'+(_0x2c7ca0['descricao']||'')+_0x46c32d(0x15c);else _0x7a2056===_0x46c32d(0x132)&&(_0x288618=_0x46c32d(0x1ad)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1bc),_0x46c32d(0x117),_0x2c7ca0[_0x46c32d(0x12d)],'Ex:\x20Apostila\x20Módulo\x201')+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x134),_0x46c32d(0x184),_0x2c7ca0[_0x46c32d(0x148)],_0x46c32d(0x107))+_0x46c32d(0x136)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x16d),_0x46c32d(0x14b),_0x2c7ca0[_0x46c32d(0x1c0)]||'0.00',_0x46c32d(0x187),_0x46c32d(0xfe))+_0x46c32d(0x1e2)+_0xe87f00[_0x46c32d(0x1e6)](_0x46c32d(0x1cc),_0x46c32d(0x133),_0x2c7ca0[_0x46c32d(0x1d9)]||'0','0',_0x46c32d(0xfe))+_0x46c32d(0x136)+_0xe87f00['input'](_0x46c32d(0xfb),_0x46c32d(0x1c7),_0x2c7ca0['quantidadeMinima']||'5','5',_0x46c32d(0xfe))+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Observações</label><textarea\x20id=\x22est-obs\x22\x20rows=\x222\x22\x20style=\x22width:100%;\x20padding:10px;\x20border-radius:5px;\x20border:1px\x20solid\x20#ccc;\x22>'+(_0x2c7ca0[_0x46c32d(0x191)]||'')+_0x46c32d(0x15c));}}if(_0x3b0bd5){_0x3b0bd5[_0x46c32d(0x1d7)]=_0x288618;if(_0x7a2056===_0x46c32d(0x10e))setTimeout(()=>App[_0x46c32d(0x113)](),0x64);}const _0x4f7a85=document[_0x46c32d(0x1ea)](_0x46c32d(0x145));_0x4f7a85&&(_0x4f7a85[_0x46c32d(0x11c)](_0x46c32d(0x19b),_0x46c32d(0x157)),_0x4f7a85[_0x46c32d(0x1d7)]=_0x46c32d(0x1c1));}catch(_0x22f283){console[_0x46c32d(0x173)](_0x46c32d(0x1a2),_0x22f283);if(_0x3b0bd5)_0x3b0bd5['innerHTML']='<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20carregar\x20o\x20formulário.\x20Verifique\x20a\x20internet.</p>';}},App[a2_0x3f337b(0x189)]=async()=>{const _0x157336=a2_0x3f337b,_0x6be042=App[_0x157336(0x175)],_0xc7ead6=_0x6be042===_0x157336(0x11f)?'financeiro':_0x6be042+'s';let _0x4eb1c7={};const _0x42edfc=document[_0x157336(0x1ea)](_0x157336(0x145)),_0x231519=_0x42edfc?_0x42edfc['innerText']:'Salvar';_0x42edfc&&(_0x42edfc[_0x157336(0x17a)]=_0x157336(0x19f),_0x42edfc[_0x157336(0x106)]=!![]);document[_0x157336(0x15b)][_0x157336(0x162)][_0x157336(0x101)]=_0x157336(0x124);try{if(_0x6be042===_0x157336(0x10e)){_0x4eb1c7[_0x157336(0x12d)]=lerInput(_0x157336(0x176)),_0x4eb1c7['email']=lerInput('alu-email'),_0x4eb1c7['whatsapp']=lerInput('alu-zap'),_0x4eb1c7[_0x157336(0x15d)]=lerInput(_0x157336(0x1e8)),_0x4eb1c7['rg']=lerInput(_0x157336(0x178)),_0x4eb1c7['nascimento']=lerInput(_0x157336(0x180)),_0x4eb1c7[_0x157336(0x12e)]=lerInput(_0x157336(0x1db)),_0x4eb1c7[_0x157336(0x1ab)]=lerInput(_0x157336(0xfd)),_0x4eb1c7[_0x157336(0x121)]=lerInput(_0x157336(0x143)),_0x4eb1c7[_0x157336(0x1c9)]=lerInput(_0x157336(0x199)),_0x4eb1c7[_0x157336(0x155)]=lerInput(_0x157336(0x18e)),_0x4eb1c7[_0x157336(0x1e7)]=lerInput(_0x157336(0x149)),_0x4eb1c7['estado']=lerInput(_0x157336(0x16c)),_0x4eb1c7['pais']=lerInput('alu-pais'),_0x4eb1c7['turma']=lerInput('alu-turma'),_0x4eb1c7[_0x157336(0x11b)]=lerInput(_0x157336(0x194)),_0x4eb1c7['status']=lerInput(_0x157336(0x1d5))||_0x157336(0x126);const _0x306998=document[_0x157336(0x108)](_0x157336(0x14e)),_0x1cd7bd=_0x306998&&_0x306998['style'][_0x157336(0x16e)]!==_0x157336(0x1b5);_0x1cd7bd?(_0x4eb1c7[_0x157336(0x112)]=lerInput(_0x157336(0x186)),_0x4eb1c7[_0x157336(0x10c)]=lerInput('alu-resp-parentesco'),_0x4eb1c7[_0x157336(0x1b9)]=lerInput('alu-resp-cpf'),_0x4eb1c7[_0x157336(0x190)]=lerInput(_0x157336(0x18a))):(_0x4eb1c7[_0x157336(0x112)]='',_0x4eb1c7[_0x157336(0x10c)]='',_0x4eb1c7['resp_cpf']='',_0x4eb1c7[_0x157336(0x190)]='');if(!_0x4eb1c7['nome']||!_0x4eb1c7[_0x157336(0x15a)]){App[_0x157336(0x1e5)](_0x157336(0x1a7),_0x157336(0x173));throw new Error(_0x157336(0x13e));}}else{if(_0x6be042===_0x157336(0x141)){_0x4eb1c7[_0x157336(0x12d)]=lerInput(_0x157336(0x174)),_0x4eb1c7[_0x157336(0x1b0)]=lerInput('tur-hora'),_0x4eb1c7[_0x157336(0x11b)]=lerInput(_0x157336(0x159));const _0x3c7fbe=document['querySelectorAll'](_0x157336(0x17e));_0x4eb1c7['dia']=Array[_0x157336(0x1b1)](_0x3c7fbe)[_0x157336(0x19e)](_0x2085ad=>_0x2085ad[_0x157336(0x1df)])[_0x157336(0x10b)](',\x20');if(!_0x4eb1c7['nome']){App['showToast']('O\x20nome\x20da\x20turma\x20é\x20obrigatório!',_0x157336(0x173));throw new Error(_0x157336(0x13e));}}else{if(_0x6be042===_0x157336(0x11b)){_0x4eb1c7['nome']=lerInput(_0x157336(0x1a4)),_0x4eb1c7[_0x157336(0x109)]=lerInput(_0x157336(0x153)),_0x4eb1c7[_0x157336(0x1c0)]=lerNum('cur-valor'),_0x4eb1c7[_0x157336(0x1c4)]=lerInput(_0x157336(0x18c));if(!_0x4eb1c7[_0x157336(0x12d)]){App[_0x157336(0x1e5)](_0x157336(0x1af),_0x157336(0x173));throw new Error('Validação\x20Falhou');}}else{if(_0x6be042===_0x157336(0x132)){_0x4eb1c7[_0x157336(0x12d)]=lerInput(_0x157336(0x117)),_0x4eb1c7[_0x157336(0x148)]=lerInput(_0x157336(0x184)),_0x4eb1c7[_0x157336(0x191)]=lerInput(_0x157336(0x12a)),_0x4eb1c7['valor']=lerNum(_0x157336(0x14b)),_0x4eb1c7['quantidade']=parseInt(lerInput(_0x157336(0x133)))||0x0,_0x4eb1c7[_0x157336(0x1b7)]=parseInt(lerInput(_0x157336(0x1c7)))||0x0;if(!_0x4eb1c7['nome']){App[_0x157336(0x1e5)](_0x157336(0x1bd),_0x157336(0x173));throw new Error(_0x157336(0x13e));}}}}}const _0x3a3eea=App[_0x157336(0x116)]?'/'+_0xc7ead6+'/'+App[_0x157336(0x116)]:'/'+_0xc7ead6,_0x1d5b29=App['idEdicao']?_0x157336(0x13d):_0x157336(0x1a0),_0x7fca02=await App[_0x157336(0x18f)](_0x3a3eea,_0x1d5b29,_0x4eb1c7);if(!_0x7fca02||_0x7fca02['error'])throw new Error(_0x7fca02?_0x7fca02[_0x157336(0x173)]:'Erro\x20de\x20comunicação\x20com\x20a\x20API');App[_0x157336(0x1e5)](_0x157336(0xfc),_0x157336(0x177)),App[_0x157336(0x125)]();const _0x2c13a8=document['getElementById'](_0x157336(0x151));_0x2c13a8&&(_0x2c13a8[_0x157336(0x1d7)]='<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20lista...\x20⏳</p>');if(typeof App[_0x157336(0x1d4)]===_0x157336(0x16a))await App[_0x157336(0x1d4)](_0x6be042);else typeof App['renderizarInicio']===_0x157336(0x16a)&&await App[_0x157336(0x146)]();}catch(_0x20cf12){_0x20cf12[_0x157336(0x1d3)]!==_0x157336(0x13e)&&(App[_0x157336(0x1e5)](_0x20cf12[_0x157336(0x1d3)]||_0x157336(0x115),_0x157336(0x173)),console['error'](_0x157336(0x14d),_0x20cf12));}finally{_0x42edfc&&(_0x42edfc['innerText']=_0x231519,_0x42edfc['disabled']=![]),document['body'][_0x157336(0x162)][_0x157336(0x101)]=_0x157336(0x1e3);}};function a2_0x5053(){const _0x479417=['<p\x20style=\x22padding:20px;\x20text-align:center;\x20color:#666;\x22>Carregando\x20formulário...\x20⏳</p>','style','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>Grau\x20de\x20Parentesco</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22alu-resp-parentesco\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22\x22>--\x20Selecione\x20--</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Pai\x22\x20','Número','getDate','Cancelado','Logradouro\x20(Rua/Av)','Sexta-feira','querySelectorAll','function','8gJosAc','alu-uf','Valor\x20de\x20Venda\x20(R$)','display','estado','40974FiSwOo','>Outro</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','>Masculino</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Feminino\x22\x20','error','tur-nome','entidadeAtual','alu-nome','success','alu-rg','checked','innerText','alu-pais','<option\x20value=\x22\x22>--\x20Sem\x20Curso\x20Específico\x20--</option>','oninput=\x22App.mascaraCPF(this)\x22','.turma-dia-chk:checked','Quarta-feira','alu-nasc','email','Diversos\x20(Flexível)','517385ABOssL','est-codigo','</select></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','alu-resp-nome','0.00','target','salvarCadastro','alu-resp-zap','/turmas','cur-desc','atualizarDisplayDias','alu-bairro','api','resp_zap','obs','modal-form-content','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','alu-curso','maxlength=\x222\x22','<option\x20value=\x22','isArray','charAt','alu-num','Ex:\x20Informática\x20Essencial','onclick','CPF\x20do\x20Responsável','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','map','A\x20guardar...\x20⏳','POST','length','Erro\x20no\x20formulário:','trim','cur-nome','5740rZKztZ','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>Sexo</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22alu-sexo\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22\x22>--\x20Selecione\x20--</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Masculino\x22\x20','Nome\x20e\x20WhatsApp\x20são\x20obrigatórios!','Profissão\x20/\x20Ocupação','escapeHTML','>Feminino</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','profissao','click','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>','Mãe','O\x20nome\x20do\x20curso\x20é\x20obrigatório!','horario','from','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','>Tio/Tia</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Outro\x22\x20','slice','none','\x20onchange=\x22App.atualizarDisplayDias()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-weight:\x20normal;\x22>','quantidadeMinima','Terça-feira','resp_cpf','text','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2010px;\x20border-bottom:\x201px\x20solid\x20#ccc;\x20padding-bottom:\x205px;\x20color:#2c3e50;\x22>1.\x20Dados\x20Pessoais</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Nome\x20do\x20Produto/Serviço\x20*','O\x20nome\x20do\x20item\x20é\x20obrigatório!','Carga\x20Horária\x20(Horas)','getFullYear','valor','💾\x20Salvar\x20Registro','includes','Ex:\x20Estudante','descricao','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2010px;\x20border-bottom:\x201px\x20solid\x20#ccc;\x20padding-bottom:\x205px;\x20color:#2c3e50;\x22>2.\x20Endereço\x20Completo</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:2fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Nome\x20da\x20Turma\x20*','est-min','>🟡\x20Trancado\x20(Matrícula\x20Pausada)</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Cancelado\x22\x20','numero','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22tur-dia-options\x22\x20style=\x22display:\x20none;\x20position:\x20absolute;\x20top:\x20100%;\x20left:\x200;\x20right:\x200;\x20background:\x20#fff;\x20border:\x201px\x20solid\x20#ccc;\x20border-radius:\x205px;\x20z-index:\x20999;\x20max-height:\x20200px;\x20overflow-y:\x20auto;\x20box-shadow:\x200\x204px\x206px\x20rgba(0,0,0,0.1);\x20margin-top:\x202px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22\x20id=\x22tur-dia-wrapper\x22\x20style=\x22position:\x20relative;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>Dia(s)\x20da\x20Aula</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22tur-dia-display\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22width:\x20100%;\x20padding:\x2010px;\x20border:\x201px\x20solid\x20#ccc;\x20border-radius:\x205px;\x20background:\x20#fff\x20url(\x27data:image/svg+xml;utf8,<svg\x20fill=%22%23333%22\x20height=%2224%22\x20viewBox=%220\x200\x2024\x2024%22\x20width=%2224%22\x20xmlns=%22http://www.w3.org/2000/svg%22><path\x20d=%22M7\x2010l5\x205\x205-5z%22/><path\x20d=%22M0\x200h24v24H0z%22\x20fill=%22none%22/></svg>\x27)\x20no-repeat\x20right\x2010px\x20center;\x20cursor:\x20pointer;\x20min-height:\x2041px;\x20display:\x20flex;\x20align-items:\x20center;\x20padding-right:\x2030px;\x20font-size:\x2014px;\x20box-sizing:\x20border-box;\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onclick=\x22const\x20opt\x20=\x20document.getElementById(\x27tur-dia-options\x27);\x20opt.style.display\x20=\x20opt.style.display\x20===\x20\x27block\x27\x20?\x20\x27none\x27\x20:\x20\x27block\x27;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Quantidade\x20Atual','Ex:\x2014:00\x20às\x2016:00','alu-email','/cursos','Ex:\x2080','<option\x20value=\x22\x22>--\x20Cadastre\x20um\x20Curso\x20Primeiro\x20--</option>','6EZyESc','message','renderizarLista','alu-status','(00)\x2000000-0000','innerHTML','Ex:\x20Inglês\x20Kids\x20T1','quantidade','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','alu-sexo','Cidade','</select></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Curso\x20Vinculado</label><select\x20id=\x22alu-curso\x22>','Masculino','value','País','Bairro','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:1fr\x201fr;\x20gap:15px;\x20margin-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','default','Outro','showToast','input','cidade','alu-cpf','>Avô/Avó</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Tio/Tia\x22\x20','querySelector','WhatsApp\x20do\x20Responsável','Alerta\x20de\x20Mínimo','Registo\x20salvo\x20com\x20sucesso!\x20🎉','alu-prof','number','000.000.000-00','split','cursor','<option\x20value=\x22\x22>--\x20Cadastre\x20uma\x20Turma\x20Primeiro\x20--</option>','cursos','nascimento','CPF','disabled','Ex:\x20APOST01','getElementById','carga','>🟢\x20Ativo\x20(Estudando)</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Trancado\x22\x20','join','resp_parentesco','modal-titulo','aluno','>🔴\x20Cancelado\x20(Desistente)</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','flex','Tio/Tia','resp_nome','verificarMaioridade','pais','Ocorreu\x20um\x20erro\x20ao\x20salvar.','idEdicao','est-nome','183335chpBds','Horário','all','curso','setAttribute','801vLFhWN','</select></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>Status\x20de\x20Matrícula</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22alu-status\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Ativo\x22\x20','financeiro','selected','rua','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22box-responsavel\x22\x20style=\x22display:\x20none;\x20background:\x20#fff3e0;\x20padding:\x2015px;\x20border-radius:\x208px;\x20border:\x201px\x20dashed\x20#e67e22;\x20margin-bottom:\x2020px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin-top:\x200;\x20color:\x20#d35400;\x20margin-bottom:\x2010px;\x22>👤\x20Dados\x20do\x20Responsável\x20Legal\x20(Menor\x20de\x20Idade)</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:2fr\x201fr;\x20gap:15px;\x20margin-bottom:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Estado\x20(UF)','wait','fecharModal','Ativo','animation','>Mãe</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Avô/Avó\x22\x20','E-mail','est-obs','status','turmas','nome','sexo','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22display:flex;\x20align-items:center;\x20gap:8px;\x20padding:10px;\x20cursor:pointer;\x20border-bottom:1px\x20solid\x20#f0f0f0;\x20margin:0;\x20transition:\x20background\x200.2s;\x22\x20onmouseover=\x22this.style.background=\x27#f9f9f9\x27\x22\x20onmouseout=\x22this.style.background=\x27transparent\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22checkbox\x22\x20class=\x22turma-dia-chk\x22\x20value=\x22','<option\x20value=\x22\x22>--\x20Selecione\x20o\x20Curso\x20--</option>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Curso\x20Padrão\x20desta\x20Turma</label><select\x20id=\x22tur-curso\x22>','estoque','est-qtd','Código\x20/\x20SKU','oninput=\x22App.mascaraCelular(this)\x22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','toUpperCase','Brasil','contains','21qJxOTw','date','block','PUT','Validação\x20Falhou','6759907CSpSpq','285316HbRqWt','turma','Nome\x20Completo\x20*','alu-rua','Data\x20de\x20Nascimento','.btn-confirm','renderizarInicio','Sábado','codigo','alu-cidade','Avô/Avó','est-valor','dia','Erro\x20completo:','box-responsavel','alu-zap','--\x20Selecione\x20os\x20dias\x20--','app-content','</option>','cur-carga','email@exemplo.com','bairro','getMonth','App.salvarCadastro()','Ex:\x20Rua\x20das\x20Flores','tur-curso','whatsapp','body','</textarea></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','cpf','1260680csjbsj','WhatsApp\x20*','abrirModalCadastroModulo'];a2_0x5053=function(){return _0x479417;};return a2_0x5053();}
+window.App = window.App || {};
+const App = window.App;
+
+// =========================================================
+// MÓDULO DE CADASTROS V107 (MULTI-SELECT ELEGANTE PARA TURMAS E DOSSIÊ COMPLETO)
+// =========================================================
+
+// 🛡️ FUNÇÕES AUXILIARES SEGURAS
+const lerInput = (id) => { 
+    const el = document.getElementById(id); 
+    return el ? el.value.trim() : ''; 
+};
+
+const lerNum = (id) => { 
+    const el = document.getElementById(id); 
+    if (!el || !el.value) return 0;
+    const val = parseFloat(el.value);
+    return isNaN(val) ? 0 : val;
+};
+
+// 🧠 Função Inteligente: Verifica a Idade do Aluno em tempo real
+App.verificarMaioridade = () => {
+    const elNasc = document.getElementById('alu-nasc');
+    const boxResp = document.getElementById('box-responsavel');
+    if (!elNasc || !boxResp) return;
+    
+    if (!elNasc.value) {
+        boxResp.style.display = 'none';
+        return;
+    }
+
+    const hoje = new Date();
+    const nasc = new Date(elNasc.value);
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const m = hoje.getMonth() - nasc.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) {
+        idade--;
+    }
+
+    if (idade < 18) {
+        boxResp.style.display = 'block';
+        boxResp.style.animation = 'fadeIn 0.5s';
+    } else {
+        boxResp.style.display = 'none';
+    }
+};
+
+// 🎨 Função Visual: Atualiza o texto do campo bonito de dias da Turma
+App.atualizarDisplayDias = () => {
+    const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
+    const dias = Array.from(checkboxes).map(chk => chk.value);
+    const display = document.getElementById('tur-dia-display');
+    if(display) {
+        display.innerText = dias.length > 0 ? dias.join(', ') : '-- Selecione os dias --';
+    }
+};
+
+// Fecha o dropdown se clicar fora dele
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('tur-dia-wrapper');
+    const options = document.getElementById('tur-dia-options');
+    if (options && wrapper && !wrapper.contains(e.target)) {
+        options.style.display = 'none';
+    }
+});
+
+App.abrirModalCadastroModulo = async (tipo, id) => {
+    App.entidadeAtual = tipo;
+    App.idEdicao = id;
+    
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+    
+    if(titulo) titulo.innerText = id ? `Editar ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}` : `Novo ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+    if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando formulário... ⏳</p>';
+
+    let dados = {};
+    let listas = { cursos: [], turmas: [] };
+
+    try {
+        if (id) {
+            const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+            dados = await App.api(`/${endpoint}/${id}`);
+        }
+        
+        if (tipo === 'aluno' || tipo === 'turma') {
+            const [c, t] = await Promise.all([ App.api('/cursos'), App.api('/turmas') ]);
+            listas.cursos = Array.isArray(c) ? c : [];
+            listas.turmas = Array.isArray(t) ? t : [];
+        }
+
+        const UI = App.UI;
+        let html = '';
+
+        if (tipo === 'aluno') {
+            const opcoesTurmas = listas.turmas.length > 0 
+                ? '<option value="">-- Selecione a Turma --</option>' + listas.turmas.map(x => `<option value="${x.nome}" ${dados.turma === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
+                : '<option value="">-- Cadastre uma Turma Primeiro --</option>';
+
+            const opcoesCursos = listas.cursos.length > 0 
+                ? '<option value="">-- Selecione o Curso --</option>' + listas.cursos.map(x => `<option value="${x.nome}" ${dados.curso === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
+                : '<option value="">-- Cadastre um Curso Primeiro --</option>';
+
+            html = `
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">1. Dados Pessoais</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Nome Completo *', 'alu-nome', dados.nome)}
+                    ${UI.input('E-mail', 'alu-email', dados.email, 'email@exemplo.com', 'email')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('WhatsApp *', 'alu-zap', dados.whatsapp, '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)"')}
+                    ${UI.input('CPF', 'alu-cpf', dados.cpf, '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)"')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('RG', 'alu-rg', dados.rg, '00.000.000-0', 'text')}
+                    ${UI.input('Data de Nascimento', 'alu-nasc', dados.nascimento, '', 'date', 'onchange="App.verificarMaioridade()" onblur="App.verificarMaioridade()"')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    <div class="input-group">
+                        <label>Sexo</label>
+                        <select id="alu-sexo">
+                            <option value="">-- Selecione --</option>
+                            <option value="Masculino" ${dados.sexo === 'Masculino' ? 'selected' : ''}>Masculino</option>
+                            <option value="Feminino" ${dados.sexo === 'Feminino' ? 'selected' : ''}>Feminino</option>
+                        </select>
+                    </div>
+                    ${UI.input('Profissão / Ocupação', 'alu-prof', dados.profissao, 'Ex: Estudante')}
+                </div>
+
+                <div id="box-responsavel" style="display: none; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #e67e22; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #d35400; margin-bottom: 10px;">👤 Dados do Responsável Legal (Menor de Idade)</h4>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:15px; margin-bottom:10px;">
+                        ${UI.input('Nome do Responsável', 'alu-resp-nome', dados.resp_nome, 'Ex: Maria da Silva')}
+                        <div class="input-group">
+                            <label>Grau de Parentesco</label>
+                            <select id="alu-resp-parentesco">
+                                <option value="">-- Selecione --</option>
+                                <option value="Pai" ${dados.resp_parentesco === 'Pai' ? 'selected' : ''}>Pai</option>
+                                <option value="Mãe" ${dados.resp_parentesco === 'Mãe' ? 'selected' : ''}>Mãe</option>
+                                <option value="Avô/Avó" ${dados.resp_parentesco === 'Avô/Avó' ? 'selected' : ''}>Avô/Avó</option>
+                                <option value="Tio/Tia" ${dados.resp_parentesco === 'Tio/Tia' ? 'selected' : ''}>Tio/Tia</option>
+                                <option value="Outro" ${dados.resp_parentesco === 'Outro' ? 'selected' : ''}>Outro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                        ${UI.input('CPF do Responsável', 'alu-resp-cpf', dados.resp_cpf, '000.000.000-00', 'text', 'oninput="App.mascaraCPF(this)"')}
+                        ${UI.input('WhatsApp do Responsável', 'alu-resp-zap', dados.resp_zap, '(00) 00000-0000', 'text', 'oninput="App.mascaraCelular(this)"')}
+                    </div>
+                </div>
+
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">2. Endereço Completo</h4>
+                <div style="display:grid; grid-template-columns:2fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Logradouro (Rua/Av)', 'alu-rua', dados.rua, 'Ex: Rua das Flores')}
+                    ${UI.input('Número', 'alu-num', dados.numero, '123', 'text')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Bairro', 'alu-bairro', dados.bairro)}
+                    ${UI.input('Cidade', 'alu-cidade', dados.cidade)}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    ${UI.input('Estado (UF)', 'alu-uf', dados.estado, 'Ex: SP', 'text', 'maxlength="2"')}
+                    ${UI.input('País', 'alu-pais', dados.pais || 'Brasil')}
+                </div>
+
+                <h4 style="margin: 0 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; color:#2c3e50;">3. Matrícula</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div class="input-group"><label>Turma / Horário</label><select id="alu-turma">${opcoesTurmas}</select></div>
+                    <div class="input-group"><label>Curso Vinculado</label><select id="alu-curso">${opcoesCursos}</select></div>
+                </div>
+                <div class="input-group">
+                    <label>Status de Matrícula</label>
+                    <select id="alu-status">
+                        <option value="Ativo" ${!dados.status || dados.status === 'Ativo' ? 'selected' : ''}>🟢 Ativo (Estudando)</option>
+                        <option value="Trancado" ${dados.status === 'Trancado' ? 'selected' : ''}>🟡 Trancado (Matrícula Pausada)</option>
+                        <option value="Cancelado" ${dados.status === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado (Desistente)</option>
+                    </select>
+                </div>
+            `;
+        } 
+        else if (tipo === 'turma') {
+            const opcoesCursos = listas.cursos.length > 0 
+                ? '<option value="">-- Sem Curso Específico --</option>' + listas.cursos.map(x => `<option value="${x.nome}" ${dados.curso === x.nome ? 'selected' : ''}>${App.escapeHTML(x.nome)}</option>`).join('')
+                : '<option value="">-- Cadastre um Curso Primeiro --</option>';
+
+            // 🧠 Componente Customizado: Select com Checkboxes!
+            const diasSalvos = dados.dia ? dados.dia.split(',').map(d => d.trim()) : [];
+            const checkDia = (dia) => `
+                <label style="display:flex; align-items:center; gap:8px; padding:10px; cursor:pointer; border-bottom:1px solid #f0f0f0; margin:0; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" class="turma-dia-chk" value="${dia}" ${diasSalvos.includes(dia) ? 'checked' : ''} onchange="App.atualizarDisplayDias()">
+                    <span style="font-weight: normal;">${dia}</span>
+                </label>
+            `;
+
+            html = `
+                <div class="input-group">${UI.input('Nome da Turma *', 'tur-nome', dados.nome, 'Ex: Inglês Kids T1')}</div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div class="input-group" id="tur-dia-wrapper" style="position: relative;">
+                        <label>Dia(s) da Aula</label>
+                        <div id="tur-dia-display" 
+                             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #fff url('data:image/svg+xml;utf8,<svg fill=%22%23333%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/><path d=%22M0 0h24v24H0z%22 fill=%22none%22/></svg>') no-repeat right 10px center; cursor: pointer; min-height: 41px; display: flex; align-items: center; padding-right: 30px; font-size: 14px; box-sizing: border-box;" 
+                             onclick="const opt = document.getElementById('tur-dia-options'); opt.style.display = opt.style.display === 'block' ? 'none' : 'block';">
+                            ${diasSalvos.length > 0 ? diasSalvos.join(', ') : '-- Selecione os dias --'}
+                        </div>
+                        <div id="tur-dia-options" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 5px; z-index: 999; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 2px;">
+                            ${checkDia('Segunda-feira')}
+                            ${checkDia('Terça-feira')}
+                            ${checkDia('Quarta-feira')}
+                            ${checkDia('Quinta-feira')}
+                            ${checkDia('Sexta-feira')}
+                            ${checkDia('Sábado')}
+                            ${checkDia('Diversos (Flexível)')}
+                        </div>
+                    </div>
+                    ${UI.input('Horário', 'tur-hora', dados.horario, 'Ex: 14:00 às 16:00')}
+                </div>
+
+                <div class="input-group"><label>Curso Padrão desta Turma</label><select id="tur-curso">${opcoesCursos}</select></div>
+            `;
+        } 
+        else if (tipo === 'curso') {
+            html = `
+                <div class="input-group">${UI.input('Nome do Curso *', 'cur-nome', dados.nome, 'Ex: Informática Essencial')}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Carga Horária (Horas)', 'cur-carga', dados.carga, 'Ex: 80', 'number')}
+                    ${UI.input('Valor Padrão (Mensalidade) R$', 'cur-valor', dados.valor || '0.00', '0.00', 'number')}
+                </div>
+                <div class="input-group"><label>Descrição Breve</label><textarea id="cur-desc" rows="3" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">${dados.descricao || ''}</textarea></div>
+            `;
+        }
+        else if (tipo === 'estoque') {
+            html = `
+                <div class="input-group">${UI.input('Nome do Produto/Serviço *', 'est-nome', dados.nome, 'Ex: Apostila Módulo 1')}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Código / SKU', 'est-codigo', dados.codigo, 'Ex: APOST01')}
+                    ${UI.input('Valor de Venda (R$)', 'est-valor', dados.valor || '0.00', '0.00', 'number')}
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+                    ${UI.input('Quantidade Atual', 'est-qtd', dados.quantidade || '0', '0', 'number')}
+                    ${UI.input('Alerta de Mínimo', 'est-min', dados.quantidadeMinima || '5', '5', 'number')}
+                </div>
+                <div class="input-group"><label>Observações</label><textarea id="est-obs" rows="2" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">${dados.obs || ''}</textarea></div>
+            `;
+        }
+
+        if(conteudo) {
+            conteudo.innerHTML = html;
+            if (tipo === 'aluno') setTimeout(() => App.verificarMaioridade(), 100);
+        }
+        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) {
+            btnConfirm.setAttribute('onclick', 'App.salvarCadastro()');
+            btnConfirm.innerHTML = "💾 Salvar Registro";
+        }
+    } catch (e) { 
+        console.error("Erro no formulário:", e);
+        if(conteudo) conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o formulário. Verifique a internet.</p>'; 
+    }
+};
+
+App.salvarCadastro = async () => {
+    const t = App.entidadeAtual;
+    const ep = t === 'financeiro' ? 'financeiro' : t + 's';
+    let p = {};
+    
+    const btn = document.querySelector('.btn-confirm');
+    const txtOriginal = btn ? btn.innerText : 'Salvar';
+    if(btn) { btn.innerText = "A guardar... ⏳"; btn.disabled = true; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        if (t === 'aluno') {
+            p.nome = lerInput('alu-nome');
+            p.email = lerInput('alu-email');
+            p.whatsapp = lerInput('alu-zap');
+            p.cpf = lerInput('alu-cpf');
+            p.rg = lerInput('alu-rg');
+            p.nascimento = lerInput('alu-nasc');
+            p.sexo = lerInput('alu-sexo');
+            p.profissao = lerInput('alu-prof');
+
+            p.rua = lerInput('alu-rua');
+            p.numero = lerInput('alu-num');
+            p.bairro = lerInput('alu-bairro');
+            p.cidade = lerInput('alu-cidade');
+            p.estado = lerInput('alu-uf');
+            p.pais = lerInput('alu-pais');
+
+            p.turma = lerInput('alu-turma');
+            p.curso = lerInput('alu-curso');
+            p.status = lerInput('alu-status') || 'Ativo';
+
+            // 🧠 NOVA LÓGICA DO RESPONSÁVEL: Direta, Visual e à prova de falhas
+            const boxResp = document.getElementById('box-responsavel');
+            const isMenorVisivel = boxResp && boxResp.style.display !== 'none';
+
+            if (isMenorVisivel) {
+                p.resp_nome = lerInput('alu-resp-nome');
+                p.resp_parentesco = lerInput('alu-resp-parentesco'); // Salva o select perfeitamente
+                p.resp_cpf = lerInput('alu-resp-cpf');
+                p.resp_zap = lerInput('alu-resp-zap');
+            } else {
+                p.resp_nome = '';
+                p.resp_parentesco = '';
+                p.resp_cpf = '';
+                p.resp_zap = '';
+            }
+
+            if(!p.nome || !p.whatsapp) { App.showToast("Nome e WhatsApp são obrigatórios!", "error"); throw new Error("Validação Falhou"); }
+        } 
+        else if (t === 'turma') {
+            p.nome = lerInput('tur-nome');
+            p.horario = lerInput('tur-hora');
+            p.curso = lerInput('tur-curso');
+            const checkboxes = document.querySelectorAll('.turma-dia-chk:checked');
+            p.dia = Array.from(checkboxes).map(chk => chk.value).join(', ');
+            if(!p.nome) { App.showToast("O nome da turma é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        } 
+        else if (t === 'curso') {
+            p.nome = lerInput('cur-nome');
+            p.carga = lerInput('cur-carga');
+            p.valor = lerNum('cur-valor');
+            p.descricao = lerInput('cur-desc');
+            if(!p.nome) { App.showToast("O nome do curso é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        }
+        else if (t === 'estoque') {
+            p.nome = lerInput('est-nome');
+            p.codigo = lerInput('est-codigo');
+            p.obs = lerInput('est-obs');
+            p.valor = lerNum('est-valor');
+            p.quantidade = parseInt(lerInput('est-qtd')) || 0;
+            p.quantidadeMinima = parseInt(lerInput('est-min')) || 0;
+            if(!p.nome) { App.showToast("O nome do item é obrigatório!", "error"); throw new Error("Validação Falhou"); }
+        }
+
+        const endpoint = App.idEdicao ? `/${ep}/${App.idEdicao}` : `/${ep}`;
+        const method = App.idEdicao ? 'PUT' : 'POST';
+
+        const resultado = await App.api(endpoint, method, p);
+        if (!resultado || resultado.error) throw new Error(resultado ? resultado.error : "Erro de comunicação com a API");
+
+        App.showToast('Registo salvo com sucesso! 🎉', 'success');
+        App.fecharModal();
+        
+        const area = document.getElementById('app-content');
+        if (area) {
+        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando lista... ⏳</p>';
+   }
+
+        if (typeof App.renderizarLista === 'function') {
+        await App.renderizarLista(t);
+        } else if (typeof App.renderizarInicio === 'function') {
+        await App.renderizarInicio();
+   }
+
+    } catch (err) {
+        if(err.message !== "Validação Falhou") {
+            App.showToast(err.message || "Ocorreu um erro ao salvar.", "error");
+            console.error("Erro completo:", err);
+        }
+    } finally {
+        if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
+        document.body.style.cursor = 'default';
+    }
+};
+

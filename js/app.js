@@ -1,1 +1,3911 @@
-const a0_0x5d5ecf=a0_0x3395;(function(_0x2dca4a,_0x888fdb){const _0x4dfccf=a0_0x3395,_0x5344ff=_0x2dca4a();while(!![]){try{const _0x50c080=-parseInt(_0x4dfccf(0x174))/0x1+parseInt(_0x4dfccf(0x132))/0x2*(parseInt(_0x4dfccf(0x1a1))/0x3)+-parseInt(_0x4dfccf(0x108))/0x4+parseInt(_0x4dfccf(0x3a8))/0x5*(-parseInt(_0x4dfccf(0x3cd))/0x6)+parseInt(_0x4dfccf(0x496))/0x7+parseInt(_0x4dfccf(0x4f1))/0x8*(-parseInt(_0x4dfccf(0x443))/0x9)+-parseInt(_0x4dfccf(0x1a6))/0xa*(-parseInt(_0x4dfccf(0x291))/0xb);if(_0x50c080===_0x888fdb)break;else _0x5344ff['push'](_0x5344ff['shift']());}catch(_0x235033){_0x5344ff['push'](_0x5344ff['shift']());}}}(a0_0x2f17,0x4f2a3));const API_URL=CONFIG[a0_0x5d5ecf(0x3c4)],LISTA_FUNCIONALIDADES=[{'id':a0_0x5d5ecf(0x440),'nome':a0_0x5d5ecf(0x2f3),'icon':a0_0x5d5ecf(0x51e),'acao':a0_0x5d5ecf(0x55f),'roles':[a0_0x5d5ecf(0x414),a0_0x5d5ecf(0x1c6)]},{'id':a0_0x5d5ecf(0x2a4),'nome':'Gerar\x20Carnê','icon':'💸','acao':'App.renderizarTela(\x27mensalidades\x27)','roles':['Gestor',a0_0x5d5ecf(0x1c6)]},{'id':a0_0x5d5ecf(0x124),'nome':'Fazer\x20Chamada','icon':'📋','acao':a0_0x5d5ecf(0x2f5),'roles':[a0_0x5d5ecf(0x414),a0_0x5d5ecf(0x1c6),'Professor']},{'id':'ped_notas','nome':a0_0x5d5ecf(0x2d3),'icon':'📝','acao':a0_0x5d5ecf(0x2e3),'roles':['Gestor',a0_0x5d5ecf(0x1c6),a0_0x5d5ecf(0x3cb)]},{'id':'ped_plan','nome':a0_0x5d5ecf(0x4a0),'icon':'📅','acao':a0_0x5d5ecf(0x16f),'roles':['Gestor','Secretaria',a0_0x5d5ecf(0x3cb)]},{'id':a0_0x5d5ecf(0x45f),'nome':a0_0x5d5ecf(0x4f5),'icon':'🖨️','acao':a0_0x5d5ecf(0x1e3),'roles':['Gestor',a0_0x5d5ecf(0x1c6),a0_0x5d5ecf(0x3cb)]},{'id':a0_0x5d5ecf(0x3b2),'nome':'Inadimplência','icon':'⚠️','acao':'App.renderizarTela(\x27inadimplencia\x27)','roles':[a0_0x5d5ecf(0x414),a0_0x5d5ecf(0x1c6)]},{'id':'fin_rel','nome':a0_0x5d5ecf(0x4ef),'icon':'📊','acao':a0_0x5d5ecf(0x44a),'roles':['Gestor',a0_0x5d5ecf(0x1c6)]},{'id':'doc_ficha','nome':a0_0x5d5ecf(0x5b1),'icon':'📄','acao':a0_0x5d5ecf(0x477),'roles':[a0_0x5d5ecf(0x414),a0_0x5d5ecf(0x1c6)]},{'id':'doc_dossie','nome':a0_0x5d5ecf(0x450),'icon':'📁','acao':a0_0x5d5ecf(0x317),'roles':[a0_0x5d5ecf(0x414)]},{'id':a0_0x5d5ecf(0x2b1),'nome':a0_0x5d5ecf(0x43a),'icon':'🎓','acao':a0_0x5d5ecf(0x524),'roles':['Gestor',a0_0x5d5ecf(0x1c6)]}];var App={'usuario':null,'entidadeAtual':null,'idEdicao':null,'idEdicaoUsuario':null,'listaCache':[],'sanitizeHTML':_0x28f227=>{const _0x5f437c=a0_0x5d5ecf;if(!_0x28f227)return'';if(typeof DOMPurify==='undefined')return console[_0x5f437c(0x4c4)]('DOMPurify\x20não\x20carregado.\x20Usando\x20escapeHTML\x20como\x20fallback.'),App[_0x5f437c(0x159)](_0x28f227);return DOMPurify[_0x5f437c(0x1a5)](_0x28f227,{'USE_PROFILES':{'html':!![]},'ALLOWED_TAGS':['p','br',_0x5f437c(0xf4),'b','em','i','u','h1','h2','h3','h4','ul','ol','li',_0x5f437c(0x3d3),_0x5f437c(0x2ab),_0x5f437c(0x264),_0x5f437c(0x43b),_0x5f437c(0x541),'tr','td','th',_0x5f437c(0x320)],'ALLOWED_ATTR':[_0x5f437c(0x1c7),'class']});},'motorTempoRealLigado':![],'calendarState':{'month':new Date()[a0_0x5d5ecf(0x4bf)](),'year':new Date()[a0_0x5d5ecf(0x3d6)]()},'escapeHTML':_0x5ba5de=>{const _0x2043a9=a0_0x5d5ecf;if(_0x5ba5de===null||_0x5ba5de===undefined)return'';return String(_0x5ba5de)['replace'](/&/g,'&amp;')[_0x2043a9(0x513)](/</g,'&lt;')[_0x2043a9(0x513)](/>/g,_0x2043a9(0x311))[_0x2043a9(0x513)](/"/g,_0x2043a9(0x1ab))[_0x2043a9(0x513)](/'/g,_0x2043a9(0x45c));},'unescapeHTML':_0x320bc0=>{const _0x1e423b=a0_0x5d5ecf;if(_0x320bc0===null||_0x320bc0===undefined)return'';return String(_0x320bc0)['replace'](/&amp;/g,'&')[_0x1e423b(0x513)](/&lt;/g,'<')['replace'](/&gt;/g,'>')[_0x1e423b(0x513)](/&quot;/g,'\x22')[_0x1e423b(0x513)](/&#039;/g,'\x27');},'criarElemento':(_0x1f68e1,_0x1e9562=[],_0x2af24a={},_0x42824a='')=>{const _0x151b15=a0_0x5d5ecf,_0x28b2bd=document[_0x151b15(0x53a)](_0x1f68e1);if(_0x1e9562['length']>0x0)_0x28b2bd[_0x151b15(0xdc)][_0x151b15(0x167)](..._0x1e9562);for(const _0x1a0e47 in _0x2af24a){if(_0x1a0e47[_0x151b15(0x39f)]('on')&&typeof _0x2af24a[_0x1a0e47]===_0x151b15(0x405)){const _0x3d1876=_0x1a0e47['substring'](0x2)['toLowerCase']();_0x28b2bd[_0x151b15(0x432)](_0x3d1876,_0x2af24a[_0x1a0e47]);}else _0x28b2bd['setAttribute'](_0x1a0e47,_0x2af24a[_0x1a0e47]);}if(_0x42824a!=='')_0x28b2bd['textContent']=_0x42824a;return _0x28b2bd;},'getTenantKey':_0x2fd4ea=>{const _0x5923e8=a0_0x5d5ecf,_0xea7eb2=App[_0x5923e8(0x252)]&&App[_0x5923e8(0x252)]['id']?App['usuario']['id']:_0x5923e8(0x128);return _0x2fd4ea+'_'+_0xea7eb2;},'getPlanoAtual':()=>{const _0x38fd94=a0_0x5d5ecf;return localStorage[_0x38fd94(0x598)](App[_0x38fd94(0x11d)](_0x38fd94(0x15b)))||'Teste';},'getDeviceId':()=>{const _0xc4ebc2=a0_0x5d5ecf;let _0x275bfc=localStorage[_0xc4ebc2(0x598)](_0xc4ebc2(0x213));return!_0x275bfc&&(_0x275bfc=_0xc4ebc2(0x1dc)+window[_0xc4ebc2(0x27e)][_0xc4ebc2(0x1cd)](),localStorage[_0xc4ebc2(0x16b)]('ptt_device_id',_0x275bfc)),_0x275bfc;},'aplicarPermissoesDeUsuario':()=>{const _0xc308c=a0_0x5d5ecf;if(!App['usuario'])return;const _0x3713ab=App[_0xc308c(0x252)][_0xc308c(0x119)]||'Gestor',_0x4f773b=document[_0xc308c(0x521)](_0xc308c(0x533));_0x4f773b[_0xc308c(0x52f)](_0x1e73c9=>{const _0x465b7c=_0xc308c,_0x10ec7e=_0x1e73c9['getAttribute']('onclick')||'';let _0x4290f9=!![];if(_0x3713ab===_0x465b7c(0x3cb)){if(_0x10ec7e['includes'](_0x465b7c(0x439))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x3c2))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0xf1))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x504))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x2bd))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x40a))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x3f7))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x21f))||_0x10ec7e[_0x465b7c(0x1b9)]('conta'))_0x4290f9=![];}else{if(_0x3713ab===_0x465b7c(0x1c6)){if(_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x2bd))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x40a))||_0x10ec7e[_0x465b7c(0x1b9)]('backup')||_0x10ec7e[_0x465b7c(0x1b9)]('plano')||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x335))||_0x10ec7e[_0x465b7c(0x1b9)](_0x465b7c(0x118)))_0x4290f9=![];}}_0x1e73c9['style']['display']=_0x4290f9?'':'none';});},'verificarBloqueioGeral':_0x5b63ba=>{const _0x5ac918=a0_0x5d5ecf;if(!_0x5b63ba)return![];const _0x4237db=_0x5b63ba[_0x5ac918(0x21f)]||_0x5ac918(0x29a);if(_0x4237db===_0x5ac918(0x1f4))return!![];const _0x53252d=new Date();if(_0x5b63ba[_0x5ac918(0x136)]){const _0x15f540=new Date(_0x5b63ba['dataExpiracao']);return _0x53252d>=_0x15f540;}else{const _0x33c3c5=_0x5b63ba[_0x5ac918(0x11f)]?new Date(_0x5b63ba[_0x5ac918(0x11f)]):new Date(),_0x327197=Math[_0x5ac918(0x417)](Math[_0x5ac918(0x178)](_0x53252d-_0x33c3c5)/(0x3e8*0x3c*0x3c*0x18));if(_0x4237db===_0x5ac918(0x29a)&&_0x327197>=0x7)return!![];if(_0x4237db!==_0x5ac918(0x29a)&&_0x4237db!==_0x5ac918(0x58f)&&_0x327197>=0x1e)return!![];}return![];},'mostrarTelaBloqueioLogin':_0x2883e8=>{const _0x3c1245=a0_0x5d5ecf;document[_0x3c1245(0x578)][_0x3c1245(0x343)]('style'),document[_0x3c1245(0x21a)](_0x3c1245(0x582))[_0x3c1245(0x1c7)]['display']='none';const _0x3eda84=document['getElementById'](_0x3c1245(0x4ed));if(_0x3eda84)_0x3eda84['style']['display']=_0x3eda84['classList']['contains'](_0x3c1245(0x523))?_0x3c1245(0x141):_0x3c1245(0x25e);const _0x54c66c=_0x3eda84[_0x3c1245(0x521)](_0x3c1245(0x223));_0x54c66c[_0x3c1245(0x52f)](_0x198f6e=>{const _0x57a316=_0x3c1245;if(_0x198f6e['id']!==_0x57a316(0x105))_0x198f6e[_0x57a316(0x1c7)][_0x57a316(0x115)]=_0x57a316(0x3bd);});let _0x562393=document['getElementById']('box-bloqueio-conta');!_0x562393&&(_0x562393=document[_0x3c1245(0x53a)]('div'),_0x562393['id']=_0x3c1245(0x105),_0x562393[_0x3c1245(0x155)]=_0x54c66c[_0x3c1245(0xe1)]>0x0?_0x54c66c[0x0][_0x3c1245(0x155)]:_0x3c1245(0x173),_0x562393[_0x3c1245(0x1c7)]['maxWidth']=_0x3c1245(0x19b),_0x562393[_0x3c1245(0x1c7)][_0x3c1245(0x189)]='0\x20auto',_0x562393['style']['background']='#fff',_0x562393[_0x3c1245(0x1c7)]['padding']=_0x3c1245(0x200),_0x562393[_0x3c1245(0x1c7)][_0x3c1245(0x2dd)]=_0x3c1245(0x360),_0x562393[_0x3c1245(0x1c7)][_0x3c1245(0x442)]=_0x3c1245(0x595),_0x3eda84[_0x3c1245(0x15e)](_0x562393)),_0x562393['style'][_0x3c1245(0x115)]=_0x3c1245(0x25e),_0x562393[_0x3c1245(0xec)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2045px;\x20display:block;\x20margin-bottom:\x2010px;\x22>🔒</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:\x20#e74c3c;\x20margin-top:0;\x20font-size:22px;\x22>Acesso\x20Bloqueado</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:\x20#666;\x20font-size:\x2013px;\x20margin-bottom:\x2020px;\x22>O\x20seu\x20acesso\x20foi\x20bloqueado\x20por\x20falta\x20de\x20pagamento\x20ou\x20o\x20seu\x20período\x20de\x20teste\x20expirou.</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fdf2f2;\x20padding:\x2020px;\x20border-radius:\x208px;\x20border:\x201px\x20solid\x20#f5b7b1;\x20margin-bottom:\x2020px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2010px\x200;\x20color:\x20#c0392b;\x20font-size:\x2015px;\x22>Já\x20efetuou\x20o\x20pagamento?</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:12px;\x20color:#c0392b;\x20margin-bottom:\x2015px;\x22>Insira\x20a\x20sua\x20Chave\x20de\x20Ativação\x20(PIN)\x20para\x20liberar\x20o\x20sistema\x20imediatamente.</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-pin-login\x22\x20placeholder=\x22Digite\x20o\x20PIN\x20recebido\x22\x20style=\x22width:\x20100%;\x20padding:\x2012px;\x20border-radius:\x206px;\x20border:\x201px\x20solid\x20#ccc;\x20text-align:\x20center;\x20font-weight:\x20bold;\x20letter-spacing:\x202px;\x20margin-bottom:\x2015px;\x20font-size:\x2016px;\x20box-sizing:border-box;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:\x20100%;\x20justify-content:\x20center;\x20background:\x20#27ae60;\x20border:none;\x20padding:12px;\x20border-radius:6px;\x20color:white;\x20font-weight:bold;\x20cursor:pointer;\x22\x20onclick=\x22App.ativarPinLogin(event)\x22>🔓\x20Validar\x20e\x20Desbloquear</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20style=\x22width:\x20100%;\x20justify-content:\x20center;\x20background:transparent;\x20border:1px\x20solid\x20#ccc;\x20padding:10px;\x20border-radius:6px;\x20cursor:pointer;\x22\x20onclick=\x22App.sairDaTelaDeBloqueio()\x22>Sair\x20e\x20Voltar\x20ao\x20Login</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';},'sairDaTelaDeBloqueio':()=>{const _0x5af502=a0_0x5d5ecf;App[_0x5af502(0x13d)]();},'ativarPinLogin':async _0x3e09ad=>{const _0x2cde82=a0_0x5d5ecf;if(_0x3e09ad)_0x3e09ad['preventDefault']();const _0x538340=document['getElementById'](_0x2cde82(0x3fd));if(!_0x538340)return;const _0xfe917f=_0x538340[_0x2cde82(0x4c9)]['trim']()[_0x2cde82(0x3a7)]();if(!_0xfe917f)return App[_0x2cde82(0x424)](_0x2cde82(0x4f0),'warning');const _0x370b94=_0x3e09ad[_0x2cde82(0x245)],_0x491494=_0x370b94[_0x2cde82(0x4ab)];_0x370b94&&(_0x370b94[_0x2cde82(0x4ab)]=_0x2cde82(0x107),_0x370b94[_0x2cde82(0x1e1)]=!![]);try{const _0x17d032=await App[_0x2cde82(0x4e9)]('/escola/validar-pin',_0x2cde82(0x401),{'pin':_0xfe917f});let _0x36ba72=_0x17d032&&_0x17d032['success']?_0x17d032['plano']:null;if(!_0x36ba72){if(_0xfe917f[_0x2cde82(0x1b9)](_0x2cde82(0x4f4)))_0x36ba72=_0x2cde82(0x58f);else{if(_0xfe917f[_0x2cde82(0x1b9)](_0x2cde82(0x272)))_0x36ba72=_0x2cde82(0x288);else{if(_0xfe917f[_0x2cde82(0x1b9)](_0x2cde82(0x1dd)))_0x36ba72=_0x2cde82(0x22c);else{App[_0x2cde82(0x424)](_0x17d032['error']||_0x2cde82(0x2ed),'error');_0x370b94&&(_0x370b94['innerText']=_0x491494,_0x370b94['disabled']=![]);return;}}}}const _0x2adebd=await App['api']('/escola')||{},_0x262dba=new Date();_0x262dba[_0x2cde82(0xde)](_0x262dba[_0x2cde82(0x154)]()+0x1e),await App[_0x2cde82(0x4e9)](_0x2cde82(0x49c),_0x2cde82(0x4b9),{..._0x2adebd,'plano':_0x36ba72,'pinUsado':_0xfe917f,'dataExpiracao':_0x262dba[_0x2cde82(0x479)]()}),localStorage[_0x2cde82(0x16b)](App[_0x2cde82(0x11d)](_0x2cde82(0x15b)),_0x36ba72);let _0x450f4e=JSON[_0x2cde82(0x48f)](localStorage[_0x2cde82(0x598)](App['getTenantKey'](_0x2cde82(0x2cc))))||{};_0x450f4e[_0x2cde82(0x21f)]=_0x36ba72,_0x450f4e[_0x2cde82(0x136)]=_0x262dba[_0x2cde82(0x479)](),localStorage[_0x2cde82(0x16b)](App['getTenantKey'](_0x2cde82(0x2cc)),JSON[_0x2cde82(0x24b)](_0x450f4e)),App[_0x2cde82(0x34c)](_0x450f4e),App[_0x2cde82(0x424)](_0x2cde82(0x568),'success');const _0x5c9e4a=document[_0x2cde82(0x21a)](_0x2cde82(0x105));if(_0x5c9e4a)_0x5c9e4a[_0x2cde82(0x1c7)][_0x2cde82(0x115)]=_0x2cde82(0x3bd);App[_0x2cde82(0x2fc)]();}catch(_0x4e005f){App['showToast'](_0x2cde82(0x294),'error');}finally{_0x370b94&&(_0x370b94[_0x2cde82(0x4ab)]=_0x491494,_0x370b94['disabled']=![]);}},'verificarLimites':async _0x31293b=>{const _0x51c077=a0_0x5d5ecf,_0x1765c0=App['getPlanoAtual']();if(_0x1765c0===_0x51c077(0x58f)||_0x1765c0==='Teste')return!![];try{if(_0x31293b==='aluno'){const _0x3a6f24=await App[_0x51c077(0x4e9)](_0x51c077(0x4dd)),_0x1a5c43=_0x1765c0===_0x51c077(0x288)?0x14:_0x1765c0==='Profissional'?0x50:0x0;if(_0x3a6f24[_0x51c077(0xe1)]>=_0x1a5c43)return App[_0x51c077(0x424)](_0x51c077(0x49e)+_0x1a5c43+'\x20alunos\x20atingido\x20no\x20plano\x20'+_0x1765c0+_0x51c077(0x284),_0x51c077(0x2e2)),setTimeout(()=>App[_0x51c077(0x123)](),0x7d0),![];}else{if(_0x31293b===_0x51c077(0x252)){const _0x4b747a=await App[_0x51c077(0x4e9)](_0x51c077(0x413)),_0x28fbc4=_0x1765c0===_0x51c077(0x288)?0x2:_0x1765c0===_0x51c077(0x22c)?0x4:0x0;if(_0x4b747a[_0x51c077(0xe1)]>=_0x28fbc4)return App[_0x51c077(0x424)](_0x51c077(0x49e)+_0x28fbc4+_0x51c077(0x416)+_0x1765c0+_0x51c077(0x398),_0x51c077(0x2e2)),setTimeout(()=>App['renderizarMeuPlano'](),0x7d0),![];}}return!![];}catch(_0x586c3d){return![];}},'verificarPermissao':_0x516c92=>{const _0x4ec1ec=a0_0x5d5ecf,_0x284a83=App['getPlanoAtual']();if(_0x284a83===_0x4ec1ec(0x58f)||_0x284a83===_0x4ec1ec(0x29a))return!![];if(_0x516c92==='whatsapp'&&_0x284a83===_0x4ec1ec(0x288))return App['showToast'](_0x4ec1ec(0x449),_0x4ec1ec(0x2e2)),setTimeout(()=>App[_0x4ec1ec(0x123)](),0x5dc),![];if(_0x516c92===_0x4ec1ec(0x335)&&_0x284a83!==_0x4ec1ec(0x58f))return App[_0x4ec1ec(0x424)]('💎\x20Exclusivo\x20do\x20Plano\x20Premium.\x20Faça\x20o\x20upgrade\x20para\x20aceder\x20ao\x20Dossiê\x20Executivo!',_0x4ec1ec(0x2e2)),setTimeout(()=>App[_0x4ec1ec(0x123)](),0x5dc),![];return!![];},'api':async(_0x80dd06,_0x38b936='GET',_0x3089b3=null)=>{const _0x1f874a=a0_0x5d5ecf,_0x358b64={'Content-Type':_0x1f874a(0x208)},_0x5da79e={'method':_0x38b936,'headers':_0x358b64,'credentials':_0x1f874a(0x143),'cache':'no-store'};if(_0x3089b3)_0x5da79e[_0x1f874a(0x584)]=JSON[_0x1f874a(0x24b)](_0x3089b3);try{const _0x3a2666=await fetch(''+API_URL+_0x80dd06,_0x5da79e);let _0x36730b;try{_0x36730b=await _0x3a2666[_0x1f874a(0x4ac)]();}catch(_0x3f103b){_0x36730b=null;}if(!_0x3a2666['ok'])return(_0x3a2666[_0x1f874a(0x2ec)]===0x191||_0x3a2666['status']===0x193)&&!_0x80dd06[_0x1f874a(0x39f)]('/auth/')&&(App[_0x1f874a(0x424)](_0x1f874a(0x31a),_0x1f874a(0x2e2)),App[_0x1f874a(0x13d)]()),_0x36730b||{'error':_0x1f874a(0x3af)+_0x3a2666['status']};if(_0x38b936!==_0x1f874a(0x2bc)&&App['usuario'])setTimeout(App[_0x1f874a(0x574)],0x320);return _0x36730b;}catch(_0x4a5639){return console['error'](_0x1f874a(0x468),_0x4a5639),_0x38b936==='GET'?[]:{'error':_0x1f874a(0x221)};}},'setTitulo':_0x448765=>{const _0x13b41e=a0_0x5d5ecf,_0x1120b7=document[_0x13b41e(0x21a)](_0x13b41e(0x4fd));if(_0x1120b7)_0x1120b7['innerText']=_0x448765;},'toggleSub':_0x195c0b=>{const _0x525f83=a0_0x5d5ecf;document[_0x525f83(0x521)]('.submenu')[_0x525f83(0x52f)](_0x4fb089=>{const _0x417dfe=_0x525f83;if(_0x4fb089['id']!==_0x195c0b)_0x4fb089[_0x417dfe(0x1c7)]['display']=_0x417dfe(0x3bd);});const _0x11ea63=document[_0x525f83(0x21a)](_0x195c0b);if(_0x11ea63)_0x11ea63['style'][_0x525f83(0x115)]=_0x11ea63[_0x525f83(0x1c7)][_0x525f83(0x115)]===_0x525f83(0x25e)?_0x525f83(0x3bd):_0x525f83(0x25e);},'fecharModal':()=>{const _0x3519ea=a0_0x5d5ecf;document['getElementById'](_0x3519ea(0x26b))[_0x3519ea(0x1c7)][_0x3519ea(0x115)]=_0x3519ea(0x3bd);const _0x3e5908=document['querySelector'](_0x3519ea(0x289));_0x3e5908&&(_0x3e5908['style'][_0x3519ea(0x115)]=_0x3519ea(0x518),_0x3e5908[_0x3519ea(0x186)]('onclick',_0x3519ea(0x572)),_0x3e5908[_0x3519ea(0xec)]=_0x3519ea(0x529));},'mascaraCNPJ':_0x4e09cf=>{const _0x1c7237=a0_0x5d5ecf;let _0x509e99=_0x4e09cf[_0x1c7237(0x4c9)][_0x1c7237(0x513)](/\D/g,'');_0x509e99=_0x509e99[_0x1c7237(0x513)](/^(\d{2})(\d)/,_0x1c7237(0x23e)),_0x509e99=_0x509e99[_0x1c7237(0x513)](/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3'),_0x509e99=_0x509e99[_0x1c7237(0x513)](/\.(\d{3})(\d)/,_0x1c7237(0x322)),_0x509e99=_0x509e99[_0x1c7237(0x513)](/(\d{4})(\d)/,'$1-$2'),_0x4e09cf[_0x1c7237(0x4c9)]=_0x509e99;},'mascaraCPF':_0x38e5d2=>{const _0x5da7fa=a0_0x5d5ecf;let _0x4497c4=_0x38e5d2[_0x5da7fa(0x4c9)][_0x5da7fa(0x513)](/\D/g,'');_0x4497c4=_0x4497c4['replace'](/(\d{3})(\d)/,_0x5da7fa(0x23e)),_0x4497c4=_0x4497c4[_0x5da7fa(0x513)](/(\d{3})(\d)/,_0x5da7fa(0x23e)),_0x4497c4=_0x4497c4['replace'](/(\d{3})(\d{1,2})$/,'$1-$2'),_0x38e5d2[_0x5da7fa(0x4c9)]=_0x4497c4;},'mascaraCelular':_0x311f9f=>{const _0x277e7e=a0_0x5d5ecf;let _0x24dbea=_0x311f9f[_0x277e7e(0x4c9)];_0x24dbea[_0x277e7e(0x39f)]('+')?_0x311f9f[_0x277e7e(0x4c9)]='+'+_0x24dbea[_0x277e7e(0x513)](/\D/g,''):(_0x24dbea=_0x24dbea[_0x277e7e(0x513)](/\D/g,''),_0x24dbea=_0x24dbea[_0x277e7e(0x513)](/^(\d{2})(\d)/g,'($1)\x20$2'),_0x24dbea=_0x24dbea[_0x277e7e(0x513)](/(\d)(\d{4})$/,_0x277e7e(0x292)),_0x311f9f[_0x277e7e(0x4c9)]=_0x24dbea);},'mascaraCEP':_0x599e6a=>{const _0x533b5a=a0_0x5d5ecf;let _0x24b22b=_0x599e6a[_0x533b5a(0x4c9)][_0x533b5a(0x513)](/\D/g,'');_0x24b22b=_0x24b22b[_0x533b5a(0x513)](/^(\d{5})(\d)/,_0x533b5a(0x292)),_0x599e6a[_0x533b5a(0x4c9)]=_0x24b22b;},'mascaraValor':_0xbfdcee=>{const _0x201508=a0_0x5d5ecf;let _0x326f4f=_0xbfdcee[_0x201508(0x4c9)][_0x201508(0x513)](/\D/g,'');_0x326f4f=(_0x326f4f/0x64)['toFixed'](0x2)+'',_0xbfdcee[_0x201508(0x4c9)]=_0x326f4f;},'init':async()=>{const _0x57549b=a0_0x5d5ecf;localStorage['removeItem'](_0x57549b(0xdf)),localStorage[_0x57549b(0x21b)](_0x57549b(0x3dd)),localStorage[_0x57549b(0x21b)](_0x57549b(0x2cc));const _0x4f6c8b=new URLSearchParams(window[_0x57549b(0x10c)][_0x57549b(0x456)])[_0x57549b(0x54d)](_0x57549b(0x3d8));if(_0x4f6c8b){document[_0x57549b(0x578)]['removeAttribute'](_0x57549b(0x1c7)),document['getElementById'](_0x57549b(0x4ed))['style'][_0x57549b(0x115)]=_0x57549b(0x141),document[_0x57549b(0x21a)]('tela-sistema')['style']['display']='none',setTimeout(()=>{const _0x18725d=_0x57549b;App[_0x18725d(0x39c)](_0x4f6c8b);},0x12c);return;}const _0x3c9683=localStorage[_0x57549b(0x598)](_0x57549b(0x32b)),_0x424e3d=localStorage[_0x57549b(0x598)](_0x57549b(0x1c4));if(_0x3c9683){App[_0x57549b(0x252)]=JSON[_0x57549b(0x48f)](_0x3c9683),App['aplicarTemaSalvo']();const _0x5a8d7a=App[_0x57549b(0x11d)](_0x57549b(0x3dd));!localStorage['getItem'](_0x5a8d7a)&&localStorage['setItem'](_0x5a8d7a,JSON[_0x57549b(0x24b)](['novo_aluno',_0x57549b(0x2a4),_0x57549b(0x124),_0x57549b(0x555),_0x57549b(0x538),_0x57549b(0x45f)]));let _0xfcbe84=await App['api'](_0x57549b(0x49c));if(!_0xfcbe84||_0xfcbe84['error']){if(_0xfcbe84?.[_0x57549b(0x1b4)]==='Sessão\x20não\x20encontrada.'||_0xfcbe84?.['error']===_0x57549b(0x3aa)){await App['logout']();return;}_0xfcbe84=JSON[_0x57549b(0x48f)](localStorage[_0x57549b(0x598)](App[_0x57549b(0x11d)](_0x57549b(0x2cc))))||{};}App[_0x57549b(0x4f9)](_0xfcbe84)?(document['documentElement']['removeAttribute'](_0x57549b(0x1c7)),App[_0x57549b(0x206)](_0xfcbe84)):_0x424e3d&&window[_0x57549b(0x3f9)]?(document[_0x57549b(0x21a)](_0x57549b(0x4ed))[_0x57549b(0x1c7)]['display']=_0x57549b(0x141),document[_0x57549b(0x21a)](_0x57549b(0x582))[_0x57549b(0x1c7)]['display']=_0x57549b(0x3bd),document['getElementById'](_0x57549b(0x3d1))[_0x57549b(0x1c7)][_0x57549b(0x115)]='block',setTimeout(()=>{App['entrarComBiometria']();},0x258)):App[_0x57549b(0x2fc)]();}else document[_0x57549b(0x578)]['removeAttribute'](_0x57549b(0x1c7)),document['getElementById'](_0x57549b(0x4ed))[_0x57549b(0x1c7)][_0x57549b(0x115)]='flex',document[_0x57549b(0x21a)](_0x57549b(0x582))[_0x57549b(0x1c7)][_0x57549b(0x115)]=_0x57549b(0x3bd);const _0x126603=document['getElementById'](_0x57549b(0x1f1));if(_0x126603)_0x126603['innerText']=new Date()['toLocaleDateString'](_0x57549b(0x39b));App[_0x57549b(0x461)]();const _0x3fe639=document['getElementById']('login-pass');_0x3fe639&&_0x3fe639[_0x57549b(0x432)](_0x57549b(0x3ea),function(_0x1a0fd5){const _0x545c88=_0x57549b;_0x1a0fd5['key']===_0x545c88(0x489)&&App['fazerLogin']();});if(!App['motorTempoRealLigado']){const _0x56e7c3=()=>{const _0x949500=_0x57549b,_0x44976b=document[_0x949500(0x21a)](_0x949500(0x582));App['usuario']&&_0x44976b&&_0x44976b['style'][_0x949500(0x115)]!=='none'&&(App[_0x949500(0x574)](),App[_0x949500(0x49b)]());};setTimeout(_0x56e7c3,0x7d0),setInterval(_0x56e7c3,0x2710),App[_0x57549b(0x28d)]=!![];}},'fazerLogin':async()=>{const _0x383113=a0_0x5d5ecf,_0x1b08d1=document[_0x383113(0x21a)](_0x383113(0x25b))['value']['trim'](),_0x2fcc0b=document[_0x383113(0x21a)](_0x383113(0x40b))[_0x383113(0x4c9)]['trim']();if(!_0x1b08d1||!_0x2fcc0b)return App[_0x383113(0x424)](_0x383113(0x23b),_0x383113(0x2e2));const _0x2c5429=document['querySelector']('#tela-login\x20button[type=\x22submit\x22]'),_0x5448bc=_0x2c5429[_0x383113(0x4ab)];_0x2c5429['innerText']='Autenticando...\x20⏳',_0x2c5429[_0x383113(0x1e1)]=!![];try{const _0x16f107=App[_0x383113(0x114)](),_0x2ccdaf=await App[_0x383113(0x4e9)](_0x383113(0x3d9),'POST',{'login':_0x1b08d1,'senha':_0x2fcc0b,'deviceId':_0x16f107});if(_0x2ccdaf&&_0x2ccdaf[_0x383113(0x553)]){App['usuario']=_0x2ccdaf[_0x383113(0x252)],localStorage[_0x383113(0x16b)](_0x383113(0x32b),JSON[_0x383113(0x24b)](_0x2ccdaf['usuario']));if(typeof gtag===_0x383113(0x405))gtag(_0x383113(0x4e3),_0x383113(0x41c),{'method':_0x383113(0x1c1)});App['aplicarTemaSalvo']();const _0x53ed26=App[_0x383113(0x11d)](_0x383113(0x3dd));!localStorage[_0x383113(0x598)](_0x53ed26)&&localStorage[_0x383113(0x16b)](_0x53ed26,JSON[_0x383113(0x24b)]([_0x383113(0x440),_0x383113(0x2a4),_0x383113(0x124),_0x383113(0x555),_0x383113(0x538),_0x383113(0x45f)]));let _0x397bd7=await App[_0x383113(0x4e9)](_0x383113(0x49c));if(!_0x397bd7||_0x397bd7['error']){if(_0x397bd7?.['error']===_0x383113(0x39d)||_0x397bd7?.[_0x383113(0x1b4)]==='Sessão\x20expirada.'){await App[_0x383113(0x13d)]();return;}_0x397bd7=JSON['parse'](localStorage[_0x383113(0x598)](App[_0x383113(0x11d)]('escola_perfil')))||{};}App[_0x383113(0x4f9)](_0x397bd7)?App[_0x383113(0x206)](_0x397bd7):(App['entrarNoSistema'](),App[_0x383113(0x424)]('Bem-vindo\x20ao\x20sistema!',_0x383113(0x553)));}else App[_0x383113(0x424)](_0x2ccdaf[_0x383113(0x1b4)]||_0x383113(0x415),_0x383113(0x1b4));}catch(_0x3642b8){App[_0x383113(0x424)]('Erro\x20ao\x20conectar\x20no\x20servidor','error');}finally{_0x2c5429[_0x383113(0x4ab)]=_0x5448bc,_0x2c5429['disabled']=![];}},'entrarNoSistema':async()=>{const _0x318dbf=a0_0x5d5ecf;document[_0x318dbf(0x21a)]('tela-login')[_0x318dbf(0x1c7)][_0x318dbf(0x115)]='none',document[_0x318dbf(0x21a)](_0x318dbf(0x582))[_0x318dbf(0x1c7)][_0x318dbf(0x115)]=_0x318dbf(0x141);const _0x3d4354=document[_0x318dbf(0x21a)](_0x318dbf(0x56f));if(_0x3d4354&&App[_0x318dbf(0x252)])_0x3d4354[_0x318dbf(0x4ab)]=App[_0x318dbf(0x252)]['nome']||App[_0x318dbf(0x252)]['login'];App[_0x318dbf(0x347)](),await App[_0x318dbf(0x49b)](),document[_0x318dbf(0x21a)](_0x318dbf(0x582))[_0x318dbf(0x1c7)][_0x318dbf(0x115)]!==_0x318dbf(0x3bd)&&App[_0x318dbf(0x451)]();},'logout':async()=>{const _0x23cefb=a0_0x5d5ecf;try{await fetch(API_URL+_0x23cefb(0x268),{'method':'POST','credentials':'include'});}catch(_0x462982){}document[_0x23cefb(0x578)][_0x23cefb(0x343)](_0x23cefb(0x1c7)),localStorage[_0x23cefb(0x21b)](_0x23cefb(0x32b)),localStorage[_0x23cefb(0x21b)]('token_acesso'),App[_0x23cefb(0x252)]=null;const _0x204ef7=document['getElementById'](_0x23cefb(0x25b));if(_0x204ef7)_0x204ef7[_0x23cefb(0x4c9)]='';const _0x37dba8=document[_0x23cefb(0x21a)](_0x23cefb(0x40b));if(_0x37dba8)_0x37dba8[_0x23cefb(0x4c9)]='';const _0x19aa83=document[_0x23cefb(0x21a)](_0x23cefb(0x26b));if(_0x19aa83)_0x19aa83['style']['display']='none';const _0x44f334=document[_0x23cefb(0x21a)]('modal-cadastro-inst');if(_0x44f334)_0x44f334[_0x23cefb(0x1c7)][_0x23cefb(0x115)]=_0x23cefb(0x3bd);const _0x309109=document[_0x23cefb(0x21a)](_0x23cefb(0x1e2));if(_0x309109)_0x309109[_0x23cefb(0x1c7)][_0x23cefb(0x115)]=_0x23cefb(0x3bd);const _0x4a2f33=document[_0x23cefb(0x382)](_0x23cefb(0x16d));if(_0x4a2f33)_0x4a2f33[_0x23cefb(0xdc)][_0x23cefb(0x379)](_0x23cefb(0x344));const _0xf606d=document['querySelector'](_0x23cefb(0x50c));if(_0xf606d)_0xf606d[_0x23cefb(0xdc)][_0x23cefb(0x379)](_0x23cefb(0x344));const _0x4a7b16=document[_0x23cefb(0x21a)]('noti-dropdown');if(_0x4a7b16)_0x4a7b16[_0x23cefb(0xdc)]['remove']('active');document[_0x23cefb(0x21a)](_0x23cefb(0x582))[_0x23cefb(0x1c7)]['display']=_0x23cefb(0x3bd);const _0x501bff=document[_0x23cefb(0x21a)]('tela-login');if(_0x501bff)_0x501bff[_0x23cefb(0x1c7)][_0x23cefb(0x115)]=_0x501bff[_0x23cefb(0xdc)][_0x23cefb(0x5aa)](_0x23cefb(0x523))?_0x23cefb(0x141):_0x23cefb(0x25e);const _0x1043d6=document[_0x23cefb(0x21a)]('box-bloqueio-conta');if(_0x1043d6)_0x1043d6[_0x23cefb(0x1c7)]['display']=_0x23cefb(0x3bd);const _0x1e5163=document[_0x23cefb(0x521)](_0x23cefb(0x4b5));_0x1e5163['forEach'](_0x545240=>{const _0x21f7d1=_0x23cefb;if(_0x545240['id']!==_0x21f7d1(0x105))_0x545240[_0x21f7d1(0x1c7)][_0x21f7d1(0x115)]='';});},'toggleSenhaLogin':()=>{const _0xaa63f4=a0_0x5d5ecf,_0xbb04db=document[_0xaa63f4(0x21a)](_0xaa63f4(0x40b));if(_0xbb04db)_0xbb04db[_0xaa63f4(0x30c)]=_0xbb04db['type']==='password'?_0xaa63f4(0x4cf):_0xaa63f4(0x58c);},'abrirModalRecuperacao':_0x508155=>{const _0x2fa3aa=a0_0x5d5ecf;if(_0x508155)_0x508155['preventDefault']();let _0x3160dc=document['getElementById']('modal-recuperacao-senha');!_0x3160dc&&(_0x3160dc=document[_0x2fa3aa(0x53a)](_0x2fa3aa(0x3d3)),_0x3160dc['id']=_0x2fa3aa(0x1e2),_0x3160dc[_0x2fa3aa(0x1c7)]['cssText']=_0x2fa3aa(0x230),_0x3160dc[_0x2fa3aa(0xec)]=_0x2fa3aa(0x57f),document[_0x2fa3aa(0x584)][_0x2fa3aa(0x15e)](_0x3160dc)),document[_0x2fa3aa(0x21a)](_0x2fa3aa(0x22b))['value']='',_0x3160dc[_0x2fa3aa(0x1c7)]['display']='flex';},'enviarRecuperacaoSenha':async()=>{const _0x42ca57=a0_0x5d5ecf,_0x29f350=document['getElementById'](_0x42ca57(0x22b))?.[_0x42ca57(0x4c9)][_0x42ca57(0xfc)]();if(!_0x29f350)return App[_0x42ca57(0x424)](_0x42ca57(0x3c9),_0x42ca57(0x2e2));const _0x262c3b=document[_0x42ca57(0x382)](_0x42ca57(0x55e)),_0x311bc4=_0x262c3b[_0x42ca57(0x4ab)];_0x262c3b[_0x42ca57(0x4ab)]='Enviando\x20link...\x20⏳',_0x262c3b[_0x42ca57(0x1e1)]=!![];try{const _0x5c26be=await fetch(API_URL+_0x42ca57(0x490),{'method':_0x42ca57(0x401),'headers':{'Content-Type':_0x42ca57(0x208)},'body':JSON['stringify']({'email':_0x29f350})}),_0xd8400=await _0x5c26be['json']();_0xd8400[_0x42ca57(0x553)]?(App[_0x42ca57(0x424)](_0xd8400[_0x42ca57(0x23a)]||_0x42ca57(0x215),'success'),document[_0x42ca57(0x21a)](_0x42ca57(0x1e2))[_0x42ca57(0x1c7)][_0x42ca57(0x115)]=_0x42ca57(0x3bd)):App[_0x42ca57(0x424)](_0xd8400[_0x42ca57(0x1b4)]||_0x42ca57(0x590),_0x42ca57(0x1b4));}catch(_0x352d11){App[_0x42ca57(0x424)](_0x42ca57(0x27d),_0x42ca57(0x1b4));}finally{_0x262c3b[_0x42ca57(0x4ab)]=_0x311bc4,_0x262c3b[_0x42ca57(0x1e1)]=![];}},'abrirModalNovaSenha':_0x406d3c=>{const _0xc7fc2c=a0_0x5d5ecf;let _0x3e7d7e=document[_0xc7fc2c(0x21a)]('modal-nova-senha');!_0x3e7d7e&&(_0x3e7d7e=document[_0xc7fc2c(0x53a)](_0xc7fc2c(0x3d3)),_0x3e7d7e['id']='modal-nova-senha',_0x3e7d7e[_0xc7fc2c(0x1c7)][_0xc7fc2c(0x508)]=_0xc7fc2c(0x56a),_0x3e7d7e['innerHTML']=_0xc7fc2c(0x545),document[_0xc7fc2c(0x584)][_0xc7fc2c(0x15e)](_0x3e7d7e)),App[_0xc7fc2c(0x32e)]=_0x406d3c,_0x3e7d7e[_0xc7fc2c(0x1c7)][_0xc7fc2c(0x115)]=_0xc7fc2c(0x141);},'confirmarNovaSenhaReset':async()=>{const _0x169297=a0_0x5d5ecf,_0x1b4325=document[_0x169297(0x21a)]('nova-senha-reset')?.['value']||'',_0x5321c5=document[_0x169297(0x21a)](_0x169297(0x278))?.[_0x169297(0x4c9)]||'';if(_0x1b4325[_0x169297(0xe1)]<0x6)return App['showToast'](_0x169297(0xe5),'warning');if(_0x1b4325!==_0x5321c5)return App[_0x169297(0x424)]('As\x20senhas\x20não\x20conferem.',_0x169297(0x2e2));const _0x43bf01=document[_0x169297(0x382)](_0x169297(0x352)),_0x486161=_0x43bf01[_0x169297(0x4ab)];_0x43bf01[_0x169297(0x4ab)]=_0x169297(0x15d),_0x43bf01['disabled']=!![];try{const _0x35ea1e=await fetch(API_URL+'/auth/redefinir-senha',{'method':_0x169297(0x401),'headers':{'Content-Type':_0x169297(0x208)},'body':JSON[_0x169297(0x24b)]({'token':App[_0x169297(0x32e)],'novaSenha':_0x1b4325})}),_0x34d25f=await _0x35ea1e['json']();if(_0x34d25f[_0x169297(0x553)]){App[_0x169297(0x424)](_0x169297(0x2dc),_0x169297(0x553)),document['getElementById'](_0x169297(0x5a6))[_0x169297(0x1c7)][_0x169297(0x115)]=_0x169297(0x3bd),App[_0x169297(0x32e)]=null;const _0x539e57=window[_0x169297(0x10c)][_0x169297(0x579)]+window[_0x169297(0x10c)]['pathname'];window[_0x169297(0x34b)][_0x169297(0x377)]({},document[_0x169297(0x5a4)],_0x539e57);}else App[_0x169297(0x424)](_0x34d25f[_0x169297(0x1b4)]||_0x169297(0x54f),_0x169297(0x1b4));}catch(_0x4a1d19){App[_0x169297(0x424)](_0x169297(0x27d),_0x169297(0x1b4));}finally{_0x43bf01[_0x169297(0x4ab)]=_0x486161,_0x43bf01['disabled']=![];}},'bufferToBase64':function(_0x5a20ad){const _0x214eae=a0_0x5d5ecf;var _0x1d3784=new Uint8Array(_0x5a20ad),_0x24781e='';for(var _0x44fa6e=0x0;_0x44fa6e<_0x1d3784['byteLength'];_0x44fa6e++){_0x24781e+=String[_0x214eae(0x1ae)](_0x1d3784[_0x44fa6e]);}return btoa(_0x24781e);},'base64ToBuffer':function(_0x39053f){const _0xfb21e0=a0_0x5d5ecf;var _0x1aa1a9=atob(_0x39053f),_0x55b2f5=_0x1aa1a9[_0xfb21e0(0xe1)],_0x1ab718=new Uint8Array(_0x55b2f5);for(var _0x47e0f8=0x0;_0x47e0f8<_0x55b2f5;_0x47e0f8++){_0x1ab718[_0x47e0f8]=_0x1aa1a9['charCodeAt'](_0x47e0f8);}return _0x1ab718;},'configurarBiometria':async()=>{const _0xf4a4d3=a0_0x5d5ecf;if(!window['PublicKeyCredential'])return App['showToast']('Este\x20dispositivo\x20não\x20suporta\x20biometria.',_0xf4a4d3(0x1b4));try{App[_0xf4a4d3(0x36c)]('Configurar\x20Acesso\x20Seguro',_0xf4a4d3(0x3dc));const _0x78be46=window[_0xf4a4d3(0x27e)][_0xf4a4d3(0x2a9)](new Uint8Array(0x20)),_0x15cc4c=window['crypto'][_0xf4a4d3(0x2a9)](new Uint8Array(0x10)),_0x438bfd=await navigator[_0xf4a4d3(0x395)][_0xf4a4d3(0x16c)]({'publicKey':{'challenge':_0x78be46,'rp':{'name':_0xf4a4d3(0x560)},'user':{'id':_0x15cc4c,'name':App[_0xf4a4d3(0x252)][_0xf4a4d3(0x41c)],'displayName':App[_0xf4a4d3(0x252)][_0xf4a4d3(0x3c0)]},'pubKeyCredParams':[{'type':_0xf4a4d3(0x158),'alg':-0x7},{'type':_0xf4a4d3(0x158),'alg':-0x101}],'authenticatorSelection':{'authenticatorAttachment':_0xf4a4d3(0x1fe),'userVerification':_0xf4a4d3(0x1b5)},'timeout':0xea60}});_0x438bfd&&(localStorage[_0xf4a4d3(0x16b)]('escola_bio_id',App[_0xf4a4d3(0x429)](_0x438bfd[_0xf4a4d3(0x2da)])),App['removerOverlayBiometria'](),App[_0xf4a4d3(0x424)]('✅\x20Biometria\x20ativada\x20com\x20sucesso!','success'),App['renderizarMinhaConta']());}catch(_0x4252ab){App['removerOverlayBiometria'](),console[_0xf4a4d3(0x1b4)](_0x4252ab),App[_0xf4a4d3(0x424)]('Configuração\x20cancelada\x20ou\x20falhou.','warning');}},'entrarComBiometria':async()=>{const _0x4c24a7=a0_0x5d5ecf,_0x5c7275=localStorage[_0x4c24a7(0x598)]('escola_bio_id');if(!_0x5c7275)return;try{App[_0x4c24a7(0x36c)](_0x4c24a7(0x4bd),_0x4c24a7(0x394));const _0x1f1a2d=window['crypto']['getRandomValues'](new Uint8Array(0x20)),_0x10522c=App[_0x4c24a7(0x236)](_0x5c7275),_0x4b3bbb=await navigator[_0x4c24a7(0x395)]['get']({'publicKey':{'challenge':_0x1f1a2d,'allowCredentials':[{'type':_0x4c24a7(0x158),'id':_0x10522c}],'userVerification':'required','timeout':0xea60}});_0x4b3bbb&&(App[_0x4c24a7(0x185)](),App[_0x4c24a7(0x424)](_0x4c24a7(0x33d),'success'),App[_0x4c24a7(0x2fc)]());}catch(_0x4c6ce8){App[_0x4c24a7(0x185)](),console[_0x4c24a7(0x1b4)](_0x4c6ce8),App[_0x4c24a7(0x424)](_0x4c24a7(0x526),_0x4c24a7(0x131));}},'exibirOverlayBiometria':(_0x29aa6b,_0x569350)=>{const _0x36c5b2=a0_0x5d5ecf;let _0x339f23=document[_0x36c5b2(0x21a)]('bio-overlay-premium');!_0x339f23&&(_0x339f23=document[_0x36c5b2(0x53a)](_0x36c5b2(0x3d3)),_0x339f23['id']=_0x36c5b2(0x5ac),_0x339f23['style'][_0x36c5b2(0x508)]=_0x36c5b2(0xfd),document['body'][_0x36c5b2(0x15e)](_0x339f23)),_0x339f23['innerHTML']=_0x36c5b2(0x220)+_0x29aa6b+_0x36c5b2(0x547)+_0x569350+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2011px;\x20color:\x20#3498db;\x20font-weight:\x20bold;\x20letter-spacing:\x202px;\x20text-transform:\x20uppercase;\x22>App\x20Gestão\x20PTT</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20slideUpBio\x20{\x20from\x20{\x20transform:\x20translateY(50px);\x20opacity:\x200;\x20}\x20to\x20{\x20transform:\x20translateY(0);\x20opacity:\x201;\x20}\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.bio-icon-pulse\x20{\x20animation:\x20pulseBio\x201.8s\x20infinite;\x20display:\x20inline-block;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20pulseBio\x20{\x200%\x20{\x20transform:\x20scale(1);\x20}\x2050%\x20{\x20transform:\x20scale(1.1);\x20opacity:\x200.8;\x20}\x20100%\x20{\x20transform:\x20scale(1);\x20}\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20',_0x339f23[_0x36c5b2(0x1c7)][_0x36c5b2(0x115)]=_0x36c5b2(0x141);},'removerOverlayBiometria':()=>{const _0x4d578f=a0_0x5d5ecf,_0x192b07=document[_0x4d578f(0x21a)](_0x4d578f(0x5ac));if(_0x192b07)_0x192b07['style'][_0x4d578f(0x115)]=_0x4d578f(0x3bd);},'abrirTelaCadastroInst':()=>{const _0x1d7a4d=a0_0x5d5ecf;document[_0x1d7a4d(0x21a)](_0x1d7a4d(0x562))[_0x1d7a4d(0x1c7)][_0x1d7a4d(0x115)]='flex',App[_0x1d7a4d(0x4ae)]();},'fecharModalInst':()=>{const _0x4bc9bf=a0_0x5d5ecf;document['getElementById'](_0x4bc9bf(0x562))[_0x4bc9bf(0x1c7)][_0x4bc9bf(0x115)]=_0x4bc9bf(0x3bd);},'voltarEtapa1':()=>{const _0x2848b9=a0_0x5d5ecf;document['getElementById'](_0x2848b9(0x2f7))['style'][_0x2848b9(0x115)]='block',document[_0x2848b9(0x21a)](_0x2848b9(0x338))[_0x2848b9(0x1c7)][_0x2848b9(0x115)]='none',document['getElementById'](_0x2848b9(0x11e))[_0x2848b9(0x1c7)][_0x2848b9(0x115)]=_0x2848b9(0x3bd);},'enviarCodigoInst':async()=>{const _0x31996f=a0_0x5d5ecf,_0x219fe6=document['getElementById'](_0x31996f(0x3b9))[_0x31996f(0x4c9)],_0x4c04a6=document[_0x31996f(0x382)]('#etapa-1-email\x20button');if(!_0x219fe6||!_0x219fe6[_0x31996f(0x1b9)]('@'))return App[_0x31996f(0x424)](_0x31996f(0x26a),_0x31996f(0x1b4));const _0x2e4769=_0x4c04a6[_0x31996f(0x4ab)];_0x4c04a6[_0x31996f(0x4ab)]=_0x31996f(0x261),_0x4c04a6[_0x31996f(0x1e1)]=!![];try{const _0x6428e2=await App[_0x31996f(0x4e9)](_0x31996f(0x277),'POST',{'email':_0x219fe6});_0x6428e2&&_0x6428e2[_0x31996f(0x553)]?(App[_0x31996f(0x424)]('Código\x20enviado!',_0x31996f(0x553)),document[_0x31996f(0x21a)](_0x31996f(0x2f7))['style']['display']=_0x31996f(0x3bd),document[_0x31996f(0x21a)](_0x31996f(0x338))['style'][_0x31996f(0x115)]='block'):App['showToast'](_0x31996f(0x359),_0x31996f(0x1b4));}catch(_0x575737){App[_0x31996f(0x424)]('Erro\x20de\x20servidor.','error');}finally{_0x4c04a6[_0x31996f(0x4ab)]=_0x2e4769,_0x4c04a6[_0x31996f(0x1e1)]=![];}},'validarCadastroInst':async()=>{const _0x154a0b=a0_0x5d5ecf,_0x3c7fe1=document[_0x154a0b(0x21a)]('novo-inst-email')['value'],_0xdd2870=document[_0x154a0b(0x21a)](_0x154a0b(0x227))[_0x154a0b(0x4c9)][_0x154a0b(0xfc)](),_0x37b8e9=document[_0x154a0b(0x21a)](_0x154a0b(0x218))[_0x154a0b(0x4c9)][_0x154a0b(0xfc)](),_0x184a61=document[_0x154a0b(0x382)](_0x154a0b(0x275));if(!_0xdd2870||!_0x37b8e9)return App[_0x154a0b(0x424)](_0x154a0b(0x2f2),_0x154a0b(0x1b4));const _0x526529=_0x184a61[_0x154a0b(0x4ab)];_0x184a61[_0x154a0b(0x4ab)]=_0x154a0b(0xf6),_0x184a61[_0x154a0b(0x1e1)]=!![];try{const _0x2c16c4=await App[_0x154a0b(0x4e9)](_0x154a0b(0x2c4),_0x154a0b(0x401),{'email':_0x3c7fe1,'codigo':_0xdd2870,'pin':_0x37b8e9});if(_0x2c16c4&&_0x2c16c4[_0x154a0b(0x553)]){document['getElementById'](_0x154a0b(0x338))[_0x154a0b(0x1c7)][_0x154a0b(0x115)]=_0x154a0b(0x3bd),document[_0x154a0b(0x21a)](_0x154a0b(0x11e))[_0x154a0b(0x1c7)][_0x154a0b(0x115)]=_0x154a0b(0x25e);if(typeof confetti===_0x154a0b(0x405))confetti();if(typeof gtag==='function')gtag(_0x154a0b(0x4e3),_0x154a0b(0x120),{'currency':'BRL','value':0x0,'tipo_conta':'App\x20Gestão\x20PTT'});}else App[_0x154a0b(0x424)](_0x2c16c4[_0x154a0b(0x1b4)]||_0x154a0b(0x53f),_0x154a0b(0x1b4));}catch(_0x1cfaf6){App[_0x154a0b(0x424)](_0x154a0b(0x57b),_0x154a0b(0x1b4));}finally{_0x184a61[_0x154a0b(0x4ab)]=_0x526529,_0x184a61[_0x154a0b(0x1e1)]=![];}},'showToast':(_0x3f4573,_0x55436f='info')=>{const _0x13f033=a0_0x5d5ecf;let _0x44ab41=document[_0x13f033(0x21a)](_0x13f033(0x3d7));!_0x44ab41&&(_0x44ab41=App[_0x13f033(0x3e1)]('div',[],{'id':_0x13f033(0x3d7)}),document[_0x13f033(0x584)][_0x13f033(0x15e)](_0x44ab41));const _0x54ddc4=_0x55436f===_0x13f033(0x553)?'✅':_0x55436f==='error'?'❌':_0x55436f===_0x13f033(0x2e2)?'⚠️':'ℹ️',_0x5cb57b=App['criarElemento'](_0x13f033(0x3d3),[_0x13f033(0x28a),_0x55436f]),_0x34032d=App[_0x13f033(0x3e1)](_0x13f033(0x2ab),[_0x13f033(0x295)],{},_0x54ddc4),_0x3fb675=App[_0x13f033(0x3e1)]('span',[],{},_0x3f4573);_0x5cb57b['appendChild'](_0x34032d),_0x5cb57b[_0x13f033(0x15e)](_0x3fb675),_0x44ab41['appendChild'](_0x5cb57b),setTimeout(()=>{const _0x2c4b6b=_0x13f033;_0x5cb57b[_0x2c4b6b(0x1c7)][_0x2c4b6b(0x42c)]=_0x2c4b6b(0x38a),setTimeout(()=>_0x5cb57b[_0x2c4b6b(0x379)](),0x1f4);},0xbb8);},'setupMobileMenu':()=>{const _0x41a4f2=a0_0x5d5ecf,_0x5eddf7=document[_0x41a4f2(0x382)](_0x41a4f2(0x28e));if(_0x5eddf7&&!document[_0x41a4f2(0x21a)](_0x41a4f2(0x1ff))){const _0xb4e175=document['createElement'](_0x41a4f2(0x33c));_0xb4e175['id']='btn-mobile-menu',_0xb4e175[_0x41a4f2(0x155)]='mobile-menu-btn',_0xb4e175[_0x41a4f2(0xec)]='☰',_0xb4e175[_0x41a4f2(0x2b8)]=()=>{const _0x4a08c7=_0x41a4f2;document[_0x4a08c7(0x382)]('.sidebar')[_0x4a08c7(0xdc)][_0x4a08c7(0x282)](_0x4a08c7(0x344));const _0x5a41c7=document['querySelector'](_0x4a08c7(0x50c))||App['criarOverlay']();_0x5a41c7[_0x4a08c7(0xdc)][_0x4a08c7(0x282)](_0x4a08c7(0x344));},_0x5eddf7[_0x41a4f2(0x323)](_0xb4e175,_0x5eddf7['firstChild']),App[_0x41a4f2(0x3a1)]();}},'criarOverlay':()=>{const _0xb5f913=a0_0x5d5ecf;if(document[_0xb5f913(0x382)](_0xb5f913(0x50c)))return document['querySelector'](_0xb5f913(0x50c));const _0x59f5cf=document[_0xb5f913(0x53a)]('div');return _0x59f5cf['className']=_0xb5f913(0x378),_0x59f5cf[_0xb5f913(0x2b8)]=()=>{const _0x39b3ba=_0xb5f913;document[_0x39b3ba(0x382)](_0x39b3ba(0x16d))[_0x39b3ba(0xdc)]['remove'](_0x39b3ba(0x344)),_0x59f5cf[_0x39b3ba(0xdc)][_0x39b3ba(0x379)]('active');},document[_0xb5f913(0x584)][_0xb5f913(0x15e)](_0x59f5cf),_0x59f5cf;},'aplicarTemaSalvo':()=>{const _0xcfde50=a0_0x5d5ecf,_0xcd55ec=JSON[_0xcfde50(0x48f)](localStorage[_0xcfde50(0x598)](App[_0xcfde50(0x11d)](_0xcfde50(0xdf))));if(_0xcd55ec){const _0x4840dd=document[_0xcfde50(0x578)];if(_0xcd55ec['sidebarBg'])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)](_0xcfde50(0x319),_0xcd55ec[_0xcfde50(0x3f2)]);if(_0xcd55ec[_0xcfde50(0x491)])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)](_0xcfde50(0x212),_0xcd55ec[_0xcfde50(0x491)]);if(_0xcd55ec['bodyBg'])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)]('--body-bg',_0xcd55ec[_0xcfde50(0x1b1)]);if(_0xcd55ec[_0xcfde50(0x10b)])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)]('--text-main',_0xcd55ec[_0xcfde50(0x10b)]);if(_0xcd55ec['cardBg'])_0x4840dd[_0xcfde50(0x1c7)]['setProperty'](_0xcfde50(0x5a0),_0xcd55ec[_0xcfde50(0x2f8)]);if(_0xcd55ec['cardText'])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)](_0xcfde50(0x312),_0xcd55ec[_0xcfde50(0x2c2)]);if(_0xcd55ec[_0xcfde50(0x2ff)])_0x4840dd[_0xcfde50(0x1c7)][_0xcfde50(0x445)](_0xcfde50(0x4fa),_0xcd55ec[_0xcfde50(0x2ff)]);}else document['documentElement'][_0xcfde50(0x343)](_0xcfde50(0x1c7));},'UI':{'card':(_0x55403b,_0x12b49e,_0x4b3cf1,_0x4ccc18=a0_0x5d5ecf(0x307))=>a0_0x5d5ecf(0x462)+_0x4ccc18+a0_0x5d5ecf(0x528)+(_0x55403b?a0_0x5d5ecf(0x31c)+_0x55403b+a0_0x5d5ecf(0x48d):'')+(_0x12b49e?a0_0x5d5ecf(0x2e7)+_0x12b49e+a0_0x5d5ecf(0x203):'')+_0x4b3cf1+a0_0x5d5ecf(0x18d),'input':(_0x4a96b9,_0x372111,_0x22610e='',_0x5a857b='',_0x4b360c=a0_0x5d5ecf(0x4cf),_0x378711='')=>a0_0x5d5ecf(0x4d1)+_0x4a96b9+a0_0x5d5ecf(0x135)+_0x4b360c+a0_0x5d5ecf(0x226)+_0x372111+a0_0x5d5ecf(0x5a5)+_0x22610e+a0_0x5d5ecf(0x4e1)+_0x5a857b+'\x22\x20'+_0x378711+'></div>','botao':(_0x3e82ae,_0x196ce4,_0x4c5124='primary',_0x888df1='')=>{const _0x132c4b=a0_0x5d5ecf,_0x25fdb6=_0x4c5124===_0x132c4b(0x436)?'btn-primary':_0x4c5124===_0x132c4b(0x391)?_0x132c4b(0x486):'btn-edit';return _0x132c4b(0x3ce)+_0x25fdb6+'\x22\x20style=\x22width:\x20auto;\x20padding:\x2010px\x2020px;\x22\x20onclick=\x22'+_0x196ce4+'\x22>'+_0x888df1+'\x20'+_0x3e82ae+_0x132c4b(0x53c);},'colorPicker':(_0xf23ece,_0x34c007,_0x10cb33)=>'<div\x20class=\x22theme-row\x22><label>'+_0xf23ece+a0_0x5d5ecf(0x298)+_0x34c007+a0_0x5d5ecf(0x138)+_0x10cb33+a0_0x5d5ecf(0x18f)},'renderizarConfiguracoesAparencia':()=>{const _0x49e8fa=a0_0x5d5ecf;App[_0x49e8fa(0x408)](_0x49e8fa(0x24d));const _0x3cd19d=document['getElementById']('app-content'),_0x599c41=getComputedStyle(document['documentElement']),_0x1d4890=JSON['parse'](localStorage[_0x49e8fa(0x598)](App[_0x49e8fa(0x11d)](_0x49e8fa(0xdf))))||{},_0x1b5b30={'sbBg':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x319))['trim'](),'sbTxt':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x212))['trim'](),'bdBg':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x18a))['trim'](),'txtMain':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x49f))[_0x49e8fa(0xfc)](),'cdBg':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x5a0))[_0x49e8fa(0xfc)](),'cdTxt':_0x599c41[_0x49e8fa(0x471)](_0x49e8fa(0x312))[_0x49e8fa(0xfc)](),'zoomAtual':_0x1d4890['zoomLevel']||'1'},_0xeb1200=JSON[_0x49e8fa(0x48f)](localStorage[_0x49e8fa(0x598)](App['getTenantKey']('escola_atalhos')))||[],_0x4e382a='<div\x20class=\x22theme-section\x22><h4\x20style=\x22margin:0\x200\x2015px\x200;\x22>1.\x20Cores\x20do\x20Sistema</h4><div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(200px,\x201fr));\x20gap:20px;\x22><div><div\x20style=\x22font-weight:bold;\x20margin-bottom:10px;\x22>Menu\x20Lateral</div>'+App['UI'][_0x49e8fa(0x1b7)](_0x49e8fa(0x457),_0x1b5b30[_0x49e8fa(0x28f)],_0x49e8fa(0x319))+App['UI'][_0x49e8fa(0x1b7)]('Texto:',_0x1b5b30[_0x49e8fa(0x2a0)],_0x49e8fa(0x212))+_0x49e8fa(0x409)+App['UI']['colorPicker']('Fundo:',_0x1b5b30[_0x49e8fa(0x507)],_0x49e8fa(0x18a))+App['UI'][_0x49e8fa(0x1b7)](_0x49e8fa(0x2e0),_0x1b5b30[_0x49e8fa(0x23f)],'--text-main')+_0x49e8fa(0x585)+App['UI'][_0x49e8fa(0x1b7)](_0x49e8fa(0x457),_0x1b5b30[_0x49e8fa(0x2c9)],_0x49e8fa(0x5a0))+App['UI'][_0x49e8fa(0x1b7)](_0x49e8fa(0x2e0),_0x1b5b30[_0x49e8fa(0x3a0)],_0x49e8fa(0x312))+_0x49e8fa(0x418),_0x1e5b74=_0x49e8fa(0x314)+LISTA_FUNCIONALIDADES[_0x49e8fa(0x3b0)](_0x361201=>_0x49e8fa(0x4a1)+_0x361201['id']+'\x22\x20'+(_0xeb1200[_0x49e8fa(0x1b9)](_0x361201['id'])?_0x49e8fa(0x13a):'')+_0x49e8fa(0x2e5)+_0x361201[_0x49e8fa(0x235)]+'\x20'+_0x361201[_0x49e8fa(0x3c0)]+_0x49e8fa(0x2c3))[_0x49e8fa(0x358)]('')+_0x49e8fa(0x55b),_0x4a2863=_0x49e8fa(0x126)+(_0x1b5b30['zoomAtual']==='0.9'?_0x49e8fa(0x423):'')+'>Pequena\x20(90%)</option><option\x20value=\x221\x22\x20'+(_0x1b5b30[_0x49e8fa(0x29d)]==='1'?_0x49e8fa(0x423):'')+_0x49e8fa(0x300)+(_0x1b5b30[_0x49e8fa(0x29d)]===_0x49e8fa(0x34d)?_0x49e8fa(0x423):'')+_0x49e8fa(0x4d9),_0x3866d1=_0x49e8fa(0x116)+App['UI'][_0x49e8fa(0x472)](_0x49e8fa(0x44e),_0x49e8fa(0x1ac),_0x49e8fa(0x436),'')+App['UI'][_0x49e8fa(0x472)](_0x49e8fa(0x333),_0x49e8fa(0x558),_0x49e8fa(0x391),'')+'</div>';_0x3cd19d[_0x49e8fa(0xec)]=App['UI']['card'](_0x49e8fa(0x134),_0x49e8fa(0x51f),_0x4e382a+_0x4a2863+_0x1e5b74+_0x3866d1,_0x49e8fa(0x241));},'previewCor':(_0x981a38,_0x3d0c93)=>{const _0x1da1c4=a0_0x5d5ecf;document[_0x1da1c4(0x578)]['style']['setProperty'](_0x981a38,_0x3d0c93);},'previewZoom':_0x3842e9=>{const _0x5dbd41=a0_0x5d5ecf;document[_0x5dbd41(0x578)]['style'][_0x5dbd41(0x445)](_0x5dbd41(0x4fa),_0x3842e9);},'validarLimiteAtalhos':_0x38e994=>{const _0x45dbc7=a0_0x5d5ecf,_0x4a5eca=document['querySelectorAll'](_0x45dbc7(0x1d8));_0x4a5eca['length']>0x8&&(_0x38e994['checked']=![],App[_0x45dbc7(0x424)](_0x45dbc7(0x342),_0x45dbc7(0x2e2)));},'salvarTema':()=>{const _0x2febaf=a0_0x5d5ecf,_0x2f9991=getComputedStyle(document[_0x2febaf(0x578)]),_0x4f6235={'sidebarBg':_0x2f9991['getPropertyValue']('--sidebar-bg')[_0x2febaf(0xfc)](),'sidebarText':_0x2f9991[_0x2febaf(0x471)](_0x2febaf(0x212))[_0x2febaf(0xfc)](),'bodyBg':_0x2f9991[_0x2febaf(0x471)]('--body-bg')[_0x2febaf(0xfc)](),'textMain':_0x2f9991['getPropertyValue'](_0x2febaf(0x49f))['trim'](),'cardBg':_0x2f9991['getPropertyValue'](_0x2febaf(0x5a0))[_0x2febaf(0xfc)](),'cardText':_0x2f9991['getPropertyValue'](_0x2febaf(0x312))[_0x2febaf(0xfc)](),'zoomLevel':document['getElementById'](_0x2febaf(0xe4))[_0x2febaf(0x4c9)]},_0x6bd708=Array[_0x2febaf(0x349)](document[_0x2febaf(0x521)](_0x2febaf(0x1d8)))[_0x2febaf(0x3b0)](_0x1ccc86=>_0x1ccc86[_0x2febaf(0x4c9)]);if(_0x6bd708['length']===0x0)return App[_0x2febaf(0x424)]('Selecione\x20pelo\x20menos\x201\x20atalho.',_0x2febaf(0x2e2));if(_0x6bd708[_0x2febaf(0xe1)]>0x8)return App['showToast'](_0x2febaf(0x387),_0x2febaf(0x2e2));localStorage[_0x2febaf(0x16b)](App[_0x2febaf(0x11d)](_0x2febaf(0xdf)),JSON[_0x2febaf(0x24b)](_0x4f6235)),localStorage[_0x2febaf(0x16b)](App[_0x2febaf(0x11d)](_0x2febaf(0x3dd)),JSON[_0x2febaf(0x24b)](_0x6bd708)),App[_0x2febaf(0x17e)](),App[_0x2febaf(0x424)](_0x2febaf(0xf3),_0x2febaf(0x553)),setTimeout(()=>{const _0x479d13=_0x2febaf;App[_0x479d13(0x451)]();},0x320);},'resetarTema':()=>{const _0x249a56=a0_0x5d5ecf;if(!confirm(_0x249a56(0x4b6)))return;localStorage['removeItem'](App[_0x249a56(0x11d)]('escola_tema')),localStorage[_0x249a56(0x16b)](App[_0x249a56(0x11d)](_0x249a56(0x3dd)),JSON[_0x249a56(0x24b)]([_0x249a56(0x440),_0x249a56(0x2a4),'ped_chamada',_0x249a56(0x555),_0x249a56(0x538),_0x249a56(0x45f)])),document[_0x249a56(0x578)][_0x249a56(0x343)](_0x249a56(0x1c7)),App[_0x249a56(0x424)]('Aparência\x20restaurada\x20com\x20sucesso!\x20🔄','success'),setTimeout(()=>{const _0x18cc8e=_0x249a56;location[_0x18cc8e(0x459)]();},0x3e8);},'renderizarInicio':async()=>{const _0x406e58=a0_0x5d5ecf;App['verificarNotificacoes'](),App[_0x406e58(0x408)](_0x406e58(0x1c8));const _0x38f90d=document[_0x406e58(0x21a)](_0x406e58(0x214));_0x38f90d['innerHTML']=_0x406e58(0x4d3);try{const [_0x2081b2,_0x27421c,_0x10afa7,_0x125f8f]=await Promise[_0x406e58(0x2c0)]([App[_0x406e58(0x4e9)](_0x406e58(0x4dd)),App[_0x406e58(0x4e9)](_0x406e58(0x3a2)),App['api']('/turmas'),App[_0x406e58(0x4e9)]('/cursos')]),_0xfe8993=Array[_0x406e58(0x3ef)](_0x2081b2)?_0x2081b2:[],_0x49c6ca=_0xfe8993[_0x406e58(0x2d5)](_0x3c797b=>!_0x3c797b[_0x406e58(0x2ec)]||_0x3c797b['status']===_0x406e58(0x39e)),_0x2d48a6=Array[_0x406e58(0x3ef)](_0x27421c)?_0x27421c:[],_0x13cc18=Array[_0x406e58(0x3ef)](_0x10afa7)?_0x10afa7:[],_0x48fec6=Array[_0x406e58(0x3ef)](_0x125f8f)?_0x125f8f:[],_0x231b39=new Date(),_0x478a11=_0x231b39[_0x406e58(0x4bf)]()+0x1,_0x46c9b2=_0x231b39[_0x406e58(0x3d6)](),_0x18808a=_0x49c6ca[_0x406e58(0x3b0)](_0x18f34c=>_0x18f34c['id']),_0x3bc8bc=_0x2d48a6[_0x406e58(0x2d5)](_0x96ac71=>{const _0xf08ce1=_0x406e58;if(!_0x96ac71[_0xf08ce1(0x4f8)])return![];const _0x58138f=_0x96ac71[_0xf08ce1(0x4f8)][_0xf08ce1(0x193)]('-');return parseInt(_0x58138f[0x1])===_0x478a11&&parseInt(_0x58138f[0x0])===_0x46c9b2;}),_0x4caded=_0x3bc8bc['filter'](_0x4a2f5f=>_0x4a2f5f[_0x406e58(0x2ec)]===_0x406e58(0x240))[_0x406e58(0x20e)]((_0x2ee87b,_0x28b726)=>_0x2ee87b+parseFloat(_0x28b726[_0x406e58(0x202)]),0x0),_0x5ab10f=_0x3bc8bc['filter'](_0x9b0492=>_0x9b0492[_0x406e58(0x2ec)]!==_0x406e58(0x240)&&_0x18808a['includes'](_0x9b0492[_0x406e58(0x145)]))[_0x406e58(0x20e)]((_0x3fd9fe,_0x81d9f3)=>_0x3fd9fe+parseFloat(_0x81d9f3[_0x406e58(0x202)]),0x0),_0x51ac02=_0x2d48a6['filter'](_0x4d837a=>_0x4d837a[_0x406e58(0x2ec)]===_0x406e58(0x42f)&&new Date(_0x4d837a[_0x406e58(0x4f8)]+_0x406e58(0x157))<_0x231b39&&_0x18808a['includes'](_0x4d837a[_0x406e58(0x145)]))[_0x406e58(0x2d0)]((_0x3f75df,_0x5666fb)=>new Date(_0x3f75df[_0x406e58(0x4f8)])-new Date(_0x5666fb['vencimento'])),_0x4a83d0=_0x3a46da=>_0x3a46da['toLocaleString'](_0x406e58(0x39b),{'minimumFractionDigits':0x2,'maximumFractionDigits':0x2}),_0x2c0f28=App[_0x406e58(0x252)]?App[_0x406e58(0x252)]['tipo']:_0x406e58(0x414),_0x4a2736=_0x2c0f28!=='Professor';let _0x5d9bf3=JSON[_0x406e58(0x48f)](localStorage[_0x406e58(0x598)](App['getTenantKey'](_0x406e58(0x3dd))));(!_0x5d9bf3||!Array[_0x406e58(0x3ef)](_0x5d9bf3)||_0x5d9bf3[_0x406e58(0xe1)]===0x0)&&(_0x5d9bf3=[_0x406e58(0x440),_0x406e58(0x2a4),'ped_chamada',_0x406e58(0x555),_0x406e58(0x538),_0x406e58(0x45f)]);const _0x7b960e=_0x5d9bf3[_0x406e58(0x3b0)](_0x198aed=>{const _0x5bc692=_0x406e58,_0x4ca3f7=LISTA_FUNCIONALIDADES['find'](_0x3140f5=>_0x3140f5['id']===_0x198aed);if(_0x4ca3f7&&_0x4ca3f7[_0x5bc692(0x4f2)][_0x5bc692(0x1b9)](_0x2c0f28))return _0x5bc692(0xf0)+_0x4ca3f7[_0x5bc692(0x4db)]+_0x5bc692(0x3de)+_0x4ca3f7['icon']+'</div><span>'+_0x4ca3f7[_0x5bc692(0x3c0)]+_0x5bc692(0x371);return'';})[_0x406e58(0x358)](''),_0x2f987c=_0x51ac02[_0x406e58(0xe1)]===0x0?_0x406e58(0x2a1):_0x51ac02['map'](_0x5e7533=>{const _0x4b6b41=_0x406e58,_0x1f0a8d=_0x49c6ca[_0x4b6b41(0x12b)](_0x508a2e=>_0x508a2e['id']===_0x5e7533['idAluno'])||{},_0x44612f=_0x1f0a8d[_0x4b6b41(0x367)]||'',_0x71d0f3=_0x5e7533[_0x4b6b41(0x4f8)][_0x4b6b41(0x193)]('-')[_0x4b6b41(0x3ca)]()['join']('/'),_0x4b806a=_0x4a83d0(parseFloat(_0x5e7533[_0x4b6b41(0x202)]));return'<div\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#f5b7b1;\x20padding:12px;\x20border-radius:8px;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x20box-shadow:0\x202px\x204px\x20rgba(0,0,0,0.02);\x22><div><div\x20style=\x22font-size:13px;\x20font-weight:bold;\x20color:#333;\x20margin-bottom:4px;\x22>'+App[_0x4b6b41(0x159)](_0x5e7533['alunoNome']||_0x4b6b41(0x53e))+'</div><div\x20style=\x22font-size:11px;\x20color:#c0392b;\x20font-weight:600;\x22>Venc:\x20'+_0x71d0f3+_0x4b6b41(0x561)+_0x4b806a+_0x4b6b41(0x286)+App['escapeHTML'](_0x5e7533['alunoNome'])+_0x4b6b41(0x435)+_0x44612f+_0x4b6b41(0x435)+_0x71d0f3+_0x4b6b41(0x435)+_0x4b806a+_0x4b6b41(0x1ec);})[_0x406e58(0x358)]('');_0x38f90d[_0x406e58(0xec)]=_0x406e58(0x406)+App[_0x406e58(0x159)](App[_0x406e58(0x252)]?App['usuario'][_0x406e58(0x3c0)]:_0x406e58(0x414))+'!\x20👋</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22dashboard-grid\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22stat-card\x20card-blue\x22\x20style=\x22display:flex;\x20flex-direction:column;\x20align-items:flex-start;\x20justify-content:center;\x20gap:15px;\x20padding:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:100%;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x20border-bottom:1px\x20solid\x20rgba(0,0,0,0.05);\x20padding-bottom:10px;\x22><div\x20style=\x22display:flex;\x20align-items:center;\x20gap:10px;\x22><span\x20style=\x22font-size:24px;\x22>🎓</span><span\x20style=\x22font-size:14px;\x20font-weight:600;\x20color:#555;\x20text-transform:uppercase;\x22>Total\x20Alunos</span></div><span\x20style=\x22font-size:20px;\x20font-weight:bold;\x20color:#3498db;\x22>'+_0x49c6ca[_0x406e58(0xe1)]+'</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:100%;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x20border-bottom:1px\x20solid\x20rgba(0,0,0,0.05);\x20padding-bottom:10px;\x22><div\x20style=\x22display:flex;\x20align-items:center;\x20gap:10px;\x22><span\x20style=\x22font-size:24px;\x22>🏫</span><span\x20style=\x22font-size:14px;\x20font-weight:600;\x20color:#555;\x20text-transform:uppercase;\x22>Total\x20Turmas</span></div><span\x20style=\x22font-size:20px;\x20font-weight:bold;\x20color:#3498db;\x22>'+_0x13cc18[_0x406e58(0xe1)]+_0x406e58(0x325)+_0x48fec6['length']+_0x406e58(0x4c5)+(_0x4a2736?'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22stat-card\x20card-green\x22\x20style=\x22display:block;\x20position:relative;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:flex-start;\x20margin-bottom:10px;\x22><div\x20class=\x22stat-info\x22><h4>Receita\x20('+_0x478a11+'/'+_0x46c9b2+_0x406e58(0x5a8)+_0x4a83d0(_0x4caded)+'</p></div><div\x20class=\x22stat-icon\x22\x20style=\x22font-size:24px;\x22>💰</div></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22height:140px;\x20width:100%;\x20display:flex;\x20justify-content:center;\x20align-items:center;\x22><canvas\x20id=\x22graficoFinanceiro\x22></canvas></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:center;\x20font-size:11px;\x20color:#666;\x20margin-top:10px;\x20border-top:1px\x20solid\x20#eee;\x20padding-top:5px;\x22>Pendente\x20no\x20mês:\x20<span\x20style=\x22color:#e74c3c;\x20font-weight:bold;\x22>R$\x20'+_0x4a83d0(_0x5ab10f)+_0x406e58(0x29c)+_0x51ac02['length']+_0x406e58(0x184)+_0x2f987c+_0x406e58(0x4c2):'')+_0x406e58(0x4d4)+(_0x7b960e||_0x406e58(0x59f))+_0x406e58(0x18d);if(_0x4a2736){const _0x51c274=document['getElementById'](_0x406e58(0x36f));if(_0x51c274&&(_0x4caded>0x0||_0x5ab10f>0x0))new Chart(_0x51c274,{'type':_0x406e58(0x597),'data':{'labels':['Recebido',_0x406e58(0x42f)],'datasets':[{'data':[_0x4caded,_0x5ab10f],'backgroundColor':[_0x406e58(0x458),'#e74c3c'],'borderWidth':0x0,'hoverOffset':0x4}]},'options':{'responsive':!![],'maintainAspectRatio':![],'plugins':{'legend':{'display':![]}},'cutout':_0x406e58(0x279)}});else _0x51c274&&new Chart(_0x51c274,{'type':'doughnut','data':{'datasets':[{'data':[0x1],'backgroundColor':[_0x406e58(0x129)],'borderWidth':0x0}]},'options':{'responsive':!![],'maintainAspectRatio':![],'plugins':{'legend':{'display':![]},'tooltip':{'enabled':![]}},'cutout':'75%'}});}}catch(_0x335329){console[_0x406e58(0x1b4)](_0x335329),_0x38f90d['innerHTML']=_0x406e58(0x1e9);}},'cobrarWhatsAppDashboard':(_0x1feefe,_0x16eac8,_0x2e62c2,_0x35fef4)=>{const _0xdb0b84=a0_0x5d5ecf;if(!App[_0xdb0b84(0x222)](_0xdb0b84(0x367)))return;if(!_0x16eac8||_0x16eac8[_0xdb0b84(0xfc)]()===''||_0x16eac8===_0xdb0b84(0x392)){App[_0xdb0b84(0x424)](_0xdb0b84(0x592),_0xdb0b84(0x1b4));return;}let _0x1b4ead=_0x16eac8[_0xdb0b84(0x513)](/\D/g,'');if(_0x16eac8[_0xdb0b84(0xfc)]()[_0xdb0b84(0x39f)]('+'))_0x1b4ead=_0x16eac8[_0xdb0b84(0x513)](/\D/g,'');else(_0x1b4ead[_0xdb0b84(0xe1)]===0xa||_0x1b4ead['length']===0xb)&&(_0x1b4ead='55'+_0x1b4ead);const _0x471d76=JSON[_0xdb0b84(0x48f)](localStorage[_0xdb0b84(0x598)](App['getTenantKey'](_0xdb0b84(0x2cc))))||{},_0x553195=_0x471d76['nome']||_0xdb0b84(0x318),_0x189b61=_0x471d76[_0xdb0b84(0x4d7)]||_0xdb0b84(0x334),_0x348875=_0x471d76[_0xdb0b84(0x3a9)]||_0xdb0b84(0x30b),_0x761666=_0xdb0b84(0x4f7)+_0x1feefe+_0xdb0b84(0x30a)+_0x2e62c2+_0xdb0b84(0x404)+_0x35fef4+_0xdb0b84(0x426)+_0x553195+_0xdb0b84(0x3f8)+_0x348875+_0xdb0b84(0x381)+_0x189b61+_0xdb0b84(0x3d2);window['open'](_0xdb0b84(0x27a)+_0x1b4ead+_0xdb0b84(0x4de)+encodeURIComponent(_0x761666),_0xdb0b84(0x2c6));},'renderizarTela':async _0x5ec2f5=>{const _0x439d0b=a0_0x5d5ecf;if(!App[_0x439d0b(0x252)]&&_0x5ec2f5!==_0x439d0b(0x41c)){App['showToast'](_0x439d0b(0x31a),_0x439d0b(0x1b4)),App['logout']();return;}if(document[_0x439d0b(0x382)](_0x439d0b(0x16d)))document[_0x439d0b(0x382)](_0x439d0b(0x16d))[_0x439d0b(0xdc)][_0x439d0b(0x379)](_0x439d0b(0x344));if(document[_0x439d0b(0x382)](_0x439d0b(0x50c)))document[_0x439d0b(0x382)](_0x439d0b(0x50c))[_0x439d0b(0xdc)][_0x439d0b(0x379)](_0x439d0b(0x344));const _0x26980c=App[_0x439d0b(0x252)]?App['usuario'][_0x439d0b(0x119)]:_0x439d0b(0x414),_0x3b5e4f=[_0x439d0b(0x251),'inadimplencia',_0x439d0b(0x2bd),_0x439d0b(0x40a),'backup',_0x439d0b(0x21f),_0x439d0b(0x3c2),'dossie','documentos','ficha',_0x439d0b(0x118)],_0x2a2b89=[_0x439d0b(0x2bd),_0x439d0b(0x40a),_0x439d0b(0x3f7),_0x439d0b(0x21f),'dossie',_0x439d0b(0x118)];if(_0x26980c===_0x439d0b(0x3cb)&&_0x3b5e4f['includes'](_0x5ec2f5))return App[_0x439d0b(0x424)](_0x439d0b(0x567),'error'),App[_0x439d0b(0x451)]();if(_0x26980c===_0x439d0b(0x1c6)&&_0x2a2b89[_0x439d0b(0x1b9)](_0x5ec2f5))return App[_0x439d0b(0x424)](_0x439d0b(0x362),_0x439d0b(0x1b4)),App[_0x439d0b(0x451)]();if(typeof gtag===_0x439d0b(0x405))gtag(_0x439d0b(0x4e3),_0x439d0b(0x45a),{'page_title':_0x439d0b(0x4b3)+_0x5ec2f5,'page_location':window[_0x439d0b(0x10c)][_0x439d0b(0x242)]+'#'+_0x5ec2f5,'page_path':'/'+_0x5ec2f5});if(_0x5ec2f5===_0x439d0b(0x565))App['setTitulo'](_0x439d0b(0x22d)),App[_0x439d0b(0x22e)]();else{if(_0x5ec2f5===_0x439d0b(0x4ad))App[_0x439d0b(0x408)](_0x439d0b(0x3ff)),App[_0x439d0b(0x532)]();else{if(_0x5ec2f5===_0x439d0b(0x1e6))App[_0x439d0b(0x408)]('Calendário'),App[_0x439d0b(0x453)]();else{if(_0x5ec2f5===_0x439d0b(0x13e))App['setTitulo'](_0x439d0b(0x4a0)),App['renderizarPlanejamentoPro']();else{if(_0x5ec2f5===_0x439d0b(0x24f))App[_0x439d0b(0x408)]('Boletim'),App['renderizarBoletimVisual']();else{if(_0x5ec2f5===_0x439d0b(0x251))App['setTitulo']('Financeiro'),App['renderizarFinanceiroPro']();else{if(_0x5ec2f5===_0x439d0b(0xf1))App[_0x439d0b(0x408)](_0x439d0b(0x3b1)),App[_0x439d0b(0x1d2)]();else{if(_0x5ec2f5===_0x439d0b(0x2bd))App['setTitulo'](_0x439d0b(0x12f)),App[_0x439d0b(0x52c)]();else{if(_0x5ec2f5==='aparencia')App[_0x439d0b(0x3db)]();else{if(_0x5ec2f5===_0x439d0b(0x3f7))App[_0x439d0b(0x1cf)]();else _0x5ec2f5===_0x439d0b(0x21f)?App['renderizarMeuPlano']():App[_0x439d0b(0x451)]();}}}}}}}}}},'renderizarConfig':_0x550a6a=>{const _0x3f26b9=a0_0x5d5ecf;if(_0x550a6a===_0x3f26b9(0x310))App[_0x3f26b9(0x14e)](_0x3f26b9(0x2bd));else{if(_0x550a6a==='aparencia')App['renderizarTela'](_0x3f26b9(0x40a));else{if(_0x550a6a===_0x3f26b9(0x118))App[_0x3f26b9(0x176)]();else{if(_0x550a6a==='backup')App[_0x3f26b9(0x14e)](_0x3f26b9(0x3f7));}}}},'renderizarRelatorio':_0xeaba22=>{const _0x14732e=a0_0x5d5ecf;if(_0xeaba22===_0x14732e(0x335)&&!App[_0x14732e(0x222)]('dossie'))return;if(typeof App['renderizarRelatorioModulo']===_0x14732e(0x405))App[_0x14732e(0x3b7)](_0xeaba22);},'renderizarMeuPlano':()=>{const _0x25b0eb=a0_0x5d5ecf;App['setTitulo'](_0x25b0eb(0x151));const _0x27d9f3=document['getElementById'](_0x25b0eb(0x214)),_0x4c2725=App['getPlanoAtual']();let _0x34edff=0x0;const _0x5470da=JSON[_0x25b0eb(0x48f)](localStorage[_0x25b0eb(0x598)](App[_0x25b0eb(0x11d)](_0x25b0eb(0x2cc))))||{},_0x2ddf27=new Date()['getTime']();if(_0x5470da[_0x25b0eb(0x136)]){const _0x43c904=new Date(_0x5470da[_0x25b0eb(0x136)])[_0x25b0eb(0x501)]()-_0x2ddf27;_0x34edff=Math['ceil'](_0x43c904/(0x3e8*0x3c*0x3c*0x18));}else{if(_0x5470da[_0x25b0eb(0x11f)]){const _0x302ebb=Math[_0x25b0eb(0x178)](_0x2ddf27-new Date(_0x5470da[_0x25b0eb(0x11f)])['getTime']());_0x34edff=(_0x4c2725==='Teste'?0x7:0x1e)-Math['floor'](_0x302ebb/(0x3e8*0x3c*0x3c*0x18));}}if(_0x34edff<0x0)_0x34edff=0x0;let _0x5ee013=_0x4c2725==='Premium'?'#f39c12':_0x4c2725===_0x25b0eb(0x22c)?_0x25b0eb(0x281):'#27ae60';const _0x13c86f=_0x4c2725==='Teste'?_0x25b0eb(0x34e)+_0x34edff+_0x25b0eb(0x182):_0x25b0eb(0x4a8)+_0x5ee013+_0x25b0eb(0x15c)+_0x5ee013+';\x20font-size:16px;\x20box-shadow:0\x204px\x2010px\x20rgba(0,0,0,0.05);\x22>💎\x20PLANO\x20ATUAL:\x20'+App[_0x25b0eb(0x159)](_0x4c2725)[_0x25b0eb(0x3a7)]()+'\x20('+_0x34edff+_0x25b0eb(0x351);_0x27d9f3['innerHTML']=_0x25b0eb(0x350)+_0x13c86f+_0x25b0eb(0x383);},'comprarPlano':(_0x2804a9,_0x46e877)=>{const _0xe63407=a0_0x5d5ecf;App[_0xe63407(0x424)]('A\x20redirecionar\x20para\x20o\x20pagamento\x20seguro\x20do\x20plano\x20'+_0x2804a9+_0xe63407(0x54c),_0xe63407(0x131)),setTimeout(()=>{const _0x4331e3=_0xe63407;window[_0x4331e3(0x1f3)](_0x46e877,_0x4331e3(0x2c6));},0x5dc);},'ativarNovoPlano':async _0x1f554e=>{const _0x54725d=a0_0x5d5ecf;if(_0x1f554e)_0x1f554e[_0x54725d(0x448)]();const _0x49ccb4=document[_0x54725d(0x21a)](_0x54725d(0x494));if(!_0x49ccb4)return;const _0x451f89=_0x49ccb4['value'][_0x54725d(0xfc)]()[_0x54725d(0x3a7)]();if(!_0x451f89)return App[_0x54725d(0x424)](_0x54725d(0x4f0),'warning');const _0x291eb4=document[_0x54725d(0x382)](_0x54725d(0x1de)),_0x33cc48=_0x291eb4?_0x291eb4[_0x54725d(0x4ab)]:_0x54725d(0x4c1);_0x291eb4&&(_0x291eb4[_0x54725d(0x4ab)]='A\x20validar...\x20⏳',_0x291eb4['disabled']=!![]);try{const _0xd4900e=await App[_0x54725d(0x4e9)](_0x54725d(0x1e5),'POST',{'pin':_0x451f89});let _0x2dc6f4=_0xd4900e&&_0xd4900e[_0x54725d(0x553)]?_0xd4900e[_0x54725d(0x21f)]:null;if(!_0x2dc6f4){if(_0x451f89[_0x54725d(0x1b9)](_0x54725d(0x4f4)))_0x2dc6f4=_0x54725d(0x58f);else{if(_0x451f89[_0x54725d(0x1b9)](_0x54725d(0x272)))_0x2dc6f4=_0x54725d(0x288);else{if(_0x451f89[_0x54725d(0x1b9)](_0x54725d(0x1dd)))_0x2dc6f4=_0x54725d(0x22c);else{App[_0x54725d(0x424)](_0xd4900e[_0x54725d(0x1b4)]||_0x54725d(0x48b),'error');_0x291eb4&&(_0x291eb4[_0x54725d(0x4ab)]=_0x33cc48,_0x291eb4[_0x54725d(0x1e1)]=![]);return;}}}}const _0x287282=await App[_0x54725d(0x4e9)]('/escola')||{},_0x29a5f2=new Date();_0x29a5f2['setDate'](_0x29a5f2['getDate']()+0x1e),await App[_0x54725d(0x4e9)]('/escola','PUT',{..._0x287282,'plano':_0x2dc6f4,'pinUsado':_0x451f89,'dataExpiracao':_0x29a5f2['toISOString']()}),localStorage[_0x54725d(0x16b)](App[_0x54725d(0x11d)]('escola_plano'),_0x2dc6f4);let _0x1be2be=JSON[_0x54725d(0x48f)](localStorage[_0x54725d(0x598)](App[_0x54725d(0x11d)](_0x54725d(0x2cc))))||{};_0x1be2be[_0x54725d(0x21f)]=_0x2dc6f4,_0x1be2be['dataExpiracao']=_0x29a5f2[_0x54725d(0x479)](),localStorage[_0x54725d(0x16b)](App[_0x54725d(0x11d)]('escola_perfil'),JSON['stringify'](_0x1be2be)),App[_0x54725d(0x34c)](_0x1be2be),App[_0x54725d(0x424)]('🎉\x20PIN\x20validado\x20com\x20sucesso!\x20Plano\x20atualizado\x20para\x20'+_0x2dc6f4+'.\x20A\x20iniciar...','success'),_0x49ccb4[_0x54725d(0x4c9)]='',await App[_0x54725d(0x49b)](),App[_0x54725d(0x451)]();}catch(_0xfc738e){App[_0x54725d(0x424)](_0x54725d(0x294),_0x54725d(0x1b4));}finally{_0x291eb4&&(_0x291eb4[_0x54725d(0x4ab)]=_0x33cc48,_0x291eb4[_0x54725d(0x1e1)]=![]);}},'copiarLinkMatricula':async()=>{const _0x4e0b84=a0_0x5d5ecf;try{const _0xe05c84=await App[_0x4e0b84(0x4e9)]('/escola');if(!_0xe05c84||_0xe05c84[_0x4e0b84(0x1b4)]||!_0xe05c84['escolaId'])return App[_0x4e0b84(0x424)](_0x4e0b84(0x2cd),_0x4e0b84(0x1b4));const _0x45997a=''+window[_0x4e0b84(0x10c)][_0x4e0b84(0x579)]+window['location'][_0x4e0b84(0x34f)][_0x4e0b84(0x513)](_0x4e0b84(0x152),''),_0x28f72a=_0x45997a+_0x4e0b84(0x1c2)+encodeURIComponent(_0xe05c84[_0x4e0b84(0x495)]);navigator['clipboard']&&window[_0x4e0b84(0x3bf)]?(await navigator['clipboard'][_0x4e0b84(0x2ee)](_0x28f72a),App[_0x4e0b84(0x424)](_0x4e0b84(0x4d6),_0x4e0b84(0x553))):prompt(_0x4e0b84(0x216),_0x28f72a);}catch(_0x289ef9){console['error'](_0x289ef9),App[_0x4e0b84(0x424)](_0x4e0b84(0x534),'error');}},'abrirModalCadastro':async(_0x44c972,_0x277f01)=>{const _0x12145c=a0_0x5d5ecf;if(!_0x277f01&&_0x44c972===_0x12145c(0x26e)){const _0x114e35=await App[_0x12145c(0x519)]('aluno');if(!_0x114e35)return;}typeof App[_0x12145c(0x586)]===_0x12145c(0x405)&&App['abrirModalCadastroModulo'](_0x44c972,_0x277f01);},'abrirRelatorioFrequencia':async(_0x3db6e8,_0x3ce899)=>{const _0x12ee32=a0_0x5d5ecf,_0x5abb2c=document['getElementById'](_0x12ee32(0x26b));if(_0x5abb2c)_0x5abb2c['style'][_0x12ee32(0x115)]='flex';document[_0x12ee32(0x21a)](_0x12ee32(0x24a))[_0x12ee32(0x4ab)]=_0x12ee32(0x4a3)+App[_0x12ee32(0x159)](_0x3ce899),document[_0x12ee32(0x21a)](_0x12ee32(0xf2))[_0x12ee32(0xec)]=_0x12ee32(0x3e3);const _0x17f637=document[_0x12ee32(0x382)](_0x12ee32(0x289));if(_0x17f637)_0x17f637['style'][_0x12ee32(0x115)]=_0x12ee32(0x3bd);App[_0x12ee32(0x31e)]={'idAluno':_0x3db6e8,'nomeAluno':_0x3ce899},await App[_0x12ee32(0x32f)](_0x12ee32(0x290));},'renderizarFrequenciaView':async(_0x2ef826,_0x4fa43e=null)=>{const _0xb992e5=a0_0x5d5ecf,{idAluno:_0x48d5d2,nomeAluno:_0x449a49}=App[_0xb992e5(0x31e)],_0x150f75=document['getElementById'](_0xb992e5(0xf2));try{if(!App[_0xb992e5(0x31e)][_0xb992e5(0x297)]){const [_0x21ae02,_0x593103]=await Promise[_0xb992e5(0x2c0)]([App['api'](_0xb992e5(0x20f)),App['api'](_0xb992e5(0x52a))]);App[_0xb992e5(0x31e)][_0xb992e5(0x297)]={'chamadas':_0x21ae02,'planejamentos':_0x593103};}const _0x57d21a=App[_0xb992e5(0x31e)]['dadosCache'][_0xb992e5(0x256)],_0x22e595=App[_0xb992e5(0x31e)][_0xb992e5(0x297)]['planejamentos'],_0x51d5e2=_0x57d21a[_0xb992e5(0x2d5)](_0xa8bd18=>_0xa8bd18[_0xb992e5(0x145)]===_0x48d5d2)[_0xb992e5(0x2d0)]((_0x414209,_0x4faddf)=>new Date(_0x4faddf['data'])-new Date(_0x414209[_0xb992e5(0x502)])),_0x753b4f=_0x22e595['filter'](_0x3c3827=>_0x3c3827[_0xb992e5(0x145)]===_0x48d5d2),_0x1ca674=_0x753b4f[_0xb992e5(0x2d5)](_0x4a2c8a=>_0x4a2c8a[_0xb992e5(0x2ec)]!==_0xb992e5(0x19c)),_0x252434=_0x753b4f['filter'](_0x2d18d2=>_0x2d18d2[_0xb992e5(0x2ec)]===_0xb992e5(0x19c)),_0x3fe7c8=document['querySelector'](_0xb992e5(0x397));if(_0x3fe7c8){const _0x9bcb91=_0x3fe7c8[_0xb992e5(0x23c)];document['querySelectorAll']('.btn-modal-dinamico')[_0xb992e5(0x52f)](_0x199ea2=>_0x199ea2[_0xb992e5(0x379)]());if(!_0x3fe7c8['dataset']['limpezaAtiva']){const _0x3a4a85=_0x3fe7c8[_0xb992e5(0x2b8)];_0x3fe7c8[_0xb992e5(0x2b8)]=function(_0x4766a0){const _0x426cda=_0xb992e5;document[_0x426cda(0x521)](_0x426cda(0x3c1))[_0x426cda(0x52f)](_0x27a6e5=>_0x27a6e5['remove']());if(_0x3a4a85)_0x3a4a85[_0x426cda(0x28b)](this,arguments);},_0x3fe7c8[_0xb992e5(0x388)][_0xb992e5(0x3da)]='true';}if(_0x2ef826===_0xb992e5(0x290)||_0x2ef826===_0xb992e5(0x3f5)){const _0xd7a38d=document[_0xb992e5(0x53a)](_0xb992e5(0x33c));_0xd7a38d['className']=_0xb992e5(0xfa),_0xd7a38d[_0xb992e5(0xec)]=_0xb992e5(0x246),_0xd7a38d[_0xb992e5(0x1c7)][_0xb992e5(0x508)]=_0xb992e5(0x258),_0xd7a38d[_0xb992e5(0x4b4)]=()=>_0xd7a38d[_0xb992e5(0x1c7)]['background']=_0xb992e5(0x3e4),_0xd7a38d['onmouseout']=()=>_0xd7a38d[_0xb992e5(0x1c7)]['background']=_0xb992e5(0x458),_0xd7a38d[_0xb992e5(0x2b8)]=()=>App[_0xb992e5(0x21d)](),_0x9bcb91['insertBefore'](_0xd7a38d,_0x3fe7c8);}if(_0x2ef826===_0xb992e5(0x290)&&_0x252434[_0xb992e5(0xe1)]>0x0){const _0x215a4c=document[_0xb992e5(0x53a)](_0xb992e5(0x33c));_0x215a4c['className']='btn-modal-dinamico',_0x215a4c[_0xb992e5(0xec)]=_0xb992e5(0x45d),_0x215a4c[_0xb992e5(0x1c7)][_0xb992e5(0x508)]=_0xb992e5(0x2ac),_0x215a4c[_0xb992e5(0x4b4)]=()=>_0x215a4c[_0xb992e5(0x1c7)]['background']=_0xb992e5(0x40c),_0x215a4c[_0xb992e5(0x13f)]=()=>_0x215a4c[_0xb992e5(0x1c7)]['background']=_0xb992e5(0x38b),_0x215a4c['onclick']=_0xb33379=>{const _0x4d8447=_0xb992e5;_0xb33379[_0x4d8447(0x245)][_0x4d8447(0xec)]=_0x4d8447(0x354),_0xb33379[_0x4d8447(0x245)][_0x4d8447(0x1c7)][_0x4d8447(0x4b7)]=_0x4d8447(0x4e8),setTimeout(()=>App['renderizarFrequenciaView'](_0x4d8447(0x19f)),0xa);},_0x9bcb91['insertBefore'](_0x215a4c,_0x3fe7c8);}else{if(_0x2ef826===_0xb992e5(0x19f)||_0x2ef826===_0xb992e5(0x3f5)){const _0x472a4a=_0x2ef826===_0xb992e5(0x19f),_0x857b0b=document[_0xb992e5(0x53a)](_0xb992e5(0x33c));_0x857b0b['className']=_0xb992e5(0xfa),_0x857b0b[_0xb992e5(0xec)]=_0x472a4a?_0xb992e5(0x581):_0xb992e5(0x1b2),_0x857b0b[_0xb992e5(0x1c7)][_0xb992e5(0x508)]=_0xb992e5(0x4cb),_0x857b0b[_0xb992e5(0x4b4)]=()=>_0x857b0b[_0xb992e5(0x1c7)][_0xb992e5(0x122)]=_0xb992e5(0x110),_0x857b0b['onmouseout']=()=>_0x857b0b[_0xb992e5(0x1c7)][_0xb992e5(0x122)]=_0xb992e5(0x281),_0x857b0b['onclick']=_0x554a39=>{const _0x33b154=_0xb992e5;_0x554a39[_0x33b154(0x245)][_0x33b154(0xec)]=_0x33b154(0x179),_0x554a39[_0x33b154(0x245)][_0x33b154(0x1c7)][_0x33b154(0x4b7)]=_0x33b154(0x4e8),setTimeout(()=>App['renderizarFrequenciaView'](_0x472a4a?_0x33b154(0x290):_0x33b154(0x19f)),0xa);},_0x9bcb91[_0xb992e5(0x323)](_0x857b0b,_0x3fe7c8);}}}if(_0x2ef826===_0xb992e5(0x19f)){document[_0xb992e5(0x21a)]('modal-titulo')['innerText']=_0xb992e5(0x3c6)+App[_0xb992e5(0x159)](_0x449a49);if(_0x252434[_0xb992e5(0xe1)]===0x0){_0x150f75['innerHTML']=_0xb992e5(0x53b);return;}let _0x182d7f=_0x252434['map'](_0x31353c=>{const _0x5cb71d=_0xb992e5;let _0x2a30e0=_0x5cb71d(0x199);return _0x31353c['aulas']&&_0x31353c['aulas']['length']>0x0&&(_0x2a30e0=_0x31353c[_0x5cb71d(0x446)][0x0][_0x5cb71d(0x502)]+'\x20até\x20'+_0x31353c[_0x5cb71d(0x446)][_0x31353c[_0x5cb71d(0x446)]['length']-0x1][_0x5cb71d(0x502)]),_0x5cb71d(0xe6)+_0x31353c['id']+_0x5cb71d(0x26d)+App[_0x5cb71d(0x159)](_0x31353c['disciplina']||_0x5cb71d(0x147))+_0x5cb71d(0x4e0)+_0x2a30e0+_0x5cb71d(0x364);})[_0xb992e5(0x358)]('');_0x150f75[_0xb992e5(0xec)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22max-height:50vh;\x20overflow-y:auto;\x20padding-right:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:13px;\x20color:#666;\x20margin-bottom:15px;\x20text-align:center;\x22>Selecione\x20um\x20planejamento\x20antigo\x20para\x20ver\x20o\x20dossiê\x20de\x20presenças.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x182d7f+_0xb992e5(0x101);return;}let _0x521d52=null,_0x4f29ae=_0xb992e5(0x4a3)+App['escapeHTML'](_0x449a49);if(_0x2ef826===_0xb992e5(0x290))_0x521d52=_0x1ca674['length']>0x0?_0x1ca674[0x0]:null;else _0x2ef826===_0xb992e5(0x3f5)&&(_0x521d52=_0x252434[_0xb992e5(0x12b)](_0x152e39=>_0x152e39['id']===_0x4fa43e),_0x4f29ae='🗄️\x20Arquivo:\x20'+App[_0xb992e5(0x159)](_0x449a49));document['getElementById'](_0xb992e5(0x24a))[_0xb992e5(0x4ab)]=_0x4f29ae;const _0x547a34=_0xadd9e7=>_0xadd9e7['split']('/')[_0xb992e5(0x3ca)]()[_0xb992e5(0x358)]('-');let _0xc1a9d5=_0x51d5e2;if(_0x521d52&&_0x521d52[_0xb992e5(0x446)]&&_0x521d52['aulas']['length']>0x0){const _0x2c1f02=_0x521d52[_0xb992e5(0x446)][_0xb992e5(0x3b0)](_0x433345=>_0x547a34(_0x433345['data']))['sort'](),_0x5a0272=_0x2c1f02[0x0],_0x35f7f4=_0x2c1f02[_0x2c1f02[_0xb992e5(0xe1)]-0x1];_0xc1a9d5=_0x51d5e2['filter'](_0x431c3d=>_0x431c3d[_0xb992e5(0x502)]>=_0x5a0272&&_0x431c3d[_0xb992e5(0x502)]<=_0x35f7f4);}else{if(_0x2ef826===_0xb992e5(0x290)&&_0x252434[_0xb992e5(0xe1)]>0x0){const _0x2ddbbe=_0x252434[_0xb992e5(0x3b0)](_0x3ea61e=>{const _0x53bc4b=_0xb992e5;if(!_0x3ea61e[_0x53bc4b(0x446)]||_0x3ea61e[_0x53bc4b(0x446)]['length']===0x0)return null;const _0x396bf6=_0x3ea61e[_0x53bc4b(0x446)]['map'](_0x117b57=>_0x547a34(_0x117b57[_0x53bc4b(0x502)]))[_0x53bc4b(0x2d0)]();return{'inicio':_0x396bf6[0x0],'fim':_0x396bf6[_0x396bf6[_0x53bc4b(0xe1)]-0x1]};})[_0xb992e5(0x2d5)](_0x7beeaa=>_0x7beeaa);_0xc1a9d5=_0x51d5e2[_0xb992e5(0x2d5)](_0x464c91=>{const _0x14b8ba=_0xb992e5;return!_0x2ddbbe[_0x14b8ba(0x3e7)](_0x5079f4=>_0x464c91[_0x14b8ba(0x502)]>=_0x5079f4['inicio']&&_0x464c91[_0x14b8ba(0x502)]<=_0x5079f4[_0x14b8ba(0x527)]);});}}let _0x179924=0x0,_0x21cdc3=0x0,_0x5d50e9=0x0,_0x153ad8='';if(_0xc1a9d5[_0xb992e5(0xe1)]===0x0)_0x153ad8=_0xb992e5(0x36b)+(_0x2ef826===_0xb992e5(0x290)?_0xb992e5(0x48c):'arquivo')+_0xb992e5(0x1ea);else{const _0x1646b6={},_0x1c0aee=[_0xb992e5(0x13c),_0xb992e5(0xff),_0xb992e5(0x1d5),'Abril','Maio',_0xb992e5(0x4bb),_0xb992e5(0x183),_0xb992e5(0x1f6),_0xb992e5(0x197),'Outubro',_0xb992e5(0x4aa),_0xb992e5(0x102)];_0xc1a9d5[_0xb992e5(0x52f)](_0x3343ed=>{const _0x52143c=_0xb992e5,_0x263567=new Date(_0x3343ed[_0x52143c(0x502)]+_0x52143c(0x157)),_0x6644e6=_0x1c0aee[_0x263567[_0x52143c(0x4bf)]()]+'\x20de\x20'+_0x263567[_0x52143c(0x3d6)]();if(!_0x1646b6[_0x6644e6])_0x1646b6[_0x6644e6]=[];_0x1646b6[_0x6644e6]['push'](_0x3343ed);let _0x438763=0x0;if(_0x3343ed['duracao']){const [_0xd5eec,_0x4be3b8]=_0x3343ed['duracao'][_0x52143c(0x193)](':');_0x438763=(parseInt(_0xd5eec)||0x0)*0x3c+(parseInt(_0x4be3b8)||0x0);}if(_0x3343ed[_0x52143c(0x2ec)]==='Presença'||_0x3343ed[_0x52143c(0x2ec)]===_0x52143c(0x43f))_0x179924+=_0x438763;else{if(_0x3343ed[_0x52143c(0x2ec)]===_0x52143c(0x1a7)||_0x3343ed[_0x52143c(0x2ec)]==='Justificada')_0x5d50e9+=_0x438763;else{if(_0x3343ed[_0x52143c(0x2ec)]===_0x52143c(0x31b))_0x21cdc3+=_0x438763;}}});for(const _0x37c274 in _0x1646b6){_0x153ad8+=_0xb992e5(0x337)+_0x37c274+_0xb992e5(0x18d),_0x153ad8+=_0xb992e5(0x1b3),_0x1646b6[_0x37c274][_0xb992e5(0x52f)](_0x2d3595=>{const _0x552ad4=_0xb992e5,_0x1682c4=_0x2d3595[_0x552ad4(0x502)][_0x552ad4(0x193)]('-')[_0x552ad4(0x3ca)]()[_0x552ad4(0x358)]('/'),_0x45e2b3=_0x2d3595[_0x552ad4(0x2ec)]===_0x552ad4(0x207)||_0x2d3595[_0x552ad4(0x2ec)]===_0x552ad4(0x43f)?_0x552ad4(0x458):_0x2d3595[_0x552ad4(0x2ec)]==='Falta'?'#e74c3c':_0x552ad4(0x113);_0x153ad8+=_0x552ad4(0x339)+_0x1682c4+_0x552ad4(0x26c)+_0x45e2b3+';\x22>'+_0x2d3595[_0x552ad4(0x2ec)]+_0x552ad4(0x3a5)+(_0x2d3595[_0x552ad4(0x14b)]||_0x552ad4(0x3fe))+'\x20h</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>';}),_0x153ad8+=_0xb992e5(0x35c);}}const _0x2cccce=_0x508abf=>String(Math['floor'](_0x508abf/0x3c))['padStart'](0x2,'0')+':'+String(_0x508abf%0x3c)[_0xb992e5(0x47c)](0x2,'0')+'\x20h',_0x40dda9=_0xb992e5(0x577)+_0x2cccce(_0x179924)+_0xb992e5(0x484)+_0x2cccce(_0x5d50e9)+_0xb992e5(0x162)+_0x2cccce(_0x21cdc3)+_0xb992e5(0x52d);_0x150f75[_0xb992e5(0xec)]=_0xb992e5(0x36d)+(_0x2ef826===_0xb992e5(0x290)&&_0x521d52?_0xb992e5(0x390):'')+_0xb992e5(0x36d)+(_0x2ef826===_0xb992e5(0x3f5)?_0xb992e5(0x3f0):'')+_0xb992e5(0x57e)+_0x153ad8+_0xb992e5(0xf5)+_0x40dda9+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20';}catch(_0x418061){_0x150f75['innerHTML']=_0xb992e5(0x3df);}},'imprimirDossieFrequencia':()=>{const _0x384d96=a0_0x5d5ecf,_0x167cbf=JSON[_0x384d96(0x48f)](localStorage[_0x384d96(0x598)](App[_0x384d96(0x11d)]('escola_perfil')))||{},_0x46d38d=_0x167cbf[_0x384d96(0x3c0)]||_0x384d96(0x3a3),_0x280b50=_0x167cbf[_0x384d96(0x46b)]?'CNPJ:\x20'+_0x167cbf[_0x384d96(0x46b)]:'',_0x80ba9b=_0x167cbf[_0x384d96(0x554)]&&_0x167cbf['foto'][_0x384d96(0xe1)]>0x32&&!_0x167cbf[_0x384d96(0x554)][_0x384d96(0x1b9)]('placehold')?_0x384d96(0x497)+_0x167cbf[_0x384d96(0x554)]+_0x384d96(0x427):'',_0x467739=document['getElementById']('modal-titulo')['innerText'],_0x3106dd=document[_0x384d96(0x21a)](_0x384d96(0xf2)),_0x4fb864=_0x3106dd[_0x384d96(0x239)](!![]),_0x3bc285=_0x4fb864[_0x384d96(0x521)](_0x384d96(0x370));_0x3bc285['forEach'](_0x5e3f19=>{const _0x3aceec=_0x384d96;_0x5e3f19[_0x3aceec(0x1c7)]['maxHeight']=_0x3aceec(0x3bd),_0x5e3f19[_0x3aceec(0x1c7)]['overflowY']='visible',_0x5e3f19['style']['paddingRight']='0';});const _0x3494ef=document[_0x384d96(0x53a)](_0x384d96(0x4b1));_0x3494ef[_0x384d96(0x1c7)][_0x384d96(0x3b6)]=_0x384d96(0x50b),_0x3494ef[_0x384d96(0x1c7)]['width']='0px',_0x3494ef[_0x384d96(0x1c7)][_0x384d96(0x373)]=_0x384d96(0x137),_0x3494ef['style'][_0x384d96(0x47d)]=_0x384d96(0x3bd),document[_0x384d96(0x584)][_0x384d96(0x15e)](_0x3494ef);const _0x4b1d14=_0x3494ef[_0x384d96(0x356)]['document'];_0x4b1d14[_0x384d96(0x1f3)](),_0x4b1d14['write'](_0x384d96(0x270)+_0x467739+'</title>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20body\x20{\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-family:\x20Arial,\x20sans-serif;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2030px;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#333;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20line-height:\x201.5;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20align-items:\x20center;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-bottom:\x202px\x20solid\x20#3498db;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding-bottom:\x2015px;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2025px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20img\x20{\x20margin-right:\x2020px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20h2\x20{\x20margin:\x200;\x20color:\x20#2c3e50;\x20font-size:\x2024px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20p\x20{\x20margin:\x205px\x200\x200\x200;\x20color:\x20#7f8c8d;\x20font-size:\x2014px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.titulo-doc\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-align:\x20center;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:\x20#2c3e50;\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20margin-bottom:\x2030px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20text-transform:\x20uppercase;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:\x2018px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20#f4f6f7;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:\x2010px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:\x208px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:\x20bold;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20/*\x20Configurações\x20perfeitas\x20para\x20folha\x20A4\x20*/\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@media\x20print\x20{\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20body\x20{\x20padding:\x200;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@page\x20{\x20margin:\x2015mm;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20/*\x20Evita\x20que\x20o\x20resumo\x20fique\x20dividido\x20em\x20duas\x20folhas\x20*/\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.kpi-container\x20{\x20page-break-inside:\x20avoid\x20!important;\x20margin-top:\x2030px\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20table\x20{\x20page-break-inside:\x20auto;\x20width:\x20100%;\x20border-collapse:\x20collapse;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20tr\x20{\x20page-break-inside:\x20avoid;\x20page-break-after:\x20auto;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</head>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<body>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22header-escola\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x80ba9b+_0x384d96(0x11c)+App[_0x384d96(0x159)](_0x46d38d)+_0x384d96(0x3a4)+App[_0x384d96(0x159)](_0x280b50)+_0x384d96(0x195)+_0x467739+'</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x4fb864[_0x384d96(0xec)]+_0x384d96(0x2b6)+new Date()[_0x384d96(0x32a)](_0x384d96(0x39b))+_0x384d96(0x2b4)),_0x4b1d14['close'](),setTimeout(()=>{const _0x498fad=_0x384d96;_0x3494ef[_0x498fad(0x356)][_0x498fad(0x5a9)](),_0x3494ef[_0x498fad(0x356)][_0x498fad(0x2db)](),setTimeout(()=>{const _0x40e982=_0x498fad;document[_0x40e982(0x584)][_0x40e982(0x47f)](_0x3494ef);},0x5dc);},0x1f4);},'abrirModalVenda':async(_0x57fcdb,_0x4059bf)=>{const _0x2370fc=a0_0x5d5ecf,_0x523456=document[_0x2370fc(0x21a)](_0x2370fc(0x26b));if(_0x523456)_0x523456[_0x2370fc(0x1c7)][_0x2370fc(0x115)]='flex';document[_0x2370fc(0x21a)](_0x2370fc(0x24a))[_0x2370fc(0x4ab)]=_0x2370fc(0x4a2)+App[_0x2370fc(0x159)](_0x4059bf),document[_0x2370fc(0x21a)](_0x2370fc(0xf2))['innerHTML']=_0x2370fc(0x48a);try{const _0x5795d5=await App[_0x2370fc(0x4e9)](_0x2370fc(0x43d)),_0x1e5113=Array['isArray'](_0x5795d5)?_0x5795d5:[];let _0x374817=_0x2370fc(0x3ab);_0x1e5113[_0x2370fc(0x52f)](_0x3e620b=>{const _0x4f5c4d=_0x2370fc,_0xd125c0=parseInt(_0x3e620b[_0x4f5c4d(0x441)])||0x0,_0x360f7e=parseFloat(_0x3e620b[_0x4f5c4d(0x202)])||0x0;_0x374817+=_0x4f5c4d(0x18c)+_0x3e620b['id']+_0x4f5c4d(0x28c)+App[_0x4f5c4d(0x159)](_0x3e620b[_0x4f5c4d(0x3c0)])+_0x4f5c4d(0x33e)+_0x360f7e+_0x4f5c4d(0x576)+App[_0x4f5c4d(0x159)](_0x3e620b[_0x4f5c4d(0x3c0)])+_0x4f5c4d(0xe9)+_0xd125c0+_0x4f5c4d(0x224)+_0x360f7e[_0x4f5c4d(0x1af)](0x2)+_0x4f5c4d(0x2a7);}),_0x374817+=_0x2370fc(0x403);const _0x42e307=new Date()[_0x2370fc(0x479)]()['split']('T')[0x0],_0x54ce3b=_0x2370fc(0x1c3)+_0x374817+_0x2370fc(0x50f)+_0x42e307+_0x2370fc(0x17a)+App[_0x2370fc(0x159)](_0x57fcdb)+_0x2370fc(0x2a2)+App[_0x2370fc(0x159)](_0x4059bf)+'\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>';document[_0x2370fc(0x21a)](_0x2370fc(0xf2))[_0x2370fc(0xec)]=_0x54ce3b;const _0x3782e2=document['querySelector'](_0x2370fc(0x289));_0x3782e2['setAttribute']('onclick',_0x2370fc(0x4e6)),_0x3782e2['innerHTML']='💾\x20Registrar\x20Venda',_0x3782e2[_0x2370fc(0x1c7)][_0x2370fc(0x115)]=_0x2370fc(0x518);}catch(_0x344da3){document['getElementById'](_0x2370fc(0xf2))[_0x2370fc(0xec)]='<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20carregar\x20o\x20estoque.</p>';}},'selecionarItemVenda':_0x177d4d=>{const _0x39b1a1=a0_0x5d5ecf,_0x480892=document[_0x39b1a1(0x21a)](_0x39b1a1(0x29b)),_0x48f303=document[_0x39b1a1(0x21a)](_0x39b1a1(0x196)),_0x298f65=document[_0x39b1a1(0x21a)]('v-item-id');if(_0x177d4d['value']===_0x39b1a1(0x2f0))_0x480892['style'][_0x39b1a1(0x115)]=_0x39b1a1(0x25e),_0x480892[_0x39b1a1(0x4c9)]='',_0x48f303[_0x39b1a1(0x4c9)]='',_0x298f65[_0x39b1a1(0x4c9)]='',_0x480892[_0x39b1a1(0x5a9)]();else{if(_0x177d4d[_0x39b1a1(0x4c9)]!==''){_0x480892[_0x39b1a1(0x1c7)][_0x39b1a1(0x115)]=_0x39b1a1(0x3bd);const _0x546a2b=_0x177d4d[_0x39b1a1(0x36a)][_0x177d4d['selectedIndex']];_0x480892[_0x39b1a1(0x4c9)]=_0x546a2b[_0x39b1a1(0x473)](_0x39b1a1(0x4df)),_0x48f303[_0x39b1a1(0x4c9)]=_0x546a2b['getAttribute'](_0x39b1a1(0x2b7)),_0x298f65['value']=_0x177d4d[_0x39b1a1(0x4c9)];}else _0x480892[_0x39b1a1(0x1c7)][_0x39b1a1(0x115)]='none',_0x480892[_0x39b1a1(0x4c9)]='',_0x48f303[_0x39b1a1(0x4c9)]='',_0x298f65['value']='';}},'salvarVenda':async()=>{const _0x14e82d=a0_0x5d5ecf,_0x3cd2e9=document[_0x14e82d(0x21a)](_0x14e82d(0x2cb))[_0x14e82d(0x4c9)],_0x250bc3=document[_0x14e82d(0x21a)](_0x14e82d(0x485))[_0x14e82d(0x4c9)],_0x10a7fb=document[_0x14e82d(0x21a)](_0x14e82d(0x29b))[_0x14e82d(0x4c9)][_0x14e82d(0xfc)](),_0x1f5da2=document[_0x14e82d(0x21a)](_0x14e82d(0x3c5))[_0x14e82d(0x4c9)],_0x19d327=document[_0x14e82d(0x21a)](_0x14e82d(0x196))[_0x14e82d(0x4c9)],_0x27d07e=document[_0x14e82d(0x21a)](_0x14e82d(0x361))[_0x14e82d(0x4c9)],_0x579948=document[_0x14e82d(0x21a)](_0x14e82d(0x46d))[_0x14e82d(0x4c9)],_0x5a7c76=document[_0x14e82d(0x21a)](_0x14e82d(0x543))[_0x14e82d(0x4c9)];if(!_0x10a7fb||!_0x19d327||!_0x27d07e)return App[_0x14e82d(0x424)](_0x14e82d(0x57a),_0x14e82d(0x1b4));const _0x51a537=_0x579948===_0x14e82d(0x1ef)?_0x14e82d(0x42f):'Pago',_0x500fe3=_0x14e82d(0x1d0)+_0x10a7fb+_0x14e82d(0x363)+_0x579948+'\x20'+(_0x5a7c76?'\x20|\x20Obs:\x20'+_0x5a7c76:''),_0x4fbd6a={'id':window[_0x14e82d(0x27e)][_0x14e82d(0x1cd)](),'idCarne':_0x14e82d(0xed)+window[_0x14e82d(0x27e)][_0x14e82d(0x1cd)]()['split']('-')[0x0][_0x14e82d(0x3a7)](),'idAluno':_0x3cd2e9,'alunoNome':_0x250bc3,'valor':_0x19d327,'vencimento':_0x27d07e,'status':_0x51a537,'descricao':_0x500fe3,'tipo':_0x14e82d(0x47a),'dataGeracao':new Date()[_0x14e82d(0x1bc)]('pt-BR')},_0x55567=document['querySelector'](_0x14e82d(0x289)),_0x963fe3=_0x55567?_0x55567['innerHTML']:_0x14e82d(0x191);_0x55567&&(_0x55567[_0x14e82d(0xec)]='⏳\x20Registrando...',_0x55567[_0x14e82d(0x1e1)]=!![]);document[_0x14e82d(0x584)]['style'][_0x14e82d(0x55c)]=_0x14e82d(0x3f3);try{await App[_0x14e82d(0x4e9)](_0x14e82d(0x3a2),_0x14e82d(0x401),_0x4fbd6a);if(_0x1f5da2){const _0x25978b=await App[_0x14e82d(0x4e9)](_0x14e82d(0x33a)+_0x1f5da2);if(_0x25978b&&_0x25978b['id']){let _0x568ab3=parseInt(_0x25978b['quantidade'])||0x0;if(_0x568ab3>0x0)_0x568ab3-=0x1;await App['api'](_0x14e82d(0x33a)+_0x1f5da2,'PUT',{..._0x25978b,'quantidade':_0x568ab3});}}App[_0x14e82d(0x424)]('Venda\x20registrada\x20e\x20baixa\x20no\x20estoque\x20efetuada!','success'),App['fecharModal']();}catch(_0x50f098){App[_0x14e82d(0x424)](_0x14e82d(0x1e8),_0x14e82d(0x1b4));}finally{_0x55567&&(_0x55567[_0x14e82d(0xec)]=_0x963fe3,_0x55567[_0x14e82d(0x1e1)]=![]),document['body'][_0x14e82d(0x1c7)][_0x14e82d(0x55c)]=_0x14e82d(0x14c);}},'renderizarLista':async _0x5c082f=>{const _0x5622b6=a0_0x5d5ecf;if(!App[_0x5622b6(0x252)]){App[_0x5622b6(0x13d)]();return;}if(document[_0x5622b6(0x382)](_0x5622b6(0x16d)))document[_0x5622b6(0x382)](_0x5622b6(0x16d))[_0x5622b6(0xdc)][_0x5622b6(0x379)](_0x5622b6(0x344));if(document[_0x5622b6(0x382)](_0x5622b6(0x50c)))document[_0x5622b6(0x382)]('.mobile-overlay')['classList'][_0x5622b6(0x379)](_0x5622b6(0x344));App[_0x5622b6(0x559)]=_0x5c082f;const _0x376fe1=_0x5c082f['charAt'](0x0)['toUpperCase']()+_0x5c082f['slice'](0x1)+'s';App['setTitulo'](_0x5622b6(0x12d)+_0x376fe1);const _0x50d00d=document['getElementById'](_0x5622b6(0x214)),_0x6a21f4=_0x5c082f===_0x5622b6(0x3c2)?_0x5622b6(0x3c2):_0x5c082f+'s';try{App[_0x5622b6(0x57d)]=await App[_0x5622b6(0x4e9)]('/'+_0x6a21f4);const _0x182bde=_0x5c082f===_0x5622b6(0x3c2)?_0x5622b6(0x42b):_0x5622b6(0x308)+_0x5c082f+'\x27)',_0xf4e24e=_0x5622b6(0x1f0)+_0x182bde+_0x5622b6(0x233);_0x50d00d[_0x5622b6(0xec)]='<div\x20style=\x22text-align:center;\x20margin-bottom:30px;\x22>'+App['UI'][_0x5622b6(0x2c5)](_0x5622b6(0x1c9)+_0x376fe1,'Utilize\x20o\x20campo\x20abaixo\x20para\x20localizar\x20registros.',_0xf4e24e,'100%')+_0x5622b6(0x3ae),App['filtrarTabelaReativa']();}catch(_0x331706){_0x50d00d[_0x5622b6(0xec)]=_0x5622b6(0x20c);}},'filtrarTabelaReativa':()=>{const _0x56ccda=a0_0x5d5ecf,_0x56f52f=document[_0x56ccda(0x21a)](_0x56ccda(0x1eb))[_0x56ccda(0x4c9)]['trim']()['toLowerCase'](),_0x625941=document[_0x56ccda(0x21a)]('container-tabela');if(!Array[_0x56ccda(0x3ef)](App['listaCache'])){_0x625941['innerHTML']='';return;}const _0x38002a=_0x56f52f['length']===0x0?App[_0x56ccda(0x57d)]:App[_0x56ccda(0x57d)][_0x56ccda(0x2d5)](_0x32544f=>{const _0x445b25=_0x56ccda,_0x13c2ee=(_0x32544f[_0x445b25(0x3c0)]||_0x32544f[_0x445b25(0x487)]||_0x32544f[_0x445b25(0x330)]||'')[_0x445b25(0x19e)]();return _0x13c2ee[_0x445b25(0x1b9)](_0x56f52f);});_0x625941['innerHTML']=_0x56ccda(0x476)+App[_0x56ccda(0x51d)](_0x38002a)+_0x56ccda(0x18d);},'gerarTabelaHTML':_0x2f5f33=>{const _0x354881=a0_0x5d5ecf;if(!_0x2f5f33[_0x354881(0xe1)])return _0x354881(0x2b9);const _0x224aea=App['entidadeAtual'],_0x5aab52={'estrutura':(_0x5cb3df,_0x563020)=>'<div\x20class=\x22table-responsive-wrapper\x22><table\x20style=\x22width:100%;\x20border-collapse:collapse;\x22><thead><tr>'+_0x5cb3df+_0x354881(0x5b2)+_0x563020+'</tbody></table></div>','th':(_0x392cfb,_0x5136b3=_0x354881(0x447))=>_0x354881(0x15f)+_0x5136b3+_0x354881(0x10e)+_0x392cfb+_0x354881(0x2b3),'td':(_0x3f8578,_0x22669c=_0x354881(0x447))=>'<td\x20style=\x22text-align:'+_0x22669c+_0x354881(0x274)+_0x3f8578+_0x354881(0x570),'tr':_0x5639a3=>_0x354881(0x111)+_0x5639a3+_0x354881(0x4fb),'acoes':_0x4f9a21=>_0x354881(0x42a)+_0x4f9a21[_0x354881(0x358)]('')+_0x354881(0x18d),'btn':(_0x13fc02,_0x55a15b,_0x11f5f8,_0x4873df)=>_0x354881(0x171)+_0x55a15b+_0x354881(0x25a)+_0x11f5f8+_0x354881(0x55d)+_0x4873df+'\x22>'+_0x13fc02+_0x354881(0x53c)};let _0x3ec94f='';if(_0x224aea==='aluno')_0x3ec94f=_0x5aab52['th']('Nome')+_0x5aab52['th']('Turma')+_0x5aab52['th'](_0x354881(0x465))+_0x5aab52['th'](_0x354881(0x1f7))+_0x5aab52['th'](_0x354881(0x187),_0x354881(0x26f));if(_0x224aea==='turma')_0x3ec94f=_0x5aab52['th'](_0x354881(0x14d))+_0x5aab52['th'](_0x354881(0x153))+_0x5aab52['th'](_0x354881(0x4ce))+_0x5aab52['th'](_0x354881(0x56e))+_0x5aab52['th'](_0x354881(0x187),_0x354881(0x26f));if(_0x224aea===_0x354881(0x130))_0x3ec94f=_0x5aab52['th'](_0x354881(0x56e))+_0x5aab52['th'](_0x354881(0x1aa))+_0x5aab52['th'](_0x354881(0x187),_0x354881(0x26f));if(_0x224aea===_0x354881(0x3c2))_0x3ec94f=_0x5aab52['th'](_0x354881(0x321))+_0x5aab52['th'](_0x354881(0x355))+_0x5aab52['th'](_0x354881(0x27f))+_0x5aab52['th'](_0x354881(0x2bf))+_0x5aab52['th'](_0x354881(0x465))+_0x5aab52['th'](_0x354881(0x187),_0x354881(0x26f));if(_0x224aea===_0x354881(0x20b))_0x3ec94f=_0x5aab52['th'](_0x354881(0x3e9))+_0x5aab52['th'](_0x354881(0x18b))+_0x5aab52['th'](_0x354881(0x506))+_0x5aab52['th'](_0x354881(0x3bc))+_0x5aab52['th']('Valor')+_0x5aab52['th'](_0x354881(0x465))+_0x5aab52['th'](_0x354881(0x187),_0x354881(0x26f));const _0x502c93=_0x2f5f33[_0x354881(0x3b0)](_0x3562ef=>{const _0x21cf03=_0x354881;let _0x22df25='';if(_0x224aea===_0x21cf03(0x26e)){const _0x40d9b4=_0x3562ef[_0x21cf03(0x2ec)]||_0x21cf03(0x39e),_0x5433d1=_0x40d9b4===_0x21cf03(0x39e)?_0x21cf03(0x458):_0x40d9b4==='Trancado'?_0x21cf03(0x113):'#e74c3c',_0x3479c7=_0x21cf03(0x1fd)+_0x5433d1+_0x21cf03(0x249)+_0x5433d1+_0x21cf03(0x393)+_0x5433d1+_0x21cf03(0x25d)+_0x40d9b4+_0x21cf03(0x3ec);_0x22df25+=_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x3c0)]))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x580)]||'-'))+_0x5aab52['td'](_0x3479c7)+_0x5aab52['td'](App['escapeHTML'](_0x3562ef['whatsapp']||'-'));}else{if(_0x224aea==='turma')_0x22df25+=_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x3c0)]))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x481)]||'-'))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x37b)]||'-'))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef['curso']||'-'));else{if(_0x224aea===_0x21cf03(0x130))_0x22df25+=_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef['nome']))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x421)]||'-'));else{if(_0x224aea===_0x21cf03(0x3c2)){const _0x46e86f=_0x3562ef[_0x21cf03(0x4f8)]?_0x3562ef[_0x21cf03(0x4f8)][_0x21cf03(0x193)]('-')[_0x21cf03(0x3ca)]()[_0x21cf03(0x358)]('/'):'-',_0x3474e5=_0x21cf03(0x257)+parseFloat(_0x3562ef[_0x21cf03(0x202)])[_0x21cf03(0x32a)](_0x21cf03(0x39b),{'minimumFractionDigits':0x2}),_0x30f05a=_0x21cf03(0x400)+(_0x3562ef['status']==='Pago'?_0x21cf03(0x458):_0x21cf03(0x3fc))+_0x21cf03(0x54b)+(_0x3562ef[_0x21cf03(0x2ec)]===_0x21cf03(0x240)?'#eafaf1':_0x21cf03(0x594))+_0x21cf03(0x375)+App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x2ec)])+_0x21cf03(0x3ec);_0x22df25+=_0x5aab52['td'](App['escapeHTML'](_0x3562ef[_0x21cf03(0x487)]||_0x21cf03(0x4b0)))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x330)]))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x46e86f))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3474e5))+_0x5aab52['td'](_0x30f05a);}else{if(_0x224aea===_0x21cf03(0x20b)){const _0x336640=parseInt(_0x3562ef[_0x21cf03(0x441)])||0x0,_0x24580b=parseInt(_0x3562ef[_0x21cf03(0x480)])||0x0,_0x5ced58=_0x336640<=_0x24580b?_0x21cf03(0x1d7):'<span\x20style=\x22color:#27ae60;\x20font-weight:bold;\x20background:#eafaf1;\x20padding:4px\x208px;\x20border-radius:4px;\x20font-size:12px;\x22>✅\x20Normal</span>',_0x27e102=_0x3562ef[_0x21cf03(0x202)]?_0x21cf03(0x257)+parseFloat(_0x3562ef[_0x21cf03(0x202)])[_0x21cf03(0x32a)](_0x21cf03(0x39b),{'minimumFractionDigits':0x2}):'-';_0x22df25+=_0x5aab52['td'](App['escapeHTML'](_0x3562ef[_0x21cf03(0x3c0)]))+_0x5aab52['td'](App[_0x21cf03(0x159)](_0x3562ef[_0x21cf03(0x444)]||'-'))+_0x5aab52['td'](_0x336640,_0x21cf03(0x564))+_0x5aab52['td'](_0x24580b,_0x21cf03(0x564))+_0x5aab52['td'](_0x27e102)+_0x5aab52['td'](_0x5ced58,_0x21cf03(0x564));}}}}}const _0x54eff3=_0x224aea===_0x21cf03(0x3c2)?'financeiro':_0x224aea+'s',_0x4c654e=_0x224aea===_0x21cf03(0x3c2)?_0x21cf03(0x4a5)+_0x3562ef['id']+'\x27)':_0x21cf03(0x308)+_0x224aea+'\x27,\x20\x27'+_0x3562ef['id']+'\x27)',_0x19b590=(_0x3562ef['nome']||'')['replace'](/'/g,'\x5c\x27');let _0x48c657=[];if(_0x224aea===_0x21cf03(0x26e)){const _0x3cdc44=_0x3562ef['status']||_0x21cf03(0x39e);_0x48c657['push'](_0x5aab52[_0x21cf03(0x4a6)]('🔄',_0x21cf03(0x273),'App.alterarStatusAluno(\x27'+_0x3562ef['id']+_0x21cf03(0x435)+_0x3cdc44+'\x27)',_0x21cf03(0x587))),_0x48c657[_0x21cf03(0x316)](_0x5aab52[_0x21cf03(0x4a6)]('⏱️',_0x21cf03(0x281),_0x21cf03(0x522)+_0x3562ef['id']+_0x21cf03(0x435)+App[_0x21cf03(0x159)](_0x19b590)+'\x27)',_0x21cf03(0x544))),App[_0x21cf03(0x252)]['tipo']!==_0x21cf03(0x3cb)&&_0x3cdc44===_0x21cf03(0x39e)&&_0x48c657['push'](_0x5aab52[_0x21cf03(0x4a6)]('🛒',_0x21cf03(0x458),_0x21cf03(0x3c7)+_0x3562ef['id']+'\x27,\x20\x27'+App[_0x21cf03(0x159)](_0x19b590)+'\x27)',_0x21cf03(0x33f)));}if(_0x224aea===_0x21cf03(0x3c2))_0x48c657['push'](_0x5aab52['btn']('💬',_0x21cf03(0x434),_0x21cf03(0x530)+_0x3562ef['id']+'\x27)','Avisar\x20por\x20WhatsApp'));return _0x48c657[_0x21cf03(0x316)](_0x5aab52[_0x21cf03(0x4a6)]('✏️',_0x21cf03(0x113),_0x4c654e,_0x21cf03(0x25c))),_0x48c657[_0x21cf03(0x316)](_0x5aab52[_0x21cf03(0x4a6)](_0x21cf03(0x45e),_0x21cf03(0x3fc),_0x21cf03(0x552)+_0x54eff3+_0x21cf03(0x435)+_0x3562ef['id']+'\x27)',_0x21cf03(0x2d9))),_0x22df25+=_0x5aab52['td'](_0x5aab52['acoes'](_0x48c657),_0x21cf03(0x26f)),_0x5aab52['tr'](_0x22df25);})[_0x354881(0x358)]('');return _0x5aab52[_0x354881(0x4a4)](_0x3ec94f,_0x502c93);},'excluir':(_0x1d0e1f,_0x8f8de2)=>{const _0xdac0b4=a0_0x5d5ecf;App['abrirModalConfirmacao'](_0xdac0b4(0x168),_0xdac0b4(0x549),async _0x37c128=>{const _0x33bbbb=_0xdac0b4;document[_0x33bbbb(0x584)][_0x33bbbb(0x1c7)][_0x33bbbb(0x55c)]=_0x33bbbb(0x3f3);try{const _0x2fe706=await App[_0x33bbbb(0x4e9)]('/'+_0x1d0e1f+'/'+_0x8f8de2,_0x33bbbb(0x181));if(_0x2fe706&&_0x2fe706[_0x33bbbb(0x1b4)])App[_0x33bbbb(0x424)](_0x2fe706['error'],_0x33bbbb(0x1b4));else{App[_0x33bbbb(0x424)]('Excluído\x20com\x20sucesso!',_0x33bbbb(0x553));const _0x303f39=_0x1d0e1f===_0x33bbbb(0x3c2)?_0x33bbbb(0x3c2):_0x1d0e1f[_0x33bbbb(0x37c)](0x0,-0x1),_0x1b1134=document[_0x33bbbb(0x21a)](_0x33bbbb(0x214));_0x1b1134&&(_0x1b1134[_0x33bbbb(0xec)]=_0x33bbbb(0x1c5)),await App[_0x33bbbb(0x58b)](_0x303f39);}}catch(_0x5b4729){App[_0x33bbbb(0x424)](_0x33bbbb(0x514),_0x33bbbb(0x1b4));}finally{document[_0x33bbbb(0x584)]['style'][_0x33bbbb(0x55c)]=_0x33bbbb(0x14c),_0x37c128['style'][_0x33bbbb(0x4b7)]='0',setTimeout(()=>_0x37c128[_0x33bbbb(0x1c7)][_0x33bbbb(0x115)]=_0x33bbbb(0x3bd),0x12c);}});},'alterarStatusAluno':(_0x39b0b8,_0x169a1e)=>{const _0xeb099e=a0_0x5d5ecf,_0xec87d1=document[_0xeb099e(0x21a)](_0xeb099e(0x26b));if(_0xec87d1)_0xec87d1['style'][_0xeb099e(0x115)]=_0xeb099e(0x141);document['getElementById'](_0xeb099e(0x24a))[_0xeb099e(0x4ab)]=_0xeb099e(0x254);const _0x5e4e27={'Ativo':{'icon':'🟢','color':'#27ae60','desc':'Aluno\x20matriculado\x20e\x20assistindo\x20aulas.'},'Trancado':{'icon':'🟡','color':'#f39c12','desc':_0xeb099e(0x40e)},'Cancelado':{'icon':'🔴','color':_0xeb099e(0x3fc),'desc':_0xeb099e(0x56b)}},_0x2fc159=Object[_0xeb099e(0x44d)](_0x5e4e27)[_0xeb099e(0x3b0)](([_0x43ea4b,_0xcd458f])=>_0xeb099e(0x1b8)+_0x43ea4b+_0xeb099e(0x3b4)+_0xcd458f[_0xeb099e(0x235)]+'</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:\x20bold;\x20color:\x20'+_0xcd458f[_0xeb099e(0x55a)]+_0xeb099e(0x30f)+_0x43ea4b+_0xeb099e(0x247)+_0xcd458f[_0xeb099e(0x3d5)]+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22selection-indicator\x22\x20style=\x22width:\x2020px;\x20height:\x2020px;\x20border-radius:\x2050%;\x20border:\x202px\x20solid\x20#ccc;\x20display:\x20flex;\x20align-items:\x20center;\x20justify-content:\x20center;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20')[_0xeb099e(0x358)](''),_0x39ee12=_0xeb099e(0x244)+(_0x5e4e27[_0x169a1e]?_0x5e4e27[_0x169a1e][_0xeb099e(0x55a)]:_0xeb099e(0x219))+_0xeb099e(0x309)+_0x169a1e+_0xeb099e(0x2fe)+_0x2fc159+_0xeb099e(0x3b5)+_0x39b0b8+'\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22status-student-orig\x22\x20value=\x22'+_0x169a1e+_0xeb099e(0x109);document[_0xeb099e(0x21a)](_0xeb099e(0xf2))[_0xeb099e(0xec)]=_0x39ee12;if(_0x5e4e27[_0x169a1e]){const _0x224389=document[_0xeb099e(0x382)]('.status-option-card[data-status=\x22'+_0x169a1e+'\x22]');if(_0x224389)App[_0xeb099e(0x4ee)](_0x224389);}const _0x1070fc=document['querySelector'](_0xeb099e(0x289));_0x1070fc[_0xeb099e(0x186)]('onclick','App.confirmarAlteracaoStatus()'),_0x1070fc[_0xeb099e(0x4ab)]=_0xeb099e(0x2e4),_0x1070fc['style']['display']='inline-flex';},'selecionarOpcaoStatus':_0x2670dc=>{const _0x24bc82=a0_0x5d5ecf;document[_0x24bc82(0x521)](_0x24bc82(0x3bb))[_0x24bc82(0x52f)](_0x448129=>{const _0x368f69=_0x24bc82;_0x448129[_0x368f69(0x1c7)][_0x368f69(0x204)]='#eee',_0x448129['style'][_0x368f69(0x122)]=_0x368f69(0x234),_0x448129[_0x368f69(0x382)]('span[style*=\x22font-size:\x2032px\x22]')[_0x368f69(0x1c7)]['filter']=_0x368f69(0x22f),_0x448129[_0x368f69(0x382)](_0x368f69(0x2f1))[_0x368f69(0xec)]='',_0x448129[_0x368f69(0x382)]('.selection-indicator')[_0x368f69(0x1c7)]['borderColor']=_0x368f69(0x253),_0x448129['querySelector'](_0x368f69(0x2f1))[_0x368f69(0x1c7)][_0x368f69(0x122)]='white';});const _0x3a8907=_0x2670dc[_0x24bc82(0x473)]('data-status'),_0xa93aa1=_0x2670dc[_0x24bc82(0x382)]('div[style*=\x22font-weight:\x20bold\x22]'),_0x320838=_0xa93aa1[_0x24bc82(0x1c7)]['color'];_0x2670dc['style'][_0x24bc82(0x204)]=_0x320838,_0x2670dc[_0x24bc82(0x1c7)][_0x24bc82(0x122)]=_0x320838+'05',_0x2670dc['querySelector']('span[style*=\x22font-size:\x2032px\x22]')[_0x24bc82(0x1c7)][_0x24bc82(0x2d5)]=_0x24bc82(0x25f),_0x2670dc[_0x24bc82(0x382)](_0x24bc82(0x2f1))[_0x24bc82(0xec)]=_0x24bc82(0x32c)+_0x320838+_0x24bc82(0x34a),_0x2670dc[_0x24bc82(0x382)]('.selection-indicator')['style'][_0x24bc82(0x204)]=_0x320838,document[_0x24bc82(0x21a)](_0x24bc82(0x166))[_0x24bc82(0x186)](_0x24bc82(0x407),_0x3a8907);},'confirmarAlteracaoStatus':async()=>{const _0x8d6181=a0_0x5d5ecf,_0x770793=document[_0x8d6181(0x21a)](_0x8d6181(0x156)),_0x3a3b79=document[_0x8d6181(0x21a)]('status-student-orig'),_0xf12a99=document[_0x8d6181(0x21a)](_0x8d6181(0x166));if(!_0x770793||!_0xf12a99)return App[_0x8d6181(0x424)](_0x8d6181(0x380),_0x8d6181(0x1b4));const _0x30e8bd=_0x770793[_0x8d6181(0x4c9)],_0x201237=_0x3a3b79?_0x3a3b79[_0x8d6181(0x4c9)]:'',_0x137f0a=_0xf12a99[_0x8d6181(0x473)](_0x8d6181(0x407));if(!_0x137f0a)return App['showToast'](_0x8d6181(0x35b),'warning');if(_0x137f0a===_0x201237)return App['showToast'](_0x8d6181(0x4cc),_0x8d6181(0x2e2));const _0x2c0c52=document[_0x8d6181(0x382)]('.btn-confirm'),_0x338ea1=_0x2c0c52?_0x2c0c52[_0x8d6181(0x4ab)]:_0x8d6181(0xe2);_0x2c0c52&&(_0x2c0c52[_0x8d6181(0x4ab)]=_0x8d6181(0x29e),_0x2c0c52[_0x8d6181(0x1e1)]=!![]);document['body']['style'][_0x8d6181(0x55c)]=_0x8d6181(0x3f3);try{const _0x23e19f=await App[_0x8d6181(0x4e9)]('/alunos/'+_0x30e8bd);if(!_0x23e19f||_0x23e19f['error'])throw new Error(_0x8d6181(0x563));await App[_0x8d6181(0x4e9)](_0x8d6181(0x4e5)+_0x30e8bd,'PUT',{..._0x23e19f,'status':_0x137f0a}),App[_0x8d6181(0x424)](_0x8d6181(0x48e)+_0x137f0a+'.',_0x8d6181(0x553)),App['fecharModal']();if(Array[_0x8d6181(0x3ef)](App[_0x8d6181(0x37f)])){const _0x3917c8=App['cacheAlunos'][_0x8d6181(0x41e)](_0x17bebd=>_0x17bebd['id']===_0x30e8bd);if(_0x3917c8!==-0x1)App['cacheAlunos'][_0x3917c8]['status']=_0x137f0a;}if(Array[_0x8d6181(0x3ef)](App[_0x8d6181(0x57d)])){const _0x299e9a=App[_0x8d6181(0x57d)][_0x8d6181(0x41e)](_0x16079d=>_0x16079d['id']===_0x30e8bd);if(_0x299e9a!==-0x1)App[_0x8d6181(0x57d)][_0x299e9a][_0x8d6181(0x2ec)]=_0x137f0a;}if(typeof App[_0x8d6181(0x3f1)]===_0x8d6181(0x405))App[_0x8d6181(0x3f1)]();else typeof App[_0x8d6181(0x58b)]===_0x8d6181(0x405)?App[_0x8d6181(0x58b)](_0x8d6181(0x26e)):setTimeout(()=>window['location']['reload'](),0x1f4);App[_0x8d6181(0x574)](),document['getElementById'](_0x8d6181(0x4fd))&&document[_0x8d6181(0x21a)](_0x8d6181(0x4fd))[_0x8d6181(0x4ab)]===_0x8d6181(0x1c8)&&App[_0x8d6181(0x451)]();}catch(_0x3be88f){console['error'](_0x8d6181(0x217),_0x3be88f),App[_0x8d6181(0x424)](_0x8d6181(0x260),_0x8d6181(0x1b4));}finally{_0x2c0c52&&(_0x2c0c52[_0x8d6181(0x4ab)]=_0x338ea1,_0x2c0c52[_0x8d6181(0x1e1)]=![]),document[_0x8d6181(0x584)][_0x8d6181(0x1c7)]['cursor']='default';}},'atualizarUIHeader':_0x4b61bd=>{const _0x4beaab=a0_0x5d5ecf;if(!_0x4b61bd)return;const _0xed203d=document['querySelector']('.logo-area\x20h2'),_0x33c288=_0x4b61bd[_0x4beaab(0x21f)]||'Teste';let _0x5d6a12=_0x33c288===_0x4beaab(0x58f)?'#f39c12':_0x33c288===_0x4beaab(0x22c)?_0x4beaab(0x281):_0x33c288===_0x4beaab(0x29a)?_0x4beaab(0x3fc):_0x4beaab(0x458);const _0x56269c=_0x4beaab(0x33b)+_0x5d6a12+_0x4beaab(0x525)+App[_0x4beaab(0x159)](_0x33c288)+_0x4beaab(0x371),_0x2f5cdd=App[_0x4beaab(0x252)]?App[_0x4beaab(0x252)][_0x4beaab(0x41c)]:_0x4beaab(0x53e),_0x21a2ff=App['usuario']?App[_0x4beaab(0x252)][_0x4beaab(0x119)]:'Gestor',_0x5453b5=_0x4beaab(0x58d)+App[_0x4beaab(0x159)](_0x2f5cdd)+'</b><br><span\x20style=\x22font-size:9px;\x20color:#3498db;\x20text-transform:uppercase;\x20font-weight:bold;\x22>'+App[_0x4beaab(0x159)](_0x21a2ff)+_0x4beaab(0x371);if(_0xed203d)_0xed203d[_0x4beaab(0xec)]=App[_0x4beaab(0x159)](_0x4b61bd[_0x4beaab(0x3c0)]||'Escola')+'<br><small\x20style=\x22color:#aaa;\x22>'+App[_0x4beaab(0x159)](_0x4b61bd[_0x4beaab(0x46b)]||'')+'</small>'+_0x56269c+_0x5453b5;const _0x30b2a9=document[_0x4beaab(0x382)]('.logo-area');let _0x1e5f5f=_0x30b2a9[_0x4beaab(0x382)]('img');if(_0x4b61bd['foto']&&_0x4b61bd[_0x4beaab(0x554)]['length']>0x32)!_0x1e5f5f&&(_0x1e5f5f=document[_0x4beaab(0x53a)](_0x4beaab(0x4fe)),_0x1e5f5f[_0x4beaab(0x1c7)][_0x4beaab(0x508)]='width:80px;\x20height:80px;\x20border-radius:50%;\x20object-fit:cover;\x20margin-bottom:10px;\x20display:block;\x20margin:\x200\x20auto\x2010px\x20auto;\x20border:\x203px\x20solid\x20rgba(255,255,255,0.2);',_0x30b2a9['insertBefore'](_0x1e5f5f,_0x30b2a9[_0x4beaab(0x150)])),_0x1e5f5f[_0x4beaab(0x589)]=_0x4b61bd[_0x4beaab(0x554)];else _0x1e5f5f&&_0x1e5f5f[_0x4beaab(0x379)]();},'carregarDadosEscola':async()=>{const _0x59cb32=a0_0x5d5ecf;try{const _0x19871f=JSON[_0x59cb32(0x48f)](localStorage[_0x59cb32(0x598)](App[_0x59cb32(0x11d)]('escola_perfil')));_0x19871f&&App[_0x59cb32(0x34c)](_0x19871f);const _0x51499c=await App['api'](_0x59cb32(0x49c));if(!_0x51499c||_0x51499c[_0x59cb32(0x1b4)])return;!_0x51499c['dataCriacao']&&(_0x51499c[_0x59cb32(0x11f)]=new Date()[_0x59cb32(0x479)](),await App['api'](_0x59cb32(0x49c),_0x59cb32(0x4b9),_0x51499c)),_0x51499c['plano']&&localStorage[_0x59cb32(0x16b)](App['getTenantKey']('escola_plano'),_0x51499c[_0x59cb32(0x21f)]),localStorage[_0x59cb32(0x16b)](App['getTenantKey'](_0x59cb32(0x2cc)),JSON[_0x59cb32(0x24b)](_0x51499c)),App[_0x59cb32(0x34c)](_0x51499c),App[_0x59cb32(0x4f9)](_0x51499c)&&App[_0x59cb32(0x206)](_0x51499c);}catch(_0x2e8c69){console[_0x59cb32(0x3ee)](_0x59cb32(0x348));}},'otimizarImagem':(_0x19ed18,_0xc2ea0,_0x3d8b07)=>{const _0x2c02ab=a0_0x5d5ecf,_0x448d39=new FileReader();_0x448d39[_0x2c02ab(0x112)](_0x19ed18),_0x448d39[_0x2c02ab(0x1be)]=_0x3eb9c0=>{const _0x26dbaf=_0x2c02ab,_0x2563ee=new Image();_0x2563ee['src']=_0x3eb9c0['target'][_0x26dbaf(0x170)],_0x2563ee[_0x26dbaf(0x1be)]=()=>{const _0x21195b=_0x26dbaf,_0x85e967=document[_0x21195b(0x53a)](_0x21195b(0x466));let _0x1d2570=_0x2563ee[_0x21195b(0x58a)],_0x5bf84d=_0x2563ee[_0x21195b(0x373)];_0x1d2570>_0xc2ea0&&(_0x5bf84d*=_0xc2ea0/_0x1d2570,_0x1d2570=_0xc2ea0);_0x85e967['width']=_0x1d2570,_0x85e967[_0x21195b(0x373)]=_0x5bf84d;const _0x4e62ee=_0x85e967[_0x21195b(0x5ae)]('2d');_0x4e62ee[_0x21195b(0x10f)](_0x2563ee,0x0,0x0,_0x1d2570,_0x5bf84d),_0x3d8b07(_0x85e967[_0x21195b(0x1bd)](_0x21195b(0x4b2),0.8));};};},'renderizarConfiguracoes':async()=>{const _0x5c29ad=a0_0x5d5ecf;App[_0x5c29ad(0x408)]('Perfil\x20da\x20Escola');const _0x5b0a1d=document['getElementById'](_0x5c29ad(0x214));try{const _0x566e92=await App[_0x5c29ad(0x4e9)](_0x5c29ad(0x49c))||{},_0x491cbf=_0x566e92[_0x5c29ad(0x554)]||'https://placehold.co/100?text=LOGO',_0x3bc67b=_0x566e92[_0x5c29ad(0x172)]||_0x5c29ad(0x2b2);_0x5b0a1d[_0x5c29ad(0xec)]=_0x5c29ad(0x2ae)+_0x491cbf+'\x22\x20style=\x22width:100px;\x20height:100px;\x20border-radius:50%;\x20object-fit:cover;\x20border:2px\x20solid\x20white;\x20box-shadow:0\x202px\x205px\x20rgba(0,0,0,0.1);\x20background:white;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20font-size:13px;\x22>Logotipo\x20Oficial</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22file\x22\x20id=\x22conf-file\x22\x20accept=\x22image/*\x22\x20onchange=\x22App.previewImagemLocal(this,\x20\x27conf-preview\x27)\x22\x20style=\x22font-size:12px;\x20margin-bottom:10px;\x20width:100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-del\x22\x20style=\x22padding:5px\x2010px;\x20font-size:11px;\x22\x20onclick=\x22App.removerImagemLocal(\x27conf-preview\x27)\x22>🗑️\x20Remover\x20Imagem</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f9f9f9;\x20padding:20px;\x20border-radius:10px;\x20display:flex;\x20align-items:center;\x20gap:20px;\x20color:#333;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<img\x20id=\x22conf-qr-preview\x22\x20src=\x22'+_0x3bc67b+_0x5c29ad(0x510)+App[_0x5c29ad(0x159)](_0x566e92['nome']||'')+_0x5c29ad(0x515)+App['escapeHTML'](_0x566e92[_0x5c29ad(0x46b)]||'')+_0x5c29ad(0x4f6)+App['escapeHTML'](_0x566e92[_0x5c29ad(0x3a9)]||'')+_0x5c29ad(0x180)+App['escapeHTML'](_0x566e92[_0x5c29ad(0x4d7)]||'')+_0x5c29ad(0x225)+App['escapeHTML'](_0x566e92[_0x5c29ad(0x228)]||'')+_0x5c29ad(0x331)+App[_0x5c29ad(0x159)](_0x566e92[_0x5c29ad(0x15a)]||'')+_0x5c29ad(0x3ed)+App['escapeHTML'](_0x566e92['numero']||'')+_0x5c29ad(0x5ab)+App['escapeHTML'](_0x566e92[_0x5c29ad(0x372)]||'')+'\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Cidade</label><input\x20id=\x22conf-cidade\x22\x20value=\x22'+App['escapeHTML'](_0x566e92[_0x5c29ad(0x164)]||'')+_0x5c29ad(0x467)+App[_0x5c29ad(0x159)](_0x566e92[_0x5c29ad(0x302)]||'')+'\x22\x20maxlength=\x222\x22\x20style=\x22text-transform:\x20uppercase;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20margin-top:25px;\x20padding:15px;\x20justify-content:center;\x22\x20onclick=\x22App.salvarConfiguracoes()\x22>💾\x20ATUALIZAR\x20DADOS\x20DA\x20ESCOLA</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>';}catch(_0x23d234){_0x5b0a1d[_0x5c29ad(0xec)]=_0x5c29ad(0xd7);}},'previewImagemLocal':(_0x12c24b,_0x61f4d4)=>{const _0x450692=a0_0x5d5ecf;if(!_0x12c24b[_0x450692(0x2ce)]||_0x12c24b[_0x450692(0x2ce)][_0x450692(0xe1)]===0x0)return;App[_0x450692(0x410)](_0x12c24b[_0x450692(0x2ce)][0x0],0x190,_0xb68a28=>{const _0x20b733=_0x450692,_0x250fe7=document[_0x20b733(0x21a)](_0x61f4d4);_0x250fe7['src']=_0xb68a28,_0x250fe7['setAttribute'](_0x20b733(0x478),_0x20b733(0x59b));});},'removerImagemLocal':_0x9dc49d=>{const _0x2ea6a7=a0_0x5d5ecf,_0xe35f4=document[_0x2ea6a7(0x21a)](_0x9dc49d);_0xe35f4[_0x2ea6a7(0x589)]=_0x9dc49d===_0x2ea6a7(0x557)?_0x2ea6a7(0xef):'https://placehold.co/100?text=QR+CODE',_0xe35f4[_0x2ea6a7(0x186)](_0x2ea6a7(0x478),_0x2ea6a7(0x59b));const _0x34f194=document[_0x2ea6a7(0x21a)](_0x9dc49d===_0x2ea6a7(0x557)?_0x2ea6a7(0x3b3):'conf-qr-file');if(_0x34f194)_0x34f194[_0x2ea6a7(0x4c9)]='';},'salvarConfiguracoes':async()=>{const _0x5cfef6=a0_0x5d5ecf,_0x38c0e9={'nome':document[_0x5cfef6(0x21a)]('conf-nome')[_0x5cfef6(0x4c9)],'cnpj':document[_0x5cfef6(0x21a)](_0x5cfef6(0x475))[_0x5cfef6(0x4c9)],'banco':document[_0x5cfef6(0x21a)](_0x5cfef6(0x4af))[_0x5cfef6(0x4c9)],'chavePix':document['getElementById'](_0x5cfef6(0x51b))[_0x5cfef6(0x4c9)],'cep':document['getElementById'](_0x5cfef6(0x1a4))[_0x5cfef6(0x4c9)],'endereco':document[_0x5cfef6(0x21a)]('conf-endereco')[_0x5cfef6(0x4c9)],'numero':document[_0x5cfef6(0x21a)](_0x5cfef6(0x420))[_0x5cfef6(0x4c9)],'bairro':document[_0x5cfef6(0x21a)]('conf-bairro')['value'],'cidade':document['getElementById'](_0x5cfef6(0x463))['value'],'estado':document[_0x5cfef6(0x21a)](_0x5cfef6(0xe3))[_0x5cfef6(0x4c9)][_0x5cfef6(0x3a7)]()},_0x408550=document['getElementById'](_0x5cfef6(0x557));if(_0x408550&&_0x408550[_0x5cfef6(0x52e)]('data-nova'))_0x38c0e9['foto']=_0x408550[_0x5cfef6(0x589)][_0x5cfef6(0x1b9)](_0x5cfef6(0x3ba))?'':_0x408550[_0x5cfef6(0x589)];const _0x1082d8=document[_0x5cfef6(0x21a)](_0x5cfef6(0x14a));if(_0x1082d8&&_0x1082d8[_0x5cfef6(0x52e)](_0x5cfef6(0x478)))_0x38c0e9[_0x5cfef6(0x172)]=_0x1082d8[_0x5cfef6(0x589)][_0x5cfef6(0x1b9)]('placehold')?'':_0x1082d8[_0x5cfef6(0x589)];const _0x587517=document['querySelector'](_0x5cfef6(0x10a)),_0x47164e=_0x587517[_0x5cfef6(0x4ab)];_0x587517['innerText']=_0x5cfef6(0x29e),_0x587517[_0x5cfef6(0x1e1)]=!![];try{const _0x1552c4=await App[_0x5cfef6(0x4e9)](_0x5cfef6(0x49c))||{};await App[_0x5cfef6(0x4e9)](_0x5cfef6(0x49c),'PUT',{..._0x1552c4,..._0x38c0e9}),await App[_0x5cfef6(0x49b)]();if(_0x408550)_0x408550[_0x5cfef6(0x343)](_0x5cfef6(0x478));if(_0x1082d8)_0x1082d8['removeAttribute']('data-nova');App[_0x5cfef6(0x424)](_0x5cfef6(0x304),_0x5cfef6(0x553));}catch(_0x3f28db){App[_0x5cfef6(0x424)](_0x5cfef6(0x3be),_0x5cfef6(0x1b4));}finally{_0x587517[_0x5cfef6(0x4ab)]=_0x47164e,_0x587517[_0x5cfef6(0x1e1)]=![];}},'toggleSenhaVisibilidade':_0x55edf1=>{const _0xb4a668=a0_0x5d5ecf,_0x1ba8c8=document[_0xb4a668(0x21a)](_0x55edf1);_0x1ba8c8['type']=_0x1ba8c8['type']==='password'?'text':_0xb4a668(0x58c);},'renderizarMinhaConta':async()=>{const _0x2cd7c5=a0_0x5d5ecf;App['setTitulo'](_0x2cd7c5(0x540));const _0x2739f5=document[_0x2cd7c5(0x21a)](_0x2cd7c5(0x214));App[_0x2cd7c5(0x127)]=null;const _0x33b1dc=App[_0x2cd7c5(0x252)]?App[_0x2cd7c5(0x252)][_0x2cd7c5(0x41c)]:'',_0x343adf=App[_0x2cd7c5(0x252)]&&App['usuario'][_0x2cd7c5(0x4e4)]?App['usuario']['email']:'',_0x519f70=(_0x23b498,_0x320424)=>_0x2cd7c5(0x596)+_0x320424+_0x2cd7c5(0x3e2)+_0x23b498+_0x2cd7c5(0x315)+_0x23b498+_0x2cd7c5(0x303);try{const _0x3f3814=await App[_0x2cd7c5(0x4e9)]('/usuarios'),_0x1a6f0d=Array[_0x2cd7c5(0x3ef)](_0x3f3814)?_0x3f3814:[],_0x3092a6=_0x1a6f0d['filter'](_0x3ab46d=>_0x3ab46d['id']===App[_0x2cd7c5(0x252)]['id']||String(_0x3ab46d['donoId'])===String(App[_0x2cd7c5(0x252)]['id']));_0x2739f5[_0x2cd7c5(0xec)]=_0x2cd7c5(0x3e8)+App[_0x2cd7c5(0x159)](_0x343adf)+_0x2cd7c5(0x425)+App[_0x2cd7c5(0x159)](_0x33b1dc)+_0x2cd7c5(0x571)+_0x519f70(_0x2cd7c5(0x591),_0x2cd7c5(0x43e))+_0x2cd7c5(0x16e)+_0x519f70('user-nova-senha','Nova\x20Senha\x20(Opcional)')+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x519f70(_0x2cd7c5(0x1db),'Confirmar\x20Nova\x20Senha')+_0x2cd7c5(0x3eb)+_0x3092a6[_0x2cd7c5(0x3b0)](_0x14f686=>'<tr><td\x20style=\x22padding:10px\x200;\x20border-top:1px\x20solid\x20#eee;\x22>'+App['escapeHTML'](_0x14f686[_0x2cd7c5(0x3c0)])+'\x20'+(_0x14f686['isDono']?'👑':'')+_0x2cd7c5(0x238)+App[_0x2cd7c5(0x159)](_0x14f686[_0x2cd7c5(0x41c)])+'</td><td\x20style=\x22padding:10px\x200;\x20border-top:1px\x20solid\x20#eee;\x22><span\x20style=\x22background:#eee;\x20padding:2px\x206px;\x20border-radius:4px;\x20font-size:11px;\x22>'+App[_0x2cd7c5(0x159)](_0x14f686[_0x2cd7c5(0x119)])+_0x2cd7c5(0x499)+_0x14f686['id']+_0x2cd7c5(0x435)+App['escapeHTML'](_0x14f686[_0x2cd7c5(0x3c0)])+_0x2cd7c5(0x435)+App['escapeHTML'](_0x14f686['login'])+_0x2cd7c5(0x435)+App[_0x2cd7c5(0x159)](_0x14f686[_0x2cd7c5(0x119)])+_0x2cd7c5(0x54e)+(!_0x14f686[_0x2cd7c5(0x31d)]?_0x2cd7c5(0x140)+_0x14f686['id']+'\x27)\x22>🗑️</button>':'')+_0x2cd7c5(0x419))[_0x2cd7c5(0x358)]('')+_0x2cd7c5(0x509);}catch(_0x3aa608){_0x2739f5[_0x2cd7c5(0xec)]=_0x2cd7c5(0x2d8);}},'atualizarMeusDados':async()=>{const _0x385f23=a0_0x5d5ecf,_0x3f1c73=document[_0x385f23(0x21a)]('user-novo-login')[_0x385f23(0x4c9)]['trim'](),_0x4ce986=document[_0x385f23(0x21a)]('user-novo-email')[_0x385f23(0x4c9)][_0x385f23(0xfc)](),_0x4f2c34=document[_0x385f23(0x21a)](_0x385f23(0x591))[_0x385f23(0x4c9)],_0x48b4a8=document[_0x385f23(0x21a)](_0x385f23(0x535))['value'],_0x1b8a76=document[_0x385f23(0x21a)](_0x385f23(0x1db))[_0x385f23(0x4c9)];if(!_0x3f1c73)return App[_0x385f23(0x424)]('O\x20login\x20não\x20pode\x20ficar\x20em\x20branco.',_0x385f23(0x1b4));if(!_0x4f2c34)return App[_0x385f23(0x424)](_0x385f23(0x2a8),_0x385f23(0x1b4));if(_0x48b4a8&&_0x48b4a8!==_0x1b8a76)return App[_0x385f23(0x424)]('A\x20nova\x20senha\x20e\x20a\x20confirmação\x20não\x20conferem.',_0x385f23(0x1b4));const _0x1b4bba=document[_0x385f23(0x382)](_0x385f23(0x293)),_0xd6fcd8=_0x1b4bba['innerText'];_0x1b4bba[_0x385f23(0x4ab)]=_0x385f23(0x460),_0x1b4bba[_0x385f23(0x1e1)]=!![];try{const _0x3beeb6={'novoLogin':_0x3f1c73,'novoEmail':_0x4ce986,'senhaAtual':_0x4f2c34};if(_0x48b4a8)_0x3beeb6['novaSenha']=_0x48b4a8;const _0x51940e=await App[_0x385f23(0x4e9)](_0x385f23(0x19a),_0x385f23(0x4b9),_0x3beeb6);_0x51940e&&_0x51940e[_0x385f23(0x553)]?(App['showToast']('Dados\x20atualizados\x20com\x20sucesso!\x20Faça\x20login\x20novamente.',_0x385f23(0x553)),setTimeout(()=>App[_0x385f23(0x13d)](),0x9c4)):App[_0x385f23(0x424)](_0x51940e[_0x385f23(0x1b4)]||_0x385f23(0x5a1),_0x385f23(0x1b4));}catch(_0x2f1ddf){App[_0x385f23(0x424)](_0x385f23(0x24e),_0x385f23(0x1b4));}finally{_0x1b4bba[_0x385f23(0x4ab)]=_0xd6fcd8,_0x1b4bba['disabled']=![];}},'salvarNovoUsuario':async()=>{const _0x315170=a0_0x5d5ecf,_0x43acb6=document[_0x315170(0x21a)]('new-nome')[_0x315170(0x4c9)],_0xdbf59e=document['getElementById'](_0x315170(0x35a))['value'],_0x2f8eec=document['getElementById'](_0x315170(0x1df))[_0x315170(0x4c9)],_0x513064=document[_0x315170(0x21a)](_0x315170(0x4c6))['value'];if(!_0x43acb6||!_0xdbf59e)return App[_0x315170(0x424)](_0x315170(0x1da),'error');if(!App[_0x315170(0x127)]&&!_0x2f8eec)return App[_0x315170(0x424)]('Digite\x20uma\x20senha.',_0x315170(0x1b4));const _0x1865e3={'nome':_0x43acb6,'login':_0xdbf59e,'tipo':_0x513064};if(_0x2f8eec)_0x1865e3[_0x315170(0x177)]=_0x2f8eec;if(!App[_0x315170(0x127)]){const _0x15c011=await App[_0x315170(0x519)](_0x315170(0x252));if(!_0x15c011)return;_0x1865e3['donoId']=App[_0x315170(0x252)]['id'];}const _0x3fef34=document[_0x315170(0x21a)](_0x315170(0x17f)),_0x68635f=_0x3fef34?_0x3fef34[_0x315170(0x4ab)]:_0x315170(0xd6);_0x3fef34&&(_0x3fef34[_0x315170(0x4ab)]=_0x315170(0x15d),_0x3fef34['disabled']=!![]);document['body'][_0x315170(0x1c7)][_0x315170(0x55c)]=_0x315170(0x3f3);try{let _0x2b17ae;App['idEdicaoUsuario']?_0x2b17ae=await App['api'](_0x315170(0x517)+App['idEdicaoUsuario'],'PUT',_0x1865e3):_0x2b17ae=await App[_0x315170(0x4e9)](_0x315170(0x413),_0x315170(0x401),_0x1865e3),_0x2b17ae&&_0x2b17ae[_0x315170(0x1b4)]?App['showToast'](_0x2b17ae[_0x315170(0x1b4)],'error'):(App['showToast'](App[_0x315170(0x127)]?_0x315170(0x42e):_0x315170(0x18e),_0x315170(0x553)),App['renderizarMinhaConta']());}catch(_0x8b80b6){App['showToast'](_0x315170(0x1bf),_0x315170(0x1b4));}finally{_0x3fef34&&(_0x3fef34['innerText']=_0x68635f,_0x3fef34[_0x315170(0x1e1)]=![]),document['body'][_0x315170(0x1c7)][_0x315170(0x55c)]='default';}},'preencherEdicaoUsuario':(_0x3a1474,_0x42e273,_0x152f49,_0x8a49c9)=>{const _0x2be5cb=a0_0x5d5ecf;App[_0x2be5cb(0x127)]=_0x3a1474,document[_0x2be5cb(0x21a)](_0x2be5cb(0x56c))[_0x2be5cb(0x4c9)]=_0x42e273,document[_0x2be5cb(0x21a)](_0x2be5cb(0x35a))[_0x2be5cb(0x4c9)]=_0x152f49,document[_0x2be5cb(0x21a)](_0x2be5cb(0x1df))[_0x2be5cb(0x4c9)]='',document[_0x2be5cb(0x21a)](_0x2be5cb(0x4c6))[_0x2be5cb(0x4c9)]=_0x8a49c9,document['getElementById'](_0x2be5cb(0x346))[_0x2be5cb(0x4ab)]='Editar\x20Usuário',document[_0x2be5cb(0x21a)](_0x2be5cb(0x17f))['innerText']=_0x2be5cb(0x2d7),document['getElementById'](_0x2be5cb(0x163))[_0x2be5cb(0x1c7)][_0x2be5cb(0x115)]=_0x2be5cb(0x518);},'cancelarEdicaoUsuario':()=>{const _0x4875c2=a0_0x5d5ecf;App['idEdicaoUsuario']=null,document[_0x4875c2(0x21a)](_0x4875c2(0x56c))[_0x4875c2(0x4c9)]='',document[_0x4875c2(0x21a)]('new-login')['value']='',document[_0x4875c2(0x21a)](_0x4875c2(0x1df))['value']='',document[_0x4875c2(0x21a)]('new-tipo')[_0x4875c2(0x4c9)]=_0x4875c2(0x414),document[_0x4875c2(0x21a)]('titulo-form-user')[_0x4875c2(0x4ab)]=_0x4875c2(0x305),document[_0x4875c2(0x21a)](_0x4875c2(0x17f))[_0x4875c2(0x4ab)]=_0x4875c2(0xd6),document[_0x4875c2(0x21a)](_0x4875c2(0x163))['style']['display']=_0x4875c2(0x3bd);},'excluirUsuario':_0x19ad14=>{const _0x58a94f=a0_0x5d5ecf;App[_0x58a94f(0x376)]('Apagar\x20Utilizador?','Deseja\x20remover\x20o\x20acesso\x20deste\x20membro\x20da\x20equipa?\x20A\x20ação\x20não\x20pode\x20ser\x20desfeita.',async _0x2e2dc8=>{const _0x23d1be=_0x58a94f;document[_0x23d1be(0x584)][_0x23d1be(0x1c7)][_0x23d1be(0x55c)]=_0x23d1be(0x3f3);try{const _0x1d4d94=await App[_0x23d1be(0x4e9)]('/usuarios/'+_0x19ad14,'DELETE');_0x1d4d94&&_0x1d4d94[_0x23d1be(0x1b4)]?App['showToast'](_0x1d4d94[_0x23d1be(0x1b4)],_0x23d1be(0x1b4)):(App[_0x23d1be(0x424)](_0x23d1be(0x148),'success'),App[_0x23d1be(0x176)]());}catch(_0x480c75){App[_0x23d1be(0x424)](_0x23d1be(0x514),_0x23d1be(0x1b4));}finally{document[_0x23d1be(0x584)]['style'][_0x23d1be(0x55c)]=_0x23d1be(0x14c),_0x2e2dc8[_0x23d1be(0x1c7)][_0x23d1be(0x4b7)]='0',setTimeout(()=>_0x2e2dc8[_0x23d1be(0x1c7)][_0x23d1be(0x115)]=_0x23d1be(0x3bd),0x12c);}});},'renderizarBackup':()=>{const _0x50d82d=a0_0x5d5ecf;App['setTitulo'](_0x50d82d(0x144));const _0x10a1a1=document[_0x50d82d(0x21a)](_0x50d82d(0x214));_0x10a1a1[_0x50d82d(0xec)]=_0x50d82d(0x4ff);},'resetarSistema':async()=>{const _0x5bc3e3=a0_0x5d5ecf;if(!confirm('⚠️\x20ATENÇÃO\x20EXTREMA:\x20ISSO\x20APAGARÁ\x20TODOS\x20OS\x20DADOS\x20DA\x20ESCOLA.\x20Deseja\x20continuar?'))return;const _0x93d03a=prompt(_0x5bc3e3(0x4f3));if(_0x93d03a!==_0x5bc3e3(0x3c3))return App[_0x5bc3e3(0x424)](_0x5bc3e3(0xf7),'error');const _0x3a76a9=document[_0x5bc3e3(0x382)](_0x5bc3e3(0xf8));_0x3a76a9&&(_0x3a76a9['disabled']=!![],_0x3a76a9['innerText']=_0x5bc3e3(0x10d));document['body'][_0x5bc3e3(0x1c7)]['cursor']=_0x5bc3e3(0x3f3);try{const _0x3fefe9=[_0x5bc3e3(0x4fc),_0x5bc3e3(0x550),'cursos',_0x5bc3e3(0x3c2),'eventos',_0x5bc3e3(0x256),'avaliacoes',_0x5bc3e3(0x22a)];for(const _0x53c174 of _0x3fefe9){const _0xa5b73=await App['api']('/'+_0x53c174);Array[_0x5bc3e3(0x3ef)](_0xa5b73)&&_0xa5b73['length']>0x0&&await Promise['all'](_0xa5b73['map'](_0x73d17c=>App[_0x5bc3e3(0x4e9)]('/'+_0x53c174+'/'+_0x73d17c['id'],'DELETE')));}await App[_0x5bc3e3(0x4e9)]('/escola','PUT',{'nome':'Escola','cnpj':'','foto':'','qrCodeImagem':'','banco':'','chavePix':''}),localStorage[_0x5bc3e3(0x21b)](App[_0x5bc3e3(0x11d)](_0x5bc3e3(0x2cc))),alert(_0x5bc3e3(0x59a)),location['reload']();}catch(_0x478b60){alert('Erro\x20ao\x20limpar\x20dados.'),_0x3a76a9&&(_0x3a76a9[_0x5bc3e3(0x1e1)]=![],_0x3a76a9[_0x5bc3e3(0x4ab)]=_0x5bc3e3(0x42d));}finally{document[_0x5bc3e3(0x584)][_0x5bc3e3(0x1c7)][_0x5bc3e3(0x55c)]='default';}},'realizarDownloadBackup':async()=>{const _0x8dd642=a0_0x5d5ecf;try{const _0x8c430c=[_0x8dd642(0x142),_0x8dd642(0x575),_0x8dd642(0x4fc),_0x8dd642(0x550),_0x8dd642(0x53d),_0x8dd642(0x3c2),_0x8dd642(0x41d),_0x8dd642(0x256),_0x8dd642(0x4ad),_0x8dd642(0x22a)],_0x3e1d2f={};for(const _0x4e9fcb of _0x8c430c){const _0x24e58d=await App['api']('/'+_0x4e9fcb);_0x3e1d2f[_0x4e9fcb]=_0x24e58d;}const _0x313946=new Blob([JSON[_0x8dd642(0x24b)](_0x3e1d2f,null,0x2)],{'type':_0x8dd642(0x208)}),_0x2f022d=document[_0x8dd642(0x53a)]('a');_0x2f022d[_0x8dd642(0x242)]=URL[_0x8dd642(0x2fd)](_0x313946),_0x2f022d[_0x8dd642(0x512)]='backup_'+new Date()[_0x8dd642(0x479)]()[_0x8dd642(0x193)]('T')[0x0]+_0x8dd642(0x324),document['body'][_0x8dd642(0x15e)](_0x2f022d),_0x2f022d[_0x8dd642(0x4e2)](),document[_0x8dd642(0x584)][_0x8dd642(0x47f)](_0x2f022d);}catch(_0x4df917){alert(_0x8dd642(0x5b3));}},'processarRestauracao':async()=>{const _0x348f84=a0_0x5d5ecf,_0xbecaf8=document[_0x348f84(0x21a)]('input-backup-file');if(!_0xbecaf8[_0x348f84(0x2ce)][_0x348f84(0xe1)])return App[_0x348f84(0x424)](_0x348f84(0xeb),_0x348f84(0x2e2));if(!confirm('Tem\x20a\x20certeza\x20absoluta\x20que\x20deseja\x20substituir\x20os\x20dados\x20atuais?\x20Esta\x20ação\x20não\x20pode\x20ser\x20desfeita.'))return;const _0x984748=document[_0x348f84(0x382)](_0x348f84(0x4ba));_0x984748&&(_0x984748['disabled']=!![],_0x984748['innerText']=_0x348f84(0x190));document[_0x348f84(0x584)]['style'][_0x348f84(0x55c)]='wait';const _0x53aa33=new FileReader();_0x53aa33[_0x348f84(0x1be)]=async _0x28fcbf=>{const _0x47d35b=_0x348f84;try{const _0x23f026=JSON[_0x47d35b(0x48f)](_0x28fcbf['target'][_0x47d35b(0x170)]),_0x1a12f8=[_0x47d35b(0x4fc),_0x47d35b(0x550),'cursos','financeiro',_0x47d35b(0x41d),_0x47d35b(0x256),'avaliacoes',_0x47d35b(0x22a),_0x47d35b(0x575),_0x47d35b(0x142)];let _0x2b42df=0x0,_0x3c7958=0x0;for(const _0x25aa6b of _0x1a12f8){if(_0x23f026[_0x25aa6b]){if(Array[_0x47d35b(0x3ef)](_0x23f026[_0x25aa6b]))_0x2b42df+=_0x23f026[_0x25aa6b][_0x47d35b(0xe1)];else _0x2b42df+=0x1;}}if(_0x2b42df===0x0){App[_0x47d35b(0x424)](_0x47d35b(0x4a9),_0x47d35b(0x2e2));_0x984748&&(_0x984748['disabled']=![],_0x984748[_0x47d35b(0x4ab)]='⬆️\x20RESTAURAR\x20DADOS');document[_0x47d35b(0x584)][_0x47d35b(0x1c7)][_0x47d35b(0x55c)]=_0x47d35b(0x14c);return;}for(const _0x566dc3 of _0x1a12f8){if(_0x23f026[_0x566dc3]){if(Array['isArray'](_0x23f026[_0x566dc3]))for(const _0xba1a3c of _0x23f026[_0x566dc3]){await App[_0x47d35b(0x4e9)]('/'+_0x566dc3,'POST',_0xba1a3c),_0x3c7958++;if(_0x984748)_0x984748[_0x47d35b(0x4ab)]=_0x47d35b(0x336)+_0x3c7958+_0x47d35b(0x369)+_0x2b42df+'\x20⏳';}else{await App['api'](_0x47d35b(0x49c),_0x47d35b(0x4b9),_0x23f026[_0x566dc3]),_0x3c7958++;if(_0x984748)_0x984748[_0x47d35b(0x4ab)]=_0x47d35b(0x336)+_0x3c7958+_0x47d35b(0x369)+_0x2b42df+'\x20⏳';}}}App['showToast'](_0x47d35b(0x353),'success'),setTimeout(()=>location[_0x47d35b(0x459)](),0x5dc);}catch(_0x2c3a1a){console['error'](_0x47d35b(0x38d),_0x2c3a1a),App['showToast'](_0x47d35b(0x58e),'error'),_0x984748&&(_0x984748[_0x47d35b(0x1e1)]=![],_0x984748[_0x47d35b(0x4ab)]=_0x47d35b(0x2d2)),document[_0x47d35b(0x584)][_0x47d35b(0x1c7)][_0x47d35b(0x55c)]='default';}},_0x53aa33['readAsText'](_0xbecaf8['files'][0x0]);},'toggleNotificacoes':()=>{const _0x403223=a0_0x5d5ecf,_0xe609b5=document[_0x403223(0x21a)](_0x403223(0x556));if(_0xe609b5)_0xe609b5[_0x403223(0xdc)][_0x403223(0x282)](_0x403223(0x344));},'marcarNotificacoesComoLidas':async()=>{const _0x3732f3=a0_0x5d5ecf;try{const _0x492730=await App[_0x3732f3(0x4e9)](_0x3732f3(0x4d8));if(!Array[_0x3732f3(0x3ef)](_0x492730))return App[_0x3732f3(0x424)](_0x3732f3(0x2e6),'error');const _0x2b7842=_0x492730['filter'](_0x2e3d6b=>!_0x2e3d6b[_0x3732f3(0x192)]);if(_0x2b7842[_0x3732f3(0xe1)]===0x0)return App[_0x3732f3(0x424)]('Não\x20há\x20notificações\x20novas.','info');await Promise[_0x3732f3(0x2c0)](_0x2b7842[_0x3732f3(0x3b0)](_0x3a440e=>App[_0x3732f3(0x4e9)](_0x3732f3(0x470)+_0x3a440e['id'],_0x3732f3(0x4b9)))),App[_0x3732f3(0x424)]('Notificações\x20marcadas\x20como\x20lidas.',_0x3732f3(0x553)),await App[_0x3732f3(0x574)]();}catch(_0x362761){console[_0x3732f3(0x1b4)](_0x362761),App[_0x3732f3(0x424)](_0x3732f3(0x428),'error');}},'verificarNotificacoes':async()=>{const _0x575772=a0_0x5d5ecf;try{const _0x26ef78=App[_0x575772(0x252)]?App[_0x575772(0x252)][_0x575772(0x119)]:_0x575772(0x414),_0x44229a=await App[_0x575772(0x4e9)](_0x575772(0x4d8));let _0x223a33=await App['api'](_0x575772(0x4dd));const _0x4f40d2=await App[_0x575772(0x4e9)](_0x575772(0x1a8)),_0x450ea2=await App[_0x575772(0x4e9)]('/financeiro'),_0xc4d7c=await App[_0x575772(0x4e9)](_0x575772(0x52a)),_0x359340=await App['api'](_0x575772(0x43d)),_0xa9f455=await App[_0x575772(0x4e9)](_0x575772(0x49c));Array['isArray'](_0x223a33)&&(_0x223a33=_0x223a33[_0x575772(0x2d5)](_0x277e67=>!_0x277e67[_0x575772(0x2ec)]||_0x277e67['status']===_0x575772(0x39e)));if(App[_0x575772(0x559)]==='aluno'&&Array['isArray'](_0x223a33)&&Array[_0x575772(0x3ef)](App[_0x575772(0x57d)])){const _0x50cc83=App[_0x575772(0x57d)]['map'](_0x3f28a2=>_0x3f28a2['id']),_0x5b4ba6=_0x223a33[_0x575772(0x3e7)](_0x4147d3=>!_0x50cc83[_0x575772(0x1b9)](_0x4147d3['id']));if(_0x5b4ba6){App[_0x575772(0x424)](_0x575772(0x2aa),'success'),App[_0x575772(0x57d)]=_0x223a33;const _0x2b6386=document[_0x575772(0x21a)](_0x575772(0x1eb));if(_0x2b6386)_0x2b6386[_0x575772(0x4c9)]='';typeof App['filtrarTabelaReativa']===_0x575772(0x405)&&App[_0x575772(0x3f1)]();}}let _0x1c1fb4=[];Array['isArray'](_0x44229a)&&_0x44229a['filter'](_0x1618d5=>!_0x1618d5[_0x575772(0x192)])[_0x575772(0x2d0)]((_0x13a6cc,_0x2da329)=>new Date(_0x2da329[_0x575772(0x11f)]||0x0)-new Date(_0x13a6cc[_0x575772(0x11f)]||0x0))['slice'](0x0,0xa)[_0x575772(0x52f)](_0x194ea7=>{const _0x1f6b1e=_0x575772;_0x1c1fb4[_0x1f6b1e(0x316)]({'icon':_0x194ea7['tipo']===_0x1f6b1e(0x4da)?'📝':'🔔','texto':_0x1f6b1e(0x59c)+App[_0x1f6b1e(0x159)](_0x194ea7[_0x1f6b1e(0x3e5)]||_0x1f6b1e(0x537))+_0x1f6b1e(0x40f)+App[_0x1f6b1e(0x159)](_0x194ea7[_0x1f6b1e(0x3fb)]||'')+_0x1f6b1e(0x266)+App[_0x1f6b1e(0x159)](_0x194ea7[_0x1f6b1e(0x229)]||_0x1f6b1e(0x5a7))+_0x1f6b1e(0x106),'prioridade':0x1,'acao':_0x1f6b1e(0x1cb)});});const _0x15a532=new Date(),_0x585e76=_0x15a532[_0x575772(0x3d6)](),_0x16785a=String(_0x15a532[_0x575772(0x4bf)]()+0x1)[_0x575772(0x47c)](0x2,'0'),_0x8187c9=String(_0x15a532[_0x575772(0x154)]())[_0x575772(0x47c)](0x2,'0'),_0x355aba=_0x585e76+'-'+_0x16785a+'-'+_0x8187c9,_0x1f9236=new Date(_0x15a532);_0x1f9236[_0x575772(0xde)](_0x1f9236['getDate']()+0x1);const _0x7682fb=_0x1f9236[_0x575772(0x3d6)]()+'-'+String(_0x1f9236[_0x575772(0x4bf)]()+0x1)[_0x575772(0x47c)](0x2,'0')+'-'+String(_0x1f9236[_0x575772(0x154)]())[_0x575772(0x47c)](0x2,'0');if(_0xa9f455&&_0x26ef78==='Gestor'){const _0x3038ac=_0xa9f455[_0x575772(0x21f)]||_0x575772(0x29a),_0x5aa9b2=_0x15a532[_0x575772(0x501)]();let _0x64704e=0x0;if(_0xa9f455[_0x575772(0x136)]){const _0xad707c=new Date(_0xa9f455[_0x575772(0x136)])[_0x575772(0x501)]();_0x64704e=Math[_0x575772(0x2ad)]((_0xad707c-_0x5aa9b2)/(0x3e8*0x3c*0x3c*0x18));}else{const _0x54314e=_0xa9f455[_0x575772(0x11f)]?new Date(_0xa9f455[_0x575772(0x11f)])['getTime']():_0x5aa9b2,_0x53a5ae=Math[_0x575772(0x417)](Math[_0x575772(0x178)](_0x5aa9b2-_0x54314e)/(0x3e8*0x3c*0x3c*0x18));_0x64704e=(_0x3038ac===_0x575772(0x29a)?0x7:0x1e)-_0x53a5ae;}if(_0x3038ac!==_0x575772(0x58f)&&_0x3038ac!==_0x575772(0x1f4)){if(_0x64704e<=0x3&&_0x64704e>0x0)_0x1c1fb4[_0x575772(0x316)]({'icon':'⏳','texto':_0x575772(0x464)+_0x3038ac+_0x575772(0x51c)+_0x64704e+_0x575772(0x4d0),'acao':_0x575772(0x492)});else _0x64704e<=0x0&&_0x1c1fb4['push']({'icon':'🚫','texto':_0x575772(0x384),'acao':_0x575772(0x492)});}}Array[_0x575772(0x3ef)](_0x223a33)&&_0x223a33[_0x575772(0x52f)](_0x36fbdb=>{const _0x45b813=_0x575772;_0x36fbdb[_0x45b813(0x4a7)]&&_0x36fbdb[_0x45b813(0x4a7)][_0x45b813(0x133)](0x5)===_0x16785a+'-'+_0x8187c9&&_0x1c1fb4[_0x45b813(0x316)]({'icon':'🎂','texto':'Hoje\x20é\x20aniversário\x20de\x20<b>'+App[_0x45b813(0x159)](_0x36fbdb[_0x45b813(0x3c0)])+'</b>!\x20Clique\x20para\x20ver.','acao':'App.renderizarLista(\x27aluno\x27)'});});Array[_0x575772(0x3ef)](_0x223a33)&&_0x223a33[_0x575772(0x52f)](_0x4b591e=>{const _0x3e0007=_0x575772;_0x4b591e[_0x3e0007(0x57c)]&&_0x4b591e[_0x3e0007(0x57c)][_0x3e0007(0x39f)](_0x355aba)&&_0x1c1fb4[_0x3e0007(0x316)]({'icon':'🎉','texto':_0x3e0007(0x2ba)+App['escapeHTML'](_0x4b591e[_0x3e0007(0x3c0)])+_0x3e0007(0x548),'acao':_0x3e0007(0x1cb)});});if(_0x26ef78!=='Professor'&&Array[_0x575772(0x3ef)](_0x450ea2)){const _0x38512f=_0x450ea2[_0x575772(0x2d5)](_0x130ff7=>_0x130ff7[_0x575772(0x4f8)]===_0x355aba&&_0x130ff7['status']==='Pendente');_0x38512f['length']>0x0&&_0x1c1fb4[_0x575772(0x316)]({'icon':'💲','texto':_0x575772(0x31f)+_0x38512f['length']+_0x575772(0x583),'acao':'App.renderizarTela(\x27mensalidades\x27)'});}Array['isArray'](_0x4f40d2)&&_0x4f40d2[_0x575772(0x52f)](_0x580c98=>{const _0x3bad80=_0x575772;if(_0x580c98['data']===_0x355aba)_0x1c1fb4['push']({'icon':'🚨','texto':_0x3bad80(0x5b0)+App[_0x3bad80(0x159)](_0x580c98[_0x3bad80(0x119)])+'\x20-\x20'+App[_0x3bad80(0x159)](_0x580c98[_0x3bad80(0x330)]),'acao':'App.renderizarTela(\x27calendario\x27)'});else{if(_0x580c98[_0x3bad80(0x502)]===_0x7682fb)_0x1c1fb4[_0x3bad80(0x316)]({'icon':'⏳','texto':_0x3bad80(0xe0)+App[_0x3bad80(0x159)](_0x580c98[_0x3bad80(0x119)])+_0x3bad80(0x37e)+App[_0x3bad80(0x159)](_0x580c98[_0x3bad80(0x330)]),'acao':_0x3bad80(0x505)});}});_0x26ef78!==_0x575772(0x3cb)&&(Array['isArray'](_0x450ea2)&&Array['isArray'](_0x223a33)&&Array[_0x575772(0x3ef)](_0xc4d7c)&&_0x223a33['forEach'](_0x354682=>{const _0x223663=_0x575772,_0x22bd04=_0xc4d7c[_0x223663(0x12b)](_0xbf1a2a=>_0xbf1a2a[_0x223663(0x145)]===_0x354682['id']);let _0x3e6794=0x0,_0xf66ef1=null;_0x450ea2[_0x223663(0x52f)](_0x5b2bf8=>{const _0x50432a=_0x223663;_0x5b2bf8[_0x50432a(0x145)]===_0x354682['id']&&_0x5b2bf8[_0x50432a(0x2ec)]!=='Cancelado'&&(!_0x5b2bf8['idCarne']||!_0x5b2bf8[_0x50432a(0x1ed)][_0x50432a(0x1b9)](_0x50432a(0x2cf)))&&((!_0xf66ef1||_0x5b2bf8[_0x50432a(0x4f8)]>_0xf66ef1)&&(_0xf66ef1=_0x5b2bf8[_0x50432a(0x4f8)]),_0x5b2bf8[_0x50432a(0x4f8)]>=_0x355aba&&_0x3e6794++);});_0xf66ef1&&_0xf66ef1[_0x223663(0x39f)](_0x585e76+'-'+_0x16785a)&&_0x1c1fb4['push']({'icon':'🎓','texto':_0x223663(0x3f4)+App[_0x223663(0x159)](_0x354682['nome'])+_0x223663(0x1fb),'acao':_0x223663(0x42b)});if(_0x22bd04&&_0x22bd04[_0x223663(0x446)]){const _0x3a370d=_0x22bd04[_0x223663(0x446)][_0x223663(0x2d5)](_0x22c411=>!_0x22c411[_0x223663(0x2be)])[_0x223663(0xe1)];if(_0x3a370d>0x0){let _0x1041ea=0x4;if(_0x22bd04['aulas'][_0x223663(0xe1)]>0x1){const _0x13d6f0=_0x22bd04['aulas'][0x0]['data'][_0x223663(0x193)]('/'),_0x54d558=_0x22bd04[_0x223663(0x446)][0x1]['data'][_0x223663(0x193)]('/'),_0x44e678=new Date(_0x13d6f0[0x2]+'-'+_0x13d6f0[0x1]+'-'+_0x13d6f0[0x0]),_0x3816b3=new Date(_0x54d558[0x2]+'-'+_0x54d558[0x1]+'-'+_0x54d558[0x0]),_0x573e3d=Math[_0x223663(0x178)]((_0x3816b3-_0x44e678)/(0x3e8*0x3c*0x3c*0x18));if(_0x573e3d<=0x4)_0x1041ea=0x8;else{if(_0x573e3d<=0x2)_0x1041ea=0xc;}}const _0x1537f2=Math[_0x223663(0x2ad)](_0x3a370d/_0x1041ea);_0x1537f2>_0x3e6794&&_0x26ef78===_0x223663(0x414)&&_0x1c1fb4['push']({'icon':'⚠️','texto':_0x223663(0x40d)+App[_0x223663(0x159)](_0x354682[_0x223663(0x3c0)])+_0x223663(0x4be)+_0x3a370d+_0x223663(0x503),'acao':_0x223663(0x42b)});}}}),Array[_0x575772(0x3ef)](_0x359340)&&_0x359340[_0x575772(0x52f)](_0x4022a6=>{const _0x1d78e7=_0x575772,_0x2962fe=parseInt(_0x4022a6['quantidade'])||0x0,_0x594eef=parseInt(_0x4022a6[_0x1d78e7(0x480)])||0x0;_0x2962fe<=_0x594eef&&_0x1c1fb4['push']({'icon':'📦','texto':'<b>Estoque\x20Baixo:</b>\x20Restam\x20apenas\x20'+_0x2962fe+_0x1d78e7(0x262)+App[_0x1d78e7(0x159)](_0x4022a6[_0x1d78e7(0x3c0)])+_0x1d78e7(0x4e7),'acao':_0x1d78e7(0x332)});}));const _0x2cbb4e=document['getElementById']('noti-badge'),_0x3f3b49=document[_0x575772(0x21a)](_0x575772(0x285));if(_0x1c1fb4['length']>0x0){_0x2cbb4e&&(_0x2cbb4e[_0x575772(0x4ab)]=_0x1c1fb4[_0x575772(0xe1)],_0x2cbb4e[_0x575772(0x1c7)][_0x575772(0x115)]='block');const _0x3a0193=_0x1c1fb4[_0x575772(0xe1)]>0x0?'\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:8px;\x20border-bottom:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onclick=\x22App.marcarNotificacoesComoLidas()\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20width:100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border:none;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:#f4f6f7;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20color:#2c3e50;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20padding:10px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20border-radius:8px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-size:12px;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20font-weight:bold;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20cursor:pointer;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20transition:0.2s;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onmouseover=\x22this.style.background=\x27#e5e7e9\x27\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onmouseout=\x22this.style.background=\x27#f4f6f7\x27\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20✅\x20Marcar\x20notificações\x20como\x20lidas\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20':'';if(_0x3f3b49)_0x3f3b49['innerHTML']=_0x3a0193+_0x1c1fb4['map'](_0xb69e91=>_0x575772(0x2f4)+_0xb69e91[_0x575772(0x4db)]+_0x575772(0x5af)+_0xb69e91[_0x575772(0x235)]+_0x575772(0x3cf)+_0xb69e91[_0x575772(0x198)]+_0x575772(0xdb))[_0x575772(0x358)]('');}else{if(_0x2cbb4e)_0x2cbb4e[_0x575772(0x1c7)][_0x575772(0x115)]=_0x575772(0x3bd);if(_0x3f3b49)_0x3f3b49[_0x575772(0xec)]=_0x575772(0x2e9);}}catch(_0x41d5ab){console['error'](_0x575772(0x422),_0x41d5ab);}},'gerarLinkMatricula':function(){const _0x1f61e8=a0_0x5d5ecf,_0x18f609=App['usuario']['id'],_0x55de08=window[_0x1f61e8(0x10c)][_0x1f61e8(0x579)]+_0x1f61e8(0x59e),_0x52b036=_0x55de08+_0x1f61e8(0x165)+_0x18f609,_0x28fdea=document[_0x1f61e8(0x21a)]('inputLinkMatricula');if(_0x28fdea)_0x28fdea[_0x1f61e8(0x4c9)]=_0x52b036;let _0x1866f6=JSON[_0x1f61e8(0x48f)](localStorage[_0x1f61e8(0x598)](App[_0x1f61e8(0x11d)](_0x1f61e8(0x44b)))||'[]');if(_0x1866f6[_0x1f61e8(0xe1)]===0x0||_0x1866f6[0x0][_0x1f61e8(0x1a2)]!==_0x52b036){_0x1866f6[_0x1f61e8(0xfe)]({'data':new Date()[_0x1f61e8(0x32a)](_0x1f61e8(0x1a0)),'link':_0x52b036});if(_0x1866f6[_0x1f61e8(0xe1)]>0xa)_0x1866f6['pop']();localStorage[_0x1f61e8(0x16b)](App[_0x1f61e8(0x11d)]('historico_links'),JSON['stringify'](_0x1866f6));}App[_0x1f61e8(0x430)]();if(typeof App['showToast']==='function')App[_0x1f61e8(0x424)](_0x1f61e8(0x328),_0x1f61e8(0x553));},'renderizarHistoricoLinks':function(){const _0x5c02c1=a0_0x5d5ecf,_0x54dfed=document[_0x5c02c1(0x21a)]('containerHistoricoLinks');if(!_0x54dfed)return;const _0x13a09c=JSON['parse'](localStorage[_0x5c02c1(0x598)](App[_0x5c02c1(0x11d)](_0x5c02c1(0x44b)))||'[]');if(_0x13a09c[_0x5c02c1(0xe1)]===0x0){_0x54dfed[_0x5c02c1(0xec)]=_0x5c02c1(0x306);return;}let _0x4ac14c=_0x5c02c1(0x2ea);_0x13a09c[_0x5c02c1(0x52f)](_0x96593f=>{const _0x2bef52=_0x5c02c1;_0x4ac14c+=_0x2bef52(0x2a3)+_0x96593f['data']+_0x2bef52(0x2c8)+_0x96593f[_0x2bef52(0x1a2)]+_0x2bef52(0xda)+_0x96593f[_0x2bef52(0x1a2)]+'</a>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22navigator.clipboard.writeText(\x27'+_0x96593f[_0x2bef52(0x1a2)]+_0x2bef52(0x1d6);}),_0x4ac14c+=_0x5c02c1(0x265),_0x54dfed[_0x5c02c1(0xec)]=_0x4ac14c;},'salvarCustomizacaoMatricula':async function(){const _0xa70055=a0_0x5d5ecf,_0x1dc001={'configMatricula':{'titulo':document[_0xa70055(0x21a)]('customTitulo')['value']||'Matrícula\x20Online','corSecundaria':document[_0xa70055(0x21a)](_0xa70055(0x205))[_0xa70055(0x4c9)]||_0xa70055(0x281),'logoUrl':document['getElementById'](_0xa70055(0x49d))['value']||'','textoContrato':document['getElementById']('editorContratoHtml')['value']}};try{Swal[_0xa70055(0x431)]({'title':_0xa70055(0x4c8),'allowOutsideClick':![],'didOpen':()=>Swal[_0xa70055(0x4d5)]()});const _0x4a7de7=await fetch(CONFIG['API_URL']+_0xa70055(0x49c),{'method':_0xa70055(0x4b9),'headers':{'Content-Type':_0xa70055(0x208),'Authorization':_0xa70055(0x469)+localStorage[_0xa70055(0x598)](App['getTenantKey'](_0xa70055(0x37d)))},'body':JSON[_0xa70055(0x24b)](_0x1dc001)});if(_0x4a7de7['ok'])Swal[_0xa70055(0x431)](_0xa70055(0x41b),_0xa70055(0x23d),_0xa70055(0x553));else throw new Error(_0xa70055(0x52b));}catch(_0x143afc){Swal['fire'](_0xa70055(0x201),'Não\x20foi\x20possível\x20sincronizar\x20com\x20o\x20servidor.',_0xa70055(0x1b4));}},'renderizarCofreContratos':async function(){const _0x266acb=a0_0x5d5ecf,_0x46e2b2=document[_0x266acb(0x21a)](_0x266acb(0x2bb));if(!_0x46e2b2)return;_0x46e2b2['innerHTML']=_0x266acb(0x551);try{const _0x83b503=await fetch(CONFIG[_0x266acb(0x3c4)]+'/contratos',{'headers':{'Authorization':_0x266acb(0x469)+localStorage[_0x266acb(0x598)](App[_0x266acb(0x11d)](_0x266acb(0x37d)))}});if(!_0x83b503['ok'])throw new Error(_0x266acb(0x3f6));const _0x5e6462=await _0x83b503[_0x266acb(0x4ac)]();let _0x781cf0=_0x266acb(0x474);_0x5e6462[_0x266acb(0xe1)]===0x0?_0x781cf0+='<tr><td\x20colspan=\x223\x22\x20style=\x22text-align:center;\x20padding:20px;\x22>Nenhum\x20contrato\x20encontrado.</td></tr>':_0x5e6462[_0x266acb(0x3ca)]()[_0x266acb(0x52f)](_0x3cb8ae=>{const _0x31caee=_0x266acb,_0x27eff5=_0x3cb8ae['dataHoraRegistro']?new Date(_0x3cb8ae['dataHoraRegistro'])[_0x31caee(0x32a)](_0x31caee(0x39b)):'---';_0x781cf0+=_0x31caee(0x374)+_0x27eff5+_0x31caee(0x41a)+App[_0x31caee(0x159)](_0x3cb8ae[_0x31caee(0x1ba)]||_0x31caee(0x175))+'</strong></td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirVisualizacaoContrato(\x27'+_0x3cb8ae['id']+_0x31caee(0x250);}),_0x781cf0+=_0x266acb(0x276),_0x46e2b2['innerHTML']=_0x781cf0;}catch(_0x11d7cb){_0x46e2b2[_0x266acb(0xec)]=_0x266acb(0x313)+_0x11d7cb[_0x266acb(0x23a)]+_0x266acb(0x18d);}},'abrirVisualizacaoContrato':async function(_0x1d9f83){const _0x1c436b=a0_0x5d5ecf,_0xf27263=document[_0x1c436b(0x21a)]('modal-overlay');if(_0xf27263)_0xf27263[_0x1c436b(0x1c7)][_0x1c436b(0x115)]=_0x1c436b(0x141);document[_0x1c436b(0x21a)](_0x1c436b(0x24a))['innerText']='A\x20abrir\x20Ficha\x20Completa...\x20⏳',document[_0x1c436b(0x21a)](_0x1c436b(0xf2))[_0x1c436b(0xec)]=_0x1c436b(0x1f8);const _0xcbf2f3=document[_0x1c436b(0x382)]('.btn-confirm');if(_0xcbf2f3)_0xcbf2f3[_0x1c436b(0x1c7)][_0x1c436b(0x115)]='none';try{const _0x56cbce=await App['api']('/contratos/'+_0x1d9f83);if(!_0x56cbce||_0x56cbce['error'])throw new Error(_0x56cbce?_0x56cbce[_0x1c436b(0x1b4)]:_0x1c436b(0x301));const _0x56eb73=_0x56cbce['nomeAluno']||_0x56cbce[_0x1c436b(0x3c0)]||_0x1c436b(0x399),_0x3f49de=_0x56cbce[_0x1c436b(0x357)]||'Não\x20informado',_0x4ecd51=_0x56cbce['rg']||_0x1c436b(0x30b);let _0x417708=_0x56cbce[_0x1c436b(0x4a7)]||'Não\x20informada';if(_0x417708!==_0x1c436b(0x334)&&_0x417708[_0x1c436b(0x1b9)]('-')){const _0x2b2cf5=_0x417708[_0x1c436b(0x193)]('-');_0x2b2cf5[_0x1c436b(0xe1)]===0x3&&(_0x417708=_0x2b2cf5[0x2]+'/'+_0x2b2cf5[0x1]+'/'+_0x2b2cf5[0x0]);}const _0x476be4=_0x56cbce['sexo']||'Não\x20informado',_0x261f6c=_0x56cbce[_0x1c436b(0x45b)]||_0x1c436b(0x334),_0x290ab8=_0x56cbce[_0x1c436b(0x4e4)]||_0x1c436b(0x30b),_0x3f1072=_0x56cbce[_0x1c436b(0x367)]||'Não\x20informado',_0x4bfe17=_0x56cbce['enderecoCompleto']||'Não\x20informado',_0x553ef3=_0x56cbce[_0x1c436b(0x130)]||'Não\x20informado',_0x498888=_0x56cbce['turma']||_0x1c436b(0x334),_0x50cd95=_0x56cbce[_0x1c436b(0x211)]||_0x1c436b(0x30b),_0x4ee3a9=_0x56cbce[_0x1c436b(0x386)]||'Não\x20informado',_0x56b139=_0x56cbce[_0x1c436b(0x287)]||_0x1c436b(0xfb),_0x47d2be=_0x56cbce[_0x1c436b(0x35d)]||'Não\x20informado',_0x27f024=_0x56cbce[_0x1c436b(0x30d)]||_0x1c436b(0x30b),_0x51c8aa=_0x56cbce['resp_zap']||'Não\x20informado',_0x4158ba=_0x56cbce[_0x1c436b(0x5a3)]?App[_0x1c436b(0x255)](App['unescapeHTML'](_0x56cbce[_0x1c436b(0x5a3)])):_0x1c436b(0x188),_0x2d368c=_0x56cbce[_0x1c436b(0x37a)]||_0x56cbce[_0x1c436b(0x566)]||_0x56cbce[_0x1c436b(0x454)]?new Date(_0x56cbce[_0x1c436b(0x37a)]||_0x56cbce[_0x1c436b(0x566)]||_0x56cbce[_0x1c436b(0x454)])[_0x1c436b(0x32a)](_0x1c436b(0x39b)):'Data\x20não\x20registada';document[_0x1c436b(0x21a)](_0x1c436b(0x24a))[_0x1c436b(0x4ab)]=_0x1c436b(0x38c)+_0x56eb73,document[_0x1c436b(0x21a)]('modal-form-content')[_0x1c436b(0xec)]=_0x1c436b(0x13b)+_0x56eb73+_0x1c436b(0x1ee)+_0x417708+_0x1c436b(0x2d6)+_0x3f49de+_0x1c436b(0x2af)+_0x4ecd51+_0x1c436b(0x299)+_0x476be4+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>Profissão:</b>\x20'+_0x261f6c+_0x1c436b(0x2eb)+_0x3f1072+_0x1c436b(0x47e)+_0x290ab8+_0x1c436b(0x546)+_0x4bfe17+_0x1c436b(0x35e)+_0x56b139+_0x1c436b(0x3ac)+_0x47d2be+_0x1c436b(0x2d6)+_0x27f024+_0x1c436b(0x27c)+_0x51c8aa+_0x1c436b(0x21c)+_0x553ef3+_0x1c436b(0x1bb)+_0x498888+_0x1c436b(0x2ca)+_0x50cd95+'</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>Dia\x20de\x20Vencimento:</b>\x20'+_0x4ee3a9+_0x1c436b(0x1fa)+_0x4158ba+_0x1c436b(0x493)+_0x2d368c+_0x1c436b(0x2df)+(_0x56cbce[_0x1c436b(0x2d1)]||_0x1d9f83)+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x2050px;\x20display:\x20flex;\x20justify-content:\x20space-between;\x20text-align:\x20center;\x20font-size:\x2012px;\x20page-break-inside:\x20avoid;\x20color:\x20#333;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:\x2045%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22border-top:\x201px\x20solid\x20#333;\x20padding-top:\x205px;\x22>Assinatura\x20do\x20Responsável\x20/\x20Aluno</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:\x2045%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22border-top:\x201px\x20solid\x20#333;\x20padding-top:\x205px;\x22>Assinatura\x20da\x20Instituição</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20',_0xcbf2f3&&(_0xcbf2f3[_0x1c436b(0x1c7)][_0x1c436b(0x115)]='inline-flex',_0xcbf2f3[_0x1c436b(0x1c7)][_0x1c436b(0x122)]=_0x1c436b(0x32d),_0xcbf2f3[_0x1c436b(0xec)]=_0x1c436b(0xf9),_0xcbf2f3[_0x1c436b(0x186)](_0x1c436b(0x2b8),_0x1c436b(0x1fc)));}catch(_0xefcd9d){console[_0x1c436b(0x1b4)](_0x1c436b(0x2b5),_0xefcd9d),document[_0x1c436b(0x21a)]('modal-titulo')[_0x1c436b(0x4ab)]=_0x1c436b(0x44f),document[_0x1c436b(0x21a)](_0x1c436b(0xf2))[_0x1c436b(0xec)]='<p\x20style=\x22color:red;\x20text-align:center;\x22>Não\x20foi\x20possível\x20carregar\x20a\x20ficha\x20completa.<br><small>'+_0xefcd9d[_0x1c436b(0x23a)]+_0x1c436b(0x437);}},'renderizarHubContratos':()=>{const _0x4d20c7=a0_0x5d5ecf;App[_0x4d20c7(0x408)](_0x4d20c7(0xdd));const _0x3c72e9=document['getElementById'](_0x4d20c7(0x214));_0x3c72e9['innerHTML']='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22margin-bottom:\x2020px;\x20border-bottom:\x203px\x20solid\x20#34495e;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x20justify-content:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.mostrarAreaLinks()\x22\x20style=\x22background:#3498db;\x20border:none;\x22>🔗\x20Link\x20de\x20Matrícula</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.renderizarContratos()\x22\x20style=\x22background:#2c3e50;\x20border:none;\x22>🗄️\x20Cofre\x20de\x20Contratos</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.renderizarConfiguradorMatricula()\x22\x20style=\x22background:#f39c12;\x20border:none;\x22>⚙️\x20Configurar\x20Formulário</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22area-dinamica-hub\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22text-align:center;\x20padding:50px;\x20opacity:0.6;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:40px;\x22>📂</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Selecione\x20uma\x20das\x20opções\x20acima\x20para\x20gerenciar\x20suas\x20matrículas\x20e\x20contratos.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20';},'mostrarAreaLinks':async()=>{const _0x3121d9=a0_0x5d5ecf,_0x44c002=document[_0x3121d9(0x21a)](_0x3121d9(0x50d));_0x44c002[_0x3121d9(0xec)]=_0x3121d9(0x1b0);try{const _0x1d2956=await App['api'](_0x3121d9(0x49c));if(!_0x1d2956||_0x1d2956[_0x3121d9(0x1b4)]||!_0x1d2956[_0x3121d9(0x495)]){_0x44c002[_0x3121d9(0xec)]=_0x3121d9(0x12c);return;}const _0x4f36f1=_0x1d2956['escolaId'],_0x33489f=''+window[_0x3121d9(0x10c)][_0x3121d9(0x579)]+window[_0x3121d9(0x10c)][_0x3121d9(0x34f)][_0x3121d9(0x513)]('index.html',''),_0xd788fa=_0x33489f+'matricula.html?escola='+encodeURIComponent(_0x4f36f1),_0x5b61a4=Array[_0x3121d9(0x3ef)](_0x1d2956[_0x3121d9(0x36e)])?_0x1d2956[_0x3121d9(0x36e)]:[],_0x108f5a=_0x5b61a4[_0x3121d9(0xe1)]===0x0?'<p\x20style=\x22text-align:center;\x20color:#999;\x20font-size:13px;\x20padding:20px;\x20border:1px\x20dashed\x20#ccc;\x20border-radius:8px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Nenhum\x20link/campanha\x20gerado\x20ainda.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>':_0x5b61a4['map'](_0x5a7c1b=>{const _0x41ab10=_0x3121d9,_0x57e876=_0xd788fa+'&ref='+encodeURIComponent(_0x5a7c1b['id']);return _0x41ab10(0x500)+App[_0x41ab10(0x159)](_0x5a7c1b['nome']||_0x41ab10(0x531))+_0x41ab10(0x1ca)+App['escapeHTML'](_0x5a7c1b[_0x41ab10(0x43c)]||'-')+_0x41ab10(0x19d)+_0x57e876+_0x41ab10(0x482)+_0x57e876+_0x41ab10(0x20a)+_0x57e876+_0x41ab10(0x12e);})['join']('');_0x44c002[_0x3121d9(0xec)]=_0x3121d9(0x4c0)+_0xd788fa+'\x22\x20readonly\x20style=\x22width:100%;\x20padding:12px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:8px;\x20margin-bottom:10px;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:8px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22navigator.clipboard.writeText(document.getElementById(\x27link-principal-matricula\x27).value);\x20App.showToast(\x27Link\x20principal\x20copiado!\x27,\x20\x27success\x27);\x22\x20style=\x22width:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20📋\x20Copiar\x20Link\x20Principal\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.open(document.getElementById(\x27link-principal-matricula\x27).value,\x20\x27_blank\x27)\x22\x20style=\x22width:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20🔎\x20Abrir\x20Link\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#eee;\x20padding:15px;\x20border-radius:10px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20display:block;\x20margin-bottom:8px;\x22>Criar\x20link\x20personalizado\x20/\x20campanha</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20id=\x22nome-novo-link-matricula\x22\x20placeholder=\x22Ex:\x20Instagram,\x20WhatsApp,\x20Turma\x20Sábado,\x20Campanha\x20Maio...\x22\x20style=\x22width:100%;\x20padding:12px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:8px;\x20margin-bottom:10px;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.criarLinkMatriculaCampanha()\x22\x20style=\x22width:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20➕\x20Gerar\x20Link\x20Personalizado\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4>Links\x20gerados</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x108f5a+_0x3121d9(0x237);}catch(_0xfe32fd){console[_0x3121d9(0x1b4)](_0xfe32fd),_0x44c002[_0x3121d9(0xec)]=_0x3121d9(0x46f);}},'criarLinkMatriculaCampanha':async()=>{const _0x1cbc0c=a0_0x5d5ecf,_0x3aa116=document['getElementById'](_0x1cbc0c(0x4ec)),_0x1f7060=_0x3aa116?.[_0x1cbc0c(0x4c9)]?.[_0x1cbc0c(0xfc)]();if(!_0x1f7060)return App[_0x1cbc0c(0x424)](_0x1cbc0c(0x366),_0x1cbc0c(0x2e2));try{const _0x5e2409=await App[_0x1cbc0c(0x4e9)](_0x1cbc0c(0x49c));if(!_0x5e2409||_0x5e2409[_0x1cbc0c(0x1b4)]||!_0x5e2409['escolaId'])return App[_0x1cbc0c(0x424)]('Não\x20foi\x20possível\x20carregar\x20os\x20dados\x20da\x20instituição.',_0x1cbc0c(0x1b4));const _0xabb2c4=Array[_0x1cbc0c(0x3ef)](_0x5e2409[_0x1cbc0c(0x36e)])?_0x5e2409['linksMatricula']:[],_0x1611b0={'id':_0x1cbc0c(0x269)+Date['now'](),'nome':_0x1f7060,'criadoEm':new Date()[_0x1cbc0c(0x32a)](_0x1cbc0c(0x39b))},_0x12ff8d={..._0x5e2409,'linksMatricula':[_0x1611b0,..._0xabb2c4]},_0x331872=await App['api'](_0x1cbc0c(0x49c),_0x1cbc0c(0x4b9),_0x12ff8d);if(_0x331872&&_0x331872[_0x1cbc0c(0x1b4)])return App['showToast'](_0x331872[_0x1cbc0c(0x1b4)],_0x1cbc0c(0x1b4));App[_0x1cbc0c(0x424)](_0x1cbc0c(0x329),_0x1cbc0c(0x553)),App[_0x1cbc0c(0x520)]();}catch(_0x136571){console[_0x1cbc0c(0x1b4)](_0x136571),App[_0x1cbc0c(0x424)](_0x1cbc0c(0x47b),'error');}},'gerarNovoLinkMatricula':async()=>{const _0x43a30d=a0_0x5d5ecf,_0x256da4=document['getElementById'](_0x43a30d(0x2fb))[_0x43a30d(0x4c9)][_0x43a30d(0xfc)]();if(!_0x256da4)return App['showToast'](_0x43a30d(0x59d),_0x43a30d(0x2e2));const _0x2058ab=document[_0x43a30d(0x382)](_0x43a30d(0x2f6)),_0x21d753=_0x2058ab[_0x43a30d(0x4ab)];_0x2058ab[_0x43a30d(0x4ab)]=_0x43a30d(0x2e8),_0x2058ab[_0x43a30d(0x1e1)]=!![];try{const _0x15d8d6=await App[_0x43a30d(0x4e9)](_0x43a30d(0x49c))||{},_0x4869c3=_0x15d8d6[_0x43a30d(0x36e)]||[],_0x3dce9e={'id':window[_0x43a30d(0x27e)][_0x43a30d(0x1cd)]()[_0x43a30d(0x193)]('-')[0x0]['toUpperCase'](),'nome':_0x256da4,'data':new Date()[_0x43a30d(0x32a)](_0x43a30d(0x39b))};_0x4869c3[_0x43a30d(0xfe)](_0x3dce9e),_0x15d8d6[_0x43a30d(0x36e)]=_0x4869c3,await App['api'](_0x43a30d(0x49c),_0x43a30d(0x4b9),_0x15d8d6),App[_0x43a30d(0x424)]('Link\x20gerado\x20com\x20sucesso!','success'),App[_0x43a30d(0x520)]();}catch(_0x3cba9d){App[_0x43a30d(0x424)](_0x43a30d(0x3d4),_0x43a30d(0x1b4));}finally{_0x2058ab&&(_0x2058ab[_0x43a30d(0x4ab)]=_0x21d753,_0x2058ab['disabled']=![]);}},'excluirLinkMatricula':async _0x5ce24e=>{const _0x473db5=a0_0x5d5ecf;if(!confirm('Tem\x20a\x20certeza\x20que\x20deseja\x20apagar\x20este\x20link?\x20O\x20link\x20principal\x20continuará\x20a\x20funcionar.'))return;try{const _0x3582a4=await App[_0x473db5(0x4e9)](_0x473db5(0x49c))||{};let _0x115931=_0x3582a4[_0x473db5(0x36e)]||[];_0x3582a4[_0x473db5(0x36e)]=_0x115931['filter'](_0x22d616=>_0x22d616['id']!==_0x5ce24e),await App[_0x473db5(0x4e9)]('/escola',_0x473db5(0x4b9),_0x3582a4),App[_0x473db5(0x424)]('Link\x20apagado\x20do\x20histórico.','success'),App[_0x473db5(0x520)]();}catch(_0x123e83){App[_0x473db5(0x424)](_0x473db5(0x2f9),'error');}},'renderizarContratos':async()=>{const _0x1a1b54=a0_0x5d5ecf,_0x2d3242=document[_0x1a1b54(0x21a)](_0x1a1b54(0x50d))||document['getElementById'](_0x1a1b54(0x214));_0x2d3242[_0x1a1b54(0xec)]=_0x1a1b54(0x56d);try{const _0x592a22=await App[_0x1a1b54(0x4e9)](_0x1a1b54(0x35f)),_0x33565f=Array['isArray'](_0x592a22)?_0x592a22:[];if(_0x33565f[_0x1a1b54(0xe1)]===0x0){_0x2d3242['innerHTML']='<div\x20style=\x22text-align:center;\x20padding:40px;\x22><span\x20style=\x22font-size:50px;\x22>🗄️</span><h3\x20style=\x22color:#666;\x22>Cofre\x20Vazio</h3><p\x20style=\x22font-size:13px;\x20color:#999;\x22>Os\x20recibos\x20imutáveis\x20aparecerão\x20aqui\x20quando\x20os\x20alunos\x20preencherem\x20a\x20matrícula.</p></div>';return;}_0x33565f[_0x1a1b54(0x2d0)]((_0x29496c,_0x4b9574)=>new Date(_0x4b9574[_0x1a1b54(0x37a)])-new Date(_0x29496c[_0x1a1b54(0x37a)]));let _0x34dcd9=_0x33565f[_0x1a1b54(0x3b0)](_0x328e79=>{const _0x3ee8f7=_0x1a1b54,_0x11cce2=new Date(_0x328e79[_0x3ee8f7(0x37a)])[_0x3ee8f7(0x32a)](_0x3ee8f7(0x39b));return'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#eee;\x20padding:15px;\x20border-radius:8px;\x20margin-bottom:10px;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x20border-left:\x205px\x20solid\x20#2c3e50;\x20box-shadow:\x200\x202px\x204px\x20rgba(0,0,0,0.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:bold;\x20color:#2c3e50;\x20font-size:15px;\x22>📄\x20'+App[_0x3ee8f7(0x159)](_0x328e79['nomeAluno'])+_0x3ee8f7(0x569)+_0x11cce2+_0x3ee8f7(0xe8)+_0x328e79['id']+_0x3ee8f7(0x488)+_0x328e79['id']+_0x3ee8f7(0x573);})[_0x1a1b54(0x358)]('');_0x2d3242['innerHTML']='<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fdf2f2;\x20border:1px\x20solid\x20#f5b7b1;\x20color:#c0392b;\x20padding:12px;\x20border-radius:6px;\x20margin-bottom:20px;\x20font-size:13px;\x20text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20🔒\x20<strong>Zona\x20de\x20Segurança\x20Jurídica:</strong>\x20Os\x20documentos\x20listados\x20abaixo\x20são\x20registos\x20oficiais\x20imutáveis.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x34dcd9+_0x1a1b54(0x483),App[_0x1a1b54(0x194)]=_0x33565f;}catch(_0x5d57c6){_0x2d3242['innerHTML']='<p\x20style=\x27color:red;\x27>Erro\x20ao\x20carregar\x20cofre.</p>';}},'imprimirContrato':()=>{const _0x24e18f=a0_0x5d5ecf,_0x3e13c0=JSON['parse'](localStorage['getItem'](App[_0x24e18f(0x11d)]('escola_perfil')))||{},_0x55553e=_0x3e13c0[_0x24e18f(0x3c0)]||'Instituição\x20de\x20Ensino',_0x23ca77=_0x3e13c0['cnpj']?_0x24e18f(0x17b)+_0x3e13c0['cnpj']:'',_0x1d078d=_0x3e13c0[_0x24e18f(0x554)]&&_0x3e13c0[_0x24e18f(0x554)][_0x24e18f(0xe1)]>0x32&&!_0x3e13c0[_0x24e18f(0x554)][_0x24e18f(0x1b9)](_0x24e18f(0x3ba))?_0x24e18f(0x497)+_0x3e13c0[_0x24e18f(0x554)]+'\x22\x20style=\x22max-height:80px;\x20max-width:120px;\x20object-fit:contain;\x22>':'',_0x1d58d6=document[_0x24e18f(0x21a)](_0x24e18f(0x209)),_0x5f1d94=_0x1d58d6['cloneNode'](!![]),_0x58a9b7=document[_0x24e18f(0x53a)](_0x24e18f(0x4b1));_0x58a9b7[_0x24e18f(0x1c7)][_0x24e18f(0x3b6)]='absolute',_0x58a9b7[_0x24e18f(0x1c7)][_0x24e18f(0x341)]=_0x24e18f(0x232),_0x58a9b7[_0x24e18f(0x1c7)][_0x24e18f(0x58a)]=_0x24e18f(0x241),_0x58a9b7[_0x24e18f(0x1c7)]['height']=_0x24e18f(0x103),_0x58a9b7['style']['border']=_0x24e18f(0x3bd),document[_0x24e18f(0x584)][_0x24e18f(0x15e)](_0x58a9b7);const _0x741303=_0x58a9b7[_0x24e18f(0x356)][_0x24e18f(0x169)];_0x741303[_0x24e18f(0x1f3)](),_0x741303[_0x24e18f(0x511)](_0x24e18f(0x3c8)+_0x1d078d+'\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2>'+App[_0x24e18f(0x159)](_0x55553e)+_0x24e18f(0x3a4)+App[_0x24e18f(0x159)](_0x23ca77)+'</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20'+_0x5f1d94['innerHTML']+_0x24e18f(0x104)+new Date()[_0x24e18f(0x32a)](_0x24e18f(0x39b))+_0x24e18f(0x20d)),_0x741303[_0x24e18f(0x385)](),setTimeout(()=>{const _0x39fa61=_0x24e18f;_0x58a9b7[_0x39fa61(0x356)][_0x39fa61(0x5a9)](),_0x58a9b7[_0x39fa61(0x356)][_0x39fa61(0x2db)](),setTimeout(()=>{const _0x517613=_0x39fa61;document[_0x517613(0x584)][_0x517613(0x47f)](_0x58a9b7);},0x5dc);},0x320);},'excluirContrato':_0x20bb9b=>{const _0x3bcb1c=a0_0x5d5ecf;App[_0x3bcb1c(0x376)](_0x3bcb1c(0x1a9),'Tem\x20a\x20certeza\x20que\x20deseja\x20apagar\x20este\x20documento\x20assinado?\x20Esta\x20ação\x20é\x20irreversível.',async _0x58f736=>{const _0x1f9e21=_0x3bcb1c;document[_0x1f9e21(0x584)]['style'][_0x1f9e21(0x55c)]=_0x1f9e21(0x3f3);try{const _0x160a26=await App[_0x1f9e21(0x4e9)](_0x1f9e21(0x149)+_0x20bb9b,_0x1f9e21(0x181));_0x160a26&&_0x160a26[_0x1f9e21(0x1b4)]?App['showToast'](_0x160a26[_0x1f9e21(0x1b4)],_0x1f9e21(0x1b4)):(App[_0x1f9e21(0x424)](_0x1f9e21(0x4ca),_0x1f9e21(0x553)),App[_0x1f9e21(0x1f2)]());}catch(_0x4e859d){App[_0x1f9e21(0x424)](_0x1f9e21(0x24c),_0x1f9e21(0x1b4));}finally{document['body'][_0x1f9e21(0x1c7)][_0x1f9e21(0x55c)]=_0x1f9e21(0x14c),_0x58f736[_0x1f9e21(0x1c7)][_0x1f9e21(0x4b7)]='0',setTimeout(()=>_0x58f736['style']['display']=_0x1f9e21(0x3bd),0x12c);}});},'renderizarConfiguradorMatricula':async()=>{const _0x9a3d26=a0_0x5d5ecf,_0x45c6f6=document['getElementById'](_0x9a3d26(0x50d));_0x45c6f6['innerHTML']='<p\x20style=\x22text-align:center;\x20padding:\x2040px;\x20color:#666;\x22>A\x20carregar\x20o\x20construtor\x20do\x20contrato...\x20⏳</p>';try{const _0x13d867=await App[_0x9a3d26(0x4e9)](_0x9a3d26(0x49c))||{};!_0x13d867[_0x9a3d26(0x46c)]&&(_0x13d867[_0x9a3d26(0x46c)]={'imagemHeader':_0x9a3d26(0x1ad),'imagemPosicao':'50%\x2050%','tituloHeader':'Matrícula\x20Digital','descHeader':_0x9a3d26(0x542),'opcoesPlano':'Padrão,\x20Intensivo,\x20Personalizado','opcoesVencimento':_0x9a3d26(0x2a5),'textoContrato':_0x9a3d26(0x38f)});App[_0x9a3d26(0x11a)]={..._0x13d867[_0x9a3d26(0x46c)]};if(!App[_0x9a3d26(0x11a)][_0x9a3d26(0x248)])App[_0x9a3d26(0x11a)][_0x9a3d26(0x248)]=_0x9a3d26(0x1e7);App[_0x9a3d26(0x11a)]['textoContrato']&&(App[_0x9a3d26(0x11a)][_0x9a3d26(0x21e)]=App['unescapeHTML'](App[_0x9a3d26(0x11a)][_0x9a3d26(0x21e)])),_0x45c6f6[_0x9a3d26(0xec)]='\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:20px;\x20flex-wrap:\x20nowrap;\x20align-items:\x20flex-start;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x200\x200\x20260px;\x20width:\x20260px;\x20background:\x20white;\x20padding:\x2020px;\x20border-radius:\x2012px;\x20box-shadow:\x200\x204px\x2015px\x20rgba(0,0,0,0.05);\x20box-sizing:\x20border-box;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#2c3e50;\x20font-size:16px;\x20border-bottom:2px\x20solid\x20#eee;\x20padding-bottom:10px;\x22>🛠️\x20Ferramentas</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#f1f2f6;\x20color:#2c3e50;\x20border:1px\x20solid\x20#dcdde1;\x20margin-bottom:5px;\x20justify-content:flex-start;\x22\x20onclick=\x22App.editarConfig(\x27imagem\x27)\x22>🖼️\x20Imagem\x20do\x20Cabeçalho</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20color:#7f8c8d;\x20text-align:center;\x20margin-bottom:15px;\x20line-height:1.4;\x22>Tamanho\x20recomendado:<br><b\x20style=\x22color:#2c3e50;\x22>800\x20x\x20400px</b></div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#f1f2f6;\x20color:#2c3e50;\x20border:1px\x20solid\x20#dcdde1;\x20margin-bottom:10px;\x20justify-content:flex-start;\x22\x20onclick=\x22App.editarConfig(\x27titulo\x27)\x22>✏️\x20Título\x20do\x20Cabeçalho</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#f1f2f6;\x20color:#2c3e50;\x20border:1px\x20solid\x20#dcdde1;\x20margin-bottom:10px;\x20justify-content:flex-start;\x22\x20onclick=\x22App.editarConfig(\x27descricao\x27)\x22>📝\x20Descrição\x20do\x20Cabeçalho</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#f1f2f6;\x20color:#2c3e50;\x20border:1px\x20solid\x20#dcdde1;\x20margin-bottom:10px;\x20justify-content:flex-start;\x22\x20onclick=\x22App.editarConfig(\x27opcoes\x27)\x22>⚙️\x20Alterar\x20Dados\x20Editáveis</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#34495e;\x20color:white;\x20border:none;\x20margin-bottom:25px;\x20justify-content:flex-start;\x22\x20onclick=\x22App.editarConfig(\x27contrato\x27)\x22>📑\x20Editar\x20Contrato\x20Digital</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#27ae60;\x20border:none;\x20justify-content:center;\x20padding:15px;\x20font-weight:bold;\x22\x20onclick=\x22App.salvarConfiguradorMatricula()\x22>💾\x20Salvar\x20Tudo</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:\x201;\x20min-width:\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#e0e6ed;\x20padding:20px;\x20border-radius:12px;\x20display:flex;\x20justify-content:center;\x20width:100%;\x20box-sizing:\x20border-box;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22preview-word-doc\x22\x20style=\x22background:white;\x20width:100%;\x20max-width:100%;\x20min-height:600px;\x20box-shadow:0\x2015px\x2035px\x20rgba(0,0,0,0.1);\x20border-radius:8px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20',App['atualizarPreviewConfigurador']();}catch(_0x28d774){_0x45c6f6[_0x9a3d26(0xec)]='<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20carregar\x20o\x20configurador.</p>';}},'atualizarPreviewConfigurador':()=>{const _0x16d91f=a0_0x5d5ecf,_0x78a591=document[_0x16d91f(0x21a)](_0x16d91f(0xee));_0x78a591&&(_0x78a591['innerHTML']=_0x16d91f(0x46e)+App[_0x16d91f(0x11a)][_0x16d91f(0x4dc)]+_0x16d91f(0x438)+App[_0x16d91f(0x11a)]['imagemPosicao']+_0x16d91f(0x271)+App[_0x16d91f(0x159)](App[_0x16d91f(0x11a)][_0x16d91f(0x1f9)])+'</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#7f8c8d;\x20font-size:14px;\x20margin:0;\x22>'+App[_0x16d91f(0x159)](App[_0x16d91f(0x11a)][_0x16d91f(0x2e1)])+_0x16d91f(0x117)+App['configTemp'][_0x16d91f(0x27b)]+_0x16d91f(0x4ea)+App[_0x16d91f(0x11a)]['opcoesVencimento']+'</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22color:#2980b9;\x22>📑\x20Texto\x20do\x20Contrato</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:11px;\x20color:#555;\x20background:#f9f9f9;\x20padding:15px;\x20border-radius:6px;\x20border:1px\x20solid\x20#eee;\x20height:300px;\x20overflow-y:auto;\x20text-align:justify;\x22>'+App[_0x16d91f(0x11a)][_0x16d91f(0x21e)]+_0x16d91f(0x539));},'editarConfig':_0x43415a=>{const _0x2eaecb=a0_0x5d5ecf;if(_0x43415a===_0x2eaecb(0x39a)){const _0x8c5bcd=document[_0x2eaecb(0x53a)](_0x2eaecb(0x4c3));_0x8c5bcd[_0x2eaecb(0x30c)]=_0x2eaecb(0x326),_0x8c5bcd[_0x2eaecb(0x433)]=_0x2eaecb(0x1cc),_0x8c5bcd['onchange']=_0x3881a8=>{const _0x5925b6=_0x2eaecb,_0x4bf8c2=_0x3881a8[_0x5925b6(0x245)][_0x5925b6(0x2ce)][0x0];_0x4bf8c2&&(App[_0x5925b6(0x424)](_0x5925b6(0x1ce),_0x5925b6(0x131)),App[_0x5925b6(0x410)](_0x4bf8c2,0x320,_0x44b73c=>{const _0xa854d6=_0x5925b6;App[_0xa854d6(0x11a)][_0xa854d6(0x4dc)]=_0x44b73c,App[_0xa854d6(0x5a2)](),App[_0xa854d6(0x424)](_0xa854d6(0x161),_0xa854d6(0x553));}));},_0x8c5bcd[_0x2eaecb(0x4e2)]();}else{if(_0x43415a===_0x2eaecb(0x3e5)||_0x43415a===_0x2eaecb(0x330)||_0x43415a===_0x2eaecb(0x455)){const _0x4d382d=(_0xcf2e26,_0x8dc029,_0x4865a4)=>{const _0x5f0bcb=_0x2eaecb,_0x4e4d71=document[_0x5f0bcb(0x53a)]('div');_0x4e4d71[_0x5f0bcb(0x1c7)][_0x5f0bcb(0x508)]='position:fixed;\x20top:0;\x20left:0;\x20width:100%;\x20height:100%;\x20background:rgba(0,0,0,0.5);\x20backdrop-filter:blur(5px);\x20display:flex;\x20align-items:center;\x20justify-content:center;\x20z-index:9999;\x20animation:\x20fadeIn\x200.3s\x20ease;';const _0x3d15aa=document[_0x5f0bcb(0x53a)]('div');_0x3d15aa[_0x5f0bcb(0x1c7)][_0x5f0bcb(0x508)]=_0x5f0bcb(0x139),_0x3d15aa[_0x5f0bcb(0xec)]=_0x5f0bcb(0x4b8)+_0xcf2e26+_0x5f0bcb(0x210)+_0x8dc029+_0x5f0bcb(0x3fa),_0x4e4d71[_0x5f0bcb(0x15e)](_0x3d15aa),document[_0x5f0bcb(0x584)]['appendChild'](_0x4e4d71);const _0x25b4c6=()=>{const _0x1e1ca8=_0x5f0bcb;_0x4e4d71[_0x1e1ca8(0x1c7)][_0x1e1ca8(0x42c)]=_0x1e1ca8(0x280),_0x3d15aa['style'][_0x1e1ca8(0x42c)]=_0x1e1ca8(0x146),setTimeout(()=>document[_0x1e1ca8(0x584)]['removeChild'](_0x4e4d71),0xc8);};_0x3d15aa['querySelector']('#btnCancelarModal')[_0x5f0bcb(0x2b8)]=_0x25b4c6,_0x3d15aa['querySelector'](_0x5f0bcb(0x588))['onclick']=()=>{_0x4865a4(_0x3d15aa),_0x25b4c6();};};if(_0x43415a===_0x2eaecb(0x3e5))_0x4d382d('✏️\x20Editar\x20Título',_0x2eaecb(0x1a3)+(App[_0x2eaecb(0x11a)][_0x2eaecb(0x1f9)]||'')+'\x22>',_0x529182=>{const _0x257339=_0x2eaecb;App['configTemp'][_0x257339(0x1f9)]=_0x529182[_0x257339(0x382)](_0x257339(0x340))['value'],App[_0x257339(0x5a2)]();});else{if(_0x43415a==='descricao')_0x4d382d(_0x2eaecb(0x50e),_0x2eaecb(0x3a6)+(App[_0x2eaecb(0x11a)]['descHeader']||'')+_0x2eaecb(0x3e0),_0x36f9db=>{const _0x2e413c=_0x2eaecb;App[_0x2e413c(0x11a)]['descHeader']=_0x36f9db[_0x2e413c(0x382)](_0x2e413c(0x365))[_0x2e413c(0x4c9)],App[_0x2e413c(0x5a2)]();});else _0x43415a===_0x2eaecb(0x455)&&_0x4d382d(_0x2eaecb(0x2ef),_0x2eaecb(0x100)+(App[_0x2eaecb(0x11a)]['opcoesPlano']||'')+_0x2eaecb(0x14f)+(App['configTemp']['opcoesVencimento']||'')+_0x2eaecb(0x389),_0xeea855=>{const _0xfbe021=_0x2eaecb;App[_0xfbe021(0x11a)][_0xfbe021(0x27b)]=_0xeea855[_0xfbe021(0x382)](_0xfbe021(0x1d1))[_0xfbe021(0x4c9)],App['configTemp'][_0xfbe021(0x16a)]=_0xeea855['querySelector'](_0xfbe021(0x121))[_0xfbe021(0x4c9)],App[_0xfbe021(0x5a2)]();});}}else{if(_0x43415a===_0x2eaecb(0x1b6)){const _0x2f578d=document[_0x2eaecb(0x21a)](_0x2eaecb(0x26b));if(_0x2f578d)_0x2f578d[_0x2eaecb(0x1c7)]['display']=_0x2eaecb(0x141);document[_0x2eaecb(0x21a)](_0x2eaecb(0x24a))[_0x2eaecb(0x4ab)]=_0x2eaecb(0x3cc),document[_0x2eaecb(0x21a)](_0x2eaecb(0xf2))[_0x2eaecb(0xec)]=_0x2eaecb(0x41f)+App[_0x2eaecb(0x255)](App['configTemp'][_0x2eaecb(0x21e)]||'')+_0x2eaecb(0x2fa),setTimeout(()=>{const _0x50112d=_0x2eaecb;window[_0x50112d(0x1d4)]=new Quill(_0x50112d(0x49a),{'theme':'snow','modules':{'toolbar':[[_0x50112d(0x4bc),'italic',_0x50112d(0x46a)],[{'list':_0x50112d(0x2a6)},{'list':_0x50112d(0x283)}],[{'align':[]}],[{'size':['small',![],_0x50112d(0x3ad),_0x50112d(0x4eb)]}],[_0x50112d(0x4d2)]]}});},0x64);const _0x759af=document[_0x2eaecb(0x382)](_0x2eaecb(0x289));_0x759af[_0x2eaecb(0x1c7)][_0x2eaecb(0x115)]=_0x2eaecb(0x518),_0x759af[_0x2eaecb(0xec)]=_0x2eaecb(0x38e),_0x759af['onclick']=()=>{const _0x200785=_0x2eaecb;App[_0x200785(0x11a)]['textoContrato']=window[_0x200785(0x1d4)][_0x200785(0xe7)][_0x200785(0xec)],App[_0x200785(0x5a2)](),App[_0x200785(0x12a)]();};}}}},'salvarConfiguradorMatricula':async()=>{const _0x342bd6=a0_0x5d5ecf,_0x55f04b=document[_0x342bd6(0x382)](_0x342bd6(0x3b8)),_0x41f041=_0x55f04b?_0x55f04b[_0x342bd6(0xec)]:_0x342bd6(0x1e0);_0x55f04b&&(_0x55f04b[_0x342bd6(0xec)]='A\x20salvar...\x20⏳',_0x55f04b[_0x342bd6(0x1e1)]=!![],_0x55f04b['style'][_0x342bd6(0x4b7)]=_0x342bd6(0x4e8));document[_0x342bd6(0x584)][_0x342bd6(0x1c7)][_0x342bd6(0x55c)]=_0x342bd6(0x3f3);try{const _0x1cd75b=await App['api'](_0x342bd6(0x49c))||{};_0x1cd75b[_0x342bd6(0x46c)]=App[_0x342bd6(0x11a)],await App[_0x342bd6(0x4e9)]('/escola',_0x342bd6(0x4b9),_0x1cd75b),App['showToast'](_0x342bd6(0x267),_0x342bd6(0x553));}catch(_0xf66fc5){App[_0x342bd6(0x424)](_0x342bd6(0x1f5),_0x342bd6(0x1b4));}finally{_0x55f04b&&(_0x55f04b[_0x342bd6(0xec)]=_0x41f041,_0x55f04b[_0x342bd6(0x1e1)]=![],_0x55f04b[_0x342bd6(0x1c7)]['opacity']='1'),document[_0x342bd6(0x584)][_0x342bd6(0x1c7)]['cursor']=_0x342bd6(0x14c);}},'abrirModalConfirmacao':(_0x51e327,_0x1e5599,_0x2107c7)=>{const _0x3f0c55=a0_0x5d5ecf;let _0x571abf=document[_0x3f0c55(0x21a)](_0x3f0c55(0x4c7));!_0x571abf&&(_0x571abf=document[_0x3f0c55(0x53a)](_0x3f0c55(0x3d3)),_0x571abf['id']='modal-confirmacao-bonito',_0x571abf['style'][_0x3f0c55(0x508)]=_0x3f0c55(0x17c),document['body'][_0x3f0c55(0x15e)](_0x571abf)),_0x571abf[_0x3f0c55(0xec)]=_0x3f0c55(0x2c1)+_0x51e327+'</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#7f8c8d;\x20font-size:14px;\x20margin-bottom:25px;\x20line-height:1.5;\x22>'+_0x1e5599+_0x3f0c55(0x296),_0x571abf[_0x3f0c55(0x1c7)]['display']='flex',setTimeout(()=>{const _0x28737d=_0x3f0c55;_0x571abf[_0x28737d(0x1c7)][_0x28737d(0x4b7)]='1',document[_0x28737d(0x21a)]('box-confirmacao-interno')[_0x28737d(0x1c7)][_0x28737d(0x327)]=_0x28737d(0x54a);},0xa),document[_0x3f0c55(0x21a)](_0x3f0c55(0x1c0))['onclick']=function(){const _0x88f39b=_0x3f0c55,_0x145d5c=this;_0x145d5c[_0x88f39b(0xec)]=_0x88f39b(0x2de),_0x145d5c[_0x88f39b(0x1c7)][_0x88f39b(0x4b7)]=_0x88f39b(0x4e8),_0x145d5c[_0x88f39b(0x1e1)]=!![],_0x2107c7(_0x571abf);};},'dragState':{'isDragging':![],'startX':0x0,'startY':0x0,'bgX':0x32,'bgY':0x32},'iniciarArraste':_0x697c3f=>{const _0x3c7f9a=a0_0x5d5ecf;App[_0x3c7f9a(0x396)][_0x3c7f9a(0x516)]=!![],App[_0x3c7f9a(0x396)][_0x3c7f9a(0x259)]=_0x697c3f[_0x3c7f9a(0x30c)][_0x3c7f9a(0x1b9)](_0x3c7f9a(0x599))?_0x697c3f[_0x3c7f9a(0x263)][0x0][_0x3c7f9a(0x1d3)]:_0x697c3f[_0x3c7f9a(0x1d3)],App[_0x3c7f9a(0x396)][_0x3c7f9a(0x3d0)]=_0x697c3f[_0x3c7f9a(0x30c)][_0x3c7f9a(0x1b9)](_0x3c7f9a(0x599))?_0x697c3f['touches'][0x0][_0x3c7f9a(0x2d4)]:_0x697c3f['clientY'];let _0x4d4da7=App['configTemp'][_0x3c7f9a(0x248)]||_0x3c7f9a(0x1e7),_0x3899c2=_0x4d4da7[_0x3c7f9a(0x193)]('\x20');App[_0x3c7f9a(0x396)]['bgX']=parseFloat(_0x3899c2[0x0])||0x32,App[_0x3c7f9a(0x396)][_0x3c7f9a(0x536)]=parseFloat(_0x3899c2[0x1])||0x32;const _0x2d5062=document['getElementById']('preview-header-img');if(_0x2d5062)_0x2d5062[_0x3c7f9a(0x1c7)][_0x3c7f9a(0x55c)]=_0x3c7f9a(0x29f);document[_0x3c7f9a(0x432)]('mousemove',App[_0x3c7f9a(0x345)]),document['addEventListener'](_0x3c7f9a(0x1e4),App[_0x3c7f9a(0x44c)]),document[_0x3c7f9a(0x432)]('touchmove',App[_0x3c7f9a(0x345)],{'passive':![]}),document['addEventListener'](_0x3c7f9a(0x411),App[_0x3c7f9a(0x44c)]);},'arrastarImagem':_0x23a075=>{const _0x261465=a0_0x5d5ecf;if(!App['dragState'][_0x261465(0x516)])return;_0x23a075[_0x261465(0x448)]();const _0x3691ad=_0x23a075[_0x261465(0x30c)][_0x261465(0x1b9)](_0x261465(0x599))?_0x23a075[_0x261465(0x263)][0x0][_0x261465(0x1d3)]:_0x23a075[_0x261465(0x1d3)],_0x2cf8a7=_0x23a075['type'][_0x261465(0x1b9)](_0x261465(0x599))?_0x23a075[_0x261465(0x263)][0x0][_0x261465(0x2d4)]:_0x23a075['clientY'],_0x445640=_0x3691ad-App[_0x261465(0x396)][_0x261465(0x259)],_0x53dec0=_0x2cf8a7-App[_0x261465(0x396)][_0x261465(0x3d0)],_0x2915a5=0.2;let _0x4f9068=App['dragState'][_0x261465(0x4cd)]-_0x445640*_0x2915a5,_0x3b88f7=App[_0x261465(0x396)]['bgY']-_0x53dec0*_0x2915a5;_0x4f9068=Math[_0x261465(0x125)](0x0,Math[_0x261465(0x2c7)](0x64,_0x4f9068)),_0x3b88f7=Math['max'](0x0,Math[_0x261465(0x2c7)](0x64,_0x3b88f7)),App['configTemp'][_0x261465(0x248)]=_0x4f9068['toFixed'](0x2)+'%\x20'+_0x3b88f7[_0x261465(0x1af)](0x2)+'%';const _0x56c445=document[_0x261465(0x21a)](_0x261465(0x17d));if(_0x56c445)_0x56c445['style']['backgroundPosition']=App[_0x261465(0x11a)][_0x261465(0x248)];App[_0x261465(0x396)][_0x261465(0x259)]=_0x3691ad,App[_0x261465(0x396)][_0x261465(0x3d0)]=_0x2cf8a7,App[_0x261465(0x396)]['bgX']=_0x4f9068,App[_0x261465(0x396)]['bgY']=_0x3b88f7;},'pararArraste':()=>{const _0x3b9f15=a0_0x5d5ecf;if(App['dragState'][_0x3b9f15(0x516)]){App[_0x3b9f15(0x396)][_0x3b9f15(0x516)]=![];const _0x5086f1=document[_0x3b9f15(0x21a)](_0x3b9f15(0x17d));if(_0x5086f1)_0x5086f1[_0x3b9f15(0x1c7)][_0x3b9f15(0x55c)]=_0x3b9f15(0x231);document['removeEventListener']('mousemove',App[_0x3b9f15(0x345)]),document[_0x3b9f15(0x593)]('mouseup',App[_0x3b9f15(0x44c)]),document[_0x3b9f15(0x593)]('touchmove',App[_0x3b9f15(0x345)]),document[_0x3b9f15(0x593)]('touchend',App[_0x3b9f15(0x44c)]);}}};document[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0xea),App[a0_0x5d5ecf(0x243)]),document['addEventListener']('keydown',function(_0x46751d){const _0x1f8e04=a0_0x5d5ecf;if(_0x46751d['key']==='Escape'){App['fecharModal']();if(typeof App[_0x1f8e04(0x11b)]===_0x1f8e04(0x405))App[_0x1f8e04(0x11b)]();}}),window[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x5a9),()=>{const _0x5efbb0=a0_0x5d5ecf,_0x3657f5=document['getElementById'](_0x5efbb0(0x582));App[_0x5efbb0(0x252)]&&_0x3657f5&&_0x3657f5[_0x5efbb0(0x1c7)][_0x5efbb0(0x115)]!==_0x5efbb0(0x3bd)&&App[_0x5efbb0(0x574)]();}),document['addEventListener']('click',_0x51e444=>{const _0x3fe339=a0_0x5d5ecf,_0x156a5b=document[_0x3fe339(0x382)]('.notification-container');if(_0x156a5b&&!_0x156a5b[_0x3fe339(0x5aa)](_0x51e444[_0x3fe339(0x245)])){const _0x13f0b8=document[_0x3fe339(0x21a)](_0x3fe339(0x556));if(_0x13f0b8)_0x13f0b8[_0x3fe339(0xdc)][_0x3fe339(0x379)]('active');}}),window[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0xd9),()=>{const _0x2eccb8=a0_0x5d5ecf,_0x10de5d=document[_0x2eccb8(0x21a)](_0x2eccb8(0x368));if(_0x10de5d)_0x10de5d[_0x2eccb8(0x1c7)][_0x2eccb8(0x115)]=_0x2eccb8(0x25e);typeof App[_0x2eccb8(0x424)]===_0x2eccb8(0x405)&&App[_0x2eccb8(0x424)](_0x2eccb8(0x412),'error');}),window[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x51a),()=>{const _0x5b99ad=a0_0x5d5ecf,_0x33d8cc=document['getElementById']('offline-banner');if(_0x33d8cc)_0x33d8cc['style']['display']=_0x5b99ad(0x3bd);typeof App[_0x5b99ad(0x424)]===_0x5b99ad(0x405)&&App[_0x5b99ad(0x424)](_0x5b99ad(0x452),_0x5b99ad(0x553));});function a0_0x2f17(){const _0x24b57b=['escola_atalhos','\x22><div>','<p\x20style=\x22color:red;\x20text-align:center;\x22>Erro\x20ao\x20processar\x20as\x20horas\x20de\x20frequência.</p>','</textarea>','criarElemento','</label><input\x20type=\x22password\x22\x20id=\x22','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20processar\x20o\x20planejamento\x20atual...\x20⏳</p>','#1e8449','titulo','App\x20instalada\x20com\x20sucesso!\x20🎉','some','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:30px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22flex:1;\x20height:fit-content;\x20min-width:300px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3>Meus\x20Dados\x20de\x20Acesso</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:12px;\x20color:#666;\x20margin-bottom:15px;\x22>A\x20senha\x20atual\x20é\x20sempre\x20obrigatória\x20para\x20salvar\x20as\x20alterações.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>E-mail\x20Dono\x20da\x20Conta</label><input\x20type=\x22email\x22\x20id=\x22user-novo-email\x22\x20value=\x22','Item','keypress','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20margin-top:10px;\x20justify-content:center;\x22\x20onclick=\x22App.atualizarMeusDados()\x22>ATUALIZAR\x20DADOS</button>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x2030px;\x20border-top:\x201px\x20solid\x20#eee;\x20padding-top:\x2020px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2010px\x200;\x20color:\x20#333;\x22>🔒\x20Segurança\x20Avançada</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:\x2012px;\x20color:\x20#666;\x20margin-bottom:\x2015px;\x22>Use\x20o\x20sensor\x20de\x20rosto\x20(FaceID)\x20ou\x20impressão\x20digital\x20para\x20entrar.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22background:\x20#27ae60;\x20width:\x20100%;\x20justify-content:center;\x22\x20onclick=\x22App.configurarBiometria()\x22>👆\x20Ativar\x20Biometria</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22flex:2;\x20min-width:300px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3>Equipe\x20e\x20Acessos</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f9f9f9;\x20padding:20px;\x20border-radius:10px;\x20margin-bottom:20px;\x20border:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20id=\x22titulo-form-user\x22\x20style=\x22margin:0\x200\x2015px\x200;\x20color:#2c3e50;\x22>Novo\x20Usuário</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(150px,\x201fr));\x20gap:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Nome</label><input\x20id=\x22new-nome\x22\x20placeholder=\x22Ex:\x20Maria\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Login</label><input\x20id=\x22new-login\x22\x20placeholder=\x22Ex:\x20maria\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Senha</label><input\x20id=\x22new-senha\x22\x20type=\x22password\x22\x20placeholder=\x22******\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Permissão</label><select\x20id=\x22new-tipo\x22><option\x20value=\x22Gestor\x22>Gestor</option><option\x20value=\x22Secretaria\x22>Secretaria</option><option\x20value=\x22Professor\x22>Professor</option></select></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:right;\x20margin-top:10px;\x20display:flex;\x20justify-content:flex-end;\x20gap:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-cancel-user\x22\x20class=\x22btn-cancel\x22\x20onclick=\x22App.cancelarEdicaoUsuario()\x22\x20style=\x22display:none;\x20margin-top:0;\x22>✖️\x20CANCELAR</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-save-user\x22\x20class=\x22btn-primary\x22\x20style=\x22width:auto;\x20margin-top:0;\x22\x20onclick=\x22App.salvarNovoUsuario()\x22>CRIAR\x20USUÁRIO</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22table-responsive-wrapper\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20text-align:left;\x20border-collapse:collapse;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<thead><tr><th\x20style=\x22padding-bottom:10px;\x22>Nome</th><th\x20style=\x22padding-bottom:10px;\x22>Login</th><th\x20style=\x22padding-bottom:10px;\x22>Tipo</th><th\x20style=\x22text-align:right;\x22>Ações</th></tr></thead>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tbody>','</span>','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Número</label><input\x20id=\x22conf-numero\x22\x20value=\x22','log','isArray','<div\x20style=\x22background:#fdf2f2;\x20border:1px\x20solid\x20#e74c3c;\x20color:#c0392b;\x20padding:8px\x2012px;\x20border-radius:6px;\x20margin-bottom:15px;\x20font-size:12px;\x20font-weight:bold;\x20text-align:center;\x22>🗄️\x20Exibindo\x20Frequência\x20do\x20Histórico\x20Arquivado</div>','filtrarTabelaReativa','sidebarBg','wait','A\x20última\x20mensalidade\x20de\x20<b>','ver_arquivado','Erro\x20ao\x20carregar\x20contratos','backup','\x0a*Banco:*\x20','PublicKeyCredential','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:flex-end;\x20gap:12px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btnCancelarModal\x22\x20class=\x22modal-btn-cancel\x22>Cancelar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btnSalvarModal\x22\x20class=\x22modal-btn-save\x22>Salvar\x20Alterações</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','mensagem','#e74c3c','input-pin-login','00:00','Notas','<span\x20style=\x22color:','POST','pwa-btn-install','<option\x20value=\x22avulso\x22>✏️\x20Outro\x20Item\x20(Digitar\x20Manualmente)</option>','.\x20Para\x20realizar\x20o\x20pagamento\x20de\x20forma\x20rápida,\x20basta\x20enviar\x20o\x20valor\x20de\x20*R$\x20','function','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22opacity:0.7;\x20margin-top:0;\x20margin-bottom:20px;\x22>Olá,\x20','data-selecionado','setTitulo','</div><div><div\x20style=\x22font-weight:bold;\x20margin-bottom:10px;\x22>Área\x20Principal</div>','aparencia','login-pass','#95a5a6','<b>Faturação\x20Perdida!</b>\x20<b>','Matrícula\x20pausada.\x20Histórico\x20financeiro\x20preservado.','</b><br>','otimizarImagem','touchend','Sem\x20ligação\x20à\x20Internet!','/usuarios','Gestor','Login\x20ou\x20senha\x20incorretos','\x20acessos\x20atingido\x20no\x20plano\x20','floor','</div></div></div>','</td></tr>','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x22><strong>','Perfeito!','login','eventos','findIndex','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22editor-contrato-quill\x22\x20style=\x22height:350px;\x20background:#fff;\x20font-family:sans-serif;\x20line-height:1.5;\x22>','conf-numero','carga','Erro\x20nas\x20notificações','selected','showToast','\x22\x20placeholder=\x22Ex:\x20gestor@escola.com\x22\x20style=\x22width:100%;\x20border-left:\x204px\x20solid\x20#f39c12;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Login\x20de\x20Acesso</label><input\x20type=\x22text\x22\x20id=\x22user-novo-login\x22\x20value=\x22','*\x20para\x20a\x20chave\x20PIX\x20abaixo:\x0a\x0a*Instituição:*\x20','\x22\x20style=\x22max-height:80px;\x20max-width:120px;\x20object-fit:contain;\x22>','Erro\x20ao\x20marcar\x20notificações.','bufferToBase64','<div\x20style=\x22display:flex;\x20gap:5px;\x20justify-content:flex-end;\x20align-items:center;\x22>','App.renderizarTela(\x27mensalidades\x27)','animation','🗑️\x20RESETAR\x20TUDO','Atualizado\x20com\x20sucesso!','Pendente','renderizarHistoricoLinks','fire','addEventListener','accept','#25D366','\x27,\x20\x27','primary','</small></p>','\x27)\x20no-repeat;\x20background-size:\x20cover;\x20background-position:\x20','mensalidade','Documentos','thead','criadoEm','/estoques','Senha\x20Atual\x20(Obrigatória)','Reposição','novo_aluno','quantidade','boxShadow','204741HhQFfJ','codigo','setProperty','aulas','left','preventDefault','💎\x20Funcionalidade\x20disponível\x20a\x20partir\x20do\x20Plano\x20Profissional.\x20Faça\x20o\x20upgrade!','App.renderizarRelatorio(\x27financeiro\x27)','historico_links','pararArraste','entries','💾\x20SALVAR\x20ALTERAÇÕES','Erro\x20de\x20Leitura','Dossiê\x20Executivo','renderizarInicio','Ligação\x20à\x20Internet\x20restaurada!','renderizarCalendarioPro','createdAt','opcoes','search','Fundo:','#27ae60','reload','page_view','profissao','&#039;','🗄️\x20Arquivados','🗑️','ped_bol','Atualizando...\x20⏳','setupMobileMenu','<div\x20class=\x22card\x22\x20style=\x22max-width:\x20','conf-cidade','<b>Atenção\x20Gestor:</b>\x20O\x20seu\x20plano\x20<b>','Status','canvas','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Estado\x20(UF)</label><input\x20id=\x22conf-estado\x22\x20value=\x22','Erro\x20no\x20fetch:','Bearer\x20','underline','cnpj','configMatricula','v-forma','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22preview-header-img\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20onmousedown=\x22App.iniciarArraste(event)\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20ontouchstart=\x22App.iniciarArraste(event)\x22\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22width:100%;\x20height:120px;\x20background:url(\x27','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22text-align:center;\x20color:#e74c3c;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3>Erro</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Não\x20foi\x20possível\x20carregar\x20a\x20área\x20de\x20links.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','/sistema/notificacoes/lida/','getPropertyValue','botao','getAttribute','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22header-tela\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2>🔒\x20Cofre\x20de\x20Contratos\x20Digitais</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Documentos\x20assinados\x20em\x20tempo\x20real\x20via\x20matrícula\x20online.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card-tabela\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:100%;\x20text-align:left;\x20border-collapse:\x20collapse;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22background:#f4f6f7;\x20border-bottom:2px\x20solid\x20#ddd;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x22>Data/Hora</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x22>Aluno</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<th\x20style=\x22padding:12px;\x22>Ação</th>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','conf-cnpj','<div\x20class=\x22card\x22\x20style=\x22animation:\x20fadeIn\x200.3s\x20ease;\x20padding:0;\x20overflow:hidden;\x22>','App.renderizarRelatorio(\x27ficha\x27)','data-nova','toISOString','Receita','Erro\x20ao\x20criar\x20link\x20personalizado.','padStart','border','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>E-mail:</b>\x20','removeChild','quantidadeMinima','dia','\x22\x20readonly\x20style=\x22width:100%;\x20padding:10px;\x20border:1px\x20solid\x20#ddd;\x20border-radius:6px;\x20font-size:12px;\x20margin-bottom:10px;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:8px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22navigator.clipboard.writeText(\x27','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:90px;\x20background:#fef5e7;\x20border:1px\x20solid\x20#f39c12;\x20padding:15px\x2010px;\x20border-radius:8px;\x20text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:10px;\x20color:#d68910;\x20font-weight:bold;\x20text-transform:uppercase;\x20margin-bottom:5px;\x22>Justificadas</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:18px;\x20font-weight:bold;\x20color:#b9770e;\x22>','v-nomealuno','btn-cancel','alunoNome','\x27)\x22\x20style=\x22padding:8px\x2015px;\x20font-size:12px;\x20background:#2c3e50;\x20color:white;\x20border:none;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x20transition:\x20background\x200.2s;\x22>👁️\x20Ver</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.excluirContrato(\x27','Enter','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20carregar\x20estoque...\x20⏳</p>','PIN\x20em\x20formato\x20inválido.','período\x20letivo','</h3>','Sucesso!\x20Aluno\x20agora\x20está\x20como\x20','parse','/auth/recuperar-senha','sidebarText','App.renderizarTela(\x27plano\x27)','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:15px;\x20background:#eafaf1;\x20border:1px\x20solid\x20#27ae60;\x20text-align:center;\x20font-size:12px;\x20border-radius:6px;\x20page-break-inside:\x20avoid;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22margin:0\x200\x205px\x200;\x20color:#333;\x22>Pelo\x20presente\x20instrumento,\x20as\x20partes\x20concordam\x20com\x20todos\x20os\x20termos\x20acima\x20descritos.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20✅\x20<b>ACEITE\x20DIGITAL\x20REGISTRADO\x20COM\x20VALIDADE\x20JURÍDICA:</b><br>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:16px;\x20font-weight:bold;\x20color:#1e8449;\x20display:block;\x20margin-top:5px;\x22>📅\x20','input-novo-pin','escolaId','3656618lPrVvd','<img\x20src=\x22','app_install','</span></td><td\x20style=\x22text-align:right;\x20border-top:1px\x20solid\x20#eee;\x22><button\x20class=\x22btn-edit\x22\x20onclick=\x22App.preencherEdicaoUsuario(\x27','#editor-contrato-quill','carregarDadosEscola','/escola','customLogoUrl','⚠️\x20Limite\x20de\x20','--text-main','Planejamento','<label\x20class=\x22shortcut-item\x22\x20style=\x22background:#f9f9f9;\x20padding:8px\x2012px;\x20border-radius:6px;\x20cursor:pointer;\x22><input\x20type=\x22checkbox\x22\x20class=\x22sc-check\x22\x20value=\x22','Registrar\x20Venda\x20-\x20','Frequência\x20Escolar:\x20','estrutura','App.abrirEdicaoFinanceiro(\x27','btn','nascimento','<strong\x20style=\x22color:','O\x20ficheiro\x20de\x20backup\x20parece\x20estar\x20vazio.','Novembro','innerText','json','avaliacoes','voltarEtapa1','conf-banco','Sem\x20Nome','iframe','image/jpeg','Tela:\x20','onmouseover','#tela-login\x20.login-box,\x20#tela-login\x20.box-login','Deseja\x20restaurar\x20as\x20cores\x20e\x20fontes\x20padrão?','opacity','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20fadeIn\x20{\x20from\x20{\x20opacity:\x200;\x20}\x20to\x20{\x20opacity:\x201;\x20}\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@keyframes\x20scaleUp\x20{\x20from\x20{\x20transform:\x20scale(0.95);\x20opacity:\x200;\x20}\x20to\x20{\x20transform:\x20scale(1);\x20opacity:\x201;\x20}\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-custom-input\x20{\x20width:\x20100%;\x20padding:\x2012px;\x20border:\x201px\x20solid\x20#ced4da;\x20border-radius:\x208px;\x20box-sizing:\x20border-box;\x20font-family:\x20inherit;\x20font-size:\x2015px;\x20margin-top:\x206px;\x20transition:\x20border-color\x200.2s;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-custom-input:focus\x20{\x20border-color:\x20#0d6efd;\x20outline:\x20none;\x20box-shadow:\x200\x200\x200\x203px\x20rgba(13,110,253,0.2);\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-custom-label\x20{\x20font-weight:\x20600;\x20color:\x20#495057;\x20font-size:\x2014px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-btn-cancel\x20{\x20padding:\x2010px\x2018px;\x20background:\x20#f8f9fa;\x20color:\x20#495057;\x20border:\x201px\x20solid\x20#dee2e6;\x20border-radius:\x208px;\x20cursor:\x20pointer;\x20font-weight:\x20600;\x20transition:\x200.2s;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-btn-cancel:hover\x20{\x20background:\x20#e2e6ea;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-btn-save\x20{\x20padding:\x2010px\x2018px;\x20background:\x20#0d6efd;\x20color:\x20#fff;\x20border:\x20none;\x20border-radius:\x208px;\x20cursor:\x20pointer;\x20font-weight:\x20600;\x20transition:\x200.2s;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.modal-btn-save:hover\x20{\x20background:\x20#0b5ed7;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#212529;\x20font-size:20px;\x20border-bottom:1px\x20solid\x20#f1f3f5;\x20padding-bottom:15px;\x20margin-bottom:20px;\x22>','PUT','button[onclick=\x22App.processarRestauracao()\x22]','Junho','bold','Autenticação\x20Biométrica','</b>\x20precisa\x20de\x20','getMonth','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3>🔗\x20Links\x20de\x20Matrícula</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:13px;\x20color:#666;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Gere\x20links\x20públicos\x20para\x20matrícula\x20online.\x20Cada\x20link\x20abre\x20o\x20<strong>matricula.html</strong>\x20com\x20o\x20ID\x20desta\x20instituição.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f8f9fa;\x20border:1px\x20solid\x20#eee;\x20padding:15px;\x20border-radius:10px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20display:block;\x20margin-bottom:8px;\x22>Link\x20principal\x20da\x20instituição</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20id=\x22link-principal-matricula\x22\x20value=\x22','Validar\x20PIN','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','input','warn','</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','new-tipo','modal-confirmacao-bonito','A\x20Sincronizar\x20com\x20a\x20Nuvem...','value','Contrato\x20apagado\x20com\x20sucesso!','background:#3498db;\x20color:white;\x20border:none;\x20padding:8px\x2016px;\x20border-radius:6px;\x20cursor:pointer;\x20font-weight:bold;\x20margin-right:10px;\x20font-size:\x2014px;\x20transition:\x20background\x200.2s\x20ease,\x20opacity\x200.2s\x20ease;','O\x20status\x20selecionado\x20é\x20o\x20mesmo\x20que\x20o\x20atual.','bgX','Horário','text','\x20dia(s)</b>!\x20Renove\x20agora.','<div\x20class=\x22input-group\x22><label>','clean','<p\x20style=\x22padding:20px;\x20text-align:center;\x20color:#666;\x22>Carregando\x20painel\x20de\x20métricas...</p>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:var(--card-text);\x20font-size:16px;\x20margin-bottom:15px;\x20border-bottom:1px\x20solid\x20#eee;\x20padding-bottom:10px;\x22>Acesso\x20Rápido</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22shortcuts-grid\x22>','showLoading','✅\x20Link\x20copiado\x20com\x20sucesso!\x20Envie\x20para\x20os\x20alunos.','chavePix','/sistema/notificacoes/nao-lidas','>Maior\x20(110%)</option></select></div></div>','matricula_contrato','acao','imagemHeader','/alunos','?text=','data-nome','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:12px;\x20color:#7f8c8d;\x20margin-top:4px;\x22>📅\x20Período:\x20','\x22\x20placeholder=\x22','click','event','email','/alunos/','App.salvarVenda()','</b>!','0.8','api','</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20style=\x22flex:1;\x20padding:8px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:4px;\x22\x20disabled>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option>Vencimento:\x20','huge','nome-novo-link-matricula','tela-login','selecionarOpcaoStatus','Rel.\x20Financeiro','Por\x20favor,\x20insira\x20o\x20PIN\x20recebido\x20no\x20e-mail.','168ZdUQQa','roles','Para\x20confirmar\x20a\x20exclusão\x20TOTAL,\x20digite:\x20APAGAR\x20TUDO','PRE','Boletins','\x22\x20oninput=\x22App.mascaraCNPJ(this)\x22\x20maxlength=\x2218\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(250px,\x201fr));\x20gap:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Dados\x20Bancários\x20(Carnê)</label><input\x20id=\x22conf-banco\x22\x20value=\x22','🔔\x20*LEMBRETE\x20DE\x20VENCIMENTO*\x0aOlá,\x20','vencimento','verificarBloqueioGeral','--zoom-level','</tr>','alunos','titulo-pagina','img','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:20px;\x20flex-wrap:wrap;\x20margin-bottom:30px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22flex:1;\x20border-left:\x205px\x20solid\x20#27ae60;\x20padding:25px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:#27ae60;\x20border:none;\x20margin-top:0;\x22>📥\x20Fazer\x20Backup</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22opacity:0.7;\x20margin-bottom:20px;\x20font-size:13px;\x22>Baixe\x20uma\x20cópia\x20completa\x20de\x20todos\x20os\x20dados\x20do\x20sistema.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#27ae60;\x20justify-content:center;\x22\x20onclick=\x22App.realizarDownloadBackup()\x22>⬇️\x20BAIXAR\x20DADOS\x20(.JSON)</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22flex:1;\x20border-left:\x205px\x20solid\x20#f39c12;\x20padding:25px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:#f39c12;\x20border:none;\x20margin-top:0;\x22>📤\x20Restaurar</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22opacity:0.7;\x20margin-bottom:15px;\x20font-size:13px;\x22>Carregue\x20um\x20arquivo\x20de\x20backup\x20para\x20recuperar\x20dados.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22file\x22\x20id=\x22input-backup-file\x22\x20accept=\x22.json\x22\x20style=\x22width:100%;\x20margin-bottom:15px;\x20border:1px\x20solid\x20#ddd;\x20padding:10px;\x20border-radius:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#f39c12;\x20justify-content:center;\x22\x20onclick=\x22App.processarRestauracao()\x22>⬆️\x20RESTAURAR\x20DADOS</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22border:2px\x20solid\x20#e74c3c;\x20background:#fff5f5;\x20padding:30px;\x20text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:#c0392b;\x20border:none;\x20font-size:22px;\x20margin-top:0;\x22>⚠️\x20ZONA\x20DE\x20PERIGO</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#c0392b;\x20margin-bottom:20px;\x22>Esta\x20ação\x20apagará\x20<strong>TODOS</strong>\x20os\x20dados\x20operacionais\x20e\x20resetará\x20o\x20<strong>PERFIL\x20DA\x20ESCOLA</strong>.<br>O\x20seu\x20usuário\x20será\x20mantido\x20para\x20login.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22background:#c0392b;\x20width:100%;\x20max-width:250px;\x20margin:\x200\x20auto;\x20padding:15px;\x20font-weight:bold;\x20border:2px\x20solid\x20#c0392b;\x20justify-content:center;\x22\x20onclick=\x22App.resetarSistema()\x22>🗑️\x20RESETAR\x20TUDO</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#eee;\x20padding:15px;\x20border-radius:10px;\x20margin-bottom:12px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<strong>','getTime','data','\x20aulas,\x20mas\x20não\x20tem\x20parcelas\x20suficientes.','relatorio','App.renderizarTela(\x27calendario\x27)','Qtd\x20Atual','bdBg','cssText','</tbody>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','pwa-install-banner','absolute','.mobile-overlay','area-dinamica-hub','📝\x20Editar\x20Descrição','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22v-item\x22\x20placeholder=\x22Digite\x20o\x20nome\x20do\x20item\x20avulso...\x22\x20style=\x22display:none;\x20width:100%;\x20padding:12px;\x20border-radius:8px;\x20border:1px\x20solid\x20#ccc;\x20margin-top:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22v-item-id\x22\x20value=\x22\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:\x20grid;\x20grid-template-columns:\x201fr\x201fr;\x20gap:\x2020px;\x20margin-top:10px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Valor\x20(R$)</label><input\x20type=\x22number\x22\x20id=\x22v-valor\x22\x20step=\x220.01\x22\x20placeholder=\x220.00\x22\x20style=\x22padding:12px;\x20border-radius:8px;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Data\x20da\x20Venda</label><input\x20type=\x22date\x22\x20id=\x22v-data\x22\x20value=\x22','\x22\x20style=\x22width:100px;\x20height:100px;\x20object-fit:contain;\x20border:2px\x20solid\x20white;\x20box-shadow:0\x202px\x205px\x20rgba(0,0,0,0.1);\x20background:white;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20style=\x22font-weight:bold;\x20font-size:13px;\x22>QR\x20Code\x20PIX</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22file\x22\x20id=\x22conf-qr-file\x22\x20accept=\x22image/*\x22\x20onchange=\x22App.previewImagemLocal(this,\x20\x27conf-qr-preview\x27)\x22\x20style=\x22font-size:12px;\x20margin-bottom:10px;\x20width:100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:5px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-del\x22\x20style=\x22padding:5px\x2010px;\x20font-size:11px;\x22\x20onclick=\x22App.removerImagemLocal(\x27conf-qr-preview\x27)\x22>🗑️\x20Remover\x20Imagem</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2015px\x200;\x20color:\x20#333;\x20border-bottom:\x201px\x20solid\x20#eee;\x20padding-bottom:\x2010px;\x22>📋\x20Dados\x20Principais</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(250px,\x201fr));\x20gap:20px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Nome\x20da\x20Instituição</label><input\x20id=\x22conf-nome\x22\x20value=\x22','write','download','replace','Erro\x20ao\x20excluir.','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>CNPJ\x20/\x20NIF</label><input\x20id=\x22conf-cnpj\x22\x20value=\x22','isDragging','/usuarios/','inline-flex','verificarLimites','online','conf-pix','</b>\x20expira\x20em\x20<b>','gerarTabelaHTML','👨‍🎓','Personalize\x20as\x20cores,\x20zoom\x20e\x20atalhos\x20da\x20tela\x20inicial.','mostrarAreaLinks','querySelectorAll','App.abrirRelatorioFrequencia(\x27','login-wrapper','App.renderizarRelatorio(\x27documentos\x27)',';\x20color:#fff;\x20font-size:10px;\x20font-weight:bold;\x20padding:3px\x208px;\x20border-radius:12px;\x20text-transform:uppercase;\x20letter-spacing:1px;\x20box-shadow:0\x202px\x204px\x20rgba(0,0,0,0.2);\x22>💎\x20PLANO\x20','Biometria\x20não\x20reconhecida.\x20Use\x20sua\x20senha.','fim',';\x20margin:\x200\x20auto;\x22>','💾\x20Salvar\x20Registro','/planejamentos','Falha\x20no\x20servidor.','renderizarConfiguracoes','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','hasAttribute','forEach','if(App.verificarPermissao(\x27whatsapp\x27))\x20App.enviarWhatsApp(\x27','Link\x20sem\x20nome','renderizarAvaliacoesPro','.sidebar\x20button,\x20.sidebar\x20.menu-item','Erro\x20ao\x20gerar\x20o\x20link.','user-nova-senha','bgY','Nova\x20notificação','ped_plan','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','createElement','<p\x20style=\x22text-align:center;\x20padding:30px;\x20color:#999;\x22>Nenhum\x20planejamento\x20arquivado\x20encontrado\x20para\x20este\x20aluno.</p>','</button>','cursos','Desconhecido','Dados\x20incorretos.','Gestão\x20de\x20Usuários','tbody','Preencha\x20os\x20dados\x20abaixo\x20com\x20atenção\x20para\x20garantir\x20a\x20sua\x20vaga.','v-desc','Ver\x20Histórico\x20de\x20Horas\x20/\x20Frequência','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20padding:30px;\x20border-radius:12px;\x20max-width:420px;\x20width:90%;\x20text-align:center;\x20box-shadow:0\x2010px\x2025px\x20rgba(0,0,0,0.2);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2040px;\x20display:block;\x20margin-bottom:10px;\x22>🔑</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#2c3e50;\x22>Criar\x20Nova\x20Senha</h3>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:13px;\x20color:#666;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Digite\x20a\x20sua\x20nova\x20senha\x20de\x20acesso.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22password\x22\x20id=\x22nova-senha-reset\x22\x20placeholder=\x22Nova\x20senha\x22\x20style=\x22width:100%;\x20padding:12px;\x20border-radius:6px;\x20border:1px\x20solid\x20#ccc;\x20margin-bottom:12px;\x20text-align:center;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22password\x22\x20id=\x22confirma-senha-reset\x22\x20placeholder=\x22Confirmar\x20nova\x20senha\x22\x20style=\x22width:100%;\x20padding:12px;\x20border-radius:6px;\x20border:1px\x20solid\x20#ccc;\x20margin-bottom:15px;\x20text-align:center;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.confirmarNovaSenhaReset()\x22\x20style=\x22width:100%;\x20justify-content:center;\x20padding:12px;\x20margin-bottom:10px;\x20border:none;\x20border-radius:6px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20✅\x20Salvar\x20Nova\x20Senha\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22document.getElementById(\x27modal-nova-senha\x27).style.display=\x27none\x27\x22\x20style=\x22width:100%;\x20justify-content:center;\x20padding:10px;\x20background:transparent;\x20border:1px\x20solid\x20#ccc;\x20border-radius:6px;\x20cursor:pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Cancelar\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20colspan=\x222\x22\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>Endereço\x20Completo:</b>\x20','</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:\x20#7f8c8d;\x20font-size:\x2014px;\x20line-height:\x201.5;\x20margin-bottom:\x2025px;\x20font-family:\x20sans-serif;\x22>','</b>\x20foi\x20registado\x20hoje.','Esta\x20ação\x20apagará\x20este\x20registro\x20permanentemente.\x20Não\x20é\x20possível\x20desfazer.','scale(1)',';\x20font-weight:bold;\x20background:','...','get','\x27)\x22>✏️</button>','Não\x20foi\x20possível\x20redefinir\x20a\x20senha.','turmas','<div\x20style=\x22padding:\x2040px;\x20text-align:\x20center;\x22><i\x20class=\x22fas\x20fa-spinner\x20fa-spin\x20fa-2x\x22></i><br>A\x20aceder\x20ao\x20cofre...</div>','App.excluir(\x27','success','foto','ped_notas','noti-dropdown','conf-preview','App.resetarTema()','entidadeAtual','color','</div></div>','cursor','\x22\x20title=\x22','#modal-recuperacao-senha\x20.btn-primary','App.abrirModalCadastro(\x27aluno\x27)','App\x20Gestão\x20PTT','\x20•\x20R$\x20','modal-cadastro-inst','Erro\x20ao\x20buscar\x20dados\x20do\x20aluno','center','chamada','dataHora','🚫\x20Acesso\x20restrito.\x20Perfil\x20de\x20Professor\x20não\x20tem\x20permissão\x20para\x20esta\x20área.','🎉\x20PIN\x20validado!\x20Sistema\x20desbloqueado\x20por\x20mais\x2030\x20dias.','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:12px;\x20color:#7f8c8d;\x20margin-top:4px;\x22>⏱️\x20Recebido\x20em:\x20<strong\x20style=\x22color:#2c3e50;\x22>','position:fixed;\x20top:0;\x20left:0;\x20width:100%;\x20height:100%;\x20background:rgba(0,0,0,0.85);\x20display:flex;\x20justify-content:center;\x20align-items:center;\x20z-index:10000;','Vínculo\x20encerrado\x20com\x20a\x20instituição.','new-nome','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20carregar\x20o\x20cofre...\x20⏳</p>','Curso','user-name','</td>','\x22\x20style=\x22width:100%;\x20border-left:\x204px\x20solid\x20#3498db;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','App.salvarCadastro()','\x27)\x22\x20style=\x22padding:8px\x2015px;\x20font-size:12px;\x20background:#e74c3c;\x20color:white;\x20border:none;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x20transition:\x20background\x200.2s;\x22>🗑️\x20Apagar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','verificarNotificacoes','usuarios','\x22>📦\x20','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22kpi-container\x22\x20style=\x22display:flex;\x20gap:10px;\x20margin-top:20px;\x20flex-wrap:wrap;\x20page-break-inside:\x20avoid;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:90px;\x20background:#eafaf1;\x20border:1px\x20solid\x20#27ae60;\x20padding:15px\x2010px;\x20border-radius:8px;\x20text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:10px;\x20color:#27ae60;\x20font-weight:bold;\x20text-transform:uppercase;\x20margin-bottom:5px;\x22>Presenças</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:18px;\x20font-weight:bold;\x20color:#1e8449;\x22>','documentElement','origin','Preencha\x20o\x20item,\x20valor\x20e\x20data.','Erro\x20de\x20servidor.','dataMatricula','listaCache','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22max-height:45vh;\x20overflow-y:auto;\x20padding-right:10px;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20padding:30px;\x20border-radius:12px;\x20max-width:400px;\x20width:90%;\x20text-align:center;\x20box-shadow:0\x2010px\x2025px\x20rgba(0,0,0,0.2);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2040px;\x20display:block;\x20margin-bottom:10px;\x22>🔐</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#2c3e50;\x22>Recuperar\x20Senha</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:13px;\x20color:#666;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Insira\x20o\x20e-mail\x20registado\x20na\x20sua\x20conta.\x20Enviaremos\x20um\x20link\x20seguro\x20para\x20criar\x20uma\x20nova\x20senha.\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22email\x22\x20id=\x22recuperar-email-input\x22\x20placeholder=\x22O\x20seu\x20e-mail\x20de\x20acesso\x22\x20style=\x22width:100%;\x20padding:12px;\x20border-radius:6px;\x20border:1px\x20solid\x20#ccc;\x20margin-bottom:15px;\x20text-align:center;\x22>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20onclick=\x22App.enviarRecuperacaoSenha()\x22\x20style=\x22width:100%;\x20justify-content:center;\x20padding:12px;\x20margin-bottom:10px;\x20border:none;\x20border-radius:6px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20✉️\x20Enviar\x20Link\x20de\x20Recuperação\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22document.getElementById(\x27modal-recuperacao-senha\x27).style.display=\x27none\x27\x22\x20style=\x22width:100%;\x20justify-content:center;\x20padding:10px;\x20background:transparent;\x20border:1px\x20solid\x20#ccc;\x20border-radius:6px;\x20cursor:pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Cancelar\x20e\x20Voltar\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','turma','⬅️\x20Voltar\x20ao\x20Atual','tela-sistema','</b>\x20mensalidades\x20a\x20vencer\x20no\x20dia\x20de\x20hoje.','body','</div><div><div\x20style=\x22font-weight:bold;\x20margin-bottom:10px;\x22>Dashboard\x20/\x20Cards</div>','abrirModalCadastroModulo','Alterar\x20Status\x20(Ativo/Trancado/Cancelado)','#btnSalvarModal','src','width','renderizarLista','password','<div\x20style=\x22font-size:11px;\x20color:#aaa;\x20font-weight:normal;\x20line-height:1.4;\x20margin-top:5px;\x20background:\x20rgba(0,0,0,0.15);\x20border-radius:\x206px;\x20padding:\x204px;\x22>👤\x20Logado\x20como:<br><b\x20style=\x22color:#fff;\x22>','Ficheiro\x20inválido\x20ou\x20erro\x20de\x20comunicação.','Premium','Não\x20foi\x20possível\x20solicitar\x20a\x20recuperação.','user-senha-atual','Este\x20aluno\x20não\x20tem\x20um\x20número\x20de\x20WhatsApp\x20registado\x20no\x20sistema!','removeEventListener','#fdedec','0\x2010px\x2025px\x20rgba(0,0,0,0.1)','<div\x20class=\x22input-group\x22\x20style=\x22position:relative;\x22><label>','doughnut','getItem','touch','✅\x20Sistema\x20resetado\x20com\x20sucesso!','true','<b>','Por\x20favor,\x20dê\x20um\x20nome\x20para\x20a\x20campanha/link.','matricula.html','<p\x20style=\x22color:#666;\x22>Nenhum\x20atalho\x20selecionado\x20ou\x20permitido.</p>','--card-bg','Erro\x20ao\x20atualizar\x20os\x20dados.','atualizarPreviewConfigurador','conteudoHTML','title','\x22\x20value=\x22','modal-nova-senha','Direto',')</h4><p\x20style=\x22color:#27ae60;\x20font-size:20px;\x22>R$\x20','focus','contains','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(150px,\x201fr));\x20gap:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Bairro</label><input\x20id=\x22conf-bairro\x22\x20value=\x22','bio-overlay-premium','PWA\x20Web','getContext',';\x20App.toggleNotificacoes();\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22noti-icon\x22>','<b>Hoje:</b>\x20','Ficha\x20Matrícula','</tr></thead><tbody>','Erro\x20no\x20backup.','CRIAR\x20USUÁRIO','Erro\x20ao\x20carregar.','userChoice','offline','\x22\x20target=\x22_blank\x22\x20style=\x22color:#3498db;\x20text-decoration:none;\x22>','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','classList','Hub\x20de\x20Contratos\x20e\x20Matrículas','setDate','escola_tema','<b>Amanhã:</b>\x20','length','Salvar','conf-estado','theme-zoom','A\x20nova\x20senha\x20deve\x20ter\x20pelo\x20menos\x206\x20caracteres.','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20onclick=\x22App.renderizarFrequenciaView(\x27ver_arquivado\x27,\x20\x27','root','</strong></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:8px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22App.abrirVisualizacaoContrato(\x27','\x20(Estoque:\x20','DOMContentLoaded','Por\x20favor,\x20selecione\x20o\x20ficheiro\x20de\x20backup.','innerHTML','VENDA_','preview-word-doc','https://placehold.co/100?text=LOGO','<div\x20class=\x22shortcut-btn\x22\x20onclick=\x22','inadimplencia','modal-form-content','Configurações\x20salvas\x20com\x20sucesso!\x20🎉','strong','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','A\x20Validar...\x20⏳','Ação\x20cancelada.\x20Código\x20incorreto.','button[onclick=\x22App.resetarSistema()\x22]','🖨️\x20Imprimir\x20Ficha','btn-modal-dinamico','O\x20Próprio\x20/\x20Não\x20informado','trim','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20position:\x20fixed;\x20top:\x200;\x20left:\x200;\x20width:\x20100%;\x20height:\x20100%;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20background:\x20rgba(0,0,0,0.85);\x20backdrop-filter:\x20blur(8px);\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20display:\x20flex;\x20justify-content:\x20center;\x20align-items:\x20center;\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20z-index:\x2010000;\x0a\x20\x20\x20\x20\x20\x20\x20\x20','unshift','Fevereiro','<div\x20style=\x22margin-bottom:16px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20class=\x22modal-custom-label\x22>Planos\x20de\x20Curso</label><br>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:12px;\x20color:#6c757d;\x22>Separe\x20as\x20opções\x20por\x20vírgula</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22inputCursos\x22\x20class=\x22modal-custom-input\x22\x20placeholder=\x22Ex:\x20Inglês,\x20Informática\x22\x20value=\x22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Dezembro','1000px','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x2050px;\x20text-align:\x20center;\x20font-size:\x2012px;\x20color:\x20#999;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Documento\x20impresso\x20em\x20','box-bloqueio-conta','</small>','A\x20validar...\x20⏳','944972uHjVbZ','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','button[onclick=\x22App.salvarConfiguracoes()\x22]','textMain','location','⏳\x20APAGANDO...',';\x20padding:15px;\x20background:#f8f9fa;\x20border-bottom:2px\x20solid\x20#eee;\x20color:#2c3e50;\x22>','drawImage','#2980b9','<tr\x20style=\x22transition:\x20background\x200.2s;\x22>','readAsDataURL','#f39c12','getDeviceId','display','<div\x20style=\x22display:flex;\x20gap:10px;\x20margin-top:\x2025px;\x20flex-wrap:wrap;\x22>','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:\x2025px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22color:#2980b9;\x20margin-top:0;\x22>📋\x20Dados\x20Editáveis\x20(Preview)</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20margin-bottom:\x2015px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20style=\x22flex:1;\x20padding:8px;\x20border:1px\x20solid\x20#ccc;\x20border-radius:4px;\x22\x20disabled>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option>Plano\x20de\x20Curso:\x20','conta','tipo','configTemp','fecharModalInst','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2>','getTenantKey','etapa-3-sucesso','dataCriacao','generate_lead','#inputDias','background','renderizarMeuPlano','ped_chamada','max','<div\x20class=\x22theme-section\x22\x20style=\x22margin-top:20px;\x22><h4\x20style=\x22margin:0\x200\x205px\x200;\x22>3.\x20Tamanho\x20da\x20Fonte\x20(Zoom)</h4><p\x20style=\x22font-size:12px;\x20color:#666;\x20margin-bottom:15px;\x22>Ajuste\x20o\x20tamanho\x20geral\x20para\x20facilitar\x20a\x20leitura.</p><div\x20class=\x22input-group\x22\x20style=\x22max-width:\x20300px;\x22><select\x20id=\x22theme-zoom\x22\x20style=\x22font-weight:bold;\x20cursor:pointer;\x22\x20onchange=\x22App.previewZoom(this.value)\x22><option\x20value=\x220.9\x22\x20','idEdicaoUsuario','convidado','#eee','fecharModal','find','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22text-align:center;\x20color:#e74c3c;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3>Erro\x20ao\x20carregar\x20links</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>Não\x20foi\x20possível\x20identificar\x20o\x20ID\x20da\x20instituição.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Gerenciar\x20','\x27,\x20\x27_blank\x27)\x22\x20style=\x22width:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20🔎\x20Abrir\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Configurações','curso','info','44332lJoGWS','substring','🎨\x20Personalizar\x20Aparência','</label><input\x20type=\x22','dataExpiracao','0px','\x22\x20oninput=\x22App.previewCor(\x27','background:#fff;\x20border-radius:12px;\x20padding:24px;\x20width:100%;\x20max-width:450px;\x20box-shadow:0\x2010px\x2025px\x20rgba(0,0,0,0.2);\x20transform:\x20scale(0.95);\x20animation:\x20scaleUp\x200.3s\x20ease\x20forwards;\x20font-family:\x20inherit;','checked','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22area-impressao-contrato\x22\x20style=\x22padding:\x2030px;\x20border:\x201px\x20solid\x20#ccc;\x20background:\x20#fff;\x20position:relative;\x20color:\x20#333;\x20font-family:\x20Arial,\x20sans-serif;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22text-align:center;\x20margin-bottom:20px;\x20border-bottom:2px\x20solid\x20#2c3e50;\x20padding-bottom:15px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22margin:0;\x20color:#2c3e50;\x20font-size:22px;\x20text-transform:uppercase;\x22>Ficha\x20de\x20Matrícula\x20e\x20Contrato</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22color:#27ae60;\x20font-size:12px;\x20font-weight:bold;\x20margin-top:8px;\x20display:inline-block;\x20border:1px\x20solid\x20#27ae60;\x20padding:4px\x2012px;\x20border-radius:20px;\x20background:#eafaf1;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20✅\x20AUTENTICADO\x20DIGITALMENTE\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22background:\x20#f0f3f4;\x20padding:\x208px;\x20border-left:\x204px\x20solid\x20#3498db;\x20margin-bottom:\x2010px;\x20font-size:\x2014px;\x20color:#2c3e50;\x20text-transform:\x20uppercase;\x22>📋\x20Dados\x20do\x20Aluno</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:\x20100%;\x20border-collapse:\x20collapse;\x20font-size:\x2012px;\x20margin-bottom:\x2020px;\x20line-height:\x201.6;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2040%;\x22><b>Nome:</b>\x20','Janeiro','logout','planejamento','onmouseout','<button\x20class=\x22btn-del\x22\x20onclick=\x22App.excluirUsuario(\x27','flex','escola','include','Backup\x20de\x20Dados','idAluno','scaleUp\x200.2s\x20ease\x20reverse\x20forwards','Curso\x20Geral','Utilizador\x20excluído.','/contratos/','conf-qr-preview','duracao','default','Turma','renderizarTela','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label\x20class=\x22modal-custom-label\x22>Dias\x20de\x20Vencimento</label><br>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:12px;\x20color:#6c757d;\x22>Separe\x20as\x20opções\x20por\x20vírgula</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22inputDias\x22\x20class=\x22modal-custom-input\x22\x20placeholder=\x22Ex:\x205,\x2010,\x2015\x22\x20value=\x22','firstChild','Gerenciar\x20Assinatura','index.html','Dia','getDate','className','status-student-id','T00:00:00','public-key','escapeHTML','endereco','escola_plano',';\x20background:rgba(0,0,0,0.02);\x20padding:8px\x2020px;\x20border-radius:20px;\x20border:2px\x20solid\x20','Salvando...\x20⏳','appendChild','<th\x20style=\x22text-align:','pwa-btn-cancel','Imagem\x20aplicada\x20com\x20sucesso!','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20min-width:90px;\x20background:#fdedec;\x20border:1px\x20solid\x20#e74c3c;\x20padding:15px\x2010px;\x20border-radius:8px;\x20text-align:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:10px;\x20color:#e74c3c;\x20font-weight:bold;\x20text-transform:uppercase;\x20margin-bottom:5px;\x22>Faltas</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:18px;\x20font-weight:bold;\x20color:#c0392b;\x22>','btn-cancel-user','cidade','?escola=','status-options-container','add','Tem\x20a\x20certeza\x20absoluta?','document','opcoesVencimento','setItem','create','.sidebar','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','App.renderizarTela(\x27planejamento\x27)','result','<button\x20class=\x22btn-edit\x22\x20style=\x22background:','qrCodeImagem','login-box','524992qsvIag','Aluno\x20sem\x20nome','renderizarMinhaConta','senha','abs','⏳\x20A\x20voltar...','\x22\x20style=\x22padding:12px;\x20border-radius:8px;\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Forma\x20de\x20Pagamento</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22v-forma\x22\x20style=\x22font-weight:bold;\x20padding:12px;\x20border-radius:8px;\x20cursor:pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22PIX\x22>PIX</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Cartão\x20de\x20Crédito\x22>💳\x20Cartão\x20de\x20Crédito</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Cartão\x20de\x20Débito\x22>💳\x20Cartão\x20de\x20Débito</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Dinheiro\x22>💵\x20Dinheiro</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<option\x20value=\x22Pendente\x20(Fiado)\x22>⚠️\x20Deixar\x20Pendente\x20(Fiado)</option>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</select>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Descrição\x20/\x20Observação\x20Adicional</label><textarea\x20id=\x22v-desc\x22\x20rows=\x222\x22\x20placeholder=\x22Detalhes\x20opcionais...\x22\x20style=\x22padding:12px;\x20border-radius:8px;\x22></textarea></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22v-idaluno\x22\x20value=\x22','CNPJ:\x20','position:fixed;\x20top:0;\x20left:0;\x20width:100%;\x20height:100%;\x20background:rgba(0,0,0,0.6);\x20backdrop-filter:blur(4px);\x20display:flex;\x20justify-content:center;\x20align-items:center;\x20z-index:10000;\x20opacity:0;\x20transition:opacity\x200.3s\x20ease;','preview-header-img','aplicarTemaSalvo','btn-save-user','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Chave\x20PIX\x20(Texto)</label><input\x20id=\x22conf-pix\x22\x20value=\x22','DELETE','\x20dias\x20restantes)</strong>','Julho',')</h4></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22flex:1;\x20overflow-y:auto;\x20display:flex;\x20flex-direction:column;\x20gap:10px;\x20padding-right:5px;\x22>','removerOverlayBiometria','setAttribute','Ações','<p>O\x20contrato\x20não\x20possui\x20texto\x20legível.</p>','margin','--body-bg','Código','<option\x20value=\x22','</div>','Criado\x20com\x20sucesso!','\x27,\x20this.value)\x22></div>','A\x20Ler\x20ficheiro...\x20⏳','💾\x20Registrar\x20Venda','lida','split','listaCacheContratos','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22titulo-doc\x22>📄\x20','v-valor','Setembro','texto','Sem\x20datas\x20registadas','/usuarios/atualizar-conta','400px','Arquivado','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</p>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20value=\x22','toLowerCase','lista_arquivados','pt-PT','3gDJcHG','link','<label\x20class=\x22modal-custom-label\x22>Título\x20do\x20Documento:</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22inputTitulo\x22\x20class=\x22modal-custom-input\x22\x20placeholder=\x22Ex:\x20Contrato\x20de\x20Prestação\x20de\x20Serviços\x22\x20value=\x22','conf-cep','sanitize','1809170QACUVz','Falta\x20Justificada','/eventos','Apagar\x20Contrato\x20Oficial?','Carga','&quot;','App.salvarTema()','https://placehold.co/800x400?text=Sua+Imagem+de+Cabecalho','fromCharCode','toFixed','<p\x20style=\x22text-align:center;\x20padding:20px;\x20color:#666;\x22>A\x20carregar\x20links...\x20⏳</p>','bodyBg','⬅️\x20Voltar\x20à\x20Lista','<table\x20style=\x22width:100%;\x20border-collapse:collapse;\x20font-size:13px;\x20border:1px\x20solid\x20#eee;\x20margin-bottom:10px;\x20background:#fff;\x22><tbody>','error','required','contrato','colorPicker','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22status-option-card\x22\x20data-status=\x22','includes','nomeAluno','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2060%;\x22><b>Turma:</b>\x20','toLocaleDateString','toDataURL','onload','Erro\x20crítico\x20ao\x20salvar.','btn-confirmar-acao-bonita','Sistema\x20PTT','matricula.html?escola=','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f4f6f7;\x20padding:15px;\x20border-radius:8px;\x20margin-bottom:15px;\x20border-left:4px\x20solid\x20#27ae60;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:0\x200\x2010px\x200;\x20color:#2c3e50;\x22>🛒\x20Detalhes\x20da\x20Compra</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<label>Item\x20/\x20Serviço\x20Comprado</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<select\x20id=\x22v-item-select\x22\x20onchange=\x22App.selecionarItemVenda(this)\x22\x20style=\x22font-weight:bold;\x20padding:12px;\x20width:100%;\x20border-radius:8px;\x20border:1px\x20solid\x20#ccc;\x20margin-bottom:5px;\x20cursor:pointer;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','escola_bio_id','<p\x20style=\x22text-align:center;\x20color:#666;\x20padding:20px;\x22>Atualizando\x20lista...\x20⏳</p>','Secretaria','style','Visão\x20Geral','Consultar\x20','</strong>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:12px;\x20color:#777;\x20margin:6px\x200;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Criado\x20em:\x20','App.renderizarContratos()','image/*','randomUUID','A\x20processar\x20e\x20otimizar\x20a\x20imagem...\x20⏳','renderizarBackup','Venda:\x20','#inputCursos','renderizarInadimplencia','clientX','quillContrato','Março','\x27);\x20App.showToast(\x27Copiado!\x27,\x20\x27success\x27);\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22background:#f4f6f7;\x20border:1px\x20solid\x20#ddd;\x20padding:5px\x2010px;\x20border-radius:5px;\x20cursor:pointer;\x20color:#333;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Copiar\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20</li>','<span\x20style=\x22color:#e74c3c;\x20font-weight:bold;\x20background:#fdedec;\x20padding:4px\x208px;\x20border-radius:4px;\x20font-size:12px;\x22>⚠️\x20Baixo</span>','.sc-check:checked','prompt','Preencha\x20nome\x20e\x20login.','user-conf-senha','dev_','PRO','button[onclick=\x22App.ativarNovoPlano(event)\x22]','new-senha','💾\x20Salvar\x20Tudo','disabled','modal-recuperacao-senha','App.renderizarTela(\x27boletins\x27)','mouseup','/escola/validar-pin','calendario','50%\x2050%','Erro\x20ao\x20registrar\x20venda.','<p>Erro\x20ao\x20carregar\x20dashboard.</p>','.</p>','input-busca','\x27)\x22\x20style=\x22background:#25D366;\x20color:white;\x20border:none;\x20padding:8px\x2012px;\x20border-radius:6px;\x20font-size:11px;\x20cursor:pointer;\x20font-weight:bold;\x20white-space:nowrap;\x20box-shadow:0\x202px\x204px\x20rgba(37,211,102,0.3);\x20display:flex;\x20align-items:center;\x20gap:5px;\x20transition:transform\x200.2s;\x22\x20onmouseover=\x22this.style.transform=\x27scale(1.05)\x27\x22\x20onmouseout=\x22this.style.transform=\x27scale(1)\x27\x22><span>💬</span>\x20Cobrar</button></div>','idCarne','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2060%;\x22><b>Data\x20de\x20Nascimento:</b>\x20','Pendente\x20(Fiado)','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22toolbar\x22\x20style=\x22max-width:\x20800px;\x20margin:\x200\x20auto;\x20display:\x20flex;\x20gap:\x2015px;\x20text-align:\x20left;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22search-wrapper\x22\x20style=\x22flex:\x201;\x20min-width:250px;\x20position:\x20relative;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20class=\x22search-icon\x22\x20style=\x22position:\x20absolute;\x20left:\x2015px;\x20top:\x2050%;\x20transform:\x20translateY(-50%);\x20color:\x20#aaa;\x22>🔍</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-busca\x22\x20class=\x22search-input-modern\x22\x20style=\x22width:\x20100%;\x20padding:\x2014px\x2014px\x2014px\x2045px;\x20border-radius:\x208px;\x20border:\x202px\x20solid\x20#eee;\x22\x20placeholder=\x22Pesquisar...\x22\x20oninput=\x22App.filtrarTabelaReativa()\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-new-modern\x22\x20onclick=\x22','data-hoje','renderizarContratos','open','Bloqueado','Erro\x20ao\x20guardar\x20as\x20configurações.','Agosto','WhatsApp','<p\x20style=\x22text-align:center;\x20padding:30px;\x20color:#666;\x22>A\x20extrair\x20todos\x20os\x20dados\x20do\x20aluno\x20e\x20contrato\x20da\x20base\x20de\x20dados...</p>','tituloHeader','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22background:\x20#f0f3f4;\x20padding:\x208px;\x20border-left:\x204px\x20solid\x20#e67e22;\x20margin-bottom:\x2010px;\x20font-size:\x2014px;\x20color:#2c3e50;\x20text-transform:\x20uppercase;\x22>📜\x20Termos\x20do\x20Contrato</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22box-contrato-print\x22\x20style=\x22font-size:11px;\x20text-align:justify;\x20line-height:1.6;\x20padding:10px;\x20max-height:350px;\x20overflow-y:auto;\x20border:\x201px\x20solid\x20#eee;\x20background:\x20#fafafa;\x20border-radius:\x204px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','</b>\x20vence\x20este\x20mês.\x20Clique\x20para\x20gerar\x20renovação!','App.imprimirContrato()','<span\x20style=\x22background:','platform','btn-mobile-menu','30px','Erro','valor','</p>','borderColor','customCor','mostrarTelaBloqueioLogin','Presença','application/json','area-impressao-contrato','\x27);\x20App.showToast(\x27Link\x20copiado!\x27,\x20\x27success\x27);\x22\x20style=\x22width:auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20📋\x20Copiar\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-cancel\x22\x20onclick=\x22window.open(\x27','estoque','Erro\x20ao\x20carregar\x20lista.','\x20pelo\x20SISTEMA\x20PTT\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</body>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','reduce','/chamadas','</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:24px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','planoCurso','--sidebar-text','ptt_device_id','app-content','Se\x20este\x20e-mail\x20estiver\x20cadastrado,\x20enviaremos\x20um\x20link.','Copie\x20o\x20seu\x20link\x20manualmente\x20abaixo:','Erro\x20na\x20atualização:','novo-inst-pin','#333','getElementById','removeItem','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22background:\x20#f0f3f4;\x20padding:\x208px;\x20border-left:\x204px\x20solid\x20#2ecc71;\x20margin-bottom:\x2010px;\x20font-size:\x2014px;\x20color:#2c3e50;\x20text-transform:\x20uppercase;\x22>🎓\x20Dados\x20Acadêmicos\x20e\x20Financeiros</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:\x20100%;\x20border-collapse:\x20collapse;\x20font-size:\x2012px;\x20margin-bottom:\x2025px;\x20line-height:\x201.6;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2040%;\x22><b>Curso:</b>\x20','imprimirDossieFrequencia','textoContrato','plano','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20white;\x20padding:\x2040px;\x20border-radius:\x2028px;\x20text-align:\x20center;\x20width:\x2085%;\x20max-width:\x20320px;\x20box-shadow:\x200\x2020px\x2040px\x20rgba(0,0,0,0.4);\x20animation:\x20slideUpBio\x200.4s\x20cubic-bezier(0.175,\x200.885,\x200.32,\x201.275);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22bio-icon-pulse\x22\x20style=\x22font-size:\x2065px;\x20margin-bottom:\x2020px;\x22>👤</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22margin:\x200\x200\x2010px\x200;\x20color:\x20#2c3e50;\x20font-size:\x2020px;\x20font-family:\x20sans-serif;\x22>','Falha\x20na\x20conexão.\x20Verifique\x20a\x20internet.','verificarPermissao','.login-box,\x20.box-login','\x20|\x20R$\x20','\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x2025px\x200\x2015px\x200;\x20color:\x20#333;\x20border-bottom:\x201px\x20solid\x20#eee;\x20padding-bottom:\x2010px;\x22>📍\x20Endereço\x20da\x20Instituição</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x201fr\x202fr\x201fr;\x20gap:20px;\x20margin-bottom:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>CEP</label><input\x20id=\x22conf-cep\x22\x20value=\x22','\x22\x20id=\x22','novo-inst-codigo','cep','refLink','planejamentos','recuperar-email-input','Profissional','Chamada','renderizarChamadaPro','grayscale(1)','position:fixed;\x20top:0;\x20left:0;\x20width:100%;\x20height:100%;\x20background:rgba(0,0,0,0.8);\x20display:flex;\x20justify-content:center;\x20align-items:center;\x20z-index:9999;','grab','-10000px','\x22><span>＋</span>\x20NOVO\x20REGISTRO</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','white','icon','base64ToBuffer','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','</td><td\x20style=\x22padding:10px\x200;\x20border-top:1px\x20solid\x20#eee;\x22>','cloneNode','message','Preencha\x20utilizador\x20e\x20senha','parentNode','Configurações\x20e\x20Contrato\x20atualizados\x20online.','$1.$2','txtMain','Pago','800px','href','init','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#fdf2f2;\x20border:\x201px\x20solid\x20#f5b7b1;\x20padding:\x2010px;\x20border-radius:\x206px;\x20margin-bottom:\x2020px;\x20text-align:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2012px;\x20color:\x20#7f8c8d;\x20text-transform:\x20uppercase;\x22>Status\x20Atual:</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2014px;\x20font-weight:\x20bold;\x20color:\x20','target','🖨️\x20Imprimir','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22margin:\x200;\x20color:\x20#666;\x20font-size:\x2012px;\x20line-height:\x201.4;\x22>','imagemPosicao','20;\x20color:','modal-titulo','stringify','Erro\x20ao\x20apagar\x20o\x20contrato.','Aparência\x20do\x20Sistema','Erro\x20de\x20conexão.','boletins','\x27)\x22\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20style=\x22padding:8px\x2015px;\x20font-size:12px;\x20background:#2c3e50;\x20color:white;\x20border:none;\x20border-radius:5px;\x20cursor:pointer;\x20font-weight:bold;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20👁️\x20Ver\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>','mensalidades','usuario','#ccc','Atualizar\x20Status\x20de\x20Matrícula','sanitizeHTML','chamadas','R$\x20','background:#27ae60;\x20color:white;\x20border:none;\x20padding:8px\x2016px;\x20border-radius:6px;\x20cursor:pointer;\x20font-weight:bold;\x20margin-right:10px;\x20font-size:\x2014px;\x20transition:\x20background\x200.2s\x20ease;','startX',';\x20border:none;\x20color:white;\x20padding:6px\x2010px;\x20border-radius:4px;\x20cursor:pointer;\x22\x20onclick=\x22','login-user','Editar','50;\x22>','block','grayscale(0)','Não\x20foi\x20possível\x20atualizar\x20o\x20status.\x20Tente\x20novamente.','Enviando...\x20⏳','\x20unidades\x20de\x20<b>','touches','table','</ul>','<br><small>Origem:\x20','Configurações\x20da\x20matrícula\x20salvas\x20com\x20sucesso!','/auth/logout','REF_','Digite\x20um\x20e-mail\x20válido.','modal-overlay','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px\x2015px;\x20font-weight:bold;\x20color:','\x27)\x22\x20style=\x22background:#f9f9f9;\x20border:1px\x20solid\x20#eee;\x20padding:15px;\x20border-radius:8px;\x20margin-bottom:10px;\x20cursor:pointer;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x20transition:\x20background\x200.2s;\x22\x20onmouseover=\x22this.style.background=\x27#f1f2f6\x27\x22\x20onmouseout=\x22this.style.background=\x27#f9f9f9\x27\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-weight:bold;\x20color:#2c3e50;\x20font-size:14px;\x22>📄\x20','aluno','right','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!DOCTYPE\x20html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<head>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<title>Impressão\x20-\x20',';\x20border-radius:8px\x208px\x200\x200;\x20cursor:grab;\x20position:relative;\x20overflow:hidden;\x20user-select:none;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22position:absolute;\x20bottom:6px;\x20right:6px;\x20background:rgba(0,0,0,0.6);\x20color:white;\x20font-size:10px;\x20padding:4px\x208px;\x20border-radius:12px;\x20pointer-events:none;\x20backdrop-filter:blur(2px);\x20border:1px\x20solid\x20rgba(255,255,255,0.2);\x22>🖐️\x20Arraste\x20para\x20reposicionar</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22padding:\x2025px;\x20text-align:\x20center;\x20border-bottom:\x202px\x20dashed\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22color:#2c3e50;\x20margin:0\x200\x2010px\x200;\x22>','ESS','#8e44ad',';\x20padding:15px;\x20border-bottom:1px\x20solid\x20#eee;\x20color:#333;\x22>','#etapa-2-validacao\x20button','</table></div>','/auth/enviar-codigo','confirma-senha-reset','75%','https://wa.me/','opcoesPlano','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>WhatsApp:</b>\x20','Erro\x20de\x20comunicação\x20com\x20o\x20servidor.','crypto','Vencimento','fadeIn\x200.2s\x20ease\x20reverse\x20forwards','#3498db','toggle','bullet','.\x20Faça\x20o\x20upgrade\x20para\x20continuar\x20a\x20crescer!','noti-list','</div></div><button\x20onclick=\x22App.cobrarWhatsAppDashboard(\x27','resp_nome','Essencial','.btn-confirm','toast','apply','\x22\x20data-nome=\x22','motorTempoRealLigado','header','sbBg','ativo','99KJsgbx','$1-$2','button[onclick=\x22App.atualizarMeusDados()\x22]','Erro\x20ao\x20comunicar\x20com\x20a\x20base\x20de\x20dados.','toast-icon','</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:12px;\x20justify-content:center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20onclick=\x22document.getElementById(\x27modal-confirmacao-bonito\x27).style.opacity=\x270\x27;\x20setTimeout(()=>document.getElementById(\x27modal-confirmacao-bonito\x27).style.display=\x27none\x27,\x20300);\x22\x20style=\x22flex:1;\x20padding:12px;\x20background:#f4f6f7;\x20color:#7f8c8d;\x20border:1px\x20solid\x20#d5dbdb;\x20border-radius:12px;\x20font-weight:bold;\x20cursor:pointer;\x20font-size:14px;\x20transition:background\x200.2s;\x22\x20onmouseover=\x22this.style.background=\x27#e5e8e8\x27\x22\x20onmouseout=\x22this.style.background=\x27#f4f6f7\x27\x22>Cancelar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20id=\x22btn-confirmar-acao-bonita\x22\x20style=\x22flex:1;\x20padding:12px;\x20background:#e74c3c;\x20color:#fff;\x20border:none;\x20border-radius:12px;\x20font-weight:bold;\x20cursor:pointer;\x20font-size:14px;\x20box-shadow:0\x204px\x2015px\x20rgba(231,76,60,0.3);\x20transition:background\x200.2s;\x22\x20onmouseover=\x22this.style.background=\x27#c0392b\x27\x22\x20onmouseout=\x22this.style.background=\x27#e74c3c\x27\x22>Sim,\x20Apagar</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','dadosCache','</label><input\x20type=\x22color\x22\x20value=\x22','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>Sexo:</b>\x20','Teste','v-item','</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22stat-card\x20card-red\x22\x20style=\x22display:flex;\x20flex-direction:column;\x20align-items:stretch;\x20padding:15px;\x20height:100%;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20justify-content:space-between;\x20align-items:center;\x20margin-bottom:10px;\x20border-bottom:1px\x20solid\x20#fdedec;\x20padding-bottom:8px;\x22><h4\x20style=\x22margin:0;\x20font-size:14px;\x20color:#e74c3c;\x20text-transform:uppercase;\x20font-weight:bold;\x22>⚠️\x20Títulos\x20em\x20Atraso\x20(','zoomAtual','A\x20atualizar...\x20⏳','grabbing','sbTxt','<div\x20style=\x22text-align:center;\x20padding:20px;\x20color:#27ae60;\x20font-weight:bold;\x20font-size:14px;\x22>🎉\x20Excelente!\x20Nenhum\x20título\x20em\x20atraso.</div>','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22v-nomealuno\x22\x20value=\x22','\x0a\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22padding:\x2010px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20display:\x20flex;\x20justify-content:\x20space-between;\x20align-items:\x20center;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:\x2013px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<strong\x20style=\x22color:#2c3e50;\x22>','fin_carne','08,\x2020','ordered',')</option>','Digite\x20sua\x20senha\x20atual\x20para\x20autorizar\x20as\x20alterações.','getRandomValues','Novo\x20aluno\x20recebido\x20pela\x20matrícula\x20online.','span','background:#7f8c8d;\x20color:white;\x20border:none;\x20padding:8px\x2016px;\x20border-radius:6px;\x20cursor:pointer;\x20font-weight:bold;\x20margin-right:10px;\x20font-size:\x2014px;\x20transition:\x20background\x200.2s\x20ease,\x20opacity\x200.2s\x20ease;','ceil','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22max-width:850px;\x20margin:0\x20auto;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(300px,\x201fr));\x20gap:20px;\x20margin-bottom:30px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#f9f9f9;\x20padding:20px;\x20border-radius:10px;\x20display:flex;\x20align-items:center;\x20gap:20px;\x20color:#333;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<img\x20id=\x22conf-preview\x22\x20src=\x22','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>RG:</b>\x20','beforeinstallprompt','doc_gerador','https://placehold.co/100?text=QR+CODE','</th>','\x20pelo\x20Sistema\x20Escolar\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</body>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','Falha\x20ao\x20abrir\x20contrato:','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-top:\x2050px;\x20text-align:\x20center;\x20font-size:\x2012px;\x20color:\x20#999;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20Documento\x20gerado\x20em\x20','data-valor','onclick','<p\x20style=\x22text-align:center;\x20padding:30px;\x20color:#666;\x22>Nenhum\x20registro\x20encontrado.</p>','<b>Nova\x20Matrícula!</b>\x20O\x20aluno\x20<b>','conteudoPrincipal','GET','configuracoes','visto','Valor','all','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:#fff;\x20padding:30px;\x20border-radius:24px;\x20width:90%;\x20max-width:380px;\x20text-align:center;\x20box-shadow:0\x2020px\x2050px\x20rgba(0,0,0,0.3);\x20transform:scale(0.8);\x20transition:transform\x200.3s\x20cubic-bezier(0.175,\x200.885,\x200.32,\x201.275);\x22\x20id=\x22box-confirmacao-interno\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:80px;\x20height:80px;\x20border-radius:50%;\x20background:#fdedec;\x20color:#e74c3c;\x20font-size:40px;\x20display:flex;\x20align-items:center;\x20justify-content:center;\x20margin:0\x20auto\x2020px\x20auto;\x20border:4px\x20solid\x20#f9ebea;\x22>🗑️</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22color:#2c3e50;\x20margin:0\x200\x2010px\x200;\x20font-size:22px;\x20font-weight:800;\x22>','cardText','</label>','/auth/validar-cadastro','card','_blank','min','</strong><br>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<a\x20href=\x22','cdBg','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>Plano\x20de\x20Curso:</b>\x20','v-idaluno','escola_perfil','Não\x20foi\x20possível\x20identificar\x20a\x20instituição.','files','VENDA','sort','_id','⬆️\x20RESTAURAR\x20DADOS','Lançar\x20Nota','clientY','filter','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>CPF:</b>\x20','ATUALIZAR','Erro\x20ao\x20carregar\x20usuários.','Excluir','rawId','print','Senha\x20redefinida\x20com\x20sucesso.\x20Faça\x20login\x20com\x20a\x20nova\x20senha.','borderRadius','A\x20apagar...\x20⏳','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22margin:10px\x200\x200\x200;\x20font-size:10px;\x20color:#7f8c8d;\x22>ID\x20da\x20Transação:\x20','Texto:','descHeader','warning','App.renderizarTela(\x27avaliacoes\x27)','💾\x20Salvar\x20Novo\x20Status','\x20onchange=\x22App.validarLimiteAtalhos(this)\x22>\x20','Não\x20foi\x20possível\x20carregar\x20notificações.','<p\x20style=\x22color:#666;\x20margin-bottom:20px;\x20font-size:13px;\x22>','A\x20gerar...\x20⏳','<div\x20class=\x22noti-item\x22\x20style=\x22justify-content:center;\x20color:#999;\x20padding:\x2030px\x2015px;\x22>Nenhum\x20alerta\x20pendente.<br>Tudo\x20tranquilo!\x20🎉</div>','<ul\x20style=\x22list-style:none;\x20padding:0;\x20margin-top:15px;\x22>','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x22><b>WhatsApp:</b>\x20','status','PIN\x20inválido\x20ou\x20formato\x20incorreto.','writeText','⚙️\x20Dados\x20Complementares','avulso','.selection-indicator','Preencha\x20Código\x20e\x20PIN.','Novo\x20Aluno','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22noti-item\x22\x20style=\x22cursor:pointer;\x20transition:background\x200.2s;\x22\x20onmouseover=\x22this.style.background=\x27#f1f2f6\x27\x22\x20onmouseout=\x22this.style.background=\x27transparent\x27\x22\x20onclick=\x22','App.renderizarTela(\x27chamada\x27)','button[onclick=\x22App.gerarNovoLinkMatricula()\x22]','etapa-1-email','cardBg','Erro\x20ao\x20apagar.','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','nome-novo-link','entrarNoSistema','createObjectURL','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2015px\x200;\x20color:\x20#333;\x20font-size:\x2014px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20padding-bottom:10px;\x22>Selecione\x20o\x20novo\x20status:</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20id=\x22status-options-container\x22\x20data-selecionado=\x22\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','zoomLevel','>Padrão\x20(100%)</option><option\x20value=\x221.1\x22\x20','Documento\x20não\x20encontrado','estado','\x27)\x22\x20style=\x22position:absolute;\x20right:12px;\x20top:32px;\x20cursor:pointer;\x20font-size:16px;\x20opacity:0.6;\x20user-select:none;\x22\x20title=\x22Mostrar/Ocultar\x20Senha\x22>👁️</span></div>','Configurações\x20atualizadas\x20com\x20sucesso!','Novo\x20Usuário','<p\x20style=\x27color:#7f8c8d;\x20font-size:14px;\x27>Nenhum\x20link\x20gerado\x20recentemente.</p>','100%','App.abrirModalCadastro(\x27',';\x20margin-left:\x205px;\x22>','!\x0a\x0aConsta\x20no\x20nosso\x20sistema\x20que\x20a\x20sua\x20mensalidade\x20venceu\x20no\x20dia\x20','Não\x20informado','type','resp_cpf','appinstalled',';\x20font-size:\x2016px;\x22>','perfil','&gt;','--card-text','<div\x20style=\x22padding:\x2020px;\x20color:\x20red;\x22>Erro\x20ao\x20carregar\x20o\x20cofre:\x20','<div\x20class=\x22theme-section\x22\x20style=\x22margin-top:20px;\x22><h4\x20style=\x22margin:0\x200\x205px\x200;\x22>2.\x20Atalhos\x20no\x20Dashboard</h4><p\x20style=\x22font-size:12px;\x20color:#666;\x20margin-bottom:15px;\x22>Selecione\x20os\x20atalhos\x20(Mínimo:\x201\x20|\x20Máximo:\x208).</p><div\x20class=\x22shortcut-selector\x22\x20style=\x22display:flex;\x20flex-wrap:wrap;\x20gap:10px;\x22>','\x22\x20style=\x22width:100%;\x20padding-right:40px;\x22><span\x20onclick=\x22App.toggleSenhaVisibilidade(\x27','push','App.renderizarRelatorio(\x27dossie\x27)','Nossa\x20Instituição','--sidebar-bg','Sessão\x20expirada.\x20Faça\x20login\x20novamente.','Falta','<h3\x20style=\x22margin-top:0;\x20color:var(--card-text);\x20border-bottom:1px\x20solid\x20#eee;\x20padding-bottom:10px;\x22>','isDono','contextoFrequencia','<b>Caixa\x20de\x20Hoje:</b>\x20Existem\x20<b>','blockquote','Ref\x20(Aluno)','.$1/$2','insertBefore','.json','</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22width:100%;\x20display:flex;\x20justify-content:space-between;\x20align-items:center;\x22><div\x20style=\x22display:flex;\x20align-items:center;\x20gap:10px;\x22><span\x20style=\x22font-size:24px;\x22>📚</span><span\x20style=\x22font-size:14px;\x20font-weight:600;\x20color:#555;\x20text-transform:uppercase;\x22>Total\x20Cursos</span></div><span\x20style=\x22font-size:20px;\x20font-weight:bold;\x20color:#3498db;\x22>','file','transform','Link\x20gerado\x20com\x20sucesso!','Link\x20personalizado\x20criado\x20com\x20sucesso!','toLocaleString','usuario_logado','<div\x20style=\x22width:\x2012px;\x20height:\x2012px;\x20border-radius:\x2050%;\x20background:\x20','#2c3e50','tokenResetSenha','renderizarFrequenciaView','descricao','\x22\x20oninput=\x22App.mascaraCEP(this)\x22\x20maxlength=\x229\x22></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22input-group\x22><label>Endereço\x20(Rua,\x20Av.)</label><input\x20id=\x22conf-endereco\x22\x20value=\x22','App.renderizarLista(\x27estoque\x27)','✖️\x20RESTAURAR\x20PADRÃO','Não\x20informada','dossie','A\x20Restaurar:\x20','<div\x20style=\x22background:#f4f6f7;\x20padding:10px\x2015px;\x20margin-top:15px;\x20border-radius:8px\x208px\x200\x200;\x20font-weight:bold;\x20color:#2c3e50;\x20border:1px\x20solid\x20#eee;\x20border-bottom:none;\x20font-size:13px;\x20text-transform:uppercase;\x22>📅\x20','etapa-2-validacao','<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px\x2015px;\x20width:30%;\x20font-weight:500;\x22>','/estoques/','<div\x20style=\x22margin-top:8px;\x20margin-bottom:5px;\x22><span\x20style=\x22background:','button','🔓\x20Identidade\x20confirmada!','\x22\x20data-valor=\x22','Registrar\x20Venda\x20/\x20Extra','#inputTitulo','top','O\x20limite\x20máximo\x20é\x20de\x208\x20atalhos.','removeAttribute','active','arrastarImagem','titulo-form-user','aplicarPermissoesDeUsuario','Carregando\x20perfil...','from',';\x22></div>','history','atualizarUIHeader','1.1','<strong\x20style=\x22color:var(--warning);\x20background:rgba(243,156,18,0.1);\x20padding:8px\x2020px;\x20border-radius:20px;\x20border:2px\x20solid\x20var(--warning);\x20font-size:16px;\x22>⏳\x20Plano\x20Teste\x20(','pathname','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22card\x22\x20style=\x22text-align:center;\x20padding:\x2040px\x2020px;\x20border-top:\x205px\x20solid\x20var(--accent);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h2\x20style=\x22margin:\x200\x200\x2015px\x200;\x20color:\x20var(--card-text);\x22>Evolua\x20a\x20sua\x20Instituição</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22margin-bottom:\x2030px;\x22>','\x20dias)</strong>','#modal-nova-senha\x20.btn-primary','Dados\x20restaurados\x20com\x20sucesso!\x20A\x20reiniciar...','⏳\x20A\x20abrir...','Descrição','contentWindow','cpf','join','Erro\x20ao\x20enviar\x20e-mail.','new-login','Selecione\x20um\x20status\x20para\x20prosseguir.','</tbody></table>','resp_parentesco','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</table>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22background:\x20#f0f3f4;\x20padding:\x208px;\x20border-left:\x204px\x20solid\x20#9b59b6;\x20margin-bottom:\x2010px;\x20font-size:\x2014px;\x20color:#2c3e50;\x20text-transform:\x20uppercase;\x22>👨‍👩‍👧\x20Dados\x20do\x20Responsável</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<table\x20style=\x22width:\x20100%;\x20border-collapse:\x20collapse;\x20font-size:\x2012px;\x20margin-bottom:\x2020px;\x20line-height:\x201.6;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2040%;\x22><b>Nome:</b>\x20','/contratos','12px','v-data','🚫\x20Acesso\x20restrito.\x20Perfil\x20de\x20Secretaria\x20não\x20tem\x20permissão\x20para\x20esta\x20área.','\x20|\x20Pagto:\x20','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:20px;\x20color:#aaa;\x22>➡️</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','#inputDescricao','Digite\x20um\x20nome\x20para\x20o\x20link.','whatsapp','offline-banner','\x20de\x20','options','<p\x20style=\x22text-align:center;\x20padding:30px;\x20color:#999;\x20font-size:14px;\x22>Nenhum\x20registo\x20de\x20chamada\x20encontrado\x20para\x20este\x20','exibirOverlayBiometria','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','linksMatricula','graficoFinanceiro','div[style*=\x22max-height\x22]','</span></div>','bairro','height','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<tr\x20style=\x22border-bottom:1px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:12px;\x22>',';\x20padding:4px\x208px;\x20border-radius:4px;\x20font-size:12px;\x22>','abrirModalConfirmacao','replaceState','mobile-overlay','remove','dataHoraRegistro','horario','slice','token_acesso','\x20-\x20','cacheAlunos','Erro:\x20Janela\x20não\x20abriu\x20corretamente.','\x0a*Chave\x20PIX:*\x20','querySelector','</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22background:\x20#f8f9fa;\x20padding:\x2020px;\x20border-radius:\x208px;\x20max-width:\x20500px;\x20margin:\x200\x20auto;\x20border:\x201px\x20solid\x20#eee;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h4\x20style=\x22margin:\x200\x200\x2015px\x200;\x20color:\x20#333;\x22>Já\x20efetuou\x20o\x20pagamento?</h4>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22display:flex;\x20gap:10px;\x20flex-wrap:wrap;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22text\x22\x20id=\x22input-novo-pin\x22\x20placeholder=\x22Insira\x20a\x20sua\x20Chave\x20de\x20Ativação\x20(PIN)\x22\x20style=\x22flex:1;\x20min-width:\x20200px;\x20padding:12px;\x20border-radius:6px;\x20border:1px\x20solid\x20#ccc;\x20text-align:center;\x20letter-spacing:2px;\x20font-weight:bold;\x20font-size:16px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:auto;\x20margin:0;\x22\x20onclick=\x22App.ativarNovoPlano(event)\x22>Validar\x20PIN</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22font-size:11px;\x20color:#999;\x20margin:\x2010px\x200\x200\x200;\x22>O\x20PIN\x20é\x20enviado\x20para\x20o\x20seu\x20e-mail\x20imediatamente\x20após\x20a\x20confirmação\x20do\x20pagamento.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22text-align:\x20center;\x20color:\x20var(--card-text);\x20margin-top:\x2040px;\x22>Escolha\x20o\x20pacote\x20ideal\x20para\x20a\x20sua\x20escola</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22pricing-grid\x22\x20style=\x22display:grid;\x20grid-template-columns:\x20repeat(auto-fit,\x20minmax(280px,\x201fr));\x20gap:20px;\x20margin-top:20px;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22pricing-card\x22\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#eee;\x20border-radius:12px;\x20padding:30px;\x20text-align:center;\x20box-shadow:0\x204px\x2015px\x20rgba(0,0,0,0.05);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#333;\x20font-size:22px;\x22>Essencial</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:32px;\x20font-weight:bold;\x20color:#27ae60;\x20margin:15px\x200;\x22>R$\x2097<span\x20style=\x22font-size:14px;\x20color:#999;\x22>/mês</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#666;\x20font-size:13px;\x20margin-bottom:20px;\x22>Para\x20pequenos\x20cursos\x20e\x20professores\x20particulares.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20style=\x22list-style:none;\x20padding:0;\x20margin:0\x200\x2025px\x200;\x20text-align:left;\x20font-size:14px;\x20color:#555;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Até\x2020\x20Alunos\x20Ativos</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x202\x20Acessos\x20(Gestor\x20+\x201\x20Equipa)</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Gestão\x20Pedagógica</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Controle\x20Financeiro</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x20color:#ccc;\x22>❌\x20Cobrança\x20via\x20WhatsApp</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22color:#ccc;\x22>❌\x20Dossiê\x20Executivo</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:transparent;\x20color:#27ae60;\x20border:2px\x20solid\x20#27ae60;\x20justify-content:center;\x22\x20onclick=\x22App.comprarPlano(\x27Essencial\x27,\x20\x27https://mpago.la/2LcgaA1\x27)\x22>Assinar\x20Essencial</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22pricing-card\x20featured\x22\x20style=\x22background:#fff;\x20border:2px\x20solid\x20#3498db;\x20border-radius:12px;\x20padding:30px;\x20text-align:center;\x20box-shadow:0\x2010px\x2030px\x20rgba(52,152,219,0.15);\x20position:relative;\x20transform:scale(1.02);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22position:absolute;\x20top:-12px;\x20left:50%;\x20transform:translateX(-50%);\x20background:#3498db;\x20color:#fff;\x20font-size:11px;\x20font-weight:bold;\x20padding:4px\x2012px;\x20border-radius:20px;\x20text-transform:uppercase;\x20letter-spacing:1px;\x22>Mais\x20Vendido</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#333;\x20font-size:22px;\x22>Profissional</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:32px;\x20font-weight:bold;\x20color:#3498db;\x20margin:15px\x200;\x22>R$\x20147<span\x20style=\x22font-size:14px;\x20color:#999;\x22>/mês</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#666;\x20font-size:13px;\x20margin-bottom:20px;\x22>A\x20solução\x20completa\x20para\x20acabar\x20com\x20a\x20inadimplência.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20style=\x22list-style:none;\x20padding:0;\x20margin:0\x200\x2025px\x200;\x20text-align:left;\x20font-size:14px;\x20color:#555;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Até\x2080\x20Alunos\x20Ativos</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x204\x20Acessos\x20(Gestor\x20+\x203\x20Equipa)</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Gestão\x20Pedagógica</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Financeiro\x20Completo</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20<strong>Cobrança\x20WhatsApp</strong></li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22color:#ccc;\x22>❌\x20Dossiê\x20Executivo</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:#3498db;\x20justify-content:center;\x22\x20onclick=\x22App.comprarPlano(\x27Profissional\x27,\x20\x27https://mpago.la/1KmmwZf\x27)\x22>Assinar\x20Profissional</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22pricing-card\x22\x20style=\x22background:#fff;\x20border:1px\x20solid\x20#eee;\x20border-radius:12px;\x20padding:30px;\x20text-align:center;\x20box-shadow:0\x204px\x2015px\x20rgba(0,0,0,0.05);\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<h3\x20style=\x22margin-top:0;\x20color:#333;\x20font-size:22px;\x22>Premium</h3>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20style=\x22font-size:32px;\x20font-weight:bold;\x20color:#f39c12;\x20margin:15px\x200;\x22>R$\x20297<span\x20style=\x22font-size:14px;\x20color:#999;\x22>/mês</span></div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p\x20style=\x22color:#666;\x20font-size:13px;\x20margin-bottom:20px;\x22>Para\x20escolas\x20estruturadas\x20e\x20sem\x20limites\x20operacionais.</p>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<ul\x20style=\x22list-style:none;\x20padding:0;\x20margin:0\x200\x2025px\x200;\x20text-align:left;\x20font-size:14px;\x20color:#555;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Alunos\x20Ilimitados</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Acessos\x20Ilimitados</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Gestão\x20Pedagógica</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Financeiro\x20Completo</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li\x20style=\x22margin-bottom:10px;\x22>✅\x20Cobrança\x20WhatsApp</li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<li>✅\x20<strong>Dossiê\x20Executivo</strong></li>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</ul>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<button\x20class=\x22btn-primary\x22\x20style=\x22width:100%;\x20background:transparent;\x20color:#f39c12;\x20border:2px\x20solid\x20#f39c12;\x20justify-content:center;\x22\x20onclick=\x22App.comprarPlano(\x27Premium\x27,\x20\x27https://mpago.la/1DNyscL\x27)\x22>Assinar\x20Premium</button>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20','<b>Urgente:</b>\x20O\x20seu\x20acesso\x20<b>expirou</b>!\x20Regularize\x20para\x20continuar\x20usando\x20o\x20sistema.','close','diaVencimento','Máximo\x20de\x208\x20atalhos\x20permitidos.','dataset','\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>','fadeOut\x200.5s\x20ease\x20forwards','#7f8c8d','Matrícula:\x20','Erro\x20na\x20restauração:','Aplicar\x20ao\x20Preview','TERMO\x20DE\x20PRESTAÇÃO\x20DE\x20SERVIÇOS\x20EDUCACIONAIS<br><br>CLÁUSULA\x20PRIMEIRA\x20–\x20DO\x20OBJETO<br>O\x20presente\x20contrato\x20tem\x20como\x20objeto...','<div\x20style=\x22background:#e8f4f8;\x20border:1px\x20solid\x20#3498db;\x20color:#2980b9;\x20padding:8px\x2012px;\x20border-radius:6px;\x20margin-bottom:15px;\x20font-size:12px;\x20font-weight:bold;\x20text-align:center;\x22>🟢\x20Dossiê\x20do\x20Planejamento\x20Letivo\x20Atual</div>','cancel','undefined',';\x20padding:4px\x208px;\x20border-radius:4px;\x20font-size:11px;\x20font-weight:bold;\x20border:\x201px\x20solid\x20','Aguardando\x20confirmação\x20de\x20identidade...','credentials','dragState','#modal-overlay\x20.btn-cancel','.\x20Faça\x20o\x20upgrade\x20para\x20adicionar\x20mais\x20equipa!','Aluno\x20não\x20identificado','imagem','pt-BR','abrirModalNovaSenha','Sessão\x20não\x20encontrada.','Ativo','startsWith','cdTxt','criarOverlay','/financeiro','Instituição\x20de\x20Ensino','</h2>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<p>','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:10px\x2015px;\x20text-align:right;\x20color:#666;\x20font-weight:500;\x22>','<label\x20class=\x22modal-custom-label\x22>Subtítulo\x20ou\x20Descrição:</label>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<textarea\x20id=\x22inputDescricao\x22\x20class=\x22modal-custom-input\x22\x20style=\x22height:110px;\x20resize:vertical;\x22\x20placeholder=\x22Digite\x20aqui\x20uma\x20breve\x20descrição...\x22>','toUpperCase','26050clYZsC','banco','Sessão\x20expirada.','<option\x20value=\x22\x22>--\x20Selecione\x20um\x20Produto/Serviço\x20--</option>','</td>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<td\x20style=\x22padding:\x206px;\x20border-bottom:\x201px\x20solid\x20#eee;\x20width:\x2060%;\x22><b>Parentesco:</b>\x20','large','</div><div\x20id=\x22container-tabela\x22></div>','Erro\x20HTTP:\x20','map','Inadimplência','fin_inad','conf-file','\x22\x20onclick=\x22App.selecionarOpcaoStatus(this)\x22\x20style=\x22border:\x202px\x20solid\x20#eee;\x20border-radius:\x208px;\x20padding:\x2015px;\x20cursor:\x20pointer;\x20display:\x20flex;\x20align-items:\x20center;\x20gap:\x2015px;\x20margin-bottom:\x2010px;\x20transition:\x20all\x200.2s;\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<span\x20style=\x22font-size:\x2032px;\x20filter:\x20grayscale(1);\x20transition:\x20filter\x200.2s;\x22>','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</div>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<input\x20type=\x22hidden\x22\x20id=\x22status-student-id\x22\x20value=\x22','position','renderizarRelatorioModulo','button[onclick=\x22App.salvarConfiguradorMatricula()\x22]','novo-inst-email','placehold','.status-option-card','Mínimo\x20(Alerta)','none','Erro\x20ao\x20salvar\x20perfil\x20da\x20escola.','isSecureContext','nome','.btn-modal-dinamico','financeiro','APAGAR\x20TUDO','API_URL','v-item-id','🗄️\x20Histórico\x20Arquivado:\x20','App.abrirModalVenda(\x27','\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<!DOCTYPE\x20html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<html>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<head>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<title>Impressão\x20-\x20Contrato</title>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20body\x20{\x20font-family:\x20Arial,\x20sans-serif;\x20padding:\x2030px;\x20color:\x20#333;\x20line-height:\x201.5;\x20background:\x20#fff;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20{\x20display:\x20flex;\x20align-items:\x20center;\x20border-bottom:\x202px\x20solid\x20#3498db;\x20padding-bottom:\x2015px;\x20margin-bottom:\x2025px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20img\x20{\x20margin-right:\x2020px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20h2\x20{\x20margin:\x200;\x20color:\x20#2c3e50;\x20font-size:\x2024px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.header-escola\x20p\x20{\x20margin:\x205px\x200\x200\x200;\x20color:\x20#7f8c8d;\x20font-size:\x2014px;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20.box-contrato-print\x20{\x20max-height:\x20none\x20!important;\x20overflow:\x20visible\x20!important;\x20border:\x20none\x20!important;\x20padding:\x200\x20!important;\x20background:\x20transparent\x20!important;\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20@media\x20print\x20{\x20body\x20{\x20padding:\x200;\x20}\x20@page\x20{\x20margin:\x2015mm;\x20}\x20}\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</style>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20</head>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<body>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div\x20class=\x22header-escola\x22>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20','Informe\x20o\x20e-mail\x20de\x20acesso.','reverse','Professor','Editar\x20Texto\x20do\x20Contrato','702qHGxNv','<button\x20class=\x22','</span>\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20<div>','startY','btn-biometria','\x0a\x0a*Obs.:*\x20_Após\x20o\x20pagamento,\x20por\x20favor,\x20envie\x20o\x20comprovante\x20por\x20aqui\x20para\x20podermos\x20dar\x20baixa\x20no\x20sistema._\x0a\x0a🙏\x20Agradecemos\x20desde\x20já\x20e\x20desejamos-lhe\x20um\x20excelente\x20dia!\x20😉✅','div','Erro\x20ao\x20guardar\x20o\x20link.','desc','getFullYear','toast-container','reset','/auth/login','limpezaAtiva','renderizarConfiguracoesAparencia','Use\x20o\x20sensor\x20digital\x20ou\x20FaceID\x20para\x20registrar\x20o\x20seu\x20acesso\x20neste\x20aparelho.'];a0_0x2f17=function(){return _0x24b57b;};return a0_0x2f17();}let deferredPrompt;window[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x2b0),_0x1abac4=>{const _0x5e216f=a0_0x5d5ecf;_0x1abac4['preventDefault'](),deferredPrompt=_0x1abac4;const _0x555906=document['getElementById'](_0x5e216f(0x50a));_0x555906&&(_0x555906[_0x5e216f(0x1c7)][_0x5e216f(0x115)]=_0x5e216f(0x25e));});function a0_0x3395(_0x16bdc2,_0x4203d0){_0x16bdc2=_0x16bdc2-0xd6;const _0x2f17bd=a0_0x2f17();let _0x33953c=_0x2f17bd[_0x16bdc2];return _0x33953c;}const btnInstall=document[a0_0x5d5ecf(0x21a)](a0_0x5d5ecf(0x402));btnInstall&&btnInstall[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x4e2),async()=>{const _0x572fe6=a0_0x5d5ecf,_0x1964a4=document[_0x572fe6(0x21a)]('pwa-install-banner');_0x1964a4[_0x572fe6(0x1c7)][_0x572fe6(0x115)]='none';if(deferredPrompt){deferredPrompt[_0x572fe6(0x1d9)]();const {outcome:_0x49caa5}=await deferredPrompt[_0x572fe6(0xd8)];deferredPrompt=null;}});const btnCancel=document[a0_0x5d5ecf(0x21a)](a0_0x5d5ecf(0x160));btnCancel&&btnCancel[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x4e2),()=>{const _0x3d5810=a0_0x5d5ecf,_0x3fa292=document[_0x3d5810(0x21a)]('pwa-install-banner');_0x3fa292['style'][_0x3d5810(0x115)]='none';});window[a0_0x5d5ecf(0x432)](a0_0x5d5ecf(0x30e),()=>{const _0x752613=a0_0x5d5ecf,_0x1d28f4=document[_0x752613(0x21a)](_0x752613(0x50a));if(_0x1d28f4)_0x1d28f4[_0x752613(0x1c7)][_0x752613(0x115)]='none';deferredPrompt=null;if(typeof gtag===_0x752613(0x405))gtag(_0x752613(0x4e3),_0x752613(0x498),{'platform':_0x752613(0x5ad)});App[_0x752613(0x424)](_0x752613(0x3e6),_0x752613(0x553));});
+window.CONFIG = window.CONFIG || {};
+window.App = window.App || {};
+const CONFIG = window.CONFIG;
+const App = window.App;
+// =========================================================
+// SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
+// =========================================================
+
+const API_URL = CONFIG.API_URL; 
+
+// 🛡️ Mapeamento de funcionalidades por Cargo
+const LISTA_FUNCIONALIDADES = [
+    { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'ped_chamada', nome: 'Fazer Chamada', icon: '📋', acao: "App.renderizarTela('chamada')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_notas', nome: 'Lançar Nota', icon: '📝', acao: "App.renderizarTela('avaliacoes')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_plan', nome: 'Planejamento', icon: '📅', acao: "App.renderizarTela('planejamento')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'ped_bol', nome: 'Boletins', icon: '🖨️', acao: "App.renderizarTela('boletins')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+    { id: 'fin_inad', nome: 'Inadimplência', icon: '⚠️', acao: "App.renderizarTela('inadimplencia')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')", roles: ['Gestor', 'Secretaria'] },
+    { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')", roles: ['Gestor'] },
+    { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] } 
+];
+
+// =========================================================
+// 🛡️ CORE DA APLICAÇÃO E SISTEMA DE SEGURANÇA CONTRA XSS
+// =========================================================
+
+Object.assign(App, {
+    usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
+    
+    sanitizeHTML: (html) => {
+    if (!html) return '';
+
+    if (typeof DOMPurify === 'undefined') {
+        console.warn('DOMPurify não carregado. Usando escapeHTML como fallback.');
+        return App.escapeHTML(html);
+    }
+
+    return DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: [
+            'p', 'br', 'strong', 'b', 'em', 'i', 'u',
+            'h1', 'h2', 'h3', 'h4',
+            'ul', 'ol', 'li',
+            'div', 'span',
+            'table', 'thead', 'tbody', 'tr', 'td', 'th',
+            'blockquote'
+        ],
+        ALLOWED_ATTR: ['style', 'class']
+    });
+},    
+
+    motorTempoRealLigado: false,
+    calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
+
+    escapeHTML: (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    },
+    
+    unescapeHTML: (str) => {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+    },
+
+    criarElemento: (tag, classes = [], atributos = {}, texto = '') => {
+        const elemento = document.createElement(tag);
+        
+        // Adiciona classes
+        if (classes.length > 0) elemento.classList.add(...classes);
+        
+        // Adiciona atributos (id, type, etc.) e Eventos (onclick)
+        for (const chave in atributos) {
+            // Se o atributo for um evento (ex: onClick), adicionamos o Listener de forma moderna
+            if (chave.startsWith('on') && typeof atributos[chave] === 'function') {
+                const nomeEvento = chave.substring(2).toLowerCase(); // transforma 'onClick' em 'click'
+                elemento.addEventListener(nomeEvento, atributos[chave]);
+            } else {
+                elemento.setAttribute(chave, atributos[chave]);
+            }
+        }
+        
+        // Adiciona o texto de forma 100% segura (não precisa do escapeHTML)
+        if (texto !== '') elemento.textContent = texto; 
+        
+        return elemento;
+    },
+
+    getTenantKey: (chaveBase) => {
+        const tenantId = (App.usuario && App.usuario.id) ? App.usuario.id : 'convidado';
+        return `${chaveBase}_${tenantId}`;
+    },
+
+    getPlanoAtual: () => { return localStorage.getItem(App.getTenantKey('escola_plano')) || 'Teste'; },
+
+    getDeviceId: () => {
+    let deviceId = localStorage.getItem('ptt_device_id');
+    if (!deviceId) {
+        deviceId = 'dev_' + window.crypto.randomUUID();
+        localStorage.setItem('ptt_device_id', deviceId);
+        }
+    return deviceId;
+    },
+
+    aplicarPermissoesDeUsuario: () => {
+        if (!App.usuario) return;
+        const tipo = App.usuario.tipo || 'Gestor';
+        
+        const menuItems = document.querySelectorAll('.sidebar button, .sidebar .menu-item');
+        menuItems.forEach(btn => {
+            const acao = btn.getAttribute('onclick') || '';
+            let visivel = true;
+            
+            if (tipo === 'Professor') {
+                if (acao.includes('mensalidade') || acao.includes('financeiro') || acao.includes('inadimplencia') || acao.includes('relatorio') || acao.includes('configuracoes') || acao.includes('aparencia') || acao.includes('backup') || acao.includes('plano') || acao.includes('conta')) visivel = false;
+            } else if (tipo === 'Secretaria') {
+                if (acao.includes('configuracoes') || acao.includes('aparencia') || acao.includes('backup') || acao.includes('plano') || acao.includes('dossie') || acao.includes('conta')) visivel = false;
+            }
+            
+            btn.style.display = visivel ? '' : 'none';
+        });
+    },
+
+    // 🚀 LÓGICA DE BLOQUEIO DESTRUTIVA GERAL (30 DIAS E TESTE)
+    verificarBloqueioGeral: (escola) => {
+        if (!escola) return false;
+        const plano = escola.plano || 'Teste';
+        
+        if (plano === 'Bloqueado') return true;
+
+        const dataHoje = new Date();
+
+        // Respeita a data de validade imposta no sistema
+        if (escola.dataExpiracao) {
+            const dataVenc = new Date(escola.dataExpiracao);
+            return dataHoje >= dataVenc;
+        } else {
+            // Fallback para escolas que ainda não tem a data registrada
+            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
+            const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
+            
+            if (plano === 'Teste' && diffDays >= 7) return true;
+            if (plano !== 'Teste' && plano !== 'Premium' && diffDays >= 30) return true; 
+        }
+
+        return false;
+    },
+
+    mostrarTelaBloqueioLogin: (escola) => {
+        document.documentElement.removeAttribute('style');
+        document.getElementById('tela-sistema').style.display = 'none';
+
+        const telaLogin = document.getElementById('tela-login');
+        if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+
+        const loginForms = telaLogin.querySelectorAll('.login-box, .box-login');
+        loginForms.forEach(form => {
+            if (form.id !== 'box-bloqueio-conta') form.style.display = 'none';
+        });
+
+        let blockBox = document.getElementById('box-bloqueio-conta');
+        if (!blockBox) {
+            blockBox = document.createElement('div');
+            blockBox.id = 'box-bloqueio-conta';
+            blockBox.className = loginForms.length > 0 ? loginForms[0].className : 'login-box';
+            blockBox.style.maxWidth = '400px';
+            blockBox.style.margin = '0 auto';
+            blockBox.style.background = '#fff';
+            blockBox.style.padding = '30px';
+            blockBox.style.borderRadius = '12px';
+            blockBox.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            telaLogin.appendChild(blockBox);
+        }
+
+        blockBox.style.display = 'block';
+        blockBox.innerHTML = `
+            <div style="text-align:center;">
+                <span style="font-size: 45px; display:block; margin-bottom: 10px;">🔒</span>
+                <h2 style="color: #e74c3c; margin-top:0; font-size:22px;">Acesso Bloqueado</h2>
+                <p style="color: #666; font-size: 13px; margin-bottom: 20px;">O seu acesso foi bloqueado por falta de pagamento ou o seu período de teste expirou.</p>
+
+                <div style="background: #fdf2f2; padding: 20px; border-radius: 8px; border: 1px solid #f5b7b1; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #c0392b; font-size: 15px;">Já efetuou o pagamento?</h4>
+                    <p style="font-size:12px; color:#c0392b; margin-bottom: 15px;">Insira a sua Chave de Ativação (PIN) para liberar o sistema imediatamente.</p>
+
+                    <input type="text" id="input-pin-login" placeholder="Digite o PIN recebido" style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #ccc; text-align: center; font-weight: bold; letter-spacing: 2px; margin-bottom: 15px; font-size: 16px; box-sizing:border-box;">
+
+                    <button class="btn-primary" style="width: 100%; justify-content: center; background: #27ae60; border:none; padding:12px; border-radius:6px; color:white; font-weight:bold; cursor:pointer;" onclick="App.ativarPinLogin(event)">🔓 Validar e Desbloquear</button>
+                </div>
+
+                <button class="btn-cancel" style="width: 100%; justify-content: center; background:transparent; border:1px solid #ccc; padding:10px; border-radius:6px; cursor:pointer;" onclick="App.sairDaTelaDeBloqueio()">Sair e Voltar ao Login</button>
+            </div>
+        `;
+    },
+
+    sairDaTelaDeBloqueio: () => {
+        App.logout();
+    },
+
+    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS NO LOGIN
+    ativarPinLogin: async (event) => {
+        if (event) event.preventDefault();
+        const inputElement = document.getElementById('input-pin-login');
+        if (!inputElement) return;
+
+        const pin = inputElement.value.trim().toUpperCase();
+        if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
+
+        const btn = event.target;
+        const txt = btn.innerText;
+        if(btn) { btn.innerText = "A validar... ⏳"; btn.disabled = true; }
+
+        try {
+            const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
+            let novoPlano = res && res.success ? res.plano : null;
+
+            // Se falhar na API, verifica as chaves manuais (fallback)
+            if (!novoPlano) {
+                if (pin.includes('PRE')) novoPlano = 'Premium';
+                else if (pin.includes('ESS')) novoPlano = 'Essencial';
+                else if (pin.includes('PRO')) novoPlano = 'Profissional';
+                else {
+                    App.showToast(res.error || "PIN inválido ou formato incorreto.", "error");
+                    if(btn) { btn.innerText = txt; btn.disabled = false; }
+                    return;
+                }
+            }
+
+            // 🚀 O SEGREDO: GRAVAR A NOVA DATA DE VALIDADE NO BANCO DE DADOS OFICIAL
+            const escolaAtual = await App.api('/escola') || {};
+            const novaDataExp = new Date();
+            novaDataExp.setDate(novaDataExp.getDate() + 30); // Soma +30 dias ao dia de hoje
+            
+            await App.api('/escola', 'PUT', { 
+                ...escolaAtual, 
+                plano: novoPlano, 
+                pinUsado: pin, 
+                dataExpiracao: novaDataExp.toISOString() 
+            });
+
+            // Atualiza o Cache Local
+            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+            let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            perfilCache.plano = novoPlano;
+            perfilCache.dataExpiracao = novaDataExp.toISOString();
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+            App.atualizarUIHeader(perfilCache);
+            App.showToast(`🎉 PIN validado! Sistema desbloqueado por mais 30 dias.`, "success");
+            
+            const blockBox = document.getElementById('box-bloqueio-conta');
+            if(blockBox) blockBox.style.display = 'none';
+            
+            App.entrarNoSistema();
+        } catch(e) {
+            App.showToast("Erro ao comunicar com a base de dados.", "error");
+        } finally {
+            if(btn) { btn.innerText = txt; btn.disabled = false; }
+        }
+    },
+
+    verificarLimites: async (tipo) => {
+        const plano = App.getPlanoAtual();
+        if (plano === 'Premium' || plano === 'Teste') return true; 
+        
+        try {
+            if (tipo === 'aluno') {
+                const alunos = await App.api('/alunos');
+                const limite = plano === 'Essencial' ? 20 : (plano === 'Profissional' ? 80 : 0);
+                if (alunos.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} alunos atingido no plano ${plano}. Faça o upgrade para continuar a crescer!`, "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 2000);
+                    return false;
+                }
+            } else if (tipo === 'usuario') {
+                const usuarios = await App.api('/usuarios');
+                const limite = plano === 'Essencial' ? 2 : (plano === 'Profissional' ? 4 : 0);
+                if (usuarios.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipa!`, "warning");
+                    setTimeout(() => App.renderizarMeuPlano(), 2000);
+                    return false;
+                }
+            }
+            return true;
+        } catch(e) { return false; }
+    },
+
+    verificarPermissao: (funcionalidade) => {
+        const plano = App.getPlanoAtual();
+        if (plano === 'Premium' || plano === 'Teste') return true; 
+        
+        if (funcionalidade === 'whatsapp' && plano === 'Essencial') {
+            App.showToast("💎 Funcionalidade disponível a partir do Plano Profissional. Faça o upgrade!", "warning");
+            setTimeout(() => App.renderizarMeuPlano(), 1500); return false;
+        }
+        if (funcionalidade === 'dossie' && plano !== 'Premium') {
+            App.showToast("💎 Exclusivo do Plano Premium. Faça o upgrade para aceder ao Dossiê Executivo!", "warning");
+            setTimeout(() => App.renderizarMeuPlano(), 1500); return false;
+        }
+        return true;
+    },
+
+    api: async (endpoint, method = 'GET', body = null) => {
+        const headers = { 'Content-Type': 'application/json' };
+        
+        
+        const options = {
+    method,
+    headers,
+    credentials: 'include',
+    cache: 'no-store'
+}; 
+        if (body) options.body = JSON.stringify(body);
+        
+        try {
+            const response = await fetch(`${API_URL}${endpoint}`, options);
+            
+            let data;
+            try { data = await response.json(); } catch(e) { data = null; }
+
+            if (!response.ok) { 
+                if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth/')) { 
+                    App.showToast("Sessão expirada. Faça login novamente.", "warning");
+                    App.logout(); 
+                }
+                return data || { error: `Erro HTTP: ${response.status}` };
+            }
+            
+            if (method !== 'GET' && App.usuario) setTimeout(App.verificarNotificacoes, 800);
+            return data;
+        } catch (error) { 
+            console.error("Erro no fetch:", error);
+            return method === 'GET' ? [] : { error: 'Falha na conexão. Verifique a internet.' }; 
+        }
+    },
+
+    setTitulo: (texto) => { const el = document.getElementById('titulo-pagina'); if(el) el.innerText = texto; },
+    toggleSub: (id) => { 
+        document.querySelectorAll('.submenu').forEach(el => { if (el.id !== id) el.style.display = 'none'; });
+        const el = document.getElementById(id); if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    },
+    fecharModal: () => {
+        document.getElementById('modal-overlay').style.display = 'none';
+        const btn = document.querySelector('.btn-confirm');
+        if(btn) { btn.style.display = 'inline-flex'; btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
+    },
+
+    // =========================================================
+    // MÁSCARAS DE FORMATAÇÃO
+    // =========================================================
+    mascaraCNPJ: (i) => { let v = i.value.replace(/\D/g,""); v=v.replace(/^(\d{2})(\d)/,"$1.$2"); v=v.replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3"); v=v.replace(/\.(\d{3})(\d)/,".$1/$2"); v=v.replace(/(\d{4})(\d)/,"$1-$2"); i.value = v; },
+    mascaraCPF: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; },
+   mascaraCelular: (i) => { 
+        let v = i.value;
+        if (v.startsWith('+')) {
+            // Formato Internacional: Mantém o '+' e os números livres
+            i.value = '+' + v.replace(/\D/g, "");
+        } else {
+            // Formato Brasil: Aplica a máscara padrão (XX) XXXXX-XXXX
+            v = v.replace(/\D/g, ""); 
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); 
+            v = v.replace(/(\d)(\d{4})$/, "$1-$2"); 
+            i.value = v; 
+        }
+    },
+    mascaraCEP: (i) => { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; },
+    mascaraValor: (i) => { let v = i.value.replace(/\D/g, ""); v = (v / 100).toFixed(2) + ""; i.value = v; },
+
+    // =========================================================
+    // ARRANQUE E LOGIN COM FILTRO DE BLOQUEIO ABSOLUTO
+    // =========================================================
+    init: async () => {
+        localStorage.removeItem('escola_tema'); localStorage.removeItem('escola_atalhos'); localStorage.removeItem('escola_perfil');
+         
+        const resetToken = new URLSearchParams(window.location.search).get('reset');
+        if (resetToken) {
+        document.documentElement.removeAttribute('style');
+        document.getElementById('tela-login').style.display = 'flex';
+        document.getElementById('tela-sistema').style.display = 'none';
+
+        setTimeout(() => {
+        App.abrirModalNovaSenha(resetToken);
+        }, 300);
+
+        return;
+        } 
+
+        const salvo = localStorage.getItem('usuario_logado'); const bioId = localStorage.getItem('escola_bio_id');
+
+        if (salvo) { 
+            App.usuario = JSON.parse(salvo); 
+            App.aplicarTemaSalvo();
+
+            const keyAtalhos = App.getTenantKey('escola_atalhos');
+            if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
+
+            let escola = await App.api('/escola');
+
+if (!escola || escola.error) {
+
+    // 🚨 Se a sessão expirou ou não existe
+    if (
+        escola?.error === 'Sessão não encontrada.' ||
+        escola?.error === 'Sessão expirada.'
+    ) {
+
+        await App.logout();
+        return;
+    }
+
+    // 📦 fallback offline/cache
+    escola = JSON.parse(
+        localStorage.getItem(App.getTenantKey('escola_perfil'))
+    ) || {};
+}
+
+            if (App.verificarBloqueioGeral(escola)) {
+                document.documentElement.removeAttribute('style'); 
+                App.mostrarTelaBloqueioLogin(escola);
+            } else {
+                if (bioId && window.PublicKeyCredential) {
+                    document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none';
+                    document.getElementById('btn-biometria').style.display = 'block'; 
+setTimeout(() => { App.entrarComBiometria(); }, 600); 
+                } else { 
+                    App.entrarNoSistema(); 
+                }
+            }
+        } else { 
+            document.documentElement.removeAttribute('style'); document.getElementById('tela-login').style.display = 'flex'; document.getElementById('tela-sistema').style.display = 'none'; 
+        }
+        
+        const dataEl = document.getElementById('data-hoje'); if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
+        App.setupMobileMenu(); 
+        
+        const passInput = document.getElementById('login-pass'); if(passInput) { passInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { App.fazerLogin(); } }); }
+        
+        // ⏰ MOTOR DE TEMPO REAL DO SININHO E CÃO DE GUARDA
+        if (!App.motorTempoRealLigado) {
+            
+            // 1. Separamos a lógica numa função para poder chamar na hora
+            const checarSistema = () => {
+                const telaSistema = document.getElementById('tela-sistema');
+                if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
+                    App.verificarNotificacoes();
+                    App.carregarDadosEscola(); 
+                }
+            };
+
+            // 2. Roda a primeira vez quase que imediatamente (2 seg) após o login
+            setTimeout(checarSistema, 2000);
+
+            // 3. Depois, fica rodando a cada 10 segundos (10000 milissegundos)
+            setInterval(checarSistema, 10000); 
+            
+            App.motorTempoRealLigado = true;
+        }
+    },
+
+    fazerLogin: async () => {
+        const login = document.getElementById('login-user').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        if(!login || !pass) return App.showToast("Preencha utilizador e senha", "warning");
+        
+        const btn = document.querySelector('#tela-login button[type="submit"]');
+        const txt = btn.innerText; btn.innerText = "Autenticando... ⏳"; btn.disabled = true;
+        
+        try {
+            const deviceId = App.getDeviceId();
+            const res = await App.api('/auth/login', 'POST', { login: login, senha: pass, deviceId: deviceId });
+            
+            if(res && res.success) {
+                App.usuario = res.usuario;
+                localStorage.setItem('usuario_logado', JSON.stringify(res.usuario));
+                
+                
+                if (typeof gtag === 'function') gtag('event', 'login', { method: 'Sistema PTT' });
+                
+                App.aplicarTemaSalvo();
+                const keyAtalhos = App.getTenantKey('escola_atalhos');
+                if (!localStorage.getItem(keyAtalhos)) { localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); }
+
+                let escola = await App.api('/escola');
+
+if (!escola || escola.error) {
+
+    // 🚨 Se a sessão expirou ou não existe
+    if (
+        escola?.error === 'Sessão não encontrada.' ||
+        escola?.error === 'Sessão expirada.'
+    ) {
+
+        await App.logout();
+        return;
+    }
+
+    // 📦 fallback offline/cache
+    escola = JSON.parse(
+        localStorage.getItem(App.getTenantKey('escola_perfil'))
+    ) || {};
+}
+
+                if (App.verificarBloqueioGeral(escola)) {
+                    App.mostrarTelaBloqueioLogin(escola);
+                } else {
+                    App.entrarNoSistema();
+                    App.showToast('Bem-vindo ao sistema!', 'success');
+                }
+            } else { 
+                App.showToast(res.error || "Login ou senha incorretos", "error"); 
+            }
+        } catch(e) { App.showToast("Erro ao conectar no servidor", "error"); } 
+        finally { btn.innerText = txt; btn.disabled = false; }
+    },
+
+    entrarNoSistema: async () => {
+        document.getElementById('tela-login').style.display = 'none';
+        document.getElementById('tela-sistema').style.display = 'flex';
+        const el = document.getElementById('user-name');
+        if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+        App.aplicarPermissoesDeUsuario(); 
+        
+        await App.carregarDadosEscola();
+        
+        if (document.getElementById('tela-sistema').style.display !== 'none') {
+            App.renderizarInicio();
+        }
+    },
+
+   logout: async () => {
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch(e) {}
+
+    document.documentElement.removeAttribute('style');
+    localStorage.removeItem('usuario_logado');
+    localStorage.removeItem('token_acesso');
+    App.usuario = null;
+
+    const inUser = document.getElementById('login-user');
+    if (inUser) inUser.value = '';
+
+    const inPass = document.getElementById('login-pass');
+    if (inPass) inPass.value = '';
+
+    const modalPadrao = document.getElementById('modal-overlay');
+    if (modalPadrao) modalPadrao.style.display = 'none';
+
+    const modalInst = document.getElementById('modal-cadastro-inst');
+    if (modalInst) modalInst.style.display = 'none';
+
+    const modalRec = document.getElementById('modal-recuperacao-senha');
+    if (modalRec) modalRec.style.display = 'none';
+
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) sidebar.classList.remove('active');
+
+    const mobileOverlay = document.querySelector('.mobile-overlay');
+    if (mobileOverlay) mobileOverlay.classList.remove('active');
+
+    const notiDropdown = document.getElementById('noti-dropdown');
+    if (notiDropdown) notiDropdown.classList.remove('active');
+
+    document.getElementById('tela-sistema').style.display = 'none';
+
+    const telaLogin = document.getElementById('tela-login');
+    if (telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+
+    const blockBox = document.getElementById('box-bloqueio-conta');
+    if (blockBox) blockBox.style.display = 'none';
+
+    const loginForms = document.querySelectorAll('#tela-login .login-box, #tela-login .box-login');
+    loginForms.forEach(form => {
+        if (form.id !== 'box-bloqueio-conta') form.style.display = '';
+    });
+},
+     
+        // =========================================================
+    // 👁️ OLHINHO E RECUPERAÇÃO DE SENHA
+    // =========================================================
+    toggleSenhaLogin: () => {
+        const input = document.getElementById('login-pass');
+        if (input) input.type = input.type === 'password' ? 'text' : 'password';
+    },
+
+    abrirModalRecuperacao: (event) => {
+    if(event) event.preventDefault();
+
+    let modal = document.getElementById('modal-recuperacao-senha');
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-recuperacao-senha';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;';
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                <span style="font-size: 40px; display:block; margin-bottom:10px;">🔐</span>
+                <h3 style="margin-top:0; color:#2c3e50;">Recuperar Senha</h3>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">
+                    Insira o e-mail registado na sua conta. Enviaremos um link seguro para criar uma nova senha.
+                </p>
+
+                <input type="email" id="recuperar-email-input" placeholder="O seu e-mail de acesso" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
+
+                <button class="btn-primary" onclick="App.enviarRecuperacaoSenha()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">
+                    ✉️ Enviar Link de Recuperação
+                </button>
+
+                <button class="btn-cancel" onclick="document.getElementById('modal-recuperacao-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                    Cancelar e Voltar
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    document.getElementById('recuperar-email-input').value = '';
+    modal.style.display = 'flex';
+},  
+      
+  enviarRecuperacaoSenha: async () => {
+    const email = document.getElementById('recuperar-email-input')?.value.trim();
+
+    if (!email) {
+        return App.showToast("Informe o e-mail de acesso.", "warning");
+    }
+
+    const btn = document.querySelector('#modal-recuperacao-senha .btn-primary');
+    const textoOriginal = btn.innerText;
+
+    btn.innerText = "Enviando link... ⏳";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/recuperar-senha`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            App.showToast(data.message || "Se este e-mail estiver cadastrado, enviaremos um link.", "success");
+            document.getElementById('modal-recuperacao-senha').style.display = 'none';
+        } else {
+            App.showToast(data.error || "Não foi possível solicitar a recuperação.", "error");
+        }
+
+    } catch (e) {
+        App.showToast("Erro de comunicação com o servidor.", "error");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+},
+
+abrirModalNovaSenha: (token) => {
+    let modal = document.getElementById('modal-nova-senha');
+
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-nova-senha';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10000;';
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:12px; max-width:420px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+                <span style="font-size: 40px; display:block; margin-bottom:10px;">🔑</span>
+                <h3 style="margin-top:0; color:#2c3e50;">Criar Nova Senha</h3>
+
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">
+                    Digite a sua nova senha de acesso.
+                </p>
+
+                <input type="password" id="nova-senha-reset" placeholder="Nova senha" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:12px; text-align:center;">
+
+                <input type="password" id="confirma-senha-reset" placeholder="Confirmar nova senha" style="width:100%; padding:12px; border-radius:6px; border:1px solid #ccc; margin-bottom:15px; text-align:center;">
+
+                <button class="btn-primary" onclick="App.confirmarNovaSenhaReset()" style="width:100%; justify-content:center; padding:12px; margin-bottom:10px; border:none; border-radius:6px;">
+                    ✅ Salvar Nova Senha
+                </button>
+
+                <button class="btn-cancel" onclick="document.getElementById('modal-nova-senha').style.display='none'" style="width:100%; justify-content:center; padding:10px; background:transparent; border:1px solid #ccc; border-radius:6px; cursor:pointer;">
+                    Cancelar
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    App.tokenResetSenha = token;
+    modal.style.display = 'flex';
+},
+
+confirmarNovaSenhaReset: async () => {
+    const novaSenha = document.getElementById('nova-senha-reset')?.value || '';
+    const confirmaSenha = document.getElementById('confirma-senha-reset')?.value || '';
+
+    if (novaSenha.length < 6) {
+        return App.showToast("A nova senha deve ter pelo menos 6 caracteres.", "warning");
+    }
+
+    if (novaSenha !== confirmaSenha) {
+        return App.showToast("As senhas não conferem.", "warning");
+    }
+
+    const btn = document.querySelector('#modal-nova-senha .btn-primary');
+    const textoOriginal = btn.innerText;
+
+    btn.innerText = "Salvando... ⏳";
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/redefinir-senha`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                token: App.tokenResetSenha,
+                novaSenha
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            App.showToast("Senha redefinida com sucesso. Faça login com a nova senha.", "success");
+            document.getElementById('modal-nova-senha').style.display = 'none';
+
+            App.tokenResetSenha = null;
+
+            const novaUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, novaUrl);
+        } else {
+            App.showToast(data.error || "Não foi possível redefinir a senha.", "error");
+        }
+
+    } catch (e) {
+        App.showToast("Erro de comunicação com o servidor.", "error");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+},
+
+// =========================================================
+// 👆 BIOMETRIA PREMIUM - EXPERIÊNCIA DE APP NATIVO
+// =========================================================
+
+// Utilitários de Conversão Ultra-Seguros
+bufferToBase64: function(buf) {
+    var bytes = new Uint8Array(buf);
+    var binary = '';
+    for (var i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+},
+
+base64ToBuffer: function(b64) {
+    var binary_string = atob(b64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+},
+
+configurarBiometria: async () => {
+    if (!window.PublicKeyCredential) return App.showToast("Este dispositivo não suporta biometria.", "error");
+
+    try {
+        // Interface de Antecipação Estilo App
+        App.exibirOverlayBiometria("Configurar Acesso Seguro", "Use o sensor digital ou FaceID para registrar o seu acesso neste aparelho.");
+        
+        const challenge = window.crypto.getRandomValues(new Uint8Array(32));
+        const userId = window.crypto.getRandomValues(new Uint8Array(16));
+
+        const cred = await navigator.credentials.create({
+            publicKey: {
+                challenge: challenge,
+                rp: { name: "App Gestão PTT" },
+                user: { 
+                    id: userId, 
+                    name: App.usuario.login, 
+                    displayName: App.usuario.nome 
+                },
+                pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+                authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                timeout: 60000
+            }
+        });
+
+        if (cred) {
+            localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
+            App.removerOverlayBiometria();
+            App.showToast("✅ Biometria ativada com sucesso!", "success");
+            App.renderizarMinhaConta();
+        }
+    } catch (e) {
+        App.removerOverlayBiometria();
+        console.error(e);
+        App.showToast("Configuração cancelada ou falhou.", "warning");
+    }
+},
+
+entrarComBiometria: async () => {
+    const bioId = localStorage.getItem('escola_bio_id');
+    if (!bioId) return;
+
+    try {
+        App.exibirOverlayBiometria("Autenticação Biométrica", "Aguardando confirmação de identidade...");
+        
+        const challenge = window.crypto.getRandomValues(new Uint8Array(32));
+        const rawId = App.base64ToBuffer(bioId);
+
+        const assertion = await navigator.credentials.get({
+            publicKey: {
+                challenge: challenge,
+                allowCredentials: [{ type: "public-key", id: rawId }],
+                userVerification: "required",
+                timeout: 60000
+            }
+        });
+
+        if (assertion) {
+            App.removerOverlayBiometria();
+            App.showToast("🔓 Identidade confirmada!", "success");
+            App.entrarNoSistema();
+        }
+    } catch (e) {
+        App.removerOverlayBiometria();
+        console.error(e);
+        App.showToast("Biometria não reconhecida. Use sua senha.", "info");
+    }
+},
+
+// Interface Visual (Overlay Estilo iOS/Android)
+exibirOverlayBiometria: (titulo, sub) => {
+    let overlay = document.getElementById('bio-overlay-premium');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'bio-overlay-premium';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+        <div style="background: white; padding: 40px; border-radius: 28px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); animation: slideUpBio 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <div class="bio-icon-pulse" style="font-size: 65px; margin-bottom: 20px;">👤</div>
+            <h2 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px; font-family: sans-serif;">${titulo}</h2>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.5; margin-bottom: 25px; font-family: sans-serif;">${sub}</p>
+            <div style="font-size: 11px; color: #3498db; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">App Gestão PTT</div>
+        </div>
+        <style>
+            @keyframes slideUpBio { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            .bio-icon-pulse { animation: pulseBio 1.8s infinite; display: inline-block; }
+            @keyframes pulseBio { 0% { transform: scale(1); } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); } }
+        </style>
+    `;
+    overlay.style.display = 'flex';
+},
+
+removerOverlayBiometria: () => {
+    const overlay = document.getElementById('bio-overlay-premium');
+    if (overlay) overlay.style.display = 'none';
+},
+
+// =========================================================
+// CADASTRO DE NOVA INSTITUIÇÃO (LEADS COM RASTREAMENTO)
+// =========================================================
+abrirTelaCadastroInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'flex'; App.voltarEtapa1(); },
+fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.display = 'none'; },
+voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
+
+enviarCodigoInst: async () => {
+    const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
+    if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
+    const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
+    try {
+        const res = await App.api('/auth/enviar-codigo', 'POST', { email });
+        if(res && res.success) { App.showToast('Código enviado!', 'success'); document.getElementById('etapa-1-email').style.display = 'none'; document.getElementById('etapa-2-validacao').style.display = 'block'; } 
+        else { App.showToast('Erro ao enviar e-mail.', 'error'); }
+    } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
+},
+
+validarCadastroInst: async () => {
+    const email = document.getElementById('novo-inst-email').value; const codigo = document.getElementById('novo-inst-codigo').value.trim(); const pin = document.getElementById('novo-inst-pin').value.trim(); const btn = document.querySelector('#etapa-2-validacao button');
+    if(!codigo || !pin) return App.showToast('Preencha Código e PIN.', 'error');
+    const txt = btn.innerText; btn.innerText = "A Validar... ⏳"; btn.disabled = true;
+    try {
+        const res = await App.api('/auth/validar-cadastro', 'POST', { email, codigo, pin });
+        if(res && res.success) { 
+            document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'block'; 
+            if(typeof confetti === 'function') confetti(); 
+            if (typeof gtag === 'function') gtag('event', 'generate_lead', { currency: 'BRL', value: 0.00, tipo_conta: 'App Gestão PTT' });
+        } 
+        else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
+    } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
+},
+
+    // =========================================================
+    // UTILITÁRIOS DA INTERFACE
+    // =========================================================
+    showToast: (mensagem, tipo = 'info') => {
+        let container = document.getElementById('toast-container'); 
+        if (!container) { 
+            // Usando o nosso novo criador para fazer o container
+            container = App.criarElemento('div', [], { id: 'toast-container' });
+            document.body.appendChild(container); 
+        }
+
+        const iconStr = tipo === 'success' ? '✅' : (tipo === 'error' ? '❌' : (tipo === 'warning' ? '⚠️' : 'ℹ️'));
+
+        // Fabricamos a caixa do Toast
+        const toast = App.criarElemento('div', ['toast', tipo]);
+        
+        // Fabricamos o ícone
+        const iconSpan = App.criarElemento('span', ['toast-icon'], {}, iconStr);
+        
+        // Fabricamos o texto da mensagem (O textContent torna-o super seguro automaticamente)
+        const msgSpan = App.criarElemento('span', [], {}, mensagem);
+
+        // Juntamos os blocos (Colocamos os spans dentro do toast, e o toast no container)
+        toast.appendChild(iconSpan);
+        toast.appendChild(msgSpan);
+        container.appendChild(toast);
+
+        // A animação continua igual
+        setTimeout(() => { 
+            toast.style.animation = 'fadeOut 0.5s ease forwards'; 
+            setTimeout(() => toast.remove(), 500); 
+        }, 3000);
+    },
+
+    setupMobileMenu: () => {
+        const header = document.querySelector('header');
+        if(header && !document.getElementById('btn-mobile-menu')) {
+            const btn = document.createElement('button'); btn.id = 'btn-mobile-menu'; btn.className = 'mobile-menu-btn'; btn.innerHTML = '☰';
+            btn.onclick = () => { document.querySelector('.sidebar').classList.toggle('active'); const overlay = document.querySelector('.mobile-overlay') || App.criarOverlay(); overlay.classList.toggle('active'); };
+            header.insertBefore(btn, header.firstChild); App.criarOverlay();
+        }
+    },
+    criarOverlay: () => {
+        if(document.querySelector('.mobile-overlay')) return document.querySelector('.mobile-overlay');
+        const overlay = document.createElement('div'); overlay.className = 'mobile-overlay';
+        overlay.onclick = () => { document.querySelector('.sidebar').classList.remove('active'); overlay.classList.remove('active'); };
+        document.body.appendChild(overlay); return overlay;
+    },
+
+    aplicarTemaSalvo: () => { 
+        const tema = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema')));
+        if (tema) {
+            const root = document.documentElement;
+            if(tema.sidebarBg) root.style.setProperty('--sidebar-bg', tema.sidebarBg); 
+            if(tema.sidebarText) root.style.setProperty('--sidebar-text', tema.sidebarText); 
+            if(tema.bodyBg) root.style.setProperty('--body-bg', tema.bodyBg); 
+            if(tema.textMain) root.style.setProperty('--text-main', tema.textMain); 
+            if(tema.cardBg) root.style.setProperty('--card-bg', tema.cardBg); 
+            if(tema.cardText) root.style.setProperty('--card-text', tema.cardText);
+            if(tema.zoomLevel) root.style.setProperty('--zoom-level', tema.zoomLevel);
+        } else { document.documentElement.removeAttribute('style'); }
+    },
+
+    UI: {
+        card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `<div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}${conteudo}</div>`,
+        input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `<div class="input-group"><label>${label}</label><input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}></div>`,
+        botao: (texto, acao, tipo = 'primary', icone = '') => { const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit'); return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`; },
+        colorPicker: (label, valor, varCss) => `<div class="theme-row"><label>${label}</label><input type="color" value="${valor}" oninput="App.previewCor('${varCss}', this.value)"></div>`
+    },
+
+    renderizarConfiguracoesAparencia: () => { 
+        App.setTitulo("Aparência do Sistema"); const div = document.getElementById('app-content'); const styles = getComputedStyle(document.documentElement);
+        const temaSalvo = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema'))) || {};
+        
+        const c = { sbBg: styles.getPropertyValue('--sidebar-bg').trim(), sbTxt: styles.getPropertyValue('--sidebar-text').trim(), bdBg: styles.getPropertyValue('--body-bg').trim(), txtMain: styles.getPropertyValue('--text-main').trim(), cdBg: styles.getPropertyValue('--card-bg').trim(), cdTxt: styles.getPropertyValue('--card-text').trim(), zoomAtual: temaSalvo.zoomLevel || '1' };
+        const atalhosSalvos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos'))) || [];
+
+        const blocoCores = `<div class="theme-section"><h4 style="margin:0 0 15px 0;">1. Cores do Sistema</h4><div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;"><div><div style="font-weight:bold; margin-bottom:10px;">Menu Lateral</div>${App.UI.colorPicker('Fundo:', c.sbBg, '--sidebar-bg')}${App.UI.colorPicker('Texto:', c.sbTxt, '--sidebar-text')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Área Principal</div>${App.UI.colorPicker('Fundo:', c.bdBg, '--body-bg')}${App.UI.colorPicker('Texto:', c.txtMain, '--text-main')}</div><div><div style="font-weight:bold; margin-bottom:10px;">Dashboard / Cards</div>${App.UI.colorPicker('Fundo:', c.cdBg, '--card-bg')}${App.UI.colorPicker('Texto:', c.cdTxt, '--card-text')}</div></div></div>`;
+        const blocoAtalhos = `<div class="theme-section" style="margin-top:20px;"><h4 style="margin:0 0 5px 0;">2. Atalhos no Dashboard</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Selecione os atalhos (Mínimo: 1 | Máximo: 8).</p><div class="shortcut-selector" style="display:flex; flex-wrap:wrap; gap:10px;">${LISTA_FUNCIONALIDADES.map(f => `<label class="shortcut-item" style="background:#f9f9f9; padding:8px 12px; border-radius:6px; cursor:pointer;"><input type="checkbox" class="sc-check" value="${f.id}" ${atalhosSalvos.includes(f.id) ? 'checked' : ''} onchange="App.validarLimiteAtalhos(this)"> ${f.icon} ${f.nome}</label>`).join('')}</div></div>`;
+        const blocoFonte = `<div class="theme-section" style="margin-top:20px;"><h4 style="margin:0 0 5px 0;">3. Tamanho da Fonte (Zoom)</h4><p style="font-size:12px; color:#666; margin-bottom:15px;">Ajuste o tamanho geral para facilitar a leitura.</p><div class="input-group" style="max-width: 300px;"><select id="theme-zoom" style="font-weight:bold; cursor:pointer;" onchange="App.previewZoom(this.value)"><option value="0.9" ${c.zoomAtual === '0.9' ? 'selected' : ''}>Pequena (90%)</option><option value="1" ${c.zoomAtual === '1' ? 'selected' : ''}>Padrão (100%)</option><option value="1.1" ${c.zoomAtual === '1.1' ? 'selected' : ''}>Maior (110%)</option></select></div></div>`;
+        const blocoBotoes = `<div style="display:flex; gap:10px; margin-top: 25px; flex-wrap:wrap;">${App.UI.botao('💾 SALVAR ALTERAÇÕES', 'App.salvarTema()', 'primary', '')}${App.UI.botao('✖️ RESTAURAR PADRÃO', 'App.resetarTema()', 'cancel', '')}</div>`;
+        div.innerHTML = App.UI.card('🎨 Personalizar Aparência', 'Personalize as cores, zoom e atalhos da tela inicial.', blocoCores + blocoFonte + blocoAtalhos + blocoBotoes, '800px');
+    },
+
+    previewCor: (varName, color) => { document.documentElement.style.setProperty(varName, color); },
+    previewZoom: (valor) => { document.documentElement.style.setProperty('--zoom-level', valor); },
+    validarLimiteAtalhos: (checkbox) => { const checked = document.querySelectorAll('.sc-check:checked'); if (checked.length > 8) { checkbox.checked = false; App.showToast("O limite máximo é de 8 atalhos.", "warning"); } },
+    
+    salvarTema: () => { 
+        const root = getComputedStyle(document.documentElement);
+        const tema = { sidebarBg: root.getPropertyValue('--sidebar-bg').trim(), sidebarText: root.getPropertyValue('--sidebar-text').trim(), bodyBg: root.getPropertyValue('--body-bg').trim(), textMain: root.getPropertyValue('--text-main').trim(), cardBg: root.getPropertyValue('--card-bg').trim(), cardText: root.getPropertyValue('--card-text').trim(), zoomLevel: document.getElementById('theme-zoom').value };
+        const atalhos = Array.from(document.querySelectorAll('.sc-check:checked')).map(cb => cb.value);
+        if(atalhos.length === 0) return App.showToast("Selecione pelo menos 1 atalho.", "warning"); 
+        if(atalhos.length > 8) return App.showToast("Máximo de 8 atalhos permitidos.", "warning");
+        localStorage.setItem(App.getTenantKey('escola_tema'), JSON.stringify(tema)); localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(atalhos)); 
+        App.aplicarTemaSalvo(); App.showToast("Configurações salvas com sucesso! 🎉", "success"); setTimeout(() => { App.renderizarInicio(); }, 800);
+    },
+    
+    resetarTema: () => { 
+        if(!confirm("Deseja restaurar as cores e fontes padrão?")) return; 
+        localStorage.removeItem(App.getTenantKey('escola_tema')); localStorage.setItem(App.getTenantKey('escola_atalhos'), JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
+        document.documentElement.removeAttribute('style'); App.showToast("Aparência restaurada com sucesso! 🔄", "success"); setTimeout(() => { location.reload(); }, 1000);
+    },
+
+    // =========================================================
+    // VISÃO GERAL (DASHBOARD INTELIGENTE COM FILTRO DE CARGO)
+    // =========================================================
+    renderizarInicio: async () => { 
+        App.verificarNotificacoes(); 
+        App.setTitulo("Visão Geral"); const div = document.getElementById('app-content'); div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
+        try {
+            const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
+            const todosAlunos = Array.isArray(alunos) ? alunos : [];
+            const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); 
+            const listaFin = Array.isArray(financeiro) ? financeiro : []; const listaTurmas = Array.isArray(turmas) ? turmas : []; const listaCursos = Array.isArray(cursos) ? cursos : [];
+            const dataHoje = new Date(); const mesAtual = dataHoje.getMonth() + 1; const anoAtual = dataHoje.getFullYear();
+            
+            const ativosIds = listaAlunos.map(a => a.id);
+
+            const financasMes = listaFin.filter(f => { if(!f.vencimento) return false; const parts = f.vencimento.split('-'); return parseInt(parts[1]) === mesAtual && parseInt(parts[0]) === anoAtual; });
+            const totalRecebido = financasMes.filter(f => f.status === 'Pago').reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
+            
+            const totalPendente = financasMes.filter(f => f.status !== 'Pago' && ativosIds.includes(f.idAluno)).reduce((acc, cur) => acc + parseFloat(cur.valor), 0);
+            
+            const inadimplentesList = listaFin.filter(f => 
+                f.status === 'Pendente' && 
+                new Date(f.vencimento + 'T00:00:00') < dataHoje &&
+                ativosIds.includes(f.idAluno) 
+            ).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+
+            const formatarMoeda = (valor) => valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+            const mostraFinanceiro = tipoUtilizador !== 'Professor'; 
+
+            let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
+            if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
+            
+            const htmlAtalhos = idsAtalhos.map(id => { 
+                const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); 
+                if (func && func.roles.includes(tipoUtilizador)) {
+                    return `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>`;
+                }
+                return ''; 
+            }).join('');
+
+            const htmlInadimplentes = inadimplentesList.length === 0 
+                ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
+                : inadimplentesList.map(f => {
+                    const alunoInfo = listaAlunos.find(a => a.id === f.idAluno) || {}; const zap = alunoInfo.whatsapp || ''; const dataBr = f.vencimento.split('-').reverse().join('/'); const valFmt = formatarMoeda(parseFloat(f.valor));
+                    return `<div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);"><div><div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${App.escapeHTML(f.alunoNome || 'Desconhecido')}</div><div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div></div><button onclick="App.cobrarWhatsAppDashboard('${App.escapeHTML(f.alunoNome)}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"><span>💬</span> Cobrar</button></div>`;
+                }).join('');
+
+            div.innerHTML = `
+                <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor')}! 👋</h3>
+                <div class="dashboard-grid">
+                    <div class="stat-card card-blue" style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:15px; padding:20px;">
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">🎓</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Alunos</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaAlunos.length}</span></div>
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,0,0,0.05); padding-bottom:10px;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">🏫</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Turmas</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaTurmas.length}</span></div>
+                        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;"><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">📚</span><span style="font-size:14px; font-weight:600; color:#555; text-transform:uppercase;">Total Cursos</span></div><span style="font-size:20px; font-weight:bold; color:#3498db;">${listaCursos.length}</span></div>
+                    </div>
+                    ${mostraFinanceiro ? `
+                    <div class="stat-card card-green" style="display:block; position:relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;"><div class="stat-info"><h4>Receita (${mesAtual}/${anoAtual})</h4><p style="color:#27ae60; font-size:20px;">R$ ${formatarMoeda(totalRecebido)}</p></div><div class="stat-icon" style="font-size:24px;">💰</div></div>
+                        <div style="height:140px; width:100%; display:flex; justify-content:center; align-items:center;"><canvas id="graficoFinanceiro"></canvas></div>
+                        <div style="text-align:center; font-size:11px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:5px;">Pendente no mês: <span style="color:#e74c3c; font-weight:bold;">R$ ${formatarMoeda(totalPendente)}</span></div>
+                    </div>
+                    <div class="stat-card card-red" style="display:flex; flex-direction:column; align-items:stretch; padding:15px; height:100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fdedec; padding-bottom:8px;"><h4 style="margin:0; font-size:14px; color:#e74c3c; text-transform:uppercase; font-weight:bold;">⚠️ Títulos em Atraso (${inadimplentesList.length})</h4></div>
+                        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:5px;">${htmlInadimplentes}</div>
+                    </div>
+                    ` : ''}
+                </div>
+                <h3 style="color:var(--card-text); font-size:16px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Acesso Rápido</h3>
+                <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado ou permitido.</p>'}</div>`;
+
+            if (mostraFinanceiro) {
+                const ctx = document.getElementById('graficoFinanceiro');
+                if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
+                    new Chart(ctx, { type: 'doughnut', data: { labels: ['Recebido', 'Pendente'], datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' } });
+                } else if (ctx) { new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [1], backgroundColor: ['#eee'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' } }); }
+            }
+        } catch(e) { console.error(e); div.innerHTML = "<p>Erro ao carregar dashboard.</p>"; }
+    },
+
+    cobrarWhatsAppDashboard: (nomeAluno, telefone, dataVencimento, valorFmt) => {
+        if (!App.verificarPermissao('whatsapp')) return;
+        if (!telefone || telefone.trim() === '' || telefone === 'undefined') { App.showToast("Este aluno não tem um número de WhatsApp registado no sistema!", "error"); return; }
+        
+        let numero = telefone.replace(/\D/g, ''); 
+        if (telefone.trim().startsWith('+')) {
+            // Se já tem '+', usamos exatamente os números com o DDI que foi digitado
+            numero = telefone.replace(/\D/g, ''); 
+        } else if (numero.length === 10 || numero.length === 11) {
+            // Se for nacional (sem DDI), injeta o 55 por defeito
+            numero = '55' + numero;
+        }
+
+        // 1. Puxar os dados da Escola registados no sistema
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Nossa Instituição';
+        const chavePix = escola.chavePix || 'Não informada';
+        const bancoPix = escola.banco || 'Não informado';
+
+        // 2. Montar a mensagem de forma dinâmica
+        const msg = `🔔 *LEMBRETE DE VENCIMENTO*\nOlá, ${nomeAluno}!\n\nConsta no nosso sistema que a sua mensalidade venceu no dia ${dataVencimento}. Para realizar o pagamento de forma rápida, basta enviar o valor de *R$ ${valorFmt}* para a chave PIX abaixo:\n\n*Instituição:* ${nomeEscola}\n*Banco:* ${bancoPix}\n*Chave PIX:* ${chavePix}\n\n*Obs.:* _Após o pagamento, por favor, envie o comprovante por aqui para podermos dar baixa no sistema._\n\n🙏 Agradecemos desde já e desejamos-lhe um excelente dia! 😉✅`;
+        
+        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
+    },    
+
+// =========================================================
+    // ROTEAMENTO DE TELAS E BLOQUEIO DE CARGOS
+    // =========================================================
+    renderizarTela: async (tela) => {
+        if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
+        if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
+        if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
+
+        const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
+        const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
+        const bloqueadoSecr = ['configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'conta'];
+
+        if (tipoUtil === 'Professor' && bloqueadoProf.includes(tela)) {
+            App.showToast("🚫 Acesso restrito. Perfil de Professor não tem permissão para esta área.", "error"); return App.renderizarInicio();
+        }
+        if (tipoUtil === 'Secretaria' && bloqueadoSecr.includes(tela)) {
+            App.showToast("🚫 Acesso restrito. Perfil de Secretaria não tem permissão para esta área.", "error"); return App.renderizarInicio();
+        }
+
+        if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
+
+        if (tela === 'chamada') { App.setTitulo("Chamada"); App.renderizarChamadaPro(); }
+        else if (tela === 'avaliacoes') { App.setTitulo("Notas"); App.renderizarAvaliacoesPro(); }
+        else if (tela === 'calendario') { App.setTitulo("Calendário"); App.renderizarCalendarioPro(); }
+        else if (tela === 'planejamento') { App.setTitulo("Planejamento"); App.renderizarPlanejamentoPro(); }
+        else if (tela === 'boletins') { App.setTitulo("Boletim"); App.renderizarBoletimVisual(); }
+        else if (tela === 'mensalidades') { App.setTitulo("Financeiro"); App.renderizarFinanceiroPro(); }
+        else if (tela === 'inadimplencia') { App.setTitulo("Inadimplência"); App.renderizarInadimplencia(); } 
+        else if (tela === 'configuracoes') { App.setTitulo("Configurações"); App.renderizarConfiguracoes(); }
+        else if (tela === 'aparencia') { App.renderizarConfiguracoesAparencia(); } 
+        else if (tela === 'backup') { App.renderizarBackup(); }
+        else if (tela === 'plano') { App.renderizarMeuPlano(); } 
+        else { App.renderizarInicio(); }
+    },
+    
+    renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
+    renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
+
+    // =========================================================
+    // 💎 O MEU PLANO (PAINEL INTERNO)
+    // =========================================================
+    renderizarMeuPlano: () => {
+        App.setTitulo("Gerenciar Assinatura");
+        const div = document.getElementById('app-content');
+        const planoAtual = App.getPlanoAtual();
+        
+        let diasRestantes = 0;
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const hojeTime = new Date().getTime();
+        
+        // Pega os dias restantes diretos da nova arquitetura de expiração
+        if (escola.dataExpiracao) {
+            const diffTime = new Date(escola.dataExpiracao).getTime() - hojeTime;
+            diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        } else if (escola.dataCriacao) {
+            const diffTime = Math.abs(hojeTime - new Date(escola.dataCriacao).getTime());
+            diasRestantes = (planoAtual === 'Teste' ? 7 : 30) - Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        }
+        if(diasRestantes < 0) diasRestantes = 0;
+
+        let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+        const infoPlano = planoAtual === 'Teste' 
+            ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px;">⏳ Plano Teste (${diasRestantes} dias restantes)</strong>` 
+            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias)</strong>`;
+        
+        div.innerHTML = `
+            <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
+                <h2 style="margin: 0 0 15px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
+                <div style="margin-bottom: 30px;">${infoPlano}</div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
+                    <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="input-novo-pin" placeholder="Insira a sua Chave de Ativação (PIN)" style="flex:1; min-width: 200px; padding:12px; border-radius:6px; border:1px solid #ccc; text-align:center; letter-spacing:2px; font-weight:bold; font-size:16px;">
+                        
+                        <button class="btn-primary" style="width:auto; margin:0;" onclick="App.ativarNovoPlano(event)">Validar PIN</button>
+                    </div>
+                    <p style="font-size:11px; color:#999; margin: 10px 0 0 0;">O PIN é enviado para o seu e-mail imediatamente após a confirmação do pagamento.</p>
+                </div>
+            </div>
+
+            <h3 style="text-align: center; color: var(--card-text); margin-top: 40px;">Escolha o pacote ideal para a sua escola</h3>
+            
+            <div class="pricing-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-top:20px;">
+                <div class="pricing-card" style="background:#fff; border:1px solid #eee; border-radius:12px; padding:30px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top:0; color:#333; font-size:22px;">Essencial</h3>
+                    <div style="font-size:32px; font-weight:bold; color:#27ae60; margin:15px 0;">R$ 97<span style="font-size:14px; color:#999;">/mês</span></div>
+                    <p style="color:#666; font-size:13px; margin-bottom:20px;">Para pequenos cursos e professores particulares.</p>
+                    <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
+                        <li style="margin-bottom:10px;">✅ Até 20 Alunos Ativos</li>
+                        <li style="margin-bottom:10px;">✅ 2 Acessos (Gestor + 1 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Controle Financeiro</li>
+                        <li style="margin-bottom:10px; color:#ccc;">❌ Cobrança via WhatsApp</li>
+                        <li style="color:#ccc;">❌ Dossiê Executivo</li>
+                    </ul>
+                    <button class="btn-primary" style="width:100%; background:transparent; color:#27ae60; border:2px solid #27ae60; justify-content:center;" onclick="App.comprarPlano('Essencial', 'https://mpago.la/2LcgaA1')">Assinar Essencial</button>
+                </div>
+
+                <div class="pricing-card featured" style="background:#fff; border:2px solid #3498db; border-radius:12px; padding:30px; text-align:center; box-shadow:0 10px 30px rgba(52,152,219,0.15); position:relative; transform:scale(1.02);">
+                    <div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#3498db; color:#fff; font-size:11px; font-weight:bold; padding:4px 12px; border-radius:20px; text-transform:uppercase; letter-spacing:1px;">Mais Vendido</div>
+                    <h3 style="margin-top:0; color:#333; font-size:22px;">Profissional</h3>
+                    <div style="font-size:32px; font-weight:bold; color:#3498db; margin:15px 0;">R$ 147<span style="font-size:14px; color:#999;">/mês</span></div>
+                    <p style="color:#666; font-size:13px; margin-bottom:20px;">A solução completa para acabar com a inadimplência.</p>
+                    <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
+                        <li style="margin-bottom:10px;">✅ Até 80 Alunos Ativos</li>
+                        <li style="margin-bottom:10px;">✅ 4 Acessos (Gestor + 3 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Financeiro Completo</li>
+                        <li style="margin-bottom:10px;">✅ <strong>Cobrança WhatsApp</strong></li>
+                        <li style="color:#ccc;">❌ Dossiê Executivo</li>
+                    </ul>
+                    <button class="btn-primary" style="width:100%; background:#3498db; justify-content:center;" onclick="App.comprarPlano('Profissional', 'https://mpago.la/1KmmwZf')">Assinar Profissional</button>
+                </div>
+
+                <div class="pricing-card" style="background:#fff; border:1px solid #eee; border-radius:12px; padding:30px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top:0; color:#333; font-size:22px;">Premium</h3>
+                    <div style="font-size:32px; font-weight:bold; color:#f39c12; margin:15px 0;">R$ 297<span style="font-size:14px; color:#999;">/mês</span></div>
+                    <p style="color:#666; font-size:13px; margin-bottom:20px;">Para escolas estruturadas e sem limites operacionais.</p>
+                    <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
+                        <li style="margin-bottom:10px;">✅ Alunos Ilimitados</li>
+                        <li style="margin-bottom:10px;">✅ Acessos Ilimitados</li>
+                        <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
+                        <li style="margin-bottom:10px;">✅ Financeiro Completo</li>
+                        <li style="margin-bottom:10px;">✅ Cobrança WhatsApp</li>
+                        <li>✅ <strong>Dossiê Executivo</strong></li>
+                    </ul>
+                    <button class="btn-primary" style="width:100%; background:transparent; color:#f39c12; border:2px solid #f39c12; justify-content:center;" onclick="App.comprarPlano('Premium', 'https://mpago.la/1DNyscL')">Assinar Premium</button>
+                </div>
+            </div>
+        `;
+    },
+
+    comprarPlano: (nomePlano, linkCheckout) => {
+        App.showToast(`A redirecionar para o pagamento seguro do plano ${nomePlano}...`, "info");
+        setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
+    },
+
+    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS DENTRO DO SISTEMA
+    ativarNovoPlano: async (event) => {
+        if (event) event.preventDefault(); 
+
+        const inputElement = document.getElementById('input-novo-pin');
+        if (!inputElement) return;
+
+        const pin = inputElement.value.trim().toUpperCase(); 
+        if(!pin) return App.showToast("Por favor, insira o PIN recebido no e-mail.", "warning");
+
+        const btn = document.querySelector('button[onclick="App.ativarNovoPlano(event)"]');
+        const txt = btn ? btn.innerText : 'Validar PIN'; 
+        if(btn) { btn.innerText = "A validar... ⏳"; btn.disabled = true; }
+
+        try {
+            const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
+            let novoPlano = res && res.success ? res.plano : null;
+
+            // Se falhar na API, verifica as chaves manuais (fallback)
+            if (!novoPlano) {
+                if (pin.includes('PRE')) novoPlano = 'Premium';
+                else if (pin.includes('ESS')) novoPlano = 'Essencial';
+                else if (pin.includes('PRO')) novoPlano = 'Profissional';
+                else { 
+                    App.showToast(res.error || "PIN em formato inválido.", "error"); 
+                    if(btn) { btn.innerText = txt; btn.disabled = false; } 
+                    return; 
+                }
+            }
+
+            // 🚀 O SEGREDO: GRAVAR A NOVA DATA DE VALIDADE NO BANCO DE DADOS OFICIAL
+            const escolaAtual = await App.api('/escola') || {};
+            const novaDataExp = new Date();
+            novaDataExp.setDate(novaDataExp.getDate() + 30); // Soma +30 dias ao dia de hoje
+            
+            await App.api('/escola', 'PUT', { 
+                ...escolaAtual, 
+                plano: novoPlano, 
+                pinUsado: pin, 
+                dataExpiracao: novaDataExp.toISOString() 
+            });
+
+            // Atualiza o Cache Local
+            localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
+            let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            perfilCache.plano = novoPlano;
+            perfilCache.dataExpiracao = novaDataExp.toISOString();
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
+
+            App.atualizarUIHeader(perfilCache);
+            
+            App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
+            inputElement.value = '';
+            
+            await App.carregarDadosEscola();
+            App.renderizarInicio();
+        } catch(e) { 
+            App.showToast("Erro ao comunicar com a base de dados.", "error"); 
+        } finally { 
+            if(btn) { btn.innerText = txt; btn.disabled = false; } 
+        }
+    },
+
+    // 🔗 LINK EXCLUSIVO DE MATRÍCULA
+   copiarLinkMatricula: async () => {
+    try {
+        const escola = await App.api('/escola');
+
+        if (!escola || escola.error || !escola.escolaId) {
+            return App.showToast("Não foi possível identificar a instituição.", "error");
+        }
+
+        const linkBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}`;
+        const linkExclusivo = `${linkBase}matricula.html?escola=${encodeURIComponent(escola.escolaId)}`;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(linkExclusivo);
+            App.showToast("✅ Link copiado com sucesso! Envie para os alunos.", "success");
+        } else {
+            prompt("Copie o seu link manualmente abaixo:", linkExclusivo);
+        }
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao gerar o link.", "error");
+    }
+},
+
+    abrirModalCadastro: async (tipo, id) => { 
+        if (!id && (tipo === 'aluno')) {
+            const podeCadastrar = await App.verificarLimites('aluno');
+            if (!podeCadastrar) return; 
+        }
+        if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
+    },
+
+    abrirRelatorioFrequencia: async (idAluno, nomeAluno) => {
+        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A processar o planejamento atual... ⏳</p>';
+        
+        const btnConfirm = document.querySelector('.btn-confirm');
+        if(btnConfirm) btnConfirm.style.display = 'none'; 
+
+        // 🧠 Guardamos o contexto na memória global para navegar entre Ativo/Arquivado
+        App.contextoFrequencia = { idAluno, nomeAluno };
+        await App.renderizarFrequenciaView('ativo');
+    },
+
+    // 🚀 NOVA FUNÇÃO: O MOTOR DO RELÓGIO (Ativos vs Arquivados)
+    renderizarFrequenciaView: async (modo, idPlanoAlvo = null) => {
+        const { idAluno, nomeAluno } = App.contextoFrequencia;
+        const content = document.getElementById('modal-form-content');
+
+        try {
+            // 🚀 MAGIA DA PERFORMANCE: CACHE DE MEMÓRIA
+            if (!App.contextoFrequencia.dadosCache) {
+                const [chamadasFetch, planejamentosFetch] = await Promise.all([App.api('/chamadas'), App.api('/planejamentos')]);
+                App.contextoFrequencia.dadosCache = { chamadas: chamadasFetch, planejamentos: planejamentosFetch };
+            }
+            const chamadas = App.contextoFrequencia.dadosCache.chamadas;
+            const planejamentos = App.contextoFrequencia.dadosCache.planejamentos;
+
+            const historico = chamadas.filter(c => c.idAluno === idAluno).sort((a,b) => new Date(b.data) - new Date(a.data));
+            const planosAluno = planejamentos.filter(p => p.idAluno === idAluno);
+
+            const planosAtivos = planosAluno.filter(p => p.status !== 'Arquivado');
+            const planosArquivados = planosAluno.filter(p => p.status === 'Arquivado');
+
+             // --- 🪄 GESTÃO DO RODAPÉ FIXO MÁGICO ---
+            const btnCancelFixo = document.querySelector('#modal-overlay .btn-cancel');
+            if (btnCancelFixo) {
+                const rodape = btnCancelFixo.parentNode;
+                
+                // 1. Limpar botões injetados anteriormente
+                document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
+                
+                // 2. Garantir que se fechar o modal, os botões extra desaparecem
+                if (!btnCancelFixo.dataset.limpezaAtiva) {
+                    const onclickOriginal = btnCancelFixo.onclick;
+                    btnCancelFixo.onclick = function(e) {
+                        document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
+                        if (onclickOriginal) onclickOriginal.apply(this, arguments);
+                    };
+                    btnCancelFixo.dataset.limpezaAtiva = "true";
+                }
+
+                // 🖨️ INJETAR BOTÃO IMPRIMIR NA FRENTE DO CANCELAR
+                if (modo === 'ativo' || modo === 'ver_arquivado') {
+                    const btnPrint = document.createElement('button');
+                    btnPrint.className = 'btn-modal-dinamico';
+                    btnPrint.innerHTML = '🖨️ Imprimir';
+                    btnPrint.style.cssText = 'background:#27ae60; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease;';
+                    btnPrint.onmouseover = () => btnPrint.style.background = '#1e8449';
+                    btnPrint.onmouseout = () => btnPrint.style.background = '#27ae60';
+                    btnPrint.onclick = () => App.imprimirDossieFrequencia();
+                    rodape.insertBefore(btnPrint, btnCancelFixo);
+                }
+
+                // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading (ANTES DO CANCELAR)
+                if (modo === 'ativo' && planosArquivados.length > 0) {
+                    const btnArq = document.createElement('button');
+                    btnArq.className = 'btn-modal-dinamico';
+                    btnArq.innerHTML = '🗄️ Arquivados';
+                    btnArq.style.cssText = 'background:#7f8c8d; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    btnArq.onmouseover = () => btnArq.style.background = '#95a5a6';
+                    btnArq.onmouseout = () => btnArq.style.background = '#7f8c8d';
+                    btnArq.onclick = (e) => {
+                        e.target.innerHTML = '⏳ A abrir...'; e.target.style.opacity = '0.8';
+                        setTimeout(() => App.renderizarFrequenciaView('lista_arquivados'), 10);
+                    };
+                    rodape.insertBefore(btnArq, btnCancelFixo);
+                } else if (modo === 'lista_arquivados' || modo === 'ver_arquivado') {
+                    const isLista = modo === 'lista_arquivados';
+                    const btnVoltar = document.createElement('button');
+                    btnVoltar.className = 'btn-modal-dinamico';
+                    btnVoltar.innerHTML = isLista ? '⬅️ Voltar ao Atual' : '⬅️ Voltar à Lista';
+                    btnVoltar.style.cssText = 'background:#3498db; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px; font-size: 14px; transition: background 0.2s ease, opacity 0.2s ease;';
+                    btnVoltar.onmouseover = () => btnVoltar.style.background = '#2980b9';
+                    btnVoltar.onmouseout = () => btnVoltar.style.background = '#3498db';
+                    btnVoltar.onclick = (e) => {
+                        e.target.innerHTML = '⏳ A voltar...'; e.target.style.opacity = '0.8';
+                        setTimeout(() => App.renderizarFrequenciaView(isLista ? 'ativo' : 'lista_arquivados'), 10);
+                    };
+                    rodape.insertBefore(btnVoltar, btnCancelFixo);
+                }
+            }
+            // ----------------------------------------            
+
+            // 🗄️ MODO 1: EXIBIR LISTA DE ARQUIVADOS
+            if (modo === 'lista_arquivados') {
+                document.getElementById('modal-titulo').innerText = `🗄️ Histórico Arquivado: ${App.escapeHTML(nomeAluno)}`;
+
+                if (planosArquivados.length === 0) {
+                    content.innerHTML = `<p style="text-align:center; padding:30px; color:#999;">Nenhum planejamento arquivado encontrado para este aluno.</p>`;
+                    return;
+                }
+
+                let listaHTML = planosArquivados.map(p => {
+                    let periodo = "Sem datas registadas";
+                    if (p.aulas && p.aulas.length > 0) {
+                        periodo = `${p.aulas[0].data} até ${p.aulas[p.aulas.length-1].data}`;
+                    }
+                    return `
+                    <div onclick="App.renderizarFrequenciaView('ver_arquivado', '${p.id}')" style="background:#f9f9f9; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition: background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='#f9f9f9'">
+                        <div>
+                            <div style="font-weight:bold; color:#2c3e50; font-size:14px;">📄 ${App.escapeHTML(p.disciplina || 'Curso Geral')}</div>
+                            <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">📅 Período: ${periodo}</div>
+                        </div>
+                        <span style="font-size:20px; color:#aaa;">➡️</span>
+                    </div>`;
+                }).join('');
+
+                content.innerHTML = `
+                    <div style="max-height:50vh; overflow-y:auto; padding-right:10px;">
+                        <p style="font-size:13px; color:#666; margin-bottom:15px; text-align:center;">Selecione um planejamento antigo para ver o dossiê de presenças.</p>
+                        ${listaHTML}
+                    </div>
+                `;
+                return;
+            }
+
+            // ⏱️ MODO 2: EXIBIR ESTATÍSTICAS (Ativo ou Visualizando um Arquivado)
+            let planoFoco = null;
+            let tituloModal = `Frequência Escolar: ${App.escapeHTML(nomeAluno)}`;
+
+            if (modo === 'ativo') {
+                planoFoco = planosAtivos.length > 0 ? planosAtivos[0] : null; 
+            } else if (modo === 'ver_arquivado') {
+                planoFoco = planosArquivados.find(p => p.id === idPlanoAlvo);
+                tituloModal = `🗄️ Arquivo: ${App.escapeHTML(nomeAluno)}`;
+            }
+
+            document.getElementById('modal-titulo').innerText = tituloModal;
+
+            const formatarDataIso = (dataBr) => dataBr.split('/').reverse().join('-');
+            let chamadasFiltradas = historico;
+
+            if (planoFoco && planoFoco.aulas && planoFoco.aulas.length > 0) {
+                const datasPlanejadas = planoFoco.aulas.map(a => formatarDataIso(a.data)).sort();
+                const dataInicio = datasPlanejadas[0];
+                const dataFim = datasPlanejadas[datasPlanejadas.length - 1];
+                chamadasFiltradas = historico.filter(c => c.data >= dataInicio && c.data <= dataFim);
+            } else if (modo === 'ativo' && planosArquivados.length > 0) {
+                const limitesArquivados = planosArquivados.map(p => {
+                    if(!p.aulas || p.aulas.length === 0) return null;
+                    const d = p.aulas.map(a => formatarDataIso(a.data)).sort();
+                    return { inicio: d[0], fim: d[d.length-1] };
+                }).filter(x => x);
+
+                chamadasFiltradas = historico.filter(c => {
+                    return !limitesArquivados.some(lim => c.data >= lim.inicio && c.data <= lim.fim);
+                });
+            }
+
+            let minPresenca = 0; let minFalta = 0; let minJustificada = 0; let htmlMeses = '';
+            
+            if (chamadasFiltradas.length === 0) {
+                htmlMeses = `<p style="text-align:center; padding:30px; color:#999; font-size:14px;">Nenhum registo de chamada encontrado para este ${modo === 'ativo' ? 'período letivo' : 'arquivo'}.</p>`;
+            } else {
+                const agrupado = {};
+                const mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                
+                chamadasFiltradas.forEach(c => {
+                    const d = new Date(c.data + 'T00:00:00');
+                    const mesAno = `${mesesNomes[d.getMonth()]} de ${d.getFullYear()}`;
+                    if (!agrupado[mesAno]) agrupado[mesAno] = [];
+                    agrupado[mesAno].push(c);
+                    
+                    let mins = 0;
+                    if (c.duracao) {
+                        const [h, m] = c.duracao.split(':');
+                        mins = (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
+                    }
+                    
+                    if (c.status === 'Presença' || c.status === 'Reposição') minPresenca += mins;
+                    else if (c.status === 'Falta Justificada' || c.status === 'Justificada') minJustificada += mins;
+                    else if (c.status === 'Falta') minFalta += mins;
+                });
+                
+                for (const mes in agrupado) {
+                    htmlMeses += `<div style="background:#f4f6f7; padding:10px 15px; margin-top:15px; border-radius:8px 8px 0 0; font-weight:bold; color:#2c3e50; border:1px solid #eee; border-bottom:none; font-size:13px; text-transform:uppercase;">📅 ${mes}</div>`;
+                    htmlMeses += `<table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #eee; margin-bottom:10px; background:#fff;"><tbody>`;
+                    agrupado[mes].forEach(c => {
+                        const dataBr = c.data.split('-').reverse().join('/');
+                        const cor = (c.status === 'Presença' || c.status === 'Reposição') ? '#27ae60' : (c.status === 'Falta' ? '#e74c3c' : '#f39c12');
+                        htmlMeses += `<tr style="border-bottom:1px solid #eee;">
+                                        <td style="padding:10px 15px; width:30%; font-weight:500;">${dataBr}</td>
+                                        <td style="padding:10px 15px; font-weight:bold; color:${cor};">${c.status}</td>
+                                        <td style="padding:10px 15px; text-align:right; color:#666; font-weight:500;">${c.duracao || '00:00'} h</td>
+                                      </tr>`;
+                    });
+                    htmlMeses += `</tbody></table>`;
+                }
+            }
+            
+            const fmtHoras = (mins) => `${String(Math.floor(mins/60)).padStart(2,'0')}:${String(mins%60).padStart(2,'0')} h`;
+            
+            const kpiHTML = `
+                <div class="kpi-container" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; page-break-inside: avoid;">
+                    <div style="flex:1; min-width:90px; background:#eafaf1; border:1px solid #27ae60; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#27ae60; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Presenças</div>
+                        <div style="font-size:18px; font-weight:bold; color:#1e8449;">${fmtHoras(minPresenca)}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; background:#fef5e7; border:1px solid #f39c12; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#d68910; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Justificadas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#b9770e;">${fmtHoras(minJustificada)}</div>
+                    </div>
+                    <div style="flex:1; min-width:90px; background:#fdedec; border:1px solid #e74c3c; padding:15px 10px; border-radius:8px; text-align:center;">
+                        <div style="font-size:10px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Faltas</div>
+                        <div style="font-size:18px; font-weight:bold; color:#c0392b;">${fmtHoras(minFalta)}</div>
+                    </div>
+                </div>`;
+
+            content.innerHTML = `
+                ${modo === 'ativo' && planoFoco ? `<div style="background:#e8f4f8; border:1px solid #3498db; color:#2980b9; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🟢 Dossiê do Planejamento Letivo Atual</div>` : ''}
+                ${modo === 'ver_arquivado' ? `<div style="background:#fdf2f2; border:1px solid #e74c3c; color:#c0392b; padding:8px 12px; border-radius:6px; margin-bottom:15px; font-size:12px; font-weight:bold; text-align:center;">🗄️ Exibindo Frequência do Histórico Arquivado</div>` : ''}
+                <div style="max-height:45vh; overflow-y:auto; padding-right:10px;">${htmlMeses}</div>
+                ${kpiHTML}
+            `;
+        } catch(e) { 
+            content.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar as horas de frequência.</p>'; 
+        }
+    },
+
+    // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO
+    // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO INVISÍVEL (IFRAME)
+    imprimirDossieFrequencia: () => {
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Instituição de Ensino';
+        const cnpjEscola = escola.cnpj ? `CNPJ: ${escola.cnpj}` : '';
+        const logoEscola = (escola.foto && escola.foto.length > 50 && !escola.foto.includes('placehold')) 
+            ? `<img src="${escola.foto}" style="max-height:80px; max-width:120px; object-fit:contain;">` 
+            : '';
+
+        const tituloModal = document.getElementById('modal-titulo').innerText;
+        const conteudoOriginal = document.getElementById('modal-form-content');
+
+        // Clonar o conteúdo para não quebrar a tela original
+        const clone = conteudoOriginal.cloneNode(true);
+
+        // Remover barras de rolagem para que saia a folha inteira na impressão
+        const divsComScroll = clone.querySelectorAll('div[style*="max-height"]');
+        divsComScroll.forEach(d => {
+            d.style.maxHeight = 'none';
+            d.style.overflowY = 'visible';
+            d.style.paddingRight = '0';
+        });
+
+        // 👻 CRIAR A PÁGINA FANTASMA (Iframe Invisível)
+        const iframe = document.createElement('iframe');
+        // Escondemos o iframe na tela, mas ele existe no sistema
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        // Escrever o documento dentro do iframe
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Impressão - ${tituloModal}</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        padding: 30px; 
+                        color: #333; 
+                        line-height: 1.5;
+                    }
+                    .header-escola {
+                        display: flex; 
+                        align-items: center; 
+                        border-bottom: 2px solid #3498db; 
+                        padding-bottom: 15px; 
+                        margin-bottom: 25px;
+                    }
+                    .header-escola img { margin-right: 20px; }
+                    .header-escola h2 { margin: 0; color: #2c3e50; font-size: 24px; }
+                    .header-escola p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
+                    
+                    .titulo-doc {
+                        text-align: center; 
+                        color: #2c3e50; 
+                        margin-bottom: 30px;
+                        text-transform: uppercase;
+                        font-size: 18px;
+                        background: #f4f6f7;
+                        padding: 10px;
+                        border-radius: 8px;
+                        font-weight: bold;
+                    }
+                    
+                    /* Configurações perfeitas para folha A4 */
+                    @media print {
+                        body { padding: 0; }
+                        @page { margin: 15mm; }
+                        /* Evita que o resumo fique dividido em duas folhas */
+                        .kpi-container { page-break-inside: avoid !important; margin-top: 30px !important; }
+                        table { page-break-inside: auto; width: 100%; border-collapse: collapse; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header-escola">
+                    ${logoEscola}
+                    <div>
+                        <h2>${App.escapeHTML(nomeEscola)}</h2>
+                        <p>${App.escapeHTML(cnpjEscola)}</p>
+                    </div>
+                </div>
+                
+                <div class="titulo-doc">📄 ${tituloModal}</div>
+                
+                ${clone.innerHTML}
+                
+                <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
+                    Documento gerado em ${new Date().toLocaleString('pt-BR')} pelo Sistema Escolar
+                </div>
+            </body>
+            </html>
+        `);
+        doc.close();
+
+        // Aguarda 500ms para garantir que as imagens carregaram no iframe
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // 🧹 Faxina: Remove a página fantasma assim que a impressão for concluída ou cancelada
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1500);
+        }, 500);
+    },   
+    
+    abrirModalVenda: async (idAluno, nomeAluno) => {
+        const modal = document.getElementById('modal-overlay'); if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = `Registrar Venda - ${App.escapeHTML(nomeAluno)}`;
+        document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar estoque... ⏳</p>';
+
+        try {
+            const estoque = await App.api('/estoques');
+            const listaEstoque = Array.isArray(estoque) ? estoque : [];
+            
+            let opcoesEstoque = '<option value="">-- Selecione um Produto/Serviço --</option>';
+            listaEstoque.forEach(item => {
+                const qtd = parseInt(item.quantidade) || 0;
+                const valor = parseFloat(item.valor) || 0;
+                opcoesEstoque += `<option value="${item.id}" data-nome="${App.escapeHTML(item.nome)}" data-valor="${valor}">📦 ${App.escapeHTML(item.nome)} (Estoque: ${qtd} | R$ ${valor.toFixed(2)})</option>`;
+            });
+            opcoesEstoque += '<option value="avulso">✏️ Outro Item (Digitar Manualmente)</option>';
+
+            const hoje = new Date().toISOString().split('T')[0];
+            const html = `
+                <div style="background:#f4f6f7; padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid #27ae60;">
+                    <h4 style="margin:0 0 10px 0; color:#2c3e50;">🛒 Detalhes da Compra</h4>
+                    
+                    <div class="input-group">
+                        <label>Item / Serviço Comprado</label>
+                        <select id="v-item-select" onchange="App.selecionarItemVenda(this)" style="font-weight:bold; padding:12px; width:100%; border-radius:8px; border:1px solid #ccc; margin-bottom:5px; cursor:pointer;">
+                            ${opcoesEstoque}
+                        </select>
+                        <input type="text" id="v-item" placeholder="Digite o nome do item avulso..." style="display:none; width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-top:5px;">
+                        <input type="hidden" id="v-item-id" value="">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top:10px;">
+                        <div class="input-group"><label>Valor (R$)</label><input type="number" id="v-valor" step="0.01" placeholder="0.00" style="padding:12px; border-radius:8px;"></div>
+                        <div class="input-group"><label>Data da Venda</label><input type="date" id="v-data" value="${hoje}" style="padding:12px; border-radius:8px;"></div>
+                    </div>
+                    
+                    <div class="input-group"><label>Forma de Pagamento</label>
+                        <select id="v-forma" style="font-weight:bold; padding:12px; border-radius:8px; cursor:pointer;">
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+                            <option value="Cartão de Débito">💳 Cartão de Débito</option>
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Pendente (Fiado)">⚠️ Deixar Pendente (Fiado)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>Descrição / Observação Adicional</label><textarea id="v-desc" rows="2" placeholder="Detalhes opcionais..." style="padding:12px; border-radius:8px;"></textarea></div>
+                    <input type="hidden" id="v-idaluno" value="${App.escapeHTML(idAluno)}">
+                    <input type="hidden" id="v-nomealuno" value="${App.escapeHTML(nomeAluno)}">
+                </div>`;
+            
+            document.getElementById('modal-form-content').innerHTML = html;
+            const btnConfirm = document.querySelector('.btn-confirm'); 
+            btnConfirm.setAttribute('onclick', 'App.salvarVenda()'); 
+            btnConfirm.innerHTML = "💾 Registrar Venda";
+            btnConfirm.style.display = 'inline-flex';
+
+        } catch (e) {
+            document.getElementById('modal-form-content').innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o estoque.</p>';
+        }
+    },
+
+    selecionarItemVenda: (selectElement) => {
+        const inputNome = document.getElementById('v-item');
+        const inputValor = document.getElementById('v-valor');
+        const inputId = document.getElementById('v-item-id');
+
+        if (selectElement.value === 'avulso') {
+            inputNome.style.display = 'block';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+            inputNome.focus();
+        } else if (selectElement.value !== '') {
+            inputNome.style.display = 'none';
+            const option = selectElement.options[selectElement.selectedIndex];
+            inputNome.value = option.getAttribute('data-nome');
+            inputValor.value = option.getAttribute('data-valor');
+            inputId.value = selectElement.value;
+        } else {
+            inputNome.style.display = 'none';
+            inputNome.value = '';
+            inputValor.value = '';
+            inputId.value = '';
+        }
+    },
+
+    salvarVenda: async () => {
+        const idAluno = document.getElementById('v-idaluno').value; 
+        const alunoNome = document.getElementById('v-nomealuno').value; 
+        const item = document.getElementById('v-item').value.trim(); 
+        const idItemEstoque = document.getElementById('v-item-id').value;
+        const valor = document.getElementById('v-valor').value; 
+        const data = document.getElementById('v-data').value; 
+        const forma = document.getElementById('v-forma').value; 
+        const obs = document.getElementById('v-desc').value;
+        
+        if(!item || !valor || !data) return App.showToast("Preencha o item, valor e data.", "error");
+
+        const status = forma === 'Pendente (Fiado)' ? 'Pendente' : 'Pago';
+        const descricaoFinal = `Venda: ${item} | Pagto: ${forma} ${obs ? ' | Obs: '+obs : ''}`;
+        const payload = { 
+            id: window.crypto.randomUUID(), 
+            idCarne: `VENDA_${window.crypto.randomUUID().split('-')[0].toUpperCase()}`, 
+            idAluno: idAluno, 
+            alunoNome: alunoNome, 
+            valor: valor, 
+            vencimento: data, 
+            status: status, 
+            descricao: descricaoFinal, 
+            tipo: 'Receita', 
+            dataGeracao: new Date().toLocaleDateString('pt-BR') 
+        };
+
+        const btn = document.querySelector('.btn-confirm'); 
+        const txtOriginal = btn ? btn.innerHTML : '💾 Registrar Venda';
+        if(btn) { btn.innerHTML = "⏳ Registrando..."; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
+
+        try { 
+            await App.api('/financeiro', 'POST', payload); 
+            
+            if (idItemEstoque) {
+                const itemEstoque = await App.api(`/estoques/${idItemEstoque}`);
+                if (itemEstoque && itemEstoque.id) {
+                    let qtdAtual = parseInt(itemEstoque.quantidade) || 0;
+                    if (qtdAtual > 0) qtdAtual -= 1;
+                    await App.api(`/estoques/${idItemEstoque}`, 'PUT', { ...itemEstoque, quantidade: qtdAtual });
+                }
+            }
+
+            App.showToast("Venda registrada e baixa no estoque efetuada!", "success"); 
+            App.fecharModal(); 
+        } catch (e) { 
+            App.showToast("Erro ao registrar venda.", "error"); 
+        } finally { 
+            if(btn) { btn.innerHTML = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
+    },
+
+    renderizarLista: async (tipo) => {
+        if (!App.usuario) { App.logout(); return; }
+        if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
+        if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
+
+        App.entidadeAtual = tipo; const titulo = tipo.charAt(0).toUpperCase() + tipo.slice(1) + 's'; App.setTitulo(`Gerenciar ${titulo}`); const div = document.getElementById('app-content'); const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+
+        try {
+            App.listaCache = await App.api(`/${endpoint}`);
+            const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
+            
+            const barraBusca = `
+                <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left; flex-wrap:wrap;">
+                    <div class="search-wrapper" style="flex: 1; min-width:250px; position: relative;">
+                        <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
+                        <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
+                    </div>
+                    <button class="btn-new-modern" onclick="${acaoNovo}"><span>＋</span> NOVO REGISTRO</button>
+                </div>`;
+            
+            div.innerHTML = `<div style="text-align:center; margin-bottom:30px;">${App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%')}</div><div id="container-tabela"></div>`;
+            App.filtrarTabelaReativa();
+        } catch(e) { div.innerHTML = "Erro ao carregar lista."; }
+    },
+
+    filtrarTabelaReativa: () => {
+        const termo = document.getElementById('input-busca').value.trim().toLowerCase(); const container = document.getElementById('container-tabela');
+        if (!Array.isArray(App.listaCache)) { container.innerHTML = ''; return; }
+        const filtrados = termo.length === 0 ? App.listaCache : App.listaCache.filter(item => { const nome = (item.nome || item.alunoNome || item.descricao || "").toLowerCase(); return nome.includes(termo); });
+        container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
+    },
+
+    gerarTabelaHTML: (dados) => {
+        if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
+        const tipo = App.entidadeAtual;
+        
+        const TB = { 
+            estrutura: (cabecalho, corpo) => `<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse;"><thead><tr>${cabecalho}</tr></thead><tbody>${corpo}</tbody></table></div>`, 
+            th: (texto, align = 'left') => `<th style="text-align:${align}; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee; color:#2c3e50;">${texto}</th>`, 
+            td: (texto, align = 'left') => `<td style="text-align:${align}; padding:15px; border-bottom:1px solid #eee; color:#333;">${texto}</td>`, 
+            tr: (celulas) => `<tr style="transition: background 0.2s;">${celulas}</tr>`, 
+            acoes: (botoes) => `<div style="display:flex; gap:5px; justify-content:flex-end; align-items:center;">${botoes.join('')}</div>`, 
+            btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>` 
+        };
+
+        let cabecalho = '';
+        if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('Status') + TB.th('WhatsApp') + TB.th('Ações', 'right');
+        if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
+        if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
+        if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
+        if (tipo === 'estoque')    cabecalho = TB.th('Item') + TB.th('Código') + TB.th('Qtd Atual') + TB.th('Mínimo (Alerta)') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');        
+
+        const corpo = dados.map(item => {
+            let celulas = '';
+            if (tipo === 'aluno') { 
+                const statusAluno = item.status || 'Ativo';
+                const corStatus = statusAluno === 'Ativo' ? '#27ae60' : (statusAluno === 'Trancado' ? '#f39c12' : '#e74c3c');
+                const badgeStatus = `<span style="background:${corStatus}20; color:${corStatus}; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; border: 1px solid ${corStatus}50;">${statusAluno}</span>`;
+                
+                celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.turma || '-')) + TB.td(badgeStatus) + TB.td(App.escapeHTML(item.whatsapp || '-')); 
+            }
+
+            else if (tipo === 'turma') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); } 
+            else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
+            else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
+            else if (tipo === 'estoque') { 
+                const qtd = parseInt(item.quantidade) || 0;
+                const min = parseInt(item.quantidadeMinima) || 0;
+                const statusFmt = qtd <= min 
+                    ? `<span style="color:#e74c3c; font-weight:bold; background:#fdedec; padding:4px 8px; border-radius:4px; font-size:12px;">⚠️ Baixo</span>` 
+                    : `<span style="color:#27ae60; font-weight:bold; background:#eafaf1; padding:4px 8px; border-radius:4px; font-size:12px;">✅ Normal</span>`;
+                const valorFmt = item.valor ? `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '-';
+                
+                celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.codigo || '-')) + TB.td(qtd, 'center') + TB.td(min, 'center') + TB.td(valorFmt) + TB.td(statusFmt, 'center'); 
+            }            
+ 
+            const epExcluir = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+            const acaoEdit = tipo === 'financeiro' ? `App.abrirEdicaoFinanceiro('${item.id}')` : `App.abrirModalCadastro('${tipo}', '${item.id}')`;
+            const nomeSeguro = (item.nome || '').replace(/'/g, "\\'"); 
+            
+            let botoes = [];
+            if (tipo === 'aluno') {
+                const statusAluno = item.status || 'Ativo';
+                botoes.push(TB.btn('🔄', '#8e44ad', `App.alterarStatusAluno('${item.id}', '${statusAluno}')`, 'Alterar Status (Ativo/Trancado/Cancelado)'));
+                botoes.push(TB.btn('⏱️', '#3498db', `App.abrirRelatorioFrequencia('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Ver Histórico de Horas / Frequência'));
+                
+                if (App.usuario.tipo !== 'Professor' && statusAluno === 'Ativo') {
+                    botoes.push(TB.btn('🛒', '#27ae60', `App.abrirModalVenda('${item.id}', '${App.escapeHTML(nomeSeguro)}')`, 'Registrar Venda / Extra'));
+                }
+            }
+            if (tipo === 'financeiro') botoes.push(TB.btn('💬', '#25D366', `if(App.verificarPermissao('whatsapp')) App.enviarWhatsApp('${item.id}')`, 'Avisar por WhatsApp'));
+            
+            botoes.push(TB.btn('✏️', '#f39c12', acaoEdit, 'Editar'));
+            botoes.push(TB.btn('🗑️', '#e74c3c', `App.excluir('${epExcluir}', '${item.id}')`, 'Excluir'));
+            
+            celulas += TB.td(TB.acoes(botoes), 'right'); return TB.tr(celulas);
+        }).join('');
+        return TB.estrutura(cabecalho, corpo);
+    },
+
+  excluir: (endpoint, id) => {
+        App.abrirModalConfirmacao(
+            "Tem a certeza absoluta?", 
+            "Esta ação apagará este registro permanentemente. Não é possível desfazer.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/${endpoint}/${id}`, 'DELETE');
+                    if (res && res.error) {
+                        App.showToast(res.error, "error");
+                    } else {
+                        App.showToast("Excluído com sucesso!", "success");
+
+                       const tipoLista = endpoint === 'financeiro' ? 'financeiro' : endpoint.slice(0, -1);
+
+                       const area = document.getElementById('app-content');
+                       if (area) {
+                       area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando lista... ⏳</p>';
+                    }
+
+                       await App.renderizarLista(tipoLista);
+                    }
+                } catch(e) { 
+                    App.showToast("Erro ao excluir.", "error"); 
+                } finally { 
+                    document.body.style.cursor = 'default'; 
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
+    },
+
+    alterarStatusAluno: (id, statusAtual) => {
+        const modal = document.getElementById('modal-overlay');
+        if(modal) modal.style.display = 'flex';
+        document.getElementById('modal-titulo').innerText = "Atualizar Status de Matrícula";
+
+        const estilos = {
+            Ativo: { icon: '🟢', color: '#27ae60', desc: 'Aluno matriculado e assistindo aulas.' },
+            Trancado: { icon: '🟡', color: '#f39c12', desc: 'Matrícula pausada. Histórico financeiro preservado.' },
+            Cancelado: { icon: '🔴', color: '#e74c3c', desc: 'Vínculo encerrado com a instituição.' }
+        };
+
+        const htmlOptions = Object.entries(estilos).map(([key, info]) => `
+            <div class="status-option-card" data-status="${key}" onclick="App.selecionarOpcaoStatus(this)" style="border: 2px solid #eee; border-radius: 8px; padding: 15px; cursor: pointer; display: flex; align-items: center; gap: 15px; margin-bottom: 10px; transition: all 0.2s;">
+                <span style="font-size: 32px; filter: grayscale(1); transition: filter 0.2s;">${info.icon}</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: ${info.color}; font-size: 16px;">${key}</div>
+                    <p style="margin: 0; color: #666; font-size: 12px; line-height: 1.4;">${info.desc}</p>
+                </div>
+                <div class="selection-indicator" style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center;"></div>
+            </div>
+        `).join('');
+
+        const html = `
+            <div style="background: #fdf2f2; border: 1px solid #f5b7b1; padding: 10px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+                <span style="font-size: 12px; color: #7f8c8d; text-transform: uppercase;">Status Atual:</span>
+                <span style="font-size: 14px; font-weight: bold; color: ${estilos[statusAtual] ? estilos[statusAtual].color : '#333'}; margin-left: 5px;">${statusAtual}</span>
+            </div>
+            
+            <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom:10px;">Selecione o novo status:</h4>
+            <div id="status-options-container" data-selecionado="">
+                ${htmlOptions}
+            </div>
+            <input type="hidden" id="status-student-id" value="${id}">
+            <input type="hidden" id="status-student-orig" value="${statusAtual}">
+        `;
+
+        document.getElementById('modal-form-content').innerHTML = html;
+
+        if (estilos[statusAtual]) {
+            const targetCard = document.querySelector(`.status-option-card[data-status="${statusAtual}"]`);
+            if (targetCard) App.selecionarOpcaoStatus(targetCard);
+        }
+
+        const btnConfirm = document.querySelector('.btn-confirm');
+        btnConfirm.setAttribute('onclick', 'App.confirmarAlteracaoStatus()');
+        btnConfirm.innerText = "💾 Salvar Novo Status";
+        btnConfirm.style.display = 'inline-flex';
+    },
+
+    selecionarOpcaoStatus: (card) => {
+        document.querySelectorAll('.status-option-card').forEach(c => {
+            c.style.borderColor = '#eee';
+            c.style.background = 'white';
+            c.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(1)';
+            c.querySelector('.selection-indicator').innerHTML = '';
+            c.querySelector('.selection-indicator').style.borderColor = '#ccc';
+            c.querySelector('.selection-indicator').style.background = 'white';
+        });
+
+        const status = card.getAttribute('data-status');
+        const styleTextBold = card.querySelector('div[style*="font-weight: bold"]'); 
+        const color = styleTextBold.style.color; 
+
+        card.style.borderColor = color;
+        card.style.background = `${color}05`; 
+        card.querySelector('span[style*="font-size: 32px"]').style.filter = 'grayscale(0)'; 
+        
+        card.querySelector('.selection-indicator').innerHTML = `<div style="width: 12px; height: 12px; border-radius: 50%; background: ${color};"></div>`;
+        card.querySelector('.selection-indicator').style.borderColor = color;
+        
+        document.getElementById('status-options-container').setAttribute('data-selecionado', status);
+    },
+
+    confirmarAlteracaoStatus: async () => {
+        const inputId = document.getElementById('status-student-id');
+        const inputOrig = document.getElementById('status-student-orig');
+        const containerStatus = document.getElementById('status-options-container');
+
+        if (!inputId || !containerStatus) return App.showToast("Erro: Janela não abriu corretamente.", "error");
+
+        const id = inputId.value;
+        const statusOriginal = inputOrig ? inputOrig.value : '';
+        const novoStatus = containerStatus.getAttribute('data-selecionado');
+
+        if (!novoStatus) return App.showToast("Selecione um status para prosseguir.", "warning");
+        if (novoStatus === statusOriginal) return App.showToast("O status selecionado é o mesmo que o atual.", "warning");
+
+        const btn = document.querySelector('.btn-confirm');
+        const textOrig = btn ? btn.innerText : "Salvar";
+        if(btn) { btn.innerText = "A atualizar... ⏳"; btn.disabled = true; }
+        document.body.style.cursor = 'wait';
+
+        try {
+            const aluno = await App.api(`/alunos/${id}`);
+            if (!aluno || aluno.error) throw new Error("Erro ao buscar dados do aluno");
+
+            await App.api(`/alunos/${id}`, 'PUT', { ...aluno, status: novoStatus });
+            
+            App.showToast(`Sucesso! Aluno agora está como ${novoStatus}.`, "success");
+            App.fecharModal();
+            
+            if (Array.isArray(App.cacheAlunos)) {
+                const index = App.cacheAlunos.findIndex(a => a.id === id);
+                if (index !== -1) App.cacheAlunos[index].status = novoStatus;
+            }
+            if (Array.isArray(App.listaCache)) {
+                const index = App.listaCache.findIndex(a => a.id === id);
+                if (index !== -1) App.listaCache[index].status = novoStatus;
+            }
+            
+            if(typeof App.filtrarTabelaReativa === 'function') {
+                App.filtrarTabelaReativa();
+            } else if(typeof App.renderizarLista === 'function') {
+                App.renderizarLista('aluno');
+            } else {
+                setTimeout(() => window.location.reload(), 500);
+            }
+
+            App.verificarNotificacoes();
+            
+            if (document.getElementById('titulo-pagina') && document.getElementById('titulo-pagina').innerText === 'Visão Geral') {
+                App.renderizarInicio();
+            }
+
+        } catch (e) {
+            console.error("Erro na atualização:", e);
+            App.showToast("Não foi possível atualizar o status. Tente novamente.", "error");
+        } finally {
+            if(btn) { btn.innerText = textOrig; btn.disabled = false; }
+            document.body.style.cursor = 'default';
+        }
+    },
+
+    atualizarUIHeader: (escola) => {
+        if (!escola) return;
+        const logoTitle = document.querySelector('.logo-area h2'); 
+        
+        const planoAtual = escola.plano || 'Teste';
+        
+        let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
+        const badgeHtml = `<div style="margin-top:8px; margin-bottom:5px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 PLANO ${App.escapeHTML(planoAtual)}</span></div>`;
+        
+        const userLogin = App.usuario ? App.usuario.login : 'Desconhecido';
+        const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
+        const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
+
+        if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
+        
+        const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
+        if(escola.foto && escola.foto.length > 50) { 
+            if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
+            img.src = escola.foto; 
+        } else if(img) { img.remove(); }
+    },
+
+    carregarDadosEscola: async () => { 
+        try { 
+            const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
+            if (cacheEscola) {
+                App.atualizarUIHeader(cacheEscola);
+            }
+
+            const escola = await App.api('/escola'); 
+            if(!escola || escola.error) return;
+            
+            if (!escola.dataCriacao) {
+                escola.dataCriacao = new Date().toISOString();
+                await App.api('/escola', 'PUT', escola);
+            }
+
+            if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
+            localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
+            
+            App.atualizarUIHeader(escola);
+            
+            // 🚀 CÃO DE GUARDA: Expulsa se vencer com o sistema aberto
+            if (App.verificarBloqueioGeral(escola)) {
+                App.mostrarTelaBloqueioLogin(escola);
+            }
+
+        } catch(e) { console.log("Carregando perfil..."); } 
+    },
+    
+    otimizarImagem: (file, maxWidth, callback) => { 
+        const reader = new FileReader(); reader.readAsDataURL(file); 
+        reader.onload = (event) => { 
+            const img = new Image(); img.src = event.target.result; 
+            img.onload = () => { 
+                const canvas = document.createElement('canvas'); let width = img.width; let height = img.height; 
+                if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } 
+                canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.8)); 
+            }; 
+        }; 
+    },
+
+    renderizarConfiguracoes: async () => { 
+        App.setTitulo("Perfil da Escola"); const div = document.getElementById('app-content'); 
+        try { 
+            const escola = await App.api('/escola') || {}; 
+            const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
+            const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
+            
+            div.innerHTML = `
+                <div class="card" style="max-width:850px; margin:0 auto;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-bottom:30px;">
+                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
+                            <img id="conf-preview" src="${imgLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
+                            <div>
+                                <label style="font-weight:bold; font-size:13px;">Logotipo Oficial</label>
+                                <input type="file" id="conf-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-preview')">🗑️ Remover Imagem</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; display:flex; align-items:center; gap:20px; color:#333;">
+                            <img id="conf-qr-preview" src="${imgQr}" style="width:100px; height:100px; object-fit:contain; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); background:white;">
+                            <div>
+                                <label style="font-weight:bold; font-size:13px;">QR Code PIX</label>
+                                <input type="file" id="conf-qr-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-qr-preview')" style="font-size:12px; margin-bottom:10px; width:100%;">
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-del" style="padding:5px 10px; font-size:11px;" onclick="App.removerImagemLocal('conf-qr-preview')">🗑️ Remover Imagem</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin: 0 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">📋 Dados Principais</h4>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:20px;">
+                        <div class="input-group"><label>Nome da Instituição</label><input id="conf-nome" value="${App.escapeHTML(escola.nome||'')}"></div>
+                        <div class="input-group"><label>CNPJ / NIF</label><input id="conf-cnpj" value="${App.escapeHTML(escola.cnpj||'')}" oninput="App.mascaraCNPJ(this)" maxlength="18"></div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
+                        <div class="input-group"><label>Dados Bancários (Carnê)</label><input id="conf-banco" value="${App.escapeHTML(escola.banco||'')}"></div>
+                        <div class="input-group"><label>Chave PIX (Texto)</label><input id="conf-pix" value="${App.escapeHTML(escola.chavePix||'')}"></div>
+                    </div>
+
+                    <h4 style="margin: 25px 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">📍 Endereço da Instituição</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:20px; margin-bottom:20px;">
+                        <div class="input-group"><label>CEP</label><input id="conf-cep" value="${App.escapeHTML(escola.cep||'')}" oninput="App.mascaraCEP(this)" maxlength="9"></div>
+                        <div class="input-group"><label>Endereço (Rua, Av.)</label><input id="conf-endereco" value="${App.escapeHTML(escola.endereco||'')}"></div>
+                        <div class="input-group"><label>Número</label><input id="conf-numero" value="${App.escapeHTML(escola.numero||'')}"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:20px;">
+                        <div class="input-group"><label>Bairro</label><input id="conf-bairro" value="${App.escapeHTML(escola.bairro||'')}"></div>
+                        <div class="input-group"><label>Cidade</label><input id="conf-cidade" value="${App.escapeHTML(escola.cidade||'')}"></div>
+                        <div class="input-group"><label>Estado (UF)</label><input id="conf-estado" value="${App.escapeHTML(escola.estado||'')}" maxlength="2" style="text-transform: uppercase;"></div>
+                    </div>
+
+                    <button class="btn-primary" style="width:100%; margin-top:25px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
+                </div>`; 
+        } catch(e) { div.innerHTML = "Erro ao carregar."; } 
+    },    
+
+    previewImagemLocal: (input, imgId) => {
+        if (!input.files || input.files.length === 0) return;
+        App.otimizarImagem(input.files[0], 400, (imgBase64) => {
+            const img = document.getElementById(imgId); img.src = imgBase64; img.setAttribute('data-nova', 'true');
+        });
+    },
+
+    removerImagemLocal: (imgId) => {
+        const img = document.getElementById(imgId);
+        img.src = imgId === 'conf-preview' ? "https://placehold.co/100?text=LOGO" : "https://placehold.co/100?text=QR+CODE";
+        img.setAttribute('data-nova', 'true');
+        const fileInput = document.getElementById(imgId === 'conf-preview' ? 'conf-file' : 'conf-qr-file'); if(fileInput) fileInput.value = '';
+    },
+
+    salvarConfiguracoes: async () => { 
+        const p = { 
+            nome: document.getElementById('conf-nome').value, 
+            cnpj: document.getElementById('conf-cnpj').value, 
+            banco: document.getElementById('conf-banco').value, 
+            chavePix: document.getElementById('conf-pix').value,
+            cep: document.getElementById('conf-cep').value,
+            endereco: document.getElementById('conf-endereco').value,
+            numero: document.getElementById('conf-numero').value,
+            bairro: document.getElementById('conf-bairro').value,
+            cidade: document.getElementById('conf-cidade').value,
+            estado: document.getElementById('conf-estado').value.toUpperCase()
+        }; 
+        
+        const imgLogo = document.getElementById('conf-preview');
+        if (imgLogo && imgLogo.hasAttribute('data-nova')) p.foto = imgLogo.src.includes('placehold') ? "" : imgLogo.src;
+
+        const imgQr = document.getElementById('conf-qr-preview');
+        if (imgQr && imgQr.hasAttribute('data-nova')) p.qrCodeImagem = imgQr.src.includes('placehold') ? "" : imgQr.src;
+
+        const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); 
+        const txt = btn.innerText; btn.innerText = "A atualizar... ⏳"; btn.disabled = true; 
+        
+        try { 
+            const escolaAtual = await App.api('/escola') || {};
+            await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
+            await App.carregarDadosEscola(); 
+            
+            if (imgLogo) imgLogo.removeAttribute('data-nova'); if (imgQr) imgQr.removeAttribute('data-nova');
+            App.showToast("Configurações atualizadas com sucesso!", "success"); 
+        } catch(e) { App.showToast("Erro ao salvar perfil da escola.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
+    },
+
+    toggleSenhaVisibilidade: (id) => { 
+        const input = document.getElementById(id); 
+        input.type = input.type === 'password' ? 'text' : 'password'; 
+    },
+
+    renderizarMinhaConta: async () => {
+        App.setTitulo("Gestão de Usuários"); const div = document.getElementById('app-content'); App.idEdicaoUsuario = null; 
+        const meuLogin = App.usuario ? App.usuario.login : ''; const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
+        
+        const campoSenha = (id, label) => `<div class="input-group" style="position:relative;"><label>${label}</label><input type="password" id="${id}" style="width:100%; padding-right:40px;"><span onclick="App.toggleSenhaVisibilidade('${id}')" style="position:absolute; right:12px; top:32px; cursor:pointer; font-size:16px; opacity:0.6; user-select:none;" title="Mostrar/Ocultar Senha">👁️</span></div>`;
+
+        try { 
+            const usuariosResponse = await App.api('/usuarios'); 
+            const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
+            const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
+
+            div.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div class="card" style="flex:1; height:fit-content; min-width:300px;">
+                        <h3>Meus Dados de Acesso</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
+                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
+                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
+                        ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}
+                        ${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}
+                        ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
+                        
+                        <button class="btn-primary" style="width:100%; margin-top:10px; justify-content:center;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
+
+                        <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">🔒 Segurança Avançada</h4>
+                            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Use o sensor de rosto (FaceID) ou impressão digital para entrar.</p>
+                            <button class="btn-primary" style="background: #27ae60; width: 100%; justify-content:center;" onclick="App.configurarBiometria()">👆 Ativar Biometria</button>
+                        </div>
+                    </div>
+                    <div class="card" style="flex:2; min-width:300px;">
+                        <h3>Equipe e Acessos</h3>
+                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
+                            <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">
+                                <div class="input-group"><label>Nome</label><input id="new-nome" placeholder="Ex: Maria"></div>
+                                <div class="input-group"><label>Login</label><input id="new-login" placeholder="Ex: maria"></div>
+                                <div class="input-group"><label>Senha</label><input id="new-senha" type="password" placeholder="******"></div>
+                                <div class="input-group"><label>Permissão</label><select id="new-tipo"><option value="Gestor">Gestor</option><option value="Secretaria">Secretaria</option><option value="Professor">Professor</option></select></div>
+                            </div>
+                            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
+                                <button id="btn-cancel-user" class="btn-cancel" onclick="App.cancelarEdicaoUsuario()" style="display:none; margin-top:0;">✖️ CANCELAR</button>
+                                <button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive-wrapper">
+                            <table style="width:100%; text-align:left; border-collapse:collapse;">
+                                <thead><tr><th style="padding-bottom:10px;">Nome</th><th style="padding-bottom:10px;">Login</th><th style="padding-bottom:10px;">Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
+                                <tbody>${listaUsers.map(u => `<tr><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.nome)} ${u.isDono ? '👑' : ''}</td><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.login)}</td><td style="padding:10px 0; border-top:1px solid #eee;"><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right; border-top:1px solid #eee;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${!u.isDono ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`; 
+        } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
+    },
+
+    atualizarMeusDados: async () => { 
+        const novoLogin = document.getElementById('user-novo-login').value.trim(); 
+        const novoEmail = document.getElementById('user-novo-email').value.trim(); 
+        const atual = document.getElementById('user-senha-atual').value; 
+        const nova = document.getElementById('user-nova-senha').value; 
+        const conf = document.getElementById('user-conf-senha').value; 
+
+        if (!novoLogin) return App.showToast("O login não pode ficar em branco.", "error"); 
+        if (!atual) return App.showToast("Digite sua senha atual para autorizar as alterações.", "error"); 
+        if (nova && nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
+        
+        const btn = document.querySelector('button[onclick="App.atualizarMeusDados()"]'); const textoOriginal = btn.innerText; btn.innerText = "Atualizando... ⏳"; btn.disabled = true;
+
+        try {
+            const payload = { novoLogin: novoLogin, novoEmail: novoEmail, senhaAtual: atual }; if (nova) payload.novaSenha = nova; 
+            const resposta = await App.api('/usuarios/atualizar-conta', 'PUT', payload);
+            if (resposta && resposta.success) { App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); setTimeout(() => App.logout(), 2500); } 
+            else { App.showToast(resposta.error || "Erro ao atualizar os dados.", "error"); }
+        } catch (e) { App.showToast("Erro de conexão.", "error"); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
+    },
+
+    salvarNovoUsuario: async () => {
+        const nome = document.getElementById('new-nome').value; const login = document.getElementById('new-login').value; const senha = document.getElementById('new-senha').value; const tipo = document.getElementById('new-tipo').value;
+        if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); 
+        if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
+
+        const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
+        
+        if (!App.idEdicaoUsuario) { 
+            const podeCadastrar = await App.verificarLimites('usuario');
+            if (!podeCadastrar) return; 
+            payload.donoId = App.usuario.id; 
+        }
+
+        const btn = document.getElementById('btn-save-user'); 
+        const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
+        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
+
+        try {
+            let res;
+            if(App.idEdicaoUsuario) { 
+                res = await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); 
+            } else { 
+                res = await App.api('/usuarios', 'POST', payload); 
+            }
+
+            if (res && res.error) {
+                App.showToast(res.error, "error");
+            } else {
+                App.showToast(App.idEdicaoUsuario ? "Atualizado com sucesso!" : "Criado com sucesso!", "success");
+                App.renderizarMinhaConta();
+            }
+        } catch(e) { 
+            App.showToast("Erro crítico ao salvar.", "error"); 
+        } finally { 
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
+    },
+
+    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
+    cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
+    
+excluirUsuario: (id) => { 
+        App.abrirModalConfirmacao(
+            "Apagar Utilizador?", 
+            "Deseja remover o acesso deste membro da equipa? A ação não pode ser desfeita.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
+                    if(res && res.error) { App.showToast(res.error, "error"); }
+                    else { App.showToast("Utilizador excluído.", "success"); App.renderizarMinhaConta(); }
+                } catch(e) { App.showToast("Erro ao excluir.", "error"); }
+                finally {
+                    document.body.style.cursor = 'default';
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
+    },
+
+    renderizarBackup: () => { 
+        App.setTitulo("Backup de Dados"); 
+        const div = document.getElementById('app-content');
+        div.innerHTML = `
+            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px;">
+                <div class="card" style="flex:1; border-left: 5px solid #27ae60; padding:25px;">
+                    <h3 style="color:#27ae60; border:none; margin-top:0;">📥 Fazer Backup</h3>
+                    <p style="opacity:0.7; margin-bottom:20px; font-size:13px;">Baixe uma cópia completa de todos os dados do sistema.</p>
+                    <button class="btn-primary" style="width:100%; background:#27ae60; justify-content:center;" onclick="App.realizarDownloadBackup()">⬇️ BAIXAR DADOS (.JSON)</button>
+                </div>
+                <div class="card" style="flex:1; border-left: 5px solid #f39c12; padding:25px;">
+                    <h3 style="color:#f39c12; border:none; margin-top:0;">📤 Restaurar</h3>
+                    <p style="opacity:0.7; margin-bottom:15px; font-size:13px;">Carregue um arquivo de backup para recuperar dados.</p>
+                    <input type="file" id="input-backup-file" accept=".json" style="width:100%; margin-bottom:15px; border:1px solid #ddd; padding:10px; border-radius:5px;">
+                    <button class="btn-primary" style="width:100%; background:#f39c12; justify-content:center;" onclick="App.processarRestauracao()">⬆️ RESTAURAR DADOS</button>
+                </div>
+            </div>
+            <div class="card" style="border:2px solid #e74c3c; background:#fff5f5; padding:30px; text-align:center;">
+                <h3 style="color:#c0392b; border:none; font-size:22px; margin-top:0;">⚠️ ZONA DE PERIGO</h3>
+                <p style="color:#c0392b; margin-bottom:20px;">Esta ação apagará <strong>TODOS</strong> os dados operacionais e resetará o <strong>PERFIL DA ESCOLA</strong>.<br>O seu usuário será mantido para login.</p>
+                <button class="btn-primary" style="background:#c0392b; width:100%; max-width:250px; margin: 0 auto; padding:15px; font-weight:bold; border:2px solid #c0392b; justify-content:center;" onclick="App.resetarSistema()">🗑️ RESETAR TUDO</button>
+            </div>
+        `; 
+    },
+
+    resetarSistema: async () => {
+        if(!confirm("⚠️ ATENÇÃO EXTREMA: ISSO APAGARÁ TODOS OS DADOS DA ESCOLA. Deseja continuar?")) return;
+        const confirmacao = prompt("Para confirmar a exclusão TOTAL, digite: APAGAR TUDO");
+        if(confirmacao !== "APAGAR TUDO") return App.showToast("Ação cancelada. Código incorreto.", "error");
+
+        const btn = document.querySelector('button[onclick="App.resetarSistema()"]');
+        if(btn) { btn.disabled = true; btn.innerText = "⏳ APAGANDO..."; } document.body.style.cursor = 'wait';
+        
+        try {
+            const entidades = ['alunos', 'turmas', 'cursos', 'financeiro', 'eventos', 'chamadas', 'avaliacoes', 'planejamentos'];
+            for (const ent of entidades) { const dados = await App.api(`/${ent}`); if (Array.isArray(dados) && dados.length > 0) { await Promise.all(dados.map(item => App.api(`/${ent}/${item.id}`, 'DELETE'))); } }
+            await App.api('/escola', 'PUT', { nome: 'Escola', cnpj: '', foto: '', qrCodeImagem: '', banco: '', chavePix: '' });
+            localStorage.removeItem(App.getTenantKey('escola_perfil')); alert("✅ Sistema resetado com sucesso!"); location.reload();
+        } catch (e) { alert("Erro ao limpar dados."); if(btn) { btn.disabled = false; btn.innerText = "🗑️ RESETAR TUDO"; } } finally { document.body.style.cursor = 'default'; }
+    },
+
+    realizarDownloadBackup: async () => { 
+        try { 
+            const e=['escola','usuarios','alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos']; 
+            const d={}; for(const ep of e){const r=await App.api(`/${ep}`); d[ep]=r;} 
+            const b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}); const a=document.createElement('a'); 
+            a.href=URL.createObjectURL(b); a.download=`backup_${new Date().toISOString().split('T')[0]}.json`; 
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); 
+        } catch(x){alert("Erro no backup.");} 
+    },
+    
+    processarRestauracao: async () => { 
+        const f = document.getElementById('input-backup-file'); 
+        if (!f.files.length) return App.showToast("Por favor, selecione o ficheiro de backup.", "warning"); 
+        
+        if (!confirm("Tem a certeza absoluta que deseja substituir os dados atuais? Esta ação não pode ser desfeita.")) return; 
+        
+        const btn = document.querySelector('button[onclick="App.processarRestauracao()"]');
+        if (btn) { btn.disabled = true; btn.innerText = "A Ler ficheiro... ⏳"; }
+        document.body.style.cursor = 'wait';
+
+        const r = new FileReader(); 
+        r.onload = async (e) => {
+            try {
+                const d = JSON.parse(e.target.result); 
+                const t = ['alunos','turmas','cursos','financeiro','eventos','chamadas','avaliacoes','planejamentos','usuarios','escola']; 
+                
+                let totalRegistos = 0;
+                let processados = 0;
+                
+                for (const k of t) {
+                    if (d[k]) {
+                        if (Array.isArray(d[k])) totalRegistos += d[k].length;
+                        else totalRegistos += 1; 
+                    }
+                }
+
+                if (totalRegistos === 0) {
+                    App.showToast("O ficheiro de backup parece estar vazio.", "warning");
+                    if (btn) { btn.disabled = false; btn.innerText = "⬆️ RESTAURAR DADOS"; }
+                    document.body.style.cursor = 'default';
+                    return;
+                }
+
+                for (const k of t) {
+                    if (d[k]) {
+                        if (Array.isArray(d[k])) {
+                            for (const i of d[k]) {
+                                await App.api(`/${k}`, 'POST', i);
+                                processados++;
+                                if (btn) btn.innerText = `A Restaurar: ${processados} de ${totalRegistos} ⏳`;
+                            }
+                        } else {
+                            await App.api('/escola', 'PUT', d[k]);
+                            processados++;
+                            if (btn) btn.innerText = `A Restaurar: ${processados} de ${totalRegistos} ⏳`;
+                        }
+                    }
+                } 
+                
+                App.showToast("Dados restaurados com sucesso! A reiniciar...", "success"); 
+                setTimeout(() => location.reload(), 1500);
+
+            } catch (x) {
+                console.error("Erro na restauração:", x);
+                App.showToast("Ficheiro inválido ou erro de comunicação.", "error");
+                if (btn) { btn.disabled = false; btn.innerText = "⬆️ RESTAURAR DADOS"; }
+                document.body.style.cursor = 'default';
+            }
+        }; 
+        r.readAsText(f.files[0]); 
+    },
+
+    toggleNotificacoes: () => {
+        const dropdown = document.getElementById('noti-dropdown');
+        if (dropdown) dropdown.classList.toggle('active');
+    },
+
+   marcarNotificacoesComoLidas: async () => {
+    try {
+        const notificacoes = await App.api('/sistema/notificacoes/nao-lidas');
+
+        if (!Array.isArray(notificacoes)) {
+            return App.showToast("Não foi possível carregar notificações.", "error");
+        }
+
+        const naoLidas = notificacoes.filter(n => !n.lida);
+
+        if (naoLidas.length === 0) {
+            return App.showToast("Não há notificações novas.", "info");
+        }
+
+       await Promise.all(
+    naoLidas.map(n =>
+        App.api(`/sistema/notificacoes/lida/${n.id}`, 'PUT')
+    )
+);
+
+        App.showToast("Notificações marcadas como lidas.", "success");
+        await App.verificarNotificacoes();
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao marcar notificações.", "error");
+    }
+},
+
+verificarNotificacoes: async () => {
+    try {
+        const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+
+        const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
+        let alunos = await App.api('/alunos');
+        const eventos = await App.api('/eventos');
+        const financeiro = await App.api('/financeiro');
+        const planejamentos = await App.api('/planejamentos');
+        const estoque = await App.api('/estoques');
+        const escola = await App.api('/escola');
+
+        if (Array.isArray(alunos)) {
+            alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        }
+
+        // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
+        if (
+            App.entidadeAtual === 'aluno' &&
+            Array.isArray(alunos) &&
+            Array.isArray(App.listaCache)
+        ) {
+            const idsAtuais = App.listaCache.map(a => a.id);
+            const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
+
+            if (existeNovoAluno) {
+                App.showToast("Novo aluno recebido pela matrícula online.", "success");
+
+                App.listaCache = alunos;
+
+                const inputBusca = document.getElementById('input-busca');
+                if (inputBusca) inputBusca.value = '';
+
+                if (typeof App.filtrarTabelaReativa === 'function') {
+                    App.filtrarTabelaReativa();
+                }
+            }
+        }
+
+        let alertas = [];
+
+        if (Array.isArray(notificacoesBanco)) {
+            notificacoesBanco
+                .filter(n => !n.lida)
+                .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
+                .slice(0, 10)
+                .forEach(n => {
+                    alertas.push({
+                        icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
+                        texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
+                        prioridade: 1,
+                        acao: "App.renderizarContratos()"
+                    });
+                });
+        }
+   
+
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const hojeStr = `${ano}-${mes}-${dia}`;
+            
+            const amanha = new Date(hoje);
+            amanha.setDate(amanha.getDate() + 1);
+            const amanhaStr = `${amanha.getFullYear()}-${String(amanha.getMonth() + 1).padStart(2, '0')}-${String(amanha.getDate()).padStart(2, '0')}`;
+
+            if (escola && tipoUtilizador === 'Gestor') {
+                const planoAtual = escola.plano || 'Teste';
+                const hojeTime = hoje.getTime();
+                
+                let diasRestantes = 0;
+                
+                if (escola.dataExpiracao) {
+                    const dataVenc = new Date(escola.dataExpiracao).getTime();
+                    diasRestantes = Math.ceil((dataVenc - hojeTime) / (1000 * 60 * 60 * 24));
+                } else {
+                    const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao).getTime() : hojeTime;
+                    const diasPassados = Math.floor(Math.abs(hojeTime - dataCriacao) / (1000 * 60 * 60 * 24));
+                    diasRestantes = (planoAtual === 'Teste' ? 7 : 30) - diasPassados;
+                }
+
+                if (planoAtual !== 'Premium' && planoAtual !== 'Bloqueado') {
+                    if (diasRestantes <= 3 && diasRestantes > 0) {
+                        alertas.push({ 
+                            icon: '⏳', 
+                            texto: `<b>Atenção Gestor:</b> O seu plano <b>${planoAtual}</b> expira em <b>${diasRestantes} dia(s)</b>! Renove agora.`, 
+                            acao: "App.renderizarTela('plano')" 
+                        });
+                    } else if (diasRestantes <= 0) {
+                        alertas.push({ 
+                            icon: '🚫', 
+                            texto: `<b>Urgente:</b> O seu acesso <b>expirou</b>! Regularize para continuar usando o sistema.`, 
+                            acao: "App.renderizarTela('plano')" 
+                        });
+                    }
+                }
+            }
+
+            if (Array.isArray(alunos)) {
+                alunos.forEach(a => {
+                    if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
+                        alertas.push({ 
+                            icon: '🎂', 
+                            texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`,
+                            acao: "App.renderizarLista('aluno')" 
+                        });
+                    }
+                });
+            }
+            
+            // ==========================================
+            // 🆕 ALERTA DE NOVAS MATRÍCULAS (HOJE)
+            // ==========================================
+            if (Array.isArray(alunos)) {
+                alunos.forEach(a => {
+                    // Verifica se a dataMatricula existe e se começa com a data de hoje (YYYY-MM-DD)
+                    if (a.dataMatricula && a.dataMatricula.startsWith(hojeStr)) {
+                        alertas.push({ 
+                            icon: '🎉', 
+                            texto: `<b>Nova Matrícula!</b> O aluno <b>${App.escapeHTML(a.nome)}</b> foi registado hoje.`,
+                            acao: "App.renderizarContratos()" // Leva direto para o cofre de contratos
+                        });
+                    }
+                });
+            }
+
+            // ==========================================
+            // 💸 MENSALIDADES A VENCER HOJE
+            // ==========================================
+            if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro)) {
+                const vencemHoje = financeiro.filter(f => f.vencimento === hojeStr && f.status === 'Pendente');
+                if (vencemHoje.length > 0) {
+                    alertas.push({ 
+                        icon: '💲', 
+                        texto: `<b>Caixa de Hoje:</b> Existem <b>${vencemHoje.length}</b> mensalidades a vencer no dia de hoje.`,
+                        acao: "App.renderizarTela('mensalidades')" 
+                    });
+                }
+            }
+
+            if (Array.isArray(eventos)) {
+                eventos.forEach(e => {
+                    if (e.data === hojeStr) alertas.push({ 
+                        icon: '🚨', 
+                        texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
+                        acao: "App.renderizarTela('calendario')" 
+                    });
+                    else if (e.data === amanhaStr) alertas.push({ 
+                        icon: '⏳', 
+                        texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
+                        acao: "App.renderizarTela('calendario')" 
+                    });
+                });
+            }
+
+            if (tipoUtilizador !== 'Professor') {
+                if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
+                    alunos.forEach(aluno => {
+                        const plano = planejamentos.find(p => p.idAluno === aluno.id);
+                        let parcelasFuturas = 0;
+                        let dataUltimaMensalidade = null;
+                        
+                        financeiro.forEach(f => {
+                            if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
+                                if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
+                                    dataUltimaMensalidade = f.vencimento;
+                                }
+                                if (f.vencimento >= hojeStr) {
+                                    parcelasFuturas++;
+                                }
+                            }
+                        });
+
+                        if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
+                            alertas.push({ 
+                                icon: '🎓', 
+                                texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
+                                acao: "App.renderizarTela('mensalidades')" 
+                            });
+                        }
+
+                        if (plano && plano.aulas) {
+                            const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
+                            if (aulasPendentes > 0) {
+                                let aulasPorMes = 4; 
+                                if (plano.aulas.length > 1) {
+                                    const d1 = plano.aulas[0].data.split('/');
+                                    const d2 = plano.aulas[1].data.split('/');
+                                    const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
+                                    const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
+                                    const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
+                                    if (diffDias <= 4) aulasPorMes = 8; 
+                                    else if (diffDias <= 2) aulasPorMes = 12; 
+                                }
+                                const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
+
+                                if (mesesDeAulaRestantes > parcelasFuturas && tipoUtilizador === 'Gestor') {
+                                    alertas.push({ 
+                                        icon: '⚠️', 
+                                        texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes.`,
+                                        acao: "App.renderizarTela('mensalidades')"
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+        
+                if (Array.isArray(estoque)) {
+                    estoque.forEach(item => {
+                        const qtd = parseInt(item.quantidade) || 0;
+                        const min = parseInt(item.quantidadeMinima) || 0;
+                        if (qtd <= min) {
+                            alertas.push({ 
+                                icon: '📦', 
+                                texto: `<b>Estoque Baixo:</b> Restam apenas ${qtd} unidades de <b>${App.escapeHTML(item.nome)}</b>!`,
+                                acao: "App.renderizarLista('estoque')" 
+                            });
+                        }
+                    });
+                }
+            }
+
+       
+            const badge = document.getElementById('noti-badge');
+            const list = document.getElementById('noti-list');
+            
+            if (alertas.length > 0) {
+                if (badge) { badge.innerText = alertas.length; badge.style.display = 'block'; }
+                const btnMarcarLidas = alertas.length > 0
+    ? `
+        <div style="padding:8px; border-bottom:1px solid #eee;">
+            <button
+                onclick="App.marcarNotificacoesComoLidas()"
+                style="
+                    width:100%;
+                    border:none;
+                    background:#f4f6f7;
+                    color:#2c3e50;
+                    padding:10px;
+                    border-radius:8px;
+                    font-size:12px;
+                    font-weight:bold;
+                    cursor:pointer;
+                    transition:0.2s;
+                "
+                onmouseover="this.style.background='#e5e7e9'"
+                onmouseout="this.style.background='#f4f6f7'"
+            >
+                ✅ Marcar notificações como lidas
+            </button>
+        </div>
+    `
+    : '';
+                
+if (list) list.innerHTML = btnMarcarLidas + alertas.map(a => `
+                    <div class="noti-item" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
+                        <span class="noti-icon">${a.icon}</span>
+                        <div>${a.texto}</div>
+                    </div>
+                `).join('');
+            } else {
+                if (badge) badge.style.display = 'none';
+                if (list) list.innerHTML = `<div class="noti-item" style="justify-content:center; color:#999; padding: 30px 15px;">Nenhum alerta pendente.<br>Tudo tranquilo! 🎉</div>`;
+            }
+        } catch (e) { console.error("Erro nas notificações", e); }
+    },
+
+
+// ==========================================
+// MÓDULO: LINKS DE MATRÍCULA E CUSTOMIZAÇÃO
+// ==========================================
+
+// 1. Função para Gerar Link e guardar no Histórico
+gerarLinkMatricula: function() {
+    const escolaId = App.usuario.id; 
+    const urlBase = window.location.origin + "matricula.html";
+    const linkGerado = `${urlBase}?escola=${escolaId}`;
+    
+    // Exibe o link no input principal para o Gestor copiar
+    const inputLink = document.getElementById('inputLinkMatricula');
+    if(inputLink) inputLink.value = linkGerado;
+    
+    // Guarda no histórico (usando o LocalStorage da escola ou a tua API)
+    let historico = JSON.parse(localStorage.getItem(App.getTenantKey('historico_links')) || "[]");
+    
+    // Evita duplicados seguidos
+    if(historico.length === 0 || historico[0].link !== linkGerado) {
+        historico.unshift({
+            data: new Date().toLocaleString('pt-PT'),
+            link: linkGerado
+        });
+        // Mantém apenas os últimos 10 links para não sobrecarregar
+        if(historico.length > 10) historico.pop(); 
+        localStorage.setItem(App.getTenantKey('historico_links'), JSON.stringify(historico));
+    }
+    
+    App.renderizarHistoricoLinks();
+    if (typeof App.showToast === 'function') App.showToast("Link gerado com sucesso!", "success");
+},
+
+// 2. Função para Renderizar o Histórico abaixo do botão
+renderizarHistoricoLinks: function() {
+    const container = document.getElementById('containerHistoricoLinks');
+    if(!container) return; // Se o container não existir na tela atual, ignora
+    
+    const historico = JSON.parse(localStorage.getItem(App.getTenantKey('historico_links')) || "[]");
+    
+    if(historico.length === 0) {
+        container.innerHTML = "<p style='color:#7f8c8d; font-size:14px;'>Nenhum link gerado recentemente.</p>";
+        return;
+    }
+    
+    let html = `<ul style="list-style:none; padding:0; margin-top:15px;">`;
+    historico.forEach(item => {
+        html += `
+        <li style="padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13px;">
+                <strong style="color:#2c3e50;">${item.data}</strong><br>
+                <a href="${item.link}" target="_blank" style="color:#3498db; text-decoration:none;">${item.link}</a>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${item.link}'); App.showToast('Copiado!', 'success');" 
+                    style="background:#f4f6f7; border:1px solid #ddd; padding:5px 10px; border-radius:5px; cursor:pointer; color:#333;">
+                Copiar
+            </button>
+        </li>`;
+    });
+    html += `</ul>`;
+    container.innerHTML = html;
+},
+
+    // ==========================================
+// MÓDULO: SALVAR CUSTOMIZAÇÃO NA API
+// ==========================================
+salvarCustomizacaoMatricula: async function() {
+    // Monta o objeto que vai para dentro da tua coleção "escola"
+    const config = {
+        configMatricula: {
+            titulo: document.getElementById('customTitulo').value || 'Matrícula Online',
+            corSecundaria: document.getElementById('customCor').value || '#3498db',
+            logoUrl: document.getElementById('customLogoUrl').value || '',
+            textoContrato: document.getElementById('editorContratoHtml').value // O ID da tua textarea do contrato
+        }
+    };
+    
+    try {
+        Swal.fire({ title: 'A Sincronizar com a Nuvem...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        // Usa a tua rota existente "PUT /escola"
+        const res = await fetch(`${CONFIG.API_URL}/escola`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` 
+            },
+            body: JSON.stringify(config)
+        });
+        
+        if(res.ok) Swal.fire('Perfeito!', 'Configurações e Contrato atualizados online.', 'success');
+        else throw new Error("Falha no servidor.");
+    } catch(e) {
+        Swal.fire('Erro', 'Não foi possível sincronizar com o servidor.', 'error');
+    }
+},
+
+     // ==========================================
+// MÓDULO: COFRE DE CONTRATOS DIGITAIS
+// ==========================================
+renderizarCofreContratos: async function() {
+    const container = document.getElementById('conteudoPrincipal');
+    if(!container) return;
+    container.innerHTML = `<div style="padding: 40px; text-align: center;"><i class="fas fa-spinner fa-spin fa-2x"></i><br>A aceder ao cofre...</div>`;
+
+    try {
+        const res = await fetch(`${CONFIG.API_URL}/contratos`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` }
+        });
+        if(!res.ok) throw new Error("Erro ao carregar contratos");
+        const contratos = await res.json();
+        
+        let html = `
+            <div class="header-tela">
+                <h2>🔒 Cofre de Contratos Digitais</h2>
+                <p>Documentos assinados em tempo real via matrícula online.</p>
+            </div>
+            <div class="card-tabela">
+                <table style="width:100%; text-align:left; border-collapse: collapse;">
+                    <tr style="background:#f4f6f7; border-bottom:2px solid #ddd;">
+                        <th style="padding:12px;">Data/Hora</th>
+                        <th style="padding:12px;">Aluno</th>
+                        <th style="padding:12px;">Ação</th>
+                    </tr>`;
+                    
+        if(contratos.length === 0) {
+            html += `<tr><td colspan="3" style="text-align:center; padding:20px;">Nenhum contrato encontrado.</td></tr>`;
+        } else {
+            // Inverte a lista para mostrar o mais recente primeiro
+            contratos.reverse().forEach(c => {
+                const dataFormatada = c.dataHoraRegistro ? new Date(c.dataHoraRegistro).toLocaleString('pt-BR') : '---';
+                html += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:12px;">${dataFormatada}</td>
+                    <td style="padding:12px;"><strong>${App.escapeHTML(c.nomeAluno || 'Aluno sem nome')}</strong></td>
+                    <td style="padding:12px;">
+                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" 
+                                style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">
+                            👁️ Ver
+                        </button>
+                    </td>
+                </tr>`;
+            });
+        }
+        html += `</table></div>`;
+        container.innerHTML = html;
+    } catch(error) {
+        container.innerHTML = `<div style="padding: 20px; color: red;">Erro ao carregar o cofre: ${error.message}</div>`;
+    }
+},
+
+abrirVisualizacaoContrato: async function(idContrato) {
+    // 1. Mostrar estado de carregamento no modal
+    const modal = document.getElementById('modal-overlay'); 
+    if(modal) modal.style.display = 'flex';
+    document.getElementById('modal-titulo').innerText = 'A abrir Ficha Completa... ⏳';
+    document.getElementById('modal-form-content').innerHTML = '<p style="text-align:center; padding:30px; color:#666;">A extrair todos os dados do aluno e contrato da base de dados...</p>';
+    
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if(btnConfirm) btnConfirm.style.display = 'none';
+
+    try {
+        // 2. Procurar os dados com o motor automático (já com token)
+        const contrato = await App.api(`/contratos/${idContrato}`);
+        
+        if (!contrato || contrato.error) {
+            throw new Error(contrato ? contrato.error : "Documento não encontrado");
+        }
+        
+        // 3. Mapear TODOS OS DADOS com exatidão do server.js
+        const nomeAluno = contrato.nomeAluno || contrato.nome || "Aluno não identificado";
+        const cpf = contrato.cpf || "Não informado";
+        const rg = contrato.rg || "Não informado"; 
+        // 🔄 CORREÇÃO: FORMATANDO A DATA PARA DIA/MÊS/ANO
+        let dataNascimento = contrato.nascimento || "Não informada";
+        if (dataNascimento !== "Não informada" && dataNascimento.includes('-')) {
+            const partes = dataNascimento.split('-'); // Separa o Ano-Mês-Dia
+            if (partes.length === 3) {
+                dataNascimento = `${partes[2]}/${partes[1]}/${partes[0]}`; // Remonta como Dia/Mês/Ano
+            }
+        }
+        const sexo = contrato.sexo || "Não informado";
+        const profissao = contrato.profissao || "Não informada";
+        const email = contrato.email || "Não informado";
+        const telefone = contrato.whatsapp || "Não informado";
+        const endereco = contrato.enderecoCompleto || "Não informado";
+        
+        const curso = contrato.curso || "Não informado";
+        const turma = contrato.turma || "Não informada";
+        const planoCurso = contrato.planoCurso || "Não informado";
+        const vencimento = contrato.diaVencimento || "Não informado";
+        
+        const responsavel = contrato.resp_nome || "O Próprio / Não informado";
+        const respParentesco = contrato.resp_parentesco || "Não informado";
+        const respCpf = contrato.resp_cpf || "Não informado";
+        const respZap = contrato.resp_zap || "Não informado";
+
+        const corpoContrato = contrato.conteudoHTML
+    ? App.sanitizeHTML(App.unescapeHTML(contrato.conteudoHTML))
+    : "<p>O contrato não possui texto legível.</p>";
+        const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
+            ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
+            : 'Data não registada';
+
+        // 4. Montar o HTML super otimizado e segmentado
+        document.getElementById('modal-titulo').innerText = `Matrícula: ${nomeAluno}`;
+        document.getElementById('modal-form-content').innerHTML = `
+            <div id="area-impressao-contrato" style="padding: 30px; border: 1px solid #ccc; background: #fff; position:relative; color: #333; font-family: Arial, sans-serif;">
+                
+                <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #2c3e50; padding-bottom:15px;">
+                    <h2 style="margin:0; color:#2c3e50; font-size:22px; text-transform:uppercase;">Ficha de Matrícula e Contrato</h2>
+                    <div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px; display:inline-block; border:1px solid #27ae60; padding:4px 12px; border-radius:20px; background:#eafaf1;">
+                        ✅ AUTENTICADO DIGITALMENTE
+                    </div>
+                </div>
+                
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #3498db; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📋 Dados do Aluno</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Nome:</b> ${nomeAluno}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Data de Nascimento:</b> ${dataNascimento}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${cpf}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>RG:</b> ${rg}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Sexo:</b> ${sexo}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Profissão:</b> ${profissao}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${telefone}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>E-mail:</b> ${email}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee;"><b>Endereço Completo:</b> ${endereco}</td>
+                    </tr>
+                </table>
+
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #9b59b6; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">👨‍👩‍👧 Dados do Responsável</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Nome:</b> ${responsavel}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Parentesco:</b> ${respParentesco}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>CPF:</b> ${respCpf}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>WhatsApp:</b> ${respZap}</td>
+                    </tr>
+                </table>
+
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #2ecc71; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">🎓 Dados Acadêmicos e Financeiros</h4>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 25px; line-height: 1.6;">
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 40%;"><b>Curso:</b> ${curso}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Turma:</b> ${turma}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
+                        <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
+                    </tr>
+                </table>
+                
+                <h4 style="background: #f0f3f4; padding: 8px; border-left: 4px solid #e67e22; margin-bottom: 10px; font-size: 14px; color:#2c3e50; text-transform: uppercase;">📜 Termos do Contrato</h4>
+                <div class="box-contrato-print" style="font-size:11px; text-align:justify; line-height:1.6; padding:10px; max-height:350px; overflow-y:auto; border: 1px solid #eee; background: #fafafa; border-radius: 4px; margin-bottom:20px;">
+                    ${corpoContrato}
+                </div>
+                
+                <div style="padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px; page-break-inside: avoid;">
+                    <p style="margin:0 0 5px 0; color:#333;">Pelo presente instrumento, as partes concordam com todos os termos acima descritos.</p>
+                    ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
+                    <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
+                    <p style="margin:10px 0 0 0; font-size:10px; color:#7f8c8d;">ID da Transação: ${contrato._id || idContrato}</p>
+                </div>
+                
+                <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; page-break-inside: avoid; color: #333;">
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura do Responsável / Aluno</div>
+                    </div>
+                    <div style="width: 45%;">
+                        <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura da Instituição</div>
+                    </div>
+                </div>
+
+            </div>
+        `;        
+
+        // 5. Mostrar o botão de impressão
+        if(btnConfirm) {
+            btnConfirm.style.display = 'inline-flex';
+            btnConfirm.style.background = '#2c3e50';
+            btnConfirm.innerHTML = '🖨️ Imprimir Ficha';
+            btnConfirm.setAttribute('onclick', `App.imprimirContrato()`);
+        }
+        
+    } catch(e) {
+        console.error("Falha ao abrir contrato:", e);
+        document.getElementById('modal-titulo').innerText = 'Erro de Leitura';
+        document.getElementById('modal-form-content').innerHTML = `<p style="color:red; text-align:center;">Não foi possível carregar a ficha completa.<br><small>${e.message}</small></p>`;
+    }
+},
+
+    // =========================================================
+    // 🧩 HUB CENTRAL DE CONTRATOS (CORRIGIDO E INTEGRADO)
+    // =========================================================
+    renderizarHubContratos: () => {
+        App.setTitulo("Hub de Contratos e Matrículas");
+        const div = document.getElementById('app-content');
+        
+        div.innerHTML = `
+            <div class="card" style="margin-bottom: 20px; border-bottom: 3px solid #34495e;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                    <button class="btn-primary" onclick="App.mostrarAreaLinks()" style="background:#3498db; border:none;">🔗 Link de Matrícula</button>
+                    <button class="btn-primary" onclick="App.renderizarContratos()" style="background:#2c3e50; border:none;">🗄️ Cofre de Contratos</button>
+                    <button class="btn-primary" onclick="App.renderizarConfiguradorMatricula()" style="background:#f39c12; border:none;">⚙️ Configurar Formulário</button>
+                </div>
+            </div>
+            <div id="area-dinamica-hub">
+                <div class="card" style="text-align:center; padding:50px; opacity:0.6;">
+                    <span style="font-size:40px;">📂</span>
+                    <p>Selecione uma das opções acima para gerenciar suas matrículas e contratos.</p>
+                </div>
+            </div>
+        `;
+    },
+
+    mostrarAreaLinks: async () => {
+    const area = document.getElementById('area-dinamica-hub');
+    area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar links... ⏳</p>';
+
+    try {
+        const escola = await App.api('/escola');
+
+        if (!escola || escola.error || !escola.escolaId) {
+            area.innerHTML = `
+                <div class="card" style="text-align:center; color:#e74c3c;">
+                    <h3>Erro ao carregar links</h3>
+                    <p>Não foi possível identificar o ID da instituição.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const meuEscolaId = escola.escolaId;
+
+        const linkBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}`;
+        const linkBaseEscola = `${linkBase}matricula.html?escola=${encodeURIComponent(meuEscolaId)}`;
+
+        const links = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
+
+        const htmlLista = links.length === 0
+            ? `<p style="text-align:center; color:#999; font-size:13px; padding:20px; border:1px dashed #ccc; border-radius:8px;">
+                    Nenhum link/campanha gerado ainda.
+               </p>`
+            : links.map(link => {
+                const urlCompleta = `${linkBaseEscola}&ref=${encodeURIComponent(link.id)}`;
+                return `
+                    <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:12px;">
+                        <strong>${App.escapeHTML(link.nome || 'Link sem nome')}</strong>
+                        <p style="font-size:12px; color:#777; margin:6px 0;">
+                            Criado em: ${App.escapeHTML(link.criadoEm || '-')}
+                        </p>
+
+                        <input value="${urlCompleta}" readonly style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:12px; margin-bottom:10px;">
+
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn-primary" onclick="navigator.clipboard.writeText('${urlCompleta}'); App.showToast('Link copiado!', 'success');" style="width:auto;">
+                                📋 Copiar
+                            </button>
+
+                            <button class="btn-cancel" onclick="window.open('${urlCompleta}', '_blank')" style="width:auto;">
+                                🔎 Abrir
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        area.innerHTML = `
+            <div class="card">
+                <h3>🔗 Links de Matrícula</h3>
+                <p style="font-size:13px; color:#666;">
+                    Gere links públicos para matrícula online. Cada link abre o <strong>matricula.html</strong> com o ID desta instituição.
+                </p>
+
+                <div style="background:#f8f9fa; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <label style="font-weight:bold; display:block; margin-bottom:8px;">Link principal da instituição</label>
+                    <input id="link-principal-matricula" value="${linkBaseEscola}" readonly style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('link-principal-matricula').value); App.showToast('Link principal copiado!', 'success');" style="width:auto;">
+                            📋 Copiar Link Principal
+                        </button>
+
+                        <button class="btn-cancel" onclick="window.open(document.getElementById('link-principal-matricula').value, '_blank')" style="width:auto;">
+                            🔎 Abrir Link
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:20px;">
+                    <label style="font-weight:bold; display:block; margin-bottom:8px;">Criar link personalizado / campanha</label>
+                    <input id="nome-novo-link-matricula" placeholder="Ex: Instagram, WhatsApp, Turma Sábado, Campanha Maio..." style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+
+                    <button class="btn-primary" onclick="App.criarLinkMatriculaCampanha()" style="width:auto;">
+                        ➕ Gerar Link Personalizado
+                    </button>
+                </div>
+
+                <h4>Links gerados</h4>
+                ${htmlLista}
+            </div>
+        `;
+
+    } catch (e) {
+        console.error(e);
+        area.innerHTML = `
+            <div class="card" style="text-align:center; color:#e74c3c;">
+                <h3>Erro</h3>
+                <p>Não foi possível carregar a área de links.</p>
+            </div>
+        `;
+    }
+},    
+
+    criarLinkMatriculaCampanha: async () => {
+    const input = document.getElementById('nome-novo-link-matricula');
+    const nome = input?.value?.trim();
+
+    if (!nome) {
+        return App.showToast("Digite um nome para o link.", "warning");
+    }
+
+    try {
+        const escola = await App.api('/escola');
+
+        if (!escola || escola.error || !escola.escolaId) {
+            return App.showToast("Não foi possível carregar os dados da instituição.", "error");
+        }
+
+        const linksAtuais = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
+
+        const novoLink = {
+            id: 'REF_' + Date.now(),
+            nome,
+            criadoEm: new Date().toLocaleString('pt-BR')
+        };
+
+        const payload = {
+            ...escola,
+            linksMatricula: [novoLink, ...linksAtuais]
+        };
+
+        const res = await App.api('/escola', 'PUT', payload);
+
+        if (res && res.error) {
+            return App.showToast(res.error, "error");
+        }
+
+        App.showToast("Link personalizado criado com sucesso!", "success");
+        App.mostrarAreaLinks();
+
+    } catch (e) {
+        console.error(e);
+        App.showToast("Erro ao criar link personalizado.", "error");
+    }
+},
+
+    gerarNovoLinkMatricula: async () => {
+        const nomeInput = document.getElementById('nome-novo-link').value.trim();
+        if(!nomeInput) return App.showToast("Por favor, dê um nome para a campanha/link.", "warning");
+
+        const btn = document.querySelector('button[onclick="App.gerarNovoLinkMatricula()"]');
+        const txtOriginal = btn.innerText;
+        btn.innerText = "A gerar... ⏳"; btn.disabled = true;
+
+        try {
+            const escola = await App.api('/escola') || {};
+            const links = escola.linksMatricula || [];
+            
+            const novoLink = {
+                id: window.crypto.randomUUID().split('-')[0].toUpperCase(),
+                nome: nomeInput,
+                data: new Date().toLocaleString('pt-BR')
+            };
+
+            links.unshift(novoLink); // Adiciona no início da lista
+            escola.linksMatricula = links;
+
+            await App.api('/escola', 'PUT', escola);
+            App.showToast("Link gerado com sucesso!", "success");
+            App.mostrarAreaLinks(); // Recarrega a tela
+        } catch(e) {
+            App.showToast("Erro ao guardar o link.", "error");
+        } finally {
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
+        }
+    },
+
+    excluirLinkMatricula: async (id) => {
+        if(!confirm("Tem a certeza que deseja apagar este link? O link principal continuará a funcionar.")) return;
+        try {
+            const escola = await App.api('/escola') || {};
+            let links = escola.linksMatricula || [];
+            escola.linksMatricula = links.filter(l => l.id !== id);
+            
+            await App.api('/escola', 'PUT', escola);
+            App.showToast("Link apagado do histórico.", "success");
+            App.mostrarAreaLinks();
+        } catch(e) {
+            App.showToast("Erro ao apagar.", "error");
+        }
+    },
+
+   
+    renderizarContratos: async () => {
+        const area = document.getElementById('area-dinamica-hub') || document.getElementById('app-content');
+        area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar o cofre... ⏳</p>';
+
+        try {
+            const contratos = await App.api('/contratos');
+            const lista = Array.isArray(contratos) ? contratos : [];
+
+            if(lista.length === 0) {
+                area.innerHTML = `<div style="text-align:center; padding:40px;"><span style="font-size:50px;">🗄️</span><h3 style="color:#666;">Cofre Vazio</h3><p style="font-size:13px; color:#999;">Os recibos imutáveis aparecerão aqui quando os alunos preencherem a matrícula.</p></div>`;
+                return;
+            }
+
+            lista.sort((a, b) => new Date(b.dataHoraRegistro) - new Date(a.dataHoraRegistro));
+
+            let htmlLista = lista.map(c => {
+                const dataBr = new Date(c.dataHoraRegistro).toLocaleString('pt-BR');
+                return `
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid #2c3e50; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div>
+                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">📄 ${App.escapeHTML(c.nomeAluno)}</div>
+                        <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">👁️ Ver</button>
+                        <button onclick="App.excluirContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">🗑️ Apagar</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            area.innerHTML = `<div>
+                <div style="background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px; text-align:center;">
+                    🔒 <strong>Zona de Segurança Jurídica:</strong> Os documentos listados abaixo são registos oficiais imutáveis.
+                </div>
+                ${htmlLista}
+            </div>`;
+            App.listaCacheContratos = lista;
+        } catch(e) {
+            area.innerHTML = "<p style='color:red;'>Erro ao carregar cofre.</p>";
+        }
+    },
+
+    imprimirContrato: () => {
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const nomeEscola = escola.nome || 'Instituição de Ensino';
+        const cnpjEscola = escola.cnpj ? `CNPJ: ${escola.cnpj}` : '';
+        const logoEscola = (escola.foto && escola.foto.length > 50 && !escola.foto.includes('placehold')) 
+            ? `<img src="${escola.foto}" style="max-height:80px; max-width:120px; object-fit:contain;">` 
+            : '';
+
+        const conteudoOriginal = document.getElementById('area-impressao-contrato');
+        const clone = conteudoOriginal.cloneNode(true);
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute'; iframe.style.top = '-10000px'; iframe.style.width = '800px'; iframe.style.height = '1000px'; iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Impressão - Contrato</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; color: #333; line-height: 1.5; background: #fff; }
+                    .header-escola { display: flex; align-items: center; border-bottom: 2px solid #3498db; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header-escola img { margin-right: 20px; }
+                    .header-escola h2 { margin: 0; color: #2c3e50; font-size: 24px; }
+                    .header-escola p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
+                    .box-contrato-print { max-height: none !important; overflow: visible !important; border: none !important; padding: 0 !important; background: transparent !important; }
+                    @media print { body { padding: 0; } @page { margin: 15mm; } }
+                </style>
+            </head>
+            <body>
+                <div class="header-escola">
+                    ${logoEscola}
+                    <div>
+                        <h2>${App.escapeHTML(nomeEscola)}</h2>
+                        <p>${App.escapeHTML(cnpjEscola)}</p>
+                    </div>
+                </div>
+                ${clone.innerHTML}
+                <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #999;">
+                    Documento impresso em ${new Date().toLocaleString('pt-BR')} pelo SISTEMA PTT
+                </div>
+            </body>
+            </html>
+        `);
+        doc.close();
+
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => { document.body.removeChild(iframe); }, 1500);
+        }, 800);
+    },
+
+    excluirContrato: (id) => {
+        App.abrirModalConfirmacao(
+            "Apagar Contrato Oficial?", 
+            "Tem a certeza que deseja apagar este documento assinado? Esta ação é irreversível.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/contratos/${id}`, 'DELETE');
+                    if (res && res.error) {
+                        App.showToast(res.error, "error");
+                    } else {
+                        App.showToast("Contrato apagado com sucesso!", "success");
+                        App.renderizarContratos();
+                    }
+                } catch(e) { 
+                    App.showToast("Erro ao apagar o contrato.", "error"); 
+                } finally { 
+                    document.body.style.cursor = 'default'; 
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
+    },
+
+    renderizarConfiguradorMatricula: async () => {
+        const area = document.getElementById('area-dinamica-hub');
+        area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do contrato... ⏳</p>';
+
+        try {
+            const escola = await App.api('/escola') || {};
+            
+            if (!escola.configMatricula) {
+                escola.configMatricula = {
+                    imagemHeader: 'https://placehold.co/800x400?text=Sua+Imagem+de+Cabecalho',
+                    imagemPosicao: '50% 50%', // Nova variável para guardar a posição
+                    tituloHeader: 'Matrícula Digital',
+                    descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
+                    opcoesPlano: 'Padrão, Intensivo, Personalizado',
+                    opcoesVencimento: '08, 20',
+                    textoContrato: `TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS<br><br>CLÁUSULA PRIMEIRA – DO OBJETO<br>O presente contrato tem como objeto...`
+                };
+            }
+
+            App.configTemp = { ...escola.configMatricula };
+            // Garante que a posição existe mesmo para quem já tinha gravado antes
+            if (!App.configTemp.imagemPosicao) App.configTemp.imagemPosicao = '50% 50%';
+
+            // Converte as tags protegidas da base de dados de volta para formatação visual
+            if (App.configTemp.textoContrato) {
+                App.configTemp.textoContrato = App.unescapeHTML(App.configTemp.textoContrato);
+            }
+
+            area.innerHTML = `
+                <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
+                    <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+                        <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
+                        
+                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
+                        <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">800 x 400px</b></div>
+
+                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
+                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
+                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
+                        <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
+                        <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
+                    </div>
+
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
+                            <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            App.atualizarPreviewConfigurador();
+
+        } catch (e) {
+            area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o configurador.</p>';
+        }
+    },
+
+   atualizarPreviewConfigurador: () => {
+        const preview = document.getElementById('preview-word-doc');
+        if(preview) {
+            preview.innerHTML = `
+                <div id="preview-header-img" 
+                     onmousedown="App.iniciarArraste(event)" 
+                     ontouchstart="App.iniciarArraste(event)"
+                     style="width:100%; height:120px; background:url('${App.configTemp.imagemHeader}') no-repeat; background-size: cover; background-position: ${App.configTemp.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
+                     <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.2);">🖐️ Arraste para reposicionar</div>
+                </div>
+                <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
+                    <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(App.configTemp.tituloHeader)}</h2>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(App.configTemp.descHeader)}</p>
+                </div>
+                <div style="padding: 25px;">
+                    <h4 style="color:#2980b9; margin-top:0;">📋 Dados Editáveis (Preview)</h4>
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
+                            <option>Plano de Curso: ${App.configTemp.opcoesPlano}</option>
+                        </select>
+                        <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
+                            <option>Vencimento: ${App.configTemp.opcoesVencimento}</option>
+                        </select>
+                    </div>
+                    <h4 style="color:#2980b9;">📑 Texto do Contrato</h4>
+                    <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; height:300px; overflow-y:auto; text-align:justify;">${App.configTemp.textoContrato}</div>
+                </div>
+            `;
+        }
+    },
+
+    editarConfig: (tipo) => {
+        if (tipo === 'imagem') {
+            // Cria um input de arquivo invisível
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*'; // Aceita apenas imagens
+            
+            // O que acontece quando o utilizador escolhe a foto:
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    App.showToast("A processar e otimizar a imagem... ⏳", "info");
+                    
+                    // Envia para a tua função de compressão (máx 800px de largura)
+                    App.otimizarImagem(file, 800, (imgBase64) => {
+                        App.configTemp.imagemHeader = imgBase64;
+                        App.atualizarPreviewConfigurador();
+                        App.showToast("Imagem aplicada com sucesso!", "success");
+                    });
+                }
+            };
+            
+            // Aciona o clique automático para abrir a janela
+            input.click();
+        } 
+        else if (tipo === 'titulo' || tipo === 'descricao' || tipo === 'opcoes') {
+            // Função para gerar modais bonitos
+            const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
+                
+                const modal = document.createElement('div');
+                modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
+                
+                modal.innerHTML = `
+                    <style>
+                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                        .modal-custom-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 15px; margin-top: 6px; transition: border-color 0.2s; }
+                        .modal-custom-input:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 3px rgba(13,110,253,0.2); }
+                        .modal-custom-label { font-weight: 600; color: #495057; font-size: 14px; }
+                        .modal-btn-cancel { padding: 10px 18px; background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-cancel:hover { background: #e2e6ea; }
+                        .modal-btn-save { padding: 10px 18px; background: #0d6efd; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                        .modal-btn-save:hover { background: #0b5ed7; }
+                    </style>
+                    <h3 style="margin-top:0; color:#212529; font-size:20px; border-bottom:1px solid #f1f3f5; padding-bottom:15px; margin-bottom:20px;">${tituloModal}</h3>
+                    <div style="margin-bottom:24px;">
+                        ${conteudoHTML}
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:12px;">
+                        <button id="btnCancelarModal" class="modal-btn-cancel">Cancelar</button>
+                        <button id="btnSalvarModal" class="modal-btn-save">Salvar Alterações</button>
+                    </div>
+                `;
+
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+
+                const fecharModal = () => {
+                    overlay.style.animation = "fadeIn 0.2s ease reverse forwards";
+                    modal.style.animation = "scaleUp 0.2s ease reverse forwards";
+                    setTimeout(() => document.body.removeChild(overlay), 200);
+                };
+
+                modal.querySelector('#btnCancelarModal').onclick = fecharModal;
+                modal.querySelector('#btnSalvarModal').onclick = () => {
+                    onSave(modal);
+                    fecharModal();
+                };
+            };
+
+            // MODAIS ESPECÍFICOS USANDO AS TUAS VARIÁVEIS EXATAS
+            if (tipo === 'titulo') {
+                abrirModalBonito(
+                    "✏️ Editar Título",
+                    `<label class="modal-custom-label">Título do Documento:</label>
+                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${App.configTemp.tituloHeader || ''}">`,
+                    (modal) => {
+                        App.configTemp.tituloHeader = modal.querySelector('#inputTitulo').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'descricao') {
+                abrirModalBonito(
+                    "📝 Editar Descrição",
+                    `<label class="modal-custom-label">Subtítulo ou Descrição:</label>
+                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${App.configTemp.descHeader || ''}</textarea>`,
+                    (modal) => {
+                        App.configTemp.descHeader = modal.querySelector('#inputDescricao').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            } 
+            else if (tipo === 'opcoes') {
+                abrirModalBonito(
+                    "⚙️ Dados Complementares",
+                    `<div style="margin-bottom:16px;">
+                        <label class="modal-custom-label">Planos de Curso</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.configTemp.opcoesPlano || ''}">
+                     </div>
+                     <div>
+                        <label class="modal-custom-label">Dias de Vencimento</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
+                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.configTemp.opcoesVencimento || ''}">
+                     </div>`,
+                    (modal) => {
+                        App.configTemp.opcoesPlano = modal.querySelector('#inputCursos').value;
+                        App.configTemp.opcoesVencimento = modal.querySelector('#inputDias').value;
+                        App.atualizarPreviewConfigurador();
+                    }
+                );
+            }
+        }
+        else if (tipo === 'contrato') {
+            const modal = document.getElementById('modal-overlay'); 
+            if(modal) modal.style.display = 'flex';
+            document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
+            
+            // Construção do modal com o novo Editor Quill (LIMPO: Sem caixa de tags mágicas)
+            document.getElementById('modal-form-content').innerHTML = `
+                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.sanitizeHTML(App.configTemp.textoContrato || '')}</div>
+            `;
+            
+            // Inicializar o Editor e a sua barra de ferramentas
+            setTimeout(() => {
+                window.quillContrato = new Quill('#editor-contrato-quill', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
+                            [{ 'size': ['small', false, 'large', 'huge'] }],
+                            ['clean'] // Botão mágico "Tx" que remove códigos lixo do Word!
+                        ]
+                    }
+                });
+            }, 100);
+
+            const btnConfirm = document.querySelector('.btn-confirm');
+            btnConfirm.style.display = 'inline-flex';
+            btnConfirm.innerHTML = "Aplicar ao Preview";
+            btnConfirm.onclick = () => {
+                // Ao clicar em aplicar, ele vai buscar o HTML perfeitamente formatado gerado pelo Quill
+                App.configTemp.textoContrato = window.quillContrato.root.innerHTML;
+                App.atualizarPreviewConfigurador();
+                App.fecharModal();
+            };
+        }
+    },
+
+    salvarConfiguradorMatricula: async () => {
+        // Captura o botão exato que disparou a função
+        const btn = document.querySelector('button[onclick="App.salvarConfiguradorMatricula()"]');
+        const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Tudo';
+        
+        // Dá o feedback visual imediato: muda o texto, desativa o clique e põe o rato a carregar
+        if (btn) { 
+            btn.innerHTML = "A salvar... ⏳"; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.8'; 
+        }
+        document.body.style.cursor = 'wait';
+
+        try {
+            const escola = await App.api('/escola') || {};
+            escola.configMatricula = App.configTemp;
+            await App.api('/escola', 'PUT', escola);
+            App.showToast("Configurações da matrícula salvas com sucesso!", "success");
+        } catch(e) {
+            App.showToast("Erro ao guardar as configurações.", "error");
+        } finally {
+            // Devolve o botão ao normal, independentemente de ter dado erro ou sucesso
+            if (btn) { 
+                btn.innerHTML = txtOriginal; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+            }
+            document.body.style.cursor = 'default';
+        }
+    },
+
+    abrirModalConfirmacao: (titulo, subtitulo, acaoConfirmar) => {
+        let modal = document.getElementById('modal-confirmacao-bonito');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-confirmacao-bonito';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; justify-content:center; align-items:center; z-index:10000; opacity:0; transition:opacity 0.3s ease;';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:24px; width:90%; max-width:380px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); transform:scale(0.8); transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);" id="box-confirmacao-interno">
+                <div style="width:80px; height:80px; border-radius:50%; background:#fdedec; color:#e74c3c; font-size:40px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; border:4px solid #f9ebea;">🗑️</div>
+                <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size:22px; font-weight:800;">${titulo}</h3>
+                <p style="color:#7f8c8d; font-size:14px; margin-bottom:25px; line-height:1.5;">${subtitulo}</p>
+                <div style="display:flex; gap:12px; justify-content:center;">
+                    <button onclick="document.getElementById('modal-confirmacao-bonito').style.opacity='0'; setTimeout(()=>document.getElementById('modal-confirmacao-bonito').style.display='none', 300);" style="flex:1; padding:12px; background:#f4f6f7; color:#7f8c8d; border:1px solid #d5dbdb; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px; transition:background 0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">Cancelar</button>
+                    <button id="btn-confirmar-acao-bonita" style="flex:1; padding:12px; background:#e74c3c; color:#fff; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(231,76,60,0.3); transition:background 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">Sim, Apagar</button>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            document.getElementById('box-confirmacao-interno').style.transform = 'scale(1)';
+        }, 10);
+
+        document.getElementById('btn-confirmar-acao-bonita').onclick = function() {
+            const btn = this;
+            btn.innerHTML = "A apagar... ⏳";
+            btn.style.opacity = '0.8';
+            btn.disabled = true;
+            acaoConfirmar(modal); 
+        };
+    },
+
+    // =========================================================
+    // 🖐️ MOTOR DE ARRASTE DA IMAGEM DO CABEÇALHO (DRAG & DROP)
+    // =========================================================
+    dragState: { isDragging: false, startX: 0, startY: 0, bgX: 50, bgY: 50 },
+
+    iniciarArraste: (e) => {
+        App.dragState.isDragging = true;
+        
+        // Pega a posição inicial do clique (rato ou dedo)
+        App.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        App.dragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Descobre a posição atual que está guardada (ex: "50% 50%")
+        let pos = App.configTemp.imagemPosicao || '50% 50%';
+        let parts = pos.split(' ');
+        App.dragState.bgX = parseFloat(parts[0]) || 50;
+        App.dragState.bgY = parseFloat(parts[1]) || 50;
+
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.cursor = 'grabbing';
+
+        // Escuta os movimentos em todo o documento para não perder o rato se sair da div
+        document.addEventListener('mousemove', App.arrastarImagem);
+        document.addEventListener('mouseup', App.pararArraste);
+        document.addEventListener('touchmove', App.arrastarImagem, { passive: false });
+        document.addEventListener('touchend', App.pararArraste);
+    },
+
+    arrastarImagem: (e) => {
+        if (!App.dragState.isDragging) return;
+        e.preventDefault(); // Evita que a página faça scroll no telemóvel enquanto arrasta
+
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+        // Calcula a distância que o rato percorreu
+        const dx = clientX - App.dragState.startX;
+        const dy = clientY - App.dragState.startY;
+
+        // Sensibilidade. Valores menores deixam o movimento mais suave (ideal entre 0.1 e 0.3)
+        const sensibilidade = 0.2;
+
+        let newX = App.dragState.bgX - (dx * sensibilidade);
+        let newY = App.dragState.bgY - (dy * sensibilidade);
+
+        // Bloqueia entre 0% e 100% para a imagem não fugir da div
+        newX = Math.max(0, Math.min(100, newX));
+        newY = Math.max(0, Math.min(100, newY));
+
+        // Guarda a nova posição
+        App.configTemp.imagemPosicao = `${newX.toFixed(2)}% ${newY.toFixed(2)}%`;
+
+        // Aplica o movimento na tela em tempo real
+        const el = document.getElementById('preview-header-img');
+        if(el) el.style.backgroundPosition = App.configTemp.imagemPosicao;
+
+        // Atualiza a origem para o próximo frame de movimento ser contínuo
+        App.dragState.startX = clientX;
+        App.dragState.startY = clientY;
+        App.dragState.bgX = newX;
+        App.dragState.bgY = newY;
+    },
+
+    pararArraste: () => {
+        if (App.dragState.isDragging) {
+            App.dragState.isDragging = false;
+            const el = document.getElementById('preview-header-img');
+            if(el) el.style.cursor = 'grab';
+
+            // Limpa a memória libertando os eventos
+            document.removeEventListener('mousemove', App.arrastarImagem);
+            document.removeEventListener('mouseup', App.pararArraste);
+            document.removeEventListener('touchmove', App.arrastarImagem);
+            document.removeEventListener('touchend', App.pararArraste);
+        }
+    }
+
+}); // <--- O OBJETO APP FECHA CORRETAMENTE AQUI!
+
+// =========================================================
+// EVENTOS DE ARRANQUE E PWA
+// =========================================================
+document.addEventListener('DOMContentLoaded', App.init);
+document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
+window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
+
+document.addEventListener('click', (e) => {
+    const container = document.querySelector('.notification-container');
+    if (container && !container.contains(e.target)) {
+        const dropdown = document.getElementById('noti-dropdown'); if (dropdown) dropdown.classList.remove('active');
+    }
+});
+
+
+// =========================================================
+// 📡 DETEÇÃO DE LIGAÇÃO (ONLINE / OFFLINE)
+// =========================================================
+
+// Ouvinte que dispara quando o dispositivo PERDE a internet
+window.addEventListener('offline', () => {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.style.display = 'block'; // Mostra o banner vermelho
+    
+    // Como você já tem um sistema de Toast no seu app.js, vamos usá-lo também!
+    if (typeof App.showToast === 'function') {
+        App.showToast("Sem ligação à Internet!", "error");
+    }
+});
+
+// Ouvinte que dispara quando o dispositivo RECUPERA a internet
+window.addEventListener('online', () => {
+    const banner = document.getElementById('offline-banner');
+    if (banner) banner.style.display = 'none'; // Esconde o banner vermelho
+    
+    if (typeof App.showToast === 'function') {
+        App.showToast("Ligação à Internet restaurada!", "success");
+    }
+});
+
+let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) { installBanner.style.display = 'block'; } });
+const btnInstall = document.getElementById('pwa-btn-install'); if (btnInstall) { btnInstall.addEventListener('click', async () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt = null; } }); }
+const btnCancel = document.getElementById('pwa-btn-cancel'); if (btnCancel) { btnCancel.addEventListener('click', () => { const installBanner = document.getElementById('pwa-install-banner'); installBanner.style.display = 'none'; }); }
+window.addEventListener('appinstalled', () => { 
+    const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) installBanner.style.display = 'none'; deferredPrompt = null; 
+    if (typeof gtag === 'function') gtag('event', 'app_install', { platform: 'PWA Web' });
+    App.showToast('App instalada com sucesso! 🎉', 'success'); 
+});

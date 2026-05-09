@@ -1,0 +1,23 @@
+{
+  "name": "Gestão Escolar SaaS",
+  "short_name": "Gestão Escolar",
+  "description": "Sistema completo de Gestão Escolar e Financeira",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#2c3e50",
+  "icons": [
+    {
+      "src": "assets/icone.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icone.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
