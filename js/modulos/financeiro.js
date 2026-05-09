@@ -1,5 +1,6 @@
 window.App = window.App || {};
 const App = window.App;
+
 // =========================================================
 // MÓDULO FINANCEIRO V162 (CARNÊ BANCÁRIO A4 BLINDADO E QR OFICIAL)
 // =========================================================
