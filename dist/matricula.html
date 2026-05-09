@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrícula Online</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" type="image/png">
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f7; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #3498db; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { color: #2c3e50; margin-bottom: 5px; }
+        .header p { color: #7f8c8d; font-size: 14px; margin-top: 0; }
+        h3 { color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 30px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #555; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { border-color: #3498db; outline: none; }
+        #box-responsavel { display: none; background: #fff3e0; padding: 20px; border-radius: 8px; border: 1px dashed #e67e22; margin-top: 20px; }
+        button { width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:hover { background: #219653; }
+        .termo { font-size: 12px; color: #666; margin-top: 20px; display: flex; gap: 10px; }
+        .contrato-box { 
+            background: #f9f9f9; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            padding: 15px; 
+            height: 200px; 
+            overflow-y: auto; 
+            font-size: 12px; 
+            color: #555; 
+            margin-top: 20px; 
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .contrato-box strong { color: #2c3e50; }   
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>  <script type="module" crossorigin src="/assets/main-D9xM9d0Y.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-DOIXXDe3.css">
+</head>
+<body>
+
+<div class="container">
+    <div id="header-imagem" style="width: 100%; height: 150px; background: #eee; border-radius: 12px 12px 0 0; margin-bottom: 20px; display: none; background-size: cover; background-position: center;"></div>
+        
+    <div class="header">
+        <img id="logoEscola" src="" alt="Logo da Escola" style="max-height: 100px; max-width: 100%; display: none; margin: 0 auto 15px auto; border-radius: 8px;">
+        <h2 id="tituloPagina">Matrícula Online</h2>
+        <p id="desc-matricula">Preencha os dados abaixo com atenção para garantir a sua vaga.</p>
+    </div>
+
+    <div id="mensagemSucesso" style="display: none; text-align: center; padding: 40px 20px;">
+        <div style="font-size: 60px; color: #27ae60; margin-bottom: 15px;">✅</div>
+        <h2 style="color: #2c3e50;">Matrícula Concluída!</h2>
+        <p style="color: #7f8c8d; font-size: 16px;">Os seus dados e o contrato foram enviados com sucesso para a nossa secretaria. Seja muito bem-vindo(a)!</p>
+    </div>
+
+    <form id="formMatricula">
+        <h3>1. Dados Pessoais</h3>
+        <div class="input-group">
+            <label>Nome Completo *</label>
+            <input type="text" id="nome" required>
+        </div>
+        
+        <div class="grid-2">
+            <div class="input-group">
+                <label>WhatsApp *</label>
+                <input type="text" id="whatsapp" placeholder="Ex: (11) 99999-9999" maxlength="20" required>
+            </div>
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" id="email">
+            </div>
+            <div class="input-group">
+                <label>CPF *</label>
+                <input type="text" id="cpf" maxlength="14" required>
+            </div>
+            <div class="input-group">
+                <label>RG</label>
+                <input type="text" id="rg">
+            </div>
+            <div class="input-group">
+                <label>Data de Nascimento *</label>
+                <input type="date" id="nascimento" required>
+            </div>
+            <div class="input-group">
+                <label>Sexo</label>
+                <select id="sexo">
+                    <option value="">-- Selecione --</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-group">
+            <label>Profissão / Ocupação</label>
+            <input type="text" id="profissao">
+        </div>
+
+        <div id="box-responsavel">
+            <h4 style="margin-top: 0; color: #d35400;">👤 Dados do Responsável Legal</h4>
+            <div class="grid-2">
+                <div class="input-group"><label>Nome do Responsável *</label><input type="text" id="resp_nome"></div>
+                <div class="input-group">
+                    <label>Parentesco *</label>
+                    <select id="resp_parentesco">
+                        <option value="">Selecione</option>
+                        <option value="Pai">Pai</option>
+                        <option value="Mãe">Mãe</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>CPF do Responsável *</label><input type="text" id="resp_cpf" maxlength="14"></div>
+                <div class="input-group">
+                    <label>WhatsApp do Responsável *</label>
+                    <input type="text" id="resp_zap" placeholder="Ex: (11) 99999-9999" maxlength="20">
+                </div>
+            </div>
+        </div>
+
+        <h3>2. Endereço Completo</h3>
+        <div class="grid-2">
+            <div class="input-group"><label>Logradouro (Rua/Av) *</label><input type="text" id="rua" required></div>
+            <div class="input-group"><label>Número *</label><input type="text" id="numero" required></div>
+            <div class="input-group"><label>Bairro *</label><input type="text" id="bairro" required></div>
+            <div class="input-group"><label>Cidade *</label><input type="text" id="cidade" required></div>
+        </div>
+        
+        <h3>3. Dados do Curso e Pagamento</h3>
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Plano de Curso *</label>
+                <select id="plano_curso" required>
+                    <option value="">-- Selecione --</option>
+                    <option value="Padrão">Padrão</option>
+                    <option value="Intensivo">Intensivo</option>
+                    <option value="Personalizado">Personalizado</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Dia de Vencimento da Mensalidade *</label>
+                <select id="dia_vencimento" required>
+                    <option value="">-- Selecione --</option>
+                    <option value="08">Dia 08</option>
+                    <option value="20">Dia 20</option>
+                </select>
+            </div>
+        </div>
+
+        <h3>4. Contrato de Prestação de Serviços</h3>
+        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
+        
+        <div id="previewContrato" class="contrato-box">
+            O presente contrato é firmado entre a instituição de ensino e o(a) aluno(a) [NOME_ALUNO], portador(a) do CPF [CPF_ALUNO] e RG [RG_ALUNO].<br><br>
+            Neste ato, fica estabelecido que o(a) aluno(a) cursará o plano: [PLANO_CURSO].<br><br>
+            Responsável Legal (quando aplicável): [NOME_RESPONSAVEL].<br><br>
+            Ao finalizar a matrícula, você concorda com os termos acima descritos.
+        </div>
+
+        <div class="termo">
+            <input type="checkbox" id="aceito" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
+            <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que li e aceito todos os termos do contrato de prestação de serviços educacionais.</label>
+        </div>
+
+        <button type="submit" id="btnSubmit">Concluir Matrícula</button>
+    </form>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const escolaId = urlParams.get('escola');
+    const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : 'https://sistema-escolar-api-k3o8.onrender.com';
+
+    // Mostra/Oculta painel do responsável caso o aluno seja menor
+    document.getElementById('nascimento').addEventListener('change', function() {
+        const nasc = new Date(this.value);
+        const hoje = new Date();
+        let idade = hoje.getFullYear() - nasc.getFullYear();
+        const m = hoje.getMonth() - nasc.getMonth();
+        if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+        
+        const boxResp = document.getElementById('box-responsavel');
+        if(idade < 18) {
+            boxResp.style.display = 'block';
+            document.getElementById('resp_nome').required = true;
+            document.getElementById('resp_cpf').required = true;
+        } else {
+            boxResp.style.display = 'none';
+            document.getElementById('resp_nome').required = false;
+            document.getElementById('resp_cpf').required = false;
+        }
+    });
+
+    // 1. Puxa as customizações da API
+    async function carregarConfiguracoes() {
+        if (!escolaId) {
+            document.body.innerHTML = "<h2 style='text-align:center; padding:50px; color:red;'>Link de matrícula inválido.</h2>";
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}/public/escola/${escolaId}`);
+            if(!res.ok) throw new Error("Escola não encontrada");
+            const dados = await res.json();
+            
+            const config = dados.configMatricula || dados || {};
+            
+            // Imagem de Cabeçalho
+            if(config.imagemHeader) {
+                const header = document.getElementById('header-imagem');
+                header.style.backgroundImage = `url('${config.imagemHeader}')`;
+                header.style.display = 'block';
+            }
+
+            // Textos Iniciais
+            if(config.tituloHeader) document.getElementById('tituloPagina').innerText = config.tituloHeader;
+            if(config.descHeader) document.getElementById('desc-matricula').innerText = config.descHeader;
+
+            // Opções do Plano de Curso
+            if(config.opcoesPlano) {
+                const selectPlano = document.getElementById('plano_curso');
+                selectPlano.innerHTML = '<option value="">-- Selecione --</option>';
+                config.opcoesPlano.split(',').forEach(plano => {
+                    const option = document.createElement('option');
+                    option.value = plano.trim();
+                    option.innerText = plano.trim();
+                    selectPlano.appendChild(option);
+                });
+            }
+
+            // Opções de Dia de Vencimento
+            if(config.opcoesVencimento) {
+                const selectVenc = document.getElementById('dia_vencimento');
+                selectVenc.innerHTML = '<option value="">-- Selecione --</option>';
+                config.opcoesVencimento.split(',').forEach(dia => {
+                    const option = document.createElement('option');
+                    option.value = dia.trim();
+                    option.innerText = dia.trim();
+                    selectVenc.appendChild(option);
+                });
+            }
+
+            // Logo e Cores
+            if(config.corSecundaria) {
+                document.querySelector('.container').style.borderTopColor = config.corSecundaria;
+                document.querySelectorAll('h3, button').forEach(el => el.style.color = config.corSecundaria || '#3498db');
+                document.getElementById('btnSubmit').style.backgroundColor = config.corSecundaria;
+                document.getElementById('btnSubmit').style.color = '#ffffff';
+            }
+            if(config.logoUrl) {
+                const imgLogo = document.getElementById('logoEscola');
+                imgLogo.src = config.logoUrl;
+                imgLogo.style.display = 'block';
+            }
+            
+            // Decodifica HTML do banco
+            function formatarHTML(htmlTexto) {
+                var txt = document.createElement("textarea");
+                txt.innerHTML = htmlTexto;
+                return txt.value;
+            }
+
+            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
+            window.textoContratoOriginal = contratoFormatado;
+
+            atualizarContratoAoVivo();
+            
+        } catch (error) {
+            console.error("Erro ao carregar configurações da escola:", error);
+            window.textoContratoOriginal = document.getElementById('previewContrato').innerHTML;
+            atualizarContratoAoVivo();
+        }
+    }
+
+    // 2. Atualiza as tags do contrato em tempo real
+    function atualizarContratoAoVivo() {
+        if(!window.textoContratoOriginal) return;
+        let texto = window.textoContratoOriginal;
+        
+        const nome = document.getElementById('nome')?.value || '_______________________';
+        const cpf = document.getElementById('cpf')?.value || '_______________________';
+        const rg = document.getElementById('rg')?.value || '_______________________';
+        const resp_nome = document.getElementById('resp_nome')?.value || '_______________________';
+        
+        const planoSelect = document.getElementById('plano_curso');
+        const plano = planoSelect.options[planoSelect.selectedIndex]?.text.replace('-- Selecione --', '_______________________') || '_______________________';
+        
+        texto = texto.replace(/\[NOME_ALUNO\]/g, `<strong style="color:#2c3e50; text-decoration:underline;">${nome.toUpperCase()}</strong>`);
+        texto = texto.replace(/\[CPF_ALUNO\]/g, `<strong style="color:#2c3e50;">${cpf}</strong>`);
+        texto = texto.replace(/\[RG_ALUNO\]/g, `<strong style="color:#2c3e50;">${rg}</strong>`);
+        texto = texto.replace(/\[NOME_RESPONSAVEL\]/g, `<strong style="color:#2c3e50;">${resp_nome.toUpperCase()}</strong>`);
+        texto = texto.replace(/\[PLANO_CURSO\]/g, `<strong style="color:#2c3e50;">${plano.toUpperCase()}</strong>`);
+        
+        document.getElementById('previewContrato').innerHTML = DOMPurify.sanitize(texto, {
+    USE_PROFILES: { html: true },
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
+    ALLOWED_ATTR: ['style', 'class']
+});
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', atualizarContratoAoVivo);
+        el.addEventListener('change', atualizarContratoAoVivo);
+    });
+
+     // 3. Envia a matrícula para o Sistema
+    document.getElementById('formMatricula').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        btn.innerText = "A Enviar ao Sistema..."; 
+        btn.disabled = true;
+
+        // 🚀 PAYLOAD CORRIGIDO (IDs agora batem 100% com o seu HTML)
+        const payload = {
+            escolaId: escolaId,
+            refLink: urlParams.get('ref') || 'Direto',
+            nome: document.getElementById('nome')?.value || '',
+            cpf: document.getElementById('cpf')?.value || '',
+            email: document.getElementById('email')?.value || '',
+            whatsapp: document.getElementById('whatsapp')?.value || '',
+            
+            // Dados para o Cofre de Contratos e Ficha do Aluno
+            rg: document.getElementById('rg')?.value || '',
+            nascimento: document.getElementById('nascimento')?.value || '',
+            sexo: document.getElementById('sexo')?.value || '',
+            profissao: document.getElementById('profissao')?.value || '',
+            
+            // Endereço
+            rua: document.getElementById('rua')?.value || '',
+            numero: document.getElementById('numero')?.value || '',
+            bairro: document.getElementById('bairro')?.value || '',
+            cidade: document.getElementById('cidade')?.value || '',
+            estado: document.getElementById('estado')?.value || '', // Se não houver no form, vai vazio
+            pais: document.getElementById('pais')?.value || 'Brasil',
+            
+            // Dados Académicos e Financeiros (IDs CORRIGIDOS AQUI 👇)
+            curso: document.getElementById('curso')?.value || '', // Se não houver, vai vazio
+            turma: document.getElementById('turma')?.value || '', // Se não houver, vai vazio
+            planoCurso: document.getElementById('plano_curso')?.value || '', 
+            diaVencimento: document.getElementById('dia_vencimento')?.value || '',
+            
+            // Dados do Responsável Legal
+            resp_nome: document.getElementById('resp_nome')?.value || '',
+            resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
+            resp_cpf: document.getElementById('resp_cpf')?.value || '',
+            resp_zap: document.getElementById('resp_zap')?.value || '',
+            
+            // O Contrato assinado/gerado
+            conteudoHTML: DOMPurify.sanitize(
+    document.getElementById('previewContrato')?.innerHTML || '<p>Contrato não gerado.</p>',
+    {
+        USE_PROFILES: { html: true },
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
+        ALLOWED_ATTR: ['style', 'class']
+    }
+)
+        };
+
+        try {
+            const resposta = await fetch(`${API_BASE}/public/receber-matricula`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const resultado = await resposta.json().catch(() => ({}));
+
+            if(resposta.ok && resultado.success) {
+                document.getElementById('formMatricula').style.display = 'none';
+                document.getElementById('mensagemSucesso').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else { 
+                throw new Error(resultado.error || "Erro no servidor"); 
+            }
+        } catch (error) {
+            alert("Erro ao enviar matrícula: " + error.message);
+            btn.innerText = "Concluir Matrícula"; 
+            btn.disabled = false;
+        }
+    });    
+
+    // Inicia tudo
+    carregarConfiguracoes();
+</script>
+
+</body>
+</html>

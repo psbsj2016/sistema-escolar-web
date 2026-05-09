@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👑 Portal do CEO - PTT CURSOS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        * { box-sizing: border-box; outline: none; }
+        
+        /* LOGIN DO CEO */
+        #login-screen { flex: 1; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; width: 350px; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #334155; border-radius: 6px; background: #0f172a; color: white; }
+        .login-box button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .login-box button:hover { background: #2563eb; }
+
+        /* SCROLLBAR & UX GERAL */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        button, select, input[type="checkbox"] { cursor: pointer !important; }
+        
+        /* ANIMAÇÕES */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Badges de Status e Plano */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .plan-essencial { border: 1px solid #94a3b8; color: #cbd5e1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-profissional { border: 1px solid #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-premium { border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-liberado { border: 1px solid #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+  <script type="module" crossorigin src="/assets/main-D9xM9d0Y.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-DOIXXDe3.css">
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="margin-top:0; color:var(--accent);">👑 CEO Login</h2>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:20px;">Acesso restrito à gestão de licenças.</p>
+            <input type="password" id="master-pwd" placeholder="Senha Master" autocomplete="off" onkeypress="if(event.key === 'Enter') Admin.login()">
+            <button onclick="Admin.login()">Autenticar</button>
+            <div id="login-error" style="color:var(--danger); font-size:12px; margin-top:10px; display:none;">Senha incorreta!</div>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display: none; flex: 1; flex-direction: column;">
+        <header style="background: var(--card); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+            <h1 style="margin:0; font-size:24px; color:var(--text); letter-spacing:1px;">👑 Painel Master</h1>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <button onclick="Admin.abrirModalVip()" style="background: linear-gradient(135deg, var(--success), #059669); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition:0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">➕ Cadastro VIP</button>
+                <button onclick="Admin.logout()" style="background: #334155; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Sair</button>
+            </div>
+        </header>
+
+        <div style="padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; animation: fadeIn 0.5s ease;">
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;">
+                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--accent);">
+                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Total de Escolas</div>
+                    <div id="kpi-total" style="font-size: 36px; font-weight: bold; margin-top: 10px;">0</div>
+                </div>
+                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--success);">
+                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Ativos</div>
+                    <div id="kpi-ativas" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--success);">0</div>
+                </div>
+                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--warning);">
+                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Pendentes</div>
+                    <div id="kpi-pendentes" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--warning);">0</div>
+                </div>
+                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--danger);">
+                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Bloqueados</div>
+                    <div id="kpi-bloqueados" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--danger);">0</div>
+                </div>
+            </div>
+
+            <div style="background: var(--card); border-radius: 12px; border: 1px solid #334155; overflow: hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid #334155; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+                    <h2 style="margin:0; font-weight:400; font-size:18px;">Escolas Gerenciadas</h2>
+                    
+                    <input type="text" id="pesquisa-admin" placeholder="🔍 Pesquisar e-mail ou plano..." oninput="Admin.filtrarTabela(this.value)" autocomplete="off" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
+                    <thead>
+                        <tr style="background: #0f172a; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                            <th style="padding: 15px 20px; width: 30%;">E-mail da Escola</th>
+                            <th style="padding: 15px 20px; width: 15%;">Plano Atual</th>
+                            <th style="padding: 15px 20px; width: 20%;">Status / PIN</th>
+                            <th style="padding: 15px 20px; text-align: right; width: 35%;">Ações de Gestão</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-clientes">
+                        <tr><td colspan="4" style="padding: 20px; text-align: center; color: #64748b;">Carregando dados...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-vip" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:450px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0; color:var(--success);">🚀 Cadastro VIP</h2>
+                <span onclick="Admin.fecharModalVip()" style="font-size:24px; color:#94a3b8; cursor:pointer;">&times;</span>
+            </div>
+            
+            <div id="vip-form-area">
+                <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">E-mail do Cliente:</label>
+                <input type="email" id="vip-email" placeholder="escola@email.com" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                
+                <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">WhatsApp (com DDD):</label>
+                <input type="text" id="vip-zap" placeholder="Ex: 11999999999" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                
+                <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Plano Contratado:</label>
+                <select id="vip-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                    <option value="Teste">⚪ Plano Teste (7 Dias)</option>
+                    <option value="Essencial">🟢 Essencial</option>
+                    <option value="Profissional">🔵 Profissional</option>
+                    <option value="Premium">🟡 Premium</option>
+                </select>
+                
+                <button id="btn-gerar-vip" onclick="Admin.gerarAcessoVip()" style="width:100%; padding:14px; border:none; border-radius:6px; background:var(--accent); color:white; font-weight:bold; font-size:15px; transition:0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Gerar PIN e Acesso Direto</button>
+            </div>
+
+            <div id="vip-result-area" style="display:none; text-align:center;">
+                <div style="background:#0f172a; border:1px solid #334155; padding:20px; border-radius:8px; margin-bottom:20px;">
+                    <div style="font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">PIN Exclusivo Gerado:</div>
+                    <div id="vip-pin-display" style="font-size:32px; font-weight:bold; color:var(--success); letter-spacing:3px;">PRO-1234</div>
+                </div>
+                
+                <a id="vip-zap-link" href="#" target="_blank" style="display:inline-block; width:100%; background:#25D366; color:white; padding:15px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; transition:0.3s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">
+                    📲 Enviar Acesso p/ WhatsApp
+                </a>
+                <button onclick="Admin.fecharModalVip()" style="width:100%; margin-top:10px; padding:12px; background:transparent; color:#94a3b8; border:none; font-size:13px; text-decoration:underline;">Fechar Janela</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-mudar-plano" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:400px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; color:var(--warning); border-bottom:1px solid #334155; padding-bottom:15px;">🔄 Atualizar Plano</h3>
+            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Selecione o novo pacote. Isto irá gerar um novo PIN de ativação para a escola.</p>
+            
+            <input type="hidden" id="mp-email">
+            
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Novo Plano Contratado:</label>
+            <select id="mp-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <option value="Teste">⚪ Plano Teste (7 Dias)</option>
+                <option value="Essencial">🟢 Essencial</option>
+                <option value="Profissional">🔵 Profissional</option>
+                <option value="Premium">🟡 Premium</option>
+            </select>
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="Admin.fecharModalMudarPlano()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
+                <button id="btn-confirmar-mp" onclick="Admin.confirmarMudancaPlano()" style="flex:1; padding:12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Atualizar Plano</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-excluir" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:450px; text-align:left; border:1px solid #dc2626; box-shadow: 0 10px 40px rgba(220, 38, 38, 0.3);">
+            <h3 style="margin-top:0; color:var(--danger); border-bottom:1px solid #334155; padding-bottom:15px;">⚠️ EXCLUSÃO DEFINITIVA</h3>
+            <p style="font-size:14px; color:#cbd5e1; margin-bottom:15px;">Você está prestes a apagar <strong>TODOS</strong> os dados, alunos, financeiro e o acesso da conta:</p>
+            <p id="excluir-email-display" style="font-weight:bold; color:var(--warning); font-size:16px; margin-bottom:15px; text-align:center;"></p>
+            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px; background:#0f172a; padding:10px; border-radius:6px; border-left:3px solid var(--warning);">
+                <strong>CONSELHO:</strong> Certifique-se de avisar o cliente para realizar o DOWNLOAD DO BACKUP antes de confirmar. Esta ação NÃO pode ser desfeita.
+            </p>
+            
+            <input type="hidden" id="excluir-email">
+            
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Para confirmar, digite EXCLUIR abaixo:</label>
+            <input type="text" id="input-confirmar-exclusao" placeholder="EXCLUIR" autocomplete="off" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; text-transform:uppercase;">
+            
+            <div style="display:flex; gap:10px;">
+                <button onclick="Admin.fecharModalExcluir()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
+                <button id="btn-confirmar-exclusao" onclick="Admin.confirmarExclusao()" style="flex:1; padding:12px; background:var(--danger); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='var(--danger)'">Apagar Tudo</button>
+            </div>
+        </div>
+    </div>    
+
+    <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+
+
+    <script>
+        const API_URL = CONFIG.API_URL;
+        let cacheClientes = [];
+
+        const Admin = {
+            escapeHTML: (str) => {
+                if (str === null || str === undefined) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            },
+
+            init: () => {
+                if(sessionStorage.getItem('token_master')) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'flex';
+                    Admin.carregarDados();
+                }
+            },
+
+            showToast: (msg, type='success') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.innerHTML = `<span>${type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️')}</span> <span>${Admin.escapeHTML(msg)}</span>`;
+                toast.style.background = 'var(--card)';
+                toast.style.borderLeft = `4px solid ${type === 'success' ? 'var(--success)' : (type === 'error' ? 'var(--danger)' : 'var(--warning)')}`;
+                toast.style.color = 'white'; toast.style.padding = '15px 20px'; toast.style.borderRadius = '6px';
+                toast.style.boxShadow = '0 10px 15px rgba(0,0,0,0.5)'; toast.style.display = 'flex'; toast.style.alignItems = 'center'; toast.style.gap = '10px'; toast.style.fontSize = '14px'; toast.style.animation = 'fadeIn 0.3s ease';
+                container.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+            },
+
+            login: async () => {
+                const pwd = document.getElementById('master-pwd').value;
+                if(!pwd) return Admin.showToast("Digite a senha.", "warning");
+
+                const btn = document.querySelector('.login-box button');
+                const txtOrig = btn.innerText;
+                btn.innerText = "Autenticando... ⏳";
+                btn.disabled = true;
+                
+                const errEl = document.getElementById('login-error');
+                errEl.style.display = 'none';
+
+                try {
+                    const res = await fetch(`${API_URL}/master/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ senha: pwd })
+                    });
+                    
+                    let data;
+                    try { data = await res.json(); } catch(e) { data = { error: "Erro crítico no servidor." }; }
+                    
+                    if(res.ok && data.success && data.token) {
+                        sessionStorage.setItem('token_master', data.token);
+                        document.getElementById('master-pwd').value = '';
+                        Admin.init();
+                    } else {
+                        errEl.innerText = data.error || "Acesso negado!";
+                        errEl.style.display = 'block';
+                    }
+                } catch(e) { 
+                    Admin.showToast("Erro de rede. O servidor pode estar a iniciar, aguarde...", "error"); 
+                } finally {
+                    btn.innerText = txtOrig;
+                    btn.disabled = false;
+                }
+            },
+
+            logout: () => {
+                sessionStorage.removeItem('token_master');
+                window.location.reload();
+            },
+
+            carregarDados: async () => {
+                const token = sessionStorage.getItem('token_master');
+                try {
+                    const res = await fetch(`${API_URL}/master/ativacoes`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if(res.status === 401 || res.status === 403) return Admin.logout();
+                    
+                    const lista = await res.json();
+                    cacheClientes = lista;
+                    
+                    document.getElementById('kpi-total').innerText = lista.length;
+                    document.getElementById('kpi-ativas').innerText = lista.filter(l => l.status === 'Verificado').length;
+                    document.getElementById('kpi-pendentes').innerText = lista.filter(l => l.status === 'Pendente').length;
+                    document.getElementById('kpi-bloqueados').innerText = lista.filter(l => l.status === 'Bloqueado').length;
+
+                    Admin.desenharTabela(cacheClientes);
+                } catch(e) { console.error(e); Admin.showToast("Erro ao carregar lista", "error"); }
+            },
+
+            desenharTabela: (lista) => {
+                const tbody = document.getElementById('tabela-clientes');
+                if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Nenhuma escola encontrada.</td></tr>'; return; }
+                
+                tbody.innerHTML = lista.map(c => {
+                    const rawEmail = (c.email || "").trim().toLowerCase();
+                    const safeEmail = Admin.escapeHTML(rawEmail);
+                    
+                    // 🛡️ Segurança: Substitui aspas para não quebrar os eventos 'onclick'
+                    const jsSafeEmail = rawEmail.replace(/'/g, "\\'");
+                    const jsSafePinAtivacao = c.pinAtivacao ? String(c.pinAtivacao).replace(/'/g, "\\'") : '';
+
+                    let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
+                    let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '<span style="color:#64748b;">Aguardando...</span>');
+                    
+                    let planoNome = c.plano;
+                    if (!planoNome || planoNome === 'Aguardando' || planoNome === 'Teste') {
+                        if (c.pinAtivacao) {
+                            const pinUpper = c.pinAtivacao.toUpperCase();
+                            if (pinUpper.includes('PRE')) planoNome = 'Premium';
+                            else if (pinUpper.includes('PRO')) planoNome = 'Profissional';
+                            else if (pinUpper.includes('ESS')) planoNome = 'Essencial';
+                            else planoNome = 'Liberado'; 
+                        } else {
+                            planoNome = 'Pendente';
+                        }
+                    }
+
+                    const jsSafePlano = planoNome ? String(planoNome).replace(/'/g, "\\'") : '';
+
+                    let planoClass = 'bg-gray';
+                    let planoDisplay = planoNome;
+                    
+                    if(planoNome === 'Essencial') planoClass = 'plan-essencial';
+                    else if(planoNome === 'Profissional') planoClass = 'plan-profissional';
+                    else if(planoNome === 'Premium') planoClass = 'plan-premium';
+                    else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
+
+                    const safeStatus = Admin.escapeHTML(c.status);
+
+                    return `
+                    <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:15px; font-weight:bold; max-width: 250px; word-break: break-all; white-space: normal;">${safeEmail}</td>
+                        <td style="padding:15px;">
+                            <span class="${planoClass}">${Admin.escapeHTML(planoDisplay)}</span>
+                        </td>
+                        <td style="padding:15px; font-family:monospace;">
+                            <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-right: 10px; ${badgeClass}">${safeStatus}</span>
+                            ${statusPin}
+                        </td>
+                        <td style="padding:15px; text-align:right; white-space: nowrap;">
+                            <button onclick="Admin.abrirModalMudarPlano('${jsSafeEmail}', '${jsSafePlano}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
+                            
+                           ${jsSafePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + jsSafePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
+                            <button onclick="Admin.copiarAcesso('${jsSafeEmail}', '${jsSafePinAtivacao}', '${jsSafePlano === 'Liberado' ? 'VIP' : jsSafePlano}')" style="background:#475569; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
+                            
+                            <button onclick="Admin.bloquear('${jsSafeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
+                            <button onclick="Admin.excluir('${jsSafeEmail}')" style="background:#000000; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#333333'" onmouseout="this.style.background='#000000'" title="Excluir Definitivamente">🗑️ Excluir</button>
+                        </td>
+                    </tr>
+                `}).join('');
+            },
+
+            filtrarTabela: (termo) => {
+                const t = termo.toLowerCase().trim();
+                const filtrados = cacheClientes.filter(c => 
+                    (c.email && c.email.toLowerCase().includes(t)) || 
+                    (c.plano && c.plano.toLowerCase().includes(t)) || 
+                    (c.status && c.status.toLowerCase().includes(t)) || 
+                    (c.pinAtivacao && c.pinAtivacao.toLowerCase().includes(t))
+                );
+                Admin.desenharTabela(filtrados);
+            },
+
+            abrirModalMudarPlano: (email, planoAtual) => {
+                document.getElementById('mp-email').value = email;
+                const select = document.getElementById('mp-plano');
+                for(let i = 0; i < select.options.length; i++) {
+                    if(select.options[i].value === planoAtual) select.selectedIndex = i;
+                }
+                document.getElementById('modal-mudar-plano').style.display = 'flex';
+            },
+
+            fecharModalMudarPlano: () => { document.getElementById('modal-mudar-plano').style.display = 'none'; },
+
+            confirmarMudancaPlano: async () => {
+                // 🛡️ Segurança: Trim e LowerCase obrigatório
+                const email = document.getElementById('mp-email').value.trim().toLowerCase();
+                const plano = document.getElementById('mp-plano').value;
+                const token = sessionStorage.getItem('token_master');
+                const btn = document.getElementById('btn-confirmar-mp');
+                btn.innerText = "A atualizar... ⏳"; btn.disabled = true;
+                
+                try {
+                    const res = await fetch(`${API_URL}/master/gerar-pin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ email, plano })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        Admin.showToast(`Plano atualizado para ${plano}! Novo PIN gerado: ${data.pin}`, 'success');
+                        Admin.fecharModalMudarPlano();
+                        Admin.carregarDados(); 
+                    } else { Admin.showToast(data.error || "Erro ao gerar novo PIN da API.", "error"); }
+                } catch(e) { Admin.showToast("Erro de comunicação com o servidor.", "error"); } 
+                finally { btn.innerText = "Atualizar Plano"; btn.disabled = false; }
+            },
+
+            abrirModalVip: () => {
+                document.getElementById('vip-email').value = '';
+                document.getElementById('vip-zap').value = '';
+                document.getElementById('vip-plano').value = 'Essencial';
+                document.getElementById('vip-form-area').style.display = 'block';
+                document.getElementById('vip-result-area').style.display = 'none';
+                document.getElementById('modal-vip').style.display = 'flex';
+            },
+
+            fecharModalVip: () => { document.getElementById('modal-vip').style.display = 'none'; },
+
+            gerarAcessoVip: async () => {
+                // 🛡️ Segurança: Trim e LowerCase obrigatório
+                const email = document.getElementById('vip-email').value.trim().toLowerCase();
+                const zap = document.getElementById('vip-zap').value.replace(/\D/g, ''); 
+                const plano = document.getElementById('vip-plano').value;
+                
+                if(!email) return Admin.showToast("E-mail é obrigatório!", "error");
+
+                const btn = document.getElementById('btn-gerar-vip');
+                btn.innerText = "A processar... ⏳"; btn.disabled = true;
+
+                const token = sessionStorage.getItem('token_master');
+                try {
+                    const res = await fetch(`${API_URL}/master/gerar-pin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ email, plano })
+                    });
+                    const data = await res.json();
+                    
+                    if(data.success) {
+                        const pin = data.pin;
+                        const urlSistema = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+                        
+                        // 🚀 ATENÇÃO: Removi os asteriscos do *${pin}* para evitar que copiem os "estrelinhas"
+                        const msg = `Olá! A sua conta VIP foi criada no plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar o seu sistema agora mesmo:* \n1. Aceda ao portal: ${urlSistema}\n2. Clique em "Nova Instituição" e coloque o seu e-mail: *${email}*\n3. O sistema enviará um código de segurança rápido para o seu e-mail.\n4. Insira esse código junto com o seu PIN de Ativação VIP: ${pin}\n\nPronto! O seu sistema será destravado automaticamente. Boas vendas!`;
+                        
+                        const linkZap = zap ? `https://wa.me/${zap.length <= 11 ? '55'+zap : zap}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                        
+                        document.getElementById('vip-pin-display').innerText = pin;
+                        document.getElementById('vip-zap-link').href = linkZap;
+                        
+                        document.getElementById('vip-form-area').style.display = 'none';
+                        document.getElementById('vip-result-area').style.display = 'block';
+                        
+                        Admin.showToast("Acesso VIP gerado!", "success");
+                        Admin.carregarDados(); 
+                    } else { Admin.showToast(data.error || "Erro ao gerar PIN da API.", "error"); }
+                } catch(e) { Admin.showToast("Erro de comunicação com o servidor.", "error"); } 
+                finally { btn.innerText = "Gerar PIN e Acesso Direto"; btn.disabled = false; }
+            },
+
+            copiarAcesso: (email, pin, plano) => {
+                const urlSistema = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
+                
+                // 🚀 ATENÇÃO: Removi os asteriscos do PIN para proteger contra falha no 'Colar'
+                const mensagem = `Olá! A sua conta foi atualizada para o plano *${plano.toUpperCase()}* 🚀\n\n*Para ativar:* \n1. Aceda a: ${urlSistema}\n2. Vá ao menu "💎 Meu Plano"\n3. Insira o PIN Exclusivo: ${pin}\n\nQualquer dúvida, estamos à disposição!`;
+                
+                // 🛡️ Fallback para quando não se usa HTTPS (quebrava a função copiar silenciosamente)
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(mensagem).then(() => {
+                        Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
+                    }).catch(err => {
+                        Admin.showToast("Erro ao copiar.", "error");
+                    });
+                } else {
+                    let textArea = document.createElement("textarea");
+                    textArea.value = mensagem;
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        Admin.showToast("Copiado! Só colar no WhatsApp do cliente.", "success");
+                    } catch (err) {
+                        Admin.showToast("Erro ao copiar. Use o botão do WhatsApp.", "error");
+                    }
+                    document.body.removeChild(textArea);
+                }
+            },
+
+            bloquear: async (email) => {
+                if(!confirm(`Tem a certeza que deseja bloquear o acesso de ${email}?`)) return;
+                const token = sessionStorage.getItem('token_master');
+                try {
+                    const res = await fetch(`${API_URL}/master/bloquear`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        // 🛡️ Segurança: Trim e LowerCase obrigatório
+                        body: JSON.stringify({ email: email.trim().toLowerCase() })
+                    });
+                    const data = await res.json();
+                    if(data.success) { Admin.showToast('Conta bloqueada.', 'success'); Admin.carregarDados(); }
+                } catch(e) { Admin.showToast('Erro ao bloquear.', 'error'); }
+            },
+            
+            // NOVAS FUNÇÕES DE EXCLUSÃO SEGURA
+            abrirModalExcluir: (email) => {
+                document.getElementById('excluir-email').value = email;
+                document.getElementById('excluir-email-display').innerText = email;
+                document.getElementById('input-confirmar-exclusao').value = '';
+                document.getElementById('modal-excluir').style.display = 'flex';
+            },
+
+            fecharModalExcluir: () => {
+                document.getElementById('modal-excluir').style.display = 'none';
+            },
+
+            excluir: (email) => {
+                Admin.abrirModalExcluir(email);
+            },
+
+            confirmarExclusao: async () => {
+                const email = document.getElementById('excluir-email').value;
+                const confirmacao = document.getElementById('input-confirmar-exclusao').value.trim().toUpperCase();
+
+                if(confirmacao !== "EXCLUIR") {
+                    return Admin.showToast("Palavra de segurança incorreta. Digite EXCLUIR.", "warning");
+                }
+
+                const token = sessionStorage.getItem('token_master');
+                const btn = document.getElementById('btn-confirmar-exclusao');
+                btn.innerText = "Apagando... ⏳"; btn.disabled = true;
+
+                try {
+                    const res = await fetch(`${API_URL}/master/excluir-conta`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ email: email })
+                    });
+                    
+                    const data = await res.json();
+                    if(data.success) { 
+                        Admin.showToast('Conta obliterada com sucesso!', 'success'); 
+                        Admin.fecharModalExcluir();
+                        Admin.carregarDados(); 
+                    } else {
+                        Admin.showToast(data.error || 'Erro ao excluir conta.', 'error');
+                    }
+                } catch(e) { 
+                    Admin.showToast('Erro crítico de comunicação com o servidor.', 'error'); 
+                } finally {
+                    btn.innerText = "Apagar Tudo"; btn.disabled = false;
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', Admin.init);
+    </script>
+</body>
+</html>
