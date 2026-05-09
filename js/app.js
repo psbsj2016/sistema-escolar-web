@@ -2227,6 +2227,122 @@ validarCadastroInst: async () => {
         }
     },
 
+     // =========================================================
+    // 🎨 RENDERIZAR LISTA DE NOTIFICAÇÕES (COM BOTÃO RESOLVER)
+    // =========================================================
+    renderizarNotificacoes: (notificacoes) => {
+        const container = document.getElementById('noti-list');
+        if (!container) return;
+
+        // Se não houver nada, mostra a mensagem de tudo limpo
+        if (!notificacoes || notificacoes.length === 0) {
+            container.innerHTML = `
+                <div style="padding:20px; text-align:center; color:#94a3b8;">
+                    <div style="font-size:30px; margin-bottom:10px;">✅</div>
+                    <div style="font-weight:600; font-size:14px;">Tudo resolvido por aqui!</div>
+                    <div style="font-size:12px; opacity:0.7;">Nenhuma pendência pendente.</div>
+                </div>`;
+            return;
+        }
+
+        // Gera o HTML de cada notificação com o botão de ação manual
+        container.innerHTML = notificacoes.map(n => `
+            <div class="noti-item" id="noti-${n.id}" style="display:flex; gap:12px; padding:15px; border-bottom:1px solid rgba(0,0,0,0.05); align-items: flex-start; transition: background 0.2s;">
+                <div class="noti-icon" style="font-size:20px; margin-top:2px;">🔔</div>
+                <div style="flex:1;">
+                    <strong style="color: var(--accent); display:block; margin-bottom:3px; font-size:14px;">${n.titulo}</strong>
+                    <span style="font-size: 13px; color:#555; line-height:1.4; display:block; margin-bottom:10px;">${n.mensagem}</span>
+                    
+                    <button onclick="App.resolverNotificacao('${n.id}')" 
+                            style="background: #27ae60; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; transition: 0.2s;"
+                            onmouseover="this.style.background='#219150'" 
+                            onmouseout="this.style.background='#27ae60'">
+                        <span>✅</span> Marcar como Resolvido
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // =========================================================
+    // ✅ RESOLVER NOTIFICAÇÃO MANUALMENTE
+    // =========================================================
+    resolverNotificacao: async (id) => {
+        try {
+            // 1. Avisa o servidor (com o cookie de segurança incluído)
+            await fetch(`${CONFIG.API_URL}/sistema/notificacoes/lida/${id}`, {
+                method: 'PUT',
+                credentials: 'include'
+            });
+
+            // 2. Remove o item visualmente da lista na mesma hora
+            const item = document.getElementById(`noti-${id}`);
+            if (item) item.remove();
+
+            // 3. Atualiza o número no sininho
+            const badge = document.getElementById('noti-badge');
+            if (badge) {
+                let qtdAtual = parseInt(badge.innerText) || 0;
+                qtdAtual = qtdAtual - 1;
+                
+                if (qtdAtual > 0) {
+                    badge.innerText = qtdAtual;
+                } else {
+                    badge.style.display = 'none'; // Esconde se chegar a zero
+                    // Se a lista ficar vazia, avisa visualmente
+                    const lista = document.getElementById('noti-list'); // Ajuste para o ID da sua div de lista
+                    if(lista) lista.innerHTML = '<div style="padding:15px; text-align:center; color:#999;">Tudo resolvido! ✅</div>';
+                }
+            }
+
+            // 4. Remove da memória do Radar para não reaparecer no próximo ciclo
+            if (App.notificacoesAtuais) {
+                App.notificacoesAtuais = App.notificacoesAtuais.filter(notifId => notifId !== id);
+            }
+
+        } catch (error) {
+            console.error("Erro ao resolver:", error);
+            if(typeof App.showToast === 'function') App.showToast("Erro ao comunicar com o servidor.", "error");
+        }
+    },
+
+    // =========================================================
+    // 🎨 RENDERIZAR LISTA DE NOTIFICAÇÕES (COM BOTÃO RESOLVER)
+    // =========================================================
+    renderizarNotificacoes: (notificacoes) => {
+        const container = document.getElementById('noti-list');
+        if (!container) return;
+
+        // Se não houver nada, mostra a mensagem de tudo limpo
+        if (!notificacoes || notificacoes.length === 0) {
+            container.innerHTML = `
+                <div style="padding:20px; text-align:center; color:#94a3b8;">
+                    <div style="font-size:30px; margin-bottom:10px;">✅</div>
+                    <div style="font-weight:600; font-size:14px;">Tudo resolvido por aqui!</div>
+                    <div style="font-size:12px; opacity:0.7;">Nenhuma pendência.</div>
+                </div>`;
+            return;
+        }
+
+        // Gera o HTML de cada notificação com o botão de ação manual
+        container.innerHTML = notificacoes.map(n => `
+            <div class="noti-item" id="noti-${n.id}" style="display:flex; gap:12px; padding:15px; border-bottom:1px solid rgba(0,0,0,0.05); align-items: flex-start;">
+                <div class="noti-icon" style="font-size:20px; margin-top:2px;">🔔</div>
+                <div style="flex:1;">
+                    <strong style="color: var(--accent); display:block; margin-bottom:3px; font-size:14px;">${n.titulo}</strong>
+                    <span style="font-size: 13px; color:#555; line-height:1.4; display:block; margin-bottom:10px;">${n.mensagem}</span>
+                    
+                    <button onclick="App.resolverNotificacao('${n.id}')" 
+                            style="background: #27ae60; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; transition: 0.2s;"
+                            onmouseover="this.style.background='#219150'" 
+                            onmouseout="this.style.background='#27ae60'">
+                        <span>✅</span> Marcar como Resolvido
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    },
+
     iniciarRadar: () => {
         if (App.radarAtivo) clearInterval(App.radarAtivo); // Limpa radares antigos
         App.verificarNovidadesSilenciosamente(); // Faz a primeira leitura imediatamente
@@ -2996,6 +3112,7 @@ salvarCustomizacaoMatricula: async function() {
         // Usa a tua rota existente "PUT /escola"
         const res = await fetch(`${CONFIG.API_URL}/escola`, {
             method: 'PUT',
+            credentials: 'include',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem(App.getTenantKey('token_acesso'))}` 
