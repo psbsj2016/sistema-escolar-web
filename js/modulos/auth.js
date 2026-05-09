@@ -1,3 +1,6 @@
+window.App = window.App || {};
+const App = window.App;
+
 // =========================================================
 // MÓDULO AUTH - LOGIN, LOGOUT, SENHA, BIOMETRIA E BLOQUEIO
 // =========================================================
