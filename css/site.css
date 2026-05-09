@@ -771,3 +771,25 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 .admin-portal-body .plan-profissional { border: 1px solid #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .admin-portal-body .plan-premium { border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .admin-portal-body .plan-liberado { border: 1px solid #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+
+/* 7. TABELAS DO ADMIN (Texto Branco e Bordas Ajustadas) */
+.admin-portal-body table th {
+    color: #94a3b8 !important; /* Cinza claro/azulado para o cabeçalho */
+    border-bottom: 1px solid #334155 !important;
+    background: transparent !important;
+}
+
+.admin-portal-body table td {
+    color: #ffffff !important; /* BRANCO ABSOLUTO para os e-mails e dados */
+    border-bottom: 1px solid #334155 !important;
+}
+
+.admin-portal-body table tr:hover td {
+    background: rgba(255, 255, 255, 0.05) !important; /* Efeito de brilho suave ao passar o rato */
+}
+
+/* Garante que qualquer link dentro da tabela também fique branco */
+.admin-portal-body table td a {
+    color: #ffffff !important;
+    font-weight: 600;
+}
