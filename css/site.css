@@ -674,3 +674,32 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         width: 100% !important;
     }
 }
+
+
+:root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #3b82f6; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        * { box-sizing: border-box; outline: none; }
+        
+        /* LOGIN DO CEO */
+        #login-screen { flex: 1; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; width: 350px; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #334155; border-radius: 6px; background: #0f172a; color: white; }
+        .login-box button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .login-box button:hover { background: #2563eb; }
+
+        /* SCROLLBAR & UX GERAL */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        button, select, input[type="checkbox"] { cursor: pointer !important; }
+        
+        /* ANIMAÇÕES */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Badges de Status e Plano */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .plan-essencial { border: 1px solid #94a3b8; color: #cbd5e1; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-profissional { border: 1px solid #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-premium { border: 1px solid #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .plan-liberado { border: 1px solid #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }

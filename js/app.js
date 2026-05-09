@@ -1,12 +1,16 @@
 window.CONFIG = window.CONFIG || {};
 window.App = window.App || {};
+window.Admin = window.Admin || {}; 
+
+// Pontes de escopo necessárias para o funcionamento do Vite
 const CONFIG = window.CONFIG;
 const App = window.App;
+
 // =========================================================
 // SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
 // =========================================================
 
-const API_URL = CONFIG.API_URL; 
+const API_URL = CONFIG.API_URL;
 
 // 🛡️ Mapeamento de funcionalidades por Cargo
 const LISTA_FUNCIONALIDADES = [
@@ -516,15 +520,19 @@ if (!escola || escola.error) {
     },
 
     entrarNoSistema: async () => {
-        document.getElementById('tela-login').style.display = 'none';
-        document.getElementById('tela-sistema').style.display = 'flex';
+        // O operador ?. impede que o código quebre se o ID não existir na página atual
+        document.getElementById('tela-login')?.style.setProperty('display', 'none');
+        document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
+        
         const el = document.getElementById('user-name');
         if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+        
         App.aplicarPermissoesDeUsuario(); 
         
         await App.carregarDadosEscola();
         
-        if (document.getElementById('tela-sistema').style.display !== 'none') {
+        const telaSistema = document.getElementById('tela-sistema');
+        if (telaSistema && telaSistema.style.display !== 'none') {
             App.renderizarInicio();
         }
     },
