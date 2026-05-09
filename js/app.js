@@ -530,7 +530,9 @@ if (!escola || escola.error) {
         App.aplicarPermissoesDeUsuario(); 
         
         await App.carregarDadosEscola();
-        
+        // 🚀 LIGA O RADAR AQUI!
+        App.iniciarRadar();        
+
         const telaSistema = document.getElementById('tela-sistema');
         if (telaSistema && telaSistema.style.display !== 'none') {
             App.renderizarInicio();
@@ -538,7 +540,9 @@ if (!escola || escola.error) {
     },
 
    logout: async () => {
-    try {
+   // 🛑 DESLIGA O RADAR
+        if (App.radarAtivo) clearInterval(App.radarAtivo); 
+   try {
         await fetch(`${API_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
@@ -2162,6 +2166,73 @@ validarCadastroInst: async () => {
         } catch(e) { console.log("Carregando perfil..."); } 
     },
     
+    // =========================================================
+    // 📡 RADAR SILENCIOSO (Notificações e Matrículas em Tempo Real)
+    // =========================================================
+    verificarNovidadesSilenciosamente: async () => {
+        if (!App.usuario) return; // Só funciona se o utilizador estiver logado
+
+        try {
+            const res = await fetch(`${CONFIG.API_URL}/sistema/notificacoes/nao-lidas`, {
+                credentials: 'include' // Essencial para passar o token JWT seguro
+            });
+
+            if (!res.ok) return;
+            const notificacoes = await res.json();
+
+            // 1. Atualiza o número vermelho no sininho
+            const badge = document.getElementById('noti-badge');
+            if (badge) {
+                badge.innerText = notificacoes.length;
+                badge.style.display = notificacoes.length > 0 ? 'flex' : 'none';
+            }
+
+            // 2. Compara com a memória para saber se algo REALMENTE novo chegou agora
+            const idsAtuais = App.notificacoesAtuais || [];
+            const idsNovos = notificacoes.map(n => n.id);
+            const temCoisaNova = idsNovos.some(id => !idsAtuais.includes(id));
+
+            if (temCoisaNova) {
+                App.notificacoesAtuais = idsNovos; // Atualiza a memória do radar
+
+                // Atualiza a lista visual do dropdown do sininho (se a função existir)
+                if (typeof App.renderizarNotificacoes === 'function') {
+                    App.renderizarNotificacoes(notificacoes);
+                }
+
+                // 🚀 A MÁGICA: Deteta se a novidade é uma Matrícula
+                const temNovaMatricula = notificacoes.some(n => 
+                    (n.tipo === 'matricula' || n.tipo === 'matricula_contrato') && !idsAtuais.includes(n.id)
+                );
+
+                if (temNovaMatricula) {
+                    // Puxa os dados atualizados do banco no background (trazendo o aluno novo)
+                    if (typeof App.carregarDadosEscola === 'function') {
+                        await App.carregarDadosEscola();
+                    }
+                    
+                    // Se o diretor estiver exatamente na tela de 'alunos', recarrega a tabela para o aluno surgir na hora
+                    if (App.telaAtual === 'alunos' && typeof App.renderizarTela === 'function') {
+                        App.renderizarTela('alunos');
+                    }
+                    
+                    // Mostra um aviso verde na tela
+                    if (typeof App.showToast === 'function') {
+                        App.showToast("🎉 Nova matrícula online recebida agora!", "success");
+                    }
+                }
+            }
+        } catch (error) {
+            // Silencioso. Se a internet falhar num segundo, não suja o console.
+        }
+    },
+
+    iniciarRadar: () => {
+        if (App.radarAtivo) clearInterval(App.radarAtivo); // Limpa radares antigos
+        App.verificarNovidadesSilenciosamente(); // Faz a primeira leitura imediatamente
+        App.radarAtivo = setInterval(App.verificarNovidadesSilenciosamente, 10000); // Roda a cada 10 segundos
+    },
+
     otimizarImagem: (file, maxWidth, callback) => { 
         const reader = new FileReader(); reader.readAsDataURL(file); 
         reader.onload = (event) => { 
