@@ -62,20 +62,55 @@ Object.assign(App, {
         }, 3000);
     },
 
-    setupMobileMenu: () => {
-        const header = document.querySelector('header');
-        if(header && !document.getElementById('btn-mobile-menu')) {
-            const btn = document.createElement('button'); btn.id = 'btn-mobile-menu'; btn.className = 'mobile-menu-btn'; btn.innerHTML = '☰';
-            btn.onclick = () => { document.querySelector('.sidebar').classList.toggle('active'); const overlay = document.querySelector('.mobile-overlay') || App.criarOverlay(); overlay.classList.toggle('active'); };
-            header.insertBefore(btn, header.firstChild); App.criarOverlay();
-        }
-    },
+   setupMobileMenu: () => {
+    const telaSistema = document.getElementById('tela-sistema');
+    const header = telaSistema
+        ? telaSistema.querySelector('header')
+        : document.querySelector('header');
+
+    const sidebar = document.querySelector('.sidebar');
+
+    if (!header || !sidebar) {
+        console.warn("Menu mobile não iniciado: header ou sidebar não encontrado.");
+        return;
+    }
+
+    if (!document.getElementById('btn-mobile-menu')) {
+        const btn = document.createElement('button');
+        btn.id = 'btn-mobile-menu';
+        btn.className = 'mobile-menu-btn';
+        btn.type = 'button';
+        btn.innerHTML = '☰';
+
+        btn.onclick = () => {
+            sidebar.classList.toggle('active');
+
+            const overlay = document.querySelector('.mobile-overlay') || App.criarOverlay();
+            overlay.classList.toggle('active');
+        };
+
+        header.insertBefore(btn, header.firstChild);
+    }
+
+    App.criarOverlay();
+},
+
     criarOverlay: () => {
-        if(document.querySelector('.mobile-overlay')) return document.querySelector('.mobile-overlay');
-        const overlay = document.createElement('div'); overlay.className = 'mobile-overlay';
-        overlay.onclick = () => { document.querySelector('.sidebar').classList.remove('active'); overlay.classList.remove('active'); };
-        document.body.appendChild(overlay); return overlay;
-    },
+    const existente = document.querySelector('.mobile-overlay');
+    if (existente) return existente;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'mobile-overlay';
+
+    overlay.onclick = () => {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    };
+
+    document.body.appendChild(overlay);
+    return overlay;
+},
 
     aplicarTemaSalvo: () => { 
         const tema = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema')));

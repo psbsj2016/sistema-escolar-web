@@ -279,8 +279,13 @@ if (!escola || escola.error) {
         App.aplicarPermissoesDeUsuario(); 
         
         await App.carregarDadosEscola();
-        // 🚀 LIGA O RADAR AQUI!
-        App.iniciarRadar();        
+
+if (typeof App.setupMobileMenu === 'function') {
+    App.setupMobileMenu();
+}
+
+// 🚀 LIGA O RADAR AQUI!
+App.iniciarRadar();        
 
         const telaSistema = document.getElementById('tela-sistema');
         if (telaSistema && telaSistema.style.display !== 'none') {
