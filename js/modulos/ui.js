@@ -116,7 +116,37 @@ Object.assign(App, {
         card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `<div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}${conteudo}</div>`,
         input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `<div class="input-group"><label>${label}</label><input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}></div>`,
         botao: (texto, acao, tipo = 'primary', icone = '') => { const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit'); return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`; },
-        colorPicker: (label, valor, varCss) => `<div class="theme-row"><label>${label}</label><input type="color" value="${valor}" oninput="App.previewCor('${varCss}', this.value)"></div>`
+        colorPicker: (label, valor, varCss) => {
+    const normalizarCor = (cor) => {
+        if (!cor) return '#000000';
+
+        cor = String(cor).trim();
+
+        const coresCurtas = {
+            '#fff': '#ffffff',
+            '#000': '#000000',
+            '#333': '#333333',
+            '#666': '#666666',
+            '#999': '#999999',
+            '#ccc': '#cccccc',
+            '#eee': '#eeeeee'
+        };
+
+        if (coresCurtas[cor.toLowerCase()]) {
+            return coresCurtas[cor.toLowerCase()];
+        }
+
+        if (/^#[0-9A-Fa-f]{6}$/.test(cor)) {
+            return cor;
+        }
+
+        return '#000000';
+    };
+
+    const corSegura = normalizarCor(valor);
+
+    return `<div class="theme-row"><label>${label}</label><input type="color" value="${corSegura}" oninput="App.previewCor('${varCss}', this.value)"></div>`;
+}
     }
 
 });
