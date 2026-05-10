@@ -5,6 +5,7 @@ import './js/modulos/ui.js';
 import './js/modulos/tema.js';
 import './js/modulos/auth.js';
 import './js/modulos/dashboard.js';
+import './js/modulos/notificacoes.js';
 import './js/admin.js';
 import './js/modulos/cadastros.js';
 import './js/modulos/financeiro.js';
