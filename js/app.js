@@ -13,7 +13,7 @@ const App = window.App;
 const API_URL = CONFIG.API_URL;
 
 // 🛡️ Mapeamento de funcionalidades por Cargo
-const LISTA_FUNCIONALIDADES = [
+window.LISTA_FUNCIONALIDADES = [
     { id: 'novo_aluno', nome: 'Novo Aluno', icon: '👨‍🎓', acao: "App.abrirModalCadastro('aluno')", roles: ['Gestor', 'Secretaria'] },
     { id: 'fin_carne', nome: 'Gerar Carnê', icon: '💸', acao: "App.renderizarTela('mensalidades')", roles: ['Gestor', 'Secretaria'] },
     { id: 'ped_chamada', nome: 'Fazer Chamada', icon: '📋', acao: "App.renderizarTela('chamada')", roles: ['Gestor', 'Secretaria', 'Professor'] },
@@ -307,7 +307,7 @@ validarCadastroInst: async () => {
             if (!idsAtalhos || !Array.isArray(idsAtalhos) || idsAtalhos.length === 0) { idsAtalhos = ['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol']; }
             
             const htmlAtalhos = idsAtalhos.map(id => { 
-                const func = LISTA_FUNCIONALIDADES.find(f => f.id === id); 
+                const func = (window.LISTA_FUNCIONALIDADES || []).find(f => f.id === id); 
                 if (func && func.roles.includes(tipoUtilizador)) {
                     return `<div class="shortcut-btn" onclick="${func.acao}"><div>${func.icon}</div><span>${func.nome}</span></div>`;
                 }
