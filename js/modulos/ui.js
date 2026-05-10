@@ -112,21 +112,7 @@ Object.assign(App, {
     return overlay;
 },
 
-    aplicarTemaSalvo: () => { 
-        const tema = JSON.parse(localStorage.getItem(App.getTenantKey('escola_tema')));
-        if (tema) {
-            const root = document.documentElement;
-            if(tema.sidebarBg) root.style.setProperty('--sidebar-bg', tema.sidebarBg); 
-            if(tema.sidebarText) root.style.setProperty('--sidebar-text', tema.sidebarText); 
-            if(tema.bodyBg) root.style.setProperty('--body-bg', tema.bodyBg); 
-            if(tema.textMain) root.style.setProperty('--text-main', tema.textMain); 
-            if(tema.cardBg) root.style.setProperty('--card-bg', tema.cardBg); 
-            if(tema.cardText) root.style.setProperty('--card-text', tema.cardText);
-            if(tema.zoomLevel) root.style.setProperty('--zoom-level', tema.zoomLevel);
-        } else { document.documentElement.removeAttribute('style'); }
-    },
-
-    UI: {
+   UI: {
         card: (titulo, subtitulo, conteudo, maxWidth = '100%') => `<div class="card" style="max-width: ${maxWidth}; margin: 0 auto;">${titulo ? `<h3 style="margin-top:0; color:var(--card-text); border-bottom:1px solid #eee; padding-bottom:10px;">${titulo}</h3>` : ''}${subtitulo ? `<p style="color:#666; margin-bottom:20px; font-size:13px;">${subtitulo}</p>` : ''}${conteudo}</div>`,
         input: (label, id, value = '', placeholder = '', tipo = 'text', extraAttr = '') => `<div class="input-group"><label>${label}</label><input type="${tipo}" id="${id}" value="${value}" placeholder="${placeholder}" ${extraAttr}></div>`,
         botao: (texto, acao, tipo = 'primary', icone = '') => { const btnClass = tipo === 'primary' ? 'btn-primary' : (tipo === 'cancel' ? 'btn-cancel' : 'btn-edit'); return `<button class="${btnClass}" style="width: auto; padding: 10px 20px;" onclick="${acao}">${icone} ${texto}</button>`; },
