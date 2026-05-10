@@ -172,6 +172,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
     const API_BASE = 'https://api.sistemaptt.com.br';
+    let escolaValida = false;
 
     // Mostra/Oculta painel do responsável caso o aluno seja menor
     document.getElementById('nascimento').addEventListener('change', function() {
@@ -203,8 +204,10 @@
             const res = await fetch(`${API_BASE}/public/escola/${escolaId}`);
             if(!res.ok) throw new Error("Escola não encontrada");
             const dados = await res.json();
-            
-            const config = dados.configMatricula || dados || {};
+
+escolaValida = true;
+
+const config = dados.configMatricula || dados || {};
             
             // Imagem de Cabeçalho
             if(config.imagemHeader) {
@@ -267,10 +270,26 @@
             atualizarContratoAoVivo();
             
         } catch (error) {
-            console.error("Erro ao carregar configurações da escola:", error);
-            window.textoContratoOriginal = document.getElementById('previewContrato').innerHTML;
-            atualizarContratoAoVivo();
-        }
+    console.error("Erro ao carregar configurações da escola:", error);
+
+    escolaValida = false;
+
+    document.getElementById('formMatricula').style.display = 'none';
+
+    const container = document.querySelector('.container');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px 20px;">
+                <div style="font-size:50px; margin-bottom:15px;">⚠️</div>
+                <h2 style="color:#c0392b;">Link de matrícula inválido</h2>
+                <p style="color:#666; font-size:15px;">
+                    Não foi possível identificar a instituição deste formulário.
+                    Solicite um novo link de matrícula.
+                </p>
+            </div>
+        `;
+    }
+}
     }
 
     // 2. Atualiza as tags do contrato em tempo real
@@ -307,6 +326,10 @@
      // 3. Envia a matrícula para o Sistema
     document.getElementById('formMatricula').addEventListener('submit', async function(e) {
         e.preventDefault();
+        if (!escolaId || !escolaValida) {
+    alert("Link de matrícula inválido. Solicite um novo link à instituição.");
+    return;
+}
         const btn = document.getElementById('btnSubmit');
         btn.innerText = "A Enviar ao Sistema..."; 
         btn.disabled = true;
