@@ -38,8 +38,7 @@
         .contrato-box strong { color: #2c3e50; }   
     </style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>  <script type="module" crossorigin src="/assets/main-Cpv8eZvu.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/main-FrmllSeQ.css">
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 </head>
 <body>
 
@@ -172,7 +171,7 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
-    const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG.API_URL) ? CONFIG.API_URL : 'https://sistema-escolar-api-k3o8.onrender.com';
+    const API_BASE = 'https://api.sistemaptt.com.br';
 
     // Mostra/Oculta painel do responsável caso o aluno seja menor
     document.getElementById('nascimento').addEventListener('change', function() {
