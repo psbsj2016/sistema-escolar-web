@@ -199,9 +199,18 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
-    const API_BASE = 'https://api.sistemaptt.com.br';
+    const API_BASE = window.location.origin + '/api';
     let escolaValida = false;
-
+ 
+    // Forçar a atualização do Service Worker sempre que carregar a página
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.update();
+        }
+    });
+}
+   
     // Mostra/Oculta painel do responsável caso o aluno seja menor
     document.getElementById('nascimento').addEventListener('change', function() {
         const nasc = new Date(this.value);
@@ -444,11 +453,16 @@
                 throw new Error(resultado.error || resultado.message || `Erro HTTP ${resposta.status}`); 
             }
         } catch (error) {
-           alert("Erro ao enviar matrícula: " + error.message);
-           btnFixo.innerText = "✅ Li e Concordo: Enviar Matrícula Oficial"; 
-           btnFixo.disabled = false;
-           btnFixo.style.opacity = '1';
-        }
+    Swal.fire({
+        icon: 'error',
+        title: 'Falha no Envio',
+        text: 'Não foi possível concluir a matrícula: ' + error.message,
+        confirmButtonColor: '#d33'
+    });
+    btnFixo.innerText = "✅ Li e Concordo: Enviar Matrícula Oficial"; 
+    btnFixo.disabled = false;
+    btnFixo.style.opacity = '1';
+}
     }
 
     // Inicia tudo
