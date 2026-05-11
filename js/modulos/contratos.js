@@ -206,8 +206,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
 
         const meuEscolaId = escola.escolaId;
 
-        const linkBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}`;
-        const linkBaseEscola = `${linkBase}matricula.html?escola=${encodeURIComponent(meuEscolaId)}`;
+        const linkBaseEscola = `${window.location.origin}/matricula?escola=${encodeURIComponent(meuEscolaId)}`;
 
         const links = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
 
