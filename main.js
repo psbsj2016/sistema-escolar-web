@@ -16,15 +16,19 @@ import './js/modulos/relatorios.js';
 // Importar o CSS
 import './css/site.css';
 
-import { registerSW } from 'virtual:pwa-register';
+import { registerSW } from 'virtual:pwa-register'
 
-// Regista o Service Worker gerado pelo Vite
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Aqui podemos invocar o seu banner de atualização se quisermos!
-    console.log("Nova versão disponível!");
+    // Mostra o seu banner de atualização!
+    const banner = document.getElementById('update-banner');
+    if (banner) {
+        banner.style.display = 'block';
+        // Se o utilizador clicar no botão "Atualizar" do seu banner:
+        // bannerBotao.addEventListener('click', () => updateSW(true))
+    }
   },
   onOfflineReady() {
-    console.log("App pronto para funcionar offline!");
+    console.log('App pronta para trabalhar offline!')
   },
 });
