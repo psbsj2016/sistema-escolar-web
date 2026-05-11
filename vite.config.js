@@ -17,7 +17,7 @@ export default defineConfig({
         start_url: "/",
         icons: [
           {
-            src: "assets/icone.png", // Certifique-se de ter imagens adequadas depois
+            src: "assets/icone.png", 
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable"
@@ -29,6 +29,11 @@ export default defineConfig({
             purpose: "any maskable"
           }
         ]
+      },
+      // 👇 A SOLUÇÃO MÁGICA ENTRA AQUI 👇
+      workbox: {
+        // Diz ao PWA para NÃO redirecionar estas páginas para o index.html
+        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/]
       }
     })
   ],
