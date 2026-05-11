@@ -35,7 +35,22 @@
             margin-bottom: 10px;
             line-height: 1.5;
         }
-        .contrato-box strong { color: #2c3e50; }   
+        .contrato-box strong { color: #2c3e50; } 
+   
+        #modalLeitura {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; overflow-y: auto; padding: 40px 20px;
+        }
+        .texto-contrato-gigante {
+            max-width: 800px; margin: 0 auto; font-size: 18px; line-height: 1.6; color: #2c3e50; text-align: justify;
+        }
+        .btn-fixo-leitura {
+            position: sticky; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #27ae60; color: white; padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: auto;
+        }        
+  
     </style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
@@ -134,38 +149,51 @@
                 <label>Plano de Curso *</label>
                 <select id="plano_curso" required>
                     <option value="">-- Selecione --</option>
-                    <option value="Padrão">Padrão</option>
-                    <option value="Intensivo">Intensivo</option>
-                    <option value="Personalizado">Personalizado</option>
                 </select>
             </div>
             <div class="input-group">
                 <label>Dia de Vencimento da Mensalidade *</label>
                 <select id="dia_vencimento" required>
                     <option value="">-- Selecione --</option>
-                    <option value="08">Dia 08</option>
-                    <option value="20">Dia 20</option>
                 </select>
             </div>
         </div>
+            
+        <div class="input-group">
+          <label>Horário de Preferência *</label>
+          <select id="horarioPreferencia" required>
+              <option value="">-- Selecione --</option>
+          </select>
+        </div>   
 
         <h3>4. Contrato de Prestação de Serviços</h3>
         <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
         
         <div id="previewContrato" class="contrato-box">
-            O presente contrato é firmado entre a instituição de ensino e o(a) aluno(a) [NOME_ALUNO], portador(a) do CPF [CPF_ALUNO] e RG [RG_ALUNO].<br><br>
-            Neste ato, fica estabelecido que o(a) aluno(a) cursará o plano: [PLANO_CURSO].<br><br>
-            Responsável Legal (quando aplicável): [NOME_RESPONSAVEL].<br><br>
-            Ao finalizar a matrícula, você concorda com os termos acima descritos.
+            A carregar o contrato da instituição...
         </div>
 
         <div class="termo">
             <input type="checkbox" id="aceito" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
-            <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que li e aceito todos os termos do contrato de prestação de serviços educacionais.</label>
+            <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que as informações acima são verdadeiras.</label>
         </div>
 
-        <button type="submit" id="btnSubmit">Concluir Matrícula</button>
+        <button type="submit" id="btnSubmit">Revisar e Concluir Matrícula</button>
     </form>
+</div>
+
+<div id="modalLeitura">
+    <div class="texto-contrato-gigante">
+        <h2 style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">Termo de Adesão e Matrícula</h2>
+        <div id="corpoContratoLeitura" style="margin-bottom: 40px; margin-top: 20px;"></div>
+        
+        <button onclick="enviarMatriculaDefinitiva()" class="btn-fixo-leitura">
+            ✅ Li e Concordo: Enviar Matrícula Oficial
+        </button>
+        <button onclick="fecharLeitura()" style="background:none; border:none; color:red; cursor:pointer; display:block; margin: 30px auto; text-decoration: underline;">
+            Voltar e Corrigir Dados
+        </button>
+    </div>
 </div>
 
 <script>
@@ -205,9 +233,8 @@
             if(!res.ok) throw new Error("Escola não encontrada");
             const dados = await res.json();
 
-escolaValida = true;
-
-const config = dados.configMatricula || dados || {};
+            escolaValida = true;
+            const config = dados.configMatricula || dados || {};
             
             // Imagem de Cabeçalho
             if(config.imagemHeader) {
@@ -244,10 +271,21 @@ const config = dados.configMatricula || dados || {};
                 });
             }
 
+            // AQUI ESTÁ A CORREÇÃO DO HORÁRIO! (Dentro da função, lendo do banco de dados)
+            const horariosRaw = config.horarios || 'Manhã, Tarde, Noite';
+            const selectHorario = document.getElementById('horarioPreferencia');
+            selectHorario.innerHTML = '<option value="">-- Selecione --</option>';
+            horariosRaw.split(',').forEach(h => {
+                const option = document.createElement('option');
+                option.value = h.trim();
+                option.innerText = h.trim();
+                selectHorario.appendChild(option);
+            });
+
             // Logo e Cores
             if(config.corSecundaria) {
                 document.querySelector('.container').style.borderTopColor = config.corSecundaria;
-                document.querySelectorAll('h3, button').forEach(el => el.style.color = config.corSecundaria || '#3498db');
+                document.querySelectorAll('h3, button:not(.btn-fixo-leitura)').forEach(el => el.style.color = config.corSecundaria || '#3498db');
                 document.getElementById('btnSubmit').style.backgroundColor = config.corSecundaria;
                 document.getElementById('btnSubmit').style.color = '#ffffff';
             }
@@ -264,32 +302,29 @@ const config = dados.configMatricula || dados || {};
                 return txt.value;
             }
 
-            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : document.getElementById('previewContrato').innerHTML;
+            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : "Contrato padrão da instituição...";
             window.textoContratoOriginal = contratoFormatado;
 
             atualizarContratoAoVivo();
             
         } catch (error) {
-    console.error("Erro ao carregar configurações da escola:", error);
-
-    escolaValida = false;
-
-    document.getElementById('formMatricula').style.display = 'none';
-
-    const container = document.querySelector('.container');
-    if (container) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:40px 20px;">
-                <div style="font-size:50px; margin-bottom:15px;">⚠️</div>
-                <h2 style="color:#c0392b;">Link de matrícula inválido</h2>
-                <p style="color:#666; font-size:15px;">
-                    Não foi possível identificar a instituição deste formulário.
-                    Solicite um novo link de matrícula.
-                </p>
-            </div>
-        `;
-    }
-}
+            console.error("Erro ao carregar configurações da escola:", error);
+            escolaValida = false;
+            document.getElementById('formMatricula').style.display = 'none';
+            const container = document.querySelector('.container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:40px 20px;">
+                        <div style="font-size:50px; margin-bottom:15px;">⚠️</div>
+                        <h2 style="color:#c0392b;">Link de matrícula inválido</h2>
+                        <p style="color:#666; font-size:15px;">
+                            Não foi possível identificar a instituição deste formulário.
+                            Solicite um novo link de matrícula.
+                        </p>
+                    </div>
+                `;
+            }
+        }
     }
 
     // 2. Atualiza as tags do contrato em tempo real
@@ -312,10 +347,10 @@ const config = dados.configMatricula || dados || {};
         texto = texto.replace(/\[PLANO_CURSO\]/g, `<strong style="color:#2c3e50;">${plano.toUpperCase()}</strong>`);
         
         document.getElementById('previewContrato').innerHTML = DOMPurify.sanitize(texto, {
-    USE_PROFILES: { html: true },
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
-    ALLOWED_ATTR: ['style', 'class']
-});
+            USE_PROFILES: { html: true },
+            ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
+            ALLOWED_ATTR: ['style', 'class']
+        });
     }
 
     document.querySelectorAll('input, select').forEach(el => {
@@ -323,18 +358,36 @@ const config = dados.configMatricula || dados || {};
         el.addEventListener('change', atualizarContratoAoVivo);
     });
 
-     // 3. Envia a matrícula para o Sistema
-    document.getElementById('formMatricula').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    // 3. Apenas Abre o Modal Gigante de Leitura
+    document.getElementById('formMatricula').addEventListener('submit', function(e) {
+        e.preventDefault(); // Impede o envio real
+        
         if (!escolaId || !escolaValida) {
-    alert("Link de matrícula inválido. Solicite um novo link à instituição.");
-    return;
-}
-        const btn = document.getElementById('btnSubmit');
-        btn.innerText = "A Enviar ao Sistema..."; 
-        btn.disabled = true;
+            alert("Link de matrícula inválido. Solicite um novo link à instituição.");
+            return;
+        }
 
-        // 🚀 PAYLOAD CORRIGIDO (IDs agora batem 100% com o seu HTML)
+        // Pega o HTML limpo do contrato atualizado e joga para o modal
+        const textoContrato = document.getElementById('previewContrato').innerHTML;
+        document.getElementById('corpoContratoLeitura').innerHTML = textoContrato;
+        
+        // Exibe o modal e sobe para o topo
+        document.getElementById('modalLeitura').style.display = 'block';
+        window.scrollTo(0, 0);
+    });
+
+    // 4. Funções de Controle do Modal
+    function fecharLeitura() {
+        document.getElementById('modalLeitura').style.display = 'none';
+    }
+
+    async function enviarMatriculaDefinitiva() {
+        const btnFixo = document.querySelector('.btn-fixo-leitura');
+        btnFixo.innerText = "A Enviar ao Sistema... ⏳"; 
+        btnFixo.disabled = true;
+        btnFixo.style.opacity = '0.7';
+
+        // PAYLOAD COM TODOS OS DADOS (Incluindo o horarioPreferencia)
         const payload = {
             escolaId: escolaId,
             refLink: urlParams.get('ref') || 'Direto',
@@ -343,41 +396,31 @@ const config = dados.configMatricula || dados || {};
             email: document.getElementById('email')?.value || '',
             whatsapp: document.getElementById('whatsapp')?.value || '',
             
-            // Dados para o Cofre de Contratos e Ficha do Aluno
             rg: document.getElementById('rg')?.value || '',
             nascimento: document.getElementById('nascimento')?.value || '',
             sexo: document.getElementById('sexo')?.value || '',
             profissao: document.getElementById('profissao')?.value || '',
             
-            // Endereço
             rua: document.getElementById('rua')?.value || '',
             numero: document.getElementById('numero')?.value || '',
             bairro: document.getElementById('bairro')?.value || '',
             cidade: document.getElementById('cidade')?.value || '',
-            estado: document.getElementById('estado')?.value || '', // Se não houver no form, vai vazio
+            estado: document.getElementById('estado')?.value || '',
             pais: document.getElementById('pais')?.value || 'Brasil',
             
-            // Dados Académicos e Financeiros (IDs CORRIGIDOS AQUI 👇)
-            curso: document.getElementById('curso')?.value || '', // Se não houver, vai vazio
-            turma: document.getElementById('turma')?.value || '', // Se não houver, vai vazio
+            curso: document.getElementById('curso')?.value || '', 
+            turma: document.getElementById('turma')?.value || '', 
             planoCurso: document.getElementById('plano_curso')?.value || '', 
             diaVencimento: document.getElementById('dia_vencimento')?.value || '',
             
-            // Dados do Responsável Legal
+            horarioPreferencia: document.getElementById('horarioPreferencia')?.value || '', // 🚀 O novo campo a ser salvo!
+            
             resp_nome: document.getElementById('resp_nome')?.value || '',
             resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
             resp_cpf: document.getElementById('resp_cpf')?.value || '',
             resp_zap: document.getElementById('resp_zap')?.value || '',
             
-            // O Contrato assinado/gerado
-            conteudoHTML: DOMPurify.sanitize(
-    document.getElementById('previewContrato')?.innerHTML || '<p>Contrato não gerado.</p>',
-    {
-        USE_PROFILES: { html: true },
-        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'div', 'span'],
-        ALLOWED_ATTR: ['style', 'class']
-    }
-)
+            conteudoHTML: document.getElementById('corpoContratoLeitura').innerHTML
         };
 
         try {
@@ -388,25 +431,25 @@ const config = dados.configMatricula || dados || {};
             });
 
             const resultado = await resposta.json().catch(() => ({}));
-             
-            console.log("Resposta da matrícula:", resultado);
             
             if(resposta.ok && resultado.success) {
+                // Esconde o formulário principal e o modal de leitura
+                fecharLeitura();
                 document.getElementById('formMatricula').style.display = 'none';
+                
+                // Exibe a mensagem de sucesso
                 document.getElementById('mensagemSucesso').style.display = 'block';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else { 
-                throw new Error(
-    resultado.error || 
-    resultado.message || 
-    `Erro HTTP ${resposta.status}`
-); 
+                throw new Error(resultado.error || resultado.message || `Erro HTTP ${resposta.status}`); 
             }
         } catch (error) {
            alert("Erro ao enviar matrícula: " + error.message);
-           console.error("Erro completo da matrícula:", error);
+           btnFixo.innerText = "✅ Li e Concordo: Enviar Matrícula Oficial"; 
+           btnFixo.disabled = false;
+           btnFixo.style.opacity = '1';
         }
-    });    
+    }
 
     // Inicia tudo
     carregarConfiguracoes();

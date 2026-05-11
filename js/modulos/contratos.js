@@ -50,7 +50,8 @@ abrirVisualizacaoContrato: async function(idContrato) {
         const turma = contrato.turma || "Não informada";
         const planoCurso = contrato.planoCurso || "Não informado";
         const vencimento = contrato.diaVencimento || "Não informado";
-        
+        const horario = contrato.horarioPreferencia || "Não informado";        
+
         const responsavel = contrato.resp_nome || "O Próprio / Não informado";
         const respParentesco = contrato.resp_parentesco || "Não informado";
         const respCpf = contrato.resp_cpf || "Não informado";
@@ -119,6 +120,7 @@ abrirVisualizacaoContrato: async function(idContrato) {
                     <tr>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
                         <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
+                        <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee; color: #27ae60;"><b>🕒 Horário de Preferência:</b> ${horario}</td>
                     </tr>
                 </table>
                 
@@ -689,14 +691,20 @@ abrirVisualizacaoContrato: async function(idContrato) {
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
                         <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.configTemp.opcoesPlano || ''}">
                      </div>
-                     <div>
+                     <div style="margin-bottom:16px;">
                         <label class="modal-custom-label">Dias de Vencimento</label><br>
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
                         <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.configTemp.opcoesVencimento || ''}">
+                     </div>
+                     <div>
+                        <label class="modal-custom-label">Horários Disponíveis</label><br>
+                        <span style="font-size:12px; color:#6c757d;">Ex: Manhã (08h às 10h), Noite (19h às 21h)</span>
+                        <input type="text" id="inputHorarios" class="modal-custom-input" placeholder="Separe por vírgula" value="${App.configTemp.horarios || ''}">
                      </div>`,
                     (modal) => {
                         App.configTemp.opcoesPlano = modal.querySelector('#inputCursos').value;
                         App.configTemp.opcoesVencimento = modal.querySelector('#inputDias').value;
+                        App.configTemp.horarios = modal.querySelector('#inputHorarios').value; // 🚀 Salva os horários aqui
                         App.atualizarPreviewConfigurador();
                     }
                 );
