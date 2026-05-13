@@ -245,10 +245,19 @@ if ('serviceWorker' in navigator) {
             escolaValida = true;
             const config = dados.configMatricula || dados || {};
             
-            // Imagem de Cabeçalho
+           // Imagem de Cabeçalho
             if(config.imagemHeader) {
                 const header = document.getElementById('header-imagem');
                 header.style.backgroundImage = `url('${config.imagemHeader}')`;
+                
+                // 🚀 O SEGREDO: Forçar o tamanho e a posição exata guardada na base de dados
+                header.style.backgroundSize = 'cover';
+                header.style.backgroundRepeat = 'no-repeat';
+                header.style.backgroundPosition = config.imagemPosicao || '50% 50%';
+                
+                // Certifique-se de que a altura do cabeçalho público é igual à do preview (250px)
+                header.style.height = '250px'; 
+                
                 header.style.display = 'block';
             }
 

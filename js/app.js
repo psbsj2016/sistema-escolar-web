@@ -991,7 +991,15 @@ validarCadastroInst: async () => {
     },
 
     filtrarTabelaReativa: () => {
-        const termo = document.getElementById('input-busca').value.trim().toLowerCase(); const container = document.getElementById('container-tabela');
+        // 1. Procuramos a barra de pesquisa
+        const campoBusca = document.querySelector('input[placeholder*="Pesquisar"], #busca-tabela');
+        
+        // 2. O ESCUDO: Se o campo não estiver no ecrã, paramos a função aqui!
+        if (!campoBusca) return; 
+
+        // 3. Se existir, continuamos normalmente
+        const termo = campoBusca.value.toLowerCase();
+        
         if (!Array.isArray(App.listaCache)) { container.innerHTML = ''; return; }
         const filtrados = termo.length === 0 ? App.listaCache : App.listaCache.filter(item => { const nome = (item.nome || item.alunoNome || item.descricao || "").toLowerCase(); return nome.includes(termo); });
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;

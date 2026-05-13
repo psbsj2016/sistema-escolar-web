@@ -343,7 +343,7 @@ App.salvarPlanejamentoBanco = async () => {
 
     const met = App.planoAtual.id ? 'PUT' : 'POST'; 
     const url = App.planoAtual.id ? `/planejamentos/${App.planoAtual.id}` : `/planejamentos`; 
-    if(!App.planoAtual.id) App.planoAtual.id = Date.now().toString(); 
+    if(!App.planoAtual.id) App.planoAtual.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(); 
     
     if(!App.planoAtual.status) App.planoAtual.status = 'Ativo'; 
     
@@ -365,9 +365,9 @@ App.salvarPlanejamentoBanco = async () => {
         let totalCriadas = 0, totalAtualizadas = 0, totalRemovidas = 0;
 
         App.planoAtual.aulas.forEach((aula, index) => {
-            const partesData = aula.data.split('/');
-            if(partesData.length === 3) {
-                const dataAulaISO = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+            const pData = aula.data.includes('/') ? aula.data.split('/') : aula.data.split('-');
+            if (pData.length === 3) {
+            const dataAulaISO = pData[0].length === 4 ? `${pData[0]}-${pData[1]}-${pData[2]}` : `${pData[2]}-${pData[1]}-${pData[0]}`;
                 
                 // SÓ PROCESSA DATAS PASSADAS OU HOJE
                 if (dataAulaISO <= hojeStr) {
@@ -527,8 +527,9 @@ App.excluirPlanejamentoArquivado = (id) => {
 App.processarAutoAjustePlano = (plano, chamadas) => {
     if (!plano || !plano.aulas || plano.aulas.length === 0) return plano;
 
-    const primeiraAulaArr = plano.aulas[0].data.split('/');
-    const dataInicioPlano = `${primeiraAulaArr[2]}-${primeiraAulaArr[1]}-${primeiraAulaArr[0]}`;
+    const dataRaw = plano.aulas[0].data;
+    const partsIni = dataRaw.includes('/') ? dataRaw.split('/') : dataRaw.split('-');
+    const dataInicioPlano = partsIni[0].length === 4 ? `${partsIni[0]}-${partsIni[1]}-${partsIni[2]}` : `${partsIni[2]}-${partsIni[1]}-${partsIni[0]}`;
 
     // 1. Lemos TODO o histórico a partir do início (Presenças, Faltas, Feriados, etc.)
     const historico = chamadas
@@ -544,10 +545,25 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         diasDaSemanaAulas = [...new Set(ultimas.map(p => { const [ano, mes, dia] = p.data.split('-'); const d = new Date(`${ano}-${mes}-${dia}T12:00:00`); return d.getDay(); }))];
     }
 
-    if (diasDaSemanaAulas.length === 0) {
-        diasDaSemanaAulas = [...new Set(plano.aulas.map(a => { const parts = a.data.split('/'); if (parts.length === 3) { const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00`); return d.getDay(); } return -1; }).filter(d => d !== -1))];
-    }
-    if (diasDaSemanaAulas.length === 0) diasDaSemanaAulas = [1]; 
+   if (diasDaSemanaAulas.length === 0) {
+    // Tenta extrair os dias do planejamento original com fallback para dias úteis (1 a 5)
+    const diasExtraidos = [...new Set(plano.aulas.map(a => { 
+        if (!a.data) return -1;
+        const parts = a.data.includes('/') ? a.data.split('/') : a.data.split('-');
+        if (parts.length === 3) {
+            // Garante que a data seja lida corretamente independente do separador
+            const ano = parts[0].length === 4 ? parts[0] : parts[2];
+            const mes = parts[1];
+            const dia = parts[0].length === 2 ? parts[0] : parts[2];
+            const d = new Date(`${ano}-${mes}-${dia}T12:00:00`); 
+            return isNaN(d.getTime()) ? -1 : d.getDay();
+        }
+        return -1;
+    }).filter(d => d !== -1))];
+
+    // Se ainda assim for vazio, assume dias úteis (Segunda a Sexta) em vez de apenas Segunda
+    diasDaSemanaAulas = diasExtraidos.length > 0 ? diasExtraidos : [1, 2, 3, 4, 5];
+}
 
     let presencasUsadas = 0; 
     let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
@@ -570,7 +586,10 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
             // "Gasta" a aula com a presença
             const presencaDia = presencas[presencasUsadas]; 
             const dataReal = presencaDia.data; 
-            const [ano, mes, dia] = dataReal.split('-');
+            const pReal = dataReal.includes('/') ? dataReal.split('/') : dataReal.split('-');
+            const ano = pReal[0].length === 4 ? pReal[0] : pReal[2];
+            const mes = pReal[1];
+            const dia = pReal[0].length === 2 ? pReal[0] : pReal[2];
             
             aula.data = `${dia}/${mes}/${ano}`;
             if(presencaDia.duracao) aula.duracao = presencaDia.duracao;
@@ -1009,7 +1028,7 @@ App.salvarNotasLote = async () => {
             if (regExistente) { 
                 promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, periodo: periodoSelecionado, bimestre: periodoSelecionado })); 
             } else { 
-                payload.id = Date.now().toString() + Math.floor(Math.random()*1000); 
+                payload.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2)); 
                 promessas.push(App.api('/avaliacoes', 'POST', payload)); 
             }
         });
@@ -1309,7 +1328,7 @@ App.salvarChamadaLote = async () => {
                     if(idx !== -1) chamadasAtualizadasNaMemoria[idx] = chamadaAtualizada;
                 } else { 
                     // O '+ idAluno' evita conflitos
-                    payload.id = Date.now().toString() + Math.floor(Math.random()*1000) + idAluno; 
+                    payload.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2)); 
                     promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
                     
                     // Adiciona na memória virtual
