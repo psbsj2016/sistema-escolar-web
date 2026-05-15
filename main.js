@@ -20,13 +20,9 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Mostra o seu banner de atualização!
-    const banner = document.getElementById('update-banner');
-    if (banner) {
-        banner.style.display = 'block';
-        // Se o utilizador clicar no botão "Atualizar" do seu banner:
-        // bannerBotao.addEventListener('click', () => updateSW(true))
-    }
+    console.log('Nova versão detetada! A atualizar forçadamente...');
+    // A linha abaixo é a magia que faltava! Força o PWA a deitar o cache velho fora.
+    updateSW(true); 
   },
   onOfflineReady() {
     console.log('App pronta para trabalhar offline!')
