@@ -991,17 +991,32 @@ validarCadastroInst: async () => {
     },
 
     filtrarTabelaReativa: () => {
-        // 1. Procuramos a barra de pesquisa
+        // 1. Procuramos a barra de pesquisa e o container onde a tabela vai nascer
         const campoBusca = document.querySelector('input[placeholder*="Pesquisar"], #busca-tabela');
+        const container = document.getElementById('container-tabela'); // 🔥 O VILÃO ESTAVA AQUI! Faltava definir isto.
         
-        // 2. O ESCUDO: Se o campo não estiver no ecrã, paramos a função aqui!
-        if (!campoBusca) return; 
+        // 2. O ESCUDO: Se o campo ou o container não estiverem no ecrã, paramos aqui.
+        if (!campoBusca || !container) return; 
 
-        // 3. Se existir, continuamos normalmente
+        // 3. Se a API devolveu um erro (ex: sessão expirada), mostramos o erro verdadeiro!
+        if (App.listaCache && App.listaCache.error) {
+            container.innerHTML = `<p style="text-align:center; padding:30px; color:#e74c3c;"><b>Erro de Servidor:</b> ${App.escapeHTML(App.listaCache.error)}</p>`;
+            return;
+        }
+
+        // 4. Se tudo estiver bem, desenhamos a tabela
         const termo = campoBusca.value.toLowerCase();
         
-        if (!Array.isArray(App.listaCache)) { container.innerHTML = ''; return; }
-        const filtrados = termo.length === 0 ? App.listaCache : App.listaCache.filter(item => { const nome = (item.nome || item.alunoNome || item.descricao || "").toLowerCase(); return nome.includes(termo); });
+        if (!Array.isArray(App.listaCache)) { 
+            container.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado ou carregamento falhou.</p>'; 
+            return; 
+        }
+        
+        const filtrados = termo.length === 0 ? App.listaCache : App.listaCache.filter(item => { 
+            const nome = (item.nome || item.alunoNome || item.descricao || "").toLowerCase(); 
+            return nome.includes(termo); 
+        });
+        
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
