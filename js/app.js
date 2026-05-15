@@ -10,18 +10,7 @@ const App = window.App;
 // SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
 // =========================================================
 
-const API_URL = "https://sistema-escolar-api-k3o8.onrender.com";
-
-// =========================================================
-// ATUALIZAÇÃO AUTOMÁTICA DO PWA (SEM CACHE PRESO)
-// =========================================================
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        // Assim que o celular/PC baixar a sua nova versão em segundo plano, 
-        // ele recarrega a página sozinho na hora!
-        window.location.reload();
-    });
-}
+const API_URL = CONFIG.API_URL;
 
 // 🛡️ Mapeamento de funcionalidades por Cargo
 window.LISTA_FUNCIONALIDADES = [
