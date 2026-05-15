@@ -32,7 +32,12 @@ export default defineConfig({
       },
       // 👇 A SOLUÇÃO MÁGICA ENTRA AQUI 👇
       workbox: {
-        // Diz ao PWA para NÃO redirecionar estas páginas para o index.html
+        // Força o PWA a assumir o controle imediatamente sem esperar
+        skipWaiting: true,
+        clientsClaim: true,
+        // Limpa o cache antigo da memória automaticamente
+        cleanupOutdatedCaches: true,
+        // Diz ao PWA para NÃO redirecionar estas páginas
         navigateFallbackDenylist: [/^\/matricula/, /^\/admin/]
       }
     })
