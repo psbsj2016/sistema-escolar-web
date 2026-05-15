@@ -10,7 +10,7 @@ const App = window.App;
 // SISTEMA ESCOLAR - APP.JS (V158 - RBAC: PERMISSÕES DE CARGO, LIMITES E ANTI-PIRATARIA)
 // =========================================================
 
-const API_URL = CONFIG.API_URL;
+const API_URL = "https://sistema-escolar-api-k3o8.onrender.com";
 
 // 🛡️ Mapeamento de funcionalidades por Cargo
 window.LISTA_FUNCIONALIDADES = [
