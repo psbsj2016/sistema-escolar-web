@@ -272,10 +272,8 @@ validarCadastroInst: async () => {
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
 },
    
-    // =========================================================
-    // ROTEAMENTO DE TELAS E BLOQUEIO DE CARGOS
-    // =========================================================
-    renderizarTela: async (tela) => {
+    // Adicionamos o parâmetro 'veioDoHistorico'
+    renderizarTela: async (tela, veioDoHistorico = false) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
@@ -289,6 +287,15 @@ validarCadastroInst: async () => {
         }
         if (tipoUtil === 'Secretaria' && bloqueadoSecr.includes(tela)) {
             App.showToast("🚫 Acesso restrito. Perfil de Secretaria não tem permissão para esta área.", "error"); return App.renderizarInicio();
+        }
+
+        // 👇 A MÁGICA DA NAVEGAÇÃO ENTRA AQUI 👇
+        // Se a chamada não veio do botão "Voltar" do navegador, adicionamos o link na barra de endereços
+        if (!veioDoHistorico && tela !== 'login' && tela !== 'inicio') {
+            window.history.pushState({ tela: tela }, '', `#${tela}`);
+        } else if (!veioDoHistorico && tela === 'inicio') {
+            // Se for a tela inicial, limpamos o hash para ficar limpo: sistemaptt.com.br/
+            window.history.pushState({ tela: 'inicio' }, '', window.location.pathname);
         }
 
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
@@ -1976,6 +1983,24 @@ excluirUsuario: (id) => {
 // EVENTOS DE ARRANQUE E PWA
 // =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
+// =========================================================
+// MOTOR DE NAVEGAÇÃO (BOTÕES VOLTAR / AVANÇAR DO NAVEGADOR)
+// =========================================================
+window.addEventListener('popstate', (event) => {
+    if (App.usuario) {
+        // Lê o que está na barra de endereços agora (ex: financeiro)
+        const telaDestino = window.location.hash.replace('#', '');
+        
+        if (telaDestino) {
+            // Chama a tela e passa 'true' para não criar um loop infinito no histórico
+            App.renderizarTela(telaDestino, true);
+        } else {
+            // Se não houver hash, é porque voltou à tela inicial
+            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+        }
+    }
+});
+
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
 window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
 
