@@ -674,7 +674,6 @@ App.executarAcaoLoteConfirmada = async (acao, checks, btn, corOriginal) => {
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px;">Gerando Carnê Profissional...</p>';
-    
     try {
         const [financeiro, alunos, escola] = await Promise.all([App.api('/financeiro'), App.api('/alunos'), App.api('/escola')]);
         const parcelas = financeiro.filter(x => x.idCarne === idLote).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
@@ -687,84 +686,133 @@ App.abrirCarneExistente = async (idLote) => {
         const bancoNome = escola.banco || 'Não Configurado';
         const chavePix = escola.chavePix || 'Não Configurada';
 
-        // Estilos Universais (Tela e Impressão)
-        const estiloCarnes = `
-            <style>
-                .carnes-container { background: #f4f6f7; padding: 20px; border-radius: 8px; }
-                .carne-wrapper { 
-                    display: flex; border: 1px solid #000; margin: 0 auto 5mm auto; font-family: Arial, sans-serif; 
-                    background: #fff; color: #000; border-radius: 8px; overflow: hidden; 
-                    width: 100%; max-width: 210mm; height: 65mm; box-sizing: border-box;
-                }
-                .carne-canhoto { width: 28%; border-right: 2px dashed #999; padding: 8px; display: flex; flex-direction: column; background: #fafafa; }
-                .carne-recibo { width: 72%; padding: 6px 15px; display: flex; flex-direction: column; position: relative; }
-                @media print {
-                    body { background: white !important; }
-                    .no-print { display: none !important; }
-                    @page { size: A4 portrait; margin: 10mm; }
-                    .carnes-container { background: white; padding: 0; }
-                }
-            </style>
-        `;
-
         const carnesHTML = parcelas.map((p) => {
             const dataVenc = p.vencimento.split('-').reverse().join('/');
             const valorF = parseFloat(p.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             const nossoNumero = p.id.slice(-8).toUpperCase();
+            
+            // Reduzido para 60px para criar folga inferior e subir todo o bloco
             const qrCodeDisplay = (escola.qrCodeImagem && escola.qrCodeImagem.length > 50 && !escola.qrCodeImagem.includes('placehold'))
-                ? `<img src="${escola.qrCodeImagem}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px;">`
+                ? `<img src="${escola.qrCodeImagem}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px; background: #fff;">`
                 : `<div id="qr-${p.id}" style="width: 60px; height: 60px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
 
             return `
-            <div class="carne-wrapper">
-                <div class="carne-canhoto">
-                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px; text-align: center;">${logo}</div>
+            <div class="carne-wrapper" style="display: flex; border: 1px solid #000; margin-bottom: 5mm; font-family: Arial, sans-serif; background: #fff; color: #000; border-radius: 8px; overflow: hidden; width: 100%; max-width: 210mm; height: 65mm; margin-left: auto; margin-right: auto; page-break-inside: avoid; box-sizing: border-box;">
+                
+                <div class="carne-canhoto" style="width: 28%; border-right: 2px dashed #999; padding: 8px; display: flex; flex-direction: column; background: #fafafa; box-sizing: border-box; justify-content: space-between;">
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px; text-align: center;">
+                        ${logo}
+                        <div style="font-weight: bold; font-size: 10px; text-transform: uppercase; margin-top:3px;">${App.escapeHTML(nomeEscolaResumo)}</div>
+                    </div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Valor:</b> R$ ${valorF}</div>
+                    <div style="font-size: 10px; margin-bottom: 3px;"><b>Nº Doc:</b> ${nossoNumero}</div>
                     <div style="margin-top: auto; font-size: 9px; border-top: 1px solid #ccc; padding-top: 5px;"><b>Sacado:</b> ${App.escapeHTML(primeiroNomeAluno)}</div>
                 </div>
-                <div class="carne-recibo">
-                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 6px;">
-                        <div><div style="font-weight: bold; font-size: 12px;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div><div style="font-size: 9px;">Banco: ${App.escapeHTML(bancoNome)}</div></div>
-                        <div style="text-align: right; font-size: 10px; font-weight: bold;">RECIBO DO PAGADOR</div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; background: #fdfdfd; border: 1px solid #ddd; padding: 4px 10px;">
-                        <div><div style="font-size: 9px; color: #777;">Nosso Número</div><div style="font-weight: bold; font-size: 12px;">${nossoNumero}</div></div>
-                        <div><div style="font-size: 9px; color: #777;">Vencimento</div><div style="font-weight: bold; font-size: 12px; color: #c0392b;">${dataVenc}</div></div>
-                        <div><div style="font-size: 9px; color: #777;">Valor</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
-                    </div>
-                    <div style="font-size: 10px; margin-bottom: 5px;"><b>Ref:</b> ${App.escapeHTML(p.descricao)} | <b>Pagador:</b> ${App.escapeHTML(aluno.nome)}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div>
-                            <div style="font-size: 10px; font-weight: bold; color:#27ae60;">PAGAMENTO VIA PIX</div>
-                            <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; word-break: break-all;">🔑 ${App.escapeHTML(chavePix)}</div>
+                
+                <div class="carne-recibo" style="width: 72%; padding: 6px 15px; display: flex; flex-direction: column; position: relative; box-sizing: border-box;">
+                    
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 6px; align-items: center;">
+                        <div style="display: flex; align-items: center;">
+                            ${logo} 
+                            <div>
+                                <div style="font-weight: bold; font-size: 12px; text-transform: uppercase;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO')}</div>
+                                <div style="font-size: 9px; color: #555;">CNPJ: ${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')} | Banco: <b>${App.escapeHTML(bancoNome)}</b></div>
+                            </div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">${qrCodeDisplay}</div>
+                        <div style="text-align: right; font-size: 10px; font-weight: bold; color: #555; border-left: 2px solid #ccc; padding-left:10px;">
+                            RECIBO DO<br>PAGADOR
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; background: #fdfdfd; border: 1px solid #ddd; padding: 4px 10px; border-radius: 4px;">
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Nosso Número</div><div style="font-weight: bold; font-size: 12px;">${nossoNumero}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Vencimento</div><div style="font-weight: bold; font-size: 12px; color: #c0392b;">${dataVenc}</div></div>
+                        <div><div style="font-size: 9px; color: #777; text-transform: uppercase;">Valor do Documento</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
+                    </div>
+
+                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 5px; text-align: center;">
+                        <span style="font-size: 9px; font-weight: bold; color: #d35400;">⚠️ Informação Importante:</span> 
+                        <span style="font-size: 9px; color: #555;">Evite a perda de descontos e benefícios. Após o vencimento, o valor da mensalidade será atualizado.</span>
+                    </div>
+                    
+                    <div style="font-size: 10px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 4px; line-height:1.4;">
+                        <div><b>Ref:</b> ${App.escapeHTML(p.descricao)} &nbsp;|&nbsp; <b>Pagador:</b> ${App.escapeHTML(aluno.nome)} &nbsp;|&nbsp; <b>CPF:</b> ${App.escapeHTML(aluno.cpf || 'Não informado')}</div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap:15px;">
+                        <div style="flex:1;">
+                            <div style="font-size: 10px; font-weight: bold; margin-bottom: 2px; color:#27ae60;">PAGAMENTO VIA PIX</div>
+                            <div style="font-size: 9px; margin-bottom: 3px; color:#555;">Leia o QR Code ao lado ou utilize a chave manual abaixo:</div>
+                            <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; word-break: break-all; border:1px dashed #ccc;">
+                                🔑 ${App.escapeHTML(chavePix)}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            ${qrCodeDisplay}
+                            <div style="font-size: 8px; color: #999; margin-top: 2px;">Autenticação Mecânica</div>
+                        </div>
                     </div>
                 </div>
             </div>`;
         }).join('');
 
         div.innerHTML = `
-            ${estiloCarnes}
-            <div class="no-print" style="text-align:center; padding:20px; background:#fff; margin-bottom: 20px;">
-                <h2 style="margin:0;">Carnê Gerado!</h2>
-                <button onclick="window.print()" class="btn-primary">🖨️ IMPRIMIR CARNÊ</button>
-                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel">VOLTAR</button>
+            <style>
+                @media print {
+                    body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
+                    .no-print { display: none !important; }
+                    .print-bg { background: transparent !important; padding: 0 !important; }
+                    .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
+                    
+                    @page { size: A4 portrait; margin: 10mm; }
+                    .carne-wrapper { 
+                        border: 1px solid #000 !important; 
+                        box-shadow: none !important; 
+                        margin-bottom: 5mm !important; 
+                        height: 65mm !important; 
+                        flex-direction: row !important;
+                        page-break-inside: avoid !important;
+                    }
+                    .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
+                    .carne-recibo { width: 72% !important; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+                @media (max-width: 768px) {
+                    .carne-wrapper { flex-direction: column !important; height: auto !important; }
+                    .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
+                    .carne-recibo { width: 100% !important; }
+                    .print-sheet { padding: 10px !important; }
+                }
+            </style>
+            
+            <div class="no-print" style="text-align:center; padding:20px; background:#fff; border-radius: 8px; margin-bottom: 20px; border: 1px solid #eee; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h2 style="margin-top:0; color:#2c3e50;">Carnê Gerado com Sucesso! 🎉</h2>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">O layout foi refinado. O bloco PIX subiu para evitar cortes na linha final.</p>
+                <button onclick="window.print()" class="btn-primary" style="padding:12px 25px; font-size:16px; width:auto;">🖨️ IMPRIMIR CARNÊ</button>
+                <button onclick="App.renderizarFinanceiroPro()" class="btn-cancel" style="margin-left:10px; padding:12px 25px; width:auto;">VOLTAR</button>
             </div>
-            <div class="carnes-container">${carnesHTML}</div>`;
+            
+            <div class="print-bg" style="background: #f4f6f7; padding: 30px 15px; border-radius: 8px;">
+                <div class="print-sheet" style="background: white; max-width: 210mm; margin: 0 auto; padding: 20px 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; box-sizing: border-box;">
+                    ${carnesHTML}
+                </div>
+            </div>`;
 
-        // Gerar QR Codes
-        if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50) {
+        if (!escola.qrCodeImagem || escola.qrCodeImagem.length <= 50 || escola.qrCodeImagem.includes('placehold')) {
             parcelas.forEach(p => {
                 const el = document.getElementById(`qr-${p.id}`);
-                if(el && typeof QRCode !== 'undefined') new QRCode(el, { text: chavePix, width: 60, height: 60 });
+                if(el && typeof QRCode !== 'undefined') {
+                    // Ajustado para 60x60 aqui também
+                    new QRCode(el, { text: chavePix, width: 60, height: 60, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
+                } else if(el) {
+                    el.innerHTML = '<span style="font-size:8px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
+                }
             });
         }
-    } catch(e) { App.showToast("Erro ao gerar carnê.", "error"); }
+    } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
 };
-
 
 // ---------------------------------------------------------
 // 📉 RELATÓRIO DE INADIMPLÊNCIA (CORRIGIDO)
