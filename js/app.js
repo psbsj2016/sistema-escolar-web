@@ -1273,13 +1273,16 @@ validarCadastroInst: async () => {
         const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
         const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
 
-        if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
+     if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
         
-        const logoContainer = document.querySelector('.logo-area'); let img = logoContainer.querySelector('img'); 
-        if(escola.foto && escola.foto.length > 50) { 
-            if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
-            img.src = escola.foto; 
-        } else if(img) { img.remove(); }
+        const logoContainer = document.querySelector('.logo-area'); 
+        if (logoContainer) { // 🛡️ Proteção: Só atualiza o logo se a área existir na tela
+            let img = logoContainer.querySelector('img'); 
+            if(escola.foto && escola.foto.length > 50) { 
+                if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
+                img.src = escola.foto; 
+            } else if(img) { img.remove(); }
+        }
     },
 
     carregarDadosEscola: async () => { 
@@ -1355,9 +1358,9 @@ validarCadastroInst: async () => {
                         await App.carregarDadosEscola();
                     }
                     
-                    // Se o diretor estiver exatamente na tela de 'alunos', recarrega a tabela para o aluno surgir na hora
-                    if (App.telaAtual === 'alunos' && typeof App.renderizarTela === 'function') {
-                        App.renderizarTela('alunos');
+                   // Se o diretor estiver exatamente na tela de 'alunos', recarrega a tabela para o aluno surgir na hora
+                    if (App.entidadeAtual === 'aluno' && typeof App.renderizarLista === 'function') {
+                        App.renderizarLista('aluno');
                     }
                     
                     // Mostra um aviso verde na tela
@@ -1448,43 +1451,6 @@ validarCadastroInst: async () => {
             console.error("Erro ao resolver:", error);
             if(typeof App.showToast === 'function') App.showToast("Erro ao comunicar com o servidor.", "error");
         }
-    },
-
-    // =========================================================
-    // 🎨 RENDERIZAR LISTA DE NOTIFICAÇÕES (COM BOTÃO RESOLVER)
-    // =========================================================
-    renderizarNotificacoes: (notificacoes) => {
-        const container = document.getElementById('noti-list');
-        if (!container) return;
-
-        // Se não houver nada, mostra a mensagem de tudo limpo
-        if (!notificacoes || notificacoes.length === 0) {
-            container.innerHTML = `
-                <div style="padding:20px; text-align:center; color:#94a3b8;">
-                    <div style="font-size:30px; margin-bottom:10px;">✅</div>
-                    <div style="font-weight:600; font-size:14px;">Tudo resolvido por aqui!</div>
-                    <div style="font-size:12px; opacity:0.7;">Nenhuma pendência.</div>
-                </div>`;
-            return;
-        }
-
-        // Gera o HTML de cada notificação com o botão de ação manual
-        container.innerHTML = notificacoes.map(n => `
-            <div class="noti-item" id="noti-${n.id}" style="display:flex; gap:12px; padding:15px; border-bottom:1px solid rgba(0,0,0,0.05); align-items: flex-start;">
-                <div class="noti-icon" style="font-size:20px; margin-top:2px;">🔔</div>
-                <div style="flex:1;">
-                    <strong style="color: var(--accent); display:block; margin-bottom:3px; font-size:14px;">${n.titulo}</strong>
-                    <span style="font-size: 13px; color:#555; line-height:1.4; display:block; margin-bottom:10px;">${n.mensagem}</span>
-                    
-                    <button onclick="App.resolverNotificacao('${n.id}')" 
-                            style="background: #27ae60; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; transition: 0.2s;"
-                            onmouseover="this.style.background='#219150'" 
-                            onmouseout="this.style.background='#27ae60'">
-                        <span>✅</span> Marcar como Resolvido
-                    </button>
-                </div>
-            </div>
-        `).join('');
     },
 
     otimizarImagem: (file, maxWidth, callback) => { 
@@ -1912,7 +1878,8 @@ excluirUsuario: (id) => {
         App.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         App.dragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-        // Descobre a posição atual que está guardada (ex: "50% 50%")
+        // Proteção: Garante que o objeto existe antes de ler a posição
+        App.configTemp = App.configTemp || {}; 
         let pos = App.configTemp.imagemPosicao || '50% 50%';
         let parts = pos.split(' ');
         App.dragState.bgX = parseFloat(parts[0]) || 50;
