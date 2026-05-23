@@ -779,7 +779,9 @@ App.abrirCarneExistente = async (idLote) => {
                     /* Ajusta a margem da página da impressora */
                     @page { size: A4 portrait; margin: 5mm; }
                     
+                    /* AQUI ESTÁ A CORREÇÃO: forçar display: flex !important */
                     .carne-wrapper { 
+                        display: flex !important; 
                         border: 1px solid #000 !important; 
                         box-shadow: none !important; 
                         margin-bottom: 5mm !important; 
@@ -789,8 +791,19 @@ App.abrirCarneExistente = async (idLote) => {
                         width: 100% !important;
                     }
                     
-                    .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
-                    .carne-recibo { width: 72% !important; }
+                    .carne-canhoto { 
+                        display: flex !important; 
+                        flex-direction: column !important;
+                        width: 28% !important; 
+                        border-right: 2px dashed #999 !important; 
+                        border-bottom: none !important; 
+                    }
+                    
+                    .carne-recibo { 
+                        display: flex !important; 
+                        flex-direction: column !important;
+                        width: 72% !important; 
+                    }
                     
                     /* FORÇA O NAVEGADOR A IMPRIMIR AS CORES DE FUNDO (Aviso amarelo, fundo PIX, etc) */
                     * { 
