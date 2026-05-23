@@ -761,12 +761,24 @@ App.abrirCarneExistente = async (idLote) => {
         div.innerHTML = `
             <style>
                 @media print {
+                    /* Remove fundos do sistema, mas mantém o do carnê */
                     body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
                     .no-print { display: none !important; }
                     .print-bg { background: transparent !important; padding: 0 !important; }
-                    .print-sheet { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
                     
-                    @page { size: A4 portrait; margin: 10mm; }
+                    /* O SEGREDO: Manter a largura exata do A4 (210mm) na impressão */
+                    .print-sheet { 
+                        box-shadow: none !important; 
+                        border: none !important; 
+                        margin: 0 auto !important; 
+                        padding: 0 !important; 
+                        width: 210mm !important; 
+                        max-width: 210mm !important; 
+                    }
+                    
+                    /* Ajusta a margem da página da impressora */
+                    @page { size: A4 portrait; margin: 5mm; }
+                    
                     .carne-wrapper { 
                         border: 1px solid #000 !important; 
                         box-shadow: none !important; 
@@ -774,11 +786,20 @@ App.abrirCarneExistente = async (idLote) => {
                         height: 65mm !important; 
                         flex-direction: row !important;
                         page-break-inside: avoid !important;
+                        width: 100% !important;
                     }
+                    
                     .carne-canhoto { width: 28% !important; border-right: 2px dashed #999 !important; border-bottom: none !important; }
                     .carne-recibo { width: 72% !important; }
-                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    
+                    /* FORÇA O NAVEGADOR A IMPRIMIR AS CORES DE FUNDO (Aviso amarelo, fundo PIX, etc) */
+                    * { 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                        color-adjust: exact !important;
+                    }
                 }
+                
                 @media (max-width: 768px) {
                     .carne-wrapper { flex-direction: column !important; height: auto !important; }
                     .carne-canhoto { width: 100% !important; border-right: none !important; border-bottom: 2px dashed #999 !important; }
@@ -804,7 +825,6 @@ App.abrirCarneExistente = async (idLote) => {
             parcelas.forEach(p => {
                 const el = document.getElementById(`qr-${p.id}`);
                 if(el && typeof QRCode !== 'undefined') {
-                    // Ajustado para 60x60 aqui também
                     new QRCode(el, { text: chavePix, width: 60, height: 60, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
                 } else if(el) {
                     el.innerHTML = '<span style="font-size:8px; color:#999; text-align:center;">QR Code<br>Indisponível</span>';
@@ -812,7 +832,7 @@ App.abrirCarneExistente = async (idLote) => {
             });
         }
     } catch(e) { console.error(e); App.showToast("Erro ao gerar carnê.", "error"); }
-};
+};        
 
 // ---------------------------------------------------------
 // 📉 RELATÓRIO DE INADIMPLÊNCIA (CORRIGIDO)
