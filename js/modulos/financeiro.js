@@ -669,7 +669,7 @@ App.executarAcaoLoteConfirmada = async (acao, checks, btn, corOriginal) => {
 };
 
 // ---------------------------------------------------------
-// 🚀 RENDERIZAÇÃO DO CARNÊ (AGORA SUBINDO O BLOCO DO PIX)
+// 🚀 RENDERIZAÇÃO DO CARNÊ (AGORA SUBINDO O BLOCO DO PIX) E IMPRESSÃO FIEL
 // ---------------------------------------------------------
 App.abrirCarneExistente = async (idLote) => {
     const div = document.getElementById('app-content');
@@ -698,11 +698,41 @@ App.abrirCarneExistente = async (idLote) => {
                 }
                 .carne-canhoto { width: 28%; border-right: 2px dashed #999; padding: 8px; display: flex; flex-direction: column; background: #fafafa; }
                 .carne-recibo { width: 72%; padding: 6px 15px; display: flex; flex-direction: column; position: relative; }
+                
+                /* REGRAS DE FERRO PARA A IMPRESSORA NÃO QUEBRAR O LAYOUT */
                 @media print {
-                    body { background: white !important; }
+                    body { background: white !important; margin: 0 !important; padding: 0 !important; }
                     .no-print { display: none !important; }
                     @page { size: A4 portrait; margin: 10mm; }
-                    .carnes-container { background: white; padding: 0; }
+                    .carnes-container { background: white !important; padding: 0 !important; }
+                    
+                    .carne-wrapper {
+                        display: flex !important; /* Força o lado a lado na impressora */
+                        flex-direction: row !important;
+                        width: 210mm !important;
+                        max-width: 210mm !important;
+                        page-break-inside: avoid !important;
+                    }
+                    
+                    .carne-canhoto {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        width: 28% !important;
+                        background: #fafafa !important;
+                    }
+                    
+                    .carne-recibo {
+                        display: flex !important;
+                        flex-direction: column !important;
+                        width: 72% !important;
+                    }
+                    
+                    /* Força o navegador a imprimir cores de fundo (Avisos amarelos, etc) */
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        color-adjust: exact !important;
+                    }
                 }
             </style>
         `;
