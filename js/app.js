@@ -200,7 +200,7 @@ verificarLimites: async (tipo) => {
         return true;
     },
 
-    // =========================================================
+   // =========================================================
     // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS
     // =========================================================
     api: async (endpoint, method = 'GET', body = null) => {
