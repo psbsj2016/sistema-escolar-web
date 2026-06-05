@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://api.sistemaptt.com.br/:path*" },
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/matricula", "destination": "/matricula.html" }
+    { "source": "/matricula", "destination": "/matricula.html" },
+    { "source": "/hub-matriculas", "destination": "/hub-matriculas.html" },
+    { "source": "/matricula-online", "destination": "/matricula-online.html" }
   ]
 }
