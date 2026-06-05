@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrícula Presencial</title>
+    <title>Matrícula - Curso Online EAD</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" type="image/png">
 
     <style>
@@ -62,18 +62,19 @@
         
     <div class="header">
         <img id="logoEscola" src="" alt="Logo da Escola" style="max-height: 100px; max-width: 100%; display: none; margin: 0 auto 15px auto; border-radius: 8px;">
-        <h2 id="tituloPagina">Matrícula Presencial</h2>
-        <p id="desc-matricula">Preencha os dados abaixo com atenção para garantir a sua vaga.</p>
+        <h2 id="tituloPagina">Matrícula Online EAD</h2>
+        <p id="desc-matricula">Preencha os dados abaixo com atenção para garantir a sua vaga no curso online.</p>
     </div>
 
     <div id="mensagemSucesso" style="display: none; text-align: center; padding: 40px 20px;">
         <div style="font-size: 60px; color: #27ae60; margin-bottom: 15px;">✅</div>
         <h2 style="color: #2c3e50;">Matrícula Concluída!</h2>
-        <p style="color: #7f8c8d; font-size: 16px;">Os seus dados e o contrato foram enviados com sucesso para a nossa secretaria. Seja muito bem-vindo(a)!</p>
+        <p style="color: #7f8c8d; font-size: 16px;">Os seus dados e o contrato foram enviados com sucesso para a nossa secretaria. Seja muito bem-vindo(a) à modalidade Online!</p>
     </div>
 
     <form id="formMatricula">
-    <input type="hidden" name="modalidade_escolhida" value="Presencial">
+        <input type="hidden" id="modalidade_escolhida" name="modalidade_escolhida" value="Online">
+        
         <h3>1. Dados Pessoais</h3>
         <div class="input-group">
             <label>Nome Completo *</label>
@@ -167,8 +168,8 @@
           </select>
         </div>   
 
-        <h3>4. Contrato de Prestação de Serviços</h3>
-        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato abaixo antes de confirmar sua matrícula.</p>
+        <h3>4. Contrato de Prestação de Serviços (EAD)</h3>
+        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato online abaixo antes de confirmar sua matrícula.</p>
         
         <div id="previewContrato" class="contrato-box">
             A carregar o contrato da instituição...
@@ -179,17 +180,17 @@
             <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que as informações acima são verdadeiras.</label>
         </div>
 
-        <button type="submit" id="btnSubmit">Revisar e Concluir Matrícula</button>
+        <button type="submit" id="btnSubmit">Revisar e Concluir Matrícula Online</button>
     </form>
 </div>
 
 <div id="modalLeitura">
     <div class="texto-contrato-gigante">
-        <h2 style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">Termo de Adesão e Matrícula</h2>
+        <h2 style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">Termo de Adesão e Matrícula (Online)</h2>
         <div id="corpoContratoLeitura" style="margin-bottom: 40px; margin-top: 20px;"></div>
         
         <button onclick="enviarMatriculaDefinitiva()" class="btn-fixo-leitura">
-            ✅ Li e Concordo: Enviar Matrícula Oficial
+            ✅ Li e Concordo: Enviar Matrícula EAD Oficial
         </button>
         <button onclick="fecharLeitura()" style="background:none; border:none; color:red; cursor:pointer; display:block; margin: 30px auto; text-decoration: underline;">
             Voltar e Corrigir Dados
@@ -200,19 +201,17 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
-    const API_BASE = 'http://localhost:3000'; // Coloque a porta correta do seu backend local se não for 3000
+    const API_BASE = 'http://localhost:3000'; // Ajuste se necessário para produção
     let escolaValida = false;
  
-    // Forçar a atualização do Service Worker sempre que carregar a página
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-            registration.update();
-        }
-    });
-}
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+                registration.update();
+            }
+        });
+    }
    
-    // Mostra/Oculta painel do responsável caso o aluno seja menor
     document.getElementById('nascimento').addEventListener('change', function() {
         const nasc = new Date(this.value);
         const hoje = new Date();
@@ -232,7 +231,7 @@ if ('serviceWorker' in navigator) {
         }
     });
 
-    // 1. Puxa as customizações da API
+    // 1. Puxa as customizações da API (AGORA FOCADO NO EAD)
     async function carregarConfiguracoes() {
         if (!escolaId) {
             document.body.innerHTML = "<h2 style='text-align:center; padding:50px; color:red;'>Link de matrícula inválido.</h2>";
@@ -244,29 +243,31 @@ if ('serviceWorker' in navigator) {
             const dados = await res.json();
 
             escolaValida = true;
-            const config = dados.configMatricula || dados || {};
             
-           // Imagem de Cabeçalho
+            // 🚀 A NOVA MAGIA: Procurar o EAD dentro da caixa principal
+            const caixaForte = dados.configMatricula || {};
+            const config = caixaForte.online || {
+                tituloHeader: 'Matrícula Digital EAD',
+                descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
+                opcoesPlano: 'Curso Online',
+                opcoesVencimento: '08, 20',
+                horarios: '100% Online',
+                textoContrato: 'Contrato Padrão EAD não configurado pelo gestor.'
+            };
+            
             if(config.imagemHeader) {
                 const header = document.getElementById('header-imagem');
                 header.style.backgroundImage = `url('${config.imagemHeader}')`;
-                
-                // 🚀 O SEGREDO: Forçar o tamanho e a posição exata guardada na base de dados
                 header.style.backgroundSize = 'cover';
                 header.style.backgroundRepeat = 'no-repeat';
                 header.style.backgroundPosition = config.imagemPosicao || '50% 50%';
-                
-                // Certifique-se de que a altura do cabeçalho público é igual à do preview (250px)
                 header.style.height = '250px'; 
-                
                 header.style.display = 'block';
             }
 
-            // Textos Iniciais
             if(config.tituloHeader) document.getElementById('tituloPagina').innerText = config.tituloHeader;
             if(config.descHeader) document.getElementById('desc-matricula').innerText = config.descHeader;
 
-            // Opções do Plano de Curso
             if(config.opcoesPlano) {
                 const selectPlano = document.getElementById('plano_curso');
                 selectPlano.innerHTML = '<option value="">-- Selecione --</option>';
@@ -278,7 +279,6 @@ if ('serviceWorker' in navigator) {
                 });
             }
 
-            // Opções de Dia de Vencimento
             if(config.opcoesVencimento) {
                 const selectVenc = document.getElementById('dia_vencimento');
                 selectVenc.innerHTML = '<option value="">-- Selecione --</option>';
@@ -290,8 +290,7 @@ if ('serviceWorker' in navigator) {
                 });
             }
 
-            // AQUI ESTÁ A CORREÇÃO DO HORÁRIO! (Dentro da função, lendo do banco de dados)
-            const horariosRaw = config.horarios || 'Manhã, Tarde, Noite';
+            const horariosRaw = config.horarios || 'Manhã, Tarde, Noite, 100% Online';
             const selectHorario = document.getElementById('horarioPreferencia');
             selectHorario.innerHTML = '<option value="">-- Selecione --</option>';
             horariosRaw.split(',').forEach(h => {
@@ -301,27 +300,25 @@ if ('serviceWorker' in navigator) {
                 selectHorario.appendChild(option);
             });
 
-            // Logo e Cores
-            if(config.corSecundaria) {
-                document.querySelector('.container').style.borderTopColor = config.corSecundaria;
-                document.querySelectorAll('h3, button:not(.btn-fixo-leitura)').forEach(el => el.style.color = config.corSecundaria || '#3498db');
-                document.getElementById('btnSubmit').style.backgroundColor = config.corSecundaria;
+            if(dados.corSecundaria) {
+                document.querySelector('.container').style.borderTopColor = dados.corSecundaria;
+                document.querySelectorAll('h3, button:not(.btn-fixo-leitura)').forEach(el => el.style.color = dados.corSecundaria || '#3498db');
+                document.getElementById('btnSubmit').style.backgroundColor = dados.corSecundaria;
                 document.getElementById('btnSubmit').style.color = '#ffffff';
             }
-            if(config.logoUrl) {
+            if(dados.logoUrl) {
                 const imgLogo = document.getElementById('logoEscola');
-                imgLogo.src = config.logoUrl;
+                imgLogo.src = dados.logoUrl;
                 imgLogo.style.display = 'block';
             }
             
-            // Decodifica HTML do banco
             function formatarHTML(htmlTexto) {
                 var txt = document.createElement("textarea");
                 txt.innerHTML = htmlTexto;
                 return txt.value;
             }
 
-            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : "Contrato padrão da instituição...";
+            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : "Contrato online padrão da instituição...";
             window.textoContratoOriginal = contratoFormatado;
 
             atualizarContratoAoVivo();
@@ -335,7 +332,7 @@ if ('serviceWorker' in navigator) {
                 container.innerHTML = `
                     <div style="text-align:center; padding:40px 20px;">
                         <div style="font-size:50px; margin-bottom:15px;">⚠️</div>
-                        <h2 style="color:#c0392b;">Link de matrícula inválido</h2>
+                        <h2 style="color:#c0392b;">Link de matrícula EAD inválido</h2>
                         <p style="color:#666; font-size:15px;">
                             Não foi possível identificar a instituição deste formulário.
                             Solicite um novo link de matrícula.
@@ -346,7 +343,6 @@ if ('serviceWorker' in navigator) {
         }
     }
 
-    // 2. Atualiza as tags do contrato em tempo real
     function atualizarContratoAoVivo() {
         if(!window.textoContratoOriginal) return;
         let texto = window.textoContratoOriginal;
@@ -377,39 +373,36 @@ if ('serviceWorker' in navigator) {
         el.addEventListener('change', atualizarContratoAoVivo);
     });
 
-    // 3. Apenas Abre o Modal Gigante de Leitura
     document.getElementById('formMatricula').addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede o envio real
+        e.preventDefault(); 
         
         if (!escolaId || !escolaValida) {
             alert("Link de matrícula inválido. Solicite um novo link à instituição.");
             return;
         }
 
-        // Pega o HTML limpo do contrato atualizado e joga para o modal
         const textoContrato = document.getElementById('previewContrato').innerHTML;
         document.getElementById('corpoContratoLeitura').innerHTML = textoContrato;
         
-        // Exibe o modal e sobe para o topo
         document.getElementById('modalLeitura').style.display = 'block';
         window.scrollTo(0, 0);
     });
 
-    // 4. Funções de Controle do Modal
     function fecharLeitura() {
         document.getElementById('modalLeitura').style.display = 'none';
     }
 
     async function enviarMatriculaDefinitiva() {
         const btnFixo = document.querySelector('.btn-fixo-leitura');
-        btnFixo.innerText = "A Enviar ao Sistema... ⏳"; 
+        btnFixo.innerText = "A Enviar ao Sistema EAD... ⏳"; 
         btnFixo.disabled = true;
         btnFixo.style.opacity = '0.7';
 
-        // PAYLOAD COM TODOS OS DADOS (Incluindo o horarioPreferencia)
+        // 🚀 O payload agora envia 'Online' para identificarmos na base de dados
         const payload = {
             escolaId: escolaId,
             refLink: urlParams.get('ref') || 'Direto',
+            modalidade: 'Online', 
             nome: document.getElementById('nome')?.value || '',
             cpf: document.getElementById('cpf')?.value || '',
             email: document.getElementById('email')?.value || '',
@@ -431,8 +424,7 @@ if ('serviceWorker' in navigator) {
             turma: document.getElementById('turma')?.value || '', 
             planoCurso: document.getElementById('plano_curso')?.value || '', 
             diaVencimento: document.getElementById('dia_vencimento')?.value || '',
-            
-            horarioPreferencia: document.getElementById('horarioPreferencia')?.value || '', // 🚀 O novo campo a ser salvo!
+            horarioPreferencia: document.getElementById('horarioPreferencia')?.value || '',
             
             resp_nome: document.getElementById('resp_nome')?.value || '',
             resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
@@ -452,30 +444,27 @@ if ('serviceWorker' in navigator) {
             const resultado = await resposta.json().catch(() => ({}));
             
             if(resposta.ok && resultado.success) {
-                // Esconde o formulário principal e o modal de leitura
                 fecharLeitura();
                 document.getElementById('formMatricula').style.display = 'none';
                 
-                // Exibe a mensagem de sucesso
                 document.getElementById('mensagemSucesso').style.display = 'block';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else { 
                 throw new Error(resultado.error || resultado.message || `Erro HTTP ${resposta.status}`); 
             }
         } catch (error) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Falha no Envio',
-        text: 'Não foi possível concluir a matrícula: ' + error.message,
-        confirmButtonColor: '#d33'
-    });
-    btnFixo.innerText = "✅ Li e Concordo: Enviar Matrícula Oficial"; 
-    btnFixo.disabled = false;
-    btnFixo.style.opacity = '1';
-}
+            Swal.fire({
+                icon: 'error',
+                title: 'Falha no Envio',
+                text: 'Não foi possível concluir a matrícula: ' + error.message,
+                confirmButtonColor: '#d33'
+            });
+            btnFixo.innerText = "✅ Li e Concordo: Enviar Matrícula EAD Oficial"; 
+            btnFixo.disabled = false;
+            btnFixo.style.opacity = '1';
+        }
     }
 
-    // Inicia tudo
     carregarConfiguracoes();
 </script>
 

@@ -1,5 +1,5 @@
 // Use apenas esta declaração segura
-const API_URL = window.CONFIG?.API_URL || 'https://api.sistemaptt.com.br';
+const API_URL = 'http://localhost:3000'; // Muda consoante a porta do teu backend
 
 let cacheClientes = [];
 
@@ -23,9 +23,15 @@ const Admin = {
 
     init: () => {
         if(sessionStorage.getItem('token_master')) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'flex';
-            Admin.carregarDados();
+            const loginScreen = document.getElementById('login-screen');
+            const dashboard = document.getElementById('dashboard');
+
+            // 🛡️ TRAVA DE SEGURANÇA: Só tenta alterar o layout se estivermos no admin.html
+            if (loginScreen && dashboard) {
+                loginScreen.style.display = 'none';
+                dashboard.style.display = 'flex';
+                Admin.carregarDados();
+            }
         }
     },
 
@@ -84,102 +90,205 @@ const Admin = {
         window.location.reload();
     },
 
-    carregarDados: async () => {
+  carregarDados: async () => {
         const token = sessionStorage.getItem('token_master');
         try {
-            const res = await fetch(`${API_URL}/master/ativacoes`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const urlSemCache = `${API_URL}/master/ativacoes?t=${new Date().getTime()}`;
+            const res = await fetch(urlSemCache, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
             
             if(res.status === 401 || res.status === 403) return Admin.logout();
             
             const lista = await res.json();
             
-            // Garantia de que recebemos uma lista e não um erro em objeto
             if (Array.isArray(lista)) {
                 cacheClientes = lista;
                 
                 document.getElementById('kpi-total').innerText = lista.length;
-                document.getElementById('kpi-ativas').innerText = lista.filter(l => l.status === 'Verificado').length;
-                document.getElementById('kpi-pendentes').innerText = lista.filter(l => l.status === 'Pendente').length;
+                document.getElementById('kpi-ativas').innerText = lista.filter(l => l.status === 'Verificado' || l.status === 'Ativo').length;
+                document.getElementById('kpi-pendentes').innerText = lista.filter(l => l.status === 'Pendente' || l.status === 'Aguardando Ativação' || l.status === 'Aguardando').length;
                 document.getElementById('kpi-bloqueados').innerText = lista.filter(l => l.status === 'Bloqueado').length;
 
+                // 🚀 A MÁGICA AQUI: Força a limpeza da barra de pesquisa para nenhum e-mail ficar "preso"!
+                const campoBusca = document.getElementById('busca-tabela-escolas') || document.getElementById('pesquisa-admin');
+                if (campoBusca) {
+                    campoBusca.value = ''; 
+                }
+
                 Admin.desenharTabela(cacheClientes);
-            } else {
-                Admin.showToast("Formato de dados inválido.", "error");
+                Admin.carregarNotificacoes();
             }
-        } catch(e) { console.error(e); Admin.showToast("Erro ao carregar lista", "error"); }
+        } catch(e) { console.error("🚨 Erro no carregarDados:", e); }
+    },
+
+    toggleNotificacoes: () => {
+        const drop = document.getElementById('dropdown-notificacoes');
+        if (drop.style.display === 'none' || drop.style.display === '') {
+            drop.style.display = 'block';
+            drop.style.animation = 'fadeIn 0.2s ease';
+        } else {
+            drop.style.display = 'none';
+        }
+    },
+
+    carregarNotificacoes: async () => {
+        const token = sessionStorage.getItem('token_master');
+        try {
+            const res = await fetch(`${API_URL}/master/notificacoes?t=${new Date().getTime()}`, {
+                headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store'
+            });
+            
+            if (res.ok) {
+                const notificacoes = await res.json();
+                const badge = document.getElementById('badge-notificacao');
+                const lista = document.getElementById('lista-notificacoes');
+                
+                if (notificacoes.length > 0) {
+                    badge.innerText = notificacoes.length;
+                    badge.style.display = 'block';
+                    
+                    lista.innerHTML = notificacoes.map(n => {
+                        let icon = '🔔';
+                        let corTitulo = '#94a3b8';
+                        let bgCor = 'transparent';
+                        
+                        if(n.tipo === 'perigo') { icon = '🚨'; corTitulo = 'var(--danger)'; bgCor = 'rgba(239, 68, 68, 0.05)'; }
+                        if(n.tipo === 'aviso') { icon = '⚠️'; corTitulo = 'var(--warning)'; bgCor = 'rgba(245, 158, 11, 0.05)'; }
+                        if(n.tipo === 'info') { icon = '💡'; corTitulo = '#3b82f6'; bgCor = 'rgba(59, 130, 246, 0.05)'; }
+                        
+                        return `
+                        <div style="padding: 15px; border-bottom: 1px solid #334155; display: flex; gap: 15px; align-items: start; background: ${bgCor}; transition: 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='${bgCor}'">
+                            <span style="font-size: 20px;">${icon}</span>
+                            <div>
+                                <div style="color: ${corTitulo}; font-size: 13px; font-weight: bold; margin-bottom: 4px;">${n.titulo}</div>
+                                <div style="color: #cbd5e1; font-size: 12px; line-height: 1.5;">${n.mensagem}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    badge.style.display = 'none';
+                    lista.innerHTML = `
+                    <div style="padding: 30px 20px; text-align: center;">
+                        <div style="font-size: 30px; margin-bottom: 10px;">🎉</div>
+                        <div style="color: #94a3b8; font-size: 13px;">Tudo tranquilo!<br>Nenhum alerta no momento.</div>
+                    </div>`;
+                }
+            }
+        } catch(e) {
+            console.error("Erro ao carregar notificações", e);
+        }
     },
 
     desenharTabela: (lista) => {
         const tbody = document.getElementById('tabela-clientes');
-        if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Nenhuma escola encontrada.</td></tr>'; return; }
+        tbody.innerHTML = ''; // Limpa a tabela antes de desenhar a nova
         
-        tbody.innerHTML = lista.map(c => {
-            const rawEmail = (c.email || "").trim().toLowerCase();
-            const safeEmail = Admin.escapeHTML(rawEmail);
-            
-            // 🛡️ Segurança dupla nos botões para os e-mails não sumirem no clique!
-            const jsSafeEmail = Admin.escapeJS(rawEmail);
-            const jsSafePinAtivacao = Admin.escapeJS(c.pinAtivacao);
+        if(!lista || lista.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Nenhuma escola encontrada.</td></tr>'; 
+            return; 
+        }
+        
+        // 🚀 O SEGREDO: Constrói as linhas uma a uma no DOM!
+        lista.forEach(c => {
+            try {
+                const rawEmail = (c.email || "").trim().toLowerCase();
+                const safeEmail = Admin.escapeHTML(rawEmail);
+                const jsSafeEmail = Admin.escapeJS(rawEmail);
+                const jsSafePinAtivacao = c.pinAtivacao ? Admin.escapeJS(c.pinAtivacao) : '';
+                const safeStatus = Admin.escapeHTML(c.status || 'Pendente');
 
-            let badgeClass = c.status === 'Verificado' ? 'color:var(--success); background:rgba(16, 185, 129, 0.2);' : (c.status === 'Pendente' ? 'color:var(--warning); background:rgba(245, 158, 11, 0.2);' : 'color:var(--danger); background:rgba(239, 68, 68, 0.2);');
-            let statusPin = c.status === 'Verificado' ? '<span style="color:var(--success);">✅ ATIVO</span>' : (c.pinAtivacao ? Admin.escapeHTML(c.pinAtivacao) : '<span style="color:#64748b;">Aguardando...</span>');
-            
-            let planoNome = c.plano;
-            if (!planoNome || planoNome === 'Aguardando' || planoNome === 'Teste') {
-                if (c.pinAtivacao) {
-                    const pinUpper = String(c.pinAtivacao).toUpperCase();
-                    if (pinUpper.includes('PRE')) planoNome = 'Premium';
-                    else if (pinUpper.includes('PRO')) planoNome = 'Profissional';
-                    else if (pinUpper.includes('ESS')) planoNome = 'Essencial';
-                    else planoNome = 'Liberado'; 
+                // 1. Cores do Status
+                let badgeClass = 'color:var(--warning); background:rgba(245, 158, 11, 0.2);'; 
+                if (safeStatus === 'Verificado' || safeStatus === 'Ativo') badgeClass = 'color:var(--success); background:rgba(16, 185, 129, 0.2);';
+                else if (safeStatus === 'Bloqueado') badgeClass = 'color:var(--danger); background:rgba(239, 68, 68, 0.2);';
+                
+                // 2. O Texto do PIN
+                let statusPinHTML = '';
+                if (safeStatus === 'Verificado' || safeStatus === 'Ativo') {
+                    statusPinHTML = '<span style="color:var(--success); font-weight:bold;">✅ ATIVO</span>';
+                } else if (jsSafePinAtivacao) {
+                    statusPinHTML = `<span style="font-weight:bold; letter-spacing: 1px;">${Admin.escapeHTML(c.pinAtivacao)}</span>`;
                 } else {
-                    planoNome = 'Pendente';
+                    statusPinHTML = '<span style="color:#f59e0b; font-weight:bold; font-size:11px;">⚠️ AGUARDANDO PIN</span>';
                 }
+                
+                // 3. O Plano
+                let planoNome = c.plano || 'Pendente';
+                if (planoNome === 'Aguardando' || planoNome === 'Teste' || planoNome === 'Pendente') {
+                    if (c.pinAtivacao) {
+                        const pinUpper = String(c.pinAtivacao).toUpperCase();
+                        if (pinUpper.includes('PRE')) planoNome = 'Premium';
+                        else if (pinUpper.includes('PRO')) planoNome = 'Profissional';
+                        else if (pinUpper.includes('ESS')) planoNome = 'Essencial';
+                        else planoNome = 'Liberado'; 
+                    } else {
+                        planoNome = 'Pendente';
+                    }
+                }
+
+                const jsSafePlano = Admin.escapeJS(planoNome);
+                let planoClass = 'bg-gray';
+                let planoDisplay = planoNome;
+                
+                if(planoNome === 'Essencial') planoClass = 'plan-essencial';
+                else if(planoNome === 'Profissional') planoClass = 'plan-profissional';
+                else if(planoNome === 'Premium') planoClass = 'plan-premium';
+                else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
+
+                // 4. Os Botões de Ação (Separados para não quebrar a visualização)
+                let botoesAcaoHTML = '';
+                if (jsSafePinAtivacao) {
+                    const zapLink = `https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + jsSafePinAtivacao)}`;
+                    botoesAcaoHTML = `
+                        <button onclick="Admin.abrirModalMudarPlano('${jsSafeEmail}', '${jsSafePlano}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; cursor:pointer; transition:0.2s;">🔄 Plano</button>
+                        <button onclick="window.open('${zapLink}', '_blank')" style="background:#25D366; color:white; border:none; cursor:pointer; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;">💬 Zap</button>
+                        <button onclick="Admin.copiarAcesso('${jsSafeEmail}', '${jsSafePinAtivacao}', '${jsSafePlano === 'Liberado' ? 'VIP' : jsSafePlano}')" style="background:#475569; color:white; border:none; cursor:pointer; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;">📋 Copiar</button>
+                    `;
+                } else {
+                    botoesAcaoHTML = `
+                        <button onclick="Admin.abrirModalMudarPlano('${jsSafeEmail}', 'Profissional')" style="background:#10b981; color:white; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; cursor:pointer; transition:0.2s;">✅ Aprovar / Gerar PIN</button>
+                    `;
+                }
+
+                botoesAcaoHTML += `
+                    <button onclick="Admin.bloquear('${jsSafeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:5px; font-size:12px; transition:0.2s;">🚫 Bloq</button>
+                    <button onclick="Admin.excluir('${jsSafeEmail}')" style="background:#000000; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:5px; font-size:12px; transition:0.2s; margin-left: 5px;">🗑️ Excluir</button>
+                `;
+
+                // 5. A MÁGICA DA BLINDAGEM: Cria o elemento "tr" e insere no ecrã. Impossível falhar!
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = "1px solid #334155";
+                tr.style.transition = "background 0.2s";
+                tr.onmouseover = () => tr.style.background = '#1e293b';
+                tr.onmouseout = () => tr.style.background = 'transparent';
+                
+                tr.innerHTML = `
+                    <td style="padding:15px; font-weight:bold; max-width: 250px; word-break: break-all; white-space: normal;">${safeEmail}</td>
+                    <td style="padding:15px;"><span class="${planoClass}">${Admin.escapeHTML(planoDisplay)}</span></td>
+                    <td style="padding:15px; font-family:monospace;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; ${badgeClass}">${safeStatus}</span>
+                            ${statusPinHTML}
+                        </div>
+                    </td>
+                    <td style="padding:15px; text-align:right; white-space: nowrap;">${botoesAcaoHTML}</td>
+                `;
+                
+                tbody.appendChild(tr);
+
+            } catch (err) {
+                console.error("🚨 ERRO AO DESENHAR A LINHA:", c.email, err);
             }
-
-            const jsSafePlano = Admin.escapeJS(planoNome);
-
-            let planoClass = 'bg-gray';
-            let planoDisplay = planoNome;
-            
-            if(planoNome === 'Essencial') planoClass = 'plan-essencial';
-            else if(planoNome === 'Profissional') planoClass = 'plan-profissional';
-            else if(planoNome === 'Premium') planoClass = 'plan-premium';
-            else if(planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
-
-            const safeStatus = Admin.escapeHTML(c.status);
-
-            return `
-            <tr style="border-bottom:1px solid #334155; transition: background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
-                <td style="padding:15px; font-weight:bold; max-width: 250px; word-break: break-all; white-space: normal;">${safeEmail}</td>
-                <td style="padding:15px;">
-                    <span class="${planoClass}">${Admin.escapeHTML(planoDisplay)}</span>
-                </td>
-                <td style="padding:15px; font-family:monospace;">
-                    <span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-right: 10px; ${badgeClass}">${safeStatus}</span>
-                    ${statusPin}
-                </td>
-                <td style="padding:15px; text-align:right; white-space: nowrap;">
-                    <button onclick="Admin.abrirModalMudarPlano('${jsSafeEmail}', '${jsSafePlano}')" style="background:var(--warning); color:#0f172a; border:none; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#fbbf24'" onmouseout="this.style.background='var(--warning)'" title="Upgrade / Downgrade">🔄 Plano</button>
-                    
-                   ${jsSafePinAtivacao ? `<button onclick="window.open('https://wa.me/?text=${encodeURIComponent('Olá! O seu PIN de acesso ao sistema escolar é: ' + jsSafePinAtivacao)}', '_blank')" style="background:#25D366; color:white; border:none; cursor:pointer; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">💬 Zap</button>
-                    <button onclick="Admin.copiarAcesso('${jsSafeEmail}', '${jsSafePinAtivacao}', '${jsSafePlano === 'Liberado' ? 'VIP' : jsSafePlano}')" style="background:#475569; color:white; border:none; cursor:pointer; padding:8px 12px; border-radius:5px; font-size:12px; margin-right:5px; transition:0.2s;" onmouseover="this.style.background='#64748b'" onmouseout="this.style.background='#475569'">📋 Copiar</button>` : ''}
-                    
-                    <button onclick="Admin.bloquear('${jsSafeEmail}')" style="background:var(--danger); color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:5px; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='var(--danger)'">🚫 Bloq</button>
-                    <button onclick="Admin.excluir('${jsSafeEmail}')" style="background:#000000; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:5px; font-size:12px; transition:0.2s; margin-left: 5px;" onmouseover="this.style.background='#333333'" onmouseout="this.style.background='#000000'" title="Excluir Definitivamente">🗑️ Excluir</button>
-                </td>
-            </tr>
-        `}).join('');
+        });
     },
 
     // 🚀 NOVO: Pesquisa à prova de falhas (Aceita nulos, números, e caracteres perdidos)
-    filtrarTabela: (termo) => {
-        if (!termo) {
+ filtrarTabela: (termo) => {
+        // Se a barra estiver vazia, desenha tudo!
+        if (!termo || termo.trim() === '') {
             Admin.desenharTabela(cacheClientes);
             return;
         }
+        
         const t = termo.toLowerCase().trim();
         const filtrados = cacheClientes.filter(c => {
             const emailStr = c.email ? String(c.email).toLowerCase() : '';
@@ -189,6 +298,7 @@ const Admin = {
             
             return emailStr.includes(t) || planoStr.includes(t) || statusStr.includes(t) || pinStr.includes(t);
         });
+        
         Admin.desenharTabela(filtrados);
     },
 

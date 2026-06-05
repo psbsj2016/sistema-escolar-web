@@ -136,17 +136,23 @@ Object.assign(App, {
 
         const dataHoje = new Date();
 
-        // Respeita a data de validade imposta no sistema
+        // 🚀 MÁGICA DO BLOQUEIO: Se for Teste, tranca a porta aos 7 dias SEM EXCEÇÃO!
+        if (plano === 'Teste') {
+            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
+            const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
+            return diffDays >= 7;
+        }
+
+        // Respeita a data de validade imposta no sistema (Planos Pagos)
         if (escola.dataExpiracao) {
             const dataVenc = new Date(escola.dataExpiracao);
             return dataHoje >= dataVenc;
         } else {
             // Fallback para escolas que ainda não tem a data registrada
-            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : new Date();
+            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
             const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
             
-            if (plano === 'Teste' && diffDays >= 7) return true;
-            if (plano !== 'Teste' && plano !== 'Premium' && diffDays >= 30) return true; 
+            if (plano !== 'Premium' && diffDays >= 30) return true; 
         }
 
         return false;
@@ -170,7 +176,7 @@ verificarLimites: async (tipo) => {
                 const usuarios = await App.api('/usuarios');
                 const limite = plano === 'Essencial' ? 2 : (plano === 'Profissional' ? 4 : 0);
                 if (usuarios.length >= limite) {
-                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipa!`, "warning");
+                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipe!`, "warning");
                     setTimeout(() => App.renderizarMeuPlano(), 2000);
                     return false;
                 }
@@ -194,37 +200,75 @@ verificarLimites: async (tipo) => {
         return true;
     },
 
+    // =========================================================
+    // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS
+    // =========================================================
     api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
-        
-        
         const options = {
-    method,
-    headers,
-    credentials: 'include',
-    cache: 'no-store'
-}; 
+            method,
+            headers,
+            credentials: 'include',
+            cache: 'no-store'
+        }; 
+
         if (body) options.body = JSON.stringify(body);
         
-        try {
-            const response = await fetch(`${API_URL}${endpoint}`, options);
-            
-            let data;
-            try { data = await response.json(); } catch(e) { data = null; }
+        // 🚀 O SEGREDO DO ROTEAMENTO INTELIGENTE
+        let servidorBackend = API_URL;
+        
+        // Se estivermos no ambiente de testes (computador local)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            servidorBackend = 'http://localhost:3000'; // Força a porta do Node.js!
+        } else {
+            // Em produção (servidor real), limpa o "/api" fantasma se ele existir
+            servidorBackend = API_URL.replace(/\/api$/, '');
+        }
 
+        // Limpa qualquer "/api" que o código possa ter adicionado acidentalmente
+        const endpointLimpo = endpoint.replace(/^\/api/, '');
+        
+        // URL Final Perfeita
+        const urlFinal = `${servidorBackend}${endpointLimpo}`;
+        
+        try {
+            const response = await fetch(urlFinal, options);
+            
+            // 🛡️ O GUARDA-COSTAS ENTRA AQUI
             if (!response.ok) { 
+                // 1. Proteção contra Sessão Expirada
                 if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth/')) { 
                     App.showToast("Sessão expirada. Faça login novamente.", "warning");
-                    App.logout(); 
+                    if (typeof App.logout === 'function') App.logout(); 
+                    return { error: "Sessão expirada" };
                 }
-                return data || { error: `Erro HTTP: ${response.status}` };
+                
+                // 2. Extrai o erro que o Backend enviou
+                const errorData = await response.json().catch(() => ({}));
+                const mensagemErro = errorData.error || `Erro no servidor (${response.status})`;
+                
+                App.showToast(mensagemErro, "error");
+                return { error: mensagemErro };
             }
             
-            if (method !== 'GET' && App.usuario) setTimeout(App.verificarNotificacoes, 800);
+            // Se chegou aqui, a resposta foi SUCESSO (200 OK)
+            const data = await response.json();
+            
+            // Atualiza as notificações no fundo se for uma ação (POST/PUT/DELETE)
+            if (method !== 'GET' && App.usuario && typeof App.verificarNotificacoes === 'function') {
+                setTimeout(App.verificarNotificacoes, 800);
+            }
+            
             return data;
+
         } catch (error) { 
-            console.error("Erro no fetch:", error);
-            return method === 'GET' ? [] : { error: 'Falha na conexão. Verifique a internet.' }; 
+            console.error(`❌ Falha na API [${method} ${urlFinal}]:`, error.message);
+            const msgNet = error.message === "Failed to fetch" || error.message.includes("NetworkError") 
+                         ? "Sem ligação ao servidor Backend (Porta 3000 desligada?)" 
+                         : error.message;
+            
+            App.showToast(msgNet, "error");
+            return method === 'GET' ? [] : { error: msgNet }; 
         }
     },
 
@@ -247,6 +291,7 @@ fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.di
 voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
 
 enviarCodigoInst: async () => {
+    console.log("🔥 Clique recebido no botão de Cadastro!"); // <--- ADICIONE ESTA LINHA
     const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
     if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
     const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
@@ -329,17 +374,27 @@ validarCadastroInst: async () => {
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         const hojeTime = new Date().getTime();
         
-        // Pega os dias restantes diretos da nova arquitetura de expiração
-        if (escola.dataExpiracao) {
+        // 🚀 A MÁGICA: Regra ABSOLUTA para o Plano Teste (Ignora a data do servidor)
+        if (planoAtual === 'Teste') {
+            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao).getTime() : hojeTime;
+            const diffTime = Math.abs(hojeTime - dataCriacao);
+            diasRestantes = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        } 
+        // 📅 Para planos pagos, respeita a data de expiração oficial
+        else if (escola.dataExpiracao) {
             const diffTime = new Date(escola.dataExpiracao).getTime() - hojeTime;
             diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        } else if (escola.dataCriacao) {
+        } 
+        // Fallback antigo
+        else if (escola.dataCriacao) {
             const diffTime = Math.abs(hojeTime - new Date(escola.dataCriacao).getTime());
-            diasRestantes = (planoAtual === 'Teste' ? 7 : 30) - Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            diasRestantes = 30 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
         }
+
         if(diasRestantes < 0) diasRestantes = 0;
 
         let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+
         const infoPlano = planoAtual === 'Teste' 
             ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px;">⏳ Plano Teste (${diasRestantes} dias restantes)</strong>` 
             : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias)</strong>`;
@@ -369,7 +424,7 @@ validarCadastroInst: async () => {
                     <p style="color:#666; font-size:13px; margin-bottom:20px;">Para pequenos cursos e professores particulares.</p>
                     <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
                         <li style="margin-bottom:10px;">✅ Até 20 Alunos Ativos</li>
-                        <li style="margin-bottom:10px;">✅ 2 Acessos (Gestor + 1 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ 2 Acessos (Gestor + 1 Equipe)</li>
                         <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
                         <li style="margin-bottom:10px;">✅ Controle Financeiro</li>
                         <li style="margin-bottom:10px; color:#ccc;">❌ Cobrança via WhatsApp</li>
@@ -385,7 +440,7 @@ validarCadastroInst: async () => {
                     <p style="color:#666; font-size:13px; margin-bottom:20px;">A solução completa para acabar com a inadimplência.</p>
                     <ul style="list-style:none; padding:0; margin:0 0 25px 0; text-align:left; font-size:14px; color:#555;">
                         <li style="margin-bottom:10px;">✅ Até 80 Alunos Ativos</li>
-                        <li style="margin-bottom:10px;">✅ 4 Acessos (Gestor + 3 Equipa)</li>
+                        <li style="margin-bottom:10px;">✅ 4 Acessos (Gestor + 3 Equipe)</li>
                         <li style="margin-bottom:10px;">✅ Gestão Pedagógica</li>
                         <li style="margin-bottom:10px;">✅ Financeiro Completo</li>
                         <li style="margin-bottom:10px;">✅ <strong>Cobrança WhatsApp</strong></li>
@@ -1701,7 +1756,7 @@ validarCadastroInst: async () => {
 excluirUsuario: (id) => { 
         App.abrirModalConfirmacao(
             "Apagar Utilizador?", 
-            "Deseja remover o acesso deste membro da equipa? A ação não pode ser desfeita.", 
+            "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
             async (modal) => {
                 document.body.style.cursor = 'wait';
                 try {

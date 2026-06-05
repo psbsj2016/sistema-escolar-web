@@ -1,15 +1,20 @@
 // main.js (Agora na raiz do projeto)
-import './js/config.js';
+import { CONFIG } from './js/config.js';
 import './js/app.js';
 import './js/modulos/ui.js';
 import './js/modulos/tema.js';
 import './js/modulos/auth.js';
-import './js/modulos/dashboard.js';
+// Importamos tudo o que o dashboard exporta e guardamos na variável Dashboard
+import * as Dashboard from './js/modulos/dashboard.js';
+
+// Juntamos as funções do dashboard ao nosso App global para não quebrar o HTML
+Object.assign(window.App, Dashboard);
 import './js/modulos/notificacoes.js';
 import './js/modulos/contratos.js';
 import './js/admin.js';
 import './js/modulos/cadastros.js';
-import './js/modulos/financeiro.js';
+import * as Financeiro from './js/modulos/financeiro.js';
+Object.assign(window.App, Financeiro);
 import './js/modulos/pedagogico.js';
 import './js/modulos/relatorios.js';
 

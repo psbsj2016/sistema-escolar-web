@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Matrículas - Selecione a Modalidade</title>
+    <style>
+        :root {
+            --primary: #2c3e50;      
+            --secondary: #3498db;    
+            --bg-color: #f4f7f6;     
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            max-width: 600px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            max-width: 900px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap; 
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none; 
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.15);
+            border-color: var(--secondary);
+        }
+
+        .icon-wrapper {
+            font-size: 65px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .icon-wrapper {
+            transform: scale(1.1);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            flex-grow: 1; 
+        }
+
+        .btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 16px 25px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card:hover .btn {
+            background-color: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .cards-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Bem-vindo(a) à Área de Matrículas</h1>
+        <p>Estamos muito felizes em tê-lo(a) connosco! Por favor, selecione abaixo a modalidade do curso que pretende frequentar.</p>
+    </div>
+
+    <div class="cards-container">
+        <a href="matricula.html" class="card" id="link-presencial">
+            <div class="icon-wrapper">🏫</div>
+            <h2>Curso Presencial</h2>
+            <p>Aulas presenciais na nossa unidade física. Acesso completo à infraestrutura, laboratórios e contacto direto com os nossos professores.</p>
+            <div class="btn">Matrícula Presencial</div>
+        </a>
+
+        <a href="matricula-online.html" class="card" id="link-online">
+            <div class="icon-wrapper">💻</div>
+            <h2>Curso Online (EAD)</h2>
+            <p>Estude a partir de casa e ao seu próprio ritmo. Acesso imediato à plataforma virtual de aprendizagem, materiais e suporte 100% online.</p>
+            <div class="btn">Matrícula Online</div>
+        </a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Pega o ID da escola da URL (ex: ?escola=66fba123...)
+            const params = window.location.search; 
+            
+            // Injeta o ID nos links dos botões
+            const btnPresencial = document.getElementById("link-presencial");
+            const btnOnline = document.getElementById("link-online");
+            
+            if (btnPresencial) btnPresencial.href = "matricula.html" + params;
+            if (btnOnline) btnOnline.href = "matricula-online.html" + params;
+        });
+    </script>
+
+</body>
+</html>

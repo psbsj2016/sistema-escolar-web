@@ -33,7 +33,7 @@ export default defineConfig({
       // 👇 A SOLUÇÃO MÁGICA ENTRA AQUI 👇
       workbox: {
         // Diz ao PWA para NÃO redirecionar estas páginas para o index.html
-        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/]
+        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/, /^\/hub-matriculas/]
       }
     })
   ],

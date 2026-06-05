@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matrícula Online</title>
+    <title>Matrícula Presencial</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" type="image/png">
 
     <style>
@@ -62,7 +62,7 @@
         
     <div class="header">
         <img id="logoEscola" src="" alt="Logo da Escola" style="max-height: 100px; max-width: 100%; display: none; margin: 0 auto 15px auto; border-radius: 8px;">
-        <h2 id="tituloPagina">Matrícula Online</h2>
+        <h2 id="tituloPagina">Matrícula Presencial</h2>
         <p id="desc-matricula">Preencha os dados abaixo com atenção para garantir a sua vaga.</p>
     </div>
 
@@ -73,6 +73,7 @@
     </div>
 
     <form id="formMatricula">
+    <input type="hidden" name="modalidade_escolhida" value="Presencial">
         <h3>1. Dados Pessoais</h3>
         <div class="input-group">
             <label>Nome Completo *</label>
@@ -146,7 +147,7 @@
         <h3>3. Dados do Curso e Pagamento</h3>
         <div class="grid-2">
             <div class="input-group">
-                <label>Plano de Curso *</label>
+                <label>Curso Adquirido *</label>
                 <select id="plano_curso" required>
                     <option value="">-- Selecione --</option>
                 </select>
@@ -199,7 +200,7 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
-    const API_BASE = window.location.origin + '/api';
+    const API_BASE = 'http://localhost:3000'; // Coloque a porta correta do seu backend local se não for 3000
     let escolaValida = false;
  
     // Forçar a atualização do Service Worker sempre que carregar a página

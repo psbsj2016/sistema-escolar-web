@@ -582,7 +582,7 @@ App.gerarFichaImprimir = async () => {
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px; background:#fff3e0; padding:15px; border-radius:5px; border:1px dashed #e67e22;">
                     <div><b>Nome do Responsável:</b> ${App.escapeHTML(aluno.resp_nome)}</div>
                     <div><b>Grau Parentesco:</b> ${App.escapeHTML(aluno.resp_parentesco || '-')}</div>
-                    <div><b>CPF do Respons.:</b> ${App.escapeHTML(aluno.resp_cpf || '-')}</div>
+                    <div><b>CPF do Responsável:</b> ${App.escapeHTML(aluno.resp_cpf || '-')}</div>
                     <div><b>WhatsApp:</b> ${App.escapeHTML(aluno.resp_zap || '-')}</div>
                 </div>
             `;
@@ -604,7 +604,7 @@ App.gerarFichaImprimir = async () => {
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; color:#2c3e50; font-size:15px;">1. DADOS DO ALUNO</h3>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
                         <div><b>Nome:</b> ${App.escapeHTML(aluno.nome || '-')}</div>
-                        <div><b>Data Nasc:</b> ${App.escapeHTML(aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-')}</div>
+                        <div><b>Data Nascimento:</b> ${App.escapeHTML(aluno.nascimento ? aluno.nascimento.split('-').reverse().join('/') : '-')}</div>
                         <div><b>CPF:</b> ${App.escapeHTML(aluno.cpf || '-')}</div>
                         <div><b>RG:</b> ${App.escapeHTML(aluno.rg || '-')}</div>
                         <div><b>Sexo:</b> ${App.escapeHTML(aluno.sexo || '-')}</div>
@@ -642,7 +642,7 @@ App.gerarFichaImprimir = async () => {
                     </div>
 
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color:#2c3e50; font-size:15px;">3. ENDEREÇO</h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; font-size:13px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15x; margin-bottom: 20px; font-size:13px;">
                         <div style="grid-column: 1 / -1;"><b>Logradouro:</b> ${App.escapeHTML(aluno.rua || '-')}, ${App.escapeHTML(aluno.numero || '-')}</div>
                         <div><b>Bairro:</b> ${App.escapeHTML(aluno.bairro || '-')}</div>
                         <div><b>Cidade/UF:</b> ${App.escapeHTML(aluno.cidade || '-')}/${App.escapeHTML(aluno.estado || '-')}</div>

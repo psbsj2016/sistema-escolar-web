@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-  <script type="module" crossorigin src="/assets/main-CRGT3aNv.js"></script>
+  <script type="module" crossorigin src="/assets/main-ChATyeKl.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-De_JJ5pM.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body class="admin-portal-body">
@@ -24,8 +24,25 @@
 
     <div id="dashboard" style="display: none; flex: 1; flex-direction: column;">
         <header style="background: var(--card); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
-            <h1 style="margin:0; font-size:24px; color:var(--text); letter-spacing:1px;"> Painel Master</h1>
+            <h1 style="margin:0; font-size:24px; color:var(--text); letter-spacing:1px;">👑 Painel Master</h1>
+            
             <div style="display:flex; gap:15px; align-items:center;">
+                
+                <div style="position: relative; cursor: pointer; margin-right: 15px;" onclick="Admin.toggleNotificacoes()">
+                    <span style="font-size: 24px; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🔔</span>
+                    <span id="badge-notificacao" style="position: absolute; top: -5px; right: -8px; background: var(--danger); color: white; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 50%; display: none; box-shadow: 0 0 10px rgba(239,68,68,0.5);">0</span>
+                    
+                    <div id="dropdown-notificacoes" style="display: none; position: absolute; top: 45px; right: -15px; width: 340px; background: var(--card); border: 1px solid #334155; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); z-index: 1000; overflow: hidden; cursor: default; text-align: left;" onclick="event.stopPropagation()">
+                        <div style="padding: 15px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; background: #0f172a;">
+                            <h3 style="margin: 0; font-size: 14px; color: white; font-weight: 600;">Central de Alertas</h3>
+                            <button onclick="Admin.toggleNotificacoes(); event.stopPropagation();" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px;">&times;</button>
+                        </div>
+                        <div id="lista-notificacoes" style="max-height: 350px; overflow-y: auto; background: var(--card);">
+                            <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">Carregando alertas...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <button onclick="Admin.abrirModalVip()" style="background: linear-gradient(135deg, var(--success), #059669); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition:0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">➕ Cadastro VIP</button>
                 <button onclick="Admin.logout()" style="background: #334155; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Sair</button>
             </div>
@@ -56,7 +73,7 @@
                 <div style="padding: 20px; border-bottom: 1px solid #334155; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
                     <h2 style="margin:0; font-weight:400; font-size:18px;">Escolas Gerenciadas</h2>
                     
-                    <input type="text" id="pesquisa-admin" placeholder="🔍 Pesquisar e-mail ou plano..." oninput="Admin.filtrarTabela(this.value)" autocomplete="off" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                    <input type="text" id="busca-tabela-escolas" name="busca_aleatoria" placeholder="🔍 Buscar registros e cadastros..." oninput="Admin.filtrarTabela(this.value)" autocomplete="new-password" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 </div>
                 
                 <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">

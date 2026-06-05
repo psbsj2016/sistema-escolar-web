@@ -63,8 +63,9 @@ Object.assign(App, {
                 ? App.sanitizeHTML(App.unescapeHTML(contrato.conteudoHTML))
                 : "<p>O contrato não possui texto legível.</p>";
             
-            const dataBr = (contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt) 
-                ? new Date(contrato.dataHoraRegistro || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
+            // 🔄 CORREÇÃO: Adicionámos o 'contrato.dataCriacao' à verificação
+            const dataBr = (contrato.dataHoraRegistro || contrato.dataCriacao || contrato.dataHora || contrato.createdAt) 
+                ? new Date(contrato.dataHoraRegistro || contrato.dataCriacao || contrato.dataHora || contrato.createdAt).toLocaleString('pt-BR') 
                 : 'Data não registada';
 
             // 4. Montar o HTML super otimizado e segmentado
@@ -121,7 +122,7 @@ Object.assign(App, {
                             <td style="padding: 6px; border-bottom: 1px solid #eee; width: 60%;"><b>Turma:</b> ${turma}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Plano de Curso:</b> ${planoCurso}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Curso Adquirido:</b> ${planoCurso}</td>
                             <td style="padding: 6px; border-bottom: 1px solid #eee;"><b>Dia de Vencimento:</b> ${vencimento}</td>
                             <td colspan="2" style="padding: 6px; border-bottom: 1px solid #eee; color: #27ae60;"><b>🕒 Horário de Preferência:</b> ${horario}</td>
                         </tr>
@@ -208,7 +209,7 @@ Object.assign(App, {
             }
 
             const meuEscolaId = escola.escolaId;
-            const linkBaseEscola = `${window.location.origin}/matricula.html?escola=${encodeURIComponent(meuEscolaId)}`;
+            const linkBaseEscola = `${window.location.origin}/hub-matriculas.html?escola=${encodeURIComponent(meuEscolaId)}`;
             const links = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
 
             const htmlLista = links.length === 0
@@ -247,7 +248,7 @@ Object.assign(App, {
                 <div class="card">
                     <h3>🔗 Links de Matrícula</h3>
                     <p style="font-size:13px; color:#666;">
-                        Gere links públicos para matrícula online. Cada link abre o <strong>matricula.html</strong> com o ID desta instituição.
+                        Gere links públicos para matrícula. Cada link abre o <strong>Hub de Seleção (Presencial/Online)</strong> com o ID desta instituição.
                     </p>
 
                     <div style="background:#f8f9fa; border:1px solid #eee; padding:15px; border-radius:10px; margin-bottom:20px;">
@@ -363,7 +364,7 @@ Object.assign(App, {
         );
     },
    
-    renderizarContratos: async () => {
+   renderizarContratos: async () => {
         const area = document.getElementById('area-dinamica-hub') || document.getElementById('app-content');
         area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar o cofre... ⏳</p>';
 
@@ -376,31 +377,70 @@ Object.assign(App, {
                 return;
             }
 
-            lista.sort((a, b) => new Date(b.dataHoraRegistro) - new Date(a.dataHoraRegistro));
+            // Ordena os contratos do mais recente para o mais antigo
+            lista.sort((a, b) => new Date(b.dataHoraRegistro || b.dataCriacao) - new Date(a.dataHoraRegistro || a.dataCriacao));
 
-            let htmlLista = lista.map(c => {
-                const dataBr = new Date(c.dataHoraRegistro).toLocaleString('pt-BR');
+            // Função que desenha o layout do documento (agora dinâmico com cores)
+            const desenharCard = (c, corBorda, icone) => {
+                const dataRegistro = c.dataHoraRegistro || c.dataCriacao || new Date().toISOString();
+                const dataBr = new Date(dataRegistro).toLocaleString('pt-BR');
+                const nomeSeguro = App.escapeHTML(c.nomeAluno || c.nome || 'Aluno Indefinido');
+                
                 return `
-                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid #2c3e50; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid ${corBorda}; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div>
-                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">📄 ${App.escapeHTML(c.nomeAluno)}</div>
+                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">${icone} ${nomeSeguro}</div>
                         <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#2c3e50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">👁️ Ver</button>
+                        <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:${corBorda}; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">👁️ Ver</button>
                         <button onclick="App.excluirContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">🗑️ Apagar</button>
                     </div>
                 </div>`;
-            }).join('');
+            };
 
-            area.innerHTML = `<div>
+            // 🚀 A MAGIA DA SEPARAÇÃO ACONTECE AQUI
+            // Filtramos quem tem a modalidade Online e quem não tem (Presencial)
+            const ead = lista.filter(c => c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online')));
+            const presencial = lista.filter(c => !(c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online'))));
+
+            const htmlEAD = ead.length > 0 
+                ? ead.map(c => desenharCard(c, '#27ae60', '💻')).join('') 
+                : '<p style="text-align:center; color:#999; font-size:12px; padding:20px; border:1px dashed #bbf7d0; border-radius:8px;">Nenhuma matrícula online.</p>';
+                
+            const htmlPresencial = presencial.length > 0 
+                ? presencial.map(c => desenharCard(c, '#2c3e50', '🏫')).join('') 
+                : '<p style="text-align:center; color:#999; font-size:12px; padding:20px; border:1px dashed #e2e8f0; border-radius:8px;">Nenhuma matrícula presencial.</p>';
+
+            // Monta as duas colunas lado a lado
+            area.innerHTML = `
+            <div>
                 <div style="background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px; text-align:center;">
                     🔒 <strong>Zona de Segurança Jurídica:</strong> Os documentos listados abaixo são registos oficiais imutáveis.
                 </div>
-                ${htmlLista}
+                
+                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items: flex-start;">
+                    <div style="flex:1; min-width:300px; background:#f8f9fa; padding:15px; border-radius:10px; border-top: 4px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <h3 style="text-align:center; color:#2c3e50; margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
+                            🏫 Curso Presencial 
+                            <span style="font-size:12px; background:#2c3e50; color:white; padding:3px 8px; border-radius:12px; vertical-align:middle; margin-left:5px;">${presencial.length}</span>
+                        </h3>
+                        ${htmlPresencial}
+                    </div>
+
+                    <div style="flex:1; min-width:300px; background:#f0fdf4; padding:15px; border-radius:10px; border-top: 4px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <h3 style="text-align:center; color:#27ae60; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">
+                            💻 Curso Online 
+                            <span style="font-size:12px; background:#27ae60; color:white; padding:3px 8px; border-radius:12px; vertical-align:middle; margin-left:5px;">${ead.length}</span>
+                        </h3>
+                        ${htmlEAD}
+                    </div>
+                </div>
             </div>`;
+            
             App.listaCacheContratos = lista;
         } catch(e) {
+            console.error(e);
             area.innerHTML = "<p style='color:red;'>Erro ao carregar cofre.</p>";
         }
     },
@@ -492,88 +532,139 @@ Object.assign(App, {
         try {
             const escola = await App.api('/escola') || {};
             
-            if (!escola.configMatricula) {
-                escola.configMatricula = {
-                    imagemHeader: 'https://placehold.co/1000x500?text=Sua+Imagem+de+Cabecalho',
-                    imagemPosicao: '50% 50%', 
-                    tituloHeader: 'Matrícula Digital',
-                    descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
-                    opcoesPlano: 'Padrão, Intensivo, Personalizado',
-                    opcoesVencimento: '08, 20',
-                    textoContrato: `TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS<br><br>CLÁUSULA PRIMEIRA – DO OBJETO<br>O presente contrato tem como objeto...`
-                };
-            }
+            const configPadrao = {
+                imagemHeader: 'https://placehold.co/1000x500?text=Sua+Imagem+de+Cabecalho',
+                imagemPosicao: '50% 50%', 
+                tituloHeader: 'Matrícula Digital',
+                descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
+                opcoesPlano: 'Padrão, Intensivo, Personalizado',
+                opcoesVencimento: '08, 20',
+                horarios: '',
+                textoContrato: `TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS<br><br>CLÁUSULA PRIMEIRA...`
+            };
 
-            App.configTemp = { ...escola.configMatricula };
-            if (!App.configTemp.imagemPosicao) App.configTemp.imagemPosicao = '50% 50%';
+            // Puxa a caixa de configurações principal que o banco de dados aceita
+            const configBD = escola.configMatricula || {};
 
-            if (App.configTemp.textoContrato) {
-                App.configTemp.textoContrato = App.unescapeHTML(App.configTemp.textoContrato);
-            }
+            // 1. O Presencial recebe a caixa principal (ignorando o EAD que está lá dentro)
+            let configPresencial = { ...configBD };
+            delete configPresencial.online; // Limpa o EAD para não sujar o Presencial
+            
+            if (!configPresencial.tituloHeader) configPresencial = { ...configPadrao };
+            if (configPresencial.textoContrato) configPresencial.textoContrato = App.unescapeHTML(configPresencial.textoContrato);
 
+            // 2. O Online puxa do compartimento secreto "online"
+            let configOnline = configBD.online || { 
+                ...configPadrao, 
+                tituloHeader: 'Matrícula Digital EAD',
+                opcoesPlano: 'Curso Online VIP, Curso Online Básico',
+                horarios: '100% Online'
+            };
+            if (configOnline.textoContrato) configOnline.textoContrato = App.unescapeHTML(configOnline.textoContrato);
+
+            // Guarda as duas na memória para podermos editar
+            App.configTemp = {
+                presencial: configPresencial,
+                online: configOnline
+            };
+            
+            App.abaAtiva = 'presencial';
+
+        
+            // Renderiza as abas e o container interno
             area.innerHTML = `
-                <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
-                    <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
-                        <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas</h3>
-                        
-                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
-                        <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">1000 x 500px</b></div>
-
-                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
-                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
-                        <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
-                        <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
-                        <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
-                    </div>
-
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
-                            <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
-                                </div>
-                        </div>
-                    </div>
+                <div style="display:flex; gap:10px; margin-bottom: 20px; justify-content: center; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <button id="btn-aba-presencial" onclick="App.alternarAbaConfig('presencial')" style="flex:1; max-width: 200px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; background: #2c3e50; color: white;">🏫 Contrato Presencial</button>
+                    <button id="btn-aba-online" onclick="App.alternarAbaConfig('online')" style="flex:1; max-width: 200px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; background: #e0e6ed; color: #2c3e50;">💻 Contrato Online</button>
                 </div>
+                <div id="container-config-interno"></div>
             `;
 
-            App.atualizarPreviewConfigurador();
+            App.alternarAbaConfig('presencial');
 
         } catch (e) {
+            console.error(e);
             area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o configurador.</p>';
         }
     },
 
+    alternarAbaConfig: (aba) => {
+        App.abaAtiva = aba;
+        
+        const btnPresencial = document.getElementById('btn-aba-presencial');
+        const btnOnline = document.getElementById('btn-aba-online');
+        
+        if (aba === 'presencial') {
+            if(btnPresencial) { btnPresencial.style.background = '#2c3e50'; btnPresencial.style.color = 'white'; }
+            if(btnOnline) { btnOnline.style.background = '#e0e6ed'; btnOnline.style.color = '#2c3e50'; }
+        } else {
+            if(btnOnline) { btnOnline.style.background = '#27ae60'; btnOnline.style.color = 'white'; }
+            if(btnPresencial) { btnPresencial.style.background = '#e0e6ed'; btnPresencial.style.color = '#2c3e50'; }
+        }
+
+        const container = document.getElementById('container-config-interno');
+        container.innerHTML = `
+            <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
+                <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+                    <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas (${aba === 'presencial' ? 'Presencial' : 'Online'})</h3>
+                    
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
+                    <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">1000 x 500px</b></div>
+
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
+                    <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
+                    <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
+                    <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
+                </div>
+
+                <div style="flex: 1; min-width: 0;">
+                    <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
+                        <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        App.atualizarPreviewConfigurador();
+    },
+
     atualizarPreviewConfigurador: () => {
         const preview = document.getElementById('preview-word-doc');
+        const config = App.configTemp[App.abaAtiva]; 
+        
         if(preview) {
             preview.innerHTML = `
                 <div id="preview-header-img" 
                      onmousedown="App.iniciarArraste(event)" 
                      ontouchstart="App.iniciarArraste(event)"
-                     style="width:100%; height:250px; background:url('${App.configTemp.imagemHeader}') no-repeat; background-size: cover; background-position: ${App.configTemp.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
+                     style="width:100%; height:250px; background:url('${config.imagemHeader}') no-repeat; background-size: cover; background-position: ${config.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
                      <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.2);">🖐️ Arraste para reposicionar</div>
                 </div>
                 <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
-                    <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(App.configTemp.tituloHeader)}</h2>
-                    <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(App.configTemp.descHeader)}</p>
+                    <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(config.tituloHeader)}</h2>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(config.descHeader)}</p>
                 </div>
                 <div style="padding: 25px;">
                     <h4 style="color:#2980b9; margin-top:0;">📋 Dados Editáveis (Preview)</h4>
                     <div style="display:flex; gap:10px; margin-bottom: 15px;">
                         <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
-                            <option>Plano de Curso: ${App.configTemp.opcoesPlano}</option>
+                            <option>Plano de Curso: ${config.opcoesPlano}</option>
                         </select>
                         <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
-                            <option>Vencimento: ${App.configTemp.opcoesVencimento}</option>
+                            <option>Vencimento: ${config.opcoesVencimento}</option>
                         </select>
                     </div>
                     <h4 style="color:#2980b9;">📑 Texto do Contrato</h4>
-                    <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; height:300px; overflow-y:auto; text-align:justify;">${App.configTemp.textoContrato}</div>
+                    <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; height:300px; overflow-y:auto; text-align:justify;">${config.textoContrato}</div>
                 </div>
             `;
         }
     },
 
     editarConfig: (tipo) => {
+        const config = App.configTemp[App.abaAtiva];
+
         if (tipo === 'imagem') {
             const input = document.createElement('input');
             input.type = 'file';
@@ -584,9 +675,8 @@ Object.assign(App, {
                 if (file) {
                     App.showToast("A processar e otimizar a imagem... ⏳", "info");
                     
-                    // 🚀 AQUI: Otimizador alterado para 1000px de largura máxima
                     App.otimizarImagem(file, 1000, (imgBase64) => {
-                        App.configTemp.imagemHeader = imgBase64;
+                        App.configTemp[App.abaAtiva].imagemHeader = imgBase64;
                         App.atualizarPreviewConfigurador();
                         App.showToast("Imagem aplicada com sucesso!", "success");
                     });
@@ -644,9 +734,9 @@ Object.assign(App, {
                 abrirModalBonito(
                     "✏️ Editar Título",
                     `<label class="modal-custom-label">Título do Documento:</label>
-                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${App.configTemp.tituloHeader || ''}">`,
+                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${config.tituloHeader || ''}">`,
                     (modal) => {
-                        App.configTemp.tituloHeader = modal.querySelector('#inputTitulo').value;
+                        App.configTemp[App.abaAtiva].tituloHeader = modal.querySelector('#inputTitulo').value;
                         App.atualizarPreviewConfigurador();
                     }
                 );
@@ -655,9 +745,9 @@ Object.assign(App, {
                 abrirModalBonito(
                     "📝 Editar Descrição",
                     `<label class="modal-custom-label">Subtítulo ou Descrição:</label>
-                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${App.configTemp.descHeader || ''}</textarea>`,
+                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${config.descHeader || ''}</textarea>`,
                     (modal) => {
-                        App.configTemp.descHeader = modal.querySelector('#inputDescricao').value;
+                        App.configTemp[App.abaAtiva].descHeader = modal.querySelector('#inputDescricao').value;
                         App.atualizarPreviewConfigurador();
                     }
                 );
@@ -666,24 +756,24 @@ Object.assign(App, {
                 abrirModalBonito(
                     "⚙️ Dados Complementares",
                     `<div style="margin-bottom:16px;">
-                        <label class="modal-custom-label">Planos de Curso</label><br>
+                        <label class="modal-custom-label">Curso Adquirido</label><br>
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
-                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.configTemp.opcoesPlano || ''}">
+                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${config.opcoesPlano || ''}">
                      </div>
                      <div style="margin-bottom:16px;">
-                        <label class="modal-custom-label">Dias de Vencimento</label><br>
+                        <label class="modal-custom-label">Dia de Vencimento</label><br>
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
-                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.configTemp.opcoesVencimento || ''}">
+                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${config.opcoesVencimento || ''}">
                      </div>
                      <div>
                         <label class="modal-custom-label">Horários Disponíveis</label><br>
                         <span style="font-size:12px; color:#6c757d;">Ex: Manhã (08h às 10h), Noite (19h às 21h)</span>
-                        <input type="text" id="inputHorarios" class="modal-custom-input" placeholder="Separe por vírgula" value="${App.configTemp.horarios || ''}">
+                        <input type="text" id="inputHorarios" class="modal-custom-input" placeholder="Separe por vírgula" value="${config.horarios || ''}">
                      </div>`,
                     (modal) => {
-                        App.configTemp.opcoesPlano = modal.querySelector('#inputCursos').value;
-                        App.configTemp.opcoesVencimento = modal.querySelector('#inputDias').value;
-                        App.configTemp.horarios = modal.querySelector('#inputHorarios').value; 
+                        App.configTemp[App.abaAtiva].opcoesPlano = modal.querySelector('#inputCursos').value;
+                        App.configTemp[App.abaAtiva].opcoesVencimento = modal.querySelector('#inputDias').value;
+                        App.configTemp[App.abaAtiva].horarios = modal.querySelector('#inputHorarios').value; 
                         App.atualizarPreviewConfigurador();
                     }
                 );
@@ -692,10 +782,10 @@ Object.assign(App, {
         else if (tipo === 'contrato') {
             const modal = document.getElementById('modal-overlay'); 
             if(modal) modal.style.display = 'flex';
-            document.getElementById('modal-titulo').innerText = "Editar Texto do Contrato";
+            document.getElementById('modal-titulo').innerText = `Editar Texto do Contrato (${App.abaAtiva === 'presencial' ? 'Presencial' : 'Online'})`;
             
             document.getElementById('modal-form-content').innerHTML = `
-                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.sanitizeHTML(App.configTemp.textoContrato || '')}</div>
+                <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.sanitizeHTML(config.textoContrato || '')}</div>
             `;
             
             setTimeout(() => {
@@ -717,7 +807,7 @@ Object.assign(App, {
             btnConfirm.style.display = 'inline-flex';
             btnConfirm.innerHTML = "Aplicar ao Preview";
             btnConfirm.onclick = () => {
-                App.configTemp.textoContrato = window.quillContrato.root.innerHTML;
+                App.configTemp[App.abaAtiva].textoContrato = window.quillContrato.root.innerHTML;
                 App.atualizarPreviewConfigurador();
                 App.fecharModal();
             };
@@ -731,8 +821,7 @@ Object.assign(App, {
         e.preventDefault();
         let isDragging = true;
         
-        // Pega a posição atual ou define 50% por padrão
-        let currentPos = App.configTemp.imagemPosicao || '50% 50%';
+        let currentPos = App.configTemp[App.abaAtiva].imagemPosicao || '50% 50%';
         let [posX, posY] = currentPos.split(' ').map(p => parseFloat(p) || 50);
 
         const startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
@@ -743,10 +832,8 @@ Object.assign(App, {
             const currentY = moveEvent.type.includes('touch') ? moveEvent.touches[0].clientY : moveEvent.clientY;
             const diffY = currentY - startY;
             
-            // Sensibilidade do arraste (ajuste o 0.2 se quiser mais rápido ou mais lento)
             posY = initialPosY - (diffY * 0.2); 
             
-            // Limites para não arrastar para fora (entre 0% e 100%)
             if (posY < 0) posY = 0;
             if (posY > 100) posY = 100;
 
@@ -756,8 +843,7 @@ Object.assign(App, {
 
         const onEnd = () => {
             isDragging = false;
-            // 🚀 GUARDA A POSIÇÃO FINAL NA VARIÁVEL PARA IR PARA A BASE DE DADOS
-            App.configTemp.imagemPosicao = img.style.backgroundPosition;
+            App.configTemp[App.abaAtiva].imagemPosicao = img.style.backgroundPosition;
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onEnd);
             document.removeEventListener('touchmove', onMove);
@@ -770,7 +856,7 @@ Object.assign(App, {
         document.addEventListener('touchend', onEnd);
     },
 
-    salvarConfiguradorMatricula: async () => {
+   salvarConfiguradorMatricula: async () => {
         const btn = document.querySelector('button[onclick="App.salvarConfiguradorMatricula()"]');
         const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Tudo';
         
@@ -783,9 +869,15 @@ Object.assign(App, {
 
         try {
             const escola = await App.api('/escola') || {};
-            escola.configMatricula = App.configTemp;
+            
+            // 🚀 O TRUQUE NINJA: Colocamos o EAD DENTRO da variável que o Banco de Dados já aceita!
+            escola.configMatricula = {
+                ...App.configTemp.presencial,
+                online: App.configTemp.online
+            };
+            
             await App.api('/escola', 'PUT', escola);
-            App.showToast("Configurações da matrícula salvas com sucesso!", "success");
+            App.showToast("Configurações salvas para Presencial e Online!", "success");
         } catch(e) {
             App.showToast("Erro ao guardar as configurações.", "error");
         } finally {

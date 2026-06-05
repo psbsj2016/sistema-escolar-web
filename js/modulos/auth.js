@@ -280,44 +280,27 @@ Object.assign(App, {
 
     logout: async () => {
         if (App.radarAtivo) clearInterval(App.radarAtivo); 
+        
         try {
-            await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
-        } catch(e) {}
+            // 🚀 CORREÇÃO 1: Usa o motor inteligente (App.api) para garantir que o cookie morre no servidor
+            if (typeof App.api === 'function') {
+                await App.api('/auth/logout', 'POST');
+            } else {
+                await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+            }
+        } catch(e) { 
+            console.warn("Logout backend ignorado localmente."); 
+        }
 
-        document.documentElement.removeAttribute('style');
-        localStorage.removeItem('usuario_logado');
-        localStorage.removeItem('token_acesso');
+        // 🚀 CORREÇÃO 2: A Bomba Nuclear. Limpa ABSOLUTAMENTE TUDO da escola anterior
+        localStorage.clear();
+        sessionStorage.clear();
         App.usuario = null;
+        App.listaCache = [];
 
-        const inUser = document.getElementById('login-user');
-        if (inUser) inUser.value = '';
-
-        const inPass = document.getElementById('login-pass');
-        if (inPass) inPass.value = '';
-
-        const modais = ['modal-overlay', 'modal-cadastro-inst', 'modal-recuperacao-senha', 'noti-dropdown'];
-        modais.forEach(m => {
-            const el = document.getElementById(m);
-            if(el) el.style.display = 'none';
-            el?.classList.remove('active');
-        });
-
-        const sidebar = document.querySelector('.sidebar');
-        if (sidebar) sidebar.classList.remove('active');
-
-        const mobileOverlay = document.querySelector('.mobile-overlay');
-        if (mobileOverlay) mobileOverlay.classList.remove('active');
-
-        document.getElementById('tela-sistema').style.display = 'none';
-        const telaLogin = document.getElementById('tela-login');
-        if (telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
-
-        const blockBox = document.getElementById('box-bloqueio-conta');
-        if (blockBox) blockBox.style.display = 'none';
-
-        document.querySelectorAll('#tela-login .login-box, #tela-login .box-login').forEach(form => {
-            if (form.id !== 'box-bloqueio-conta') form.style.display = '';
-        });
+        // 🚀 CORREÇÃO 3: Força o recarregamento total e limpo da página (mata a memória Zombie)
+        // Isso remove a necessidade de ficar a esconder/mostrar divs manualmente
+        window.location.href = window.location.pathname; 
     },
 
     toggleSenhaLogin: () => {
@@ -351,21 +334,27 @@ Object.assign(App, {
     enviarRecuperacaoSenha: async () => {
         const email = document.getElementById('recuperar-email-input')?.value.trim();
         if (!email) return App.showToast("Informe o e-mail de acesso.", "warning");
+        
         const btn = document.querySelector('#modal-recuperacao-senha .btn-primary');
         const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
+        
         try {
-            const res = await fetch(`${API_URL}/auth/recuperar-senha`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const data = await res.json();
-            if (data.success) {
-                App.showToast(data.message || "Link enviado com sucesso.", "success");
+            // USANDO A FUNÇÃO App.api EM VEZ DO FETCH COM A VARIÁVEL FANTASMA
+            const res = await App.api('/auth/recuperar-senha', 'POST', { email });
+            
+            if (res && res.success) {
+                App.showToast(res.message || "Link enviado com sucesso.", "success");
                 document.getElementById('modal-recuperacao-senha').style.display = 'none';
-            } else { App.showToast(data.error || "Erro ao solicitar.", "error"); }
-        } catch (e) { App.showToast("Erro de comunicação.", "error"); } 
-        finally { btn.innerText = txt; btn.disabled = false; }
+            } else { 
+                App.showToast(res.error || "Erro ao solicitar.", "error"); 
+            }
+        } catch (e) { 
+            console.error("ERRO NO FRONTEND:", e);
+            App.showToast("Erro de comunicação.", "error"); 
+        } 
+        finally { 
+            btn.innerText = txt; btn.disabled = false; 
+        }
     },
 
     abrirModalNovaSenha: (token) => {
