@@ -1,7 +1,9 @@
 // js/config.js
 
 export const CONFIG = {
-    API_URL: import.meta.env.VITE_API_URL || 'https://api.sistemaptt.com.br'
+    // Usamos sempre o '/api' porque o Vite (localmente) e a Vercel (na internet) 
+    // já estão configurados para reencaminhar isto para o seu backend verdadeiro!
+    API_URL: '/api'
 };
 
 // Criamos a variável global AQUI diretamente.
