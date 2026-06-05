@@ -388,21 +388,23 @@ Object.assign(App, {
         const btn = document.querySelector('#modal-nova-senha .btn-primary');
         const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true;
         try {
-            const res = await fetch(`${API_URL}/auth/redefinir-senha`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: App.tokenResetSenha, novaSenha })
-            });
-            const data = await res.json();
-            if (data.success) {
+            // Utilizamos o App.api para garantir que a rota vai para a Vercel com /api
+            const data = await App.api('/auth/redefinir-senha', 'POST', { token: App.tokenResetSenha, novaSenha });
+            
+            if (data && data.success) {
                 App.showToast("Senha redefinida! Faça login agora.", "success");
                 document.getElementById('modal-nova-senha').style.display = 'none';
                 App.tokenResetSenha = null;
                 const novaUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, novaUrl);
-            } else { App.showToast(data.error || "Erro ao redefinir.", "error"); }
-        } catch (e) { App.showToast("Erro de comunicação.", "error"); } 
-        finally { btn.innerText = txt; btn.disabled = false; }
+            } else { 
+                App.showToast(data.error || "Erro ao redefinir.", "error"); 
+            }
+        } catch (e) { 
+            App.showToast("Erro de comunicação.", "error"); 
+        } finally { 
+            btn.innerText = txt; btn.disabled = false; 
+        }
     },
 
     bufferToBase64: function(buf) {
