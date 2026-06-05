@@ -215,21 +215,22 @@ verificarLimites: async (tipo) => {
         if (body) options.body = JSON.stringify(body);
         
         // 🚀 O SEGREDO DO ROTEAMENTO INTELIGENTE
-        let servidorBackend = API_URL;
+        let servidorBackend = API_URL; // Na Vercel, isto será exatamente '/api'
         
         // Se estivermos no ambiente de testes (computador local)
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             servidorBackend = 'http://localhost:3000'; // Força a porta do Node.js!
-        } else {
-            // Em produção (servidor real), limpa o "/api" fantasma se ele existir
-            servidorBackend = API_URL.replace(/\/api$/, '');
         }
 
-        // Limpa qualquer "/api" que o código possa ter adicionado acidentalmente
+        // Limpa qualquer "/api" que o código possa ter adicionado no endpoint 
+        // para evitar que fique /api/api/auth/login
         const endpointLimpo = endpoint.replace(/^\/api/, '');
         
-        // URL Final Perfeita
-        const urlFinal = `${servidorBackend}${endpointLimpo}`;
+        // Garante que há uma barra separadora correta
+        const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
+
+        // URL Final Perfeita (Ex Vercel: /api/auth/login)
+        const urlFinal = `${servidorBackend}${caminhoFinal}`;
         
         try {
             const response = await fetch(urlFinal, options);
