@@ -214,35 +214,26 @@ verificarLimites: async (tipo) => {
 
         if (body) options.body = JSON.stringify(body);
         
-        // 🚀 O SEGREDO DO ROTEAMENTO INTELIGENTE
-        let servidorBackend = API_URL; // Na Vercel, isto será exatamente '/api'
+        // 🚀 O SEGREDO DO ROTEAMENTO: Simples, Limpo e Blindado
+        let servidorBackend = CONFIG.API_URL; // Pega SEMPRE o '/api'
         
-        // Se estivermos no ambiente de testes (computador local)
+        // Se for no computador local (ambiente de desenvolvimento), força a porta do Node.js
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            servidorBackend = 'http://localhost:3000'; // Força a porta do Node.js!
+            servidorBackend = 'http://localhost:3000'; 
         }
 
-        // Limpa qualquer "/api" que o código possa ter adicionado no endpoint 
-        // para evitar que fique /api/api/auth/login
+        // Limpa o endpoint para garantir que não duplicamos o /api nem deixamos barras perdidas
         const endpointLimpo = endpoint.replace(/^\/api/, '');
-        
-        // Garante que há uma barra separadora correta
         const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
-
-        // URL Final Perfeita (Ex Vercel: /api/auth/login)
+        
+        // URL Final Perfeita (Na Vercel vai ser sempre: /api/auth/login)
         const urlFinal = `${servidorBackend}${caminhoFinal}`;
         
         try {
             const response = await fetch(urlFinal, options);
             
             // 🛡️ O GUARDA-COSTAS ENTRA AQUI
-            if (!response.ok) { 
-                // 1. Proteção contra Sessão Expirada
-                if ((response.status === 401 || response.status === 403) && !endpoint.startsWith('/auth/')) { 
-                    App.showToast("Sessão expirada. Faça login novamente.", "warning");
-                    if (typeof App.logout === 'function') App.logout(); 
-                    return { error: "Sessão expirada" };
-                }
+            if (!response.ok) {
                 
                 // 2. Extrai o erro que o Backend enviou
                 const errorData = await response.json().catch(() => ({}));
