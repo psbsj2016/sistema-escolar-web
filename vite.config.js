@@ -60,7 +60,9 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
-        matricula: resolve(__dirname, 'matricula.html')
+        matricula: resolve(__dirname, 'matricula.html'),
+        hub: resolve(__dirname, 'hub-matriculas.html'), // Adicionado!
+        online: resolve(__dirname, 'matricula-online.html') // Adicionado!
       }
     }
   }
