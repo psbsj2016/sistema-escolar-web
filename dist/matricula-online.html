@@ -201,7 +201,7 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const escolaId = urlParams.get('escola');
-    const API_BASE = 'http://localhost:3000'; // Ajuste se necessário para produção
+    const API_BASE = '/api';
     let escolaValida = false;
  
     if ('serviceWorker' in navigator) {
