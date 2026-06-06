@@ -201,9 +201,17 @@ verificarLimites: async (tipo) => {
     },
 
    // =========================================================
-    // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS
+    // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS E RASTREADOR
     // =========================================================
-   api: async (endpoint, method = 'GET', body = null) => {
+    api: async (endpoint, method = 'GET', body = null) => {
+        // 🕵️‍♂️ 1. RASTREADOR: IDENTIFICADOR DE VERSÃO
+        // Toda vez que você salvar, mude este número para ter certeza que atualizou!
+        const VERSAO_ATUAL = "V-100-TESTE-FINAL"; 
+        
+        console.log(`\n=========================================`);
+        console.log(`🕵️‍♂️ [RASTREADOR] Versão do Código: ${VERSAO_ATUAL}`);
+        console.log(`🕵️‍♂️ [RASTREADOR] O botão pediu para ir para: "${endpoint}"`);
+
         const headers = { 'Content-Type': 'application/json' };
         const options = {
             method,
@@ -214,17 +222,27 @@ verificarLimites: async (tipo) => {
 
         if (body) options.body = JSON.stringify(body);
         
-        // 🚀 O SEGREDO DO ROTEAMENTO: Simples, Limpo e Blindado
-        // 1. Limpamos qualquer barra solta ou o "/api" se ele já vier no endpoint
+        // 🚀 2. O ROTEAMENTO BLINDADO
         const endpointLimpo = endpoint.replace(/^\/api/, '');
         const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
         
-        // 2. Colocamos o "/api" no início de TUDO, obrigatoriamente.
-        // A Vercel vai ver o /api e redirecionar para a sua API verdadeira!
-        const urlFinal = `/api${caminhoFinal}`;
+        let urlFinal = `/api${caminhoFinal}`;
+
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            if (window.location.port !== '5173') {
+                urlFinal = `http://localhost:3000${caminhoFinal}`;
+            }
+        }
+        
+        // 🕵️‍♂️ 3. RASTREADOR: URL FINAL
+        console.log(`🚨 [RASTREADOR] O navegador vai disparar para: "${urlFinal}"`);
+        console.log(`=========================================\n`);
         
         try {
             const response = await fetch(urlFinal, options);
+            
+            // 🕵️‍♂️ 4. RASTREADOR: RESPOSTA DO SERVIDOR
+            console.log(`✅ [RASTREADOR] O Servidor respondeu com Status: ${response.status}`);
             
             // 🛡️ O GUARDA-COSTAS ENTRA AQUI
             if (!response.ok) {
