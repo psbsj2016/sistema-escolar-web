@@ -203,7 +203,7 @@ verificarLimites: async (tipo) => {
    // =========================================================
     // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS
     // =========================================================
-    api: async (endpoint, method = 'GET', body = null) => {
+   api: async (endpoint, method = 'GET', body = null) => {
         const headers = { 'Content-Type': 'application/json' };
         const options = {
             method,
@@ -215,19 +215,13 @@ verificarLimites: async (tipo) => {
         if (body) options.body = JSON.stringify(body);
         
         // 🚀 O SEGREDO DO ROTEAMENTO: Simples, Limpo e Blindado
-        let servidorBackend = CONFIG.API_URL; // Pega SEMPRE o '/api'
-        
-        // Se for no computador local (ambiente de desenvolvimento), força a porta do Node.js
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            servidorBackend = 'http://localhost:3000'; 
-        }
-
-        // Limpa o endpoint para garantir que não duplicamos o /api nem deixamos barras perdidas
+        // 1. Limpamos qualquer barra solta ou o "/api" se ele já vier no endpoint
         const endpointLimpo = endpoint.replace(/^\/api/, '');
         const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
         
-        // URL Final Perfeita (Na Vercel vai ser sempre: /api/auth/login)
-        const urlFinal = `${servidorBackend}${caminhoFinal}`;
+        // 2. Colocamos o "/api" no início de TUDO, obrigatoriamente.
+        // A Vercel vai ver o /api e redirecionar para a sua API verdadeira!
+        const urlFinal = `/api${caminhoFinal}`;
         
         try {
             const response = await fetch(urlFinal, options);
