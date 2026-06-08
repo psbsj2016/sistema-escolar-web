@@ -340,6 +340,56 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 }
 
 /* =========================================================
+   📱 BLINDAGEM DO CONTRATO E FICHA DO ALUNO NO MOBILE
+   ========================================================= */
+@media (max-width: 768px) {
+    
+    /* 1. Reduz o respiro interno do contrato para ganhar espaço na tela */
+    #area-impressao-contrato {
+        padding: 15px !important;
+    }
+
+    /* 2. TRANSFORMAÇÃO DA TABELA: Desfaz as colunas e empilha os dados */
+    #area-impressao-contrato table,
+    #area-impressao-contrato tbody,
+    #area-impressao-contrato tr,
+    #area-impressao-contrato td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Cria um espaçamento suave entre as linhas da tabela empilhada */
+    #area-impressao-contrato tr {
+        margin-bottom: 8px !important;
+        border-bottom: 1px dashed #eee !important;
+        padding-bottom: 8px !important;
+    }
+
+    #area-impressao-contrato tr:last-child {
+        border-bottom: none !important;
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    #area-impressao-contrato td {
+        border-bottom: none !important;
+        padding: 2px 0 !important;
+    }
+
+    /* 3. ASSINATURAS: Faz os blocos de assinatura empilharem verticalmente */
+    #area-impressao-contrato div[style*="display: flex"][style*="justify-content: space-between"] {
+        flex-direction: column !important;
+        gap: 40px !important; /* Dá espaço para colocar o dedo/assinar se necessário */
+        margin-top: 30px !important;
+    }
+
+    #area-impressao-contrato div[style*="display: flex"] > div[style*="width: 45%"] {
+        width: 100% !important;
+    }
+}
+
+/* =========================================================
    📺 INTELIGÊNCIA RESPONSIVA: TELAS GIGANTES E TVS (> 1600px)
    ========================================================= */
 @media (min-width: 1600px) {
