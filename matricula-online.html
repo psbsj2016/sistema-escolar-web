@@ -477,13 +477,53 @@
 
             const resultado = await resposta.json().catch(() => ({}));
             
-            if(resposta.ok && resultado.success) {
+           if(resposta.ok && resultado.success) {
+                // Esconde o formulário e o modal
                 fecharLeitura();
                 document.getElementById('formMatricula').style.display = 'none';
                 
-                document.getElementById('mensagemSucesso').style.display = 'block';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else { 
+                // Pega o e-mail que o aluno digitou para mostrar na mensagem
+                const emailDigitado = document.getElementById('email').value;
+                
+                // Dispara o pop-up moderno (SweetAlert2) sobrepondo a tela
+                Swal.fire({
+                    icon: 'success',
+                    title: '🎉 Matrícula Concluída!',
+                    html: `
+                        <div style="font-size: 15px; color: #444; line-height: 1.6; text-align: left;">
+                            <p style="text-align: center; font-size: 16px;">Os seus dados foram enviados com sucesso para o nosso sistema.</p>
+                            
+                            <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 15px; margin-top: 20px; text-align: center;">
+                                <h4 style="color: #166534; margin: 0 0 10px 0;">📧 Verifique a sua Caixa de Entrada!</h4>
+                                <p style="margin: 0; font-size: 14px;">Acabamos de enviar um e-mail de boas-vindas para:<br> <b>${emailDigitado}</b></p>
+                                
+                                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
+                                    <div style="background: white; padding: 8px 12px; border-radius: 5px; border: 1px solid #dcfce7; font-size: 13px; font-weight: bold; color: #15803d;">
+                                        📄 Cópia do Contrato
+                                    </div>
+                                    <div style="background: white; padding: 8px 12px; border-radius: 5px; border: 1px solid #dcfce7; font-size: 13px; font-weight: bold; color: #15803d;">
+                                        💸 Carnês de Pagamento
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p style="text-align: center; margin-top: 20px; font-size: 13px; color: #777;">
+                                Em breve a nossa equipa entrará em contacto através do WhatsApp.<br><b>Seja muito bem-vindo(a)!</b>
+                            </p>
+                        </div>
+                    `,
+                    confirmButtonColor: '#22c55e',
+                    confirmButtonText: '✅ Entendido',
+                    width: '600px',
+                    allowOutsideClick: false // Obriga a pessoa a clicar no botão para fechar
+                }).then(() => {
+                    // Depois que a pessoa clica em "Entendido", mostramos a tela de sucesso de fundo 
+                    // para a página não ficar em branco
+                    document.getElementById('mensagemSucesso').style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+                
+            } else {
                 throw new Error(resultado.error || resultado.message || `Erro HTTP ${resposta.status}`); 
             }
         } catch (error) {
