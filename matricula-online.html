@@ -104,8 +104,8 @@
 
 <div id="loading-tela" style="text-align: center; padding: 120px 20px; font-family: sans-serif;">
         <div style="font-size: 40px; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
-        <h2 style="color: #2c3e50; margin: 0;">A preparar ambiente seguro...</h2>
-        <p style="color: #7f8c8d;">A sincronizar os dados com a instituição de ensino.</p>
+        <h2 style="color: #2c3e50; margin: 0;">PREPARANDO UM AMBIENTE SEGURO...</h2>
+        <p style="color: #7f8c8d;">Aguarde!</p>
         <style>@keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }</style>
     </div>
 
@@ -221,7 +221,7 @@
         </div>   
 
         <h3>4. Contrato de Prestação de Serviços (EAD)</h3>
-        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o contrato online abaixo antes de confirmar sua matrícula.</p>
+        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o Contrato de Adesão de Curso Online (EAD) abaixo.</p>
         
         <div id="previewContrato" class="contrato-box">
             A carregar o contrato da instituição...
@@ -232,7 +232,7 @@
             <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que as informações acima são verdadeiras.</label>
         </div>
 
-        <button type="submit" id="btnSubmit">Revisar e Concluir Matrícula Online</button>
+        <button type="submit" id="btnSubmit">Revisar Dados e Concluir Matrícula</button>
     </form>
 </div>
 
@@ -242,7 +242,7 @@
         <div id="corpoContratoLeitura" style="margin-bottom: 40px; margin-top: 20px;"></div>
         
         <button onclick="enviarMatriculaDefinitiva()" class="btn-fixo-leitura">
-            ✅ Li e Concordo: Enviar Matrícula EAD Oficial
+            ✅ Li e Concordo: Enviar Matrícula
         </button>
         <button onclick="fecharLeitura()" style="background:none; border:none; color:red; cursor:pointer; display:block; margin: 30px auto; text-decoration: underline;">
             Voltar e Corrigir Dados
@@ -370,7 +370,7 @@
                 return txt.value;
             }
 
-            let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : "Contrato padrão da instituição...";
+           let contratoFormatado = config.textoContrato ? formatarHTML(config.textoContrato) : "Contrato padrão da instituição...";
             window.textoContratoOriginal = contratoFormatado;
 
             atualizarContratoAoVivo();
@@ -450,7 +450,7 @@
 
     async function enviarMatriculaDefinitiva() {
         const btnFixo = document.querySelector('.btn-fixo-leitura');
-        btnFixo.innerText = "A Enviar ao Sistema EAD... ⏳"; 
+        btnFixo.innerText = "Enviando ao Sistema... ⏳"; 
         btnFixo.disabled = true;
         btnFixo.style.opacity = '0.7';
 
