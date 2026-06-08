@@ -221,16 +221,21 @@
         </div>   
 
         <h3>4. Contrato de Prestação de Serviços (EAD)</h3>
-        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente o Contrato de Adesão de Curso Online (EAD) abaixo.</p>
+        <p style="font-size: 13px; color: #e67e22; margin-top: 0; font-weight: bold;">⚠️ Por favor, leia atentamente logo abaixo o Contrato de Adesão de Curso Online (EAD).</p>
         
         <div id="previewContrato" class="contrato-box">
             A carregar o contrato da instituição...
         </div>
 
-        <div class="termo">
-            <input type="checkbox" id="aceito" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
-            <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que as informações acima são verdadeiras.</label>
-        </div>
+        <div class="termo" style="margin-top: 20px;">
+    <input type="checkbox" id="aceito" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
+    <label for="aceito" style="font-weight: bold; margin:0; color: #27ae60; cursor: pointer;">Declaro que as informações acima são verdadeiras. *</label>
+</div>
+
+<div class="termo" style="margin-top: 12px;">
+    <input type="checkbox" id="autorizo_comunicacao" required style="width: auto; transform: scale(1.2); margin-top: 2px;">
+    <label for="autorizo_comunicacao" style="font-weight: bold; margin:0; color: #2c3e50; cursor: pointer;">Autorizo o envio de notificações, avisos e mensagens para o WhatsApp e E-mail cadastrados. *</label>
+</div>
 
         <button type="submit" id="btnSubmit">Revisar Dados e Concluir Matrícula</button>
     </form>
@@ -486,7 +491,8 @@
             resp_parentesco: document.getElementById('resp_parentesco')?.value || '',
             resp_cpf: document.getElementById('resp_cpf')?.value || '',
             resp_zap: document.getElementById('resp_zap')?.value || '',
-            
+            autorizoComunicacao: document.getElementById('autorizo_comunicacao')?.checked ? 'Sim' : 'Não',
+
             conteudoHTML: document.getElementById('corpoContratoLeitura').innerHTML
         };
 
