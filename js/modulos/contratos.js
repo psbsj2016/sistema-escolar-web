@@ -167,7 +167,7 @@ Object.assign(App, {
         }
     },
 
-    // =========================================================
+  // =========================================================
     // 🧩 HUB CENTRAL DE CONTRATOS E LINKS
     // =========================================================
     renderizarHubContratos: () => {
@@ -180,6 +180,7 @@ Object.assign(App, {
                     <button class="btn-primary" onclick="App.mostrarAreaLinks()" style="background:#3498db; border:none;">🔗 Link de Matrícula</button>
                     <button class="btn-primary" onclick="App.renderizarContratos()" style="background:#2c3e50; border:none;">🗄️ Cofre de Contratos</button>
                     <button class="btn-primary" onclick="App.renderizarConfiguradorMatricula()" style="background:#f39c12; border:none;">⚙️ Configurar Formulário</button>
+                    <button class="btn-primary" onclick="App.renderizarConfiguradorHub()" style="background:#8e44ad; border:none;">🎨 Configurar Hub</button>
                 </div>
             </div>
             <div id="area-dinamica-hub">
@@ -993,6 +994,226 @@ Object.assign(App, {
             App.showToast("Configurações salvas para Presencial e Online!", "success");
         } catch(e) {
             App.showToast("Erro ao guardar as configurações.", "error");
+        } finally {
+            if (btn) { 
+                btn.innerHTML = txtOriginal; 
+                btn.disabled = false; 
+                btn.style.opacity = '1'; 
+            }
+            document.body.style.cursor = 'default';
+        }
+    },
+
+    // =========================================================
+    // 🎨 CONFIGURADOR DO HUB DE MATRÍCULAS (VITRINE)
+    // =========================================================
+    renderizarConfiguradorHub: async () => {
+        const area = document.getElementById('area-dinamica-hub');
+        area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do Hub... ⏳</p>';
+
+        try {
+            const escola = await App.api('/escola') || {};
+            
+            const configPadrao = {
+                tituloHeader: 'Bem-vindo(a) à Área de Matrículas',
+                descHeader: 'Estamos muito felizes em tê-lo(a) connosco! Por favor, selecione abaixo a modalidade do curso que pretende frequentar.',
+                iconePresencial: '🏫',
+                tituloPresencial: 'Curso Presencial',
+                descPresencial: 'Aulas presenciais na nossa unidade física. Acesso completo à infraestrutura, laboratórios e contacto direto com os nossos professores.',
+                btnPresencial: 'Matrícula Presencial',
+                iconeOnline: '💻',
+                tituloOnline: 'Curso Online (EAD)',
+                descOnline: 'Estude a partir de casa e ao seu próprio ritmo. Acesso imediato à plataforma virtual de aprendizagem, materiais e suporte 100% online.',
+                btnOnline: 'Matrícula Online'
+            };
+
+            // Mistura as configurações do BD com as padrões
+            App.configHubTemp = escola.configHub ? { ...configPadrao, ...escola.configHub } : { ...configPadrao };
+
+            // O mesmo layout protegido que o configurador de formulários usa!
+            area.innerHTML = `
+                <div id="container-config-interno">
+                    <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
+                        <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+                            <h3 style="margin-top:0; color:#8e44ad; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🎨 Ferramentas da Vitrine</h3>
+                            
+                            <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('header')">📝 Textos do Topo</button>
+                            <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('presencial')">🏫 Cartão Presencial</button>
+                            <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfigHub('online')">💻 Cartão Online</button>
+                            
+                            <button class="btn-primary" style="width:100%; background:#8e44ad; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorHub()">💾 Salvar Hub</button>
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
+                                <div id="preview-hub-page" style="background:#f4f7f6; width:100%; max-width:100%; min-height:500px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px; padding: 30px; font-family: 'Segoe UI', sans-serif; position: relative;">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            App.atualizarPreviewHub();
+        } catch (e) {
+            console.error(e);
+            area.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar o configurador do Hub.</p>';
+        }
+    },
+
+    atualizarPreviewHub: () => {
+        const preview = document.getElementById('preview-hub-page');
+        if(!preview) return;
+        const config = App.configHubTemp;
+        
+        preview.innerHTML = `
+            <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px;">👁️ Pré-visualização ao Vivo</div>
+            
+            <div style="text-align: center; padding: 20px 10px 20px; max-width: 600px; margin: 20px auto 0;">
+                <h1 style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px; margin-top:0;">${App.escapeHTML(config.tituloHeader)}</h1>
+                <p style="color: #666; font-size: 0.95rem; line-height: 1.5;">${App.escapeHTML(config.descHeader)}</p>
+            </div>
+            
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
+                <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconePresencial)}</div>
+                    <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloPresencial)}</h2>
+                    <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descPresencial)}</p>
+                    <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnPresencial)}</div>
+                </div>
+
+                <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconeOnline)}</div>
+                    <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloOnline)}</h2>
+                    <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descOnline)}</p>
+                    <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnOnline)}</div>
+                </div>
+            </div>
+        `;
+    },
+
+    editarConfigHub: (tipo) => {
+        const config = App.configHubTemp;
+        
+        const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
+            
+            modal.innerHTML = `
+                <style>
+                    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                    @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                    .modal-custom-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 15px; margin-top: 6px; margin-bottom: 15px; transition: border-color 0.2s; }
+                    .modal-custom-input:focus { border-color: #8e44ad; outline: none; box-shadow: 0 0 0 3px rgba(142,68,173,0.2); }
+                    .modal-custom-label { font-weight: 600; color: #495057; font-size: 14px; display:block; }
+                    .modal-btn-cancel { padding: 10px 18px; background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                    .modal-btn-cancel:hover { background: #e2e6ea; }
+                    .modal-btn-save { padding: 10px 18px; background: #8e44ad; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+                    .modal-btn-save:hover { background: #732d91; }
+                </style>
+                <h3 style="margin-top:0; color:#212529; font-size:20px; border-bottom:1px solid #f1f3f5; padding-bottom:15px; margin-bottom:20px;">${tituloModal}</h3>
+                <div style="margin-bottom:24px; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                    ${conteudoHTML}
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:12px;">
+                    <button id="btnCancelarModal" class="modal-btn-cancel">Cancelar</button>
+                    <button id="btnSalvarModal" class="modal-btn-save">Aplicar</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const fecharModal = () => {
+                overlay.style.animation = "fadeIn 0.2s ease reverse forwards";
+                modal.style.animation = "scaleUp 0.2s ease reverse forwards";
+                setTimeout(() => document.body.removeChild(overlay), 200);
+            };
+
+            modal.querySelector('#btnCancelarModal').onclick = fecharModal;
+            modal.querySelector('#btnSalvarModal').onclick = () => {
+                onSave(modal);
+                fecharModal();
+            };
+        };
+
+        if (tipo === 'header') {
+            abrirModalBonito(
+                "📝 Textos do Topo",
+                `<label class="modal-custom-label">Título Principal:</label>
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloHeader || ''}">
+                 <label class="modal-custom-label">Mensagem de Boas-vindas:</label>
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descHeader || ''}</textarea>`,
+                (modal) => {
+                    App.configHubTemp.tituloHeader = modal.querySelector('#iTitulo').value;
+                    App.configHubTemp.descHeader = modal.querySelector('#iDesc').value;
+                    App.atualizarPreviewHub();
+                }
+            );
+        } 
+        else if (tipo === 'presencial') {
+            abrirModalBonito(
+                "🏫 Cartão Presencial",
+                `<label class="modal-custom-label">Ícone (Emoji):</label>
+                 <input type="text" id="iIcone" class="modal-custom-input" value="${config.iconePresencial || ''}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
+                 <label class="modal-custom-label">Título do Cartão:</label>
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloPresencial || ''}">
+                 <label class="modal-custom-label">Descrição Curta:</label>
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descPresencial || ''}</textarea>
+                 <label class="modal-custom-label">Texto do Botão:</label>
+                 <input type="text" id="iBtn" class="modal-custom-input" value="${config.btnPresencial || ''}">`,
+                (modal) => {
+                    App.configHubTemp.iconePresencial = modal.querySelector('#iIcone').value;
+                    App.configHubTemp.tituloPresencial = modal.querySelector('#iTitulo').value;
+                    App.configHubTemp.descPresencial = modal.querySelector('#iDesc').value;
+                    App.configHubTemp.btnPresencial = modal.querySelector('#iBtn').value;
+                    App.atualizarPreviewHub();
+                }
+            );
+        }
+        else if (tipo === 'online') {
+            abrirModalBonito(
+                "💻 Cartão Online",
+                `<label class="modal-custom-label">Ícone (Emoji):</label>
+                 <input type="text" id="iIcone" class="modal-custom-input" value="${config.iconeOnline || ''}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
+                 <label class="modal-custom-label">Título do Cartão:</label>
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloOnline || ''}">
+                 <label class="modal-custom-label">Descrição Curta:</label>
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descOnline || ''}</textarea>
+                 <label class="modal-custom-label">Texto do Botão:</label>
+                 <input type="text" id="iBtn" class="modal-custom-input" value="${config.btnOnline || ''}">`,
+                (modal) => {
+                    App.configHubTemp.iconeOnline = modal.querySelector('#iIcone').value;
+                    App.configHubTemp.tituloOnline = modal.querySelector('#iTitulo').value;
+                    App.configHubTemp.descOnline = modal.querySelector('#iDesc').value;
+                    App.configHubTemp.btnOnline = modal.querySelector('#iBtn').value;
+                    App.atualizarPreviewHub();
+                }
+            );
+        }
+    },
+
+    salvarConfiguradorHub: async () => {
+        const btn = document.querySelector('button[onclick="App.salvarConfiguradorHub()"]');
+        const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Hub';
+        
+        if (btn) { 
+            btn.innerHTML = "A salvar... ⏳"; 
+            btn.disabled = true; 
+            btn.style.opacity = '0.8'; 
+        }
+        document.body.style.cursor = 'wait';
+
+        try {
+            const escola = await App.api('/escola') || {};
+            escola.configHub = App.configHubTemp;
+            
+            await App.api('/escola', 'PUT', escola);
+            App.showToast("Vitrine salva e pronta para os alunos!", "success");
+        } catch(e) {
+            App.showToast("Erro ao guardar as configurações da vitrine.", "error");
         } finally {
             if (btn) { 
                 btn.innerHTML = txtOriginal; 
