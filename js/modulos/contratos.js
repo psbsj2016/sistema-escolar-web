@@ -381,6 +381,10 @@ Object.assign(App, {
             lista.sort((a, b) => new Date(b.dataHoraRegistro || b.dataCriacao) - new Date(a.dataHoraRegistro || a.dataCriacao));
 
             // Função que desenha o layout do documento (agora dinâmico com cores)
+           // 🚀 RESETA AS SELEÇÕES SEMPRE QUE ABRIR O COFRE
+            App.contratosSelecionados = []; 
+
+            // 1. Função que desenha o layout do documento (AGORA COM CHECKBOX)
             const desenharCard = (c, corBorda, icone) => {
                 const dataRegistro = c.dataHoraRegistro || c.dataCriacao || new Date().toISOString();
                 const dataBr = new Date(dataRegistro).toLocaleString('pt-BR');
@@ -388,9 +392,12 @@ Object.assign(App, {
                 
                 return `
                 <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid ${corBorda}; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div>
-                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">${icone} ${nomeSeguro}</div>
-                        <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="checkbox" class="chk-contrato" value="${c.id}" onchange="App.toggleSelecaoContrato(this)" style="width:18px; height:18px; cursor:pointer; accent-color: #e74c3c; flex-shrink: 0;">
+                        <div>
+                            <div style="font-weight:bold; color:#2c3e50; font-size:15px;">${icone} ${nomeSeguro}</div>
+                            <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                        </div>
                     </div>
                     <div style="display:flex; gap:8px;">
                         <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:${corBorda}; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">👁️ Ver</button>
@@ -399,8 +406,7 @@ Object.assign(App, {
                 </div>`;
             };
 
-            // 🚀 A MAGIA DA SEPARAÇÃO ACONTECE AQUI
-            // Filtramos quem tem a modalidade Online e quem não tem (Presencial)
+            // 🚀 SEPARAÇÃO DO EAD E PRESENCIAL
             const ead = lista.filter(c => c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online')));
             const presencial = lista.filter(c => !(c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online'))));
 
@@ -415,8 +421,21 @@ Object.assign(App, {
             // Monta as duas colunas lado a lado
             area.innerHTML = `
             <div>
-                <div style="background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px; border-radius:6px; margin-bottom:20px; font-size:13px; text-align:center;">
-                    🔒 <strong>Zona de Segurança Jurídica:</strong> Os documentos listados abaixo são registos oficiais imutáveis.
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px 15px; border-radius:6px; margin-bottom:15px; font-size:13px; gap: 10px;">
+                    <div>🔒 <strong>Zona de Segurança Jurídica:</strong> Documentos imutáveis.</div>
+                    <button onclick="App.selecionarTodosContratos()" style="background:transparent; border:1px solid #c0392b; color:#c0392b; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold; transition: 0.2s;">
+                        ☑️ Marcar / Desmarcar Todos
+                    </button>
+                </div>
+                
+                <div id="barra-exclusao-massa" style="display:none; flex-wrap:wrap; gap:10px; background:#ffe5e5; border:1px solid #ffb3b3; color:#d93025; padding:12px 20px; border-radius:8px; margin-bottom:20px; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(217,48,37,0.15);">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:20px;">⚠️</span>
+                        <span id="texto-exclusao-massa" style="font-weight:bold; font-size:14px;">0 contratos selecionados</span>
+                    </div>
+                    <button onclick="App.excluirContratosMassa()" style="background:#d93025; color:white; border:none; padding:10px 18px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px; transition:0.2s; box-shadow:0 2px 5px rgba(217,48,37,0.3);">
+                        🗑️ Apagar Selecionados
+                    </button>
                 </div>
                 
                 <div style="display:flex; gap:20px; flex-wrap:wrap; align-items: flex-start;">
@@ -437,7 +456,7 @@ Object.assign(App, {
                     </div>
                 </div>
             </div>`;
-            
+     
             App.listaCacheContratos = lista;
         } catch(e) {
             console.error(e);
@@ -520,6 +539,100 @@ Object.assign(App, {
                 } finally { 
                     document.body.style.cursor = 'default'; 
                     modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
+    },
+
+    // =========================================================
+    // 🗑️ FUNÇÕES DE EXCLUSÃO EM MASSA
+    // =========================================================
+    toggleSelecaoContrato: (checkbox) => {
+        if (!App.contratosSelecionados) App.contratosSelecionados = [];
+        
+        if (checkbox.checked) {
+            if (!App.contratosSelecionados.includes(checkbox.value)) {
+                App.contratosSelecionados.push(checkbox.value);
+            }
+        } else {
+            App.contratosSelecionados = App.contratosSelecionados.filter(id => id !== checkbox.value);
+        }
+        App.atualizarBarraExclusaoMassa();
+    },
+
+    selecionarTodosContratos: () => {
+        const checkboxes = document.querySelectorAll('.chk-contrato');
+        let todosMarcados = true;
+        
+        // Verifica se todos já estão marcados
+        checkboxes.forEach(chk => { if (!chk.checked) todosMarcados = false; });
+        
+        App.contratosSelecionados = []; // Zera a lista para remontar
+        
+        // Inverte o estado de todos (Se todos estiverem marcados, ele desmarca tudo)
+        checkboxes.forEach(chk => {
+            chk.checked = !todosMarcados; 
+            if (!todosMarcados) {
+                App.contratosSelecionados.push(chk.value);
+            }
+        });
+        
+        App.atualizarBarraExclusaoMassa();
+    },
+
+    atualizarBarraExclusaoMassa: () => {
+        const barra = document.getElementById('barra-exclusao-massa');
+        const texto = document.getElementById('texto-exclusao-massa');
+        if (!barra || !texto) return;
+
+        const qtd = App.contratosSelecionados ? App.contratosSelecionados.length : 0;
+        if (qtd > 0) {
+            barra.style.display = 'flex';
+            texto.innerText = `${qtd} contrato(s) selecionado(s)`;
+        } else {
+            barra.style.display = 'none';
+        }
+    },
+
+    excluirContratosMassa: () => {
+        const ids = App.contratosSelecionados || [];
+        if (ids.length === 0) return;
+
+        App.abrirModalConfirmacao(
+            "🗑️ Excluir em Massa?", 
+            `Tem a certeza absoluta que deseja apagar <b>${ids.length}</b> contrato(s)?<br><br><span style="color:red; font-size:12px;">⚠️ Esta ação é irreversível e excluirá os registos permanentemente do banco de dados.</span>`, 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    let sucessos = 0;
+                    
+                    // 🚀 FANTÁSTICO: Dispara todas as requisições de exclusão ao mesmo tempo (Paralelo)
+                    const promessas = ids.map(id => App.api(`/contratos/${id}`, 'DELETE'));
+                    const resultados = await Promise.allSettled(promessas);
+
+                    resultados.forEach(res => {
+                        // Verifica quais as exclusões que funcionaram
+                        if (res.status === 'fulfilled' && res.value && !res.value.error) {
+                            sucessos++;
+                        }
+                    });
+
+                    if (sucessos === ids.length) {
+                        App.showToast(`✅ ${sucessos} contratos apagados com sucesso!`, "success");
+                    } else {
+                        App.showToast(`⚠️ Excluídos: ${sucessos} de ${ids.length}. Atualize a página e tente de novo.`, "warning");
+                    }
+
+                    App.contratosSelecionados = []; // Limpa a seleção da memória
+                    App.renderizarContratos(); // Recarrega o cofre instantaneamente
+
+                } catch(e) { 
+                    console.error(e);
+                    App.showToast("Erro crítico durante a exclusão em massa.", "error"); 
+                } finally { 
+                    document.body.style.cursor = 'default'; 
+                    modal.style.opacity = '0'; 
+                    setTimeout(() => modal.style.display = 'none', 300);
                 }
             }
         );
