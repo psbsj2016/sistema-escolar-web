@@ -761,6 +761,37 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 }
 
 /* =========================================================
+   📱 FIX PARA O CONFIGURADOR DE CONTRATO ESPREMIDO
+   ========================================================= */
+@media (max-width: 768px) {
+    
+    /* 1. Transforma o layout Lado-a-Lado em Cima-e-Baixo */
+    #container-config-interno > div[style*="display:flex"] {
+        flex-direction: column !important;
+    }
+
+    /* 2. Painel de Ferramentas (Esquerda) agora ocupa 100% da tela */
+    #container-config-interno > div > div:first-child {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* 3. Área de Preview (Direita) agora desce e ocupa 100% da tela */
+    #container-config-interno > div > div:last-child {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+
+    /* 4. Ajuste da imagem de capa para não ficar desproporcional no celular */
+    #preview-header-img {
+        height: 150px !important; 
+    }
+}
+
+/* =========================================================
    BLINDAGEM DO PORTAL DO CEO - ESTILOS ISOLADOS
    ========================================================= */
 
