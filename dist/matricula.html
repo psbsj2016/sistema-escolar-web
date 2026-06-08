@@ -245,8 +245,16 @@
 
 <div id="modalLeitura">
     <div class="texto-contrato-gigante">
-        <h2 style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">Termo de Adesão e Matrícula (Presencial)</h2>
-        <div id="corpoContratoLeitura" style="margin-bottom: 40px; margin-top: 20px;"></div>
+        <h2 style="text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px;">Revisão da Matrícula</h2>
+        
+        <div style="background: #f8f9fa; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+            <h3 style="margin-top: 0; color: #3498db; font-size: 16px; margin-bottom: 15px;">🔍 Confirme os seus dados:</h3>
+            <div id="resumoDadosBox" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; font-size: 14px; color: #334155;">
+                </div>
+        </div>
+
+        <h3 style="text-align: center; color: #2c3e50; font-size: 18px; margin-top: 40px; margin-bottom: 20px;">Contrato de Prestação de Serviços</h3>
+        <div id="corpoContratoLeitura" style="margin-bottom: 40px;"></div>
         
         <button onclick="enviarMatriculaDefinitiva()" class="btn-fixo-leitura">
             ✅ Li e Concordo: Enviar Matrícula
@@ -449,6 +457,42 @@ if ('serviceWorker' in navigator) {
             alert("Link de matrícula inválido. Solicite um novo link à instituição.");
             return;
         }
+
+        // 🚀 NOVO: MONTA O RESUMO DOS DADOS AUTOMATICAMENTE
+        const rawDate = document.getElementById('nascimento')?.value || '';
+        const dataBr = rawDate ? rawDate.split('-').reverse().join('/') : '-';
+        
+        let htmlResumo = `
+            <div><strong>Nome:</strong> ${document.getElementById('nome')?.value || '-'}</div>
+            <div><strong>CPF:</strong> ${document.getElementById('cpf')?.value || '-'}</div>
+            <div><strong>WhatsApp:</strong> ${document.getElementById('whatsapp')?.value || '-'}</div>
+            <div><strong>E-mail:</strong> ${document.getElementById('email')?.value || '-'}</div>
+            <div><strong>Data de Nasc.:</strong> ${dataBr}</div>
+            <div><strong>RG:</strong> ${document.getElementById('rg')?.value || '-'}</div>
+            
+            <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px dashed #cbd5e1; margin-top: 5px;">
+                <strong>Endereço:</strong> ${document.getElementById('rua')?.value || '-'}, ${document.getElementById('numero')?.value || '-'} - ${document.getElementById('bairro')?.value || '-'}, ${document.getElementById('cidade')?.value || '-'}
+            </div>
+            
+            <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px dashed #cbd5e1; margin-top: 5px;">
+                <strong style="color:#27ae60;">Curso Escolhido:</strong> ${document.getElementById('plano_curso')?.value || '-'} <br>
+                <strong style="color:#27ae60;">Vencimento:</strong> Dia ${document.getElementById('dia_vencimento')?.value || '-'} <br>
+                <strong style="color:#27ae60;">Horário:</strong> ${document.getElementById('horarioPreferencia')?.value || '-'}
+            </div>
+        `;
+
+        // Se o aluno for menor e preencheu o responsável, adicionamos com destaque!
+        const boxResp = document.getElementById('box-responsavel');
+        if (boxResp && boxResp.style.display === 'block') {
+            htmlResumo += `
+                <div style="grid-column: 1 / -1; padding: 12px; background: #fff3e0; border: 1px dashed #e67e22; border-radius: 6px; margin-top: 10px;">
+                    <strong style="color:#d35400;">Responsável Legal:</strong> ${document.getElementById('resp_nome')?.value || '-'} (CPF: ${document.getElementById('resp_cpf')?.value || '-'})
+                </div>
+            `;
+        }
+
+        // Injeta o resumo na tela
+        document.getElementById('resumoDadosBox').innerHTML = htmlResumo;
 
         // Pega o HTML limpo do contrato atualizado e joga para o modal
         const textoContrato = document.getElementById('previewContrato').innerHTML;
