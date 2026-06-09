@@ -79,10 +79,11 @@ App.renderizarFinanceiroPro = async () => {
         const barraFerramentas = `
             <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
-                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
-                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
-                </div>
+            ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'warning', '✏️')}
+            ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+            ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+        </div>
                 
                 <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
                     <div class="search-wrapper" style="width: 100%; position:relative;">
@@ -1036,6 +1037,140 @@ App.salvarEdicaoFinanceiro = async () => {
 };
 
 // =======================================================================
+// ✏️ EDIÇÃO EM MASSA (LOTE) - DATA, VALOR E DESCRIÇÃO
+// =======================================================================
+
+App.abrirModalEdicaoLote = () => {
+    const checks = document.querySelectorAll('.fin-check:checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um lançamento para editar.", "warning");
+
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+
+    if(titulo) titulo.innerText = `Edição em Massa (${checks.length} itens)`;
+
+    const html = `
+        <div style="background:#e8f4f8; color:#2980b9; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #3498db;">
+            ℹ️ <b>Atenção:</b> Apenas os campos que preencher abaixo serão alterados em todos os <b>${checks.length}</b> lançamentos selecionados. Deixe em branco o que não quiser alterar.
+        </div>
+        
+        <div class="input-group" style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2c3e50;">Nova Data de Vencimento / Pagamento:</label>
+            <input type="date" id="lote-edit-data" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
+            <small style="color:#7f8c8d; font-size:11px;">Altera o vencimento (se estiver Pendente) ou a data de pagamento efetiva (se estiver Pago).</small>
+        </div>
+        
+        <div class="input-group" style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2c3e50;">Novo Valor (R$):</label>
+            <input type="number" step="0.01" id="lote-edit-valor" placeholder="Ex: 150.00" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
+        </div>
+
+        <div class="input-group" style="margin-bottom:15px;">
+            <label style="font-weight:bold; color:#2c3e50;">Nova Descrição / Referência:</label>
+            <input type="text" id="lote-edit-descricao" placeholder="Ex: Mensalidade Adiada Novembro" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
+        </div>
+    `;
+
+    if(conteudo) conteudo.innerHTML = html;
+
+    const btnConfirm = document.querySelector('.btn-confirm');
+    if(btnConfirm) {
+        btnConfirm.setAttribute('onclick', 'App.salvarEdicaoLote()');
+        btnConfirm.innerHTML = "💾 Aplicar a Todos";
+        btnConfirm.style.background = '#f39c12'; // Cor de atenção para lote
+        btnConfirm.style.display = 'inline-block';
+    }
+};
+
+App.salvarEdicaoLote = async () => {
+    const novaData = document.getElementById('lote-edit-data').value;
+    const novoValorStr = document.getElementById('lote-edit-valor').value;
+    const novaDescricao = document.getElementById('lote-edit-descricao').value.trim();
+
+    if (!novaData && !novoValorStr && !novaDescricao) {
+        return App.showToast("Preencha pelo menos um campo para alterar em massa.", "warning");
+    }
+
+    // Tratamento de segurança para o valor numérico
+    let novoValor = null;
+    if (novoValorStr) {
+        let valStr = novoValorStr.toString().trim();
+        if (valStr.includes(',') && valStr.includes('.')) valStr = valStr.replace(/\./g, '').replace(',', '.'); 
+        else if (valStr.includes(',')) valStr = valStr.replace(',', '.'); 
+        
+        novoValor = parseFloat(valStr);
+        if (isNaN(novoValor) || novoValor < 0) return App.showToast("Valor preenchido é inválido.", "warning");
+    }
+
+    const checks = document.querySelectorAll('.fin-check:checked');
+    const ids = Array.from(checks).map(c => c.value);
+
+    const btn = document.querySelector('.btn-confirm');
+    const txtOrig = btn ? btn.innerHTML : 'Aplicar';
+    if (btn) { btn.innerHTML = "⏳ A processar..."; btn.disabled = true; btn.style.opacity = '0.8'; }
+    document.body.style.cursor = 'wait';
+
+    try {
+        const promessas = ids.map(id => {
+            const parcelaOriginal = App.financeiroCache.find(f => f.id == id);
+            if (!parcelaOriginal) return Promise.resolve();
+
+            const isPago = parcelaOriginal.status === 'Pago';
+            const parcelaAtualizada = { ...parcelaOriginal };
+
+            // Aplica os valores apenas se o utilizador digitou algo no campo
+            if (novoValor !== null) {
+                parcelaAtualizada.valor = novoValor;
+                if (isPago) {
+                    parcelaAtualizada.valorPago1 = novoValor;
+                    parcelaAtualizada.valorPago2 = 0; 
+                }
+            }
+
+            if (novaData) {
+                if (isPago) parcelaAtualizada.dataPagamento = novaData;
+                else parcelaAtualizada.vencimento = novaData;
+            }
+
+            if (novaDescricao) {
+                parcelaAtualizada.descricao = novaDescricao;
+            }
+
+            // Envia o update diretamente à base de dados para aquela parcela
+            return App.api(`/financeiro/${id}`, 'PUT', parcelaAtualizada);
+        });
+
+        // 🚀 O Promise.all processa dezenas de edições ao mesmo tempo!
+        await Promise.all(promessas);
+
+        App.showToast(`Edição aplicada em ${ids.length} lançamentos! 💼`, "success");
+        App.fecharModal();
+        
+        // Recarrega a tabela de imediato
+        document.getElementById('app-content').innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando financeiro... ⏳</p>';
+        
+        if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina') && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
+            await App.renderizarFinanceiroPro();
+        } else if (typeof App.filtrarTabelaReativa === 'function') {
+            await App.renderizarLista('financeiro');
+        } else {
+            if(typeof App.renderizarFinanceiroPro === 'function') await App.renderizarFinanceiroPro();
+            else await App.renderizarHistoricoFinanceiro();
+        }
+
+    } catch (e) {
+        console.error("Erro na edição em lote:", e);
+        App.showToast("Ocorreu um erro ao atualizar em lote.", "error");
+    } finally {
+        if (btn) { btn.innerHTML = txtOrig; btn.disabled = false; btn.style.background = ''; btn.style.opacity = '1'; }
+        document.body.style.cursor = 'default';
+    }
+};
+
+// =======================================================================
 // 🗂️ TELA EXCLUSIVA DE HISTÓRICO DE LANÇAMENTOS (COM FILTROS AVANÇADOS)
 // =======================================================================
 
@@ -1076,10 +1211,11 @@ App.renderizarHistoricoFinanceiro = async () => {
         const barraFerramentas = `
             <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
-                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
-                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
-                </div>
+            ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'warning', '✏️')}
+            ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+            ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+        </div>
                 
                 <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
                     <div class="search-wrapper" style="width: 100%; position:relative;">

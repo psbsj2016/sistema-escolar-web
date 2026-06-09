@@ -122,6 +122,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const escolaId = urlParams.get('escola');
         const API_BASE = '/api';
+     
+        // 🚀 FORÇAR ATUALIZAÇÃO DE CACHE (COLE ISTO AQUI)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) { registration.update(); }
+            });
+        }
 
         async function carregarHubPersonalizado() {
             if (!escolaId) {
@@ -131,7 +138,8 @@
 
             try {
                 // Vai buscar as configurações exatas desta escola!
-                const res = await fetch(`${API_BASE}/public/escola/${escolaId}`);
+                // O '?v=' cria um link único a cada milissegundo, obrigando o navegador a trazer os dados novos!
+const res = await fetch(`${API_BASE}/public/escola/${escolaId}?v=${new Date().getTime()}`);
                 if(!res.ok) throw new Error("Escola não encontrada");
                 
                 const dados = await res.json();
