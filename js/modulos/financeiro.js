@@ -1037,7 +1037,7 @@ App.salvarEdicaoFinanceiro = async () => {
 };
 
 // =======================================================================
-// ✏️ EDIÇÃO EM MASSA (LOTE) - DATA, VALOR E DESCRIÇÃO
+// ✏️ EDIÇÃO EM MASSA (LOTE) - COM INTELIGÊNCIA DE CARNÊ (CASCATA)
 // =======================================================================
 
 App.abrirModalEdicaoLote = () => {
@@ -1054,13 +1054,19 @@ App.abrirModalEdicaoLote = () => {
 
     const html = `
         <div style="background:#e8f4f8; color:#2980b9; padding:12px; border-radius:5px; margin-bottom:15px; font-size:13px; border-left:4px solid #3498db;">
-            ℹ️ <b>Atenção:</b> Apenas os campos que preencher abaixo serão alterados em todos os <b>${checks.length}</b> lançamentos selecionados. Deixe em branco o que não quiser alterar.
+            ℹ️ <b>Atenção:</b> Apenas os campos que preencher abaixo serão alterados. Deixe em branco o que não quiser modificar.
         </div>
         
-        <div class="input-group" style="margin-bottom:15px;">
-            <label style="font-weight:bold; color:#2c3e50;">Nova Data de Vencimento / Pagamento:</label>
-            <input type="date" id="lote-edit-data" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px;">
-            <small style="color:#7f8c8d; font-size:11px;">Altera o vencimento (se estiver Pendente) ou a data de pagamento efetiva (se estiver Pago).</small>
+        <div class="input-group" style="margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+            <label style="font-weight:bold; color:#2c3e50;">Nova Data Base (1º Vencimento):</label>
+            <input type="date" id="lote-edit-data" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc; font-size:15px; margin-bottom:10px;">
+            
+            <div style="display:flex; align-items:flex-start; gap:8px; background:#fff3e0; padding:10px; border-radius:6px; border:1px solid #fdebd0;">
+                <input type="checkbox" id="lote-edit-cascata" checked style="width:18px; height:18px; accent-color:#d35400; cursor:pointer; flex-shrink:0; margin-top:2px;">
+                <label for="lote-edit-cascata" style="font-size:12px; color:#d35400; cursor:pointer; line-height:1.4;">
+                    <b>Inteligência de Carnê:</b><br> O primeiro lançamento recebe esta data, os seguintes mantêm o dia e avançam 1 mês automaticamente (Efeito Cascata).
+                </label>
+            </div>
         </div>
         
         <div class="input-group" style="margin-bottom:15px;">
@@ -1080,7 +1086,7 @@ App.abrirModalEdicaoLote = () => {
     if(btnConfirm) {
         btnConfirm.setAttribute('onclick', 'App.salvarEdicaoLote()');
         btnConfirm.innerHTML = "💾 Aplicar a Todos";
-        btnConfirm.style.background = '#f39c12'; // Cor de atenção para lote
+        btnConfirm.style.background = '#f39c12'; 
         btnConfirm.style.display = 'inline-block';
     }
 };
@@ -1089,6 +1095,7 @@ App.salvarEdicaoLote = async () => {
     const novaData = document.getElementById('lote-edit-data').value;
     const novoValorStr = document.getElementById('lote-edit-valor').value;
     const novaDescricao = document.getElementById('lote-edit-descricao').value.trim();
+    const usarCascata = document.getElementById('lote-edit-cascata')?.checked;
 
     if (!novaData && !novoValorStr && !novaDescricao) {
         return App.showToast("Preencha pelo menos um campo para alterar em massa.", "warning");
@@ -1108,20 +1115,24 @@ App.salvarEdicaoLote = async () => {
     const checks = document.querySelectorAll('.fin-check:checked');
     const ids = Array.from(checks).map(c => c.value);
 
+    // 🧠 ORDENAÇÃO CRONOLÓGICA INTELIGENTE
+    // Puxamos os itens selecionados e ordenamos pela data original, 
+    // assim a cascata de meses vai acontecer na ordem correta, mesmo que o utilizador os selecione misturados.
+    const itensSelecionados = ids.map(id => App.financeiroCache.find(f => f.id == id)).filter(Boolean);
+    itensSelecionados.sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento));
+
     const btn = document.querySelector('.btn-confirm');
     const txtOrig = btn ? btn.innerHTML : 'Aplicar';
     if (btn) { btn.innerHTML = "⏳ A processar..."; btn.disabled = true; btn.style.opacity = '0.8'; }
     document.body.style.cursor = 'wait';
 
     try {
-        const promessas = ids.map(id => {
-            const parcelaOriginal = App.financeiroCache.find(f => f.id == id);
-            if (!parcelaOriginal) return Promise.resolve();
-
+        // Criamos o lote de atualizações (usando o índice do array para saltar os meses)
+        const promessas = itensSelecionados.map((parcelaOriginal, index) => {
             const isPago = parcelaOriginal.status === 'Pago';
             const parcelaAtualizada = { ...parcelaOriginal };
 
-            // Aplica os valores apenas se o utilizador digitou algo no campo
+            // 1. Atualiza o Valor
             if (novoValor !== null) {
                 parcelaAtualizada.valor = novoValor;
                 if (isPago) {
@@ -1130,26 +1141,47 @@ App.salvarEdicaoLote = async () => {
                 }
             }
 
-            if (novaData) {
-                if (isPago) parcelaAtualizada.dataPagamento = novaData;
-                else parcelaAtualizada.vencimento = novaData;
-            }
-
+            // 2. Atualiza a Descrição
             if (novaDescricao) {
                 parcelaAtualizada.descricao = novaDescricao;
             }
 
-            // Envia o update diretamente à base de dados para aquela parcela
-            return App.api(`/financeiro/${id}`, 'PUT', parcelaAtualizada);
+            // 3. Atualiza a Data (Com a Magia da Cascata)
+            if (novaData) {
+                let dataFinal = novaData;
+
+                // Se a inteligência de carnê estiver ativada e não for um item já pago
+                if (usarCascata && !isPago && index > 0) {
+                    const dataBase = new Date(novaData + 'T00:00:00');
+                    const diaEsperado = dataBase.getDate();
+                    
+                    // Adiciona X meses com base na ordem da parcela
+                    dataBase.setMonth(dataBase.getMonth() + index);
+                    
+                    // Trava de segurança para meses curtos (Ex: 31 Jan + 1 Mês não pode virar 2 ou 3 de Março)
+                    if (dataBase.getDate() !== diaEsperado) {
+                        dataBase.setDate(0); // Força para o último dia do mês correto (Ex: 28 Fev)
+                    }
+                    
+                    dataFinal = dataBase.toISOString().split('T')[0];
+                }
+
+                // Se estiver pago altera o registo do pagamento, se pendente altera o vencimento oficial
+                if (isPago) parcelaAtualizada.dataPagamento = novaData; 
+                else parcelaAtualizada.vencimento = dataFinal; 
+            }
+
+            // Envia a parcela calculada para o banco de dados
+            return App.api(`/financeiro/${parcelaOriginal.id}`, 'PUT', parcelaAtualizada);
         });
 
-        // 🚀 O Promise.all processa dezenas de edições ao mesmo tempo!
+        // Dispara todas as dezenas de edições ao mesmo tempo e espera que concluam
         await Promise.all(promessas);
 
-        App.showToast(`Edição aplicada em ${ids.length} lançamentos! 💼`, "success");
+        App.showToast(`Edição em cascata aplicada em ${ids.length} lançamentos! 💼`, "success");
         App.fecharModal();
         
-        // Recarrega a tabela de imediato
+        // Recarrega a Tabela
         document.getElementById('app-content').innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando financeiro... ⏳</p>';
         
         if (typeof App.renderizarFinanceiroPro === 'function' && document.getElementById('titulo-pagina') && document.getElementById('titulo-pagina').innerText.includes('Financeiro')) {
