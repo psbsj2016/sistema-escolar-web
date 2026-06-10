@@ -747,7 +747,7 @@ App.abrirCarneExistente = async (idLote) => {
                 ? `<img src="${escola.qrCodeImagem}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px;">`
                 : `<div id="qr-${p.id}" style="width: 60px; height: 60px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
 
-            return `
+           return `
             <div class="carne-wrapper">
                 <div class="carne-canhoto">
                     <div style="border-bottom: 1px solid #ccc; padding-bottom: 3px; margin-bottom: 5px; text-align: center;">${logo}</div>
@@ -767,12 +767,18 @@ App.abrirCarneExistente = async (idLote) => {
                         <div><div style="font-size: 9px; color: #777;">Valor</div><div style="font-weight: bold; font-size: 12px;">R$ ${valorF}</div></div>
                     </div>
                     <div style="font-size: 10px; margin-bottom: 5px;"><b>Ref:</b> ${App.escapeHTML(p.descricao)} | <b>Pagador:</b> ${App.escapeHTML(aluno.nome)}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    
+                    <div style="background: #fff8e1; border: 1px solid #f1c40f; padding: 4px 8px; border-radius: 4px; margin-bottom: 5px; text-align: center; line-height: 1.2;">
+                        <span style="font-size: 9px; font-weight: bold; color: #d35400;">⚠️ Informação Importante:</span> 
+                        <span style="font-size: 9px; color: #555;">Descontos e benefícios concedidos na matrícula são válidos apenas até a data de vencimento. Após o vencimento, a mensalidade será atualizada automaticamente para o valor vigente.</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
                         <div>
                             <div style="font-size: 10px; font-weight: bold; color:#27ae60;">PAGAMENTO VIA PIX</div>
                             <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; word-break: break-all;">🔑 ${App.escapeHTML(chavePix)}</div>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">${qrCodeDisplay}</div>
+                        <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: -5px;">${qrCodeDisplay}</div>
                     </div>
                 </div>
             </div>`;
