@@ -857,7 +857,7 @@ App.renderizarInadimplencia = async () => {
         const totalAtraso = totalAtrasoCentavos / 100;
 
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:80px;">` : '';
                 
         const style = `
         <style>
