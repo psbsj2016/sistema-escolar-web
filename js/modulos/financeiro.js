@@ -747,13 +747,15 @@ App.abrirCarneExistente = async (idLote) => {
                 ? `<img src="${escola.qrCodeImagem}" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; padding: 2px;">`
                 : `<div id="qr-${p.id}" style="width: 60px; height: 60px; padding: 5px; background: #fff; border: 1px solid #ccc; border-radius: 4px; display:flex; align-items:center; justify-content:center;"></div>`;
 
-           return `
+          return `
             <div class="carne-wrapper">
                 <div class="carne-canhoto">
-                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px; text-align: center;">
-                        ${logo}
-                        <div style="font-size: 8px; color: #555; margin-top: 3px; line-height: 1.2;"><b>CNPJ:</b> ${App.escapeHTML(escola.cnpj || 'Não informado')}</div>
-                        <div style="font-size: 8px; color: #555; line-height: 1.2;"><b>Banco:</b> ${App.escapeHTML(bancoNome)}</div>
+                    <div style="border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; text-align: left;">
+                        ${escola.foto ? `<img src="${escola.foto}" style="height: 45px; max-width: 65px; object-fit: contain; flex-shrink: 0;">` : ''}
+                        <div style="display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+                            <div style="font-size: 8px; color: #555; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><b>CNPJ:</b> ${App.escapeHTML(escola.cnpj || 'Não informado')}</div>
+                            <div style="font-size: 8px; color: #555; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><b>Banco:</b> ${App.escapeHTML(bancoNome)}</div>
+                        </div>
                     </div>
                     <div style="font-size: 10px; margin-bottom: 3px; color: #34495e;"><b>Nº:</b> ${nossoNumero}</div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
@@ -857,7 +859,7 @@ App.renderizarInadimplencia = async () => {
         const totalAtraso = totalAtrasoCentavos / 100;
 
         const dataHojeStr = new Date().toLocaleDateString('pt-BR'); 
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:80px;">` : '';
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
                 
         const style = `
         <style>
