@@ -77,16 +77,16 @@ App.renderizarFinanceiroPro = async () => {
         const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
 
         const barraFerramentas = `
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
-            ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-            
-            <button onclick="App.abrirModalEdicaoLote()" style="background:#1abc9c; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.filter='none'; this.style.transform='scale(1)'">✏️ EDITAR</button>
-            
-            ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
-            ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
-        </div>
+            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:20px;">
                 
-                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                    ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
+                    <button onclick="App.abrirModalEdicaoLote()" style="background:#1abc9c; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.filter='none'; this.style.transform='scale(1)'">✏️ EDITAR</button>
+                    ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
+                    ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
+                </div>
+                
+                <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px; margin-top: 15px;">
                     <div class="search-wrapper" style="width: 100%; position:relative;">
                         <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
                         <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
@@ -103,9 +103,7 @@ App.renderizarFinanceiroPro = async () => {
                         </select>
                     </div>
                 </div>
-            </div>
-            <div id="fin-lista-area" class="table-responsive-wrapper" style="overflow-x:auto;">
-                ${App.gerarTabelaFinanceira(App.financeiroCache)}
+                
             </div>
         `;
 
@@ -1266,11 +1264,10 @@ App.renderizarHistoricoFinanceiro = async () => {
         </div>
                 
                 <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
-    <div class="search-wrapper" style="width: 100%; position:relative; margin-top:10px;">
-        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
-        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
-    </div>
-</div>
+                    <div class="search-wrapper" style="width: 100%; position:relative; margin-top:10px;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+                    </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opStatusBusca}
