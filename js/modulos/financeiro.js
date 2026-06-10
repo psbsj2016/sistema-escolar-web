@@ -77,10 +77,11 @@ App.renderizarFinanceiroPro = async () => {
         const opMesesBusca = '<option value="" selected>Todos os Meses</option>' + mesesNome.map((m, i) => `<option value="${(i+1).toString().padStart(2, '0')}">${m}</option>`).join('');
 
         const barraFerramentas = `
-            <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
             ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'secondary', '✏️')}
+            
+            <button onclick="App.abrirModalEdicaoLote()" style="background:#1abc9c; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.filter='none'; this.style.transform='scale(1)'">✏️ EDITAR</button>
+            
             ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
             ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
         </div>
@@ -1244,7 +1245,9 @@ App.renderizarHistoricoFinanceiro = async () => {
             <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
             ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'secondary', '✏️')}
+            
+            <button onclick="App.abrirModalEdicaoLote()" style="background:#1abc9c; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.filter='none'; this.style.transform='scale(1)'">✏️ EDITAR</button>
+            
             ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
             ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
         </div>
