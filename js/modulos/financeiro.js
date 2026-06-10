@@ -1266,10 +1266,11 @@ App.renderizarHistoricoFinanceiro = async () => {
         </div>
                 
                 <div style="display:flex; flex-direction:column; gap:10px; flex:1; min-width:300px; max-width:650px;">
-                    <div class="search-wrapper" style="width: 100%; position:relative; margin-top:10px;">
-                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
-                        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
-                    </div>
+    <div class="search-wrapper" style="width: 100%; position:relative; margin-top:10px;">
+        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity:0.5;">🔍</span>
+        <input type="text" id="fin-busca" placeholder="Pesquisar por nome ou descrição..." oninput="App.filtrarFinanceiro()" style="width:100%; padding:10px 10px 10px 35px; border:1px solid #ddd; border-radius:5px;">
+    </div>
+</div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <select id="fin-filtro-status" onchange="App.filtrarFinanceiro()" style="flex:1; min-width:130px; padding:10px; border:1px solid #ddd; border-radius:5px; background:white; font-size:13px;">
                             ${opStatusBusca}
