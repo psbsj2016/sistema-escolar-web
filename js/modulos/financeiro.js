@@ -755,6 +755,7 @@ App.abrirCarneExistente = async (idLote) => {
                         <div style="font-size: 8px; color: #555; margin-top: 3px; line-height: 1.2;"><b>CNPJ:</b> ${App.escapeHTML(escola.cnpj || 'Não informado')}</div>
                         <div style="font-size: 8px; color: #555; line-height: 1.2;"><b>Banco:</b> ${App.escapeHTML(bancoNome)}</div>
                     </div>
+                    <div style="font-size: 10px; margin-bottom: 3px; color: #34495e;"><b>Nº:</b> ${nossoNumero}</div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Parcela:</b> ${App.escapeHTML(p.descricao)}</div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Vencimento:</b> <span style="color: red; font-weight: bold;">${dataVenc}</span></div>
                     <div style="font-size: 10px; margin-bottom: 3px;"><b>Valor:</b> R$ ${valorF}</div>
