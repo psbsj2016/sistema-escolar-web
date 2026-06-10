@@ -142,6 +142,23 @@ tr:hover td { background: rgba(0,0,0,0.02); }
 .btn-edit { background: var(--warning); color: white; border: none; padding: 8px 12px; border-radius: 6px; margin-right: 5px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;}
 .btn-del { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center;}
 .btn-edit:hover, .btn-del:hover { filter: brightness(1.1); transform: scale(1.05); }
+/* BOTÃO SECUNDÁRIO (USADO PARA O EDITAR EM MASSA) */
+.btn-secondary { 
+    background: #1abc9c; /* Cor Azul Turquesa vibrante */
+    color: white; 
+    border: none; 
+    padding: 8px 12px; 
+    border-radius: 6px; 
+    margin-right: 5px; 
+    transition: 0.2s; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+}
+.btn-secondary:hover { 
+    filter: brightness(1.1); 
+    transform: scale(1.05); 
+}
 
 .btn-new-modern { background: var(--success); color: white; border: none; padding: 0 25px; height: 45px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
 .btn-new-modern:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3); }

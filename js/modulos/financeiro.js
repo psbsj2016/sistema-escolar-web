@@ -80,7 +80,7 @@ App.renderizarFinanceiroPro = async () => {
             <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
             ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'info', '✏️')}
+            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'secondary', '✏️')}
             ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
             ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
         </div>
@@ -1244,7 +1244,7 @@ App.renderizarHistoricoFinanceiro = async () => {
             <div class="toolbar" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
             ${botao('BAIXAR', "App.abrirModalBaixa()", 'primary', '✅')}
-            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'info', '✏️')}
+            ${botao('EDITAR', "App.abrirModalEdicaoLote()", 'secondary', '✏️')}
             ${botao('DESFAZER', "App.acaoLote('pendente')", 'edit', '↩️')}
             ${botao('EXCLUIR', "App.acaoLote('excluir')", 'cancel', '🗑️')}
         </div>
