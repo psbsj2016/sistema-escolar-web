@@ -369,3 +369,85 @@ App.salvarCadastro = async () => {
     }
 };
 
+// =======================================================================
+// 🗑️ EXCLUSÃO EM MASSA (LOTE) PARA CADASTROS (ALUNOS, TURMAS, CURSOS, ETC)
+// =======================================================================
+
+App.toggleCheckCadastros = (source) => { 
+    document.querySelectorAll('.chk-cadastro').forEach(c => c.checked = source.checked); 
+};
+
+App.excluirEmLoteCadastros = (tipo) => {
+    const checks = document.querySelectorAll('.chk-cadastro:checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um registo para excluir.", "warning");
+    
+    // Identifica qual a coleção do banco de dados (alunos, turmas, cursos...)
+    const colecao = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+    
+    // Abre o Modal
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+    const btnConfirm = document.querySelector('.btn-confirm');
+    
+    if (titulo) titulo.innerText = `Excluir Registos (${checks.length} itens)`;
+    
+    // Layout Bonito de Alerta
+    const html = `
+        <div style="text-align:center; padding:10px 10px 20px 10px;">
+            <div style="font-size:55px; margin-bottom:10px; animation: scaleIn 0.3s ease-out;">🗑️</div>
+            <h3 style="color:#2c3e50; margin-bottom:15px; font-size:22px;">Tem a certeza absoluta?</h3>
+            <p style="color:#555; font-size:15px; margin-bottom:10px; line-height:1.5;">
+                Está prestes a <b>excluir permanentemente</b> <br>
+                <span style="display:inline-block; margin-top:10px; background:#c0392b; color:white; padding:5px 15px; border-radius:20px; font-weight:bold; font-size:16px;">${checks.length} item(ns)</span> selecionado(s).
+            </p>
+            <div style="background:#fdf2f2; border:1px solid #fadbd8; border-left:4px solid #c0392b; padding:12px; border-radius:6px; color:#c0392b; font-size:13px; text-align:left; margin-top:20px;">
+                <b>⚠️ ATENÇÃO:</b> Esta ação é irreversível. Os dados apagados não poderão ser recuperados do sistema.
+            </div>
+        </div>
+        <style>@keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }</style>
+    `;
+    
+    if (conteudo) conteudo.innerHTML = html;
+    
+    if (btnConfirm) {
+        btnConfirm.innerText = "SIM, EXCLUIR 🗑️";
+        btnConfirm.style.background = '#c0392b';
+        
+        // Remove event listeners antigos (Clone)
+        const novoBtn = btnConfirm.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(novoBtn, btnConfirm);
+        
+        // Ação de Deletar
+        novoBtn.onclick = async () => {
+            const textoOriginal = novoBtn.innerText;
+            novoBtn.innerText = "A excluir... ⏳"; 
+            novoBtn.disabled = true;
+            document.body.style.cursor = 'wait';
+            
+            try {
+                // Dispara os deletes todos em paralelo
+                const operacoes = Array.from(checks).map(check => App.api(`/${colecao}/${check.value}`, 'DELETE'));
+                await Promise.all(operacoes);
+                
+                App.showToast("Registos excluídos com sucesso!", "success");
+                App.fecharModal();
+                
+                // Recarrega a tabela de cadastros correspondente
+                const area = document.getElementById('app-content');
+                if(area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando lista... ⏳</p>';
+                await App.renderizarLista(tipo);
+                
+            } catch (e) {
+                App.showToast("Erro ao processar exclusão.", "error");
+                novoBtn.innerText = textoOriginal; 
+                novoBtn.disabled = false;
+            } finally { 
+                document.body.style.cursor = 'default'; 
+                setTimeout(() => { if (novoBtn) novoBtn.style.background = ''; }, 500);
+            }
+        };
+    }
+};

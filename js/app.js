@@ -1035,6 +1035,7 @@ validarCadastroInst: async () => {
                         <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
                         <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
                     </div>
+                    <button class="btn-cancel" style="color:#c0392b; border: 1px solid #c0392b; background: transparent; padding: 0 20px; height: 45px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;" onclick="App.excluirEmLoteCadastros('${tipo}')">🗑️ Excluir Vários</button>
                     <button class="btn-new-modern" onclick="${acaoNovo}"><span>＋</span> NOVO REGISTRO</button>
                 </div>`;
             
@@ -1073,7 +1074,7 @@ validarCadastroInst: async () => {
         container.innerHTML = `<div class="card" style="animation: fadeIn 0.3s ease; padding:0; overflow:hidden;">${App.gerarTabelaHTML(filtrados)}</div>`;
     },
 
-    gerarTabelaHTML: (dados) => {
+   gerarTabelaHTML: (dados) => {
         if (!dados.length) return '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado.</p>';
         const tipo = App.entidadeAtual;
         
@@ -1086,15 +1087,23 @@ validarCadastroInst: async () => {
             btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>` 
         };
 
+        // 🟢 Caixa Mestra (Para marcar/desmarcar todos)
+        const chkMaster = `<th style="width:40px; text-align:center; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckCadastros(this)" style="cursor:pointer; transform:scale(1.2);"></th>`;
+
         let cabecalho = '';
-        if (tipo === 'aluno')      cabecalho = TB.th('Nome') + TB.th('Turma') + TB.th('Status') + TB.th('WhatsApp') + TB.th('Ações', 'right');
-        if (tipo === 'turma')      cabecalho = TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
-        if (tipo === 'curso')      cabecalho = TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
-        if (tipo === 'financeiro') cabecalho = TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
-        if (tipo === 'estoque')    cabecalho = TB.th('Item') + TB.th('Código') + TB.th('Qtd Atual') + TB.th('Mínimo (Alerta)') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');        
+        if (tipo === 'aluno')      cabecalho = chkMaster + TB.th('Nome') + TB.th('Turma') + TB.th('Status') + TB.th('WhatsApp') + TB.th('Ações', 'right');
+        if (tipo === 'turma')      cabecalho = chkMaster + TB.th('Turma') + TB.th('Dia') + TB.th('Horário') + TB.th('Curso') + TB.th('Ações', 'right');
+        if (tipo === 'curso')      cabecalho = chkMaster + TB.th('Curso') + TB.th('Carga') + TB.th('Ações', 'right');
+        if (tipo === 'financeiro') cabecalho = chkMaster + TB.th('Ref (Aluno)') + TB.th('Descrição') + TB.th('Vencimento') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');
+        if (tipo === 'estoque')    cabecalho = chkMaster + TB.th('Item') + TB.th('Código') + TB.th('Qtd Atual') + TB.th('Mínimo (Alerta)') + TB.th('Valor') + TB.th('Status') + TB.th('Ações', 'right');        
 
         const corpo = dados.map(item => {
             let celulas = '';
+            
+            // 🟢 Caixa Individual de cada registo
+            const chkRow = `<td style="text-align:center; padding:15px; border-bottom:1px solid #eee;"><input type="checkbox" class="chk-cadastro" value="${item.id}" style="cursor:pointer; transform:scale(1.2);"></td>`;
+            celulas += chkRow; // Insere no início da linha
+
             if (tipo === 'aluno') { 
                 const statusAluno = item.status || 'Ativo';
                 const corStatus = statusAluno === 'Ativo' ? '#27ae60' : (statusAluno === 'Trancado' ? '#f39c12' : '#e74c3c');
@@ -1102,7 +1111,6 @@ validarCadastroInst: async () => {
                 
                 celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.turma || '-')) + TB.td(badgeStatus) + TB.td(App.escapeHTML(item.whatsapp || '-')); 
             }
-
             else if (tipo === 'turma') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); } 
             else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
             else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
