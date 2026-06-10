@@ -926,3 +926,23 @@ tr:hover td { background: rgba(0,0,0,0.02); }
     font-weight: 600;
 }
 
+/* =========================================================
+   📱 FIX: VISUALIZAÇÃO DO CARNÊ NO CELULAR (SWIPE HORIZONTAL)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Cria uma área de rolagem isolada apenas para os carnês */
+    .carnes-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important; /* Rolagem super suave no iPhone/Android */
+        padding-bottom: 15px !important; /* Espaço para a barra de rolagem não sobrepor */
+    }
+    
+    /* Impede que o carnê seja esmagado pela tela pequena */
+    .carne-wrapper {
+        min-width: 750px !important; /* Mantém a largura perfeita de leitura */
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
