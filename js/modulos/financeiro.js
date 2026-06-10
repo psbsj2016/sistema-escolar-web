@@ -778,7 +778,7 @@ App.abrirCarneExistente = async (idLote) => {
                         <span style="font-size: 9px; color: #555;">Benefícios concedidos na matrícula são válidos apenas até a data de vencimento. Após o vencimento, a mensalidade será atualizada automaticamente para o valor vigente.</span>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: -10;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: -05;">
                         <div>
                             <div style="font-size: 10px; font-weight: bold; color:#27ae60;">PAGAMENTO VIA PIX</div>
                             <div style="background: #eee; padding: 4px 6px; border-radius: 4px; font-size: 10px; word-break: break-all;">🔑 ${App.escapeHTML(chavePix)}</div>
