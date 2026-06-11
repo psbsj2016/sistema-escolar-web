@@ -686,7 +686,8 @@ App.gerarBoletimTela = async () => {
         const cursoExibir = App.escapeHTML(aluno.curso || (planoAluno ? planoAluno.curso : 'Geral'));
         const turmaExibir = App.escapeHTML(aluno.turma || 'Não informada');
 
-        const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno); 
+        // INTELIGÊNCIA: Ignora notas marcadas como formativas (comporBoletim === false)
+        const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno && n.comporBoletim !== false); 
         const disciplinasMap = {};
         
         notasAluno.forEach(n => { 
@@ -700,7 +701,7 @@ App.gerarBoletimTela = async () => {
         
         let linhasHTML = '';
         if(Object.keys(disciplinasMap).length === 0) {
-            linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">Sem notas lançadas para este aluno.</td></tr>';
+            linhasHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#999;">Sem notas oficiais lançadas para este aluno.</td></tr>';
         } else {
             Object.keys(disciplinasMap).forEach(chave => {
                 const d = disciplinasMap[chave];
@@ -802,7 +803,7 @@ App.renderizarAvaliacoesPro = async () => {
         const opTurmas = `<option value="">-- Turma Completa --</option>` + turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const opCursos = `<option value="Geral">Geral / Curso Padrão</option>` + cursos.map(c => `<option value="${App.escapeHTML(c.nome)}">${App.escapeHTML(c.nome)}</option>`).join('');
-        const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
+        const opTipos = `<option value="Teste">Teste Formativo</option><option value="Prova">Prova Oficial</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
         const hoje = new Date().toISOString().split('T')[0];
 
         const painelConfig = `
@@ -859,13 +860,19 @@ App.renderizarAvaliacoesPro = async () => {
                             const valMaxAval = parseFloat(h.valorMax) || parseFloat(maxSalva);
                             const percentualAtingido = parseFloat(h.nota) / valMaxAval;
                             const corNota = percentualAtingido >= percentualAprovacao ? '#27ae60' : '#c0392b';
+                            
+                            // Adicionando as etiquetas de identificação Visual (Boletim Oficial vs Formativa)
+                            const badgeTipo = h.comporBoletim === false 
+                                ? `<span style="background:#f39c12; color:white; padding:3px 6px; border-radius:12px; font-size:10px; font-weight:bold; margin-left:5px;">TESTE</span>`
+                                : `<span style="background:#2980b9; color:white; padding:3px 6px; border-radius:12px; font-size:10px; font-weight:bold; margin-left:5px;">BOLETIM</span>`;
+
                             return `
                             <tr style="border-bottom:1px solid #eee;">
                                 <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-nota" value="${h.id}"></td>
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
                                 <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
-                                <td style="padding:12px;">${App.escapeHTML(h.tipo)}</td>
+                                <td style="padding:12px;">${App.escapeHTML(h.tipo)} ${badgeTipo}</td>
                                 <td style="padding:12px;">${App.escapeHTML(h.periodo || h.bimestre || '-')}</td>
                                 <td style="padding:12px; text-align:center;"><strong style="color:${corNota}">${App.escapeHTML(h.nota)}</strong> <span style="color:#999; font-size:11px;">/ ${App.escapeHTML(valMaxAval)}</span></td>
                                 <td style="padding:12px; text-align:right;">
@@ -879,7 +886,7 @@ App.renderizarAvaliacoesPro = async () => {
             </div>
         `;
 
-        div.innerHTML = painelConfig + App.UI.card('📝 Lançamento de Notas', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
+        div.innerHTML = painelConfig + App.UI.card('📝 Lançamento de Notas / Habilidades', '', formFiltros, '100%') + `<div id="area-lista-notas" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico de Notas Lançadas', '', tabelaHistorico, '100%') + '</div>';
     } catch(e) { div.innerHTML="Erro ao carregar avaliações."; }
 };
 
@@ -940,6 +947,8 @@ App.carregarListaNotas = async () => {
         if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
 
         let linhas = '';
+        let notaJaTinhaSidoMarcadaParaBoletim = true; // Padrão: vai para o boletim
+
         alunosAlvo.forEach(a => {
             let regExistente = null;
             if (App.idAvaliacaoEditando && a.id === document.getElementById('nota-aluno').value) {
@@ -949,6 +958,7 @@ App.carregarListaNotas = async () => {
             }
 
             const notaAtual = regExistente ? regExistente.nota : '';
+            if (regExistente && regExistente.comporBoletim === false) notaJaTinhaSidoMarcadaParaBoletim = false;
             const idEdicaoTag = (App.idAvaliacaoEditando && regExistente) ? `data-id-avaliacao="${regExistente.id}"` : '';
 
             linhas += `
@@ -962,6 +972,7 @@ App.carregarListaNotas = async () => {
 
         let alertaEdicao = App.idAvaliacaoEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO</div>` : '';
 
+        // O INTERRUPTOR INTELIGENTE ESTÁ AQUI NA DIV DE BAIXO
         area.innerHTML = alertaEdicao + `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #2980b9;">
                 <div style="padding:15px; background:#e8f4f8; border-bottom:1px solid #d1e8f0; font-size:13px; color:#2980b9; display:flex; justify-content:space-between; align-items:center;">
@@ -974,8 +985,12 @@ App.carregarListaNotas = async () => {
                         <tbody>${linhas}</tbody>
                     </table>
                 </div>
-                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
-                    <button onclick="App.salvarNotasLote()" class="btn-primary">💾 SALVAR NOTAS NO BOLETIM</button>
+                <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#2c3e50; font-size:14px; background:#fff; padding:10px 15px; border:1px solid #ccc; border-radius:8px; transition:0.2s;" onmouseover="this.style.background='#f1f1f1'" onmouseout="this.style.background='#fff'">
+                        <input type="checkbox" id="nota-vai-boletim" style="width:18px; height:18px;" ${notaJaTinhaSidoMarcadaParaBoletim ? 'checked' : ''}>
+                        Contabilizar no Boletim Oficial
+                    </label>
+                    <button onclick="App.salvarNotasLote()" class="btn-primary" style="background:#2980b9;">💾 SALVAR AVALIAÇÃO</button>
                 </div>
             </div>
         `;
@@ -989,6 +1004,9 @@ App.salvarNotasLote = async () => {
     const data = document.getElementById('nota-data').value;
     const max = document.getElementById('nota-max').value;
     const periodoSelecionado = document.getElementById('nota-periodo').value; 
+    
+    const comporBoletimCheckbox = document.getElementById('nota-vai-boletim');
+    const vaiParaBoletim = comporBoletimCheckbox ? comporBoletimCheckbox.checked : true;
     
     const linhas = document.querySelectorAll('.linha-nota');
     if(linhas.length === 0) return;
@@ -1013,10 +1031,22 @@ App.salvarNotasLote = async () => {
             if (idEdicao) { regExistente = avaliacoesExistentes.find(av => av.id === idEdicao); } 
             else { regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo); }
 
-            const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, periodo: periodoSelecionado, bimestre: periodoSelecionado, dataLancamento: new Date().toISOString().split('T')[0] };
+            const payload = { 
+                idAluno, 
+                nomeAluno, 
+                disciplina: disc, 
+                tipo, 
+                data, 
+                valorMax: max, 
+                nota: notaInput, 
+                periodo: periodoSelecionado, 
+                bimestre: periodoSelecionado, 
+                dataLancamento: new Date().toISOString().split('T')[0],
+                comporBoletim: vaiParaBoletim // Guarda a decisão de enviar ou não para o boletim
+            };
 
             if (regExistente) { 
-                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, periodo: periodoSelecionado, bimestre: periodoSelecionado })); 
+                promessas.push(App.api(`/avaliacoes/${regExistente.id}`, 'PUT', { ...regExistente, nota: notaInput, valorMax: max, data: data, disciplina: disc, tipo: tipo, periodo: periodoSelecionado, bimestre: periodoSelecionado, comporBoletim: vaiParaBoletim })); 
             } else { 
                 payload.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2)); 
                 promessas.push(App.api('/avaliacoes', 'POST', payload)); 
@@ -1024,7 +1054,7 @@ App.salvarNotasLote = async () => {
         });
 
         await Promise.all(promessas);
-        App.showToast("Pauta de notas arquivada com sucesso!", "success");
+        App.showToast("Avaliação arquivada com sucesso!", "success");
         App.cancelarEdicaoNota();
 
         const area = document.getElementById('app-content');
