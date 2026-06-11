@@ -1,7 +1,7 @@
 window.App = window.App || {};
 const App = window.App;
 // =========================================================
-// MÓDULO PEDAGÓGICO V163 (EXCLUSÃO EM MASSA + MODAL BONITO)
+// MÓDULO PEDAGÓGICO V164 (INTELIGÊNCIA AGUÇADA NA CHAMADA)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -1067,8 +1067,13 @@ App.renderizarChamadaPro = async () => {
         App.cachePedagogico.chamadas = Array.isArray(chamadasFetch) ? chamadasFetch : [];
         App.cachePedagogico.planejamentos = planosFetch;
 
+        // 🧠 INTELIGÊNCIA AGUÇADA: Pegamos apenas os IDs dos alunos que têm um planejamento ativo!
+        const idsComPlanoAtivo = App.cachePedagogico.planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
+
         const historico = [...App.cachePedagogico.chamadas].sort((a,b) => new Date(b.data) - new Date(a.data)); 
-        const alunosAtivos = App.cachePedagogico.alunos.filter(a => !a.status || a.status === 'Ativo');
+        
+        // Aplica a regra de cruzamento duplo: Tem que estar Ativo E ter um Plano que NÃO esteja no arquivo morto
+        const alunosAtivos = App.cachePedagogico.alunos.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + App.cachePedagogico.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
@@ -1186,12 +1191,18 @@ App.carregarListaChamada = async () => {
     try {
         const alunos = App.cachePedagogico.alunos;
         const chamadas = App.cachePedagogico.chamadas;
+        const planejamentos = App.cachePedagogico.planejamentos;
         
+        // 🧠 INTELIGÊNCIA AGUÇADA NA LISTA: Filtramos cruzando o status e o plano
+        const idsComPlanoAtivo = planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
+
         let alunosAlvo = [];
         if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } else { alunosAlvo = alunos.filter(a => a.turma === turma); }
-        alunosAlvo = alunosAlvo.filter(a => !a.status || a.status === 'Ativo');
+        
+        // Regra mágica aplicada na lista que vai aparecer
+        alunosAlvo = alunosAlvo.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
-        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno ativo encontrado para este filtro.</p></div>'; return; }
+        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno com Planejamento Ativo foi encontrado para este filtro.</p></div>'; return; }
 
         const chamadasDia = chamadas.filter(c => c.data === data);
         let linhas = '';
