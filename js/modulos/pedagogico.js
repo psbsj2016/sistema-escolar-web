@@ -1,7 +1,7 @@
 window.App = window.App || {};
 const App = window.App;
 // =========================================================
-// MÓDULO PEDAGÓGICO V162 (MODAL BONITO + MODO EDIÇÃO BLINDADO + NO CACHE)
+// MÓDULO PEDAGÓGICO V163 (EXCLUSÃO EM MASSA + MODAL BONITO)
 // =========================================================
 
 const EVENTO_CORES = { 'Evento': {bg:'#2ecc71',text:'#fff'}, 'Feriado': {bg:'#e74c3c',text:'#fff'}, 'Prova': {bg:'#3498db',text:'#fff'}, 'Reunião': {bg:'#f39c12',text:'#fff'} };
@@ -51,7 +51,7 @@ App.confirmar = (titulo, mensagem, textoBtn, corBtn, callback) => {
     document.getElementById(`btn-yes-${id}`).onclick = () => { close(); callback(); };
 };
 
-// --- FUNÇÃO GERAL DE FILTRO ---
+// --- FUNÇÕES GERAIS DE FILTRO E EXCLUSÃO EM MASSA ---
 App.filtrarTabela = (inputId, tabelaId) => {
     const termo = document.getElementById(inputId).value.trim().toLowerCase();
     const linhas = document.querySelectorAll(`#${tabelaId} tbody tr`);
@@ -60,6 +60,34 @@ App.filtrarTabela = (inputId, tabelaId) => {
         if (linha.innerText.includes('Nenhum') || linha.innerText.includes('Nenhuma')) return;
         const textoLinha = linha.innerText.toLowerCase(); 
         linha.style.display = textoLinha.includes(termo) ? '' : 'none';
+    });
+};
+
+App.toggleCheckMassa = (source, className) => {
+    document.querySelectorAll('.' + className).forEach(c => c.checked = source.checked);
+};
+
+App.excluirLotePedagogico = (endpoint, className, callbackRender) => {
+    const checks = document.querySelectorAll('.' + className + ':checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um item para excluir.", "warning");
+
+    App.confirmar("Excluir em Massa", `Deseja realmente excluir <b>${checks.length}</b> iten(s) selecionado(s)? Esta ação é irreversível.`, "Excluir Tudo", "#e74c3c", async () => {
+        document.body.style.cursor = 'wait';
+        try {
+            const promessas = Array.from(checks).map(check => App.api(`${endpoint}/${check.value}`, 'DELETE'));
+            await Promise.all(promessas);
+            
+            App.showToast(`${checks.length} iten(s) excluído(s) com sucesso!`, "success");
+            
+            const area = document.getElementById('app-content');
+            if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando dados... ⏳</p>';
+            
+            await callbackRender();
+        } catch (e) {
+            App.showToast("Erro ao excluir itens em massa.", "error");
+        } finally {
+            document.body.style.cursor = 'default';
+        }
     });
 };
 
@@ -131,7 +159,6 @@ App.renderizarNovoPlanejamento = async () => {
 App.renderizarPlanejamentosSalvos = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
     try {
-        // Cache-buster para garantir que os dados são frescos
         const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
         const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
         
@@ -140,9 +167,10 @@ App.renderizarPlanejamentosSalvos = async () => {
             return; 
         }
         
-        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const cabecalho = `<tr><th style="width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-plan-ativo')"></th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
         const corpo = planosAtivos.map(p => `
             <tr style="border-bottom:1px solid #eee;">
+                <td style="text-align:center;"><input type="checkbox" class="check-plan-ativo" value="${p.id}"></td>
                 <td style="padding:10px; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
                 <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center;">${p.aulas ? p.aulas.length : 0}</td>
@@ -154,12 +182,15 @@ App.renderizarPlanejamentosSalvos = async () => {
             </tr>`).join('');
 
         const buscaHtml = `
-            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <span style="font-size: 18px; color: #aaa;">🔍</span>
-                <input type="text" id="input-busca-plan-ativos" 
-                       placeholder="Pesquisar planejamento ativo pelo nome do aluno ou curso..." 
-                       oninput="App.filtrarTabela('input-busca-plan-ativos', 'tabela-plan-ativos')" 
-                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <button onclick="App.excluirLotePedagogico('/planejamentos', 'check-plan-ativo', App.renderizarPlanejamentosSalvos)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <span style="font-size: 18px; color: #aaa;">🔍</span>
+                    <input type="text" id="input-busca-plan-ativos" 
+                           placeholder="Pesquisar planejamento ativo..." 
+                           oninput="App.filtrarTabela('input-busca-plan-ativos', 'tabela-plan-ativos')" 
+                           style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+                </div>
             </div>
         `;
 
@@ -179,7 +210,6 @@ App.renderizarPlanejamentosSalvos = async () => {
 App.renderizarPlanejamentosArquivados = async () => {
     const div = document.getElementById('app-content'); div.innerHTML = 'A carregar arquivados...';
     try {
-        // Cache-buster para fresco
         const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
         const planosArquivados = planos.filter(p => p.status === 'Arquivado');
         
@@ -188,9 +218,10 @@ App.renderizarPlanejamentosArquivados = async () => {
             return; 
         }
         
-        const cabecalho = `<tr><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        const cabecalho = `<tr><th style="width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-plan-arq')"></th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
         const corpo = planosArquivados.map(p => `
             <tr style="border-bottom:1px solid #ddd; background:#f9f9f9;">
+                <td style="text-align:center;"><input type="checkbox" class="check-plan-arq" value="${p.id}"></td>
                 <td style="padding:10px; color:#7f8c8d; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
                 <td style="padding:10px; color:#7f8c8d;">${App.escapeHTML(p.curso)}</td>
                 <td style="padding:10px; text-align:center; color:#7f8c8d;">${p.aulas ? p.aulas.length : 0}</td>
@@ -202,12 +233,15 @@ App.renderizarPlanejamentosArquivados = async () => {
             </tr>`).join('');
 
         const buscaHtml = `
-            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <span style="font-size: 18px; color: #aaa;">🔍</span>
-                <input type="text" id="input-busca-plan-arquivados" 
-                       placeholder="Pesquisar arquivo morto..." 
-                       oninput="App.filtrarTabela('input-busca-plan-arquivados', 'tabela-plan-arquivados')" 
-                       style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <button onclick="App.excluirLotePedagogico('/planejamentos', 'check-plan-arq', App.renderizarPlanejamentosArquivados)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <span style="font-size: 18px; color: #aaa;">🔍</span>
+                    <input type="text" id="input-busca-plan-arquivados" 
+                           placeholder="Pesquisar arquivo morto..." 
+                           oninput="App.filtrarTabela('input-busca-plan-arquivados', 'tabela-plan-arquivados')" 
+                           style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+                </div>
             </div>
         `;
 
@@ -256,7 +290,7 @@ App.abrirPlanejamentoEditavel = async (id) => { try { const plano = await App.ap
 App.abrirPlanejamentoVisualizacao = async (id) => { 
     try { 
         const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`); 
-        App.renderizarTelaEdicao(plano, true); // O 'true' ativa o Modo Blindado de Leitura!
+        App.renderizarTelaEdicao(plano, true); 
     } catch(e) { 
         alert("Erro ao abrir."); 
     } 
@@ -279,7 +313,6 @@ App.renderizarTelaEdicao = (plano, isReadOnly = false) => {
     const escola = JSON.parse(localStorage.getItem(App.getTenantKey ? App.getTenantKey('escola_perfil') : 'escola_perfil')) || {}; 
     const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px;">` : '';
     
-    // Se for leitura, o botão fechar volta para os Arquivados, senão volta para os Ativos
     const acaoVoltar = isReadOnly ? 'App.renderizarPlanejamentosArquivados()' : 'App.renderizarPlanejamentosSalvos()';
     const tagArquivado = isReadOnly ? '<br><span style="color:#e74c3c; font-size:12px;">(ARQUIVADO - APENAS LEITURA)</span>' : '';
 
@@ -353,10 +386,7 @@ App.salvarPlanejamentoBanco = async () => {
     document.body.style.cursor = 'wait';
 
     try {
-        // 1. Salva o Planejamento (Base de tudo)
         await App.api(url, met, App.planoAtual); 
-        
-        // 2. GESTÃO DE SINCRONIZAÇÃO (Cria, Atualiza ou Remove Presenças)
         const chamadasExistentes = await App.api(`/chamadas?_t=${Date.now()}`);
         const chamadasDoAluno = chamadasExistentes.filter(c => c.idAluno === App.planoAtual.idAluno);
         
@@ -369,14 +399,11 @@ App.salvarPlanejamentoBanco = async () => {
             if (pData.length === 3) {
             const dataAulaISO = pData[0].length === 4 ? `${pData[0]}-${pData[1]}-${pData[2]}` : `${pData[2]}-${pData[1]}-${pData[0]}`;
                 
-                // SÓ PROCESSA DATAS PASSADAS OU HOJE
                 if (dataAulaISO <= hojeStr) {
                     const regExistente = chamadasDoAluno.find(c => c.data === dataAulaISO);
 
                     if (aula.visto === true) {
-                        // CASO A: Marcou OK
                         if (!regExistente) {
-                            // Criar nova presença
                             const payload = {
                                 id: Date.now().toString() + Math.floor(Math.random()*1000) + index,
                                 idAluno: App.planoAtual.idAluno,
@@ -388,22 +415,16 @@ App.salvarPlanejamentoBanco = async () => {
                             promessasSincronizacao.push(App.api('/chamadas', 'POST', payload));
                             totalCriadas++;
                         } else {
-                            // Se o prof marcou visto manual num dia que tinha "Falta", converte para "Presença"
                             if (regExistente.status !== 'Presença' && regExistente.status !== 'Reposição') {
                                 promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, status: 'Presença', duracao: aula.duracao }));
                                 totalAtualizadas++;
                             } else if (regExistente.duracao !== aula.duracao) {
-                                // Atualizar presença se a duração mudou
                                 promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', { ...regExistente, duracao: aula.duracao }));
                                 totalAtualizadas++;
                             }
                         }
                     } else {
-                        // CASO B: Desmarcou o visto
                         if (regExistente) {
-                            // 🛡️ O ESCUDO MÁGICO:
-                            // Só apaga do banco de dados se for uma "Presença" ou "Reposição".
-                            // Se houver uma "Falta" ou "Feriado" gravada nesse dia, deixa o registo em paz!
                             if (regExistente.status === 'Presença' || regExistente.status === 'Reposição') {
                                 promessasSincronizacao.push(App.api(`/chamadas/${regExistente.id}`, 'DELETE'));
                                 totalRemovidas++;
@@ -443,24 +464,18 @@ App.salvarPlanejamentoBanco = async () => {
 App.arquivarPlanejamento = (id) => {
     App.confirmar("Arquivar Planejamento", "Tem a certeza que deseja enviar este planejamento para o arquivo morto? Ele deixará de aparecer na sua lista principal.", "Sim, Arquivar", "#8e44ad", async () => {
         try {
-            // Busca a lista segura e localiza o plano (evita bugs de API com query params)
             const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
             const planoAtual = planos.find(p => String(p.id) === String(id));
             
             if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
 
-            // Atualiza o status
             planoAtual.status = 'Arquivado';
-            
-            // Salva a alteração de forma limpa na base de dados
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
             App.showToast("Planejamento Arquivado com sucesso!", "success");
 
             const area = document.getElementById('app-content');
-            if (area) {
-            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
-}
+            if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
 
             await App.renderizarPlanejamentosSalvos();
         } catch(e) { 
@@ -472,24 +487,18 @@ App.arquivarPlanejamento = (id) => {
 App.restaurarPlanejamento = (id) => {
     App.confirmar("Restaurar Planejamento", "Deseja reativar este planejamento e devolvê-lo para a lista ativa?", "Restaurar", "#27ae60", async () => {
         try {
-            // Mesma lógica segura para restaurar
             const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
             const planoAtual = planos.find(p => String(p.id) === String(id));
             
             if (!planoAtual) return App.showToast("Planejamento não encontrado.", "error");
 
-            // Volta para ativo
             planoAtual.status = 'Ativo';
-            
-            // Salva a alteração
             await App.api(`/planejamentos/${id}`, 'PUT', planoAtual);
             
             App.showToast("Planejamento Reativado com sucesso!", "success");
 
             const area = document.getElementById('app-content');
-            if (area) {
-            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
-}
+            if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
 
             await App.renderizarPlanejamentosArquivados();
         } catch(e) { 
@@ -503,9 +512,7 @@ App.excluirPlanejamento = (id) => {
         await App.api(`/planejamentos/${id}`, 'DELETE');
 
     const area = document.getElementById('app-content');
-    if (area) {
-    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
-}
+    if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando planejamentos... ⏳</p>';
 
     await App.renderizarPlanejamentosSalvos(); 
     });
@@ -516,9 +523,7 @@ App.excluirPlanejamentoArquivado = (id) => {
         await App.api(`/planejamentos/${id}`, 'DELETE');
 
     const area = document.getElementById('app-content');
-    if (area) {
-    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
-}
+    if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando arquivo morto... ⏳</p>';
 
     await App.renderizarPlanejamentosArquivados(); 
     });
@@ -531,12 +536,10 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
     const partsIni = dataRaw.includes('/') ? dataRaw.split('/') : dataRaw.split('-');
     const dataInicioPlano = partsIni[0].length === 4 ? `${partsIni[0]}-${partsIni[1]}-${partsIni[2]}` : `${partsIni[2]}-${partsIni[1]}-${partsIni[0]}`;
 
-    // 1. Lemos TODO o histórico a partir do início (Presenças, Faltas, Feriados, etc.)
     const historico = chamadas
         .filter(c => c.idAluno === plano.idAluno && c.data >= dataInicioPlano)
         .sort((a, b) => new Date(a.data) - new Date(b.data));
 
-    // 2. MAS só as presenças vão consumir/gastar as aulas da tabela
     const presencas = historico.filter(c => c.status === 'Presença' || c.status === 'Reposição');
 
     let diasDaSemanaAulas = [];
@@ -546,12 +549,10 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
     }
 
    if (diasDaSemanaAulas.length === 0) {
-    // Tenta extrair os dias do planejamento original com fallback para dias úteis (1 a 5)
     const diasExtraidos = [...new Set(plano.aulas.map(a => { 
         if (!a.data) return -1;
         const parts = a.data.includes('/') ? a.data.split('/') : a.data.split('-');
         if (parts.length === 3) {
-            // Garante que a data seja lida corretamente independente do separador
             const ano = parts[0].length === 4 ? parts[0] : parts[2];
             const mes = parts[1];
             const dia = parts[0].length === 2 ? parts[0] : parts[2];
@@ -561,19 +562,16 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         return -1;
     }).filter(d => d !== -1))];
 
-    // Se ainda assim for vazio, assume dias úteis (Segunda a Sexta) em vez de apenas Segunda
     diasDaSemanaAulas = diasExtraidos.length > 0 ? diasExtraidos : [1, 2, 3, 4, 5];
 }
 
     let presencasUsadas = 0; 
     let ultimoHorarioBase = plano.aulas.length > 0 ? plano.aulas[0].hora : '08:00';
 
-    // 3. Ponto de partida do tempo
     let ultimaDataBase = new Date(`${dataInicioPlano}T12:00:00`);
     ultimaDataBase.setDate(ultimaDataBase.getDate() - 1); 
     
     if (historico.length > 0) {
-        // 🚀 A MÁGICA: Se já houve histórico (Mesmo que seja FALTA), o futuro começa DEPOIS do último registo!
         const ultima = historico[historico.length - 1];
         ultimaDataBase = new Date(`${ultima.data}T12:00:00`);
     }
@@ -583,7 +581,6 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         if (aula.hora) ultimoHorarioBase = aula.hora;
 
         if (presencasUsadas < presencas.length) {
-            // "Gasta" a aula com a presença
             const presencaDia = presencas[presencasUsadas]; 
             const dataReal = presencaDia.data; 
             const pReal = dataReal.includes('/') ? dataReal.split('/') : dataReal.split('-');
@@ -596,7 +593,6 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
             aula.visto = true; 
             presencasUsadas++;
         } else {
-            // Projeta o futuro! (saltando os dias já usados pelas faltas)
             aula.visto = false; 
             ultimaDataBase.setDate(ultimaDataBase.getDate() + 1);
             while (!diasDaSemanaAulas.includes(ultimaDataBase.getDay())) { 
@@ -611,7 +607,6 @@ App.processarAutoAjustePlano = (plano, chamadas) => {
         }
     }
 
-    // Aulas Extras
     while (presencasUsadas < presencas.length) {
         const presencaDia = presencas[presencasUsadas]; 
         const [ano, mes, dia] = presencaDia.data.split('-');
@@ -660,15 +655,14 @@ App.gerarBoletimTela = async () => {
     const idAluno = document.getElementById('bol-aluno').value; if(!idAluno) return App.showToast("Selecione um aluno.", "error");
     const divArea = document.getElementById('boletim-area'); divArea.innerHTML = '<p style="text-align:center;">A gerar boletim...</p>';
     
-    // 🧠 LER NOVAS CONFIGURAÇÕES DINÂMICAS
     const mediaConfig = parseFloat(localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao')) || 6.0;
     const regimeConfig = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
     
-    let multiplicadorTotal = 6; // Agora o padrão Bimestral exige 6 notas
-    let labelCabecalho = 'BIMESTRE';
-    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 4; labelCabecalho = 'TRIMESTRE'; }
-    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
-    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
+    let multiplicadorTotal = 6; 
+    let labelCabecalho = 'BIMESTRE';
+    if(regimeConfig === 'Trimestral') { multiplicadorTotal = 4; labelCabecalho = 'TRIMESTRE'; }
+    else if(regimeConfig === 'Semestral') { multiplicadorTotal = 2; labelCabecalho = 'SEMESTRE'; }
+    else if(regimeConfig === 'Anual') { multiplicadorTotal = 1; labelCabecalho = 'PERÍODO ÚNICO'; }
 
     try {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
@@ -679,7 +673,6 @@ App.gerarBoletimTela = async () => {
         let primAula = '__/__/____';
         let ultAula = '__/__/____';
         
-        // 🚀 Lógica mais inteligente para puxar datas (Prioriza o Planeamento!)
         if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { 
             primAula = App.escapeHTML(planoAluno.aulas[0].data);
             ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); 
@@ -690,7 +683,6 @@ App.gerarBoletimTela = async () => {
             primAula = new Date().toLocaleDateString('pt-BR');
         }
 
-        // 🚀 Lógica mais inteligente para puxar Curso e Turma (Cruza dados do Aluno e do Planeamento)
         const cursoExibir = App.escapeHTML(aluno.curso || (planoAluno ? planoAluno.curso : 'Geral'));
         const turmaExibir = App.escapeHTML(aluno.turma || 'Não informada');
 
@@ -702,7 +694,7 @@ App.gerarBoletimTela = async () => {
             if(!disciplinasMap[disc]) disciplinasMap[disc] = { nome: disc, notas: [], total: 0, periodosLancados: new Set() }; 
             disciplinasMap[disc].notas.push(n); 
             disciplinasMap[disc].total += (parseFloat(n.nota) || 0); 
-            const periodoReal = n.periodo || n.bimestre; // Compatibilidade com dados antigos
+            const periodoReal = n.periodo || n.bimestre;
             if (periodoReal) disciplinasMap[disc].periodosLancados.add(periodoReal);
         });
         
@@ -714,7 +706,6 @@ App.gerarBoletimTela = async () => {
                 const d = disciplinasMap[chave];
                 const qtdPeriodos = d.periodosLancados.size > 0 ? d.periodosLancados.size : 1;
                 
-                // CÁLCULO DE APROVAÇÃO BLINDADO (Meta Proporcional e Meta do Ano)
                 const metaAtual = mediaConfig * qtdPeriodos;
                 const metaFinalAno = mediaConfig * multiplicadorTotal;
                 
@@ -781,28 +772,26 @@ App.renderizarAvaliacoesPro = async () => {
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
     
-    // LER CONFIGURAÇÕES SALVAS (Ou assumir o padrão)
     const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
     const maxSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima') || '10.0';
     const regimeSalvo = localStorage.getItem(App.getTenantKey ? App.getTenantKey('regime_letivo') : 'regime_letivo') || 'Bimestral';
     
     const percentualAprovacao = parseFloat(mediaSalva) / parseFloat(maxSalva);
 
-    // GERAR OPÇÕES DE PERÍODO DINAMICAMENTE
-    let opPeriodos = ''; let labelPeriodo = 'Período';
-    if (regimeSalvo === 'Bimestral') {
-        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option><option value="5º Bimestre">5º Bimestre</option><option value="6º Bimestre">6º Bimestre</option>`;
-        labelPeriodo = 'Bimestre';
-    } else if (regimeSalvo === 'Trimestral') {
-        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option><option value="4º Trimestre">4º Trimestre</option>`;
-        labelPeriodo = 'Trimestre';
-    } else if (regimeSalvo === 'Semestral') {
-        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
-        labelPeriodo = 'Semestre';
-    } else if (regimeSalvo === 'Anual') {
-        opPeriodos = `<option value="Período Único">Período Único</option>`;
-        labelPeriodo = 'Período';
-    }
+    let opPeriodos = ''; let labelPeriodo = 'Período';
+    if (regimeSalvo === 'Bimestral') {
+        opPeriodos = `<option value="1º Bimestre">1º Bimestre</option><option value="2º Bimestre">2º Bimestre</option><option value="3º Bimestre">3º Bimestre</option><option value="4º Bimestre">4º Bimestre</option><option value="5º Bimestre">5º Bimestre</option><option value="6º Bimestre">6º Bimestre</option>`;
+        labelPeriodo = 'Bimestre';
+    } else if (regimeSalvo === 'Trimestral') {
+        opPeriodos = `<option value="1º Trimestre">1º Trimestre</option><option value="2º Trimestre">2º Trimestre</option><option value="3º Trimestre">3º Trimestre</option><option value="4º Trimestre">4º Trimestre</option>`;
+        labelPeriodo = 'Trimestre';
+    } else if (regimeSalvo === 'Semestral') {
+        opPeriodos = `<option value="1º Semestre">1º Semestre</option><option value="2º Semestre">2º Semestre</option>`;
+        labelPeriodo = 'Semestre';
+    } else if (regimeSalvo === 'Anual') {
+        opPeriodos = `<option value="Período Único">Período Único</option>`;
+        labelPeriodo = 'Período';
+    }
 
     try {
         const [alunos, turmas, cursos, avaliacoes] = await Promise.all([App.api('/alunos'), App.api('/turmas'), App.api('/cursos'), App.api(`/avaliacoes?_t=${Date.now()}`)]);
@@ -816,7 +805,6 @@ App.renderizarAvaliacoesPro = async () => {
         const opTipos = `<option value="Teste">Teste</option><option value="Prova">Prova</option><option value="Pesquisa">Pesquisa</option><option value="Trabalho">Trabalho</option><option value="Outro">Outro (Especificar)</option>`;
         const hoje = new Date().toISOString().split('T')[0];
 
-        // 🚀 NOVO PAINEL DE CONFIGURAÇÕES DE REGIME
         const painelConfig = `
             <div style="background:#fff; border-left:4px solid #8e44ad; padding:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end;">
                 <div style="width:100%; font-size:12px; font-weight:bold; color:#8e44ad; text-transform:uppercase; margin-bottom:-5px;">⚙️ Configuração do Sistema de Avaliação</div>
@@ -851,25 +839,29 @@ App.renderizarAvaliacoesPro = async () => {
         `;
 
         const tabelaHistorico = `
-            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <span style="font-size: 18px; color: #aaa;">🔍</span>
-                <input type="text" id="input-busca-notas" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-notas', 'tabela-historico-notas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <button onclick="App.excluirLotePedagogico('/avaliacoes', 'check-nota', App.renderizarAvaliacoesPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <span style="font-size: 18px; color: #aaa;">🔍</span>
+                    <input type="text" id="input-busca-notas" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-notas', 'tabela-historico-notas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+                </div>
             </div>
             <div class="table-responsive-wrapper">
                 <table id="tabela-historico-notas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                            <th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Período</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
+                            <th style="padding:12px; width:40px; text-align:center;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-nota')"></th><th style="padding:12px;">Aluno</th><th style="padding:12px;">Curso/Disc.</th><th style="padding:12px;">Data</th><th style="padding:12px;">Avaliação</th><th style="padding:12px;">Período</th><th style="padding:12px; text-align:center;">Nota / Valor</th><th style="padding:12px; text-align:right;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${historico.length === 0 ? '<tr><td colspan="7" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
+                        ${historico.length === 0 ? '<tr><td colspan="8" style="padding:20px; text-align:center; color:#999;">Nenhuma nota lançada.</td></tr>' : ''}
                         ${historico.map(h => {
                             const valMaxAval = parseFloat(h.valorMax) || parseFloat(maxSalva);
                             const percentualAtingido = parseFloat(h.nota) / valMaxAval;
                             const corNota = percentualAtingido >= percentualAprovacao ? '#27ae60' : '#c0392b';
                             return `
                             <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-nota" value="${h.id}"></td>
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.disciplina || '-')}</td>
                                 <td style="padding:12px;">${h.data ? App.escapeHTML(h.data.split('-').reverse().join('/')) : '-'}</td>
@@ -901,7 +893,6 @@ App.editarAvaliacao = async (id) => {
     else { document.getElementById('nota-tipo').value='Outro'; App.toggleTipoOutroNota(); document.getElementById('nota-outro-desc').value=n.tipo; } 
     document.getElementById('nota-max').value = n.valorMax; 
     
-    // Tenta definir o valor do período, suportando registos antigos que usavam 'bimestre'
     const selectPeriodo = document.getElementById('nota-periodo');
     if(selectPeriodo) selectPeriodo.value = n.periodo || n.bimestre;
     
@@ -997,7 +988,7 @@ App.salvarNotasLote = async () => {
     if(tipo === 'Outro') tipo = document.getElementById('nota-outro-desc').value || 'Outro';
     const data = document.getElementById('nota-data').value;
     const max = document.getElementById('nota-max').value;
-    const periodoSelecionado = document.getElementById('nota-periodo').value; // Agora chama-se periodo
+    const periodoSelecionado = document.getElementById('nota-periodo').value; 
     
     const linhas = document.querySelectorAll('.linha-nota');
     if(linhas.length === 0) return;
@@ -1022,7 +1013,6 @@ App.salvarNotasLote = async () => {
             if (idEdicao) { regExistente = avaliacoesExistentes.find(av => av.id === idEdicao); } 
             else { regExistente = avaliacoesExistentes.find(av => av.idAluno === idAluno && av.data === data && av.disciplina === disc && av.tipo === tipo); }
 
-            // Guardamos como "periodo" e duplicamos para "bimestre" só para não quebrar relatórios velhos se existirem
             const payload = { idAluno, nomeAluno, disciplina: disc, tipo, data, valorMax: max, nota: notaInput, periodo: periodoSelecionado, bimestre: periodoSelecionado, dataLancamento: new Date().toISOString().split('T')[0] };
 
             if (regExistente) { 
@@ -1038,9 +1028,7 @@ App.salvarNotasLote = async () => {
         App.cancelarEdicaoNota();
 
         const area = document.getElementById('app-content');
-        if (area) {
-        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
-}
+        if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
 
         await App.renderizarAvaliacoesPro();
     } catch(e) { App.showToast("Erro ao salvar as notas.", "error"); }
@@ -1052,19 +1040,16 @@ App.excluirAvaliacao = (id) => {
         await App.api(`/avaliacoes/${id}`, 'DELETE');
 
        const area = document.getElementById('app-content');
-       if (area) {
-       area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
-}
+       if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando avaliações... ⏳</p>';
 
        await App.renderizarAvaliacoesPro(); 
     });
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA E LOTE (MÁXIMA PERFORMANCE)
+// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA
 // ---------------------------------------------------------
 
-// 🚀 MOTOR DE CACHE: Guarda os dados temporariamente para não travar o sistema com downloads repetitivos
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
 
 App.renderizarChamadaPro = async () => { 
@@ -1073,7 +1058,6 @@ App.renderizarChamadaPro = async () => {
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
     
     try { 
-        // Descarrega tudo de uma vez e guarda no Cache
         const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
             App.api('/alunos'), App.api('/turmas'), App.api(`/chamadas?_t=${Date.now()}`), App.api(`/planejamentos?_t=${Date.now()}`)
         ]); 
@@ -1105,22 +1089,36 @@ App.renderizarChamadaPro = async () => {
         `;
 
         const tabelaChamada = `
-            <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <span style="font-size: 18px; color: #aaa;">🔍</span>
-                <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <span style="font-size: 18px; color: #aaa;">🔍</span>
+                    <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+                </div>
             </div>
             <div class="table-responsive-wrapper">
                 <table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
                         <tr style="background:#f4f6f7; color:#7f8c8d; text-align:left; text-transform:uppercase; font-size:11px;">
-                            <th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
+                            <th style="padding:12px; width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-chamada')"></th><th style="padding:12px; border-bottom:2px solid #eee;">Data</th><th style="padding:12px; border-bottom:2px solid #eee;">Aluno</th><th style="padding:12px; border-bottom:2px solid #eee;">Status</th><th style="padding:12px; border-bottom:2px solid #eee;">Tempo</th><th style="padding:12px; border-bottom:2px solid #eee; text-align:right;">Ação</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${historico.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
+                        ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
                         ${historico.map(h => { 
                             let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
-                            return `<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td><td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td><td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td><td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td><td style="padding:12px; text-align:right;"><button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button><button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button></td></tr>`; 
+                            return `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
+                                <td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td>
+                                <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
+                                <td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td>
+                                <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
+                                <td style="padding:12px; text-align:right;">
+                                    <button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button>
+                                    <button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
+                                </td>
+                            </tr>`; 
                         }).join('')}
                     </tbody>
                 </table>
@@ -1132,7 +1130,6 @@ App.renderizarChamadaPro = async () => {
 };
 
 App.editarLancamentoChamada = async (id) => { 
-    // Usa o cache em vez de descarregar novamente!
     const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
     if(!registro) return App.showToast("Erro ao localizar o registo.", "error");
 
@@ -1155,14 +1152,12 @@ App.cancelarEdicaoChamada = () => {
     App.showToast("Modo de edição cancelado.", "info");
 };
 
-// 🪄 NOVA FUNÇÃO: LANÇAMENTO EM LOTE NA TELA
 App.marcarTodosChamada = (status) => {
     const selects = document.querySelectorAll('.status-chamada');
     if(selects.length === 0) return;
     
     selects.forEach(select => {
         select.value = status;
-        // Muda a cor instantaneamente consoante a seleção
         if(status === 'Falta') select.style.color = '#e74c3c';
         else if(status === 'Reposição') select.style.color = '#f39c12';
         else if(status === 'Presença') select.style.color = '#27ae60';
@@ -1180,7 +1175,6 @@ App.carregarListaChamada = async () => {
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
     if(!data) return App.showToast("Preencha a Data da aula.", "warning");
     
-    // 🛡️ TRAVA ANTI-FUTURO
     const hojeStr = new Date().toISOString().split('T')[0];
     if (data > hojeStr) {
         return App.showToast("Não é permitido abrir grelhas de frequência para datas futuras.", "warning");
@@ -1190,7 +1184,6 @@ App.carregarListaChamada = async () => {
     area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe super rápido... ⚡</p>';
 
     try {
-        // Usa o Cache (0 milissegundos de espera!)
         const alunos = App.cachePedagogico.alunos;
         const chamadas = App.cachePedagogico.chamadas;
         
@@ -1232,7 +1225,6 @@ App.carregarListaChamada = async () => {
         
         let alertaEdicao = App.idChamadaEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO (A atualizar o registo existente)</div>` : '';
 
-        // 🪄 BOTÕES DE AÇÃO EM LOTE RÁPIDA
         const botoesLote = !App.idChamadaEditando ? `
             <div style="padding:10px 15px; background:#fff; border-bottom:1px solid #eee; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
                 <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preenchimento Rápido em Lote:</span>
@@ -1268,7 +1260,6 @@ App.salvarChamadaLote = async () => {
         const linhas = document.querySelectorAll('.linha-chamada');
         if(linhas.length === 0) return;
 
-        // 🛡️ TRAVA ANTI-FUTURO
         const hojeStr = new Date().toISOString().split('T')[0];
         if (data > hojeStr) {
             return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
@@ -1278,7 +1269,6 @@ App.salvarChamadaLote = async () => {
         const txt = btn.innerText; btn.innerText = "A arquivar instantaneamente... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
 
         try {
-            // Usa o cache (zero downloads)
             const planejamentos = App.cachePedagogico.planejamentos;
             const chamadasExistentes = App.cachePedagogico.chamadas;
 
@@ -1286,10 +1276,8 @@ App.salvarChamadaLote = async () => {
             const alunosAfetados = [];
             const promessasChamadas = [];
             
-            // Variável para guardar as chamadas atualizadas na memória
             let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
 
-            // Validação de planeamento ativo
             linhas.forEach(linha => {
                 const idAluno = linha.getAttribute('data-id');
                 const nomeAluno = linha.getAttribute('data-nome');
@@ -1304,7 +1292,6 @@ App.salvarChamadaLote = async () => {
                 return; 
             }
 
-            // Preparar as chamadas e atualizar a lista
             linhas.forEach(linha => {
                 const idAluno = linha.getAttribute('data-id'); 
                 const nomeAluno = linha.getAttribute('data-nome');
@@ -1323,23 +1310,18 @@ App.salvarChamadaLote = async () => {
                     const chamadaAtualizada = { ...regExistente, data: data, status: status, duracao: duracao };
                     promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
                     
-                    // Substitui na nossa memória virtual
                     const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
                     if(idx !== -1) chamadasAtualizadasNaMemoria[idx] = chamadaAtualizada;
                 } else { 
-                    // O '+ idAluno' evita conflitos
                     payload.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2)); 
                     promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
                     
-                    // Adiciona na memória virtual
                     chamadasAtualizadasNaMemoria.push(payload);
                 }
             });
 
-            // Grava todas as chamadas no servidor simultaneamente
             await Promise.all(promessasChamadas);
             
-            // Fazer o Auto-Ajuste usando os dados da memória, sem tocar na internet!
             let avisoExtra = "";
             try {
                 const promessasPlano = [];
@@ -1362,9 +1344,7 @@ App.salvarChamadaLote = async () => {
            App.cancelarEdicaoChamada();
 
            const area = document.getElementById('app-content');
-           if (area) {
-           area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
-}
+           if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
 
            await App.renderizarChamadaPro();
         } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
@@ -1376,9 +1356,7 @@ App.excluirLancamentoChamada = (id) => {
         await App.api(`/chamadas/${id}`, 'DELETE');
 
         const area = document.getElementById('app-content');
-        if (area) {
-        area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
-}
+        if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
 
         await App.renderizarChamadaPro(); 
     });
@@ -1429,9 +1407,12 @@ App.renderizarCalendarioPro = async () => {
         `;
 
         const tabelaEventos = `
+            <div style="margin-bottom:15px;">
+                <button onclick="App.excluirLotePedagogico('/eventos', 'check-evento', App.renderizarCalendarioPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
+            </div>
             <div class="table-responsive-wrapper">
                 <table style="width:100%; border-collapse:collapse; font-size:14px; text-align:left;">
-                    <thead><tr style="background:#f8f9fa; color:#7f8c8d; border-bottom:2px solid #eee;"><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
+                    <thead><tr style="background:#f8f9fa; color:#7f8c8d; border-bottom:2px solid #eee;"><th style="padding:10px; width:40px; text-align:center;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-evento')"></th><th style="padding:10px;">DIA</th><th style="padding:10px;">HORÁRIO</th><th style="padding:10px;">TIPO</th><th style="padding:10px;">DESCRIÇÃO</th><th style="padding:10px; text-align:right;">AÇÕES</th></tr></thead>
                     <tbody>${App.gerarListaEventosHTML(App.calendarState.month, App.calendarState.year, eventos)}</tbody>
                 </table>
             </div>
@@ -1458,7 +1439,23 @@ App.gerarDiasCalendario = (mes, ano, eventos) => {
     return html; 
 };
 
-App.gerarListaEventosHTML = (mes, ano, eventos) => { const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); if(evs.length===0) return '<tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; return evs.map(e => `<tr style="border-bottom:1px solid #eee;"><td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td><td style="padding:10px;">${App.escapeHTML(e.inicio||'-')}</td><td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${App.escapeHTML(e.tipo)}</td><td style="padding:10px;">${App.escapeHTML(e.descricao)}</td><td style="padding:10px; text-align:right;"><button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button><button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button></td></tr>`).join(''); };
+App.gerarListaEventosHTML = (mes, ano, eventos) => { 
+    const evs = eventos.filter(e => { const d = new Date(e.data+'T00:00:00'); return d.getMonth()===mes && d.getFullYear()===ano; }).sort((a,b)=>new Date(a.data)-new Date(b.data)); 
+    if(evs.length===0) return '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhum evento.</td></tr>'; 
+    return evs.map(e => `
+        <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:10px; text-align:center;"><input type="checkbox" class="check-evento" value="${e.id}"></td>
+            <td style="padding:10px; font-weight:bold;">${e.data.split('-')[2]}</td>
+            <td style="padding:10px;">${App.escapeHTML(e.inicio||'-')}</td>
+            <td style="padding:10px; font-weight:bold; color:${(EVENTO_CORES[e.tipo]||EVENTO_CORES['Evento']).bg}">${App.escapeHTML(e.tipo)}</td>
+            <td style="padding:10px;">${App.escapeHTML(e.descricao)}</td>
+            <td style="padding:10px; text-align:right;">
+                <button onclick="App.preencherEdicaoEvento('${e.id}')" style="background:#f39c12; color:white; border:none; padding:5px 8px; border-radius:4px; margin-right:5px; cursor:pointer;">✏️</button>
+                <button onclick="App.excluirEvento('${e.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;">🗑️</button>
+            </td>
+        </tr>`).join(''); 
+};
+
 App.mudarMes = (d) => { App.calendarState.month+=d; if(App.calendarState.month>11){App.calendarState.month=0;App.calendarState.year++}else if(App.calendarState.month<0){App.calendarState.month=11;App.calendarState.year--}; App.renderizarCalendarioPro(); };
 
 App.selecionarDia = (dt) => { 
@@ -1486,33 +1483,30 @@ App.salvarEvento = async () => {
         else await App.api('/eventos', 'POST', pl); 
        App.idEdicaoEvento = null;
 
-const area = document.getElementById('app-content');
-if (area) {
-    area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
-}
+        const area = document.getElementById('app-content');
+        if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
 
-await App.renderizarCalendarioPro();
+        await App.renderizarCalendarioPro();
 
-setTimeout(() => {
-    const tabelaEventos = document.querySelector('.table-responsive-wrapper');
-    if (tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
-}, 100);
+        setTimeout(() => {
+            const tabelaEventos = document.querySelector('.table-responsive-wrapper');
+            if (tabelaEventos) tabelaEventos.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 100);
 
-App.showToast("Evento salvo com sucesso!", "success");
+        App.showToast("Evento salvo com sucesso!", "success");
 
     } catch(e) { App.showToast("Erro ao salvar evento.", "error"); } 
     finally { if(btn) { btn.innerText = txtOrig; btn.disabled = false; } document.body.style.cursor = 'default'; }
 };
 
 App.preencherEdicaoEvento = async (id) => { const e = await App.api(`/eventos/${id}`); document.getElementById('evt-data').value=e.data; document.getElementById('evt-tipo').value=e.tipo; document.getElementById('evt-desc').value=e.descricao; document.getElementById('evt-inicio').value=e.inicio; document.getElementById('evt-fim').value=e.fim; App.idEdicaoEvento=id; document.getElementById('box-gerir-evento').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
 App.excluirEvento = (id) => {
     App.confirmar("Excluir Evento", "Pretende remover este evento do calendário?", "Excluir", "#e74c3c", async () => {
         await App.api(`/eventos/${id}`, 'DELETE');
 
         const area = document.getElementById('app-content');
-        if (area) {
-            area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
-        }
+        if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando calendário... ⏳</p>';
 
         await App.renderizarCalendarioPro();
     });
