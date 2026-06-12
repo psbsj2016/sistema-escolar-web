@@ -1077,18 +1077,17 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + AUTO-AJUSTE
+// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + MOTIVOS
 // ---------------------------------------------------------
 
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
-App.datasLancamentoChamada = []; // Armazena as múltiplas datas selecionadas
+App.datasLancamentoChamada = []; 
 
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controle de Presença");
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
     
-    // Reseta a fila de datas ao abrir a tela
     App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]]; 
     
     try { 
@@ -1150,12 +1149,19 @@ App.renderizarChamadaPro = async () => {
                         ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
                         ${historico.map(h => { 
                             let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
+                            
+                            // 🧠 Mostramos o motivo da falta no histórico, se existir
+                            let labelStatus = App.escapeHTML(h.status);
+                            if((h.status === 'Falta' || h.status === 'Falta Justificada') && h.motivo) {
+                                labelStatus += `<br><span style="font-size:10px; color:#7f8c8d;">Motivo: ${App.escapeHTML(h.motivo)}</span>`;
+                            }
+
                             return `
                             <tr style="border-bottom:1px solid #eee;">
                                 <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
                                 <td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td>
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
-                                <td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td>
+                                <td style="padding:12px; font-weight:bold; color:${color};">${labelStatus}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
                                 <td style="padding:12px; text-align:right;">
                                     <button onclick="App.editarLancamentoChamada('${h.idAluno}', '${h.data}', '${h.duracao}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar na Matriz">✏️</button>
@@ -1170,7 +1176,7 @@ App.renderizarChamadaPro = async () => {
 
         div.innerHTML = App.UI.card('📝 Matriz de Frequência', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
         
-        App.atualizarFilaDatasUI(); // Renderiza a data inicial
+        App.atualizarFilaDatasUI(); 
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
@@ -1185,7 +1191,7 @@ App.adicionarDataFila = () => {
     if (App.datasLancamentoChamada.includes(dataVal)) return App.showToast("Esta data já está na lista.", "info");
 
     App.datasLancamentoChamada.push(dataVal);
-    App.datasLancamentoChamada.sort(); // Mantém cronológico
+    App.datasLancamentoChamada.sort(); 
     App.atualizarFilaDatasUI();
 };
 
@@ -1215,7 +1221,6 @@ App.editarLancamentoChamada = (idAluno, data, duracao) => {
     document.getElementById('chamada-turma').value = "";
     document.getElementById('chamada-duracao').value = duracao; 
     
-    // Define a fila apenas com a data a ser editada
     App.datasLancamentoChamada = [data];
     App.atualizarFilaDatasUI();
     
@@ -1233,16 +1238,34 @@ App.cancelarEdicaoChamada = () => {
     App.showToast("Modo de edição cancelado.", "info");
 };
 
+// 🧠 ATUALIZA A COR DA CÉLULA E MOSTRA/ESCONDE O CAMPO DE MOTIVO
+App.atualizarStatusCelula = (select) => {
+    const val = select.value;
+    if(val === 'Falta') select.style.color = '#e74c3c';
+    else if(val === 'Reposição') select.style.color = '#f39c12';
+    else if(val === 'Presença') select.style.color = '#27ae60';
+    else select.style.color = '#333';
+
+    // Procura o input do motivo que está logo abaixo do select
+    const inputMotivo = select.nextElementSibling;
+    if(inputMotivo && inputMotivo.classList.contains('motivo-chamada')) {
+        if(val === 'Falta' || val === 'Falta Justificada') {
+            inputMotivo.style.display = 'block';
+            inputMotivo.focus();
+        } else {
+            inputMotivo.style.display = 'none';
+            inputMotivo.value = ''; // Limpa se mudou de ideias
+        }
+    }
+};
+
 App.marcarTodosChamadaGlobal = (status) => {
     const selects = document.querySelectorAll('.status-chamada');
     if(selects.length === 0) return;
     
     selects.forEach(select => {
         select.value = status;
-        if(status === 'Falta') select.style.color = '#e74c3c';
-        else if(status === 'Reposição') select.style.color = '#f39c12';
-        else if(status === 'Presença') select.style.color = '#27ae60';
-        else select.style.color = '#333';
+        App.atualizarStatusCelula(select); // Usa a nova lógica visual
     });
     
     App.showToast(`Lote aplicado na matriz inteira: ${status}!`, "info");
@@ -1273,14 +1296,12 @@ App.carregarListaChamada = async () => {
             return; 
         }
 
-        // CABEÇALHO DINÂMICO (ALUNO + N COLUNAS DE DATAS)
         let theadHtml = `<tr><th style="padding:15px; text-align:left; position:sticky; left:0; background:#f8f9fa; z-index:2; border-right:1px solid #ddd;">NOME DO ALUNO</th>`;
         App.datasLancamentoChamada.forEach(data => {
-            theadHtml += `<th style="padding:15px; text-align:center; min-width:140px;">${data.split('-').reverse().join('/')}</th>`;
+            theadHtml += `<th style="padding:15px; text-align:center; min-width:160px;">${data.split('-').reverse().join('/')}</th>`;
         });
         theadHtml += `</tr>`;
 
-        // CORPO DA MATRIZ
         let linhasHtml = '';
         alunosAlvo.forEach(a => {
             linhasHtml += `<tr style="border-bottom:1px solid #eee;" class="linha-aluno-matriz" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">`;
@@ -1289,11 +1310,15 @@ App.carregarListaChamada = async () => {
             App.datasLancamentoChamada.forEach(data => {
                 const regExistente = chamadas.find(c => String(c.idAluno) === String(a.id) && c.data === data);
                 const status = regExistente ? regExistente.status : 'Presença';
+                const motivo = regExistente && regExistente.motivo ? regExistente.motivo : '';
                 const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
+                
+                // Exibe campo de motivo apenas se for falta
+                const mostrarMotivo = (status === 'Falta' || status === 'Falta Justificada') ? 'block' : 'none';
 
                 linhasHtml += `
-                <td style="padding:8px;">
-                    <select class="status-chamada" data-data="${data}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+                <td style="padding:8px; vertical-align:top;">
+                    <select class="status-chamada" data-data="${data}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="App.atualizarStatusCelula(this)">
                         <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
                         <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
                         <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
@@ -1302,6 +1327,7 @@ App.carregarListaChamada = async () => {
                         <option value="Recesso" ${status==='Recesso'?'selected':''}>🏖️ Recesso</option>
                         <option value="N/A" ${status==='N/A'?'selected':''}>➖ N/A (Ignorar)</option>
                     </select>
+                    <input type="text" class="motivo-chamada" placeholder="Descreva o motivo..." value="${App.escapeHTML(motivo)}" style="display:${mostrarMotivo}; width:100%; margin-top:5px; padding:6px; border-radius:4px; border:1px dashed #e74c3c; font-size:11px; outline:none;">
                 </td>`;
             });
             linhasHtml += `</tr>`;
@@ -1354,7 +1380,6 @@ App.salvarChamadaLote = async () => {
         
         let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
 
-        // 1. Validar se todos têm plano ativo
         linhas.forEach(linha => {
             const idAluno = linha.getAttribute('data-id');
             const nomeAluno = linha.getAttribute('data-nome');
@@ -1368,7 +1393,6 @@ App.salvarChamadaLote = async () => {
             return; 
         }
 
-        // 2. Extrair dados da Matriz e preparar promessas
         linhas.forEach(linha => {
             const idAluno = linha.getAttribute('data-id'); 
             const nomeAluno = linha.getAttribute('data-nome');
@@ -1376,14 +1400,17 @@ App.salvarChamadaLote = async () => {
             
             selects.forEach(select => {
                 const status = select.value;
-                if (status === 'N/A') return; // Ignora células N/A
+                if (status === 'N/A') return; 
+
+                // 🧠 LÊ O MOTIVO DA CÉLULA (Se for falta)
+                const inputMotivo = select.nextElementSibling;
+                const textoMotivo = (status === 'Falta' || status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
 
                 const dataCelula = select.getAttribute('data-data');
                 const idEdicao = select.getAttribute('data-id-chamada'); 
                 
                 alunosAfetados.add(idAluno); 
 
-                // Tenta achar o registo usando o ID em cache ou buscando pela combinação Aluno+Data
                 let regExistente = null;
                 if (idEdicao) { 
                     regExistente = chamadasExistentes.find(c => String(c.id) === String(idEdicao)); 
@@ -1391,10 +1418,10 @@ App.salvarChamadaLote = async () => {
                     regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === dataCelula); 
                 }
 
-                const payload = { idAluno, nomeAluno, data: dataCelula, status, duracao: duracaoGlobal };
+                const payload = { idAluno, nomeAluno, data: dataCelula, status, duracao: duracaoGlobal, motivo: textoMotivo };
 
                 if (regExistente) { 
-                    const chamadaAtualizada = { ...regExistente, data: dataCelula, status: status, duracao: duracaoGlobal };
+                    const chamadaAtualizada = { ...regExistente, data: dataCelula, status: status, duracao: duracaoGlobal, motivo: textoMotivo };
                     promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
                     
                     const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
@@ -1407,10 +1434,8 @@ App.salvarChamadaLote = async () => {
             });
         });
 
-        // Dispara todos os saves ao mesmo tempo (Assíncrono e muito rápido)
         await Promise.all(promessasChamadas);
         
-        // 3. Tarefa em Background: Auto-Ajustar Planejamentos
         let avisoExtra = "";
         try {
             const promessasPlano = [];
