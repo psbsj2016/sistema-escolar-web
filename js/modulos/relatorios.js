@@ -749,7 +749,12 @@ App.renderizarMenuDocumentosOficiais = async () => {
 App.gerarDocumentoOficialPrint = async () => {
     const idAluno = document.getElementById('doc-aluno-oficial').value;
     const tipo = document.getElementById('doc-tipo-oficial').value;
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    
+    // 🧠 Motor Inteligente de Data por Extenso
+    const hoje = new Date();
+    const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+    const dataPorExtenso = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+    const dataHojeSimples = hoje.toLocaleDateString('pt-BR');
     
     if (!idAluno) return App.showToast("Selecione um aluno na lista.", "warning");
 
@@ -761,7 +766,17 @@ App.gerarDocumentoOficialPrint = async () => {
         const alunosLista = await App.api('/alunos');
         const aluno = alunosLista.find(a => a.id === idAluno) || {};
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+        
         const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
+        
+        // 🧠 Construção Dinâmica: Local e Data (Ex: Porto Seguro - BA, 12 de junho de 2026.)
+        let localEscola = 'Local não informado';
+        if (escola.cidade && escola.estado) {
+            localEscola = `${App.escapeHTML(escola.cidade)} - ${App.escapeHTML(escola.estado)}`;
+        } else if (escola.cidade) {
+            localEscola = App.escapeHTML(escola.cidade);
+        }
+        const localDataCompleta = `${localEscola}, ${dataPorExtenso}.`;
 
         const printContainer = document.getElementById('doc-area-oficial');
         printContainer.innerHTML = '<p style="text-align:center;">Gerando Layout... ⏳</p>';
@@ -771,7 +786,7 @@ App.gerarDocumentoOficialPrint = async () => {
         const docHeader = `
             <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
-                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
             
         const painelImpressao = `
@@ -780,7 +795,7 @@ App.gerarDocumentoOficialPrint = async () => {
             </div>
         `;
 
-        // Lógica: CONTRATO
+        // 📄 Lógica: CONTRATO (Texto Completo Preservado)
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
@@ -809,7 +824,7 @@ App.gerarDocumentoOficialPrint = async () => {
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
                     <p style="text-align: justify; margin-top:0; font-size:14px;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
                     
-                    <p style="text-align: right; margin-top: 50px; font-size:14px;">Local e Data: ____________________________, ${dataHoje}</p>
+                    <p style="text-align: right; margin-top: 50px; font-size:14px;">${localDataCompleta}</p>
                     
                     <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px;">
                         <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
@@ -823,25 +838,30 @@ App.gerarDocumentoOficialPrint = async () => {
             `;
             let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
         } 
-        // Lógica: DECLARAÇÃO
+        // 📝 Lógica: DECLARAÇÃO (Texto Completo Preservado)
         else if (tipo === 'declaracao') {
             printContainer.innerHTML = `
                 ${reportStyles}
                 ${painelImpressao}
                 <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; min-height: 297mm; display:flex; flex-direction:column;">
                     ${docHeader}
+                    
                     <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase;">Declaração de Matrícula</h2>
+                    
                     <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px;">
                         Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
                         encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
-                        (Turma: ${App.escapeHTML(aluno.turma || 'Não especificada')}) nesta instituição de ensino.
+                        (Turma: <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>) nesta instituição de ensino.
                     </p>
+                    
                     <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 60px;">
                         Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
                     </p>
+                    
                     <p style="text-align: right; font-size: 14px; margin-bottom: 80px;">
-                        Local e Data: ____________________________, ${dataHoje}.
+                        ${localDataCompleta}
                     </p>
+                    
                     <div style="width: 100%; max-width: 400px; margin: auto auto 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 14px;">
                         <b>A Direção / Secretaria</b><br>
                         ${App.escapeHTML(escola.nome)}
@@ -854,7 +874,6 @@ App.gerarDocumentoOficialPrint = async () => {
     } catch (e) { App.showToast("Erro ao gerar o documento.", "error"); } 
     finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
 };
-
 
 // --- 4.3 AMBIENTE DE CERTIFICADOS (Diplomas com 16 Modelos Premium) ---
 App.renderizarMenuCertificados = async () => {
