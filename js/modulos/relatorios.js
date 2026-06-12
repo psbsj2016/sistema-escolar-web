@@ -745,7 +745,7 @@ App.renderizarMenuDocumentosOficiais = async () => {
     } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 };
 
-// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato)
+// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word
 App.gerarDocumentoOficialPrint = async () => {
     const idAluno = document.getElementById('doc-aluno-oficial').value;
     const tipo = document.getElementById('doc-tipo-oficial').value;
@@ -760,7 +760,7 @@ App.gerarDocumentoOficialPrint = async () => {
 
     const btn = document.querySelector('button[onclick="App.gerarDocumentoOficialPrint()"]');
     const txtOriginal = btn.innerText;
-    btn.innerText = "A Processar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    btn.innerText = "A Preparar Editor... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
         const alunosLista = await App.api('/alunos');
@@ -769,7 +769,7 @@ App.gerarDocumentoOficialPrint = async () => {
         
         const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
         
-        // 🧠 Construção Dinâmica: Local e Data (Ex: Porto Seguro - BA, 12 de junho de 2026.)
+        // Construção Dinâmica: Local e Data (Ex: Porto Seguro - BA, 12 de junho de 2026.)
         let localEscola = 'Local não informado';
         if (escola.cidade && escola.estado) {
             localEscola = `${App.escapeHTML(escola.cidade)} - ${App.escapeHTML(escola.estado)}`;
@@ -783,93 +783,140 @@ App.gerarDocumentoOficialPrint = async () => {
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         
+        // 1. CABEÇALHO ESTÁTICO E PROTEGIDO
         const docHeader = `
-            <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
-            
-        const painelImpressao = `
-            <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#3498db; border:none; border-radius:5px;">🖨️ IMPRIMIR ESTE DOCUMENTO</button>
+
+        // 2. BARRA DE FERRAMENTAS DO EDITOR (Estilo Word)
+        const editorToolbar = `
+            <div class="no-print" style="background: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px 5px 0 0; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: -1px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <button type="button" onclick="document.execCommand('bold', false, null)" style="padding: 6px 12px; cursor: pointer; font-weight: bold; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Negrito">B</button>
+                <button type="button" onclick="document.execCommand('italic', false, null)" style="padding: 6px 12px; cursor: pointer; font-style: italic; font-family: serif; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Itálico">I</button>
+                <button type="button" onclick="document.execCommand('underline', false, null)" style="padding: 6px 12px; cursor: pointer; text-decoration: underline; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Sublinhado">U</button>
+                <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
+                <button type="button" onclick="document.execCommand('justifyLeft', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Esquerda">⫷</button>
+                <button type="button" onclick="document.execCommand('justifyCenter', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Centralizar">≣</button>
+                <button type="button" onclick="document.execCommand('justifyRight', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Direita">⫸</button>
+                <button type="button" onclick="document.execCommand('justifyFull', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Justificar Texto">⇹</button>
+                <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
+                <button type="button" onclick="document.execCommand('insertUnorderedList', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista com Marcadores">• Lista</button>
+                
+                <div style="flex-grow: 1; text-align: right; font-size: 12px; font-weight: bold; color: #3498db; align-self: center; display:flex; align-items:center; justify-content:flex-end; gap:5px;">
+                    ✍️ MODO DE EDIÇÃO ATIVO
+                </div>
             </div>
         `;
 
-        // 📄 Lógica: CONTRATO (Texto Completo Preservado)
+        let corpoTexto = '';
+        let docFooter = '';
+
+        // 3. O CORPO DO TEXTO (Que vai dentro do Editor)
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            corpoTexto = `
+                <div style="text-align: justify; margin-top: 10px; font-size:14px; font-family: Arial, sans-serif;">
+                    Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
+                    inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
+                    <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
+                    residente e domiciliado(a) na ${App.escapeHTML(aluno.rua || '')}, ${App.escapeHTML(aluno.numero || '')} - ${App.escapeHTML(aluno.bairro || '')}, 
+                    ${App.escapeHTML(aluno.cidade || '')}/${App.escapeHTML(aluno.estado || '')}, doravante denominado(a) <b>CONTRATANTE</b>.
+                </div>
+
+                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
+                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</div>
+
+                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
+                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</div>
+
+                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
+                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</div>
+
+                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
+                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</div>
+            `;
             
-            printContainer.innerHTML = `
-                ${reportStyles}
-                ${painelImpressao}
-                <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
-                    ${docHeader}
-                    <p style="text-align: justify; margin-top: 20px; font-size:14px;">
-                        Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
-                        inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
-                        <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
-                        residente e domiciliado(a) na ${App.escapeHTML(aluno.rua || '')}, ${App.escapeHTML(aluno.numero || '')} - ${App.escapeHTML(aluno.bairro || '')}, 
-                        ${App.escapeHTML(aluno.cidade || '')}/${App.escapeHTML(aluno.estado || '')}, doravante denominado(a) <b>CONTRATANTE</b>.
-                    </p>
-
-                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
-
-                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</p>
-
-                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
-
-                    <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
-                    
-                    <p style="text-align: right; margin-top: 50px; font-size:14px;">${localDataCompleta}</p>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px;">
-                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
-                            <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
-                        </div>
-                        <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
-                            <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
-                        </div>
+            docFooter = `
+                <div style="text-align: right; margin-top: 50px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
+                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
+                        <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
+                    </div>
+                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
+                        <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
                     </div>
                 </div>
             `;
-            let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
-        } 
-        // 📝 Lógica: DECLARAÇÃO (Texto Completo Preservado)
-        else if (tipo === 'declaracao') {
-            printContainer.innerHTML = `
-                ${reportStyles}
-                ${painelImpressao}
-                <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; min-height: 297mm; display:flex; flex-direction:column;">
-                    ${docHeader}
-                    
-                    <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase;">Declaração de Matrícula</h2>
-                    
-                    <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px;">
-                        Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
-                        encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
-                        (Turma: <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>) nesta instituição de ensino.
-                    </p>
-                    
-                    <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 60px;">
-                        Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
-                    </p>
-                    
-                    <p style="text-align: right; font-size: 14px; margin-bottom: 80px;">
-                        ${localDataCompleta}
-                    </p>
-                    
-                    <div style="width: 100%; max-width: 400px; margin: auto auto 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 14px;">
-                        <b>A Direção / Secretaria</b><br>
-                        ${App.escapeHTML(escola.nome)}
-                    </div>
+        } else if (tipo === 'declaracao') {
+            corpoTexto = `
+                <h2 style="text-align: center; margin-top: 20px; margin-bottom: 30px; text-transform: uppercase; font-family: Arial, sans-serif;">Declaração de Matrícula</h2>
+                
+                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px; font-family: Arial, sans-serif;">
+                    Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
+                    encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
+                    (Turma: <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>) nesta instituição de ensino.
+                </div>
+                
+                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 40px; font-family: Arial, sans-serif;">
+                    Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
                 </div>
             `;
-            let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
+            
+            docFooter = `
+                <div style="text-align: right; font-size: 14px; margin-bottom: 60px; margin-top: 40px; font-family: Arial, sans-serif;">
+                    ${localDataCompleta}
+                </div>
+                
+                <div style="width: 100%; max-width: 400px; margin: auto auto 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 14px; font-family: Arial, sans-serif;">
+                    <b>A Direção / Secretaria</b><br>
+                    ${App.escapeHTML(escola.nome)}
+                </div>
+            `;
         }
+
+        const painelImpressao = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:15px 30px; background:#27ae60; border:none; border-radius:8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3); cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#219a52'" onmouseout="this.style.background='#27ae60'">🖨️ CONFIRMAR E IMPRIMIR DOCUMENTO</button>
+                <div style="font-size: 12px; color: #7f8c8d;">Pode editar o texto abaixo livremente. O editor desaparecerá na folha impressa.</div>
+            </div>
+        `;
+
+        // 4. A MONTAGEM FINAL DO SANDUÍCHE
+        printContainer.innerHTML = `
+            ${reportStyles}
+            ${painelImpressao}
+            <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; display:flex; flex-direction:column; min-height: 297mm; position: relative; padding: 40px;">
+                
+                <!-- CABEÇALHO INTOCÁVEL -->
+                <div class="header-estatico">
+                    ${docHeader}
+                </div>
+                
+                <!-- EDITOR RICH TEXT (ÁREA LIVRE) -->
+                ${editorToolbar}
+                <div id="editor-documento" contenteditable="true" style="border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 20px; outline: none; background: #fff; min-height: 200px; line-height: 1.6; margin-bottom: 20px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
+                    ${corpoTexto}
+                </div>
+                
+                <!-- RODAPÉ INTOCÁVEL -->
+                <div class="footer-estatico" style="margin-top: auto;">
+                    ${docFooter}
+                </div>
+            </div>
+        `;
+        
+        // CSS Dinâmico: Na hora de imprimir, as bordas do editor desaparecem
+        let style = document.createElement('style'); 
+        style.innerHTML = `
+            @media print { 
+                @page { size: A4 portrait; margin: 15mm; }
+                #editor-documento { border: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+                .print-sheet { box-shadow: none !important; padding: 0 !important; }
+            }
+        `; 
+        printContainer.appendChild(style);
 
     } catch (e) { App.showToast("Erro ao gerar o documento.", "error"); } 
     finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
