@@ -747,18 +747,14 @@ App.renderizarMenuDocumentosOficiais = async () => {
 
 // --- FUNÇÃO AUXILIAR PARA LISTAS JURÍDICAS ---
 App.formatarLista = (estilo) => {
-    // Insere a lista ordenada padrão
     document.execCommand('insertOrderedList', false, null);
     
-    // Captura o elemento atual onde o cursor está
     const selection = window.getSelection();
     if (selection.rangeCount > 0) {
         let currentNode = selection.anchorNode;
-        // Se for um nó de texto, pega o elemento pai
         if (currentNode && currentNode.nodeType === 3) {
             currentNode = currentNode.parentNode;
         }
-        // Encontra a lista (ol) mais próxima e aplica o estilo (letras, romanos, etc.)
         if (currentNode) {
             const ol = currentNode.closest('ol');
             if (ol) {
@@ -768,7 +764,29 @@ App.formatarLista = (estilo) => {
     }
 };
 
-// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word
+// --- NOVA FUNÇÃO: GERE O MENU SUSPENSO DE FORMATAÇÃO ---
+App.aplicarFormatacaoDropdown = (selectElement) => {
+    const valor = selectElement.value;
+    if (!valor) return; // Se for a opção padrão, não faz nada
+
+    // Devolve o foco para o editor para garantir que insere no sítio certo
+    const editor = document.getElementById('editor-documento');
+    if (editor) editor.focus();
+
+    if (valor === 'unorderedList') {
+        document.execCommand('insertUnorderedList', false, null);
+    } else if (valor === 'paragrafo') {
+        document.execCommand('insertText', false, '§ ');
+    } else {
+        // Aplica os estilos de listas numéricas (decimal, alíneas, incisos)
+        App.formatarLista(valor);
+    }
+
+    // Reinicia o campo de seleção para o estado inicial
+    selectElement.value = "";
+};
+
+// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word Limpo
 App.gerarDocumentoOficialPrint = async () => {
     const idAluno = document.getElementById('doc-aluno-oficial').value;
     const tipo = document.getElementById('doc-tipo-oficial').value;
@@ -813,18 +831,18 @@ App.gerarDocumentoOficialPrint = async () => {
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
 
-        // 2. BARRA DE FERRAMENTAS DO EDITOR (Estilo Word - Expandida)
+        // 2. BARRA DE FERRAMENTAS DO EDITOR (Limpa e com Dropdown)
         const btnToolbarStyle = "padding: 6px 12px; cursor: pointer; font-size: 13px; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;";
         
         const editorToolbar = `
-            <div class="no-print" style="background: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px 5px 0 0; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: -1px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <div class="no-print" style="background: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px 5px 0 0; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: -1px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-items: center;">
                 
                 <!-- Formatação Básica -->
                 <button type="button" onclick="document.execCommand('bold', false, null)" style="${btnToolbarStyle} font-weight: bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Negrito">B</button>
                 <button type="button" onclick="document.execCommand('italic', false, null)" style="${btnToolbarStyle} font-style: italic; font-family: serif;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Itálico">I</button>
                 <button type="button" onclick="document.execCommand('underline', false, null)" style="${btnToolbarStyle} text-decoration: underline;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Sublinhado">U</button>
                 
-                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
+                <span style="border-left: 1px solid #ccc; margin: 0 2px; height: 24px;"></span>
                 
                 <!-- Alinhamento -->
                 <button type="button" onclick="document.execCommand('justifyLeft', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Esquerda">⫷</button>
@@ -832,22 +850,19 @@ App.gerarDocumentoOficialPrint = async () => {
                 <button type="button" onclick="document.execCommand('justifyRight', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Direita">⫸</button>
                 <button type="button" onclick="document.execCommand('justifyFull', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Justificar Texto">⇹</button>
                 
-                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
+                <span style="border-left: 1px solid #ccc; margin: 0 2px; height: 24px;"></span>
                 
-                <!-- Listas Jurídicas -->
-                <button type="button" onclick="document.execCommand('insertUnorderedList', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista com Marcadores">• Pontos</button>
-                <button type="button" onclick="App.formatarLista('decimal')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista Numerada">1. Nums</button>
-                <button type="button" onclick="App.formatarLista('lower-alpha')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alíneas (a, b, c)">a. Alíneas</button>
-                <button type="button" onclick="App.formatarLista('upper-roman')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Incisos (I, II, III)">I. Incisos</button>
+                <!-- 🪄 Menu Suspenso de Elementos Jurídicos -->
+                <select onchange="App.aplicarFormatacaoDropdown(this)" style="padding: 6px 10px; font-size: 13px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff; cursor: pointer; color: #333; outline: none;">
+                    <option value="">➕ Inserir Elemento...</option>
+                    <option value="unorderedList">• Lista com Pontos</option>
+                    <option value="decimal">1. Lista Numerada</option>
+                    <option value="lower-alpha">a. Alíneas</option>
+                    <option value="upper-roman">I. Incisos</option>
+                    <option value="paragrafo">§ Símbolo de Parágrafo</option>
+                </select>
                 
-                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
-
-                <!-- Símbolos Especiais -->
-                <button type="button" onclick="document.execCommand('insertText', false, '§ ')" style="${btnToolbarStyle} font-weight:bold; color:#d35400;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Inserir Parágrafo">§</button>
-                <button type="button" onclick="document.execCommand('insertText', false, 'º')" style="${btnToolbarStyle} font-weight:bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Ordinal Masculino">º</button>
-                <button type="button" onclick="document.execCommand('insertText', false, 'ª')" style="${btnToolbarStyle} font-weight:bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Ordinal Feminino">ª</button>
-                
-                <div style="flex-grow: 1; text-align: right; font-size: 12px; font-weight: bold; color: #3498db; align-self: center; display:flex; align-items:center; justify-content:flex-end; gap:5px;">
+                <div style="flex-grow: 1; text-align: right; font-size: 12px; font-weight: bold; color: #3498db; display:flex; align-items:center; justify-content:flex-end; gap:5px;">
                     ✍️ MODO DE EDIÇÃO
                 </div>
             </div>
@@ -927,7 +942,6 @@ App.gerarDocumentoOficialPrint = async () => {
         `;
 
         // 4. A MONTAGEM FINAL DO SANDUÍCHE
-        // 💡 Modificação do Cursor: A propriedade "cursor: text;" foi aplicada diretamente no style do #editor-documento
         printContainer.innerHTML = `
             ${reportStyles}
             ${painelImpressao}
