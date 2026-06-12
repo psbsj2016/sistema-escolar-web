@@ -659,12 +659,47 @@ App.gerarFichaImprimir = async () => {
 };
 
 // =========================================================
-// 🎓 4. FÁBRICA DE DOCUMENTOS (CONTRATOS E DECLARAÇÕES E CERTIFICADO)
+// 🎓 4. FÁBRICA DE DOCUMENTOS (HUB: OFICIAIS VS CERTIFICADOS)
 // =========================================================
-App.renderizarGeradorDocumentos = async () => {
-    App.setTitulo("Gerador de Documentos");
+
+// --- 4.1 HUB PRINCIPAL DE ESCOLHA ---
+App.renderizarGeradorDocumentos = () => {
+    App.setTitulo("Fábrica de Documentos");
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando base de alunos...</p>';
+
+    // Estilos dinâmicos para os botões gigantes
+    const btnStyle = (cor) => `cursor:pointer; background:white; border:2px solid #eee; padding:40px 20px; border-radius:15px; width:45%; min-width:250px; transition:0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.05); text-align:center;`;
+    const hoverIn = (cor) => `this.style.borderColor='${cor}'; this.style.transform='translateY(-5px)'`;
+    const hoverOut = `this.style.borderColor='#eee'; this.style.transform='translateY(0)'`;
+
+    const menuHub = `
+        <div style="text-align:center; padding:20px;">
+            <h2 style="color:#2c3e50; margin-bottom:10px;">O que deseja emitir hoje?</h2>
+            <p style="color:#7f8c8d; margin-bottom:40px;">Escolha a categoria do documento para abrir o ambiente de formatação adequado.</p>
+            
+            <div style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
+                <div onclick="App.renderizarMenuDocumentosOficiais()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
+                    <div style="font-size:60px; margin-bottom:15px;">📄</div>
+                    <h3 style="margin:0 0 10px 0; color:#3498db;">Documentos Oficiais</h3>
+                    <p style="color:#666; font-size:13px; margin:0;">Contratos de Prestação de Serviços e Declarações de Matrícula (Formato A4 Retrato).</p>
+                </div>
+                
+                <div onclick="App.renderizarMenuCertificados()" style="${btnStyle('#f39c12')}" onmouseover="${hoverIn('#f39c12')}" onmouseout="${hoverOut}">
+                    <div style="font-size:60px; margin-bottom:15px;">🎓</div>
+                    <h3 style="margin:0 0 10px 0; color:#f39c12;">Certificados de Conclusão</h3>
+                    <p style="color:#666; font-size:13px; margin:0;">Diplomas oficiais com carga horária e selo da instituição (Formato A4 Paisagem).</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    div.innerHTML = App.UI.card('', '', menuHub, '100%');
+};
+
+// --- 4.2 AMBIENTE DE DOCUMENTOS OFICIAIS (Contratos/Declarações) ---
+App.renderizarMenuDocumentosOficiais = async () => {
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar base de alunos... ⏳</p>';
     
     try {
         const alunos = await App.api('/alunos');
@@ -673,111 +708,79 @@ App.renderizarGeradorDocumentos = async () => {
             ? `<option value="">-- Selecione o Aluno --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Turma: ${App.escapeHTML(a.turma || '-')})</option>`).join('')
             : `<option value="">Nenhum aluno ativo encontrado</option>`;
 
-        const dataHojeIso = new Date().toISOString().split('T')[0];
-
         const formHTML = `
-            <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid var(--accent);">
-                <h3 style="color:var(--card-text); margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px; display:flex; align-items:center; gap:10px; font-size:18px;">
-                    🎓 Emissão de Documentos Oficiais
-                </h3>
-                <p style="font-size:13px; color:#666; margin-bottom:25px;">O sistema irá preencher os dados automaticamente para impressão profissional.</p>
+            <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #3498db;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:25px;">
+                    <h3 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; font-size:18px;">
+                        📄 Emissão de Documentos Oficiais
+                    </h3>
+                    <button onclick="App.renderizarGeradorDocumentos()" style="background:#ecf0f1; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; color:#7f8c8d;">Voltar</button>
+                </div>
                 
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     <div style="display:flex; gap:15px; flex-wrap:wrap;">
                         <div style="flex:2; min-width:250px; text-align:left;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">1. Selecione o Aluno:</label>
-                            <select id="doc-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">${alunosOptions}</select>
+                            <select id="doc-aluno-oficial" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">${alunosOptions}</select>
                         </div>
                         
                         <div style="flex:2; min-width:250px; text-align:left;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Qual documento deseja emitir?</label>
-                            <select id="doc-tipo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
+                            <select id="doc-tipo-oficial" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">
                                 <option value="declaracao">📝 Declaração de Matrícula / Frequência</option>
                                 <option value="contrato">📄 Contrato de Prestação de Serviços</option>
-                                <option value="certificado">🎓 Certificado de Conclusão de Curso (Diploma)</option>
                             </select>
-                        </div>
-                    </div>
-
-                    <div style="background:#f9f9f9; padding:15px; border-radius:5px; border:1px dashed #ccc; display:flex; gap:15px; flex-wrap:wrap;">
-                        <div style="flex:1; min-width:120px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Carga Horária (Horas):</label>
-                            <input type="number" id="doc-carga" value="40" placeholder="Ex: 40" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold;">
-                        </div>
-                        <div style="flex:1; min-width:140px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Início:</label>
-                            <input type="date" id="doc-data-inicio" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
-                        </div>
-                        <div style="flex:1; min-width:140px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Conclusão:</label>
-                            <input type="date" id="doc-data-fim" value="${dataHojeIso}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
                         </div>
                     </div>
                 </div>
 
                 <div style="margin-top:30px; display:flex; gap:10px;">
-                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3); justify-content:center;" onclick="App.gerarDocumentoPrint()">🖨️ GERAR DOCUMENTO</button>
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; background:#3498db; border:none; box-shadow:0 4px 10px rgba(52, 152, 219, 0.3); justify-content:center; border-radius:8px; cursor:pointer;" onclick="App.gerarDocumentoOficialPrint()">🖨️ GERAR DOCUMENTO</button>
                 </div>
             </div>
             
-            <div id="doc-area" style="margin-top: 30px;"></div>
+            <div id="doc-area-oficial" style="margin-top: 30px;"></div>
         `;
         div.innerHTML = formHTML;
-    } catch (e) {
-        div.innerHTML = '<p>Erro ao carregar dados.</p>';
-    }
+    } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 };
 
-App.gerarDocumentoPrint = async () => {
-    const idAluno = document.getElementById('doc-aluno').value;
-    const tipo = document.getElementById('doc-tipo').value;
-    
-    // Captura dos novos campos de data e carga horária
-    const inputCarga = document.getElementById('doc-carga');
-    const cargaHoraria = inputCarga ? inputCarga.value : '40';
-    
-    const inputInicio = document.getElementById('doc-data-inicio');
-    const dataInicioStr = (inputInicio && inputInicio.value) ? inputInicio.value.split('-').reverse().join('/') : '-';
-    
-    const inputFim = document.getElementById('doc-data-fim');
+// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato)
+App.gerarDocumentoOficialPrint = async () => {
+    const idAluno = document.getElementById('doc-aluno-oficial').value;
+    const tipo = document.getElementById('doc-tipo-oficial').value;
     const dataHoje = new Date().toLocaleDateString('pt-BR');
-    const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : dataHoje;
     
     if (!idAluno) return App.showToast("Selecione um aluno na lista.", "warning");
 
-    const btn = document.querySelector('button[onclick="App.gerarDocumentoPrint()"]');
+    const btn = document.querySelector('button[onclick="App.gerarDocumentoOficialPrint()"]');
     const txtOriginal = btn.innerText;
-    btn.innerText = "A Processar... ⏳"; btn.disabled = true;
-    document.body.style.cursor = 'wait';
+    btn.innerText = "A Processar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
-        // 🚀 CORREÇÃO: Pega a lista toda e filtra para gerar os documentos perfeitamente
         const alunosLista = await App.api('/alunos');
         const aluno = alunosLista.find(a => a.id === idAluno) || {};
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
-
-        // ✨ FORMATAÇÃO DO ENDEREÇO DA ESCOLA
         const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
 
-        // 🛡️ Usa a área delimitada em vez de jogar direto no Body
-        const printContainer = document.getElementById('doc-area');
+        const printContainer = document.getElementById('doc-area-oficial');
         printContainer.innerHTML = '<p style="text-align:center;">Gerando Layout... ⏳</p>';
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:60px; object-fit:contain;">` : '';
         
-        // ✨ INJEÇÃO DO ENDEREÇO NO CABEÇALHO (LOGO ABAIXO DO CNPJ)
         const docHeader = `
             <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
-                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHoje}</div></div>
             </div>`;
             
         const painelImpressao = `
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px;">🖨️ IMPRIMIR ESTE DOCUMENTO</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#3498db; border:none; border-radius:5px;">🖨️ IMPRIMIR ESTE DOCUMENTO</button>
             </div>
         `;
 
+        // Lógica: CONTRATO
         if (tipo === 'contrato') {
             const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             
@@ -786,7 +789,6 @@ App.gerarDocumentoPrint = async () => {
                 ${painelImpressao}
                 <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; line-height: 1.6;">
                     ${docHeader}
-                    
                     <p style="text-align: justify; margin-top: 20px; font-size:14px;">
                         Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
                         inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
@@ -796,13 +798,13 @@ App.gerarDocumentoPrint = async () => {
                     </p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, com carga horária de <b>${cargaHoraria} horas</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
                     <p style="text-align: justify; margin-top:0; font-size:14px;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
-                    <p style="text-align: justify; margin-top:0; font-size:14px;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas para ter direito ao certificado de conclusão. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
+                    <p style="text-align: justify; margin-top:0; font-size:14px;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</p>
 
                     <h4 style="margin-top:25px; margin-bottom: 5px;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
                     <p style="text-align: justify; margin-top:0; font-size:14px;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</p>
@@ -820,30 +822,26 @@ App.gerarDocumentoPrint = async () => {
                 </div>
             `;
             let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
-
-        } else if (tipo === 'declaracao') {
+        } 
+        // Lógica: DECLARAÇÃO
+        else if (tipo === 'declaracao') {
             printContainer.innerHTML = `
                 ${reportStyles}
                 ${painelImpressao}
                 <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; min-height: 297mm; display:flex; flex-direction:column;">
                     ${docHeader}
-                    
                     <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase;">Declaração de Matrícula</h2>
-                    
                     <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px;">
                         Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
                         encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
                         (Turma: ${App.escapeHTML(aluno.turma || 'Não especificada')}) nesta instituição de ensino.
                     </p>
-                    
                     <p style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 60px;">
                         Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
                     </p>
-                    
                     <p style="text-align: right; font-size: 14px; margin-bottom: 80px;">
                         Local e Data: ____________________________, ${dataHoje}.
                     </p>
-                    
                     <div style="width: 100%; max-width: 400px; margin: auto auto 0 auto; border-top: 1px solid #000; padding-top: 10px; text-align: center; font-size: 14px;">
                         <b>A Direção / Secretaria</b><br>
                         ${App.escapeHTML(escola.nome)}
@@ -851,106 +849,186 @@ App.gerarDocumentoPrint = async () => {
                 </div>
             `;
             let style = document.createElement('style'); style.innerHTML = `@media print { @page { size: A4 portrait; margin: 15mm; } }`; printContainer.appendChild(style);
+        }
 
-        } else if (tipo === 'certificado') {
-            
-            // Logo do certificado muito maior e tratada como selo
-            const logoCert = escola.foto ? `<img src="${escola.foto}" style="max-height:100px; max-width:150px; object-fit:contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">` : `<div style="font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:80px; height:80px;">SELO</div>`;
-            
-            printContainer.innerHTML = `
-                ${reportStyles}
-                ${painelImpressao}
+    } catch (e) { App.showToast("Erro ao gerar o documento.", "error"); } 
+    finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
+};
+
+
+// --- 4.3 AMBIENTE DE CERTIFICADOS (Diplomas) ---
+App.renderizarMenuCertificados = async () => {
+    const div = document.getElementById('app-content');
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A preparar o ambiente de graduação... 🎓</p>';
+    
+    try {
+        const alunos = await App.api('/alunos');
+        const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+        const alunosOptions = alunosAtivos.length > 0 
+            ? `<option value="">-- Selecione o Aluno Titular --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Curso: ${App.escapeHTML(a.curso || '-')})</option>`).join('')
+            : `<option value="">Nenhum aluno ativo encontrado</option>`;
+
+        const dataHojeIso = new Date().toISOString().split('T')[0];
+
+        const formHTML = `
+            <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #f39c12;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:25px;">
+                    <h3 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; font-size:18px;">
+                        🎓 Emissão de Certificados e Diplomas
+                    </h3>
+                    <button onclick="App.renderizarGeradorDocumentos()" style="background:#ecf0f1; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; color:#7f8c8d;">Voltar</button>
+                </div>
                 
-                <style>
-                    @media print {
-                        @page { size: A4 landscape; margin: 0; }
-                        body { background: #fff !important; margin:0; padding:0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        .no-print { display: none !important; }
-                        
-                        /* A print-sheet agora utiliza flexbox para garantir que a caixa fica 100% no meio da folha impressa */
-                        .print-sheet { margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; background:transparent !important; border:none !important; max-width: 100% !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100vh !important;}
-                        
-                        /* Garante que o scroll no modo de ecrã não afeta o modo de impressão */
-                        .scroll-wrapper { overflow: visible !important; padding: 0 !important; }
-                    }
-                    
-                    /* O WRAPPER DO SCROLL: Permite rolar horizontalmente se o ecrã for pequeno */
-                    .scroll-wrapper {
-                        width: 100%;
-                        overflow-x: auto;
-                        padding-bottom: 20px;
-                    }
-                    
-                    /* A SOLUÇÃO DEFINITIVA: 260x180 garante que os roletes de tração não cortam o design */
-                    .cert-box {
-                        font-family: 'Times New Roman', serif;
-                        color: #000;
-                        text-align: center;
-                        border: 12px solid #2c3e50;
-                        outline: 3px solid #d4af37;
-                        outline-offset: -6px;
-                        background: #fff;
-                        width: 260mm;     /* 📏 LARGURA ULTRA-SEGURA PARA A4 PAISAGEM */
-                        height: 180mm;    /* 📏 ALTURA ULTRA-SEGURA PARA A4 PAISAGEM */
-                        margin: auto;
-                        padding: 30px 40px;
-                        box-sizing: border-box; 
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        position: relative;
-                        page-break-inside: avoid;
-                    }
-                </style>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">Preencha com precisão as datas curriculares. O documento será renderizado exclusivamente em <b>A4 Paisagem (Horizontal)</b>.</p>
                 
-                <div class="scroll-wrapper">
-                    <div class="print-sheet">
-                        <div class="cert-box">
-                            
-                            <h1 style="font-size: 40px; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px;">Certificado de Conclusão</h1>
-                            <p style="font-size: 20px; color: #555; margin-bottom: 20px; font-style: italic;">Certificamos para os devidos fins que</p>
-                            
-                            <h2 style="font-size: 34px; color: #b71c1c; margin: 0 auto 20px auto; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 40px; font-family: Arial, sans-serif;">
-                                ${App.escapeHTML(aluno.nome)}
-                            </h2>
-                            
-                            <p style="font-size: 19px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
-                                portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b>, concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, iniciado em <b>${dataInicioStr}</b> e finalizado em <b>${dataFimStr}</b>, com carga horária total de <b>${cargaHoraria} horas</b> e aproveitamento plenamente satisfatório.
-                            </p>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
-                                
-                                <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
-                                    <b>A Direção</b><br>
-                                    <span style="font-size: 12px; color: #555;">${App.escapeHTML(escola.nome || 'Instituição')}</span>
-                                </div>
-                                
-                                <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                                    ${logoCert}
-                                </div>
-                                
-                                <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
-                                    <b>Aluno(a) Titular</b><br>
-                                    <span style="font-size: 12px; color: #555;">${App.escapeHTML(aluno.nome)}</span>
-                                </div>
-                                
-                            </div>
-                            
-                            <div style="position: absolute; bottom: 10px; left: 0; right: 0; font-size: 10px; color: #777; text-align: center; line-height: 1.4;">
-                                <div style="margin-bottom: 2px;">O presente documento é amparado legalmente pela Lei nº 9.394/96 (Diretrizes e Bases da Educação Nacional) e pelo Decreto nº 5.154/04.</div>
-                                <div>Documento Oficial. Emitido por ${App.escapeHTML(escola.nome || 'Instituição de Ensino')} (CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}) em ${dataHoje}.</div>
-                            </div>
-                            
+                <div style="display:flex; flex-direction:column; gap:20px;">
+                    
+                    <div style="text-align:left;">
+                        <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">1. Selecione o Aluno Titular do Certificado:</label>
+                        <select id="cert-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">${alunosOptions}</select>
+                    </div>
+
+                    <div style="background:#fffaf0; padding:15px; border-radius:5px; border:1px dashed #f39c12; display:flex; gap:15px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:120px; text-align:left;">
+                            <label style="font-weight:bold; font-size:12px; color:#d35400; display:block; margin-bottom:5px;">Carga Horária (Horas):</label>
+                            <input type="number" id="cert-carga" value="40" placeholder="Ex: 40" style="width:100%; padding:10px; border:1px solid #f39c12; border-radius:5px; font-weight:bold; color:#d35400;">
+                        </div>
+                        <div style="flex:1; min-width:140px; text-align:left;">
+                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Início do Curso:</label>
+                            <input type="date" id="cert-data-inicio" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                        </div>
+                        <div style="flex:1; min-width:140px; text-align:left;">
+                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Conclusão:</label>
+                            <input type="date" id="cert-data-fim" value="${dataHojeIso}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
                         </div>
                     </div>
                 </div>
-            `;
-        }
 
-    } catch (e) {
-        App.showToast("Erro ao gerar o documento.", "error");
-    } finally {
-        btn.innerText = txtOriginal; btn.disabled = false;
-        document.body.style.cursor = 'default';
-    }
+                <div style="margin-top:30px; display:flex; gap:10px;">
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; background:#f39c12; border:none; box-shadow:0 4px 10px rgba(243, 156, 18, 0.3); justify-content:center; border-radius:8px; cursor:pointer;" onclick="App.gerarCertificadoPrint()">🖨️ RENDERIZAR CERTIFICADO</button>
+                </div>
+            </div>
+            
+            <div id="cert-area" style="margin-top: 30px;"></div>
+        `;
+        div.innerHTML = formHTML;
+    } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
+};
+
+// Motor de Impressão EXCLUSIVO para Certificados (A4 Paisagem)
+App.gerarCertificadoPrint = async () => {
+    const idAluno = document.getElementById('cert-aluno').value;
+    const cargaHoraria = document.getElementById('cert-carga').value || '40';
+    
+    const inputInicio = document.getElementById('cert-data-inicio');
+    const dataInicioStr = (inputInicio && inputInicio.value) ? inputInicio.value.split('-').reverse().join('/') : '-';
+    
+    const inputFim = document.getElementById('cert-data-fim');
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : dataHoje;
+    
+    if (!idAluno) return App.showToast("Selecione um aluno na lista.", "warning");
+
+    const btn = document.querySelector('button[onclick="App.gerarCertificadoPrint()"]');
+    const txtOriginal = btn.innerText;
+    btn.innerText = "A Criar Diploma... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+
+    try {
+        const alunosLista = await App.api('/alunos');
+        const aluno = alunosLista.find(a => a.id === idAluno) || {};
+        const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+
+        const printContainer = document.getElementById('cert-area');
+        printContainer.innerHTML = '<p style="text-align:center;">Desenhando Certificado... ⏳</p>';
+
+        // O Selo/Logo para o Certificado
+        const logoCert = escola.foto ? `<img src="${escola.foto}" style="max-height:100px; max-width:150px; object-fit:contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));">` : `<div style="font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:80px; height:80px;">SELO</div>`;
+
+        const painelImpressao = `
+            <div class="no-print" style="text-align:center; margin-bottom:20px;">
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#f39c12; border:none; border-radius:5px;">🖨️ IMPRIMIR CERTIFICADO</button>
+                <div style="font-size:11px; color:#999; margin-top:5px;">Dica: Nas definições da impressora, garanta que a opção "Orientação" está como "Paisagem".</div>
+            </div>
+        `;
+
+        printContainer.innerHTML = `
+            ${reportStyles}
+            ${painelImpressao}
+            
+            <style>
+                @media print {
+                    @page { size: A4 landscape; margin: 0; }
+                    body { background: #fff !important; margin:0; padding:0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    .no-print { display: none !important; }
+                    .print-sheet { margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; background:transparent !important; border:none !important; max-width: 100% !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100vh !important;}
+                    .scroll-wrapper { overflow: visible !important; padding: 0 !important; }
+                }
+                
+                .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; }
+                
+                .cert-box {
+                    font-family: 'Times New Roman', serif;
+                    color: #000;
+                    text-align: center;
+                    border: 12px solid #2c3e50;
+                    outline: 3px solid #d4af37;
+                    outline-offset: -6px;
+                    background: #fff;
+                    width: 260mm;     /* 📏 LARGURA A4 PAISAGEM */
+                    height: 180mm;    /* 📏 ALTURA A4 PAISAGEM */
+                    margin: auto;
+                    padding: 30px 40px;
+                    box-sizing: border-box; 
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    position: relative;
+                    page-break-inside: avoid;
+                }
+            </style>
+            
+            <div class="scroll-wrapper">
+                <div class="print-sheet">
+                    <div class="cert-box">
+                        
+                        <h1 style="font-size: 40px; color: #2c3e50; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 4px;">Certificado de Conclusão</h1>
+                        <p style="font-size: 20px; color: #555; margin-bottom: 20px; font-style: italic;">Certificamos para os devidos fins que</p>
+                        
+                        <h2 style="font-size: 34px; color: #b71c1c; margin: 0 auto 20px auto; border-bottom: 2px solid #ccc; display: inline-block; padding: 0 40px; font-family: Arial, sans-serif;">
+                            ${App.escapeHTML(aluno.nome)}
+                        </h2>
+                        
+                        <p style="font-size: 19px; color: #333; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
+                            portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b>, concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, iniciado em <b>${dataInicioStr}</b> e finalizado em <b>${dataFimStr}</b>, com carga horária total de <b>${cargaHoraria} horas</b> e aproveitamento plenamente satisfatório.
+                        </p>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                            
+                            <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
+                                <b>A Direção</b><br>
+                                <span style="font-size: 12px; color: #555;">${App.escapeHTML(escola.nome || 'Instituição')}</span>
+                            </div>
+                            
+                            <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+                                ${logoCert}
+                            </div>
+                            
+                            <div style="flex:1; border-top: 1px solid #000; padding-top: 5px; margin: 0 10px; font-size: 15px;">
+                                <b>Aluno(a) Titular</b><br>
+                                <span style="font-size: 12px; color: #555;">${App.escapeHTML(aluno.nome)}</span>
+                            </div>
+                            
+                        </div>
+                        
+                        <div style="position: absolute; bottom: 10px; left: 0; right: 0; font-size: 10px; color: #777; text-align: center; line-height: 1.4;">
+                            <div style="margin-bottom: 2px;">O presente documento é amparado legalmente pela Lei nº 9.394/96 (Diretrizes e Bases da Educação Nacional) e pelo Decreto nº 5.154/04.</div>
+                            <div>Documento Oficial. Emitido por ${App.escapeHTML(escola.nome || 'Instituição de Ensino')} (CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}) em ${dataHoje}.</div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (e) { App.showToast("Erro ao gerar o certificado.", "error"); } 
+    finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
 };
