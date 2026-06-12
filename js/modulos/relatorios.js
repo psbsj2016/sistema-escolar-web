@@ -944,7 +944,7 @@ App.gerarDocumentoOficialPrint = async () => {
             `;
             
             docFooter = `
-                <div style="text-align: right; font-size: 14px; margin-bottom: 60px; margin-top: 40px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; font-size: 14px; margin-bottom: 40px; margin-top: 10px; font-family: Arial, sans-serif;">
                     ${localDataCompleta}
                 </div>
                 
@@ -1001,7 +1001,7 @@ App.gerarDocumentoOficialPrint = async () => {
 // --- 4.3 AMBIENTE DE CERTIFICADOS (Diplomas com 16 Modelos Premium) ---
 App.renderizarMenuCertificados = async () => {
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A preparar o ambiente de graduação... 🎓</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Preparando ambiente... 🎓</p>';
     
     try {
         const alunos = await App.api('/alunos');
