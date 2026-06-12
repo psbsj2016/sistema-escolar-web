@@ -1077,15 +1077,19 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA + AUTO-AJUSTE PREDITIVO EM MASSA
+// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + AUTO-AJUSTE
 // ---------------------------------------------------------
 
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
+App.datasLancamentoChamada = []; // Armazena as múltiplas datas selecionadas
 
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controle de Presença");
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
+    
+    // Reseta a fila de datas ao abrir a tela
+    App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]]; 
     
     try { 
         const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
@@ -1097,12 +1101,8 @@ App.renderizarChamadaPro = async () => {
         App.cachePedagogico.chamadas = Array.isArray(chamadasFetch) ? chamadasFetch : [];
         App.cachePedagogico.planejamentos = planosFetch;
 
-        // 🧠 INTELIGÊNCIA AGUÇADA: Pegamos apenas os IDs dos alunos que têm um planejamento ativo!
         const idsComPlanoAtivo = App.cachePedagogico.planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
-
         const historico = [...App.cachePedagogico.chamadas].sort((a,b) => new Date(b.data) - new Date(a.data)); 
-        
-        // Aplica a regra de cruzamento duplo: Tem que estar Ativo E ter um Plano que NÃO esteja no arquivo morto
         const alunosAtivos = App.cachePedagogico.alunos.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + App.cachePedagogico.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
@@ -1115,18 +1115,26 @@ App.renderizarChamadaPro = async () => {
                 <span style="padding-bottom:10px; font-weight:bold; color:#999; text-transform:uppercase; font-size:12px;">Ou</span>
                 ${selectLocal('Buscar Aluno Único:', 'chamada-aluno', opAlunos)}
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;">
-                ${col('Data da Aula:', 'chamada-data', 'date', hoje, `max="${hoje}"`)}
-                ${col('Duração (Ex: 01:30):', 'chamada-duracao', 'time', '01:00')}
-                <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR CHAMADA</button>
-                <button onclick="App.cancelarEdicaoChamada()" id="btn-cancel-chamada" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar Edição</button>
+            
+            <div style="background:#fff; border:1px solid #d5f5e3; padding:15px; border-radius:8px; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
+                <label style="font-weight:bold; font-size:12px; color:#27ae60;">📅 Selecionar Datas para o Lançamento:</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;">
+                    <div style="display:flex; gap:5px; flex:1; min-width:200px;">
+                        <input type="date" id="input-nova-data" value="${hoje}" max="${hoje}" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                        <button onclick="App.adicionarDataFila()" style="background:#27ae60; color:white; border:none; padding:0 15px; border-radius:5px; font-weight:bold; cursor:pointer;">+ Add</button>
+                    </div>
+                    ${col('Duração (Padrão):', 'chamada-duracao', 'time', '01:00', 'style="max-width:120px;"')}
+                    <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR MATRIZ</button>
+                    <button onclick="App.cancelarEdicaoChamada()" id="btn-cancel-chamada" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar</button>
+                </div>
+                <div id="fila-datas-ui" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:5px;"></div>
             </div>
         `;
 
         const tabelaChamada = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">🗑️ Excluir Selecionados</button>
-                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Selecionados</button>
+                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px;">
                     <span style="font-size: 18px; color: #aaa;">🔍</span>
                     <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
                 </div>
@@ -1150,7 +1158,7 @@ App.renderizarChamadaPro = async () => {
                                 <td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(h.status)}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
                                 <td style="padding:12px; text-align:right;">
-                                    <button onclick="App.editarLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar">✏️</button>
+                                    <button onclick="App.editarLancamentoChamada('${h.idAluno}', '${h.data}', '${h.duracao}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar na Matriz">✏️</button>
                                     <button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
                                 </td>
                             </tr>`; 
@@ -1160,34 +1168,72 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Registo de Frequência', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
+        div.innerHTML = App.UI.card('📝 Matriz de Frequência', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
+        
+        App.atualizarFilaDatasUI(); // Renderiza a data inicial
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
-App.editarLancamentoChamada = async (id) => { 
-    const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
-    if(!registro) return App.showToast("Erro ao localizar o registo.", "error");
+// --- GESTÃO DE MÚLTIPLAS DATAS ---
+App.adicionarDataFila = () => {
+    const input = document.getElementById('input-nova-data');
+    const dataVal = input.value;
+    const hojeStr = new Date().toISOString().split('T')[0];
 
-    document.getElementById('chamada-aluno').value = registro.idAluno; 
+    if (!dataVal) return App.showToast("Selecione uma data válida.", "warning");
+    if (dataVal > hojeStr) return App.showToast("Não é permitido adicionar datas futuras.", "warning");
+    if (App.datasLancamentoChamada.includes(dataVal)) return App.showToast("Esta data já está na lista.", "info");
+
+    App.datasLancamentoChamada.push(dataVal);
+    App.datasLancamentoChamada.sort(); // Mantém cronológico
+    App.atualizarFilaDatasUI();
+};
+
+App.removerDataFila = (data) => {
+    App.datasLancamentoChamada = App.datasLancamentoChamada.filter(d => d !== data);
+    App.atualizarFilaDatasUI();
+};
+
+App.atualizarFilaDatasUI = () => {
+    const container = document.getElementById('fila-datas-ui');
+    if (!container) return;
+    if (App.datasLancamentoChamada.length === 0) {
+        container.innerHTML = '<span style="font-size:12px; color:#e74c3c; font-style:italic;">Adicione pelo menos uma data para gerar a matriz.</span>';
+        return;
+    }
+    
+    container.innerHTML = App.datasLancamentoChamada.map(data => `
+        <div style="background:#2ecc71; color:white; padding:5px 10px; border-radius:20px; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            ${data.split('-').reverse().join('/')}
+            <span onclick="App.removerDataFila('${data}')" style="cursor:pointer; background:rgba(0,0,0,0.2); border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✖</span>
+        </div>
+    `).join('');
+};
+
+App.editarLancamentoChamada = (idAluno, data, duracao) => { 
+    document.getElementById('chamada-aluno').value = idAluno; 
     document.getElementById('chamada-turma').value = "";
-    document.getElementById('chamada-data').value = registro.data; 
-    document.getElementById('chamada-duracao').value = registro.duracao; 
+    document.getElementById('chamada-duracao').value = duracao; 
+    
+    // Define a fila apenas com a data a ser editada
+    App.datasLancamentoChamada = [data];
+    App.atualizarFilaDatasUI();
     
     document.getElementById('btn-cancel-chamada').style.display = 'inline-block';
-    App.idChamadaEditando = id; 
     App.carregarListaChamada(); 
     document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
 };
 
 App.cancelarEdicaoChamada = () => {
-    App.idChamadaEditando = null;
     document.getElementById('chamada-aluno').value = "";
     document.getElementById('btn-cancel-chamada').style.display = 'none';
     document.getElementById('area-lista-chamada').innerHTML = "";
+    App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]];
+    App.atualizarFilaDatasUI();
     App.showToast("Modo de edição cancelado.", "info");
 };
 
-App.marcarTodosChamada = (status) => {
+App.marcarTodosChamadaGlobal = (status) => {
     const selects = document.querySelectorAll('.status-chamada');
     if(selects.length === 0) return;
     
@@ -1199,156 +1245,156 @@ App.marcarTodosChamada = (status) => {
         else select.style.color = '#333';
     });
     
-    App.showToast(`Lote aplicado: Todos como ${status}!`, "info");
+    App.showToast(`Lote aplicado na matriz inteira: ${status}!`, "info");
 };
 
 App.carregarListaChamada = async () => {
     const turma = document.getElementById('chamada-turma').value;
     const idAluno = document.getElementById('chamada-aluno').value;
-    const data = document.getElementById('chamada-data').value;
     
     if(!turma && !idAluno) return App.showToast("Selecione uma Turma OU um Aluno específico.", "warning");
-    if(!data) return App.showToast("Preencha a Data da aula.", "warning");
-    
-    const hojeStr = new Date().toISOString().split('T')[0];
-    if (data > hojeStr) {
-        return App.showToast("Não é permitido abrir grelhas de frequência para datas futuras.", "warning");
-    }
+    if(App.datasLancamentoChamada.length === 0) return App.showToast("Adicione pelo menos uma data na fila.", "warning");
 
     const area = document.getElementById('area-lista-chamada');
-    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar diário de classe super rápido... ⚡</p>';
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar Matriz de Classe... ⚡</p>';
 
     try {
         const alunos = App.cachePedagogico.alunos;
         const chamadas = App.cachePedagogico.chamadas;
         const planejamentos = App.cachePedagogico.planejamentos;
         
-        // 🧠 INTELIGÊNCIA AGUÇADA NA LISTA: Filtramos cruzando o status e o plano
         const idsComPlanoAtivo = planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
 
-        let alunosAlvo = [];
-        if (idAluno) { alunosAlvo = alunos.filter(a => a.id === idAluno); } else { alunosAlvo = alunos.filter(a => a.turma === turma); }
-        
-        // Regra mágica aplicada na lista que vai aparecer
+        let alunosAlvo = idAluno ? alunos.filter(a => a.id === idAluno) : alunos.filter(a => a.turma === turma);
         alunosAlvo = alunosAlvo.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
-        if(alunosAlvo.length === 0) { area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno com Planejamento Ativo foi encontrado para este filtro.</p></div>'; return; }
+        if(alunosAlvo.length === 0) { 
+            area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno com Planejamento Ativo foi encontrado para este filtro.</p></div>'; 
+            return; 
+        }
 
-        const chamadasDia = chamadas.filter(c => c.data === data);
-        let linhas = '';
-        
+        // CABEÇALHO DINÂMICO (ALUNO + N COLUNAS DE DATAS)
+        let theadHtml = `<tr><th style="padding:15px; text-align:left; position:sticky; left:0; background:#f8f9fa; z-index:2; border-right:1px solid #ddd;">NOME DO ALUNO</th>`;
+        App.datasLancamentoChamada.forEach(data => {
+            theadHtml += `<th style="padding:15px; text-align:center; min-width:140px;">${data.split('-').reverse().join('/')}</th>`;
+        });
+        theadHtml += `</tr>`;
+
+        // CORPO DA MATRIZ
+        let linhasHtml = '';
         alunosAlvo.forEach(a => {
-            let regExistente = null;
-            if (App.idChamadaEditando && a.id === document.getElementById('chamada-aluno').value) {
-                regExistente = chamadas.find(c => String(c.id) === String(App.idChamadaEditando));
-            } else {
-                regExistente = chamadasDia.find(c => c.idAluno === a.id);
-            }
+            linhasHtml += `<tr style="border-bottom:1px solid #eee;" class="linha-aluno-matriz" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">`;
+            linhasHtml += `<td style="padding:12px; font-weight:500; position:sticky; left:0; background:#fff; z-index:1; border-right:1px solid #ddd;">${App.escapeHTML(a.nome)}</td>`;
 
-            const status = regExistente ? regExistente.status : 'Presença';
-            const idEdicaoTag = (App.idChamadaEditando && regExistente) ? `data-id-chamada="${regExistente.id}"` : '';
-            
-            linhas += `
-            <tr style="border-bottom:1px solid #eee;" class="linha-chamada" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}" ${idEdicaoTag}>
-                <td style="padding:12px; font-weight:500;">${App.escapeHTML(a.nome)}</td>
-                <td style="padding:12px; width:250px;">
-                    <select class="status-chamada" style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
+            App.datasLancamentoChamada.forEach(data => {
+                const regExistente = chamadas.find(c => String(c.idAluno) === String(a.id) && c.data === data);
+                const status = regExistente ? regExistente.status : 'Presença';
+                const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
+
+                linhasHtml += `
+                <td style="padding:8px;">
+                    <select class="status-chamada" data-data="${data}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="this.style.color = this.value==='Falta'?'#e74c3c': (this.value==='Reposição'?'#f39c12':'#27ae60')">
                         <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
                         <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
                         <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
-                        <option value="Falta Justificada" ${status==='Falta Justificada'?'selected':''}>⚠️ Falta Justificada</option>
+                        <option value="Falta Justificada" ${status==='Falta Justificada'?'selected':''}>⚠️ Falta Just.</option>
                         <option value="Feriado" ${status==='Feriado'?'selected':''}>📅 Feriado</option>
                         <option value="Recesso" ${status==='Recesso'?'selected':''}>🏖️ Recesso</option>
+                        <option value="N/A" ${status==='N/A'?'selected':''}>➖ N/A (Ignorar)</option>
                     </select>
-                </td>
-            </tr>`;
+                </td>`;
+            });
+            linhasHtml += `</tr>`;
         });
-        
-        let alertaEdicao = App.idChamadaEditando ? `<div style="background:#f39c12; color:#fff; padding:10px; text-align:center; font-weight:bold; margin-bottom:10px; border-radius:5px; animation: pop 0.3s;">⚠️ MODO DE EDIÇÃO ATIVO (A atualizar o registo existente)</div>` : '';
 
-        const botoesLote = !App.idChamadaEditando ? `
+        const botoesLote = `
             <div style="padding:10px 15px; background:#fff; border-bottom:1px solid #eee; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-                <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preenchimento Rápido em Lote:</span>
-                <button onclick="App.marcarTodosChamada('Presença')" style="background:#eafaf1; color:#27ae60; border:1px solid #27ae60; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#d5f5e3'" onmouseout="this.style.background='#eafaf1'">✅ Todos Presentes</button>
-                <button onclick="App.marcarTodosChamada('Falta')" style="background:#fdf2f2; color:#e74c3c; border:1px solid #e74c3c; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fadbd8'" onmouseout="this.style.background='#fdf2f2'">❌ Todos Faltaram</button>
-                <button onclick="App.marcarTodosChamada('Reposição')" style="background:#fef5e7; color:#f39c12; border:1px solid #f39c12; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#fdebd0'" onmouseout="this.style.background='#fef5e7'">🔄 Todas Reposições</button>
+                <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preencher toda a Matriz:</span>
+                <button onclick="App.marcarTodosChamadaGlobal('Presença')" style="background:#eafaf1; color:#27ae60; border:1px solid #27ae60; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Tudo Presente</button>
+                <button onclick="App.marcarTodosChamadaGlobal('Falta')" style="background:#fdf2f2; color:#e74c3c; border:1px solid #e74c3c; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;">❌ Tudo Falta</button>
+                <button onclick="App.marcarTodosChamadaGlobal('N/A')" style="background:#f4f6f7; color:#7f8c8d; border:1px solid #bdc3c7; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" title="Células N/A não são gravadas no banco">➖ Limpar Matriz (N/A)</button>
             </div>
-        ` : '';
+        `;
 
-        area.innerHTML = alertaEdicao + `
+        area.innerHTML = `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
                 <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
-                    Grelha de Frequência - ${App.escapeHTML(data.split('-').reverse().join('/'))}
+                    Grelha de Frequência em Matriz (${App.datasLancamentoChamada.length} dia(s) selecionado(s))
                 </div>
                 ${botoesLote}
-                <div class="table-responsive-wrapper" style="margin:0; border:none;">
-                    <table style="width:100%; border-collapse:collapse; min-width:400px;">
-                        <thead style="background:#f8f9fa;"><tr><th style="padding:15px; text-align:left;">NOME DO ALUNO</th><th style="padding:15px; text-align:left;">STATUS DA AULA</th></tr></thead>
-                        <tbody>${linhas}</tbody>
+                <div class="table-responsive-wrapper" style="margin:0; border:none; max-height: 500px; overflow-y: auto;">
+                    <table style="width:100%; border-collapse:collapse; min-width:600px;">
+                        <thead>${theadHtml}</thead>
+                        <tbody>${linhasHtml}</tbody>
                     </table>
                 </div>
                 <div style="padding:20px; background:#f9f9f9; border-top:1px solid #eee; text-align:right;">
-                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">💾 SALVAR FREQUÊNCIA</button>
+                    <button onclick="App.salvarChamadaLote()" class="btn-primary" style="background:#27ae60; border-color:#27ae60; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); font-size:16px; padding:12px 25px;">💾 SALVAR MATRIZ COMPLETA</button>
                 </div>
             </div>
         `;
-    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar a lista.</p>'; }
+    } catch(e) { area.innerHTML = '<p style="color:red; text-align:center;">Erro ao processar a matriz.</p>'; }
 };
 
 App.salvarChamadaLote = async () => {
-        const data = document.getElementById('chamada-data').value;
-        const duracao = document.getElementById('chamada-duracao').value || '01:00';
-        const linhas = document.querySelectorAll('.linha-chamada');
-        if(linhas.length === 0) return;
+    const duracaoGlobal = document.getElementById('chamada-duracao').value || '01:00';
+    const linhas = document.querySelectorAll('.linha-aluno-matriz');
+    if(linhas.length === 0) return;
 
-        const hojeStr = new Date().toISOString().split('T')[0];
-        if (data > hojeStr) {
-            return App.showToast("Bloqueado: Não é possível registar frequência em datas futuras.", "error");
+    const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
+    const txt = btn.innerText; btn.innerText = "A arquivar matriz em lote... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
+
+    try {
+        const planejamentos = App.cachePedagogico.planejamentos;
+        const chamadasExistentes = App.cachePedagogico.chamadas;
+
+        const alunosSemPlano = [];
+        const alunosAfetados = new Set();
+        const promessasChamadas = [];
+        
+        let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
+
+        // 1. Validar se todos têm plano ativo
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id');
+            const nomeAluno = linha.getAttribute('data-nome');
+            const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+            if (!temPlanoAtivo) alunosSemPlano.push(nomeAluno);
+        });
+
+        if (alunosSemPlano.length > 0) {
+            App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
+            if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
+            return; 
         }
 
-        const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
-        const txt = btn.innerText; btn.innerText = "A arquivar instantaneamente... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
-
-        try {
-            const planejamentos = App.cachePedagogico.planejamentos;
-            const chamadasExistentes = App.cachePedagogico.chamadas;
-
-            const alunosSemPlano = [];
-            const alunosAfetados = [];
-            const promessasChamadas = [];
+        // 2. Extrair dados da Matriz e preparar promessas
+        linhas.forEach(linha => {
+            const idAluno = linha.getAttribute('data-id'); 
+            const nomeAluno = linha.getAttribute('data-nome');
+            const selects = linha.querySelectorAll('.status-chamada');
             
-            let chamadasAtualizadasNaMemoria = [...chamadasExistentes];
+            selects.forEach(select => {
+                const status = select.value;
+                if (status === 'N/A') return; // Ignora células N/A
 
-            linhas.forEach(linha => {
-                const idAluno = linha.getAttribute('data-id');
-                const nomeAluno = linha.getAttribute('data-nome');
+                const dataCelula = select.getAttribute('data-data');
+                const idEdicao = select.getAttribute('data-id-chamada'); 
                 
-                const temPlanoAtivo = planejamentos.some(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-                if (!temPlanoAtivo) alunosSemPlano.push(nomeAluno);
-            });
+                alunosAfetados.add(idAluno); 
 
-            if (alunosSemPlano.length > 0) {
-                App.showToast(`Bloqueado: Crie um Planejamento para: ${alunosSemPlano.join(', ')}`, "error");
-                if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default';
-                return; 
-            }
-
-            linhas.forEach(linha => {
-                const idAluno = linha.getAttribute('data-id'); 
-                const nomeAluno = linha.getAttribute('data-nome');
-                const status = linha.querySelector('.status-chamada').value;
-                const idEdicao = linha.getAttribute('data-id-chamada'); 
-                
-                alunosAfetados.push(idAluno); 
-
+                // Tenta achar o registo usando o ID em cache ou buscando pela combinação Aluno+Data
                 let regExistente = null;
-                if (idEdicao) { regExistente = chamadasExistentes.find(c => String(c.id) === String(idEdicao)); } 
-                else { regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === data); }
+                if (idEdicao) { 
+                    regExistente = chamadasExistentes.find(c => String(c.id) === String(idEdicao)); 
+                } else { 
+                    regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === dataCelula); 
+                }
 
-                const payload = { idAluno, nomeAluno, data, status, duracao };
+                const payload = { idAluno, nomeAluno, data: dataCelula, status, duracao: duracaoGlobal };
 
                 if (regExistente) { 
-                    const chamadaAtualizada = { ...regExistente, data: data, status: status, duracao: duracao };
+                    const chamadaAtualizada = { ...regExistente, data: dataCelula, status: status, duracao: duracaoGlobal };
                     promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
                     
                     const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
@@ -1356,41 +1402,46 @@ App.salvarChamadaLote = async () => {
                 } else { 
                     payload.id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).substr(2)); 
                     promessasChamadas.push(App.api('/chamadas', 'POST', payload)); 
-                    
                     chamadasAtualizadasNaMemoria.push(payload);
                 }
             });
+        });
 
-            await Promise.all(promessasChamadas);
-            
-            let avisoExtra = "";
-            try {
-                const promessasPlano = [];
-
-                alunosAfetados.forEach(idAluno => {
-                    let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-                    if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
-                        planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadasNaMemoria);
-                        promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
-                    }
-                });
-
-                if (promessasPlano.length > 0) { 
-                    await Promise.all(promessasPlano); 
-                    avisoExtra = " e Planejamento(s) Auto-Ajustado(s)!"; 
+        // Dispara todos os saves ao mesmo tempo (Assíncrono e muito rápido)
+        await Promise.all(promessasChamadas);
+        
+        // 3. Tarefa em Background: Auto-Ajustar Planejamentos
+        let avisoExtra = "";
+        try {
+            const promessasPlano = [];
+            alunosAfetados.forEach(idAluno => {
+                let planoDoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
+                if (planoDoAluno && typeof App.processarAutoAjustePlano === 'function') {
+                    planoDoAluno = App.processarAutoAjustePlano(planoDoAluno, chamadasAtualizadasNaMemoria);
+                    promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
                 }
-            } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+            });
 
-           App.showToast(`Frequência registada em tempo recorde${avisoExtra}`, "success");
-           App.cancelarEdicaoChamada();
+            if (promessasPlano.length > 0) { 
+                await Promise.all(promessasPlano); 
+                avisoExtra = " e Planos Auto-Ajustados!"; 
+            }
+        } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
 
-           const area = document.getElementById('app-content');
-           if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">Atualizando frequência... ⏳</p>';
+       App.showToast(`${promessasChamadas.length} registos processados com sucesso${avisoExtra}`, "success");
+       App.cancelarEdicaoChamada();
 
-           await App.renderizarChamadaPro();
-        } catch(e) { App.showToast("Erro ao guardar a chamada.", "error"); }
-        finally { if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; }
-    };
+       const area = document.getElementById('app-content');
+       if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">A atualizar a tabela de histórico... ⏳</p>';
+
+       await App.renderizarChamadaPro();
+    } catch(e) { 
+        App.showToast("Erro ao guardar a matriz de chamadas.", "error"); 
+    } finally { 
+        if(btn){btn.innerText = txt; btn.disabled = false;} 
+        document.body.style.cursor = 'default'; 
+    }
+};
 
 App.excluirLancamentoChamada = (id) => { 
     App.confirmar("Excluir Frequência", "Tem a certeza que deseja excluir esta chamada do sistema?", "Excluir", "#e74c3c", async () => {
