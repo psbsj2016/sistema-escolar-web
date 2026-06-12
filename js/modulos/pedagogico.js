@@ -1077,11 +1077,12 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + MOTIVOS
+// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + MOTIVOS + WIZARD
 // ---------------------------------------------------------
 
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
 App.datasLancamentoChamada = []; 
+App.filaEdicaoChamada = []; // 🧠 Nova Memória do Wizard de Edição
 
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controle de Presença");
@@ -1089,6 +1090,7 @@ App.renderizarChamadaPro = async () => {
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
     
     App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]]; 
+    App.filaEdicaoChamada = []; // Reseta a fila por segurança
     
     try { 
         const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
@@ -1132,7 +1134,10 @@ App.renderizarChamadaPro = async () => {
 
         const tabelaChamada = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Selecionados</button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Lote</button>
+                    <button onclick="App.editarLoteChamada('check-chamada')" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);">✏️ Editar Selecionados</button>
+                </div>
                 <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px;">
                     <span style="font-size: 18px; color: #aaa;">🔍</span>
                     <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
@@ -1150,7 +1155,6 @@ App.renderizarChamadaPro = async () => {
                         ${historico.map(h => { 
                             let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
                             
-                            // 🧠 Mostramos o motivo da falta no histórico, se existir
                             let labelStatus = App.escapeHTML(h.status);
                             if((h.status === 'Falta' || h.status === 'Falta Justificada') && h.motivo) {
                                 labelStatus += `<br><span style="font-size:10px; color:#7f8c8d;">Motivo: ${App.escapeHTML(h.motivo)}</span>`;
@@ -1216,6 +1220,37 @@ App.atualizarFilaDatasUI = () => {
     `).join('');
 };
 
+// --- GESTÃO DO WIZARD DE EDIÇÃO EM MASSA ---
+App.editarLoteChamada = (className) => {
+    const checks = document.querySelectorAll('.' + className + ':checked');
+    if (checks.length === 0) return App.showToast("Selecione pelo menos um registo na tabela para editar.", "warning");
+
+    App.filaEdicaoChamada = [];
+    const chamadas = App.cachePedagogico.chamadas || [];
+
+    checks.forEach(check => {
+        const id = check.value;
+        const registro = chamadas.find(c => String(c.id) === String(id));
+        if (registro) {
+            App.filaEdicaoChamada.push({ idAluno: registro.idAluno, data: registro.data, duracao: registro.duracao });
+        }
+    });
+
+    if(App.filaEdicaoChamada.length > 0) {
+        App.showToast(`Assistente ativado: A iniciar edição de ${App.filaEdicaoChamada.length} registo(s)...`, "info");
+        App.processarFilaEdicaoChamada();
+    }
+};
+
+App.processarFilaEdicaoChamada = () => {
+    if (App.filaEdicaoChamada.length > 0) {
+        const proximo = App.filaEdicaoChamada.shift(); // Tira o primeiro da fila
+        App.editarLancamentoChamada(proximo.idAluno, proximo.data, proximo.duracao);
+    } else {
+        App.cancelarEdicaoChamada(); // Fila terminou
+    }
+};
+
 App.editarLancamentoChamada = (idAluno, data, duracao) => { 
     document.getElementById('chamada-aluno').value = idAluno; 
     document.getElementById('chamada-turma').value = "";
@@ -1230,15 +1265,15 @@ App.editarLancamentoChamada = (idAluno, data, duracao) => {
 };
 
 App.cancelarEdicaoChamada = () => {
+    App.filaEdicaoChamada = []; // Aborta totalmente o Wizard se clicar no botão Cancelar
     document.getElementById('chamada-aluno').value = "";
     document.getElementById('btn-cancel-chamada').style.display = 'none';
     document.getElementById('area-lista-chamada').innerHTML = "";
     App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]];
     App.atualizarFilaDatasUI();
-    App.showToast("Modo de edição cancelado.", "info");
+    App.showToast("Modo de edição finalizado/cancelado.", "info");
 };
 
-// 🧠 ATUALIZA A COR DA CÉLULA E MOSTRA/ESCONDE O CAMPO DE MOTIVO
 App.atualizarStatusCelula = (select) => {
     const val = select.value;
     if(val === 'Falta') select.style.color = '#e74c3c';
@@ -1246,7 +1281,6 @@ App.atualizarStatusCelula = (select) => {
     else if(val === 'Presença') select.style.color = '#27ae60';
     else select.style.color = '#333';
 
-    // Procura o input do motivo que está logo abaixo do select
     const inputMotivo = select.nextElementSibling;
     if(inputMotivo && inputMotivo.classList.contains('motivo-chamada')) {
         if(val === 'Falta' || val === 'Falta Justificada') {
@@ -1254,7 +1288,7 @@ App.atualizarStatusCelula = (select) => {
             inputMotivo.focus();
         } else {
             inputMotivo.style.display = 'none';
-            inputMotivo.value = ''; // Limpa se mudou de ideias
+            inputMotivo.value = ''; 
         }
     }
 };
@@ -1265,7 +1299,7 @@ App.marcarTodosChamadaGlobal = (status) => {
     
     selects.forEach(select => {
         select.value = status;
-        App.atualizarStatusCelula(select); // Usa a nova lógica visual
+        App.atualizarStatusCelula(select); 
     });
     
     App.showToast(`Lote aplicado na matriz inteira: ${status}!`, "info");
@@ -1313,7 +1347,6 @@ App.carregarListaChamada = async () => {
                 const motivo = regExistente && regExistente.motivo ? regExistente.motivo : '';
                 const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
                 
-                // Exibe campo de motivo apenas se for falta
                 const mostrarMotivo = (status === 'Falta' || status === 'Falta Justificada') ? 'block' : 'none';
 
                 linhasHtml += `
@@ -1342,7 +1375,13 @@ App.carregarListaChamada = async () => {
             </div>
         `;
 
-        area.innerHTML = `
+        // 🧠 Banner mágico que aparece se o Wizard estiver ativo
+        const bannerWizard = App.filaEdicaoChamada.length > 0 ? 
+            `<div style="background:#3498db; color:white; padding:12px; text-align:center; font-weight:bold; border-radius:5px; margin-bottom:15px; animation: pop 0.3s; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);">
+                ✨ ASSISTENTE DE EDIÇÃO: Faltam ${App.filaEdicaoChamada.length} iten(s) na fila. Ao salvar, o próximo carregará automaticamente!
+            </div>` : '';
+
+        area.innerHTML = bannerWizard + `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
                 <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
                     Grelha de Frequência em Matriz (${App.datasLancamentoChamada.length} dia(s) selecionado(s))
@@ -1402,7 +1441,6 @@ App.salvarChamadaLote = async () => {
                 const status = select.value;
                 if (status === 'N/A') return; 
 
-                // 🧠 LÊ O MOTIVO DA CÉLULA (Se for falta)
                 const inputMotivo = select.nextElementSibling;
                 const textoMotivo = (status === 'Falta' || status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
 
@@ -1446,26 +1484,30 @@ App.salvarChamadaLote = async () => {
                     promessasPlano.push(App.api(`/planejamentos/${planoDoAluno.id}`, 'PUT', planoDoAluno));
                 }
             });
+            if (promessasPlano.length > 0) { await Promise.all(promessasPlano); avisoExtra = " e Planos Auto-Ajustados!"; }
+        } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste.", erroPlano); }
 
-            if (promessasPlano.length > 0) { 
-                await Promise.all(promessasPlano); 
-                avisoExtra = " e Planos Auto-Ajustados!"; 
-            }
-        } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste de fundo.", erroPlano); }
+       // 🧠 A MÁGICA FINAL DO WIZARD: Se tiver gente na fila, carrega o próximo!
+       if (App.filaEdicaoChamada && App.filaEdicaoChamada.length > 0) {
+           App.showToast(`Salvo! A carregar o próximo... (Faltam ${App.filaEdicaoChamada.length})`, "success");
+           
+           // Atualiza o cache silenciosamente para não perder a edição anterior
+           App.cachePedagogico.chamadas = chamadasAtualizadasNaMemoria;
+           
+           App.processarFilaEdicaoChamada();
+           if(btn){btn.innerText = "💾 SALVAR MATRIZ COMPLETA"; btn.disabled = false;} document.body.style.cursor = 'default';
+       } else {
+           App.showToast(`Processamento concluído com sucesso${avisoExtra}!`, "success");
+           App.cancelarEdicaoChamada(); // Limpa e fecha
+           const area = document.getElementById('app-content');
+           if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">A atualizar a tabela de histórico... ⏳</p>';
+           await App.renderizarChamadaPro();
+       }
 
-       App.showToast(`${promessasChamadas.length} registos processados com sucesso${avisoExtra}`, "success");
-       App.cancelarEdicaoChamada();
-
-       const area = document.getElementById('app-content');
-       if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">A atualizar a tabela de histórico... ⏳</p>';
-
-       await App.renderizarChamadaPro();
     } catch(e) { 
         App.showToast("Erro ao guardar a matriz de chamadas.", "error"); 
-    } finally { 
-        if(btn){btn.innerText = txt; btn.disabled = false;} 
-        document.body.style.cursor = 'default'; 
-    }
+        if(btn){btn.innerText = txt; btn.disabled = false;} document.body.style.cursor = 'default'; 
+    } 
 };
 
 App.excluirLancamentoChamada = (id) => { 
