@@ -944,7 +944,7 @@ App.gerarDocumentoOficialPrint = async () => {
             `;
             
             docFooter = `
-                <div style="text-align: right; font-size: 14px; margin-bottom: 40px; margin-top: 10px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; font-size: 14px; margin-bottom: 60px; margin-top: 40px; font-family: Arial, sans-serif;">
                     ${localDataCompleta}
                 </div>
                 
