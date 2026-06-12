@@ -668,17 +668,29 @@ App.gerarBoletimTela = async () => {
         const [aluno, avaliacoes, chamadas, escola, planejamentos] = await Promise.all([ App.api(`/alunos/${idAluno}`), App.api(`/avaliacoes?_t=${Date.now()}`), App.api(`/chamadas?_t=${Date.now()}`), App.api('/escola'), App.api(`/planejamentos?_t=${Date.now()}`) ]);
         
         const planoAluno = planejamentos.find(p => p.idAluno === idAluno && p.status !== 'Arquivado');
-        const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).map(c => c.data).sort();
+        const presencas = chamadas.filter(c => c.idAluno === idAluno && (c.status === 'Presença' || c.status === 'Reposição')).sort((a,b) => new Date(a.data) - new Date(b.data));
         
         let primAula = '__/__/____';
         let ultAula = '__/__/____';
         
+        // 🧠 CÁLCULO INTELIGENTE DA CARGA HORÁRIA CUMPRIDA
+        let totalMinutosCumpridos = 0;
+        presencas.forEach(c => {
+            if(c.duracao && c.duracao.includes(':')) {
+                const [h, m] = c.duracao.split(':').map(Number);
+                totalMinutosCumpridos += (h * 60) + (m || 0);
+            }
+        });
+        const horasCump = Math.floor(totalMinutosCumpridos / 60);
+        const minCump = totalMinutosCumpridos % 60;
+        const textoCargaCumprida = minCump > 0 ? `${horasCump}h ${minCump}m` : `${horasCump}H`;
+
         if (planoAluno && planoAluno.aulas && planoAluno.aulas.length > 0) { 
             primAula = App.escapeHTML(planoAluno.aulas[0].data);
             ultAula = App.escapeHTML(planoAluno.aulas[planoAluno.aulas.length - 1].data); 
         } else if (presencas.length > 0) { 
-            primAula = presencas[0].split('-').reverse().join('/');
-            ultAula = presencas[presencas.length - 1].split('-').reverse().join('/'); 
+            primAula = presencas[0].data.split('-').reverse().join('/');
+            ultAula = presencas[presencas.length - 1].data.split('-').reverse().join('/'); 
         } else {
             primAula = new Date().toLocaleDateString('pt-BR');
         }
@@ -686,7 +698,7 @@ App.gerarBoletimTela = async () => {
         const cursoExibir = App.escapeHTML(aluno.curso || (planoAluno ? planoAluno.curso : 'Geral'));
         const turmaExibir = App.escapeHTML(aluno.turma || 'Não informada');
 
-        // INTELIGÊNCIA: Ignora notas marcadas como formativas (comporBoletim === false)
+        // Ignora notas marcadas como formativas (comporBoletim === false)
         const notasAluno = avaliacoes.filter(n => n.idAluno === idAluno && n.comporBoletim !== false); 
         const disciplinasMap = {};
         
@@ -739,7 +751,11 @@ App.gerarBoletimTela = async () => {
                 <div style="padding:15px; background:#fafafa; border:1px solid #000; margin-bottom:15px;">
                     <div style="font-weight:bold; font-size:16px; margin-bottom:5px;">ALUNO: ${App.escapeHTML(aluno.nome).toUpperCase()}</div>
                     <div style="font-size:13px; margin-bottom:10px;"><b>CURSO:</b> ${cursoExibir} &nbsp;&nbsp;|&nbsp;&nbsp; <b>TURMA:</b> ${turmaExibir}</div>
-                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;"><div>INÍCIO DAS AULAS: <b>${primAula}</b></div><div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div></div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:5px; font-size:12px;">
+                        <div>INÍCIO DAS AULAS: <b>${primAula}</b></div>
+                        <div>PREVISÃO DE TÉRMINO: <b>${ultAula}</b></div>
+                        <div>CARGA HORÁRIA CUMPRIDA: <b style="color:#2980b9;">${textoCargaCumprida}</b></div>
+                    </div>
                 </div>
                 <div class="table-responsive-wrapper">
                     <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
