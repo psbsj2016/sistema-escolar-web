@@ -786,7 +786,7 @@ App.aplicarFormatacaoDropdown = (selectElement) => {
     selectElement.value = "";
 };
 
-// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word Limpo
+// Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word Limpo e Busca Financeira
 App.gerarDocumentoOficialPrint = async () => {
     const idAluno = document.getElementById('doc-aluno-oficial').value;
     const tipo = document.getElementById('doc-tipo-oficial').value;
@@ -808,6 +808,28 @@ App.gerarDocumentoOficialPrint = async () => {
         const aluno = alunosLista.find(a => a.id === idAluno) || {};
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
         
+        // Tentativa de buscar os dados financeiros silenciosamente
+        let financeiroLista = [];
+        try { financeiroLista = await App.api('/financeiro'); } catch(e) {}
+        
+        // 💰 MOTOR FINANCEIRO INTELIGENTE (Buscando Valor e Dia Real)
+        let valorMensalidade = parseFloat(aluno.valorMensalidade || aluno.mensalidade || aluno.valor || 0);
+        let diaVencimento = aluno.diaVencimento || aluno.vencimento || aluno.dia_vencimento || '';
+
+        // Se o cadastro estiver vazio, o sistema atua como detetive no módulo financeiro
+        if (valorMensalidade === 0 || !diaVencimento) {
+            const mensalidadesAluno = financeiroLista.filter(f => f.idAluno === idAluno && f.tipo === 'Receita' && (!f.descricao || !f.descricao.toLowerCase().includes('venda')));
+            if (mensalidadesAluno.length > 0) {
+                const ref = mensalidadesAluno[0]; // Pega a primeira mensalidade como referência
+                if (valorMensalidade === 0) valorMensalidade = parseFloat(ref.valor || 0);
+                if (!diaVencimento && ref.vencimento) {
+                    diaVencimento = ref.vencimento.split('-')[2]; // Extrai apenas o dia de YYYY-MM-DD
+                }
+            }
+        }
+        if (!diaVencimento) diaVencimento = '10'; // Fallback final de segurança
+        const valorFmt = valorMensalidade.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        
         const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
         
         // Construção Dinâmica: Local e Data
@@ -828,8 +850,7 @@ App.gerarDocumentoOficialPrint = async () => {
         const docHeader = `
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
-                <div style="text-align:right;">
-<div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
 
         // 2. BARRA DE FERRAMENTAS DO EDITOR (Limpa e com Dropdown)
@@ -838,14 +859,12 @@ App.gerarDocumentoOficialPrint = async () => {
         const editorToolbar = `
             <div class="no-print" style="background: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px 5px 0 0; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: -1px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-items: center;">
                 
-                <!-- Formatação Básica -->
                 <button type="button" onclick="document.execCommand('bold', false, null)" style="${btnToolbarStyle} font-weight: bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Negrito">B</button>
                 <button type="button" onclick="document.execCommand('italic', false, null)" style="${btnToolbarStyle} font-style: italic; font-family: serif;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Itálico">I</button>
                 <button type="button" onclick="document.execCommand('underline', false, null)" style="${btnToolbarStyle} text-decoration: underline;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Sublinhado">U</button>
                 
                 <span style="border-left: 1px solid #ccc; margin: 0 2px; height: 24px;"></span>
                 
-                <!-- Alinhamento -->
                 <button type="button" onclick="document.execCommand('justifyLeft', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Esquerda">⫷</button>
                 <button type="button" onclick="document.execCommand('justifyCenter', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Centralizar">≣</button>
                 <button type="button" onclick="document.execCommand('justifyRight', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Direita">⫸</button>
@@ -853,7 +872,6 @@ App.gerarDocumentoOficialPrint = async () => {
                 
                 <span style="border-left: 1px solid #ccc; margin: 0 2px; height: 24px;"></span>
                 
-                <!-- 🪄 Menu Suspenso de Elementos Jurídicos -->
                 <select onchange="App.aplicarFormatacaoDropdown(this)" style="padding: 6px 10px; font-size: 13px; border: 1px solid #bdc3c7; border-radius: 4px; background: #fff; cursor: pointer; color: #333; outline: none;">
                     <option value="">➕ Inserir Elemento...</option>
                     <option value="unorderedList">• Lista com Pontos</option>
@@ -874,11 +892,8 @@ App.gerarDocumentoOficialPrint = async () => {
 
         // 3. O CORPO DO TEXTO (Que vai dentro do Editor)
         if (tipo === 'contrato') {
-            const valorFmt = parseFloat(aluno.valorMensalidade || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
             corpoTexto = `
-                   <h2 style="text-align: center; margin-top: 20px; margin-bottom: 30px; text-transform: uppercase; font-family: Arial, sans-serif;">CONTRATO DE SERVIÇOS</h2>
-
-                   <div style="text-align: justify; margin-top: 10px; font-size:14px; font-family: Arial, sans-serif;">
+                <div style="text-align: justify; margin-top: 10px; font-size:14px; font-family: Arial, sans-serif;">
                     Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
                     inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
                     <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
@@ -890,7 +905,7 @@ App.gerarDocumentoOficialPrint = async () => {
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</div>
 
                 <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
-                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(aluno.diaVencimento || '10')}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</div>
+                <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(diaVencimento)}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</div>
 
                 <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</div>
@@ -950,18 +965,15 @@ App.gerarDocumentoOficialPrint = async () => {
             ${painelImpressao}
             <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; display:flex; flex-direction:column; min-height: 297mm; position: relative; padding: 40px;">
                 
-                <!-- CABEÇALHO INTOCÁVEL -->
                 <div class="header-estatico">
                     ${docHeader}
                 </div>
                 
-                <!-- EDITOR RICH TEXT (ÁREA LIVRE) -->
                 ${editorToolbar}
                 <div id="editor-documento" contenteditable="true" style="cursor: text; border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 20px; outline: none; background: #fff; min-height: 200px; line-height: 1.6; margin-bottom: 20px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
                     ${corpoTexto}
                 </div>
                 
-                <!-- RODAPÉ INTOCÁVEL -->
                 <div class="footer-estatico" style="margin-top: auto;">
                     ${docFooter}
                 </div>
