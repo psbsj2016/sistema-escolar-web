@@ -745,6 +745,29 @@ App.renderizarMenuDocumentosOficiais = async () => {
     } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 };
 
+// --- FUNÇÃO AUXILIAR PARA LISTAS JURÍDICAS ---
+App.formatarLista = (estilo) => {
+    // Insere a lista ordenada padrão
+    document.execCommand('insertOrderedList', false, null);
+    
+    // Captura o elemento atual onde o cursor está
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        let currentNode = selection.anchorNode;
+        // Se for um nó de texto, pega o elemento pai
+        if (currentNode && currentNode.nodeType === 3) {
+            currentNode = currentNode.parentNode;
+        }
+        // Encontra a lista (ol) mais próxima e aplica o estilo (letras, romanos, etc.)
+        if (currentNode) {
+            const ol = currentNode.closest('ol');
+            if (ol) {
+                ol.style.listStyleType = estilo;
+            }
+        }
+    }
+};
+
 // Motor de Impressão EXCLUSIVO para Documentos Oficiais (A4 Retrato) com Editor Estilo Word
 App.gerarDocumentoOficialPrint = async () => {
     const idAluno = document.getElementById('doc-aluno-oficial').value;
@@ -769,7 +792,7 @@ App.gerarDocumentoOficialPrint = async () => {
         
         const enderecoFormatado = escola.endereco ? `${escola.endereco}, ${escola.numero || 'S/N'} - ${escola.bairro || ''}. ${escola.cidade || ''}-${escola.estado || ''} | CEP: ${escola.cep || ''}` : '';
         
-        // Construção Dinâmica: Local e Data (Ex: Porto Seguro - BA, 12 de junho de 2026.)
+        // Construção Dinâmica: Local e Data
         let localEscola = 'Local não informado';
         if (escola.cidade && escola.estado) {
             localEscola = `${App.escapeHTML(escola.cidade)} - ${App.escapeHTML(escola.estado)}`;
@@ -790,22 +813,42 @@ App.gerarDocumentoOficialPrint = async () => {
                 <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
 
-        // 2. BARRA DE FERRAMENTAS DO EDITOR (Estilo Word)
+        // 2. BARRA DE FERRAMENTAS DO EDITOR (Estilo Word - Expandida)
+        const btnToolbarStyle = "padding: 6px 12px; cursor: pointer; font-size: 13px; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;";
+        
         const editorToolbar = `
             <div class="no-print" style="background: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px 5px 0 0; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: -1px; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <button type="button" onclick="document.execCommand('bold', false, null)" style="padding: 6px 12px; cursor: pointer; font-weight: bold; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Negrito">B</button>
-                <button type="button" onclick="document.execCommand('italic', false, null)" style="padding: 6px 12px; cursor: pointer; font-style: italic; font-family: serif; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Itálico">I</button>
-                <button type="button" onclick="document.execCommand('underline', false, null)" style="padding: 6px 12px; cursor: pointer; text-decoration: underline; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Sublinhado">U</button>
-                <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
-                <button type="button" onclick="document.execCommand('justifyLeft', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Esquerda">⫷</button>
-                <button type="button" onclick="document.execCommand('justifyCenter', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Centralizar">≣</button>
-                <button type="button" onclick="document.execCommand('justifyRight', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Direita">⫸</button>
-                <button type="button" onclick="document.execCommand('justifyFull', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Justificar Texto">⇹</button>
-                <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
-                <button type="button" onclick="document.execCommand('insertUnorderedList', false, null)" style="padding: 6px 12px; cursor: pointer; background: #fff; border: 1px solid #bdc3c7; border-radius: 4px; transition: 0.2s;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista com Marcadores">• Lista</button>
+                
+                <!-- Formatação Básica -->
+                <button type="button" onclick="document.execCommand('bold', false, null)" style="${btnToolbarStyle} font-weight: bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Negrito">B</button>
+                <button type="button" onclick="document.execCommand('italic', false, null)" style="${btnToolbarStyle} font-style: italic; font-family: serif;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Itálico">I</button>
+                <button type="button" onclick="document.execCommand('underline', false, null)" style="${btnToolbarStyle} text-decoration: underline;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Sublinhado">U</button>
+                
+                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
+                
+                <!-- Alinhamento -->
+                <button type="button" onclick="document.execCommand('justifyLeft', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Esquerda">⫷</button>
+                <button type="button" onclick="document.execCommand('justifyCenter', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Centralizar">≣</button>
+                <button type="button" onclick="document.execCommand('justifyRight', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alinhar à Direita">⫸</button>
+                <button type="button" onclick="document.execCommand('justifyFull', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Justificar Texto">⇹</button>
+                
+                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
+                
+                <!-- Listas Jurídicas -->
+                <button type="button" onclick="document.execCommand('insertUnorderedList', false, null)" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista com Marcadores">• Pontos</button>
+                <button type="button" onclick="App.formatarLista('decimal')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Lista Numerada">1. Nums</button>
+                <button type="button" onclick="App.formatarLista('lower-alpha')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Alíneas (a, b, c)">a. Alíneas</button>
+                <button type="button" onclick="App.formatarLista('upper-roman')" style="${btnToolbarStyle}" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Incisos (I, II, III)">I. Incisos</button>
+                
+                <span style="border-left: 1px solid #ccc; margin: 0 2px;"></span>
+
+                <!-- Símbolos Especiais -->
+                <button type="button" onclick="document.execCommand('insertText', false, '§ ')" style="${btnToolbarStyle} font-weight:bold; color:#d35400;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Inserir Parágrafo">§</button>
+                <button type="button" onclick="document.execCommand('insertText', false, 'º')" style="${btnToolbarStyle} font-weight:bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Ordinal Masculino">º</button>
+                <button type="button" onclick="document.execCommand('insertText', false, 'ª')" style="${btnToolbarStyle} font-weight:bold;" onmouseover="this.style.background='#ecf0f1'" onmouseout="this.style.background='#fff'" title="Ordinal Feminino">ª</button>
                 
                 <div style="flex-grow: 1; text-align: right; font-size: 12px; font-weight: bold; color: #3498db; align-self: center; display:flex; align-items:center; justify-content:flex-end; gap:5px;">
-                    ✍️ MODO DE EDIÇÃO ATIVO
+                    ✍️ MODO DE EDIÇÃO
                 </div>
             </div>
         `;
@@ -879,11 +922,12 @@ App.gerarDocumentoOficialPrint = async () => {
         const painelImpressao = `
             <div class="no-print" style="text-align:center; margin-bottom:20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:15px 30px; background:#27ae60; border:none; border-radius:8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3); cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#219a52'" onmouseout="this.style.background='#27ae60'">🖨️ CONFIRMAR E IMPRIMIR DOCUMENTO</button>
-                <div style="font-size: 12px; color: #7f8c8d;">Pode editar o texto abaixo livremente. O editor desaparecerá na folha impressa.</div>
+                <div style="font-size: 12px; color: #7f8c8d;">Pode editar o texto abaixo livremente. O editor e os botões desaparecerão na folha impressa.</div>
             </div>
         `;
 
         // 4. A MONTAGEM FINAL DO SANDUÍCHE
+        // 💡 Modificação do Cursor: A propriedade "cursor: text;" foi aplicada diretamente no style do #editor-documento
         printContainer.innerHTML = `
             ${reportStyles}
             ${painelImpressao}
@@ -896,7 +940,7 @@ App.gerarDocumentoOficialPrint = async () => {
                 
                 <!-- EDITOR RICH TEXT (ÁREA LIVRE) -->
                 ${editorToolbar}
-                <div id="editor-documento" contenteditable="true" style="border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 20px; outline: none; background: #fff; min-height: 200px; line-height: 1.6; margin-bottom: 20px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
+                <div id="editor-documento" contenteditable="true" style="cursor: text; border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 20px; outline: none; background: #fff; min-height: 200px; line-height: 1.6; margin-bottom: 20px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
                     ${corpoTexto}
                 </div>
                 
