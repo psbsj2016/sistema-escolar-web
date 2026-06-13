@@ -848,10 +848,9 @@ App.gerarDocumentoOficialPrint = async () => {
         
         // 1. CABEÇALHO ESTÁTICO E PROTEGIDO
         const docHeader = `
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #333; padding-bottom:15px; margin-bottom:15px; flex-wrap:wrap; gap:15px;">
                 <div style="display:flex; align-items:center; gap:20px;">${logo}<div><h2 style="margin:0; text-transform:uppercase; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#555;">CNPJ: ${App.escapeHTML(escola.cnpj)}<br>${App.escapeHTML(enderecoFormatado)}</div></div></div>
-                <div style="text-align:right;">
-<div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
+                <div style="text-align:right;"><div><b>${tipo === 'contrato' ? 'CONTRATO DE SERVIÇOS' : 'DECLARAÇÃO DE MATRÍCULA'}</b></div><div style="font-size:10px; color:#999;">Emissão: ${dataHojeSimples}</div></div>
             </div>`;
 
         // 2. BARRA DE FERRAMENTAS DO EDITOR (Limpa e com Dropdown)
@@ -890,13 +889,12 @@ App.gerarDocumentoOficialPrint = async () => {
 
         let corpoTexto = '';
         let docFooter = '';
+        let numPaginacaoHtml = '';
 
         // 3. O CORPO DO TEXTO (Que vai dentro do Editor)
         if (tipo === 'contrato') {
             corpoTexto = `
-                    <h2 style="text-align: center; margin-top: 20px; margin-bottom: 30px; text-transform: uppercase; font-family: Arial, sans-serif;">Contrato de Serviços</h2>
-
-                    <div style="text-align: justify; margin-top: 10px; font-size:14px; font-family: Arial, sans-serif;">
+                <div style="text-align: justify; margin-top: 5px; font-size:14px; font-family: Arial, sans-serif;">
                     Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
                     inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
                     <b>${App.escapeHTML(aluno.nome)}</b>, portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b> e RG nº <b>${App.escapeHTML(aluno.rg || '___________')}</b>, 
@@ -904,47 +902,53 @@ App.gerarDocumentoOficialPrint = async () => {
                     ${App.escapeHTML(aluno.cidade || '')}/${App.escapeHTML(aluno.estado || '')}, doravante denominado(a) <b>CONTRATANTE</b>.
                 </div>
 
-                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
+                <h4 style="margin-top:20px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA PRIMEIRA - DO OBJETO</h4>
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">O presente contrato tem como objeto a prestação de serviços educacionais por parte da CONTRATADA ao CONTRATANTE, referente ao curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, a ser ministrado na turma <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>.</div>
 
-                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
+                <h4 style="margin-top:20px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA SEGUNDA - DOS VALORES E FORMA DE PAGAMENTO</h4>
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Pelos serviços educacionais prestados, o CONTRATANTE pagará à CONTRATADA a mensalidade no valor estipulado de <b>R$ ${valorFmt}</b>, com vencimento programado para todo dia <b>${App.escapeHTML(diaVencimento)}</b> de cada mês. O atraso no pagamento sujeitará o CONTRATANTE a multas e juros moratórios conforme a legislação vigente.</div>
 
-                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
+                <h4 style="margin-top:20px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA TERCEIRA - DAS RESPONSABILIDADES</h4>
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">É responsabilidade do CONTRATANTE zelar pelo patrimônio da instituição, além de manter o mínimo de 75% de frequência nas aulas. A CONTRATADA compromete-se a fornecer o material pedagógico e o corpo docente adequado para o perfeito desenvolvimento das aulas.</div>
 
-                <h4 style="margin-top:25px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
+                <h4 style="margin-top:20px; margin-bottom: 5px; font-family: Arial, sans-serif;">CLÁUSULA QUARTA - DISPOSIÇÕES GERAIS</h4>
                 <div style="text-align: justify; margin-top:0; font-size:14px; font-family: Arial, sans-serif;">Este contrato tem validade a partir da data de sua assinatura. As partes elegem o foro da comarca da sede da CONTRATADA para dirimir quaisquer dúvidas ou litígios oriundos deste instrumento, renunciando a qualquer outro, por mais privilegiado que seja.</div>
             `;
             
+            // 💡 MARGENS REDUZIDAS PARA O CONTRATO
             docFooter = `
-                <div style="text-align: right; margin-top: 50px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
-                <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
-                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
+                <div style="text-align: right; margin-top: 15px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 30px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
+                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 5px; font-size:12px;">
                         <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
                     </div>
-                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 10px; font-size:12px;">
+                    <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 5px; font-size:12px;">
                         <b>${App.escapeHTML(aluno.nome)}</b><br>CONTRATANTE
                     </div>
                 </div>
             `;
+
+            // Elemento fixo que simula a paginação no canto inferior em navegadores suportados
+            numPaginacaoHtml = `<div class="rodape-paginacao"></div>`;
+
         } else if (tipo === 'declaracao') {
             corpoTexto = `
-                <h2 style="text-align: center; margin-top: 20px; margin-bottom: 30px; text-transform: uppercase; font-family: Arial, sans-serif;">Declaração de Matrícula</h2>
+                <h2 style="text-align: center; margin-top: 10px; margin-bottom: 20px; text-transform: uppercase; font-family: Arial, sans-serif;">Declaração de Matrícula</h2>
                 
-                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px; font-family: Arial, sans-serif;">
+                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 20px; font-family: Arial, sans-serif;">
                     Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
                     encontra-se regularmente matriculado(a) e frequentando o curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> 
                     (Turma: <b>${App.escapeHTML(aluno.turma || 'Não especificada')}</b>) nesta instituição de ensino.
                 </div>
                 
-                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 40px; font-family: Arial, sans-serif;">
+                <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 30px; font-family: Arial, sans-serif;">
                     Esta declaração é emitida a pedido do(a) interessado(a) para que produza os seus efeitos legais.
                 </div>
             `;
             
+            // 💡 MARGENS REDUZIDAS PARA A DECLARAÇÃO
             docFooter = `
-                <div style="text-align: right; font-size: 14px; margin-bottom: 60px; margin-top: 40px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; font-size: 14px; margin-bottom: 30px; margin-top: 15px; font-family: Arial, sans-serif;">
                     ${localDataCompleta}
                 </div>
                 
@@ -958,7 +962,7 @@ App.gerarDocumentoOficialPrint = async () => {
         const painelImpressao = `
             <div class="no-print" style="text-align:center; margin-bottom:20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:15px 30px; background:#27ae60; border:none; border-radius:8px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3); cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#219a52'" onmouseout="this.style.background='#27ae60'">🖨️ CONFIRMAR E IMPRIMIR DOCUMENTO</button>
-                <div style="font-size: 12px; color: #7f8c8d;">Pode editar o texto abaixo livremente. O editor e os botões desaparecerão na folha impressa.</div>
+                <div style="font-size: 12px; color: #7f8c8d;">Pode editar o texto abaixo livremente. As margens foram reduzidas para otimização de folha.</div>
             </div>
         `;
 
@@ -966,30 +970,69 @@ App.gerarDocumentoOficialPrint = async () => {
         printContainer.innerHTML = `
             ${reportStyles}
             ${painelImpressao}
-            <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; display:flex; flex-direction:column; min-height: 297mm; position: relative; padding: 40px;">
+            <div class="print-sheet" style="font-family: Arial, sans-serif; color: #000; display:flex; flex-direction:column; position: relative; padding: 40px; min-height: 200mm;">
                 
                 <div class="header-estatico">
                     ${docHeader}
                 </div>
                 
                 ${editorToolbar}
-                <div id="editor-documento" contenteditable="true" style="cursor: text; border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 20px; outline: none; background: #fff; min-height: 200px; line-height: 1.6; margin-bottom: 20px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
+                <div id="editor-documento" contenteditable="true" style="cursor: text; border: 1px solid #ccc; border-top: none; border-radius: 0 0 5px 5px; padding: 15px; outline: none; background: #fff; min-height: 100px; line-height: 1.6; margin-bottom: 10px; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'; this.style.boxShadow='0 0 5px rgba(52,152,219,0.3)'" onblur="this.style.borderColor='#ccc'; this.style.boxShadow='none'">
                     ${corpoTexto}
                 </div>
                 
                 <div class="footer-estatico" style="margin-top: auto;">
                     ${docFooter}
                 </div>
+
+                ${numPaginacaoHtml}
             </div>
         `;
         
-        // CSS Dinâmico: Na hora de imprimir, as bordas do editor desaparecem
+        // CSS Dinâmico: Impressão e Paginação
         let style = document.createElement('style'); 
+        
+        // Regra para criar e incrementar a página (Ativo apenas no contrato)
+        let cssPaginacao = '';
+        if (tipo === 'contrato') {
+            cssPaginacao = `
+                /* Define a contagem base na impressão */
+                body { counter-reset: pagina; }
+                
+                /* Configuração oficial Paged Media (W3C Standard) */
+                @page {
+                    @bottom-right {
+                        content: "Página " counter(page);
+                        font-family: Arial, sans-serif;
+                        font-size: 10px;
+                        color: #555;
+                    }
+                }
+                
+                /* Fallback para navegadores modernos (Chrome/Edge) */
+                .rodape-paginacao {
+                    display: block !important;
+                    position: fixed;
+                    bottom: 10mm;
+                    right: 15mm;
+                    font-size: 11px;
+                    color: #555;
+                }
+                .rodape-paginacao::after {
+                    counter-increment: pagina;
+                    content: "Página " counter(pagina);
+                }
+            `;
+        }
+
         style.innerHTML = `
+            .rodape-paginacao { display: none; }
+            
             @media print { 
-                @page { size: A4 portrait; margin: 15mm; }
-                #editor-documento { border: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
-                .print-sheet { box-shadow: none !important; padding: 0 !important; }
+                @page { size: A4 portrait; margin: 15mm 15mm 20mm 15mm; }
+                #editor-documento { border: none !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; min-height: auto !important; }
+                .print-sheet { box-shadow: none !important; padding: 0 !important; min-height: auto !important; }
+                ${cssPaginacao}
             }
         `; 
         printContainer.appendChild(style);
