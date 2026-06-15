@@ -896,7 +896,7 @@ App.gerarDocumentoOficialPrint = async () => {
         // 3. O CORPO DO TEXTO (Que vai dentro do Editor)
         if (tipo === 'contrato') {
             corpoTexto = `
-                <h2 style="text-align: center; margin-top: 50px; margin-bottom: 50px; text-transform: uppercase; font-family: Arial, sans-serif;">Contrato de Serviços</h2>
+                <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase; font-family: Arial, sans-serif;">Contrato de Serviços</h2>
                 <div style="text-align: justify; margin-top: 5px; font-size:14px; font-family: Arial, sans-serif;">
                     Pelo presente instrumento particular, de um lado <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b>, 
                     inscrita no CNPJ sob o nº <b>${App.escapeHTML(escola.cnpj || '00.000.000/0000-00')}</b>, doravante denominada <b>CONTRATADA</b>, e de outro lado 
@@ -920,8 +920,8 @@ App.gerarDocumentoOficialPrint = async () => {
             
             // 💡 MARGENS REDUZIDAS PARA O CONTRATO
             docFooter = `
-                <div style="text-align: right; margin-top: 60px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
-                <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; margin-top: 50px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
+                <div style="display: flex; justify-content: space-between; margin-top: 50px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
                     <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 5px; font-size:12px;">
                         <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
                     </div>
@@ -936,7 +936,7 @@ App.gerarDocumentoOficialPrint = async () => {
 
         } else if (tipo === 'declaracao') {
             corpoTexto = `
-                <h2 style="text-align: center; margin-top: 50px; margin-bottom: 50px; text-transform: uppercase; font-family: Arial, sans-serif;">Declaração de Matrícula</h2>
+                <h2 style="text-align: center; margin-top: 40px; margin-bottom: 40px; text-transform: uppercase; font-family: Arial, sans-serif;">Declaração de Matrícula</h2>
                 
                 <div style="text-align: justify; font-size: 16px; line-height: 2; margin-bottom: 20px; font-family: Arial, sans-serif;">
                     Declaramos para os devidos fins que <b>${App.escapeHTML(aluno.nome)}</b>, inscrito(a) no CPF sob o nº <b>${App.escapeHTML(aluno.cpf || '___________')}</b>, 
@@ -951,7 +951,7 @@ App.gerarDocumentoOficialPrint = async () => {
             
             // 💡 MARGENS REDUZIDAS PARA A DECLARAÇÃO
             docFooter = `
-                <div style="text-align: right; font-size: 14px; margin-bottom: 80px; margin-top: 60px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; font-size: 14px; margin-bottom: 70px; margin-top: 60px; font-family: Arial, sans-serif;">
                     ${localDataCompleta}
                 </div>
                 
