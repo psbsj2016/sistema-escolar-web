@@ -1089,7 +1089,7 @@ App.gerarDocumentoOficialPrint = async () => {
                 }
                 .rodape-paginacao::after {
                     counter-increment: pagina;
-                    content: "Página " counter(pagina);
+                    content: "Páginação " counter(pagina);
                 }
             `;
         }
