@@ -948,7 +948,7 @@ App.gerarDocumentoOficialPrint = async () => {
             
             // 💡 MARGENS REDUZIDAS PARA A DECLARAÇÃO
             docFooter = `
-                <div style="text-align: right; font-size: 14px; margin-bottom: 10px; margin-top: 10px; font-family: Arial, sans-serif;">
+                <div style="text-align: right; font-size: 14px; margin-bottom: 50px; margin-top: 10px; font-family: Arial, sans-serif;">
                     ${localDataCompleta}
                 </div>
                 
