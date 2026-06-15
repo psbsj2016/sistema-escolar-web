@@ -76,17 +76,13 @@ App.renderizarSelecaoRelatorio = async () => {
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar períodos disponíveis... ⏳</p>';
     
     try {
-        // 🧠 A MÁGICA: Vai buscar todo o histórico financeiro
         const financeiro = await App.api('/financeiro');
-        
         let anosSet = new Set();
         const anoAtual = new Date().getFullYear();
         
-        // Garante que o ano atual e o próximo existem sempre (mesmo sem lançamentos)
         anosSet.add(anoAtual);
         anosSet.add(anoAtual + 1); 
         
-        // Varre todos os registos à procura de anos antigos
         financeiro.forEach(f => {
             if (f.vencimento) {
                 const anoVenc = parseInt(f.vencimento.split('-')[0]);
@@ -98,28 +94,30 @@ App.renderizarSelecaoRelatorio = async () => {
             }
         });
         
-        // Ordena os anos do mais recente para o mais antigo (ex: 2027, 2026, 2025, 2024...)
         const anosOrdenados = Array.from(anosSet).sort((a, b) => b - a);
-        
-        // Monta os botões de seleção
         const opAnos = anosOrdenados.map(ano => `<option value="${ano}" ${ano === anoAtual ? 'selected' : ''}>${ano}</option>`).join('');
 
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
 
+        // 🧠 NOVO: Dropdown de Filtro Inteligente (Auditoria)
+        const opFiltro = `
+            <option value="padrao" selected>🌟 Mostrar Todos Ativos (Ocultar Excluídos/Teste)</option>
+            <option value="pagos">✅ Somente Pagos (Alunos Ativos)</option>
+            <option value="pendentes">⚠️ Somente Pendentes (Alunos Ativos)</option>
+            <option value="excluidos">🗑️ Somente Alunos Excluídos / Inativos / Teste</option>
+            <option value="tudo">🛑 Mostrar Absolutamente TUDO (Sem Filtro)</option>
+        `;
+
         const formHTML = `
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
                 <span style="font-size:24px;">🗓️</span><h2 style="margin:0; color:#2c3e50;">Selecionar Período</h2>
             </div>
-            <p style="color:#666; margin-bottom:20px;">Selecione o ano base para emitir os relatórios financeiros.</p>
+            <p style="color:#666; margin-bottom:20px;">Selecione o ano base e aplique os filtros para emitir os relatórios financeiros.</p>
             
-            ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="margin-bottom:25px; background:white; padding:12px; font-size:16px;"')}
-            
-            <div style="background: #fdf2f2; border: 1px dashed #f5b7b1; padding: 12px; border-radius: 6px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; text-align: left;">
-                <input type="checkbox" id="filtro-auditoria-limpa" checked style="width: 18px; height: 18px; cursor: pointer;">
-                <label for="filtro-auditoria-limpa" style="font-size: 13px; color: #c0392b; font-weight: bold; cursor: pointer; user-select: none;">
-                    🛡️ Ocultar alunos excluídos, inativos ou contas de "Teste"
-                </label>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:25px;">
+                ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="background:white; padding:12px; font-size:16px;"')}
+                ${relSelect('🛡️ Filtro de Auditoria:', 'filtro-auditoria', opFiltro, 'style="background:#fdf2f2; border:2px solid #f5b7b1; padding:12px; font-size:14px; font-weight:bold; color:#c0392b;"')}
             </div>
             
             <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
@@ -144,10 +142,10 @@ App.renderizarSelecaoRelatorio = async () => {
 
 App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
-    const ocultarLixo = document.getElementById('filtro-auditoria-limpa') ? document.getElementById('filtro-auditoria-limpa').checked : false;
+    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'padrao';
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório anual...</p>';
+    
     try {
-        // Buscamos o financeiro, a escola e a lista de alunos em paralelo para cruzar os dados
         const [financeiro, escola, alunos] = await Promise.all([
             App.api('/financeiro'),
             App.api('/escola') || { nome: 'ESCOLA', cnpj: '' },
@@ -156,33 +154,42 @@ App.gerarRelatorioAnual = async () => {
         
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         
-        // Mapeia os alunos por ID para sabermos o status deles em tempo recorde (O(1))
-        const mapaAlunosStatus = {};
-        alunos.forEach(a => { mapaAlunosStatus[a.id] = a.status ? a.status.toLowerCase() : 'ativo'; });
+        // 🧠 MOTOR DE DETEÇÃO AGRESSIVA: Mapeia por ID E por Nome para não escapar ninguém
+        const mapaStatusId = {};
+        const mapaStatusNome = {};
+        alunos.forEach(a => { 
+            const s = a.status ? a.status.toLowerCase() : 'ativo';
+            mapaStatusId[a.id] = s; 
+            if (a.nome) mapaStatusNome[a.nome.toLowerCase().trim()] = s;
+        });
 
         let dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano));
         
-        // 🛡️ A MÁGICA DA AUDITORIA: Filtra contas descartáveis se o checkbox estiver ativo
-        if (ocultarLixo) {
-            dados = dados.filter(f => {
-                // Se não tem ID de aluno, mantém (pode ser uma receita geral da escola)
-                if (!f.idAluno) return true; 
-                
-                const statusAluno = mapaAlunosStatus[f.idAluno] || 'ativo';
-                const nomeAluno = (f.alunoNome || '').toLowerCase();
-                
-                // Exclui se o aluno estiver inativo/excluído ou se o nome contiver "teste"
-                if (statusAluno === 'excluído' || statusAluno === 'inativo' || nomeAluno.includes('teste')) {
-                    return false;
-                }
-                return true;
-            });
-        }
+        // 🛡️ APLICAÇÃO DO FILTRO INTELIGENTE
+        dados = dados.filter(f => {
+            let statusAluno = 'ativo'; 
+            
+            if (f.idAluno && mapaStatusId[f.idAluno]) {
+                statusAluno = mapaStatusId[f.idAluno];
+            } else if (f.alunoNome && mapaStatusNome[f.alunoNome.toLowerCase().trim()]) {
+                statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
+            }
 
-        // Ordena os dados limpos por data de vencimento
+            const nomeText = (f.alunoNome || '').toLowerCase();
+            const isLixo = statusAluno === 'excluído' || statusAluno === 'inativo' || nomeText.includes('teste');
+            const isPago = f.status === 'Pago';
+
+            if (filtroSelecionado === 'pagos') return isPago && !isLixo;
+            if (filtroSelecionado === 'pendentes') return !isPago && !isLixo;
+            if (filtroSelecionado === 'excluidos') return isLixo;
+            if (filtroSelecionado === 'tudo') return true;
+            
+            // 'padrao' -> Retorna todos os ativos (pagos e pendentes), ocultando lixo
+            return !isLixo;
+        });
+
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
-        // 🛡️ CORREÇÃO: Pega o valor real pago (incluindo divisões e juros)
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
 
         const totalLancado = dados.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
@@ -221,6 +228,7 @@ App.gerarRelatorioAnual = async () => {
                             <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">RECEBIDO</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">PENDENTE</th></tr>
                         </thead>
                         <tbody>
+                            ${dados.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding:20px;">Nenhum registo encontrado para este filtro.</td></tr>' : ''}
                             ${dados.map(f => { 
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'ABERTO';
@@ -240,7 +248,7 @@ App.gerarRelatorioAnual = async () => {
 App.gerarRelatorioMensal = async () => {
     const ano = document.getElementById('rel-ano').value;
     const mesIdx = parseInt(document.getElementById('rel-mes').value);
-    const ocultarLixo = document.getElementById('filtro-auditoria-limpa') ? document.getElementById('filtro-auditoria-limpa').checked : false;
+    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'padrao';
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório mensal...</p>';
     const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
     const mesNome = meses[mesIdx - 1];
@@ -254,8 +262,13 @@ App.gerarRelatorioMensal = async () => {
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
         
-        const mapaAlunosStatus = {};
-        alunos.forEach(a => { mapaAlunosStatus[a.id] = a.status ? a.status.toLowerCase() : 'ativo'; });
+        const mapaStatusId = {};
+        const mapaStatusNome = {};
+        alunos.forEach(a => { 
+            const s = a.status ? a.status.toLowerCase() : 'ativo';
+            mapaStatusId[a.id] = s; 
+            if (a.nome) mapaStatusNome[a.nome.toLowerCase().trim()] = s;
+        });
 
         let dados = financeiro.filter(f => { 
             if(!f.vencimento) return false; 
@@ -263,22 +276,29 @@ App.gerarRelatorioMensal = async () => {
             return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; 
         });
 
-        // 🛡️ Filtro de auditoria limpa para o mensal
-        if (ocultarLixo) {
-            dados = dados.filter(f => {
-                if (!f.idAluno) return true;
-                const statusAluno = mapaAlunosStatus[f.idAluno] || 'ativo';
-                const nomeAluno = (f.alunoNome || '').toLowerCase();
-                if (statusAluno === 'excluído' || statusAluno === 'inativo' || nomeAluno.includes('teste')) {
-                    return false;
-                }
-                return true;
-            });
-        }
+        // 🛡️ APLICAÇÃO DO FILTRO INTELIGENTE NO MENSAL
+        dados = dados.filter(f => {
+            let statusAluno = 'ativo';
+            if (f.idAluno && mapaStatusId[f.idAluno]) {
+                statusAluno = mapaStatusId[f.idAluno];
+            } else if (f.alunoNome && mapaStatusNome[f.alunoNome.toLowerCase().trim()]) {
+                statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
+            }
+
+            const nomeText = (f.alunoNome || '').toLowerCase();
+            const isLixo = statusAluno === 'excluído' || statusAluno === 'inativo' || nomeText.includes('teste');
+            const isPago = f.status === 'Pago';
+
+            if (filtroSelecionado === 'pagos') return isPago && !isLixo;
+            if (filtroSelecionado === 'pendentes') return !isPago && !isLixo;
+            if (filtroSelecionado === 'excluidos') return isLixo;
+            if (filtroSelecionado === 'tudo') return true;
+            
+            return !isLixo;
+        });
 
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
-        // 🛡️ CORREÇÃO: Lógica segura de valores
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
 
         const previsao = dados.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
@@ -317,6 +337,7 @@ App.gerarRelatorioMensal = async () => {
                             <tr><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">VENCIMENTO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">ALUNO</th><th style="padding:10px; text-align:left; border-bottom:1px solid #ddd;">DESCRIÇÃO DO PRODUTO</th><th style="padding:10px; text-align:center; border-bottom:1px solid #ddd;">STATUS / FORMA</th><th style="padding:10px; text-align:right; border-bottom:1px solid #ddd;">VALOR</th></tr>
                         </thead>
                         <tbody>
+                            ${dados.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:20px;">Nenhum registo encontrado para este filtro.</td></tr>' : ''}
                             ${dados.map(f => { 
                                 const isPago = f.status === 'Pago'; 
                                 let textoStatus = isPago ? 'PAGO' : 'PENDENTE';
@@ -1061,38 +1082,7 @@ App.gerarDocumentoOficialPrint = async () => {
         // CSS Dinâmico: Impressão e Paginação
         let style = document.createElement('style'); 
         
-        // Regra para criar e incrementar a página (Ativo apenas no contrato)
-        let cssPaginacao = '';
-        if (tipo === 'contrato') {
-            cssPaginacao = `
-                /* Define a contagem base na impressão */
-                body { counter-reset: pagina; }
-                
-                /* Configuração oficial Paged Media (W3C Standard) */
-                @page {
-                    @bottom-right {
-                        content: "Página " counter(page);
-                        font-family: Arial, sans-serif;
-                        font-size: 10px;
-                        color: #555;
-                    }
-                }
-                
-                /* Fallback para navegadores modernos (Chrome/Edge) */
-                .rodape-paginacao {
-                    display: block !important;
-                    position: fixed;
-                    bottom: 10mm;
-                    right: 15mm;
-                    font-size: 11px;
-                    color: #555;
-                }
-                .rodape-paginacao::after {
-                    counter-increment: pagina;
-                    content: "Páginação " counter(pagina);
-                }
-            `;
-        }
+     
 
         style.innerHTML = `
             .rodape-paginacao { display: none; }
