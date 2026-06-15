@@ -1108,8 +1108,39 @@ App.gerarDocumentoOficialPrint = async () => {
         // CSS Dinâmico: Impressão e Paginação
         let style = document.createElement('style'); 
         
+        // Regra para criar e incrementar a página (Ativo apenas no contrato)
+        let cssPaginacao = '';
+        if (tipo === 'contrato') {
+            cssPaginacao = `
+                /* Define a contagem base na impressão */
+                body { counter-reset: pagina; }
+                
+                /* Configuração oficial Paged Media (W3C Standard) */
+                @page {
+                    @bottom-right {
+                        content: "Página " counter(page);
+                        font-family: Arial, sans-serif;
+                        font-size: 10px;
+                        color: #555;
+                    }
+                }
+                
+                /* Fallback para navegadores modernos (Chrome/Edge) */
+                .rodape-paginacao {
+                    display: block !important;
+                    position: fixed;
+                    bottom: 10mm;
+                    right: 15mm;
+                    font-size: 11px;
+                    color: #555;
+                }
+                .rodape-paginacao::after {
+                    counter-increment: pagina;
+                    content: "Página " counter(pagina);
+                }
+            `;
+        }
      
-
         style.innerHTML = `
             .rodape-paginacao { display: none; }
             
