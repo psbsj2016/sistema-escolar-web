@@ -1,5 +1,5 @@
 // Use apenas esta declaração segura
-const API_URL = 'http://localhost:3000'; // Muda consoante a porta do teu backend
+const API_URL = '/api'
 
 let cacheClientes = [];
 
