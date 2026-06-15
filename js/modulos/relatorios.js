@@ -115,6 +115,13 @@ App.renderizarSelecaoRelatorio = async () => {
             
             ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="margin-bottom:25px; background:white; padding:12px; font-size:16px;"')}
             
+            <div style="background: #fdf2f2; border: 1px dashed #f5b7b1; padding: 12px; border-radius: 6px; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; text-align: left;">
+                <input type="checkbox" id="filtro-auditoria-limpa" checked style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="filtro-auditoria-limpa" style="font-size: 13px; color: #c0392b; font-weight: bold; cursor: pointer; user-select: none;">
+                    🛡️ Ocultar alunos excluídos, inativos ou contas de "Teste"
+                </label>
+            </div>
+            
             <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
                 📄 RELATÓRIO GERAL DO ANO TODO <span>➜</span>
             </button>
@@ -137,12 +144,43 @@ App.renderizarSelecaoRelatorio = async () => {
 
 App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
+    const ocultarLixo = document.getElementById('filtro-auditoria-limpa') ? document.getElementById('filtro-auditoria-limpa').checked : false;
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório anual...</p>';
     try {
-        const financeiro = await App.api('/financeiro');
-        const escola = await App.api('/escola') || { nome: 'ESCOLA', cnpj: '' };
+        // Buscamos o financeiro, a escola e a lista de alunos em paralelo para cruzar os dados
+        const [financeiro, escola, alunos] = await Promise.all([
+            App.api('/financeiro'),
+            App.api('/escola') || { nome: 'ESCOLA', cnpj: '' },
+            App.api('/alunos') || []
+        ]);
+        
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
-        const dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano)).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        
+        // Mapeia os alunos por ID para sabermos o status deles em tempo recorde (O(1))
+        const mapaAlunosStatus = {};
+        alunos.forEach(a => { mapaAlunosStatus[a.id] = a.status ? a.status.toLowerCase() : 'ativo'; });
+
+        let dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano));
+        
+        // 🛡️ A MÁGICA DA AUDITORIA: Filtra contas descartáveis se o checkbox estiver ativo
+        if (ocultarLixo) {
+            dados = dados.filter(f => {
+                // Se não tem ID de aluno, mantém (pode ser uma receita geral da escola)
+                if (!f.idAluno) return true; 
+                
+                const statusAluno = mapaAlunosStatus[f.idAluno] || 'ativo';
+                const nomeAluno = (f.alunoNome || '').toLowerCase();
+                
+                // Exclui se o aluno estiver inativo/excluído ou se o nome contiver "teste"
+                if (statusAluno === 'excluído' || statusAluno === 'inativo' || nomeAluno.includes('teste')) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // Ordena os dados limpos por data de vencimento
+        dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
         // 🛡️ CORREÇÃO: Pega o valor real pago (incluindo divisões e juros)
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
@@ -202,15 +240,43 @@ App.gerarRelatorioAnual = async () => {
 App.gerarRelatorioMensal = async () => {
     const ano = document.getElementById('rel-ano').value;
     const mesIdx = parseInt(document.getElementById('rel-mes').value);
+    const ocultarLixo = document.getElementById('filtro-auditoria-limpa') ? document.getElementById('filtro-auditoria-limpa').checked : false;
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório mensal...</p>';
     const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
     const mesNome = meses[mesIdx - 1];
 
     try {
-        const financeiro = await App.api('/financeiro');
-        const escola = await App.api('/escola') || { nome: 'ESCOLA', cnpj: '' };
+        const [financeiro, escola, alunos] = await Promise.all([
+            App.api('/financeiro'),
+            App.api('/escola') || { nome: 'ESCOLA', cnpj: '' },
+            App.api('/alunos') || []
+        ]);
+
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
-        const dados = financeiro.filter(f => { if(!f.vencimento) return false; const d = new Date(f.vencimento + 'T00:00:00'); return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; }).sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        
+        const mapaAlunosStatus = {};
+        alunos.forEach(a => { mapaAlunosStatus[a.id] = a.status ? a.status.toLowerCase() : 'ativo'; });
+
+        let dados = financeiro.filter(f => { 
+            if(!f.vencimento) return false; 
+            const d = new Date(f.vencimento + 'T00:00:00'); 
+            return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; 
+        });
+
+        // 🛡️ Filtro de auditoria limpa para o mensal
+        if (ocultarLixo) {
+            dados = dados.filter(f => {
+                if (!f.idAluno) return true;
+                const statusAluno = mapaAlunosStatus[f.idAluno] || 'ativo';
+                const nomeAluno = (f.alunoNome || '').toLowerCase();
+                if (statusAluno === 'excluído' || statusAluno === 'inativo' || nomeAluno.includes('teste')) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
         
         // 🛡️ CORREÇÃO: Lógica segura de valores
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
