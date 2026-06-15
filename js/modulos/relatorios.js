@@ -387,8 +387,8 @@ App.gerarDossie = async () => {
     let prevMesIdx = mesIdx - 1;
     let prevAno = parseInt(ano);
     if (prevMesIdx === 0) {
-        prevMesIdx = 12; // Volta para Dezembro
-        prevAno = prevAno - 1; // Recua um ano
+        prevMesIdx = 12; 
+        prevAno = prevAno - 1; 
     }
     const nomeMesAnterior = mesesArray[prevMesIdx - 1];
 
@@ -439,18 +439,65 @@ App.gerarDossie = async () => {
 
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
         const alunosCurso = {}; cursos.forEach(c => alunosCurso[c.nome] = 0);
+        
+        // 🧠 NOVO: MOTOR DEMOGRÁFICO DE ALTA PRECISÃO
+        const demoStats = {
+            ativo: { total: 0, masc: 0, fem: 0, color: '#27ae60', label: '🟢 Ativos' },
+            trancado: { total: 0, masc: 0, fem: 0, color: '#f39c12', label: '⏸️ Trancados' },
+            cancelado: { total: 0, masc: 0, fem: 0, color: '#d35400', label: '🛑 Cancelados' },
+            excluido: { total: 0, masc: 0, fem: 0, color: '#c0392b', label: '🗑️ Excluídos' }
+        };
+        const paises = {};
+
         alunos.forEach(a => { 
             if(a.turma && alunosTurma[a.turma] !== undefined) alunosTurma[a.turma]++; 
             if(a.curso && alunosCurso[a.curso] !== undefined) alunosCurso[a.curso]++;
-        });
-        
-        const masc = alunos.filter(a => a.sexo === 'Masculino').length;
-        const fem = alunos.filter(a => a.sexo === 'Feminino').length;
-        const totalSexo = masc + fem || 1;
-        const percMasc = ((masc / totalSexo) * 100).toFixed(1);
-        const percFem = ((fem / totalSexo) * 100).toFixed(1);
 
-        // 💰 NOVO: CÁLCULO DE INADIMPLÊNCIA MENSAL (Substitui a lista gigante)
+            // 1. Agrupamento por Status
+            let st = (a.status || 'ativo').toLowerCase().trim();
+            if (st.includes('exclu')) st = 'excluido';
+            else if (st.includes('cancel')) st = 'cancelado';
+            else if (st.includes('tranc')) st = 'trancado';
+            else st = 'ativo';
+
+            // 2. Contagem de Género
+            if (demoStats[st]) {
+                demoStats[st].total++;
+                if (a.sexo === 'Masculino') demoStats[st].masc++;
+                else if (a.sexo === 'Feminino') demoStats[st].fem++;
+            }
+
+            // 3. Contagem de País
+            let pais = (a.pais || a.nacionalidade || 'Brasil').trim().toUpperCase();
+            if (pais === '') pais = 'BRASIL';
+            paises[pais] = (paises[pais] || 0) + 1;
+        });
+
+        // Construtor Visual dos Cartões Demográficos
+        let htmlDemografia = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom: 25px;">`;
+        Object.keys(demoStats).forEach(k => {
+            const s = demoStats[k];
+            const pMasc = s.total > 0 ? ((s.masc / s.total) * 100).toFixed(0) : 0;
+            const pFem = s.total > 0 ? ((s.fem / s.total) * 100).toFixed(0) : 0;
+            
+            htmlDemografia += `
+                <div style="background:#fff; border:1px solid #eee; border-top:4px solid ${s.color}; border-radius:8px; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-transform:uppercase; margin-bottom:10px;">${s.label}</div>
+                    <div style="font-size:28px; font-weight:900; color:${s.color}; margin-bottom:15px; line-height:1;">${s.total}</div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:8px; border-radius:5px; margin-bottom:5px;">
+                        <div style="font-size:11px; color:#555; display:flex; align-items:center; gap:5px;">👨 Masculino</div>
+                        <div style="font-weight:bold; color:#3498db; font-size:14px;">${s.masc} <span style="font-size:10px; color:#999; font-weight:normal;">(${pMasc}%)</span></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:8px; border-radius:5px;">
+                        <div style="font-size:11px; color:#555; display:flex; align-items:center; gap:5px;">👩 Feminino</div>
+                        <div style="font-weight:bold; color:#e74c3c; font-size:14px;">${s.fem} <span style="font-size:10px; color:#999; font-weight:normal;">(${pFem}%)</span></div>
+                    </div>
+                </div>
+            `;
+        });
+        htmlDemografia += `</div>`;
+
         const inadMesAtual = financeiro.filter(f => {
             if (f.status !== 'Pendente' || f.tipo !== 'Receita' || !f.vencimento) return false;
             const d = new Date(f.vencimento + 'T00:00:00');
@@ -552,7 +599,6 @@ App.gerarDossie = async () => {
                     </div>
                 </div>
 
-                <!-- 🌟 NOVO BLOCO: RESUMO DE INADIMPLÊNCIA EM DESTAQUE -->
                 <div class="d-box" style="background:#fdf2f2; border:2px solid #f5b7b1;">
                     <h3 style="margin-top:0; color:#c0392b; border-bottom:1px solid #f5b7b1; padding-bottom:10px; font-size:15px; display:flex; align-items:center; gap:8px;">
                         ⚠️ Indicador de Inadimplência
@@ -571,6 +617,17 @@ App.gerarDossie = async () => {
                             <div style="font-size:14px; color:#c0392b; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Mês Vigente (${nomeMes}/${ano})</div>
                             <div style="font-size:36px; font-weight:900; color:#c0392b;">${fmt(inadMesAtual)}</div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="d-box" style="background:#fcfcfc;">
+                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">👥 Demografia Estratégica (Status, Género e Origem)</h3>
+                    
+                    ${htmlDemografia}
+
+                    <div style="background:#fff; border:1px solid #eee; border-radius:8px; padding:20px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                        <h4 style="margin:0 0 15px 0; color:#2c3e50; font-size:13px; text-transform:uppercase; text-align:center;">🌎 Distribuição por País de Origem</h4>
+                        <div style="position: relative; height: 250px; width: 100%;"><canvas id="grafPais"></canvas></div>
                     </div>
                 </div>
 
@@ -598,28 +655,6 @@ App.gerarDossie = async () => {
                     </div>
                 </div>
 
-                <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">👥 Demografia dos Alunos</h3>
-                    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-around; gap:20px;">
-                        <div style="background:#f4f6f7; padding:20px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 120px;"><div style="display:flex; flex-direction:column; gap:10px;">
-                            <div style="background:#f4f6f7; padding:15px; border-radius:8px; text-align:center; border:1px solid #e9ecef; min-width: 140px;">
-                                <div style="font-size:28px; font-weight:bold; color:#27ae60; line-height:1; margin-bottom:5px;">${alunos.filter(a => !a.status || a.status === 'Ativo').length}</div>
-                                <div style="font-size:10px; font-weight:bold; color:#7f8c8d; text-transform:uppercase;">🟢 Ativos</div>
-                            </div>
-                            <div style="background:#fdf2f2; padding:10px; border-radius:8px; text-align:center; border:1px solid #f5b7b1; min-width: 140px;">
-                                <div style="font-size:20px; font-weight:bold; color:#e74c3c; line-height:1; margin-bottom:5px;">${alunos.filter(a => a.status && a.status !== 'Ativo').length}</div>
-                                <div style="font-size:10px; font-weight:bold; color:#c0392b; text-transform:uppercase;">🔴 Inativos (Evasão)</div>
-                            </div>
-                        </div>
-                        </div>
-                        <div style="position: relative; width: 140px; height: 140px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
-                        <div style="display:flex; flex-direction:column; gap:10px; min-width:180px;">
-                            <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:16px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percMasc}%</div></div>
-                            <div style="background:#fdedec; border-left:4px solid #e74c3c; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👩 Feminino</div><div style="font-size:16px; font-weight:bold; color:#e74c3c;">${fem}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percFem}%</div></div>
-                        </div>
-                    </div>
-                </div>
-
             </div>`;
 
         setTimeout(() => {
@@ -628,7 +663,28 @@ App.gerarDossie = async () => {
 
             if(Object.keys(formasMensalidade).length > 0 && document.getElementById('grafMensalidade')) { new Chart(document.getElementById('grafMensalidade'), { type: 'doughnut', data: { labels: Object.keys(formasMensalidade), datasets: [{ data: Object.values(formasMensalidade), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
             if(Object.keys(formasVenda).length > 0 && document.getElementById('grafVenda')) { new Chart(document.getElementById('grafVenda'), { type: 'doughnut', data: { labels: Object.keys(formasVenda), datasets: [{ data: Object.values(formasVenda), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
-            if(alunos.length > 0 && document.getElementById('grafDemografia')) { new Chart(document.getElementById('grafDemografia'), { type: 'doughnut', data: { labels: ['Masculino','Feminino'], datasets: [{ data: [masc, fem], backgroundColor: ['#3498db', '#e74c3c'], borderWidth: 0 }] }, options: chartOptions }); }
+            
+            // 🌎 Gráfico de Origem em Barras
+            if(Object.keys(paises).length > 0 && document.getElementById('grafPais')) { 
+                new Chart(document.getElementById('grafPais'), { 
+                    type: 'bar', 
+                    data: { 
+                        labels: Object.keys(paises), 
+                        datasets: [{ 
+                            label: 'Qtd. de Alunos',
+                            data: Object.values(paises), 
+                            backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6', '#34495e'], 
+                            borderRadius: 5 
+                        }] 
+                    }, 
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } 
+                    } 
+                }); 
+            }
         }, 300);
 
     } catch(e) { App.showToast("Erro ao gerar dossiê.", "error"); } finally { document.body.style.cursor = 'default'; }
