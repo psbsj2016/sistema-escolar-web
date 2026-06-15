@@ -72,7 +72,6 @@ const reportStyles = `
 App.renderizarSelecaoRelatorio = async () => {
     const div = document.getElementById('app-content');
     
-    // Mostra um aviso rápido enquanto "vasculha" a base de dados
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar períodos disponíveis... ⏳</p>';
     
     try {
@@ -100,13 +99,12 @@ App.renderizarSelecaoRelatorio = async () => {
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
 
-        // 🧠 NOVO: Dropdown de Filtro Inteligente (Auditoria)
+        // 🧠 NOVO: Dropdown de Filtro Inteligente com a Nova Nomenclatura
         const opFiltro = `
-            <option value="padrao" selected>🌟 Mostrar Todos Ativos (Ocultar Excluídos/Teste)</option>
-            <option value="pagos">✅ Somente Pagos (Alunos Ativos)</option>
-            <option value="pendentes">⚠️ Somente Pendentes (Alunos Ativos)</option>
-            <option value="excluidos">🗑️ Somente Alunos Excluídos / Inativos / Teste</option>
-            <option value="tudo">🛑 Mostrar Absolutamente TUDO (Sem Filtro)</option>
+            <option value="geral" selected>🌟 GERAL (Ativos, Trancados, Cancelados e Excluídos)</option>
+            <option value="pagos">✅ PAGOS (Somente cadastrados no sistema)</option>
+            <option value="pendentes">⚠️ PENDENTES (Somente cadastrados no sistema)</option>
+            <option value="excluidos">🗑️ EXCLUÍDOS (Dados de cadastros que não estão no sistema)</option>
         `;
 
         const formHTML = `
@@ -117,7 +115,7 @@ App.renderizarSelecaoRelatorio = async () => {
             
             <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:25px;">
                 ${relSelect('Selecione o Ano Base:', 'rel-ano', opAnos, 'style="background:white; padding:12px; font-size:16px;"')}
-                ${relSelect('🛡️ Filtro de Auditoria:', 'filtro-auditoria', opFiltro, 'style="background:#fdf2f2; border:2px solid #f5b7b1; padding:12px; font-size:14px; font-weight:bold; color:#c0392b;"')}
+                ${relSelect('🛡️ Filtro de Exibição:', 'filtro-auditoria', opFiltro, 'style="background:#fdf2f2; border:2px solid #f5b7b1; padding:12px; font-size:14px; font-weight:bold; color:#c0392b;"')}
             </div>
             
             <button onclick="App.gerarRelatorioAnual()" style="width:100%; padding:15px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(142,68,173,0.3);">
@@ -142,7 +140,7 @@ App.renderizarSelecaoRelatorio = async () => {
 
 App.gerarRelatorioAnual = async () => {
     const ano = document.getElementById('rel-ano').value;
-    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'padrao';
+    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'geral';
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório anual...</p>';
     
     try {
@@ -165,9 +163,9 @@ App.gerarRelatorioAnual = async () => {
 
         let dados = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano));
         
-        // 🛡️ APLICAÇÃO DO FILTRO INTELIGENTE
+        // 🛡️ APLICAÇÃO DO NOVO FILTRO INTELIGENTE
         dados = dados.filter(f => {
-            let statusAluno = 'ativo'; 
+            let statusAluno = 'desconhecido'; // Presume que não existe na base até provar o contrário
             
             if (f.idAluno && mapaStatusId[f.idAluno]) {
                 statusAluno = mapaStatusId[f.idAluno];
@@ -175,17 +173,15 @@ App.gerarRelatorioAnual = async () => {
                 statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
             }
 
-            const nomeText = (f.alunoNome || '').toLowerCase();
-            const isLixo = statusAluno === 'excluído' || statusAluno === 'inativo' || nomeText.includes('teste');
+            const isExcluido = statusAluno === 'excluído' || statusAluno === 'desconhecido';
             const isPago = f.status === 'Pago';
 
-            if (filtroSelecionado === 'pagos') return isPago && !isLixo;
-            if (filtroSelecionado === 'pendentes') return !isPago && !isLixo;
-            if (filtroSelecionado === 'excluidos') return isLixo;
-            if (filtroSelecionado === 'tudo') return true;
+            if (filtroSelecionado === 'pagos') return isPago && !isExcluido;
+            if (filtroSelecionado === 'pendentes') return !isPago && !isExcluido;
+            if (filtroSelecionado === 'excluidos') return isExcluido;
+            if (filtroSelecionado === 'geral') return true; // Mostra tudo (Ativos, Trancados, Excluídos, etc)
             
-            // 'padrao' -> Retorna todos os ativos (pagos e pendentes), ocultando lixo
-            return !isLixo;
+            return true;
         });
 
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
@@ -248,7 +244,7 @@ App.gerarRelatorioAnual = async () => {
 App.gerarRelatorioMensal = async () => {
     const ano = document.getElementById('rel-ano').value;
     const mesIdx = parseInt(document.getElementById('rel-mes').value);
-    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'padrao';
+    const filtroSelecionado = document.getElementById('filtro-auditoria') ? document.getElementById('filtro-auditoria').value : 'geral';
     const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">A gerar relatório mensal...</p>';
     const meses = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
     const mesNome = meses[mesIdx - 1];
@@ -276,25 +272,25 @@ App.gerarRelatorioMensal = async () => {
             return d.getFullYear() == ano && (d.getMonth() + 1) == mesIdx; 
         });
 
-        // 🛡️ APLICAÇÃO DO FILTRO INTELIGENTE NO MENSAL
+        // 🛡️ APLICAÇÃO DO NOVO FILTRO INTELIGENTE NO MENSAL
         dados = dados.filter(f => {
-            let statusAluno = 'ativo';
+            let statusAluno = 'desconhecido'; // Presume que não existe na base até provar o contrário
+            
             if (f.idAluno && mapaStatusId[f.idAluno]) {
                 statusAluno = mapaStatusId[f.idAluno];
             } else if (f.alunoNome && mapaStatusNome[f.alunoNome.toLowerCase().trim()]) {
                 statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
             }
 
-            const nomeText = (f.alunoNome || '').toLowerCase();
-            const isLixo = statusAluno === 'excluído' || statusAluno === 'inativo' || nomeText.includes('teste');
+            const isExcluido = statusAluno === 'excluído' || statusAluno === 'desconhecido';
             const isPago = f.status === 'Pago';
 
-            if (filtroSelecionado === 'pagos') return isPago && !isLixo;
-            if (filtroSelecionado === 'pendentes') return !isPago && !isLixo;
-            if (filtroSelecionado === 'excluidos') return isLixo;
-            if (filtroSelecionado === 'tudo') return true;
+            if (filtroSelecionado === 'pagos') return isPago && !isExcluido;
+            if (filtroSelecionado === 'pendentes') return !isPago && !isExcluido;
+            if (filtroSelecionado === 'excluidos') return isExcluido;
+            if (filtroSelecionado === 'geral') return true;
             
-            return !isLixo;
+            return true;
         });
 
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
@@ -1017,9 +1013,6 @@ App.gerarDocumentoOficialPrint = async () => {
                     </div>
                 </div>
             `;
-
-            // Elemento fixo que simula a paginação no canto inferior em navegadores suportados
-            numPaginacaoHtml = `<div class="rodape-paginacao"></div>`;
 
         } else if (tipo === 'declaracao') {
             corpoTexto = `
