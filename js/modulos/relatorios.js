@@ -921,7 +921,7 @@ App.gerarDocumentoOficialPrint = async () => {
             // 💡 MARGENS REDUZIDAS PARA O CONTRATO
             docFooter = `
                 <div style="text-align: right; margin-top: 60px; font-size:14px; font-family: Arial, sans-serif;">${localDataCompleta}</div>
-                <div style="display: flex; justify-content: space-between; margin-top: 30px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
+                <div style="display: flex; justify-content: space-between; margin-top: 60px; text-align: center; flex-wrap:wrap; gap:30px; font-family: Arial, sans-serif;">
                     <div style="flex:1; min-width:200px; border-top: 1px solid #000; padding-top: 5px; font-size:12px;">
                         <b>${App.escapeHTML(escola.nome || 'A INSTITUIÇÃO')}</b><br>CONTRATADA
                     </div>
