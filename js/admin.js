@@ -1,5 +1,5 @@
 // Use apenas esta declaração segura
-const API_URL = '/api'
+const API_URL = CONFIG.API_URL;
 
 let cacheClientes = [];
 
