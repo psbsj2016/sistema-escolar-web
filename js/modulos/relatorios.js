@@ -380,8 +380,18 @@ App.renderizarDossie = () => {
 App.gerarDossie = async () => {
     const ano = document.getElementById('dossie-ano').value;
     const mesIdx = parseInt(document.getElementById('dossie-mes').value);
-    const nomeMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesIdx-1];
+    const mesesArray = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const nomeMes = mesesArray[mesIdx-1];
     
+    // 🧠 LÓGICA DE DATAS: Descobrir o Mês e Ano anteriores
+    let prevMesIdx = mesIdx - 1;
+    let prevAno = parseInt(ano);
+    if (prevMesIdx === 0) {
+        prevMesIdx = 12; // Volta para Dezembro
+        prevAno = prevAno - 1; // Recua um ano
+    }
+    const nomeMesAnterior = mesesArray[prevMesIdx - 1];
+
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px;">Processando Inteligência de Negócios... ⏳</p>';
     document.body.style.cursor = 'wait';
@@ -400,7 +410,6 @@ App.gerarDossie = async () => {
         const finAno = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano) && f.tipo === 'Receita');
         const finMes = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === mesIdx);
         
-        // 🛡️ CORREÇÃO: || 0 inserido para blindar contra falhas e NaN
         const entradaBrutaAno = finAno.filter(f => f.status === 'Pago').reduce((a, c) => a + getVal(c), 0);
         const esperadoAnoMensalidade = finAno.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
         const esperadoMesMensalidade = finMes.filter(f => !isVenda(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
@@ -441,12 +450,18 @@ App.gerarDossie = async () => {
         const percMasc = ((masc / totalSexo) * 100).toFixed(1);
         const percFem = ((fem / totalSexo) * 100).toFixed(1);
 
-        const listInad = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && new Date(f.vencimento + 'T00:00:00') < dataHoje);
-        let linhasInad = '';
-        listInad.forEach(f => {
-            const cobrado = f.cobradoZap ? '<span style="color:#27ae60;font-weight:bold;">✅ Sim</span>' : '<span style="color:#e74c3c;font-weight:bold;">❌ Não</span>';
-            linhasInad += `<tr><td>${App.escapeHTML(f.alunoNome || 'Desconhecido')}</td><td>${App.escapeHTML(f.descricao)}</td><td style="color:#c0392b; font-weight:bold; white-space:nowrap;">${fmt(parseFloat(f.valor))}</td><td style="white-space:nowrap;">${App.escapeHTML(f.vencimento.split('-').reverse().join('/'))}</td><td style="text-align:center;">${cobrado}</td></tr>`;
-        });
+        // 💰 NOVO: CÁLCULO DE INADIMPLÊNCIA MENSAL (Substitui a lista gigante)
+        const inadMesAtual = financeiro.filter(f => {
+            if (f.status !== 'Pendente' || f.tipo !== 'Receita' || !f.vencimento) return false;
+            const d = new Date(f.vencimento + 'T00:00:00');
+            return d.getFullYear() === parseInt(ano) && (d.getMonth() + 1) === mesIdx;
+        }).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+
+        const inadMesAnterior = financeiro.filter(f => {
+            if (f.status !== 'Pendente' || f.tipo !== 'Receita' || !f.vencimento) return false;
+            const d = new Date(f.vencimento + 'T00:00:00');
+            return d.getFullYear() === prevAno && (d.getMonth() + 1) === prevMesIdx;
+        }).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
 
@@ -470,6 +485,7 @@ App.gerarDossie = async () => {
                     .d-kpi { min-width: 100%; margin-bottom: 10px; }
                     .flex-item { min-width: 100%; }
                     .d-box { padding: 10px; }
+                    .divider-vert { display: none; }
                 }
                 @media print { .d-box { page-break-inside: avoid; border:1px solid #000; } }
             </style>
@@ -508,7 +524,7 @@ App.gerarDossie = async () => {
                         <div class="d-kpi-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div>
                     </div>
                     <div class="d-kpi" style="border-bottom:3px solid #e74c3c;">
-                        <div class="d-kpi-tit">Total Inadimplência<br>(Geral)</div>
+                        <div class="d-kpi-tit">Total Inadimplência<br>(Histórico Geral)</div>
                         <div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div>
                     </div>
                 </div>
@@ -532,6 +548,28 @@ App.gerarDossie = async () => {
                                 <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (VENDAS)</div>
                                 <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;"><canvas id="grafVenda"></canvas></div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🌟 NOVO BLOCO: RESUMO DE INADIMPLÊNCIA EM DESTAQUE -->
+                <div class="d-box" style="background:#fdf2f2; border:2px solid #f5b7b1;">
+                    <h3 style="margin-top:0; color:#c0392b; border-bottom:1px solid #f5b7b1; padding-bottom:10px; font-size:15px; display:flex; align-items:center; gap:8px;">
+                        ⚠️ Indicador de Inadimplência
+                    </h3>
+                    <p style="font-size:11px; color:#e74c3c; margin-top:-5px; margin-bottom:15px;">Monitorização dos valores pendentes com vencimento nos respetivos meses.</p>
+                    
+                    <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;">
+                        <div style="text-align:center; flex:1; min-width:200px; padding:15px; background:white; border-radius:8px; border:1px dashed #f1948a;">
+                            <div style="font-size:12px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Mês Anterior (${nomeMesAnterior}/${prevAno})</div>
+                            <div style="font-size:24px; font-weight:bold; color:#e74c3c; opacity: 0.8;">${fmt(inadMesAnterior)}</div>
+                        </div>
+                        
+                        <div class="divider-vert" style="border-left: 2px dashed #f5b7b1; height: 60px;"></div>
+                        
+                        <div style="text-align:center; flex:1; min-width:200px; padding:15px; background:#fff5f5; border-radius:8px; border:2px solid #e74c3c; box-shadow: 0 4px 10px rgba(231,76,60,0.15);">
+                            <div style="font-size:14px; color:#c0392b; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Mês Vigente (${nomeMes}/${ano})</div>
+                            <div style="font-size:36px; font-weight:900; color:#c0392b;">${fmt(inadMesAtual)}</div>
                         </div>
                     </div>
                 </div>
@@ -573,6 +611,7 @@ App.gerarDossie = async () => {
                                 <div style="font-size:10px; font-weight:bold; color:#c0392b; text-transform:uppercase;">🔴 Inativos (Evasão)</div>
                             </div>
                         </div>
+                        </div>
                         <div style="position: relative; width: 140px; height: 140px; margin: 0 auto;"><canvas id="grafDemografia"></canvas></div>
                         <div style="display:flex; flex-direction:column; gap:10px; min-width:180px;">
                             <div style="background:#ebf5fb; border-left:4px solid #3498db; padding:10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; color:#555; text-transform:uppercase; font-weight:bold;">👨 Masculino</div><div style="font-size:16px; font-weight:bold; color:#3498db;">${masc}</div></div><div style="font-size:14px; color:#999; font-weight:bold;">${percMasc}%</div></div>
@@ -581,15 +620,6 @@ App.gerarDossie = async () => {
                     </div>
                 </div>
 
-                <div class="d-box">
-                    <h3 style="margin-top:0; color:#e74c3c; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">⚠️ Relatório Analítico de Inadimplência</h3>
-                    <div class="table-responsive">
-                        <table class="d-table" style="min-width:600px;">
-                            <thead><tr><th>Nome do Aluno</th><th>Descrição (Mensalidade)</th><th>Valor</th><th>Vencimento</th><th style="text-align:center;">Cobrado no WhatsApp?</th></tr></thead>
-                            <tbody>${linhasInad || '<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Nenhum inadimplente! 🎉</td></tr>'}</tbody>
-                        </table>
-                    </div>
-                </div>
             </div>`;
 
         setTimeout(() => {
@@ -1013,6 +1043,9 @@ App.gerarDocumentoOficialPrint = async () => {
                     </div>
                 </div>
             `;
+
+            // Elemento fixo que simula a paginação no canto inferior em navegadores suportados
+            numPaginacaoHtml = `<div class="rodape-paginacao"></div>`;
 
         } else if (tipo === 'declaracao') {
             corpoTexto = `
