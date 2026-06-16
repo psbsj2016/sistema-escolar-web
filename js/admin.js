@@ -1,5 +1,5 @@
 // Use apenas esta declaração segura
-const API_URL = '/api';
+const API_URL = window.CONFIG?.API_URL || 'https://api.sistemaptt.com.br';
 
 let cacheClientes = [];
 
