@@ -1346,7 +1346,8 @@ App.carregarListaChamada = async () => {
             return; 
         }
 
-        let theadHtml = `<tr><th style="padding:15px; text-align:left; position:sticky; left:0; background:#f8f9fa; z-index:2; border-right:1px solid #ddd;">NOME DO ALUNO</th>`;
+        // REMOVIDO POSITION: STICKY AQUI
+        let theadHtml = `<tr><th style="padding:15px; text-align:left; background:#f8f9fa; border-right:1px solid #ddd; min-width:150px;">NOME DO ALUNO</th>`;
         App.datasLancamentoChamada.forEach(data => {
             theadHtml += `<th style="padding:15px; text-align:center; min-width:160px;">${data.split('-').reverse().join('/')}</th>`;
         });
@@ -1355,7 +1356,8 @@ App.carregarListaChamada = async () => {
         let linhasHtml = '';
         alunosAlvo.forEach(a => {
             linhasHtml += `<tr style="border-bottom:1px solid #eee;" class="linha-aluno-matriz" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">`;
-            linhasHtml += `<td style="padding:12px; font-weight:500; position:sticky; left:0; background:#fff; z-index:1; border-right:1px solid #ddd;">${App.escapeHTML(a.nome)}</td>`;
+            // REMOVIDO POSITION: STICKY AQUI
+            linhasHtml += `<td style="padding:12px; font-weight:500; background:#fff; border-right:1px solid #ddd; min-width:150px;">${App.escapeHTML(a.nome)}</td>`;
 
             App.datasLancamentoChamada.forEach(data => {
                 const regExistente = chamadas.find(c => String(c.idAluno) === String(a.id) && c.data === data);
