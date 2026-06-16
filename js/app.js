@@ -250,7 +250,7 @@ verificarLimites: async (tipo) => {
         } catch (error) { 
             console.error(`❌ Falha na API [${method} ${urlFinal}]:`, error.message);
             
-            // 🧠 A MÁGICA: Se o utilizador minimizou a app (Whatsapp), bloqueamos o erro vermelho!
+            // 🧠 A MÁGICA: Se o utilizador minimizou a app (WhatsApp), ou se for F5 (silencioso) bloqueamos o erro vermelho!
             if (document.visibilityState === 'hidden' || silencioso) {
                 return method === 'GET' ? [] : { error: 'Rejeitado silenciosamente em background' };
             }
@@ -1344,7 +1344,7 @@ validarCadastroInst: async () => {
         try { 
             const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
             if (cacheEscola) {
-                App.atualizarUIHeader(cacheEscola);
+                if(typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(cacheEscola);
             }
 
             const escola = await App.api('/escola', 'GET', null, silencioso); 
@@ -1358,13 +1358,13 @@ validarCadastroInst: async () => {
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
             
-            App.atualizarUIHeader(escola);
+            if(typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escola);
             
-            if (App.verificarBloqueioGeral(escola)) {
-                App.mostrarTelaBloqueioLogin(escola);
+            if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
+                if(typeof App.mostrarTelaBloqueioLogin === 'function') App.mostrarTelaBloqueioLogin(escola);
             }
 
-        } catch(e) { console.log("Carregando perfil..."); } 
+        } catch(e) { console.log("Carregando perfil silenciosamente..."); } 
     },
     
     // =========================================================

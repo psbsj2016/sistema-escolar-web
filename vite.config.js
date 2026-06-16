@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'prompt', // 🔥 MAGIA AQUI: Tem que ser 'prompt' para o banner aparecer!
+      registerType: 'prompt', // 🔥 MAGIA AQUI: Mudado para 'prompt' para o banner aparecer!
       includeAssets: ['assets/icone.png'],
       manifest: {
         name: "Gestão Escolar SaaS",

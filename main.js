@@ -27,7 +27,6 @@ const updateSW = registerSW({
   onNeedRefresh() {
     console.log('Nova versão detetada! A exibir notificação de update...');
     
-    // Mostra o banner elegantemente no topo
     const banner = document.getElementById('update-banner');
     if (banner) {
         banner.style.display = 'block';
@@ -37,13 +36,13 @@ const updateSW = registerSW({
         window.atualizarApp = () => {
             const btn = banner.querySelector('button');
             if(btn) { btn.innerText = "A instalar... ⏳"; btn.disabled = true; }
-            updateSW(true); // Força a limpeza do cache e carrega o código novo
+            updateSW(true); // Confirma a atualização só ao clicar
         };
     } else {
-        updateSW(true); // Fallback caso o banner não exista
+        updateSW(true);
     }
   },
   onOfflineReady() {
-    console.log('App pronta para trabalhar offline!')
+    console.log('App pronta para trabalhar offline!');
   },
 });
