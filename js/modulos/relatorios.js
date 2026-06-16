@@ -388,20 +388,19 @@ App.gerarDossie = async () => {
     document.body.style.cursor = 'wait';
     
     try {
-        // Busca paralela de todas as entidades necessárias (incluindo planejamentos)
         const [alunos, turmas, cursos, financeiro, escola, planejamentos] = await Promise.all([
             App.api('/alunos').catch(() => []), 
             App.api('/turmas').catch(() => []), 
             App.api('/cursos').catch(() => []), 
             App.api('/financeiro').catch(() => []), 
             App.api('/escola').catch(() => ({ nome: 'Instituição', cnpj: '' })),
-            App.api('/planejamentos').catch(() => []) // Fallback caso não exista ainda
+            App.api('/planejamentos').catch(() => [])
         ]);
         
         const fmt = (v) => parseFloat(v || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         const isVenda = (f) => (f.descricao && f.descricao.toLowerCase().includes('venda')) || (f.idCarne && f.idCarne.includes('VENDA'));
 
-        // 🧠 MAPEAMENTO DE ALUNOS ATIVOS PARA O FINANCEIRO
+        // Mapeamento de Alunos Ativos
         const alunosAtivosIds = new Set();
         const alunosAtivosNomes = new Set();
         alunos.forEach(a => {
@@ -421,31 +420,25 @@ App.gerarDossie = async () => {
         // ==========================================
         // 💰 1. PILAR FINANCEIRO
         // ==========================================
-        
-        // --- DADOS DO ANO ---
         const finAno = financeiro.filter(f => f.vencimento && f.vencimento.startsWith(ano) && f.tipo === 'Receita');
         const prevAno = finAno.filter(f => !isVenda(f) && isAlunoAtivo(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
         const entradaAno = finAno.filter(f => f.status === 'Pago').reduce((a, c) => a + (parseFloat(c.valorPago1 || c.valor) + parseFloat(c.valorPago2 || 0)), 0);
         const inadAno = finAno.filter(f => f.status !== 'Pago').reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
 
-        // --- DADOS DO MÊS ---
         const finMes = finAno.filter(f => parseInt(f.vencimento.split('-')[1]) === mesIdx);
         const prevMes = finMes.filter(f => !isVenda(f) && isAlunoAtivo(f)).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
         const entradaMes = finMes.filter(f => f.status === 'Pago').reduce((a, c) => a + (parseFloat(c.valorPago1 || c.valor) + parseFloat(c.valorPago2 || 0)), 0);
         const inadMes = finMes.filter(f => f.status !== 'Pago').reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
 
-        // --- HISTÓRICO DE 12 MESES RETROATIVOS ---
         let linhasHistorico = ''; 
         let total12m = 0;
         const array12Meses = [];
-        
         for (let i = 0; i < 12; i++) {
-            let m = mesIdx - i;
-            let y = parseInt(ano);
+            let m = mesIdx - i; let y = parseInt(ano);
             if (m <= 0) { m += 12; y -= 1; }
             array12Meses.push({ mes: m, ano: y });
         }
-        array12Meses.reverse(); // Coloca em ordem cronológica (ex: Abr/25 a Mar/26)
+        array12Meses.reverse();
 
         array12Meses.forEach(data => {
             const fM = financeiro.filter(f => f.tipo === 'Receita' && f.status === 'Pago' && f.vencimento && parseInt(f.vencimento.split('-')[1]) === data.mes && parseInt(f.vencimento.split('-')[0]) === data.ano);
@@ -453,20 +446,17 @@ App.gerarDossie = async () => {
             const valVendas = fM.filter(f => isVenda(f)).reduce((a,c) => a + (parseFloat(c.valorPago1 || c.valor) + parseFloat(c.valorPago2 || 0)), 0);
             const tot = valMensalidades + valVendas;
             total12m += tot;
-            
-            const nomeM = mesesArray[data.mes - 1].substring(0,3);
             linhasHistorico += `<tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:4px 8px; font-weight:bold; color:#475569;">${nomeM}/${data.ano}</td>
-                <td style="padding:4px 8px; text-align:right; color:#2563eb;">${fmt(valMensalidades)}</td>
-                <td style="padding:4px 8px; text-align:right; color:#7c3aed;">${fmt(valVendas)}</td>
-                <td style="padding:4px 8px; text-align:right; font-weight:bold; color:#0f172a;">${fmt(tot)}</td>
+                <td style="padding:5px 8px; font-weight:bold; color:#475569;">${mesesArray[data.mes - 1].substring(0,3)}/${data.ano}</td>
+                <td style="padding:5px 8px; text-align:right; color:#2563eb;">${fmt(valMensalidades)}</td>
+                <td style="padding:5px 8px; text-align:right; color:#7c3aed;">${fmt(valVendas)}</td>
+                <td style="padding:5px 8px; text-align:right; font-weight:bold; color:#0f172a;">${fmt(tot)}</td>
             </tr>`;
         });
 
         // ==========================================
         // 🏢 2. PILAR ADMINISTRATIVO
         // ==========================================
-        
         const statusStats = {
             Ativo: { masc: 0, fem: 0, total: 0 },
             Trancado: { masc: 0, fem: 0, total: 0 },
@@ -478,9 +468,7 @@ App.gerarDossie = async () => {
         let modalidade12m = { online: 0, presencial: 0 };
 
         alunos.forEach(a => {
-            // 2.1 Status e Sexo
-            let st = 'Ativo';
-            const s = (a.status || '').toLowerCase();
+            let st = 'Ativo'; const s = (a.status || '').toLowerCase();
             if (s.includes('exclu')) st = 'Excluído';
             else if (s.includes('cancel')) st = 'Cancelado';
             else if (s.includes('tranc')) st = 'Trancado';
@@ -489,25 +477,16 @@ App.gerarDossie = async () => {
             if (a.sexo === 'Masculino') statusStats[st].masc++;
             else if (a.sexo === 'Feminino') statusStats[st].fem++;
 
-            // 2.2 Países
             let pais = (a.pais || a.nacionalidade || 'Brasil').trim().toUpperCase();
             if (pais === '') pais = 'BRASIL';
             origens[pais] = (origens[pais] || 0) + 1;
 
-            // 2.3 Modalidades (Verificando data de matrícula se existir, senão soma no geral)
             let mod = (a.modalidade || a.tipoMatricula || 'Presencial').toLowerCase().includes('online') ? 'online' : 'presencial';
             modalidade12m[mod]++;
-            
-            // Simulação de matrículas do mês (se houver data de cadastro)
             if (a.dataCadastro || a.dataMatricula) {
                 const d = new Date(a.dataCadastro || a.dataMatricula);
-                if (d.getFullYear() === parseInt(ano) && (d.getMonth() + 1) === mesIdx) {
-                    modalidadeMes[mod]++;
-                }
-            } else {
-                // Fallback: se não tiver data, assume como métrica global
-                modalidadeMes[mod]++;
-            }
+                if (d.getFullYear() === parseInt(ano) && (d.getMonth() + 1) === mesIdx) modalidadeMes[mod]++;
+            } else { modalidadeMes[mod]++; }
         });
 
         // ==========================================
@@ -515,19 +494,16 @@ App.gerarDossie = async () => {
         // ==========================================
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
         const alunosCurso = {}; cursos.forEach(c => alunosCurso[c.nome] = 0);
-        
         alunos.forEach(a => { 
             if(a.turma && alunosTurma[a.turma] !== undefined) alunosTurma[a.turma]++; 
             if(a.curso && alunosCurso[a.curso] !== undefined) alunosCurso[a.curso]++;
         });
-
         const planAtivos = planejamentos.filter(p => !p.status || p.status.toLowerCase() !== 'arquivado').length;
         const planArq = planejamentos.filter(p => p.status && p.status.toLowerCase() === 'arquivado').length;
 
-        // Renderização dos Chips Pedagógicos
         const renderChips = (dataObj, color) => {
             const keys = Object.keys(dataObj).filter(k => dataObj[k] > 0);
-            if (keys.length === 0) return `<div style="font-size:10px; color:#94a3b8;">Nenhum registo.</div>`;
+            if (keys.length === 0) return `<div style="font-size:10px; color:#94a3b8;">Nenhum registo ativo.</div>`;
             return `<div style="display:flex; flex-wrap:wrap; gap:5px;">` + 
                 keys.map(k => `<div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; display:flex; gap:6px; align-items:center; font-size:9.5px;">
                     <span style="color:#334155; font-weight:600;">${App.escapeHTML(k)}</span>
@@ -537,32 +513,22 @@ App.gerarDossie = async () => {
 
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:35px; object-fit:contain;">` : '';
 
-        // ==========================================
-        // 🖥️ CONSTRUÇÃO DO HTML (LAYOUT A4)
-        // ==========================================
         div.innerHTML = `
             ${reportStyles}
             <style>
                 * { box-sizing: border-box !important; }
                 .dossier-wrap { font-family: 'Segoe UI', Arial, sans-serif; color:#1e293b; }
-                
-                /* Cabeçalhos de Seção */
                 .section-header { background: #1e293b; color: white; padding: 6px 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; page-break-after: avoid; }
-                
-                /* Caixas de KPI */
                 .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
-                .kpi-box-fin { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-                .kpi-tit { font-size: 8px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 3px; }
-                .kpi-val { font-size: 15px; font-weight: 900; }
-                
-                /* Tabelas */
                 .fin-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
-                .fin-table th { background: #f8fafc; padding: 5px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; color: #475569; }
-                .fin-table td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; }
-                
-                /* Grid Genérico */
+                .fin-table th { background: #f8fafc; padding: 6px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; color: #475569; }
+                .fin-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
                 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-                .box-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; page-break-inside: avoid; }
+                
+                /* NOVO ALINHAMENTO DE ALTA DENSIDADE (3 COLUNAS) PARA ADMINISTRATIVO */
+                .grid-admin-3 { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px; width: 100%; }
+                
+                .box-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; page-break-inside: avoid; overflow: hidden; display: flex; flex-direction: column; }
                 .box-tit { font-size: 10px; text-transform: uppercase; color: #475569; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; margin-top: 0; margin-bottom: 8px; font-weight: bold; }
                 
                 @media print {
@@ -570,17 +536,21 @@ App.gerarDossie = async () => {
                     .no-print { display: none !important; }
                     .print-sheet { padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; }
                     .box-card { border: 1px solid #cbd5e1; }
+                    .grid-admin-3 { gap: 8px; }
+                }
+                @media (max-width: 992px) {
+                    .grid-admin-3 { grid-template-columns: 1fr; }
+                    .grid-2 { grid-template-columns: 1fr; }
                 }
             </style>
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px; margin-bottom:10px; padding:8px 16px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ CORRIGIDO</button>
             </div>
             
             <div class="print-sheet dossier-wrap">
                 
-                <!-- HEADER DO DOCUMENTO -->
                 <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 2px solid #0f172a; padding-bottom: 8px;">
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${logo} 
@@ -595,52 +565,40 @@ App.gerarDossie = async () => {
                     </div>
                 </div>
 
-                <!-- ============================================== -->
-                <!-- PILAR 1: FINANCEIRO -->
-                <!-- ============================================== -->
                 <div class="section-header">💰 1. DADOS FINANCEIROS</div>
-                
                 <div class="grid-2">
-                    <!-- ANO -->
                     <div class="box-card" style="background:#f8fafc;">
                         <h3 class="box-tit" style="color:#0f172a; border-color:#cbd5e1;">📊 Visão Anual (${ano})</h3>
-                        <div class="kpi-row" style="grid-template-columns: 1fr;">
-                            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #cbd5e1;">
-                                <span style="font-size:10px; font-weight:bold; color:#475569;">Prev. Mensalidades (Ativos):</span>
-                                <span style="font-size:12px; font-weight:900; color:#2563eb;">${fmt(prevAno)}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #cbd5e1;">
-                                <span style="font-size:10px; font-weight:bold; color:#475569;">Entrada Bruta (Geral):</span>
-                                <span style="font-size:12px; font-weight:900; color:#16a34a;">${fmt(entradaAno)}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:4px 0;">
-                                <span style="font-size:10px; font-weight:bold; color:#475569;">Inadimplência do Ano:</span>
-                                <span style="font-size:12px; font-weight:900; color:#dc2626;">${fmt(inadAno)}</span>
-                            </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #cbd5e1;">
+                            <span style="font-size:10px; font-weight:bold; color:#475569;">Prev. Resumos (Ativos):</span>
+                            <span style="font-size:12px; font-weight:900; color:#2563eb;">${fmt(prevAno)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #cbd5e1;">
+                            <span style="font-size:10px; font-weight:bold; color:#475569;">Entrada Bruta (Geral):</span>
+                            <span style="font-size:12px; font-weight:900; color:#16a34a;">${fmt(entradaAno)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                            <span style="font-size:10px; font-weight:bold; color:#475569;">Inadimplência do Ano:</span>
+                            <span style="font-size:12px; font-weight:900; color:#dc2626;">${fmt(inadAno)}</span>
                         </div>
                     </div>
-                    
-                    <!-- MÊS -->
                     <div class="box-card" style="background:#f0fdf4; border-color:#bbf7d0;">
                         <h3 class="box-tit" style="color:#166534; border-color:#bbf7d0;">📈 Visão Mensal (${nomeMes})</h3>
-                        <div class="kpi-row" style="grid-template-columns: 1fr;">
-                            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #86efac;">
-                                <span style="font-size:10px; font-weight:bold; color:#166534;">Prev. Mensalidades (Ativos):</span>
-                                <span style="font-size:12px; font-weight:900; color:#2563eb;">${fmt(prevMes)}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #86efac;">
-                                <span style="font-size:10px; font-weight:bold; color:#166534;">Entrada Bruta (Geral):</span>
-                                <span style="font-size:12px; font-weight:900; color:#16a34a;">${fmt(entradaMes)}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; padding:4px 0;">
-                                <span style="font-size:10px; font-weight:bold; color:#166534;">Inadimplência do Mês:</span>
-                                <span style="font-size:12px; font-weight:900; color:#dc2626;">${fmt(inadMes)}</span>
-                            </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #86efac;">
+                            <span style="font-size:10px; font-weight:bold; color:#166534;">Prev. Resumos (Ativos):</span>
+                            <span style="font-size:12px; font-weight:900; color:#2563eb;">${fmt(prevMes)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed #86efac;">
+                            <span style="font-size:10px; font-weight:bold; color:#166534;">Entrada Bruta (Geral):</span>
+                            <span style="font-size:12px; font-weight:900; color:#16a34a;">${fmt(entradaMes)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:4px 0;">
+                            <span style="font-size:10px; font-weight:bold; color:#166534;">Inadimplência do Mês:</span>
+                            <span style="font-size:12px; font-weight:900; color:#dc2626;">${fmt(inadMes)}</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Histórico 12 Meses -->
                 <div class="box-card">
                     <h3 class="box-tit">Histórico de Receitas Brutas (Últimos 12 Meses)</h3>
                     <table class="fin-table">
@@ -648,93 +606,77 @@ App.gerarDossie = async () => {
                         <tbody>${linhasHistorico}</tbody>
                         <tfoot>
                             <tr style="background:#f8fafc; border-top:2px solid #cbd5e1;">
-                                <td colspan="3" style="text-align:right; font-weight:bold; padding:8px;">TOTAL DO CICLO (1 ANO):</td>
-                                <td style="text-align:right; font-weight:900; font-size:12px; color:#16a34a; padding:8px;">${fmt(total12m)}</td>
+                                <td colspan="3" style="text-align:right; font-weight:bold; padding:6px;">TOTAL DO CICLO (1 ANO):</td>
+                                <td style="text-align:right; font-weight:900; font-size:11.5px; color:#16a34a; padding:6px;">${fmt(total12m)}</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- ============================================== -->
-                <!-- PILAR 2: ADMINISTRATIVO -->
-                <!-- ============================================== -->
                 <div class="section-header">🏢 2. DADOS ADMINISTRATIVOS</div>
                 
-                <div class="grid-2">
-                    <!-- Status de Alunos -->
+                <div class="grid-admin-3">
                     <div class="box-card">
-                        <h3 class="box-tit">Status das Matrículas e Volumetria</h3>
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <div style="position:relative; width:110px; height:110px;"><canvas id="chartStatus"></canvas></div>
+                        <h3 class="box-tit">Status das Matrículas</h3>
+                        <div style="display:flex; align-items:center; gap:8px; justify-content:space-between; flex:1;">
+                            <div style="position:relative; width:75px; height:75px; flex-shrink:0;"><canvas id="chartStatus"></canvas></div>
                             <div style="flex:1;">
-                                <table class="fin-table" style="font-size:8.5px;">
-                                    <tr><td><span style="color:#16a34a; font-weight:bold;">● Ativos</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Ativo'].total}</td></tr>
-                                    <tr><td><span style="color:#d97706; font-weight:bold;">● Trancados</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Trancado'].total}</td></tr>
-                                    <tr><td><span style="color:#ea580c; font-weight:bold;">● Cancelados</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Cancelado'].total}</td></tr>
-                                    <tr><td><span style="color:#dc2626; font-weight:bold;">● Excluídos</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Excluído'].total}</td></tr>
+                                <table class="fin-table" style="font-size:8px; line-height:1.2;">
+                                    <tr><td style="padding:2px 4px;"><span style="color:#16a34a; font-weight:bold;">● Ativos</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Ativo'].total}</td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#d97706; font-weight:bold;">● Tranc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Trancado'].total}</td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#ea580c; font-weight:bold;">● Canc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Cancelado'].total}</td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#dc2626; font-weight:bold;">● Excl.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Excluído'].total}</td></tr>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Origem e Demografia -->
                     <div class="box-card">
                         <h3 class="box-tit">Demografia de Género por Status</h3>
-                        <div style="position:relative; width:100%; height:110px;"><canvas id="chartGender"></canvas></div>
+                        <div style="position:relative; width:100%; height:95px; margin:auto 0;"><canvas id="chartGender"></canvas></div>
                     </div>
-                </div>
 
-                <div class="grid-2">
-                    <!-- Canais de Captação -->
-                    <div class="box-card" style="display:flex; flex-direction:column;">
-                        <h3 class="box-tit">Canais de Captação (Online vs Presencial)</h3>
-                        <div style="display:flex; align-items:center; justify-content:space-around; flex:1;">
-                            <div style="text-align:center;">
-                                <div style="font-size:9px; font-weight:bold; color:#64748b; margin-bottom:5px;">NO MÊS (${nomeMes})</div>
-                                <div style="position:relative; width:80px; height:80px; margin:0 auto;"><canvas id="chartCaptacaoMes"></canvas></div>
-                            </div>
-                            <div style="border-left:1px solid #e2e8f0; padding-left:15px; text-align:center;">
-                                <div style="font-size:9px; font-weight:bold; color:#64748b; margin-bottom:5px;">ACUMULADO 12 MESES</div>
-                                <div style="font-size:18px; font-weight:900; color:#3b82f6;">${modalidade12m.online} <span style="font-size:9px; color:#94a3b8; font-weight:bold;">ONLINE</span></div>
-                                <div style="font-size:18px; font-weight:900; color:#8b5cf6;">${modalidade12m.presencial} <span style="font-size:9px; color:#94a3b8; font-weight:bold;">PRESEN.</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Países de Origem -->
                     <div class="box-card">
-                        <h3 class="box-tit">Países de Origem (Top Representatividade)</h3>
-                        <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                            ${Object.keys(origens).map(p => `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:4px 8px; border-radius:4px; font-size:9px; color:#334155;"><b>${p}</b>: ${origens[p]}</div>`).join('')}
+                        <h3 class="box-tit">Canais de Captação</h3>
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; flex:1;">
+                            <div style="text-align:center; flex-shrink:0;">
+                                <div style="position:relative; width:65px; height:65px; margin:0 auto;"><canvas id="chartCaptacaoMes"></canvas></div>
+                                <div style="font-size:7px; color:#64748b; font-weight:bold; margin-top:2px;">NO MÊS</div>
+                            </div>
+                            <div style="border-left:1px solid #e2e8f0; padding-left:8px; text-align:right; flex:1; justify-content:center; display:flex; flex-direction:column; gap:2px;">
+                                <div style="font-size:7.5px; font-weight:bold; color:#64748b; text-transform:uppercase; line-height:1;">12 MESES:</div>
+                                <div style="font-size:11px; font-weight:900; color:#3b82f6; line-height:1.1;">${modalidade12m.online} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">ON</span></div>
+                                <div style="font-size:11px; font-weight:900; color:#8b5cf6; line-height:1.1;">${modalidade12m.presencial} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">PRES</span></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ============================================== -->
-                <!-- PILAR 3: PEDAGÓGICO -->
-                <!-- ============================================== -->
+                <div class="box-card" style="margin-bottom:10px;">
+                    <h3 class="box-tit">Países de Origem (Top Representatividade)</h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                        ${Object.keys(origens).map(p => `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; font-size:9px; color:#334155;"><b>${p}</b>: ${origens[p]}</div>`).join('')}
+                    </div>
+                </div>
+
                 <div class="section-header">📚 3. DADOS PEDAGÓGICOS</div>
-                
-                <div class="grid-2" style="grid-template-columns: 1fr 1fr;">
-                    <!-- Cursos e Turmas -->
+                <div class="grid-2">
                     <div class="box-card">
                         <h3 class="box-tit">Ocupação de Cursos</h3>
                         ${renderChips(alunosCurso, '#3b82f6')}
-                        <h3 class="box-tit" style="margin-top:15px;">Integração por Turmas</h3>
+                        <h3 class="box-tit" style="margin-top:12px;">Integração por Turmas</h3>
                         ${renderChips(alunosTurma, '#10b981')}
                     </div>
-                    
-                    <!-- Planejamentos e Acadêmico -->
                     <div class="box-card">
                         <h3 class="box-tit">Gestão de Planejamentos de Aula</h3>
-                        <div style="display:flex; gap:10px;">
-                            <div style="flex:1; background:#f0fdf4; border:1px solid #bbf7d0; padding:15px; border-radius:6px; text-align:center;">
-                                <div style="font-size:9px; font-weight:bold; color:#166534; text-transform:uppercase;">Planejamentos Ativos</div>
-                                <div style="font-size:24px; font-weight:900; color:#15803d; margin-top:5px;">${planAtivos}</div>
+                        <div style="display:flex; gap:8px; flex:1; align-items:center;">
+                            <div style="flex:1; background:#f0fdf4; border:1px solid #bbf7d0; padding:12px 6px; border-radius:6px; text-align:center;">
+                                <div style="font-size:8.5px; font-weight:bold; color:#166534; text-transform:uppercase;">Ativos</div>
+                                <div style="font-size:22px; font-weight:900; color:#15803d; margin-top:2px;">${planAtivos}</div>
                             </div>
-                            <div style="flex:1; background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:6px; text-align:center;">
-                                <div style="font-size:9px; font-weight:bold; color:#475569; text-transform:uppercase;">Planejamentos Arquivados</div>
-                                <div style="font-size:24px; font-weight:900; color:#64748b; margin-top:5px;">${planArq}</div>
+                            <div style="flex:1; background:#f8fafc; border:1px solid #e2e8f0; padding:12px 6px; border-radius:6px; text-align:center;">
+                                <div style="font-size:8.5px; font-weight:bold; color:#475569; text-transform:uppercase;">Arquivados</div>
+                                <div style="font-size:22px; font-weight:900; color:#64748b; margin-top:2px;">${planArq}</div>
                             </div>
                         </div>
                     </div>
@@ -742,11 +684,10 @@ App.gerarDossie = async () => {
 
             </div>`;
 
-        // INICIALIZAÇÃO DOS GRÁFICOS (CHART.JS)
+        // INICIALIZAÇÃO DOS GRÁFICOS COMPACTOS
         setTimeout(() => {
             const chartOptPie = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
             
-            // Gráfico de Status
             if(document.getElementById('chartStatus')) {
                 new Chart(document.getElementById('chartStatus'), {
                     type: 'doughnut',
@@ -757,36 +698,39 @@ App.gerarDossie = async () => {
                 });
             }
 
-            // Gráfico Demografia por Status (Barras Agrupadas)
             if(document.getElementById('chartGender')) {
                 new Chart(document.getElementById('chartGender'), {
                     type: 'bar',
                     data: {
-                        labels: ['Ativos', 'Trancados', 'Cancel.', 'Excluídos'],
+                        labels: ['Ativ.', 'Tran.', 'Can.', 'Excl.'],
                         datasets: [
-                            { label: 'Masculino', data: [statusStats['Ativo'].masc, statusStats['Trancado'].masc, statusStats['Cancelado'].masc, statusStats['Excluído'].masc], backgroundColor: '#3b82f6', borderRadius: 2 },
-                            { label: 'Feminino', data: [statusStats['Ativo'].fem, statusStats['Trancado'].fem, statusStats['Cancelado'].fem, statusStats['Excluído'].fem], backgroundColor: '#ec4899', borderRadius: 2 }
+                            { label: 'Masc', data: [statusStats['Ativo'].masc, statusStats['Trancado'].masc, statusStats['Cancelado'].masc, statusStats['Excluído'].masc], backgroundColor: '#3b82f6', borderRadius: 1.5 },
+                            { label: 'Fem', data: [statusStats['Ativo'].fem, statusStats['Trancado'].fem, statusStats['Cancelado'].fem, statusStats['Excluído'].fem], backgroundColor: '#ec4899', borderRadius: 1.5 }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top', labels: { boxWidth: 8, font: { size: 8 } } } },
-                        scales: { x: { grid: { display: false }, ticks: { font: { size: 8 } } }, y: { beginAtZero: true, border: { display: false }, ticks: { stepSize: 1, font: { size: 8 } } } }
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 6, font: { size: 7.5 }, padding: 4 } } },
+                        scales: { 
+                            x: { grid: { display: false }, ticks: { font: { size: 7.5 } } }, 
+                            y: { beginAtZero: true, border: { display: false }, ticks: { stepSize: 1, font: { size: 7.5 } } } 
+                        }
                     }
                 });
             }
 
-            // Gráfico Captação Mês (Pie)
-            if(document.getElementById('chartCaptacaoMes') && (modalidadeMes.online > 0 || modalidadeMes.presencial > 0)) {
-                new Chart(document.getElementById('chartCaptacaoMes'), {
-                    type: 'pie',
-                    data: {
-                        labels: ['Online', 'Presencial'],
-                        datasets: [{ data: [modalidadeMes.online, modalidadeMes.presencial], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 1, borderColor: '#fff' }]
-                    }, options: chartOptPie
-                });
-            } else if (document.getElementById('chartCaptacaoMes')) {
-                document.getElementById('chartCaptacaoMes').parentElement.innerHTML = '<div style="font-size:9px; color:#999; margin-top:20px;">Sem matrículas<br>neste mês.</div>';
+            if(document.getElementById('chartCaptacaoMes')) {
+                if (modalidadeMes.online > 0 || modalidadeMes.presencial > 0) {
+                    new Chart(document.getElementById('chartCaptacaoMes'), {
+                        type: 'pie',
+                        data: {
+                            labels: ['Online', 'Presencial'],
+                            datasets: [{ data: [modalidadeMes.online, modalidadeMes.presencial], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 1, borderColor: '#fff' }]
+                        }, options: chartOptPie
+                    });
+                } else {
+                    document.getElementById('chartCaptacaoMes').parentElement.innerHTML = '<div style="font-size:8px; color:#94a3b8; margin-top:15px; line-height:1.1;">Sem registros<br>no mês.</div>';
+                }
             }
 
         }, 300);
