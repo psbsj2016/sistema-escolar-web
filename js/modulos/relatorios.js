@@ -384,7 +384,7 @@ App.gerarDossie = async () => {
     const nomeMes = mesesArray[mesIdx-1];
 
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Processando pilares financeiro, administrativo e pedagógico ⏳</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Renderizando gráficos com numeração para impressão ⏳</p>';
     document.body.style.cursor = 'wait';
     
     try {
@@ -489,6 +489,9 @@ App.gerarDossie = async () => {
             } else { modalidadeMes[mod]++; }
         });
 
+        const totalAlunosGeral = alunos.length || 1;
+        const totalMatriculasMes = (modalidadeMes.online + modalidadeMes.presencial) || 1;
+
         // ==========================================
         // 📚 3. PILAR PEDAGÓGICO
         // ==========================================
@@ -524,10 +527,7 @@ App.gerarDossie = async () => {
                 .fin-table th { background: #f8fafc; padding: 6px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; color: #475569; }
                 .fin-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
                 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-                
-                /* NOVO ALINHAMENTO DE ALTA DENSIDADE (3 COLUNAS) PARA ADMINISTRATIVO */
-                .grid-admin-3 { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px; width: 100%; }
-                
+                .grid-admin-3 { display: grid; grid-template-columns: 1.1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px; width: 100%; }
                 .box-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; page-break-inside: avoid; overflow: hidden; display: flex; flex-direction: column; }
                 .box-tit { font-size: 10px; text-transform: uppercase; color: #475569; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; margin-top: 0; margin-bottom: 8px; font-weight: bold; }
                 
@@ -536,7 +536,6 @@ App.gerarDossie = async () => {
                     .no-print { display: none !important; }
                     .print-sheet { padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; }
                     .box-card { border: 1px solid #cbd5e1; }
-                    .grid-admin-3 { gap: 8px; }
                 }
                 @media (max-width: 992px) {
                     .grid-admin-3 { grid-template-columns: 1fr; }
@@ -546,7 +545,7 @@ App.gerarDossie = async () => {
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px; margin-bottom:10px; padding:8px 16px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ CORRIGIDO</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ FINAL</button>
             </div>
             
             <div class="print-sheet dossier-wrap">
@@ -555,7 +554,7 @@ App.gerarDossie = async () => {
                     <div style="display:flex; align-items:center; gap:10px;">
                         ${logo} 
                         <div>
-                            <h2 style="margin:0; text-transform:uppercase; font-size:15px; font-weight:900;">${App.escapeHTML(escola.nome)}</h2>
+                            <h2 style="margin:0; text-transform:uppercase; color:#0f172a; font-size:15px; font-weight:900;">${App.escapeHTML(escola.nome)}</h2>
                             <div style="font-size:9px; color:#64748b;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div>
                         </div>
                     </div>
@@ -618,14 +617,14 @@ App.gerarDossie = async () => {
                 <div class="grid-admin-3">
                     <div class="box-card">
                         <h3 class="box-tit">Status das Matrículas</h3>
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:space-between; flex:1;">
-                            <div style="position:relative; width:75px; height:75px; flex-shrink:0;"><canvas id="chartStatus"></canvas></div>
+                        <div style="display:flex; align-items:center; gap:6px; justify-content:space-between; flex:1;">
+                            <div style="position:relative; width:80px; height:80px; flex-shrink:0;"><canvas id="chartStatus"></canvas></div>
                             <div style="flex:1;">
                                 <table class="fin-table" style="font-size:8px; line-height:1.2;">
-                                    <tr><td style="padding:2px 4px;"><span style="color:#16a34a; font-weight:bold;">● Ativos</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Ativo'].total}</td></tr>
-                                    <tr><td style="padding:2px 4px;"><span style="color:#d97706; font-weight:bold;">● Tranc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Trancado'].total}</td></tr>
-                                    <tr><td style="padding:2px 4px;"><span style="color:#ea580c; font-weight:bold;">● Canc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Cancelado'].total}</td></tr>
-                                    <tr><td style="padding:2px 4px;"><span style="color:#dc2626; font-weight:bold;">● Excl.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Excluído'].total}</td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#16a34a; font-weight:bold;">● Ativos</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Ativo'].total} <span style="font-weight:normal; color:#888;">(${Math.round(statusStats['Ativo'].total/totalAlunosGeral*100)}%)</span></td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#d97706; font-weight:bold;">● Tranc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Trancado'].total} <span style="font-weight:normal; color:#888;">(${Math.round(statusStats['Trancado'].total/totalAlunosGeral*100)}%)</span></td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#ea580c; font-weight:bold;">● Canc.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Cancelado'].total} <span style="font-weight:normal; color:#888;">(${Math.round(statusStats['Cancelado'].total/totalAlunosGeral*100)}%)</span></td></tr>
+                                    <tr><td style="padding:2px 4px;"><span style="color:#dc2626; font-weight:bold;">● Excl.</span></td><td style="text-align:right; font-weight:bold;">${statusStats['Excluído'].total} <span style="font-weight:normal; color:#888;">(${Math.round(statusStats['Excluído'].total/totalAlunosGeral*100)}%)</span></td></tr>
                                 </table>
                             </div>
                         </div>
@@ -643,10 +642,10 @@ App.gerarDossie = async () => {
                                 <div style="position:relative; width:65px; height:65px; margin:0 auto;"><canvas id="chartCaptacaoMes"></canvas></div>
                                 <div style="font-size:7px; color:#64748b; font-weight:bold; margin-top:2px;">NO MÊS</div>
                             </div>
-                            <div style="border-left:1px solid #e2e8f0; padding-left:8px; text-align:right; flex:1; justify-content:center; display:flex; flex-direction:column; gap:2px;">
+                            <div style="border-left:1px solid #e2e8f0; padding-left:6px; text-align:right; flex:1; justify-content:center; display:flex; flex-direction:column; gap:2px;">
                                 <div style="font-size:7.5px; font-weight:bold; color:#64748b; text-transform:uppercase; line-height:1;">12 MESES:</div>
-                                <div style="font-size:11px; font-weight:900; color:#3b82f6; line-height:1.1;">${modalidade12m.online} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">ON</span></div>
-                                <div style="font-size:11px; font-weight:900; color:#8b5cf6; line-height:1.1;">${modalidade12m.presencial} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">PRES</span></div>
+                                <div style="font-size:11px; font-weight:900; color:#3b82f6; line-height:1.1;">${modalidade12m.online} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">(${Math.round(modalidade12m.online/totalAlunosGeral*100)}%)</span></div>
+                                <div style="font-size:11px; font-weight:900; color:#8b5cf6; line-height:1.1;">${modalidade12m.presencial} <span style="font-size:7.5px; color:#94a3b8; font-weight:bold;">(${Math.round(modalidade12m.presencial/totalAlunosGeral*100)}%)</span></div>
                             </div>
                         </div>
                     </div>
@@ -655,7 +654,7 @@ App.gerarDossie = async () => {
                 <div class="box-card" style="margin-bottom:10px;">
                     <h3 class="box-tit">Países de Origem (Top Representatividade)</h3>
                     <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                        ${Object.keys(origens).map(p => `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; font-size:9px; color:#334155;"><b>${p}</b>: ${origens[p]}</div>`).join('')}
+                        ${Object.keys(origens).map(p => `<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; font-size:9px; color:#334155;"><b>${p}</b>: ${origens[p]} <span style="color:#777;">(${Math.round(origens[p]/totalAlunosGeral*100)}%)</span></div>`).join('')}
                     </div>
                 </div>
 
@@ -684,20 +683,69 @@ App.gerarDossie = async () => {
 
             </div>`;
 
-        // INICIALIZAÇÃO DOS GRÁFICOS COMPACTOS
+        // ==========================================
+        // 🛠️ MOTOR DE GRAFIA ESTÁTICA EM PIZZA / ROSCA
+        // ==========================================
+        const pluginNumerosNoGrafico = {
+            id: 'pluginNumerosNoGrafico',
+            afterDatasetsDraw(chart) {
+                const { ctx, data } = chart;
+                ctx.save();
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((element, index) => {
+                        const val = dataset.data[index];
+                        if (val === 0) return; // Oculta valores zerados
+
+                        // Calcula o ponto médio (centro) da fatia
+                        const { x, y, startAngle, endAngle, innerRadius, outerRadius } = element;
+                        const midAngle = startAngle + (endAngle - startAngle) / 2;
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.55; // Ajuste de profundidade
+
+                        const textX = x + Math.cos(midAngle) * radius;
+                        const textY = y + Math.sin(midAngle) * radius;
+
+                        ctx.fillStyle = '#ffffff'; // Cor do texto fixa
+                        ctx.font = 'bold 9px Arial';
+                        ctx.textBaseline = 'middle';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(val, textX, textY);
+                    });
+                });
+                ctx.restore();
+            }
+        };
+
         setTimeout(() => {
-            const chartOptPie = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-            
+            // Inicialização do Gráfico de Status com Plugin de Impressão Ativo
             if(document.getElementById('chartStatus')) {
                 new Chart(document.getElementById('chartStatus'), {
                     type: 'doughnut',
+                    plugins: [pluginNumerosNoGrafico], // Injeção do Plugin
                     data: {
                         labels: ['Ativos', 'Trancados', 'Cancelados', 'Excluídos'],
                         datasets: [{ data: [statusStats['Ativo'].total, statusStats['Trancado'].total, statusStats['Cancelado'].total, statusStats['Excluído'].total], backgroundColor: ['#16a34a', '#d97706', '#ea580c', '#dc2626'], borderWidth: 0 }]
-                    }, options: { ...chartOptPie, cutout: '65%' }
+                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '55%' }
                 });
             }
 
+            // Inicialização do Gráfico de Captação Mensal com Plugin de Impressão Ativo
+            if(document.getElementById('chartCaptacaoMes')) {
+                if (modalidadeMes.online > 0 || modalidadeMes.presencial > 0) {
+                    new Chart(document.getElementById('chartCaptacaoMes'), {
+                        type: 'pie',
+                        plugins: [pluginNumerosNoGrafico], // Injeção do Plugin
+                        data: {
+                            labels: ['Online', 'Presencial'],
+                            datasets: [{ data: [modalidadeMes.online, modalidadeMes.presencial], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 1, borderColor: '#fff' }]
+                        }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                } else {
+                    document.getElementById('chartCaptacaoMes').parentElement.innerHTML = '<div style="font-size:8px; color:#94a3b8; margin-top:15px; line-height:1.1; text-align:center;">Sem registros<br>no mês.</div>';
+                }
+            }
+
+            // Gráfico de Género por Status
             if(document.getElementById('chartGender')) {
                 new Chart(document.getElementById('chartGender'), {
                     type: 'bar',
@@ -717,20 +765,6 @@ App.gerarDossie = async () => {
                         }
                     }
                 });
-            }
-
-            if(document.getElementById('chartCaptacaoMes')) {
-                if (modalidadeMes.online > 0 || modalidadeMes.presencial > 0) {
-                    new Chart(document.getElementById('chartCaptacaoMes'), {
-                        type: 'pie',
-                        data: {
-                            labels: ['Online', 'Presencial'],
-                            datasets: [{ data: [modalidadeMes.online, modalidadeMes.presencial], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 1, borderColor: '#fff' }]
-                        }, options: chartOptPie
-                    });
-                } else {
-                    document.getElementById('chartCaptacaoMes').parentElement.innerHTML = '<div style="font-size:8px; color:#94a3b8; margin-top:15px; line-height:1.1;">Sem registros<br>no mês.</div>';
-                }
             }
 
         }, 300);
