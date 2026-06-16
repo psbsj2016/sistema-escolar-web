@@ -384,7 +384,7 @@ App.gerarDossie = async () => {
     const nomeMes = mesesArray[mesIdx-1];
 
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Renderizando gráficos e sincronizando layout de impressão ⏳</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Sincronizando layout e paginação de impressão ⏳</p>';
     document.body.style.cursor = 'wait';
     
     try {
@@ -529,9 +529,20 @@ App.gerarDossie = async () => {
                 .box-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; page-break-inside: avoid; overflow: hidden; display: flex; flex-direction: column; }
                 .box-tit { font-size: 10px; text-transform: uppercase; color: #475569; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; margin-top: 0; margin-bottom: 8px; font-weight: bold; }
                 
-                /* MODO DE IMPRESSÃO: FORÇAR CORES E GRELHAS */
+                /* MODO DE IMPRESSÃO: FORÇAR CORES E NUMERAÇÃO DE PÁGINAS */
                 @media print {
-                    @page { margin: 8mm; size: A4 portrait; }
+                    @page { 
+                        margin: 10mm 10mm 15mm 10mm; /* A margem inferior maior permite ao navegador injetar o número da página */
+                        size: A4 portrait; 
+                        
+                        /* Injeção nativa de numeração para navegadores modernos */
+                        @bottom-right {
+                            content: "Página " counter(page) " de " counter(pages);
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 9px;
+                            color: #64748b;
+                        }
+                    }
                     * { 
                         -webkit-print-color-adjust: exact !important; 
                         print-color-adjust: exact !important; 
@@ -541,12 +552,11 @@ App.gerarDossie = async () => {
                     body { background: #fff !important; }
                     .print-sheet { padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
                     .box-card { border: 1px solid #cbd5e1 !important; }
-                    /* Garante que os grids não quebrem na impressão */
+                    /* Garante que as grelhas fiquem estáticas */
                     .grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; }
                     .grid-admin-3 { display: grid !important; grid-template-columns: 1.1fr 1.2fr 1fr !important; }
                 }
 
-                /* APENAS EM ECRÃS REAIS DE TELEMÓVEL É QUE SE QUEBRA A GRELHA */
                 @media screen and (max-width: 992px) {
                     .grid-admin-3 { grid-template-columns: 1fr; }
                     .grid-2 { grid-template-columns: 1fr; }
@@ -555,7 +565,7 @@ App.gerarDossie = async () => {
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="App.renderizarDossie()" class="btn-cancel" style="margin-right:10px; margin-bottom:10px; padding:8px 16px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ FINAL</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:8px 16px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ</button>
             </div>
             
             <div class="print-sheet dossier-wrap">
@@ -772,7 +782,6 @@ App.gerarDossie = async () => {
                     }
                 });
             }
-
         }, 300);
 
     } catch(e) { App.showToast("Erro ao gerar dossiê corporativo.", "error"); console.error(e); } 
