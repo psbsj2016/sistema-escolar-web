@@ -383,13 +383,10 @@ App.gerarDossie = async () => {
     const mesesArray = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const nomeMes = mesesArray[mesIdx-1];
     
-    // 🧠 LÓGICA DE DATAS: Descobrir o Mês e Ano anteriores
+    // Lógica de Datas
     let prevMesIdx = mesIdx - 1;
     let prevAno = parseInt(ano);
-    if (prevMesIdx === 0) {
-        prevMesIdx = 12; 
-        prevAno = prevAno - 1; 
-    }
+    if (prevMesIdx === 0) { prevMesIdx = 12; prevAno = prevAno - 1; }
     const nomeMesAnterior = mesesArray[prevMesIdx - 1];
 
     const div = document.getElementById('app-content'); 
@@ -434,18 +431,22 @@ App.gerarDossie = async () => {
             const vV = fM.filter(f => isVenda(f)).reduce((a,c) => a+getVal(c), 0);
             const tot = vM + vV;
             acumuladoHistorico += tot;
-            linhasHistorico += `<tr><td>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td><td style="text-align:right; color:#2980b9; white-space:nowrap;">${fmt(vM)}</td><td style="text-align:right; color:#8e44ad; white-space:nowrap;">${fmt(vV)}</td><td style="text-align:right; font-weight:bold; white-space:nowrap;">${fmt(tot)}</td></tr>`;
+            linhasHistorico += `<tr style="border-bottom:1px solid #eee;">
+                <td style="padding:4px 8px;">${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][i-1]}</td>
+                <td style="padding:4px 8px; text-align:right; color:#2980b9;">${fmt(vM)}</td>
+                <td style="padding:4px 8px; text-align:right; color:#8e44ad;">${fmt(vV)}</td>
+                <td style="padding:4px 8px; text-align:right; font-weight:bold;">${fmt(tot)}</td>
+            </tr>`;
         }
 
         const alunosTurma = {}; turmas.forEach(t => alunosTurma[t.nome] = 0);
         const alunosCurso = {}; cursos.forEach(c => alunosCurso[c.nome] = 0);
         
-        // 🧠 NOVO: MOTOR DEMOGRÁFICO DE ALTA PRECISÃO
         const demoStats = {
-            ativo: { total: 0, masc: 0, fem: 0, color: '#27ae60', label: '🟢 Ativos' },
-            trancado: { total: 0, masc: 0, fem: 0, color: '#f39c12', label: '⏸️ Trancados' },
-            cancelado: { total: 0, masc: 0, fem: 0, color: '#d35400', label: '🛑 Cancelados' },
-            excluido: { total: 0, masc: 0, fem: 0, color: '#c0392b', label: '🗑️ Excluídos' }
+            ativo: { total: 0, masc: 0, fem: 0, color: '#27ae60', label: 'Ativos' },
+            trancado: { total: 0, masc: 0, fem: 0, color: '#f39c12', label: 'Trancados' },
+            cancelado: { total: 0, masc: 0, fem: 0, color: '#d35400', label: 'Cancelados' },
+            excluido: { total: 0, masc: 0, fem: 0, color: '#c0392b', label: 'Excluídos' }
         };
         const paises = {};
 
@@ -453,88 +454,83 @@ App.gerarDossie = async () => {
             if(a.turma && alunosTurma[a.turma] !== undefined) alunosTurma[a.turma]++; 
             if(a.curso && alunosCurso[a.curso] !== undefined) alunosCurso[a.curso]++;
 
-            // 1. Agrupamento por Status
             let st = (a.status || 'ativo').toLowerCase().trim();
             if (st.includes('exclu')) st = 'excluido';
             else if (st.includes('cancel')) st = 'cancelado';
             else if (st.includes('tranc')) st = 'trancado';
             else st = 'ativo';
 
-            // 2. Contagem de Género
             if (demoStats[st]) {
                 demoStats[st].total++;
                 if (a.sexo === 'Masculino') demoStats[st].masc++;
                 else if (a.sexo === 'Feminino') demoStats[st].fem++;
             }
 
-            // 3. Contagem de País
             let pais = (a.pais || a.nacionalidade || 'Brasil').trim().toUpperCase();
             if (pais === '') pais = 'BRASIL';
             paises[pais] = (paises[pais] || 0) + 1;
         });
 
-        // Construtor Visual dos Cartões Demográficos
-        let htmlDemografia = `<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom: 25px;">`;
+        // Tabelas Compactas de Demografia
+        let htmlDemografia = `<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">`;
         Object.keys(demoStats).forEach(k => {
             const s = demoStats[k];
-            const pMasc = s.total > 0 ? ((s.masc / s.total) * 100).toFixed(0) : 0;
-            const pFem = s.total > 0 ? ((s.fem / s.total) * 100).toFixed(0) : 0;
-            
+            const pMasc = s.total > 0 ? Math.round((s.masc / s.total) * 100) : 0;
+            const pFem = s.total > 0 ? Math.round((s.fem / s.total) * 100) : 0;
             htmlDemografia += `
-                <div style="background:#fff; border:1px solid #eee; border-top:4px solid ${s.color}; border-radius:8px; padding:15px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                    <div style="font-size:12px; font-weight:bold; color:#7f8c8d; text-transform:uppercase; margin-bottom:10px;">${s.label}</div>
-                    <div style="font-size:28px; font-weight:900; color:${s.color}; margin-bottom:15px; line-height:1;">${s.total}</div>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:8px; border-radius:5px; margin-bottom:5px;">
-                        <div style="font-size:11px; color:#555; display:flex; align-items:center; gap:5px;">👨 Masculino</div>
-                        <div style="font-weight:bold; color:#3498db; font-size:14px;">${s.masc} <span style="font-size:10px; color:#999; font-weight:normal;">(${pMasc}%)</span></div>
+                <div style="border-left: 3px solid ${s.color}; background:#f9f9f9; padding:8px 12px; border-radius:0 4px 4px 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <strong style="font-size:11px; text-transform:uppercase; color:#333;">${s.label}</strong>
+                        <span style="font-size:14px; font-weight:bold; color:${s.color};">${s.total}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f9f9f9; padding:8px; border-radius:5px;">
-                        <div style="font-size:11px; color:#555; display:flex; align-items:center; gap:5px;">👩 Feminino</div>
-                        <div style="font-weight:bold; color:#e74c3c; font-size:14px;">${s.fem} <span style="font-size:10px; color:#999; font-weight:normal;">(${pFem}%)</span></div>
+                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#555;">
+                        <span>👨 ${s.masc} (${pMasc}%)</span>
+                        <span>👩 ${s.fem} (${pFem}%)</span>
                     </div>
                 </div>
             `;
         });
         htmlDemografia += `</div>`;
 
-        const inadMesAtual = financeiro.filter(f => {
-            if (f.status !== 'Pendente' || f.tipo !== 'Receita' || !f.vencimento) return false;
-            const d = new Date(f.vencimento + 'T00:00:00');
-            return d.getFullYear() === parseInt(ano) && (d.getMonth() + 1) === mesIdx;
-        }).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        // Tabelas Compactas de Cursos e Turmas
+        let htmlCursos = `<table class="exec-table"><thead><tr><th>CURSO</th><th style="text-align:right;">ALUNOS</th></tr></thead><tbody>` + 
+            (cursos.length ? cursos.map(c => `<tr><td>${App.escapeHTML(c.nome)}</td><td style="text-align:right; font-weight:bold;">${alunosCurso[c.nome] || 0}</td></tr>`).join('') : `<tr><td colspan="2">Sem dados</td></tr>`) + 
+            `</tbody></table>`;
 
-        const inadMesAnterior = financeiro.filter(f => {
-            if (f.status !== 'Pendente' || f.tipo !== 'Receita' || !f.vencimento) return false;
-            const d = new Date(f.vencimento + 'T00:00:00');
-            return d.getFullYear() === prevAno && (d.getMonth() + 1) === prevMesIdx;
-        }).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        let htmlTurmas = `<table class="exec-table"><thead><tr><th>TURMA</th><th style="text-align:right;">ALUNOS</th></tr></thead><tbody>` + 
+            (turmas.length ? turmas.map(t => `<tr><td>${App.escapeHTML(t.nome)}</td><td style="text-align:right; font-weight:bold;">${alunosTurma[t.nome] || 0}</td></tr>`).join('') : `<tr><td colspan="2">Sem dados</td></tr>`) + 
+            `</tbody></table>`;
 
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:50px; object-fit:contain;">` : '';
+        const inadMesAtual = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && f.vencimento && new Date(f.vencimento + 'T00:00:00').getFullYear() === parseInt(ano) && (new Date(f.vencimento + 'T00:00:00').getMonth() + 1) === mesIdx).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+        const inadMesAnterior = financeiro.filter(f => f.status === 'Pendente' && f.tipo === 'Receita' && f.vencimento && new Date(f.vencimento + 'T00:00:00').getFullYear() === prevAno && (new Date(f.vencimento + 'T00:00:00').getMonth() + 1) === prevMesIdx).reduce((a, c) => a + (parseFloat(c.valor) || 0), 0);
+
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:40px; object-fit:contain;">` : '';
 
         div.innerHTML = `
             ${reportStyles}
             <style>
-                .d-kpi { flex:1; background:#fff; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:center; min-width:140px; }
-                .d-kpi-tit { font-size:10px; color:#777; text-transform:uppercase; margin-bottom:5px; font-weight:bold; line-height:1.2; }
-                .d-kpi-val { font-size:18px; font-weight:bold; }
-                .d-box { background:#fff; padding:20px; border-radius:8px; border:1px solid #eee; margin-bottom:20px; overflow: hidden; }
-                .d-table { width:100%; border-collapse:collapse; font-size:12px; }
-                .d-table th { background:#f4f6f7; padding:10px; text-align:left; border-bottom:2px solid #ddd; }
-                .d-table td { padding:10px; border-bottom:1px solid #eee; }
-                .list-card { background:#f8f9fa; border:1px solid #e9ecef; padding:10px 15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-                .list-card span:first-child { font-size:13px; font-weight:500; color:#333; }
-                .badge-curso { background:#3498db; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
-                .badge-turma { background:#2ecc71; color:white; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; }
-                .flex-container { display: flex; flex-wrap: wrap; gap: 30px; align-items: center; justify-content: space-between; }
-                .flex-item { flex: 1; min-width: 300px; }
-                @media (max-width: 768px) {
-                    .d-kpi { min-width: 100%; margin-bottom: 10px; }
-                    .flex-item { min-width: 100%; }
-                    .d-box { padding: 10px; }
-                    .divider-vert { display: none; }
+                .exec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+                .exec-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.02); page-break-inside: avoid; }
+                .exec-title { font-size: 11px; text-transform: uppercase; color: #7f8c8d; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-top: 0; margin-bottom: 12px; font-weight: bold; letter-spacing: 0.5px; }
+                .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 15px; }
+                .kpi-item { background: #fdfdfd; padding: 10px; border-radius: 4px; border: 1px solid #eee; text-align: center; }
+                .kpi-item-title { font-size: 9px; text-transform: uppercase; color: #777; margin-bottom: 4px; font-weight: bold; }
+                .kpi-item-val { font-size: 16px; font-weight: 900; }
+                .exec-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                .exec-table th { background: #f4f6f7; padding: 6px 8px; text-align: left; border-bottom: 2px solid #ddd; color: #555; }
+                .exec-table td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; color: #333; }
+                
+                @media print {
+                    @page { margin: 10mm; }
+                    .exec-grid { gap: 10px; margin-bottom: 10px; }
+                    .exec-box { padding: 10px; box-shadow: none; border: 1px solid #ccc; }
+                    .no-print { display: none !important; }
+                    .print-sheet { padding: 0 !important; margin: 0 !important; max-width: 100% !important; border: none !important; }
                 }
-                @media print { .d-box { page-break-inside: avoid; border:1px solid #000; } }
+                @media (max-width: 768px) {
+                    .exec-grid { grid-template-columns: 1fr; }
+                    .kpi-row { grid-template-columns: 1fr 1fr; }
+                }
             </style>
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
@@ -542,146 +538,140 @@ App.gerarDossie = async () => {
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR DOSSIÊ</button>
             </div>
             
-            <div class="print-sheet">
-                <div class="doc-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; margin-bottom:20px; flex-wrap:wrap; gap:15px;">
-                    <div style="display:flex; align-items:center; gap:20px;">
-                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:18px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:12px; color:#666;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div>
+            <div class="print-sheet" style="font-family: Arial, sans-serif;">
+                
+                <!-- CABEÇALHO -->
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-bottom:15px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        ${logo} <div><h2 style="margin:0; text-transform:uppercase; color:#2c3e50; font-size:16px;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:10px; color:#666;">CNPJ: ${App.escapeHTML(escola.cnpj)}</div></div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-weight:bold; font-size:16px;">DOSSIÊ DE GESTÃO - ${nomeMes}/${ano}</div>
-                        <div style="font-size:11px; color:#666;">Emissão: ${dataHoje.toLocaleDateString('pt-BR')}</div>
+                        <div style="font-weight:900; font-size:14px; color:#2c3e50; text-transform:uppercase;">Dossiê Analítico - ${nomeMes}/${ano}</div>
+                        <div style="font-size:9px; color:#666;">Emissão: ${dataHoje.toLocaleDateString('pt-BR')} às ${dataHoje.toLocaleTimeString('pt-BR')}</div>
                     </div>
                 </div>
                 
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-                    <div class="d-kpi" style="border-bottom:3px solid #34495e;">
-                        <div class="d-kpi-tit">Esperado do Ano<br>(Só Mensalidades)</div>
-                        <div class="d-kpi-val" style="color:#34495e;">${fmt(esperadoAnoMensalidade)}</div>
+                <!-- RIBBON DE KPIs PRINCIPAIS -->
+                <div class="kpi-row">
+                    <div class="kpi-item" style="border-top: 3px solid #34495e;">
+                        <div class="kpi-item-title">Previsão Ano (Mensal.)</div>
+                        <div class="kpi-item-val" style="color:#34495e;">${fmt(esperadoAnoMensalidade)}</div>
                     </div>
-                    <div class="d-kpi" style="border-bottom:3px solid #f39c12;">
-                        <div class="d-kpi-tit">Esperado no Mês Vigente<br>(Mensalidades)</div>
-                        <div class="d-kpi-val" style="color:#f39c12;">${fmt(esperadoMesMensalidade)}</div>
+                    <div class="kpi-item" style="border-top: 3px solid #f39c12;">
+                        <div class="kpi-item-title">Previsão Mês (Mensal.)</div>
+                        <div class="kpi-item-val" style="color:#f39c12;">${fmt(esperadoMesMensalidade)}</div>
                     </div>
-                    <div class="d-kpi" style="border-bottom:3px solid #27ae60;">
-                        <div class="d-kpi-tit">Entrada Bruta Ano<br>(Mensalidades + Vendas)</div>
-                        <div class="d-kpi-val" style="color:#27ae60;">${fmt(entradaBrutaAno)}</div>
+                    <div class="kpi-item" style="border-top: 3px solid #27ae60;">
+                        <div class="kpi-item-title">Receita Bruta (Ano)</div>
+                        <div class="kpi-item-val" style="color:#27ae60;">${fmt(entradaBrutaAno)}</div>
                     </div>
-                    <div class="d-kpi" style="border-bottom:3px solid #3498db;">
-                        <div class="d-kpi-tit">Entrada Mês Vigente<br>(Mensalidades + Vendas)</div>
-                        <div class="d-kpi-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div>
+                    <div class="kpi-item" style="border-top: 3px solid #3498db;">
+                        <div class="kpi-item-title">Receita Bruta (Mês)</div>
+                        <div class="kpi-item-val" style="color:#3498db;">${fmt(entradaMesTotal)}</div>
                     </div>
-                    <div class="d-kpi" style="border-bottom:3px solid #e74c3c;">
-                        <div class="d-kpi-tit">Total Inadimplência<br>(Histórico Geral)</div>
-                        <div class="d-kpi-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div>
+                    <div class="kpi-item" style="border-top: 3px solid #e74c3c;">
+                        <div class="kpi-item-title">Inadimplência Histórica</div>
+                        <div class="kpi-item-val" style="color:#e74c3c;">${fmt(inadimplenciaGeral)}</div>
                     </div>
                 </div>
 
-                <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📊 Resultados Financeiros: ${nomeMes} / ${ano}</h3>
-                    <div class="flex-container">
-                        <div class="flex-item">
-                            <table class="d-table">
-                                <tr><td><strong>Entradas em Mensalidades:</strong></td><td style="text-align:right; font-size:16px; color:#2980b9; font-weight:bold; white-space:nowrap;">${fmt(entradaMesMensalidade)}</td></tr>
-                                <tr><td><strong>Entradas em Vendas:</strong></td><td style="text-align:right; font-size:16px; color:#8e44ad; font-weight:bold; white-space:nowrap;">${fmt(entradaMesVenda)}</td></tr>
-                                <tr style="background:#f9f9f9;"><td><strong>TOTAL ARRECADADO NO MÊS:</strong></td><td style="text-align:right; font-size:18px; color:#27ae60; font-weight:bold; white-space:nowrap;">${fmt(entradaMesTotal)}</td></tr>
-                            </table>
-                        </div>
-                        <div class="flex-item" style="display:flex; justify-content:space-evenly; gap:10px; align-items:center;">
+                <!-- LINHA 1: RESULTADOS FINANCEIROS & DEMOGRAFIA -->
+                <div class="exec-grid">
+                    <div class="exec-box">
+                        <h3 class="exec-title">Desempenho Financeiro (${nomeMes}/${ano})</h3>
+                        <table class="exec-table" style="margin-bottom:10px;">
+                            <tr><td>Entradas de Mensalidades:</td><td style="text-align:right; font-weight:bold; color:#2980b9;">${fmt(entradaMesMensalidade)}</td></tr>
+                            <tr><td>Entradas de Vendas/Lojas:</td><td style="text-align:right; font-weight:bold; color:#8e44ad;">${fmt(entradaMesVenda)}</td></tr>
+                            <tr style="background:#f4f8f9;"><td style="font-weight:bold;">RECEITA TOTAL ARRECADADA:</td><td style="text-align:right; font-size:14px; font-weight:900; color:#27ae60;">${fmt(entradaMesTotal)}</td></tr>
+                        </table>
+                        
+                        <div style="display:flex; justify-content:space-around; align-items:center; margin-top:15px;">
                             <div style="text-align:center;">
-                                <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (MENSALIDADES)</div>
-                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;"><canvas id="grafMensalidade"></canvas></div>
+                                <div style="font-size:9px; color:#777; font-weight:bold; margin-bottom:2px;">FORMAS (MENSALIDADE)</div>
+                                <div style="position:relative; width:90px; height:90px;"><canvas id="grafMensalidade"></canvas></div>
                             </div>
                             <div style="text-align:center;">
-                                <div style="font-size:10px; font-weight:bold; color:#777; margin-bottom:5px;">FORMAS (VENDAS)</div>
-                                <div style="position: relative; width: 120px; height: 120px; margin: 0 auto;"><canvas id="grafVenda"></canvas></div>
+                                <div style="font-size:9px; color:#777; font-weight:bold; margin-bottom:2px;">FORMAS (VENDAS)</div>
+                                <div style="position:relative; width:90px; height:90px;"><canvas id="grafVenda"></canvas></div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="d-box" style="background:#fdf2f2; border:2px solid #f5b7b1;">
-                    <h3 style="margin-top:0; color:#c0392b; border-bottom:1px solid #f5b7b1; padding-bottom:10px; font-size:15px; display:flex; align-items:center; gap:8px;">
-                        ⚠️ Indicador de Inadimplência
-                    </h3>
-                    <p style="font-size:11px; color:#e74c3c; margin-top:-5px; margin-bottom:15px;">Monitorização dos valores pendentes com vencimento nos respetivos meses.</p>
-                    
-                    <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;">
-                        <div style="text-align:center; flex:1; min-width:200px; padding:15px; background:white; border-radius:8px; border:1px dashed #f1948a;">
-                            <div style="font-size:12px; color:#e74c3c; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Mês Anterior (${nomeMesAnterior}/${prevAno})</div>
-                            <div style="font-size:24px; font-weight:bold; color:#e74c3c; opacity: 0.8;">${fmt(inadMesAnterior)}</div>
-                        </div>
-                        
-                        <div class="divider-vert" style="border-left: 2px dashed #f5b7b1; height: 60px;"></div>
-                        
-                        <div style="text-align:center; flex:1; min-width:200px; padding:15px; background:#fff5f5; border-radius:8px; border:2px solid #e74c3c; box-shadow: 0 4px 10px rgba(231,76,60,0.15);">
-                            <div style="font-size:14px; color:#c0392b; font-weight:bold; text-transform:uppercase; margin-bottom:5px;">Mês Vigente (${nomeMes}/${ano})</div>
-                            <div style="font-size:36px; font-weight:900; color:#c0392b;">${fmt(inadMesAtual)}</div>
+                    <div class="exec-box">
+                        <h3 class="exec-title">Demografia & Origem de Alunos</h3>
+                        ${htmlDemografia}
+                        <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+                            <div style="font-size:10px; font-weight:bold; color:#555; text-align:center; margin-bottom:5px;">PAÍS DE ORIGEM (MATRÍCULAS GERAIS)</div>
+                            <div style="position:relative; height:110px; width:100%;"><canvas id="grafPais"></canvas></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-box" style="background:#fcfcfc;">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">👥 Demografia Estratégica (Status, Género e Origem)</h3>
-                    
-                    ${htmlDemografia}
-
-                    <div style="background:#fff; border:1px solid #eee; border-radius:8px; padding:20px; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
-                        <h4 style="margin:0 0 15px 0; color:#2c3e50; font-size:13px; text-transform:uppercase; text-align:center;">🌎 Distribuição por País de Origem</h4>
-                        <div style="position: relative; height: 250px; width: 100%;"><canvas id="grafPais"></canvas></div>
+                <!-- LINHA 2: INADIMPLÊNCIA & HISTÓRICO -->
+                <div class="exec-grid">
+                    <div class="exec-box" style="border-top: 3px solid #e74c3c; background: #fffcfc;">
+                        <h3 class="exec-title" style="color: #c0392b; border-color: #fadbd8;">Indicador de Inadimplência (Pendentes do Mês)</h3>
+                        <div style="display:flex; gap:10px; align-items:stretch;">
+                            <div style="flex:1; background:#fff; border: 1px solid #fadbd8; border-radius:4px; padding:10px; text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                                <div style="font-size:10px; color:#e74c3c; font-weight:bold; text-transform:uppercase;">Mês Anterior<br>(${nomeMesAnterior}/${prevAno})</div>
+                                <div style="font-size:18px; font-weight:bold; color:#e74c3c; margin-top:5px;">${fmt(inadMesAnterior)}</div>
+                            </div>
+                            <div style="flex:1; background:#fdedec; border: 1px solid #e74c3c; border-radius:4px; padding:10px; text-align:center; display:flex; flex-direction:column; justify-content:center; box-shadow: inset 0 2px 5px rgba(231,76,60,0.1);">
+                                <div style="font-size:11px; color:#c0392b; font-weight:bold; text-transform:uppercase;">Mês Vigente<br>(${nomeMes}/${ano})</div>
+                                <div style="font-size:24px; font-weight:900; color:#c0392b; margin-top:5px;">${fmt(inadMesAtual)}</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="d-box">
-                    <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📈 Histórico de Entradas (${ano})</h3>
-                    <div class="table-responsive">
-                        <table class="d-table" style="min-width:400px;">
-                            <thead><tr><th>Mês</th><th style="text-align:right;">Mensalidades</th><th style="text-align:right;">Vendas</th><th style="text-align:right;">Total do Mês</th></tr></thead>
+                    <div class="exec-box">
+                        <h3 class="exec-title">Histórico de Receitas Brutas (${ano})</h3>
+                        <table class="exec-table">
+                            <thead><tr><th>MÊS</th><th style="text-align:right;">MENSAL.</th><th style="text-align:right;">VENDAS</th><th style="text-align:right;">TOTAL</th></tr></thead>
                             <tbody>${linhasHistorico}</tbody>
-                            <tfoot><tr style="background:#e8f6f3; font-weight:bold; font-size:13px;"><td colspan="3" style="text-align:right;">TOTAL BRUTO (JAN ATÉ ${nomeMes.toUpperCase()}):</td><td style="text-align:right; color:#27ae60; white-space:nowrap;">${fmt(acumuladoHistorico)}</td></tr></tfoot>
+                            <tfoot><tr style="background:#f4f8f9;"><td colspan="3" style="text-align:right; font-weight:bold;">ACUMULADO ATÉ ${nomeMes.toUpperCase()}:</td><td style="text-align:right; font-weight:900; color:#27ae60;">${fmt(acumuladoHistorico)}</td></tr></tfoot>
                         </table>
                     </div>
                 </div>
 
-                <div class="d-box">
-                    <div class="flex-container">
-                        <div class="flex-item">
-                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">📚 Cursos (${cursos.length})</h3>
-                            <div>${cursos.length ? cursos.map(c => `<div class="list-card"><span>${App.escapeHTML(c.nome)}</span><span class="badge-curso">${alunosCurso[c.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhum curso.</div>'}</div>
-                        </div>
-                        <div class="flex-item">
-                            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; font-size:15px;">🏫 Turmas (${turmas.length})</h3>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px;">${turmas.length ? turmas.map(t => `<div class="list-card" style="margin-bottom:0;"><span>${App.escapeHTML(t.nome)}</span><span class="badge-turma">${alunosTurma[t.nome] || 0} alunos</span></div>`).join('') : '<div style="color:#999; font-size:12px;">Nenhuma turma.</div>'}</div>
-                        </div>
+                <!-- LINHA 3: CURSOS & TURMAS COMPACTOS -->
+                <div class="exec-grid">
+                    <div class="exec-box">
+                        <h3 class="exec-title">Cursos Ministrados (${cursos.length})</h3>
+                        ${htmlCursos}
+                    </div>
+                    <div class="exec-box">
+                        <h3 class="exec-title">Distribuição por Turmas (${turmas.length})</h3>
+                        ${htmlTurmas}
                     </div>
                 </div>
 
             </div>`;
 
         setTimeout(() => {
-            const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '65%' };
+            const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' };
             const bgColors = ['#3498db', '#9b59b6', '#f1c40f', '#2ecc71', '#e67e22', '#95a5a6'];
 
             if(Object.keys(formasMensalidade).length > 0 && document.getElementById('grafMensalidade')) { new Chart(document.getElementById('grafMensalidade'), { type: 'doughnut', data: { labels: Object.keys(formasMensalidade), datasets: [{ data: Object.values(formasMensalidade), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
             if(Object.keys(formasVenda).length > 0 && document.getElementById('grafVenda')) { new Chart(document.getElementById('grafVenda'), { type: 'doughnut', data: { labels: Object.keys(formasVenda), datasets: [{ data: Object.values(formasVenda), backgroundColor: bgColors, borderWidth: 0 }] }, options: chartOptions }); }
             
-            // 🌎 Gráfico de Origem em Barras
             if(Object.keys(paises).length > 0 && document.getElementById('grafPais')) { 
                 new Chart(document.getElementById('grafPais'), { 
                     type: 'bar', 
                     data: { 
                         labels: Object.keys(paises), 
                         datasets: [{ 
-                            label: 'Qtd. de Alunos',
                             data: Object.values(paises), 
-                            backgroundColor: ['#3498db', '#2ecc71', '#f1c40f', '#e74c3c', '#9b59b6', '#34495e'], 
-                            borderRadius: 5 
+                            backgroundColor: '#34495e', 
+                            borderRadius: 3 
                         }] 
                     }, 
                     options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false, 
+                        responsive: true, maintainAspectRatio: false, 
                         plugins: { legend: { display: false } }, 
-                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } } 
+                        scales: { 
+                            x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+                            y: { beginAtZero: true, border: { display: false }, ticks: { stepSize: 1, font: { size: 9 } } } 
+                        } 
                     } 
                 }); 
             }
