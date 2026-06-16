@@ -102,7 +102,7 @@ Object.assign(App, {
             perfilCache.dataExpiracao = novaDataExp.toISOString();
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(perfilCache));
 
-            App.atualizarUIHeader(perfilCache);
+            if(typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(perfilCache);
             App.showToast(`🎉 PIN validado! Sistema desbloqueado por mais 30 dias.`, "success");
             
             const blockBox = document.getElementById('box-bloqueio-conta');
@@ -142,44 +142,54 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            // 🚀 RENDERIZAÇÃO OTIMISTA: Desenha a tela IMEDIATAMENTE (Evita cair pro Login no F5)
+            // 🚀 A MÁGICA DA RENDERIZAÇÃO OTIMISTA (Adeus logins no F5!)
             if (bioId && window.PublicKeyCredential) {
                 document.getElementById('tela-login').style.display = 'flex'; 
                 document.getElementById('tela-sistema').style.display = 'none';
                 document.getElementById('btn-biometria').style.display = 'block'; 
                 setTimeout(() => { App.entrarComBiometria(); }, 600); 
             } else { 
+                document.getElementById('tela-login')?.style.setProperty('display', 'none');
+                document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
+                
+                const el = document.getElementById('user-name');
+                if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+                
+                if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
+                if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
+
                 const hashSalvo = window.location.hash.replace('#', '');
-                App.entrarNoSistema(); 
                 if (hashSalvo && hashSalvo !== 'login') {
-                    setTimeout(() => App.renderizarTela(hashSalvo, true), 10);
+                    setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 10);
+                } else {
+                    if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
                 }
             }
 
-            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
-            let escola = await App.api('/escola', 'GET', null, true); // O 'true' ativa o modo Silencioso
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND (1 Segundo depois para não travar o F5)
+            setTimeout(async () => {
+                let escola = await App.api('/escola', 'GET', null, true); // true = silencioso
 
-            if (!escola || escola.error) {
-                if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
-                    App.showToast("Sessão expirada. Por favor, faça login novamente.", "warning");
-                    await App.logout();
-                    return;
+                if (!escola || escola.error) {
+                    // Só expulsa se a API atirar explicitamente o erro de sessão expirada
+                    if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
+                        App.showToast("Sessão expirada por segurança. Faça login novamente.", "warning");
+                        await App.logout();
+                        return;
+                    }
+                } else {
+                    localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano);
+                    localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
+                    if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escola);
+                    if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
+                        document.documentElement.removeAttribute('style'); 
+                        App.mostrarTelaBloqueioLogin(escola);
+                    }
                 }
-                escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-            } else {
-                // Sessão validada! Atualiza o cache local
-                localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano);
-                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
-                App.atualizarUIHeader(escola);
-            }
-
-            if (App.verificarBloqueioGeral(escola)) {
-                document.documentElement.removeAttribute('style'); 
-                App.mostrarTelaBloqueioLogin(escola);
-            }
+            }, 1000); 
 
         } else { 
-            // Só cai para o login se a memória cache realmente não tiver ninguém logado
+            // Se o browser nem tem os dados, aí sim mostra o login puro
             document.documentElement.removeAttribute('style'); 
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
@@ -188,8 +198,6 @@ Object.assign(App, {
         const dataEl = document.getElementById('data-hoje'); 
         if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
         
-        if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu(); 
-        
         const passInput = document.getElementById('login-pass'); 
         if(passInput) { 
             passInput.addEventListener('keypress', function (e) { 
@@ -197,13 +205,14 @@ Object.assign(App, {
             }); 
         }
         
+        // 🛰️ O RADAR COM PROTEÇÃO CONTRA BACKGROUND
         if (!App.motorTempoRealLigado) {
             const checarSistema = () => {
                 const telaSistema = document.getElementById('tela-sistema');
-                // 🧠 INTELIGÊNCIA: O Radar SÓ avança se a app NÃO estiver minimizada no telemóvel!
+                // SÓ FAZ PEDIDOS SE O UTILIZADOR ESTIVER COM A APP ATIVA NO ECRÃ!
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none' && document.visibilityState === 'visible') {
-                    if (typeof App.verificarNotificacoes === 'function') App.verificarNotificacoes();
-                    App.carregarDadosEscola(true); // Modo silencioso ligado
+                    if (typeof App.verificarNovidadesSilenciosamente === 'function') App.verificarNovidadesSilenciosamente();
+                    if (typeof App.carregarDadosEscola === 'function') App.carregarDadosEscola(true);
                 }
             };
             setTimeout(checarSistema, 2000);
@@ -221,7 +230,7 @@ Object.assign(App, {
         const txt = btn.innerText; btn.innerText = "Autenticando... ⏳"; btn.disabled = true;
         
         try {
-            const deviceId = App.getDeviceId();
+            const deviceId = App.getDeviceId ? App.getDeviceId() : 'dev_web';
             const res = await App.api('/auth/login', 'POST', { login: login, senha: pass, deviceId: deviceId });
             
             if(res && res.success) {
@@ -230,7 +239,7 @@ Object.assign(App, {
                 
                 if (typeof gtag === 'function') gtag('event', 'login', { method: 'Sistema PTT' });
                 
-                App.aplicarTemaSalvo();
+                if (typeof App.aplicarTemaSalvo === 'function') App.aplicarTemaSalvo();
                 const keyAtalhos = App.getTenantKey('escola_atalhos');
                 if (!localStorage.getItem(keyAtalhos)) { 
                     localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
@@ -246,15 +255,13 @@ Object.assign(App, {
                     escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
                 }
 
-                if (App.verificarBloqueioGeral(escola)) {
+                if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
                     App.mostrarTelaBloqueioLogin(escola);
                 } else {
+                    App.entrarNoSistema();
                     const hashSalvo = window.location.hash.replace('#', '');
                     if (hashSalvo && hashSalvo !== 'login') {
-                        App.entrarNoSistema();
-                        setTimeout(() => App.renderizarTela(hashSalvo, true), 100);
-                    } else {
-                        App.entrarNoSistema();
+                        setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 100);
                     }
                     App.showToast('Bem-vindo ao sistema!', 'success');
                 }
@@ -275,15 +282,14 @@ Object.assign(App, {
         const el = document.getElementById('user-name');
         if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
         
-        App.aplicarPermissoesDeUsuario(); 
-        await App.carregarDadosEscola();
-
+        if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
         if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
-        App.iniciarRadar();        
-
+        
+        if (typeof App.carregarDadosEscola === 'function') await App.carregarDadosEscola(true);
+        
         const telaSistema = document.getElementById('tela-sistema');
-        if (telaSistema && telaSistema.style.display !== 'none') {
-            App.renderizarInicio();
+        if (telaSistema && telaSistema.style.display !== 'none' && !window.location.hash) {
+            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
         }
     },
 
@@ -291,24 +297,19 @@ Object.assign(App, {
         if (App.radarAtivo) clearInterval(App.radarAtivo); 
         
         try {
-            // 🚀 CORREÇÃO 1: Usa o motor inteligente (App.api) para garantir que o cookie morre no servidor
             if (typeof App.api === 'function') {
                 await App.api('/auth/logout', 'POST');
             } else {
-                await fetch(`${CONFIG.API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             }
-        } catch(e) { 
-            console.warn("Logout backend ignorado localmente."); 
-        }
+        } catch(e) { console.warn("Logout silencioso."); }
 
-        // 🚀 CORREÇÃO 2: A Bomba Nuclear. Limpa ABSOLUTAMENTE TUDO da escola anterior
+        // A Bomba Nuclear. Limpa ABSOLUTAMENTE TUDO
         localStorage.clear();
         sessionStorage.clear();
         App.usuario = null;
         App.listaCache = [];
 
-        // 🚀 CORREÇÃO 3: Força o recarregamento total e limpo da página (mata a memória Zombie)
-        // Isso remove a necessidade de ficar a esconder/mostrar divs manualmente
         window.location.href = window.location.pathname; 
     },
 
@@ -348,22 +349,13 @@ Object.assign(App, {
         const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
         
         try {
-            // USANDO A FUNÇÃO App.api EM VEZ DO FETCH COM A VARIÁVEL FANTASMA
             const res = await App.api('/auth/recuperar-senha', 'POST', { email });
-            
             if (res && res.success) {
                 App.showToast(res.message || "Link enviado com sucesso.", "success");
                 document.getElementById('modal-recuperacao-senha').style.display = 'none';
-            } else { 
-                App.showToast(res.error || "Erro ao solicitar.", "error"); 
-            }
-        } catch (e) { 
-            console.error("ERRO NO FRONTEND:", e);
-            App.showToast("Erro de comunicação.", "error"); 
-        } 
-        finally { 
-            btn.innerText = txt; btn.disabled = false; 
-        }
+            } else { App.showToast(res.error || "Erro ao solicitar.", "error"); }
+        } catch (e) { App.showToast("Erro de comunicação.", "error"); } 
+        finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     abrirModalNovaSenha: (token) => {
@@ -397,23 +389,16 @@ Object.assign(App, {
         const btn = document.querySelector('#modal-nova-senha .btn-primary');
         const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true;
         try {
-            // Utilizamos o App.api para garantir que a rota vai para a Vercel com /api
             const data = await App.api('/auth/redefinir-senha', 'POST', { token: App.tokenResetSenha, novaSenha });
-            
             if (data && data.success) {
                 App.showToast("Senha redefinida! Faça login agora.", "success");
                 document.getElementById('modal-nova-senha').style.display = 'none';
                 App.tokenResetSenha = null;
                 const novaUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, novaUrl);
-            } else { 
-                App.showToast(data.error || "Erro ao redefinir.", "error"); 
-            }
-        } catch (e) { 
-            App.showToast("Erro de comunicação.", "error"); 
-        } finally { 
-            btn.innerText = txt; btn.disabled = false; 
-        }
+            } else { App.showToast(data.error || "Erro ao redefinir.", "error"); }
+        } catch (e) { App.showToast("Erro de comunicação.", "error"); } 
+        finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     bufferToBase64: function(buf) {
@@ -451,7 +436,7 @@ Object.assign(App, {
                 localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
                 App.removerOverlayBiometria();
                 App.showToast("✅ Biometria ativada!", "success");
-                App.renderizarMinhaConta();
+                if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
             }
         } catch (e) { App.removerOverlayBiometria(); App.showToast("Cancelado.", "warning"); }
     },
@@ -502,5 +487,4 @@ Object.assign(App, {
         const overlay = document.getElementById('bio-overlay-premium');
         if (overlay) overlay.style.display = 'none';
     }
-
 });

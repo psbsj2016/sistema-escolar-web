@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { VitePWA } from 'vite-plugin-pwa'; // Importamos o plugin
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate', // Atualiza o PWA sozinho quando há nova versão
-      includeAssets: ['assets/icone.png'], // Inclui os seus ícones
+      registerType: 'prompt', // 🔥 MAGIA AQUI: Tem que ser 'prompt' para o banner aparecer!
+      includeAssets: ['assets/icone.png'],
       manifest: {
         name: "Gestão Escolar SaaS",
         short_name: "Gestão Escolar",
@@ -16,23 +16,11 @@ export default defineConfig({
         display: "standalone",
         start_url: "/",
         icons: [
-          {
-            src: "assets/icone.png", 
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any maskable"
-          },
-          {
-            src: "assets/icone.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable"
-          }
+          { src: "assets/icone.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: "assets/icone.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
         ]
       },
-      // 👇 A SOLUÇÃO MÁGICA ENTRA AQUI 👇
       workbox: {
-        // Diz ao PWA para NÃO redirecionar estas páginas para o index.html
         navigateFallbackDenylist: [/^\/matricula/, /^\/admin/, /^\/hub-matriculas/]
       }
     })
@@ -46,10 +34,7 @@ export default defineConfig({
         configure: (proxy, _options) => {
           proxy.on('proxyRes', (proxyRes, req, res) => {
             const setCookie = proxyRes.headers['set-cookie'];
-            if (setCookie) {
-                // Mantém os cookies locais a funcionar perfeitamente
-                proxyRes.headers['set-cookie'] = setCookie.map(s => s.replace(/Domain=[^;]+;?/, ''));
-            }
+            if (setCookie) proxyRes.headers['set-cookie'] = setCookie.map(s => s.replace(/Domain=[^;]+;?/, ''));
           });
         },
       }
@@ -61,8 +46,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
         matricula: resolve(__dirname, 'matricula.html'),
-        hub: resolve(__dirname, 'hub-matriculas.html'), // Adicionado!
-        online: resolve(__dirname, 'matricula-online.html') // Adicionado!
+        hub: resolve(__dirname, 'hub-matriculas.html'),
+        online: resolve(__dirname, 'matricula-online.html')
       }
     }
   }
