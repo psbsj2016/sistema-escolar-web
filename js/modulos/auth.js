@@ -142,12 +142,13 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            // 🚀 A MÁGICA DA RENDERIZAÇÃO OTIMISTA (Adeus logins no F5!)
+            // 🚀 A MÁGICA DA RENDERIZAÇÃO OTIMISTA
             if (bioId && window.PublicKeyCredential) {
                 document.getElementById('tela-login').style.display = 'flex'; 
                 document.getElementById('tela-sistema').style.display = 'none';
-                document.getElementById('btn-biometria').style.display = 'block'; 
-                setTimeout(() => { App.entrarComBiometria(); }, 600); 
+                const btnBio = document.getElementById('btn-biometria');
+                if(btnBio) btnBio.style.display = 'block'; 
+                // Apenas deixamos o botão visível. O utilizador DEVE clicar no ecrã para ativar o FaceID!
             } else { 
                 document.getElementById('tela-login')?.style.setProperty('display', 'none');
                 document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
@@ -166,12 +167,11 @@ Object.assign(App, {
                 }
             }
 
-            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND (1 Segundo depois para não travar o F5)
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); // true = silencioso
 
                 if (!escola || escola.error) {
-                    // Só expulsa se a API atirar explicitamente o erro de sessão expirada
                     if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
                         App.showToast("Sessão expirada por segurança. Faça login novamente.", "warning");
                         await App.logout();
@@ -209,7 +209,6 @@ Object.assign(App, {
         if (!App.motorTempoRealLigado) {
             const checarSistema = () => {
                 const telaSistema = document.getElementById('tela-sistema');
-                // SÓ FAZ PEDIDOS SE O UTILIZADOR ESTIVER COM A APP ATIVA NO ECRÃ!
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none' && document.visibilityState === 'visible') {
                     if (typeof App.verificarNovidadesSilenciosamente === 'function') App.verificarNovidadesSilenciosamente();
                     if (typeof App.carregarDadosEscola === 'function') App.carregarDadosEscola(true);
@@ -304,7 +303,6 @@ Object.assign(App, {
             }
         } catch(e) { console.warn("Logout silencioso."); }
 
-        // A Bomba Nuclear. Limpa ABSOLUTAMENTE TUDO
         localStorage.clear();
         sessionStorage.clear();
         App.usuario = null;
@@ -417,15 +415,20 @@ Object.assign(App, {
     },
 
     configurarBiometria: async () => {
-        if (!window.PublicKeyCredential) return App.showToast("Não suportado.", "error");
+        if (!window.PublicKeyCredential) return App.showToast("Biometria não suportada neste aparelho.", "error");
         try {
             App.exibirOverlayBiometria("Configurar Acesso", "Use o sensor digital para registrar este aparelho.");
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const userId = window.crypto.getRandomValues(new Uint8Array(16));
+            
+            // 🛡️ A MÁGICA: O domínio adicionado no rp.id garante a confiança do iOS/Android!
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "App Gestão PTT" },
+                    rp: { 
+                        name: "App Gestão PTT", 
+                        id: window.location.hostname 
+                    },
                     user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
                     pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
                     authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
@@ -435,33 +438,43 @@ Object.assign(App, {
             if (cred) {
                 localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
                 App.removerOverlayBiometria();
-                App.showToast("✅ Biometria ativada!", "success");
+                App.showToast("✅ Biometria ativada com sucesso!", "success");
                 if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
             }
-        } catch (e) { App.removerOverlayBiometria(); App.showToast("Cancelado.", "warning"); }
+        } catch (e) { 
+            App.removerOverlayBiometria(); 
+            App.showToast("Configuração cancelada.", "warning"); 
+        }
     },
 
     entrarComBiometria: async () => {
         const bioId = localStorage.getItem('escola_bio_id');
         if (!bioId) return;
         try {
-            App.exibirOverlayBiometria("Autenticação", "Aguardando biometria...");
+            App.exibirOverlayBiometria("Autenticação", "Aguardando leitura do sensor...");
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const rawId = App.base64ToBuffer(bioId);
+            
+            // 🛡️ A MÁGICA CONTINUA: Validação pelo rpId
             const assertion = await navigator.credentials.get({
                 publicKey: {
                     challenge: challenge,
+                    rpId: window.location.hostname,
                     allowCredentials: [{ type: "public-key", id: rawId }],
                     userVerification: "required",
                     timeout: 60000
                 }
             });
+            
             if (assertion) {
                 App.removerOverlayBiometria();
-                App.showToast("🔓 Bem-vindo!", "success");
+                App.showToast("🔓 Bem-vindo de volta!", "success");
                 App.entrarNoSistema();
             }
-        } catch (e) { App.removerOverlayBiometria(); App.showToast("Use sua senha.", "info"); }
+        } catch (e) { 
+            App.removerOverlayBiometria(); 
+            App.showToast("A leitura falhou. Use a sua senha.", "info"); 
+        }
     },
 
     exibirOverlayBiometria: (titulo, sub) => {
