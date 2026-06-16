@@ -201,9 +201,9 @@ verificarLimites: async (tipo) => {
     },
 
    // =========================================================
-    // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS
+    // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS SILENCIOSO
     // =========================================================
-    api: async (endpoint, method = 'GET', body = null) => {
+    api: async (endpoint, method = 'GET', body = null, silencioso = false) => {
         const headers = { 'Content-Type': 'application/json' };
         const options = {
             method,
@@ -214,14 +214,11 @@ verificarLimites: async (tipo) => {
 
         if (body) options.body = JSON.stringify(body);
         
-        // 🚀 O SEGREDO DO ROTEAMENTO: Simples, Limpo e Blindado
         const endpointLimpo = endpoint.replace(/^\/api/, '');
         const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
         
-        // Assume Vercel por padrão (/api/...)
         let urlFinal = `/api${caminhoFinal}`;
 
-        // Se você estiver a testar puramente no seu computador local (Node.js na porta 3000)
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             if (window.location.port !== '5173') {
                 urlFinal = `http://localhost:3000${caminhoFinal}`;
@@ -231,21 +228,19 @@ verificarLimites: async (tipo) => {
         try {
             const response = await fetch(urlFinal, options);
             
-            // 🛡️ O GUARDA-COSTAS ENTRA AQUI
             if (!response.ok) {
-                
-                // 2. Extrai o erro que o Backend enviou
                 const errorData = await response.json().catch(() => ({}));
                 const mensagemErro = errorData.error || `Erro no servidor (${response.status})`;
                 
-                App.showToast(mensagemErro, "error");
+                // 🛡️ Se o modo não for silencioso e o PWA estiver maximizado, mostra erro!
+                if (!silencioso && document.visibilityState === 'visible') {
+                    App.showToast(mensagemErro, "error");
+                }
                 return { error: mensagemErro };
             }
             
-            // Se chegou aqui, a resposta foi SUCESSO (200 OK)
             const data = await response.json();
             
-            // Atualiza as notificações no fundo se for uma ação (POST/PUT/DELETE)
             if (method !== 'GET' && App.usuario && typeof App.verificarNotificacoes === 'function') {
                 setTimeout(App.verificarNotificacoes, 800);
             }
@@ -254,6 +249,12 @@ verificarLimites: async (tipo) => {
 
         } catch (error) { 
             console.error(`❌ Falha na API [${method} ${urlFinal}]:`, error.message);
+            
+            // 🧠 A MÁGICA: Se o utilizador minimizou a app (Whatsapp), bloqueamos o erro vermelho!
+            if (document.visibilityState === 'hidden' || silencioso) {
+                return method === 'GET' ? [] : { error: 'Rejeitado silenciosamente em background' };
+            }
+            
             const msgNet = error.message === "Failed to fetch" || error.message.includes("NetworkError") 
                          ? "Sem ligação ao servidor Backend (Porta 3000 desligada?)" 
                          : error.message;
@@ -282,7 +283,7 @@ fecharModalInst: () => { document.getElementById('modal-cadastro-inst').style.di
 voltarEtapa1: () => { document.getElementById('etapa-1-email').style.display = 'block'; document.getElementById('etapa-2-validacao').style.display = 'none'; document.getElementById('etapa-3-sucesso').style.display = 'none'; },
 
 enviarCodigoInst: async () => {
-    console.log("🔥 Clique recebido no botão de Cadastro!"); // <--- ADICIONE ESTA LINHA
+    console.log("🔥 Clique recebido no botão de Cadastro!"); 
     const email = document.getElementById('novo-inst-email').value; const btn = document.querySelector('#etapa-1-email button');
     if(!email || !email.includes('@')) return App.showToast('Digite um e-mail válido.', 'error');
     const txt = btn.innerText; btn.innerText = "Enviando... ⏳"; btn.disabled = true;
@@ -307,7 +308,7 @@ validarCadastroInst: async () => {
         else { App.showToast(res.error || 'Dados incorretos.', 'error'); }
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
 },
-   
+    
     // Adicionamos o parâmetro 'veioDoHistorico'
     renderizarTela: async (tela, veioDoHistorico = false) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
@@ -517,7 +518,7 @@ validarCadastroInst: async () => {
             App.showToast(`🎉 PIN validado com sucesso! Plano atualizado para ${novoPlano}. A iniciar...`, "success");
             inputElement.value = '';
             
-            await App.carregarDadosEscola();
+            await App.carregarDadosEscola(true);
             App.renderizarInicio();
         } catch(e) { 
             App.showToast("Erro ao comunicar com a base de dados.", "error"); 
@@ -1339,19 +1340,19 @@ validarCadastroInst: async () => {
         }
     },
 
-    carregarDadosEscola: async () => { 
+    carregarDadosEscola: async (silencioso = false) => { 
         try { 
             const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
             if (cacheEscola) {
                 App.atualizarUIHeader(cacheEscola);
             }
 
-            const escola = await App.api('/escola'); 
+            const escola = await App.api('/escola', 'GET', null, silencioso); 
             if(!escola || escola.error) return;
             
             if (!escola.dataCriacao) {
                 escola.dataCriacao = new Date().toISOString();
-                await App.api('/escola', 'PUT', escola);
+                await App.api('/escola', 'PUT', escola, silencioso);
             }
 
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
@@ -1359,7 +1360,6 @@ validarCadastroInst: async () => {
             
             App.atualizarUIHeader(escola);
             
-            // 🚀 CÃO DE GUARDA: Expulsa se vencer com o sistema aberto
             if (App.verificarBloqueioGeral(escola)) {
                 App.mostrarTelaBloqueioLogin(escola);
             }

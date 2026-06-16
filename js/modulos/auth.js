@@ -135,43 +135,51 @@ Object.assign(App, {
 
         if (salvo) { 
             App.usuario = JSON.parse(salvo); 
-            App.aplicarTemaSalvo();
+            if (typeof App.aplicarTemaSalvo === 'function') App.aplicarTemaSalvo();
 
             const keyAtalhos = App.getTenantKey('escola_atalhos');
             if (!localStorage.getItem(keyAtalhos)) { 
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            let escola = await App.api('/escola');
+            // 🚀 RENDERIZAÇÃO OTIMISTA: Desenha a tela IMEDIATAMENTE (Evita cair pro Login no F5)
+            if (bioId && window.PublicKeyCredential) {
+                document.getElementById('tela-login').style.display = 'flex'; 
+                document.getElementById('tela-sistema').style.display = 'none';
+                document.getElementById('btn-biometria').style.display = 'block'; 
+                setTimeout(() => { App.entrarComBiometria(); }, 600); 
+            } else { 
+                const hashSalvo = window.location.hash.replace('#', '');
+                App.entrarNoSistema(); 
+                if (hashSalvo && hashSalvo !== 'login') {
+                    setTimeout(() => App.renderizarTela(hashSalvo, true), 10);
+                }
+            }
+
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
+            let escola = await App.api('/escola', 'GET', null, true); // O 'true' ativa o modo Silencioso
 
             if (!escola || escola.error) {
                 if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
+                    App.showToast("Sessão expirada. Por favor, faça login novamente.", "warning");
                     await App.logout();
                     return;
                 }
                 escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            } else {
+                // Sessão validada! Atualiza o cache local
+                localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano);
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
+                App.atualizarUIHeader(escola);
             }
 
             if (App.verificarBloqueioGeral(escola)) {
                 document.documentElement.removeAttribute('style'); 
                 App.mostrarTelaBloqueioLogin(escola);
-            } else {
-                if (bioId && window.PublicKeyCredential) {
-                    document.getElementById('tela-login').style.display = 'flex'; 
-                    document.getElementById('tela-sistema').style.display = 'none';
-                    document.getElementById('btn-biometria').style.display = 'block'; 
-                    setTimeout(() => { App.entrarComBiometria(); }, 600); 
-                } else { 
-                    const hashSalvo = window.location.hash.replace('#', '');
-                    if (hashSalvo && hashSalvo !== 'login') {
-                        App.entrarNoSistema(); 
-                        setTimeout(() => App.renderizarTela(hashSalvo, true), 100);
-                    } else {
-                        App.entrarNoSistema(); 
-                    }
-                }
             }
+
         } else { 
+            // Só cai para o login se a memória cache realmente não tiver ninguém logado
             document.documentElement.removeAttribute('style'); 
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
@@ -180,7 +188,7 @@ Object.assign(App, {
         const dataEl = document.getElementById('data-hoje'); 
         if(dataEl) dataEl.innerText = new Date().toLocaleDateString('pt-BR');
         
-        App.setupMobileMenu(); 
+        if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu(); 
         
         const passInput = document.getElementById('login-pass'); 
         if(passInput) { 
@@ -192,9 +200,10 @@ Object.assign(App, {
         if (!App.motorTempoRealLigado) {
             const checarSistema = () => {
                 const telaSistema = document.getElementById('tela-sistema');
-                if (App.usuario && telaSistema && telaSistema.style.display !== 'none') {
-                    App.verificarNotificacoes();
-                    App.carregarDadosEscola(); 
+                // 🧠 INTELIGÊNCIA: O Radar SÓ avança se a app NÃO estiver minimizada no telemóvel!
+                if (App.usuario && telaSistema && telaSistema.style.display !== 'none' && document.visibilityState === 'visible') {
+                    if (typeof App.verificarNotificacoes === 'function') App.verificarNotificacoes();
+                    App.carregarDadosEscola(true); // Modo silencioso ligado
                 }
             };
             setTimeout(checarSistema, 2000);
