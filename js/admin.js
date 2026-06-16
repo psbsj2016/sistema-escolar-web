@@ -96,6 +96,11 @@ const Admin = {
             const urlSemCache = `${API_URL}/master/ativacoes?t=${new Date().getTime()}`;
             const res = await fetch(urlSemCache, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' });
             
+            // 🛡️ PROTEÇÃO ADICIONADA AQUI: Lida com o erro 500 do servidor
+            if(res.status === 500) {
+                Admin.showToast("Erro 500: Falha interna no servidor (Backend). Verifique os logs da sua API.", "error");
+                return;
+            }
             if(res.status === 401 || res.status === 403) return Admin.logout();
             
             const lista = await res.json();
@@ -108,7 +113,6 @@ const Admin = {
                 document.getElementById('kpi-pendentes').innerText = lista.filter(l => l.status === 'Pendente' || l.status === 'Aguardando Ativação' || l.status === 'Aguardando').length;
                 document.getElementById('kpi-bloqueados').innerText = lista.filter(l => l.status === 'Bloqueado').length;
 
-                // 🚀 A MÁGICA AQUI: Força a limpeza da barra de pesquisa para nenhum e-mail ficar "preso"!
                 const campoBusca = document.getElementById('busca-tabela-escolas') || document.getElementById('pesquisa-admin');
                 if (campoBusca) {
                     campoBusca.value = ''; 
@@ -117,7 +121,10 @@ const Admin = {
                 Admin.desenharTabela(cacheClientes);
                 Admin.carregarNotificacoes();
             }
-        } catch(e) { console.error("🚨 Erro no carregarDados:", e); }
+        } catch(e) { 
+            console.error("🚨 Erro no carregarDados:", e); 
+            Admin.showToast("Erro de comunicação: O servidor não está a responder.", "error");
+        }
     },
 
     toggleNotificacoes: () => {
