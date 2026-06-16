@@ -946,3 +946,19 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         margin-right: 0 !important;
     }
 }
+
+/* =========================================================
+   📱 FIX: TABELA DE HISTÓRICO DE RECEITAS NO DOSSIÊ MOBILE
+   ========================================================= */
+@media (max-width: 768px) {
+    .box-card {
+        /* Em vez de cortar o conteúdo (hidden), permite deslizar para o lado com o dedo */
+        overflow-x: auto !important; 
+        -webkit-overflow-scrolling: touch !important; /* Rolagem super suave no iPhone/Android */
+    }
+    
+    .fin-table {
+        /* Garante que as colunas não se esmaguem, forçando o scroll horizontal ficar perfeito */
+        min-width: 480px !important; 
+    }
+}
