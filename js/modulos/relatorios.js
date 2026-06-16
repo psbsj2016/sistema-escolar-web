@@ -384,7 +384,7 @@ App.gerarDossie = async () => {
     const nomeMes = mesesArray[mesIdx-1];
 
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Renderizando gráficos com numeração para impressão ⏳</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; font-size:14px; color:#2980b9;"><b>A gerar Dossiê Corporativo...</b><br>Renderizando gráficos e sincronizando layout de impressão ⏳</p>';
     document.body.style.cursor = 'wait';
     
     try {
@@ -400,7 +400,6 @@ App.gerarDossie = async () => {
         const fmt = (v) => parseFloat(v || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         const isVenda = (f) => (f.descricao && f.descricao.toLowerCase().includes('venda')) || (f.idCarne && f.idCarne.includes('VENDA'));
 
-        // Mapeamento de Alunos Ativos
         const alunosAtivosIds = new Set();
         const alunosAtivosNomes = new Set();
         alunos.forEach(a => {
@@ -490,7 +489,6 @@ App.gerarDossie = async () => {
         });
 
         const totalAlunosGeral = alunos.length || 1;
-        const totalMatriculasMes = (modalidadeMes.online + modalidadeMes.presencial) || 1;
 
         // ==========================================
         // 📚 3. PILAR PEDAGÓGICO
@@ -508,7 +506,7 @@ App.gerarDossie = async () => {
             const keys = Object.keys(dataObj).filter(k => dataObj[k] > 0);
             if (keys.length === 0) return `<div style="font-size:10px; color:#94a3b8;">Nenhum registo ativo.</div>`;
             return `<div style="display:flex; flex-wrap:wrap; gap:5px;">` + 
-                keys.map(k => `<div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; display:flex; gap:6px; align-items:center; font-size:9.5px;">
+                keys.map(k => `<div style="background:#f1f5f9; border:1px solid #e2e8f0; padding:3px 6px; border-radius:4px; display:flex; gap:6px; align-items:center; font-size:9.5px; page-break-inside: avoid;">
                     <span style="color:#334155; font-weight:600;">${App.escapeHTML(k)}</span>
                     <strong style="background:${color}; color:#fff; padding:1px 5px; border-radius:10px; font-size:8.5px;">${dataObj[k]}</strong>
                 </div>`).join('') + `</div>`;
@@ -522,22 +520,34 @@ App.gerarDossie = async () => {
                 * { box-sizing: border-box !important; }
                 .dossier-wrap { font-family: 'Segoe UI', Arial, sans-serif; color:#1e293b; }
                 .section-header { background: #1e293b; color: white; padding: 6px 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; page-break-after: avoid; }
-                .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
                 .fin-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
                 .fin-table th { background: #f8fafc; padding: 6px 8px; text-align: left; border-bottom: 1px solid #cbd5e1; color: #475569; }
                 .fin-table td { padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }
+                
                 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
                 .grid-admin-3 { display: grid; grid-template-columns: 1.1fr 1.2fr 1fr; gap: 10px; margin-bottom: 10px; width: 100%; }
                 .box-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; page-break-inside: avoid; overflow: hidden; display: flex; flex-direction: column; }
                 .box-tit { font-size: 10px; text-transform: uppercase; color: #475569; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; margin-top: 0; margin-bottom: 8px; font-weight: bold; }
                 
+                /* MODO DE IMPRESSÃO: FORÇAR CORES E GRELHAS */
                 @media print {
-                    @page { margin: 10mm; size: A4 portrait; }
+                    @page { margin: 8mm; size: A4 portrait; }
+                    * { 
+                        -webkit-print-color-adjust: exact !important; 
+                        print-color-adjust: exact !important; 
+                        color-adjust: exact !important; 
+                    }
                     .no-print { display: none !important; }
-                    .print-sheet { padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; }
-                    .box-card { border: 1px solid #cbd5e1; }
+                    body { background: #fff !important; }
+                    .print-sheet { padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; }
+                    .box-card { border: 1px solid #cbd5e1 !important; }
+                    /* Garante que os grids não quebrem na impressão */
+                    .grid-2 { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+                    .grid-admin-3 { display: grid !important; grid-template-columns: 1.1fr 1.2fr 1fr !important; }
                 }
-                @media (max-width: 992px) {
+
+                /* APENAS EM ECRÃS REAIS DE TELEMÓVEL É QUE SE QUEBRA A GRELHA */
+                @media screen and (max-width: 992px) {
                     .grid-admin-3 { grid-template-columns: 1fr; }
                     .grid-2 { grid-template-columns: 1fr; }
                 }
@@ -695,17 +705,16 @@ App.gerarDossie = async () => {
                     const meta = chart.getDatasetMeta(i);
                     meta.data.forEach((element, index) => {
                         const val = dataset.data[index];
-                        if (val === 0) return; // Oculta valores zerados
+                        if (val === 0) return;
 
-                        // Calcula o ponto médio (centro) da fatia
                         const { x, y, startAngle, endAngle, innerRadius, outerRadius } = element;
                         const midAngle = startAngle + (endAngle - startAngle) / 2;
-                        const radius = innerRadius + (outerRadius - innerRadius) * 0.55; // Ajuste de profundidade
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
 
                         const textX = x + Math.cos(midAngle) * radius;
                         const textY = y + Math.sin(midAngle) * radius;
 
-                        ctx.fillStyle = '#ffffff'; // Cor do texto fixa
+                        ctx.fillStyle = '#ffffff';
                         ctx.font = 'bold 9px Arial';
                         ctx.textBaseline = 'middle';
                         ctx.textAlign = 'center';
@@ -717,11 +726,10 @@ App.gerarDossie = async () => {
         };
 
         setTimeout(() => {
-            // Inicialização do Gráfico de Status com Plugin de Impressão Ativo
             if(document.getElementById('chartStatus')) {
                 new Chart(document.getElementById('chartStatus'), {
                     type: 'doughnut',
-                    plugins: [pluginNumerosNoGrafico], // Injeção do Plugin
+                    plugins: [pluginNumerosNoGrafico],
                     data: {
                         labels: ['Ativos', 'Trancados', 'Cancelados', 'Excluídos'],
                         datasets: [{ data: [statusStats['Ativo'].total, statusStats['Trancado'].total, statusStats['Cancelado'].total, statusStats['Excluído'].total], backgroundColor: ['#16a34a', '#d97706', '#ea580c', '#dc2626'], borderWidth: 0 }]
@@ -729,12 +737,11 @@ App.gerarDossie = async () => {
                 });
             }
 
-            // Inicialização do Gráfico de Captação Mensal com Plugin de Impressão Ativo
             if(document.getElementById('chartCaptacaoMes')) {
                 if (modalidadeMes.online > 0 || modalidadeMes.presencial > 0) {
                     new Chart(document.getElementById('chartCaptacaoMes'), {
                         type: 'pie',
-                        plugins: [pluginNumerosNoGrafico], // Injeção do Plugin
+                        plugins: [pluginNumerosNoGrafico],
                         data: {
                             labels: ['Online', 'Presencial'],
                             datasets: [{ data: [modalidadeMes.online, modalidadeMes.presencial], backgroundColor: ['#3b82f6', '#8b5cf6'], borderWidth: 1, borderColor: '#fff' }]
@@ -745,7 +752,6 @@ App.gerarDossie = async () => {
                 }
             }
 
-            // Gráfico de Género por Status
             if(document.getElementById('chartGender')) {
                 new Chart(document.getElementById('chartGender'), {
                     type: 'bar',
