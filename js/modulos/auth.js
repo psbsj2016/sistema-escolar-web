@@ -121,7 +121,8 @@ Object.assign(App, {
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
           
-        const resetToken = newSearchParams(window.location.search).get('reset');
+        // 🔥 CORREÇÃO FEITA AQUI:
+        const resetToken = new URLSearchParams(window.location.search).get('reset');
         if (resetToken) {
             document.documentElement.removeAttribute('style');
             document.getElementById('tela-login').style.display = 'flex';
@@ -411,7 +412,6 @@ Object.assign(App, {
         return bytes;
     },
 
-    // 🚀 NOVO PAINEL DE STATUS DA BIOMETRIA EM "MINHA CONTA"
     renderizarMinhaConta: async () => {
         if (typeof App.setTitulo === 'function') App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
@@ -479,7 +479,6 @@ Object.assign(App, {
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
 
-    // Permite remover a biometria do telemóvel atual facilmente
     desativarBiometria: () => {
         localStorage.removeItem('escola_bio_id');
         App.showToast("Acesso biométrico removido deste aparelho.", "success");
@@ -496,7 +495,7 @@ Object.assign(App, {
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "Sistema PTT" }, // Simplificado para evitar bloqueios cross-domain
+                    rp: { name: "Sistema PTT" }, 
                     user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
                     pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
                     authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
@@ -515,7 +514,6 @@ Object.assign(App, {
         }
     },
 
-    // 🚀 A TELA INTELIGENTE QUE FORÇA O UTILIZADOR A TOCAR
     exibirTelaTouchBiometria: () => {
         let tela = document.getElementById('bio-touch-screen');
         if (!tela) {
@@ -533,7 +531,6 @@ Object.assign(App, {
         }
         tela.style.display = 'flex';
         
-        // Este é o segredo: Ao tocar no ecrã, temos o "User Gesture" exigido pela Apple!
         tela.onclick = (e) => {
             if(e.target.tagName !== 'BUTTON') {
                 App.entrarComBiometria();
@@ -571,7 +568,6 @@ Object.assign(App, {
             if (assertion) {
                 App.removerOverlayBiometria();
                 
-                // Limpa a tela de toque
                 const telaTouch = document.getElementById('bio-touch-screen');
                 if (telaTouch) telaTouch.style.display = 'none';
                 
