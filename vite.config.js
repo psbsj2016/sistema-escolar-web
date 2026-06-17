@@ -47,7 +47,8 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         matricula: resolve(__dirname, 'matricula.html'),
         hub: resolve(__dirname, 'hub-matriculas.html'),
-        online: resolve(__dirname, 'matricula-online.html')
+        online: resolve(__dirname, 'matricula-online.html'),
+        workspace: resolve(__dirname, 'workspace.html')
       }
     }
   }
