@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'prompt', 
+      registerType: 'prompt', // 🔥 MAGIA AQUI: Mudado para 'prompt' para o banner aparecer!
       includeAssets: ['assets/icone.png'],
       manifest: {
         name: "Gestão Escolar SaaS",
@@ -47,8 +47,7 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         matricula: resolve(__dirname, 'matricula.html'),
         hub: resolve(__dirname, 'hub-matriculas.html'),
-        online: resolve(__dirname, 'matricula-online.html'),
-        workspace: resolve(__dirname, 'workspace.html')
+        online: resolve(__dirname, 'matricula-online.html')
       }
     }
   }

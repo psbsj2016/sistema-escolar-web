@@ -4,7 +4,6 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/matricula", "destination": "/matricula.html" },
     { "source": "/hub-matriculas", "destination": "/hub-matriculas.html" },
-    { "source": "/matricula-online", "destination": "/matricula-online.html" },
-    { "source": "/workspace", "destination": "/workspace.html" }
+    { "source": "/matricula-online", "destination": "/matricula-online.html" }
   ]
 }
