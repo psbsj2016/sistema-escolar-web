@@ -1,9 +1,10 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
-// Importa os novos módulos do Workspace
+// Importa os módulos do Workspace
 import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
+import './modulos/workspace/alertas.js'; // 🔔 NOVO IMPORT
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -45,9 +46,10 @@ Object.assign(Workspace, {
             boxCriarPost.style.display = 'block';
         }
 
-        // 🚀 Liga os motores secundários que acabámos de criar
+        // 🚀 Liga todos os motores secundários!
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.Upload) Workspace.Upload.init();
+        if (Workspace.Alertas) Workspace.Alertas.init(); // 🔔 LIGA O RADAR DE NOTIFICAÇÕES
     }
 });
 
