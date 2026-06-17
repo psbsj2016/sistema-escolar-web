@@ -121,7 +121,7 @@ Object.assign(App, {
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
           
-        const resetToken = new URLSearchParams(window.location.search).get('reset');
+        const resetToken = newSearchParams(window.location.search).get('reset');
         if (resetToken) {
             document.documentElement.removeAttribute('style');
             document.getElementById('tela-login').style.display = 'flex';
@@ -142,30 +142,12 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            // 🚀 A MÁGICA DA BIOMETRIA AUTOMÁTICA
+            // 🚀 BIOMETRIA NATIVA PWA COM TELA DE TOQUE (BURGAR BLOQUEIO DA APPLE/GOOGLE)
             if (bioId && window.PublicKeyCredential) {
-                document.getElementById('tela-login').style.display = 'flex'; 
+                document.getElementById('tela-login').style.display = 'none'; 
                 document.getElementById('tela-sistema').style.display = 'none';
                 
-                // Cria ou exibe o botão de biometria caso o navegador bloqueie o auto-trigger
-                let btnBio = document.getElementById('btn-biometria');
-                if (!btnBio) {
-                    btnBio = document.createElement('button');
-                    btnBio.id = 'btn-biometria';
-                    btnBio.className = 'btn-primary';
-                    btnBio.style.cssText = 'width: 100%; margin-top: 15px; background: #8e44ad; justify-content: center; font-weight:bold;';
-                    btnBio.innerHTML = '👆 Entrar com Biometria';
-                    btnBio.type = 'button';
-                    btnBio.onclick = App.entrarComBiometria;
-                    
-                    const box = document.querySelector('.login-box, .box-login');
-                    if(box) box.appendChild(btnBio);
-                } else {
-                    btnBio.style.display = 'flex';
-                }
-
-                // Tenta puxar a biometria automaticamente após 600ms
-                setTimeout(() => { App.entrarComBiometria(); }, 600); 
+                App.exibirTelaTouchBiometria(); // Ativa o ecrã inteligente
             } else { 
                 document.getElementById('tela-login')?.style.setProperty('display', 'none');
                 document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
@@ -186,7 +168,7 @@ Object.assign(App, {
 
             // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
             setTimeout(async () => {
-                let escola = await App.api('/escola', 'GET', null, true); 
+                let escola = await App.api('/escola', 'GET', null, true); // true = silencioso
 
                 if (!escola || escola.error) {
                     if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
@@ -429,7 +411,7 @@ Object.assign(App, {
         return bytes;
     },
 
-    // 🚀 NOVO PAINEL DE STATUS DINÂMICO
+    // 🚀 NOVO PAINEL DE STATUS DA BIOMETRIA EM "MINHA CONTA"
     renderizarMinhaConta: async () => {
         if (typeof App.setTitulo === 'function') App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
@@ -444,7 +426,7 @@ Object.assign(App, {
             const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
             const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
 
-            // Validação visual se a biometria está ou não ativa neste aparelho
+            // Feedback visual se a biometria está ativada neste dispositivo
             const bioId = localStorage.getItem('escola_bio_id');
             const bioStatusHtml = bioId 
                 ? `<div style="background: #eafaf1; border: 1px solid #27ae60; color: #27ae60; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; font-size:13px;">✅ Biometria Ativada neste Aparelho</div>
@@ -497,7 +479,7 @@ Object.assign(App, {
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
 
-    // 🚀 NOVA FUNÇÃO DE REMOVER BIOMETRIA
+    // Permite remover a biometria do telemóvel atual facilmente
     desativarBiometria: () => {
         localStorage.removeItem('escola_bio_id');
         App.showToast("Acesso biométrico removido deste aparelho.", "success");
@@ -511,14 +493,10 @@ Object.assign(App, {
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const userId = window.crypto.getRandomValues(new Uint8Array(16));
             
-            // 🛡️ O ID ESTÁ DINÂMICO PARA EVITAR BLOQUEIO DE SEGURANÇA
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: challenge,
-                    rp: { 
-                        name: "Sistema PTT", 
-                        id: window.location.hostname 
-                    },
+                    rp: { name: "Sistema PTT" }, // Simplificado para evitar bloqueios cross-domain
                     user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
                     pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
                     authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
@@ -537,6 +515,42 @@ Object.assign(App, {
         }
     },
 
+    // 🚀 A TELA INTELIGENTE QUE FORÇA O UTILIZADOR A TOCAR
+    exibirTelaTouchBiometria: () => {
+        let tela = document.getElementById('bio-touch-screen');
+        if (!tela) {
+            tela = document.createElement('div');
+            tela.id = 'bio-touch-screen';
+            tela.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#2c3e50; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; cursor:pointer; color:white; transition: opacity 0.3s;';
+            tela.innerHTML = `
+                <div style="font-size: 70px; margin-bottom: 20px; animation: pulse 2s infinite;">👆</div>
+                <h2 style="margin:0 0 10px 0; font-size:22px; text-align:center;">App Bloqueado</h2>
+                <p style="opacity:0.8; margin:0 0 40px 0; font-size:14px; text-align:center; padding: 0 20px;">Toque em qualquer lugar da tela<br>para usar o FaceID / Digital.</p>
+                <button style="padding:12px 25px; background:transparent; border:1px solid rgba(255,255,255,0.4); color:white; border-radius:8px; font-size:14px; z-index: 100000;" onclick="App.cancelarTouchBiometria(event)">Usar Senha Tradicional</button>
+                <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }</style>
+            `;
+            document.body.appendChild(tela);
+        }
+        tela.style.display = 'flex';
+        
+        // Este é o segredo: Ao tocar no ecrã, temos o "User Gesture" exigido pela Apple!
+        tela.onclick = (e) => {
+            if(e.target.tagName !== 'BUTTON') {
+                App.entrarComBiometria();
+            }
+        };
+    },
+
+    cancelarTouchBiometria: (e) => {
+        if(e) e.stopPropagation();
+        const tela = document.getElementById('bio-touch-screen');
+        if (tela) tela.style.display = 'none';
+        
+        document.documentElement.removeAttribute('style'); 
+        document.getElementById('tela-login').style.display = 'flex'; 
+        document.getElementById('tela-sistema').style.display = 'none'; 
+    },
+
     entrarComBiometria: async () => {
         const bioId = localStorage.getItem('escola_bio_id');
         if (!bioId) return;
@@ -545,11 +559,9 @@ Object.assign(App, {
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const rawId = App.base64ToBuffer(bioId);
             
-            // 🛡️ USA O MESMO ID DINÂMICO AQUI
             const assertion = await navigator.credentials.get({
                 publicKey: {
                     challenge: challenge,
-                    rpId: window.location.hostname,
                     allowCredentials: [{ type: "public-key", id: rawId }],
                     userVerification: "required",
                     timeout: 60000
@@ -558,18 +570,17 @@ Object.assign(App, {
             
             if (assertion) {
                 App.removerOverlayBiometria();
+                
+                // Limpa a tela de toque
+                const telaTouch = document.getElementById('bio-touch-screen');
+                if (telaTouch) telaTouch.style.display = 'none';
+                
                 App.showToast("🔓 Bem-vindo de volta!", "success");
                 App.entrarNoSistema();
             }
         } catch (e) { 
             App.removerOverlayBiometria(); 
-            
-            // 🛡️ INFORMA SE O iOS/CHROME BLOQUEAR A CHAMADA AUTOMÁTICA
-            if (e.name === 'NotAllowedError') {
-                App.showToast("O navegador requer que clique no botão 'Entrar com Biometria' para ler a face/digital.", "info");
-            } else {
-                App.showToast("A leitura falhou. Use a sua senha.", "info"); 
-            }
+            App.showToast("Leitura cancelada ou falhou.", "error"); 
         }
     },
 
@@ -578,7 +589,7 @@ Object.assign(App, {
         if (!overlay) {
             overlay = document.createElement('div');
             overlay.id = 'bio-overlay-premium';
-            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); display:flex; justify-content:center; align-items:center; z-index:10000;';
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); display:flex; justify-content:center; align-items:center; z-index:100000;';
             document.body.appendChild(overlay);
         }
         overlay.innerHTML = `
@@ -595,5 +606,88 @@ Object.assign(App, {
     removerOverlayBiometria: () => {
         const overlay = document.getElementById('bio-overlay-premium');
         if (overlay) overlay.style.display = 'none';
+    },
+
+    atualizarMeusDados: async () => { 
+        const novoLogin = document.getElementById('user-novo-login').value.trim(); 
+        const novoEmail = document.getElementById('user-novo-email').value.trim(); 
+        const atual = document.getElementById('user-senha-atual').value; 
+        const nova = document.getElementById('user-nova-senha').value; 
+        const conf = document.getElementById('user-conf-senha').value; 
+
+        if (!novoLogin) return App.showToast("O login não pode ficar em branco.", "error"); 
+        if (!atual) return App.showToast("Digite sua senha atual para autorizar as alterações.", "error"); 
+        if (nova && nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
+        
+        const btn = document.querySelector('button[onclick="App.atualizarMeusDados()"]'); const textoOriginal = btn.innerText; btn.innerText = "Atualizando... ⏳"; btn.disabled = true;
+
+        try {
+            const payload = { novoLogin: novoLogin, novoEmail: novoEmail, senhaAtual: atual }; if (nova) payload.novaSenha = nova; 
+            const resposta = await App.api('/usuarios/atualizar-conta', 'PUT', payload);
+            if (resposta && resposta.success) { App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); setTimeout(() => App.logout(), 2500); } 
+            else { App.showToast(resposta.error || "Erro ao atualizar os dados.", "error"); }
+        } catch (e) { App.showToast("Erro de conexão.", "error"); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
+    },
+
+    salvarNovoUsuario: async () => {
+        const nome = document.getElementById('new-nome').value; const login = document.getElementById('new-login').value; const senha = document.getElementById('new-senha').value; const tipo = document.getElementById('new-tipo').value;
+        if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); 
+        if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
+
+        const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
+        
+        if (!App.idEdicaoUsuario) { 
+            const podeCadastrar = await App.verificarLimites('usuario');
+            if (!podeCadastrar) return; 
+            payload.donoId = App.usuario.id; 
+        }
+
+        const btn = document.getElementById('btn-save-user'); 
+        const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
+        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } 
+        document.body.style.cursor = 'wait';
+
+        try {
+            let res;
+            if(App.idEdicaoUsuario) { 
+                res = await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); 
+            } else { 
+                res = await App.api('/usuarios', 'POST', payload); 
+            }
+
+            if (res && res.error) {
+                App.showToast(res.error, "error");
+            } else {
+                App.showToast(App.idEdicaoUsuario ? "Atualizado com sucesso!" : "Criado com sucesso!", "success");
+                App.renderizarMinhaConta();
+            }
+        } catch(e) { 
+            App.showToast("Erro crítico ao salvar.", "error"); 
+        } finally { 
+            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
+            document.body.style.cursor = 'default'; 
+        }
+    },
+
+    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
+    cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
+    
+excluirUsuario: (id) => { 
+        App.abrirModalConfirmacao(
+            "Apagar Utilizador?", 
+            "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
+            async (modal) => {
+                document.body.style.cursor = 'wait';
+                try {
+                    const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
+                    if(res && res.error) { App.showToast(res.error, "error"); }
+                    else { App.showToast("Utilizador excluído.", "success"); App.renderizarMinhaConta(); }
+                } catch(e) { App.showToast("Erro ao excluir.", "error"); }
+                finally {
+                    document.body.style.cursor = 'default';
+                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
+                }
+            }
+        );
     }
 });
