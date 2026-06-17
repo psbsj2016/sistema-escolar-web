@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'prompt', // 🔥 MAGIA AQUI: Mudado para 'prompt' para o banner aparecer!
+      registerType: 'prompt', 
       includeAssets: ['assets/icone.png'],
       manifest: {
         name: "Gestão Escolar SaaS",
@@ -36,7 +36,7 @@ export default defineConfig({
             const setCookie = proxyRes.headers['set-cookie'];
             if (setCookie) proxyRes.headers['set-cookie'] = setCookie.map(s => s.replace(/Domain=[^;]+;?/, ''));
           });
-        },
+        }
       }
     }
   },
@@ -47,7 +47,8 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         matricula: resolve(__dirname, 'matricula.html'),
         hub: resolve(__dirname, 'hub-matriculas.html'),
-        online: resolve(__dirname, 'matricula-online.html')
+        online: resolve(__dirname, 'matricula-online.html'),
+        workspace: resolve(__dirname, 'workspace.html')
       }
     }
   }
