@@ -142,6 +142,7 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
+            // 🚀 A MÁGICA DA BIOMETRIA
             if (bioId && window.PublicKeyCredential) {
                 document.getElementById('tela-login').style.display = 'none'; 
                 document.getElementById('tela-sistema').style.display = 'none';
@@ -164,6 +165,7 @@ Object.assign(App, {
                 }
             }
 
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); 
 
@@ -668,7 +670,7 @@ Object.assign(App, {
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     
-excluirUsuario: (id) => { 
+    excluirUsuario: (id) => { 
         App.abrirModalConfirmacao(
             "Apagar Utilizador?", 
             "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
