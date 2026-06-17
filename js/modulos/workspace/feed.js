@@ -17,7 +17,6 @@ Workspace.Feed = {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A procurar publicações na nuvem... ⏳</div>';
 
         try {
-            // 🌐 AGORA SIM: Chamada real à base de dados!
             const posts = await Workspace.api('/workspace/posts', 'GET');
 
             if (!posts || posts.length === 0) {
@@ -37,20 +36,17 @@ Workspace.Feed = {
         }
     },
 
-    // 🎨 O "Mágico" que decide como desenhar o ficheiro (Vídeo, Imagem ou Documento)
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         
         let html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">';
         
         anexos.forEach(anexo => {
-            // O Cloudinary devolve a url e o tipo (ex: image/jpeg, video/mp4, application/pdf)
             if (anexo.tipo.includes('image')) {
                 html += `<a href="${anexo.url}" target="_blank" style="flex:1; min-width:150px; max-width:250px;"><img src="${anexo.url}" style="width:100%; border-radius:8px; border:1px solid #eee; object-fit:cover; aspect-ratio:16/9; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"></a>`;
             } else if (anexo.tipo.includes('video')) {
                 html += `<video controls style="width:100%; max-width:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${anexo.url}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
-                // PDFs, Word, Excel, etc...
                 let icone = anexo.tipo.includes('pdf') ? '📕' : '📎';
                 html += `
                     <a href="${anexo.url}" target="_blank" style="display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; text-decoration:none; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">
@@ -65,15 +61,19 @@ Workspace.Feed = {
         return html;
     },
 
+    // 🚀 NOVO: Sanitização para evitar injeção de código
+    limparTexto: (txt) => {
+        if(!txt) return '';
+        return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    },
+
     renderizarLista: (posts) => {
         const container = document.getElementById('ws-posts-area');
         
         const html = posts.map(p => {
             const dataFormatada = new Date(p.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
             const avatar = p.autorNome.charAt(0).toUpperCase();
-            
-            // Tratamento contra XSS básico, mantendo quebras de linha
-            const textoSeguro = (p.texto || '').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
+            const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
             return `
                 <div class="ws-card" style="animation: fadeIn 0.4s ease;">
@@ -89,8 +89,23 @@ Workspace.Feed = {
                     ${Workspace.Feed.renderizarAnexos(p.anexos)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:20px; color:#666; font-size:13px; font-weight:600;">
-                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="alert('Funcionalidade de Gosto na próxima fase!')">👍 Gosto (${p.likes || 0})</span>
-                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="alert('Área de comentários na próxima fase!')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'">👍 Gosto (${p.likes || 0})</span>
+                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                    </div>
+
+                    <div id="box-comentarios-${p.id}" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
+                        <div style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                            ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => `
+                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px;">
+                                    <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}:</strong> 
+                                    <span style="color: #444;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                                </div>
+                            `).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:13px;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
+                            <button class="ws-btn" style="padding:10px 15px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -99,12 +114,62 @@ Workspace.Feed = {
         container.innerHTML = html;
     },
 
+    // 🚀 NOVO: Função para abrir e fechar a área de comentários
+    toggleComentarios: (id) => {
+        const box = document.getElementById(`box-comentarios-${id}`);
+        if(box) {
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            if(box.style.display === 'block') {
+                const input = document.getElementById(`input-comentario-${id}`);
+                if(input) input.focus();
+            }
+        }
+    },
+
+    // 🚀 NOVO: Função para enviar o comentário para o backend
+    enviarComentario: async (postId) => {
+        const input = document.getElementById(`input-comentario-${postId}`);
+        if(!input) return;
+        
+        const texto = input.value.trim();
+        if(!texto) {
+            if (window.App && App.showToast) App.showToast("Escreva algo no comentário.", "warning");
+            return;
+        }
+
+        const btn = input.nextElementSibling;
+        const txtOriginal = btn.innerText;
+        btn.innerText = "⏳";
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios`, 'POST', {
+                texto: texto,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if(res && res.success) {
+                input.value = '';
+                await Workspace.Feed.carregarPosts(); // Recarrega os posts para atualizar a lista
+                setTimeout(() => Workspace.Feed.toggleComentarios(postId), 50); // Garante que a gaveta fica aberta após atualizar
+            } else {
+                if (window.App && App.showToast) App.showToast("Erro ao comentar.", "error");
+            }
+        } catch(e) {
+            if (window.App && App.showToast) App.showToast("Erro de comunicação.", "error");
+        } finally {
+            if(btn) {
+                btn.innerText = txtOriginal;
+                btn.disabled = false;
+            }
+        }
+    },
+
     configurarEventosCriacao: () => {
         const btnPublicar = document.querySelector('#ws-criar-post .ws-btn');
         const inputTexto = document.querySelector('#ws-criar-post textarea');
 
         if (btnPublicar && inputTexto) {
-            // Garantimos que não duplicamos eventos caso o init() rode duas vezes
             const novoBtn = btnPublicar.cloneNode(true);
             btnPublicar.parentNode.replaceChild(novoBtn, btnPublicar);
 
@@ -123,7 +188,6 @@ Workspace.Feed = {
                 try {
                     let urlsFinais = [];
 
-                    // ☁️ PASSO 1: Enviar ficheiros para o Cloudinary (se existirem)
                     if (anexosLocais.length > 0) {
                         const formData = new FormData();
                         anexosLocais.forEach(file => formData.append('anexos', file));
@@ -144,7 +208,6 @@ Workspace.Feed = {
 
                     novoBtn.innerText = "A gravar publicação... ⏳";
 
-                    // 📝 PASSO 2: Enviar a publicação com os Links para o MongoDB
                     const postRes = await Workspace.api('/workspace/posts', 'POST', {
                         texto: texto,
                         escolaId: Workspace.usuario.escolaId,
@@ -157,7 +220,7 @@ Workspace.Feed = {
                         if (window.App && App.showToast) App.showToast("Publicado com sucesso!", "success");
                         inputTexto.value = '';
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
-                        await Workspace.Feed.carregarPosts(); // Puxa os dados novos instantaneamente!
+                        await Workspace.Feed.carregarPosts(); 
                     } else {
                         throw new Error("Falha ao gravar publicação.");
                     }
