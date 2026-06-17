@@ -142,11 +142,29 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            // 🚀 A MÁGICA DA RENDERIZAÇÃO OTIMISTA (Adeus logins no F5!)
+            // 🚀 A MÁGICA DA BIOMETRIA AUTOMÁTICA
             if (bioId && window.PublicKeyCredential) {
                 document.getElementById('tela-login').style.display = 'flex'; 
                 document.getElementById('tela-sistema').style.display = 'none';
-                document.getElementById('btn-biometria').style.display = 'block'; 
+                
+                // Cria ou exibe o botão de biometria caso o navegador bloqueie o auto-trigger
+                let btnBio = document.getElementById('btn-biometria');
+                if (!btnBio) {
+                    btnBio = document.createElement('button');
+                    btnBio.id = 'btn-biometria';
+                    btnBio.className = 'btn-primary';
+                    btnBio.style.cssText = 'width: 100%; margin-top: 15px; background: #8e44ad; justify-content: center; font-weight:bold;';
+                    btnBio.innerHTML = '👆 Entrar com Biometria';
+                    btnBio.type = 'button';
+                    btnBio.onclick = App.entrarComBiometria;
+                    
+                    const box = document.querySelector('.login-box, .box-login');
+                    if(box) box.appendChild(btnBio);
+                } else {
+                    btnBio.style.display = 'flex';
+                }
+
+                // Tenta puxar a biometria automaticamente após 600ms
                 setTimeout(() => { App.entrarComBiometria(); }, 600); 
             } else { 
                 document.getElementById('tela-login')?.style.setProperty('display', 'none');
@@ -166,12 +184,11 @@ Object.assign(App, {
                 }
             }
 
-            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND (1 Segundo depois para não travar o F5)
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
             setTimeout(async () => {
-                let escola = await App.api('/escola', 'GET', null, true); // true = silencioso
+                let escola = await App.api('/escola', 'GET', null, true); 
 
                 if (!escola || escola.error) {
-                    // Só expulsa se a API atirar explicitamente o erro de sessão expirada
                     if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
                         App.showToast("Sessão expirada por segurança. Faça login novamente.", "warning");
                         await App.logout();
@@ -189,7 +206,6 @@ Object.assign(App, {
             }, 1000); 
 
         } else { 
-            // Se o browser nem tem os dados, aí sim mostra o login puro
             document.documentElement.removeAttribute('style'); 
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
@@ -205,11 +221,9 @@ Object.assign(App, {
             }); 
         }
         
-        // 🛰️ O RADAR COM PROTEÇÃO CONTRA BACKGROUND
         if (!App.motorTempoRealLigado) {
             const checarSistema = () => {
                 const telaSistema = document.getElementById('tela-sistema');
-                // SÓ FAZ PEDIDOS SE O UTILIZADOR ESTIVER COM A APP ATIVA NO ECRÃ!
                 if (App.usuario && telaSistema && telaSistema.style.display !== 'none' && document.visibilityState === 'visible') {
                     if (typeof App.verificarNovidadesSilenciosamente === 'function') App.verificarNovidadesSilenciosamente();
                     if (typeof App.carregarDadosEscola === 'function') App.carregarDadosEscola(true);
@@ -304,7 +318,6 @@ Object.assign(App, {
             }
         } catch(e) { console.warn("Logout silencioso."); }
 
-        // A Bomba Nuclear. Limpa ABSOLUTAMENTE TUDO
         localStorage.clear();
         sessionStorage.clear();
         App.usuario = null;
@@ -416,16 +429,96 @@ Object.assign(App, {
         return bytes;
     },
 
+    // 🚀 NOVO PAINEL DE STATUS DINÂMICO
+    renderizarMinhaConta: async () => {
+        if (typeof App.setTitulo === 'function') App.setTitulo("Gestão de Usuários"); 
+        const div = document.getElementById('app-content'); 
+        App.idEdicaoUsuario = null; 
+        const meuLogin = App.usuario ? App.usuario.login : ''; 
+        const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
+        
+        const campoSenha = (id, label) => `<div class="input-group" style="position:relative;"><label>${label}</label><input type="password" id="${id}" style="width:100%; padding-right:40px;"><span onclick="App.toggleSenhaVisibilidade('${id}')" style="position:absolute; right:12px; top:32px; cursor:pointer; font-size:16px; opacity:0.6; user-select:none;" title="Mostrar/Ocultar Senha">👁️</span></div>`;
+
+        try { 
+            const usuariosResponse = await App.api('/usuarios'); 
+            const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
+            const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
+
+            // Validação visual se a biometria está ou não ativa neste aparelho
+            const bioId = localStorage.getItem('escola_bio_id');
+            const bioStatusHtml = bioId 
+                ? `<div style="background: #eafaf1; border: 1px solid #27ae60; color: #27ae60; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; font-size:13px;">✅ Biometria Ativada neste Aparelho</div>
+                   <button class="btn-cancel" style="width: 100%; justify-content:center; border: 1px solid #e74c3c; color: #e74c3c; background: transparent;" onclick="App.desativarBiometria()">🗑️ Remover Biometria</button>`
+                : `<div style="background: #fdf2f2; border: 1px solid #e74c3c; color: #e74c3c; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; text-align: center; font-size:13px;">❌ Biometria Não Configurada</div>
+                   <button class="btn-primary" style="background: #27ae60; width: 100%; justify-content:center;" onclick="App.configurarBiometria()">👆 Configurar Biometria</button>`;
+
+            div.innerHTML = `
+                <div style="display:flex; gap:30px; flex-wrap:wrap;">
+                    <div class="card" style="flex:1; height:fit-content; min-width:300px;">
+                        <h3>Meus Dados de Acesso</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
+                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
+                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
+                        ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}
+                        ${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}
+                        ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
+                        
+                        <button class="btn-primary" style="width:100%; margin-top:10px; justify-content:center;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
+
+                        <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">🔒 Segurança Avançada</h4>
+                            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Use o sensor de rosto (FaceID) ou impressão digital para entrar sem senha.</p>
+                            ${bioStatusHtml}
+                        </div>
+                    </div>
+                    <div class="card" style="flex:2; min-width:300px;">
+                        <h3>Equipe e Acessos</h3>
+                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
+                            <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
+                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">
+                                <div class="input-group"><label>Nome</label><input id="new-nome" placeholder="Ex: Maria"></div>
+                                <div class="input-group"><label>Login</label><input id="new-login" placeholder="Ex: maria"></div>
+                                <div class="input-group"><label>Senha</label><input id="new-senha" type="password" placeholder="******"></div>
+                                <div class="input-group"><label>Permissão</label><select id="new-tipo"><option value="Gestor">Gestor</option><option value="Secretaria">Secretaria</option><option value="Professor">Professor</option></select></div>
+                            </div>
+                            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
+                                <button id="btn-cancel-user" class="btn-cancel" onclick="App.cancelarEdicaoUsuario()" style="display:none; margin-top:0;">✖️ CANCELAR</button>
+                                <button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
+                            </div>
+                        </div>
+                        <div class="table-responsive-wrapper">
+                            <table style="width:100%; text-align:left; border-collapse:collapse;">
+                                <thead><tr><th style="padding-bottom:10px;">Nome</th><th style="padding-bottom:10px;">Login</th><th style="padding-bottom:10px;">Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
+                                <tbody>${listaUsers.map(u => `<tr><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.nome)} ${u.isDono ? '👑' : ''}</td><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.login)}</td><td style="padding:10px 0; border-top:1px solid #eee;"><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right; border-top:1px solid #eee;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${!u.isDono ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`; 
+        } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
+    },
+
+    // 🚀 NOVA FUNÇÃO DE REMOVER BIOMETRIA
+    desativarBiometria: () => {
+        localStorage.removeItem('escola_bio_id');
+        App.showToast("Acesso biométrico removido deste aparelho.", "success");
+        if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
+    },
+
     configurarBiometria: async () => {
-        if (!window.PublicKeyCredential) return App.showToast("Não suportado.", "error");
+        if (!window.PublicKeyCredential) return App.showToast("Biometria não suportada neste aparelho.", "error");
         try {
             App.exibirOverlayBiometria("Configurar Acesso", "Use o sensor digital para registrar este aparelho.");
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const userId = window.crypto.getRandomValues(new Uint8Array(16));
+            
+            // 🛡️ O ID ESTÁ DINÂMICO PARA EVITAR BLOQUEIO DE SEGURANÇA
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "App Gestão PTT" },
+                    rp: { 
+                        name: "Sistema PTT", 
+                        id: window.location.hostname 
+                    },
                     user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
                     pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
                     authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
@@ -435,33 +528,49 @@ Object.assign(App, {
             if (cred) {
                 localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
                 App.removerOverlayBiometria();
-                App.showToast("✅ Biometria ativada!", "success");
+                App.showToast("✅ Biometria ativada com sucesso!", "success");
                 if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
             }
-        } catch (e) { App.removerOverlayBiometria(); App.showToast("Cancelado.", "warning"); }
+        } catch (e) { 
+            App.removerOverlayBiometria(); 
+            App.showToast("Configuração cancelada ou bloqueada.", "warning"); 
+        }
     },
 
     entrarComBiometria: async () => {
         const bioId = localStorage.getItem('escola_bio_id');
         if (!bioId) return;
         try {
-            App.exibirOverlayBiometria("Autenticação", "Aguardando biometria...");
+            App.exibirOverlayBiometria("Autenticação", "Aguardando leitura do sensor...");
             const challenge = window.crypto.getRandomValues(new Uint8Array(32));
             const rawId = App.base64ToBuffer(bioId);
+            
+            // 🛡️ USA O MESMO ID DINÂMICO AQUI
             const assertion = await navigator.credentials.get({
                 publicKey: {
                     challenge: challenge,
+                    rpId: window.location.hostname,
                     allowCredentials: [{ type: "public-key", id: rawId }],
                     userVerification: "required",
                     timeout: 60000
                 }
             });
+            
             if (assertion) {
                 App.removerOverlayBiometria();
-                App.showToast("🔓 Bem-vindo!", "success");
+                App.showToast("🔓 Bem-vindo de volta!", "success");
                 App.entrarNoSistema();
             }
-        } catch (e) { App.removerOverlayBiometria(); App.showToast("Use sua senha.", "info"); }
+        } catch (e) { 
+            App.removerOverlayBiometria(); 
+            
+            // 🛡️ INFORMA SE O iOS/CHROME BLOQUEAR A CHAMADA AUTOMÁTICA
+            if (e.name === 'NotAllowedError') {
+                App.showToast("O navegador requer que clique no botão 'Entrar com Biometria' para ler a face/digital.", "info");
+            } else {
+                App.showToast("A leitura falhou. Use a sua senha.", "info"); 
+            }
+        }
     },
 
     exibirOverlayBiometria: (titulo, sub) => {
