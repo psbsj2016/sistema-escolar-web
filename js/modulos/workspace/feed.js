@@ -44,33 +44,71 @@ Workspace.Feed = {
         container.innerHTML = posts.map(p => `<div>Post ${p.id}</div>`).join('');
     },
 
-    configurarEventosCriacao: () => {
+   configurarEventosCriacao: () => {
         const btnPublicar = document.querySelector('#ws-criar-post .ws-btn');
         const inputTexto = document.querySelector('#ws-criar-post textarea');
 
         if (btnPublicar && inputTexto) {
             btnPublicar.addEventListener('click', async () => {
                 const texto = inputTexto.value.trim();
-                const anexos = Workspace.Upload ? Workspace.Upload.arquivosAtuais : [];
+                const anexosLocais = Workspace.Upload ? Workspace.Upload.arquivosAtuais : [];
 
-                if (!texto && anexos.length === 0) {
-                    if (window.App && App.showToast) App.showToast("Escreva algo ou anexe um ficheiro antes de publicar.", "warning");
+                if (!texto && anexosLocais.length === 0) {
+                    if (window.App && App.showToast) App.showToast("Escreva algo ou anexe um ficheiro.", "warning");
                     return;
                 }
 
                 btnPublicar.innerText = "A publicar... ⏳";
                 btnPublicar.disabled = true;
 
-                // Aqui entrará a lógica de enviar para o backend (Fase 3)
-                console.log("A preparar publicação com:", { texto, anexos });
-                
-                setTimeout(() => {
-                    inputTexto.value = '';
-                    if (Workspace.Upload) Workspace.Upload.limparAnexos();
+                try {
+                    let urlsFinais = [];
+
+                    // ☁️ PASSO 1: Enviar ficheiros para a Nuvem (se existirem)
+                    if (anexosLocais.length > 0) {
+                        const formData = new FormData();
+                        anexosLocais.forEach(file => formData.append('anexos', file));
+
+                        // O fetch direto é usado aqui porque a nossa api() injeta JSON, e ficheiros precisam de FormData
+                        const uploadRes = await fetch('/api/workspace/upload', {
+                            method: 'POST',
+                            credentials: 'include',
+                            body: formData 
+                        });
+
+                        const uploadData = await uploadRes.json();
+                        if (uploadData.success) {
+                            urlsFinais = uploadData.anexos;
+                        } else {
+                            throw new Error(uploadData.error || "Falha no envio dos ficheiros.");
+                        }
+                    }
+
+                    // 📝 PASSO 2: Enviar a publicação para o MongoDB
+                    const postRes = await Workspace.api('/workspace/posts', 'POST', {
+                        texto: texto,
+                        escolaId: Workspace.usuario.escolaId,
+                        autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                        autorTipo: Workspace.usuario.tipo,
+                        anexos: urlsFinais
+                    });
+
+                    if (postRes && postRes.success) {
+                        if (window.App && App.showToast) App.showToast("Publicado com sucesso!", "success");
+                        inputTexto.value = '';
+                        if (Workspace.Upload) Workspace.Upload.limparAnexos();
+                        await Workspace.Feed.carregarPosts(); // Recarrega o feed para mostrar o novo post
+                    } else {
+                        throw new Error("Falha ao gravar publicação.");
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    if (window.App && App.showToast) App.showToast(e.message || "Falha na publicação.", "error");
+                } finally {
                     btnPublicar.innerText = "Publicar";
                     btnPublicar.disabled = false;
-                    if (window.App && App.showToast) App.showToast("Publicado com sucesso!", "success");
-                }, 1000);
+                }
             });
         }
     }
