@@ -1,14 +1,16 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
-// Criação do Escopo Isolado do Workspace
+// Importa os novos módulos do Workspace
+import './modulos/workspace/feed.js';
+import './modulos/workspace/upload.js';
+
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
 
 Object.assign(Workspace, {
     usuario: null,
 
-    // Motor de API independente, blindado com credenciais
     api: async (endpoint, method = 'GET', body = null) => {
         const options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
         if (body) options.body = JSON.stringify(body);
@@ -25,7 +27,6 @@ Object.assign(Workspace, {
     init: async () => {
         console.log("🚀 A iniciar o Motor do Workspace...");
         
-        // 1. Validar Sessão Segura
         const cacheUser = localStorage.getItem('usuario_logado');
         if (!cacheUser) {
             alert("A sua sessão expirou. Por favor, faça login novamente.");
@@ -34,28 +35,20 @@ Object.assign(Workspace, {
         }
         Workspace.usuario = JSON.parse(cacheUser);
         
-        // 2. Renderizar Interface Base
         const nomeEl = document.getElementById('ws-user-name');
         const avatarEl = document.getElementById('ws-user-avatar');
-        
         if (nomeEl) nomeEl.innerText = Workspace.usuario.nome || Workspace.usuario.login;
         if (avatarEl) avatarEl.innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
 
-        // 3. Controle de Permissões: O aluno não pode criar posts mestres, só o professor/gestor
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost && ['Gestor', 'Professor', 'Secretaria'].includes(Workspace.usuario.tipo)) {
             boxCriarPost.style.display = 'block';
         }
 
-        // 4. Daqui para a frente, iremos carregar os ficheiros divididos (Feed, Uploads, etc)
-        document.getElementById('ws-posts-area').innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #999;">
-                <span style="font-size:30px;">🌟</span><br>
-                Bem-vindo ao Workspace!<br><small>O motor do feed será ligado em breve.</small>
-            </div>
-        `;
+        // 🚀 Liga os motores secundários que acabámos de criar
+        if (Workspace.Feed) await Workspace.Feed.init();
+        if (Workspace.Upload) Workspace.Upload.init();
     }
 });
 
-// Arranca o sistema quando a página carrega
 document.addEventListener('DOMContentLoaded', Workspace.init);
