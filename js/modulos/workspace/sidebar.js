@@ -35,15 +35,41 @@ Workspace.Sidebar = {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
 
+        // 1. Mensagem de carregamento inicial
         container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>';
 
         try {
-            const turmas = await Workspace.api('/turmas', 'GET');
+            // 2. Busca TODAS as turmas na nuvem
+            let turmas = await Workspace.api('/turmas', 'GET');
+            
             if (!turmas || turmas.error || turmas.length === 0) {
                 container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Nenhuma turma encontrada.</div>';
                 return;
             }
 
+            // 🔒 3. FILTRO DE PRIVACIDADE DO ALUNO
+            // Se quem está a usar for um Aluno, vamos apagar as turmas das outras pessoas da lista!
+            if (Workspace.usuario.tipo === 'Aluno') {
+                let minhasTurmas = [];
+                
+                // Descobre a(s) turma(s) em que este aluno está matriculado
+                if (Workspace.usuario.turmas) {
+                    minhasTurmas = Array.isArray(Workspace.usuario.turmas) ? Workspace.usuario.turmas : [Workspace.usuario.turmas];
+                } else if (Workspace.usuario.turma) {
+                    minhasTurmas = [Workspace.usuario.turma];
+                }
+
+                // Filtra o array: só deixa passar as turmas cujo ID ou Nome coincidam com as do Aluno
+                turmas = turmas.filter(t => minhasTurmas.includes(t.id) || minhasTurmas.includes(t.nome));
+            }
+
+            // Se após o filtro o aluno ficar sem turmas, avisamos de forma amigável
+            if (turmas.length === 0) {
+                 container.innerHTML = '<div style="padding:10px; color:#7f8c8d; font-size:12px; text-align:center;">Ainda não está associado a nenhum fórum.</div>';
+                 return;
+            }
+
+            // 4. Desenha apenas os fóruns autorizados no menu
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
@@ -55,6 +81,7 @@ Workspace.Sidebar = {
                 `;
             });
             container.innerHTML = html;
+            
         } catch (e) {
             container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>';
         }
