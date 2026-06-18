@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="./css/site.css">
     
     <style>
-        /* CSS Exclusivo do Workspace para não interferir no site principal */
         body { background-color: #f0f2f5; margin: 0; font-family: 'Poppins', sans-serif; }
         .ws-navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .ws-container { display: grid; grid-template-columns: 250px 1fr 300px; gap: 20px; max-width: 1200px; margin: 20px auto; padding: 0 20px; }
@@ -28,9 +27,26 @@
     </style>
 </head>
 <body>
-    <nav class="ws-navbar">
+
+    <div id="ws-login-screen" style="display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px;">
+        <div class="ws-card" style="width: 100%; max-width: 400px; text-align: center; padding: 40px 30px;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🎓</div>
+            <h2 style="margin: 0 0 5px 0; color: #2c3e50;">Portal do Aluno</h2>
+            <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 30px;">Entre com as credenciais fornecidas pela escola.</p>
+            
+            <input type="text" id="ws-login-user" placeholder="O seu Login" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; text-align: center;">
+            <input type="password" id="ws-login-pass" placeholder="A sua Senha" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; font-family: inherit; text-align: center;" onkeypress="if(event.key === 'Enter') Workspace.fazerLogin()">
+            
+            <button class="ws-btn" style="width: 100%; padding: 12px; font-size: 16px;" onclick="Workspace.fazerLogin()">Entrar na Turma</button>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #aaa;">Se não tem acesso, contacte a secretaria.</p>
+            <button onclick="window.location.href='/'" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:13px; margin-top:10px;">Voltar ao site da escola</button>
+        </div>
+    </div>
+
+    <nav class="ws-navbar" id="ws-navbar" style="display: none;">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <button onclick="window.location.href='/'" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor:pointer;">⬅ Voltar</button>
+            <button onclick="Workspace.logout()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor:pointer;" title="Sair da Conta">⬅ Sair</button>
             <h2 style="margin: 0; font-size: 18px;">🎓 Workspace</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
@@ -45,13 +61,13 @@
         </div>
     </nav>
 
-    <main class="ws-container">
+    <main class="ws-container" id="ws-main-container" style="display: none;">
         
         <aside class="ws-sidebar-left">
             <div class="ws-card">
                 <h3 style="margin-top:0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #2c3e50;">📚 As Minhas Turmas</h3>
                 <div id="ws-lista-turmas" style="font-size: 13px; color: #666;">
-                    A procurar turmas... ⏳
+                    Geral
                 </div>
             </div>
         </aside>

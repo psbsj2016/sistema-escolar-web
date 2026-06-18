@@ -13,6 +13,7 @@ import './js/modulos/notificacoes.js';
 import './js/modulos/contratos.js';
 import './js/admin.js';
 import './js/modulos/cadastros.js';
+import './js/modulos/workspace_admin.js';
 import * as Financeiro from './js/modulos/financeiro.js';
 Object.assign(window.App, Financeiro);
 import './js/modulos/pedagogico.js';
