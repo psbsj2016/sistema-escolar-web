@@ -63,7 +63,16 @@ Object.assign(Workspace, {
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.Upload) Workspace.Upload.init();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
-        if (Workspace.Sidebar) await Workspace.Sidebar.init();
+        if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
+
+        // 🚀 Fecha o menu de perfil se clicar fora dele
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('ws-perfil-container');
+            const dropdown = document.getElementById('ws-perfil-dropdown');
+            if (container && dropdown && !container.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
     },
 
     fazerLogin: async () => {
@@ -95,41 +104,52 @@ Object.assign(Workspace, {
         }
     },
 
-    // 👤 LÓGICA DO MEU PERFIL
-    abrirPerfil: () => {
-        document.getElementById('ws-perfil-modal').style.display = 'flex';
-        document.getElementById('ws-perfil-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
-        document.getElementById('ws-perfil-login').innerText = `@${Workspace.usuario.login}`;
-        document.getElementById('ws-perfil-avatar-preview').innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
-        document.getElementById('ws-perfil-senha').value = '';
+    // 👤 LÓGICA DO MEU PERFIL (MENU SUSPENSO)
+    togglePerfil: () => {
+        const dropdown = document.getElementById('ws-perfil-dropdown');
+        if (!dropdown) return;
+        
+        if (dropdown.style.display === 'none') {
+            dropdown.style.display = 'block';
+            document.getElementById('ws-menu-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
+            document.getElementById('ws-menu-login').innerText = `@${Workspace.usuario.login}`;
+            document.getElementById('ws-menu-avatar').innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
+            document.getElementById('ws-senha-atual').value = '';
+            document.getElementById('ws-nova-senha').value = '';
+        } else {
+            dropdown.style.display = 'none';
+        }
     },
 
-    salvarPerfil: async () => {
-        const senha = document.getElementById('ws-perfil-senha').value.trim();
-        if (!senha) {
-            alert("Digite uma nova senha para atualizar.");
+    salvarNovaSenha: async () => {
+        const senhaAtual = document.getElementById('ws-senha-atual').value;
+        const novaSenha = document.getElementById('ws-nova-senha').value.trim();
+        
+        if (!senhaAtual || !novaSenha) {
+            alert("Preencha a senha atual e a nova senha.");
             return;
         }
-        if (senha.length < 6) {
-            alert("A senha deve ter pelo menos 6 caracteres.");
+        if (novaSenha.length < 6) {
+            alert("A nova senha deve ter pelo menos 6 caracteres.");
             return;
         }
 
-        const btn = document.querySelector('.btn-salvar-perfil');
+        const btn = document.getElementById('ws-btn-salvar-senha');
         const txt = btn.innerText;
-        btn.innerText = "A guardar... ⏳";
+        btn.innerText = "⏳ A gravar...";
         btn.disabled = true;
 
         try {
-            // Envia a nova senha para o backend usando o ID do utilizador logado
             const res = await Workspace.api('/workspace/perfil', 'PUT', { 
                 id: Workspace.usuario.id,
-                senha: senha 
+                senhaAtual: senhaAtual,
+                novaSenha: novaSenha 
             });
 
             if (res && res.success) {
                 alert("✅ Senha atualizada com sucesso!");
-                document.getElementById('ws-perfil-modal').style.display = 'none';
+                document.getElementById('ws-perfil-dropdown').style.display = 'none';
+                Workspace.logout(); // Desloga o aluno para o obrigar a entrar com a senha nova
             } else {
                 alert(res.error || "Erro ao atualizar perfil.");
             }
