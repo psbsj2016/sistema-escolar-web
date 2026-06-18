@@ -75,6 +75,12 @@ Workspace.Feed = {
             const avatar = p.autorNome.charAt(0).toUpperCase();
             const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
+            // Verifica se o usuário atual é o autor do post OU se é um Gestor (para poder apagar)
+            const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
+            const btnApagar = ehDonoOuGestor 
+                ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` 
+                : '';
+
             return `
                 <div class="ws-card" style="animation: fadeIn 0.4s ease;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
@@ -88,9 +94,12 @@ Workspace.Feed = {
                     <div style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
                     ${Workspace.Feed.renderizarAnexos(p.anexos)}
                     
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:20px; color:#666; font-size:13px; font-weight:600;">
-                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'">👍 Gosto (${p.likes || 0})</span>
-                        <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; gap:20px; color:#666; font-size:13px; font-weight:600;">
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.darLike('${p.id}')">👍 Gosto (<span id="likes-count-${p.id}">${p.likes || 0}</span>)</span>
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                        </div>
+                        ${btnApagar}
                     </div>
 
                     <div id="box-comentarios-${p.id}" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
@@ -112,6 +121,37 @@ Workspace.Feed = {
         }).join('');
         
         container.innerHTML = html;
+    },
+
+    // 🚀 NOVO: Função para registar o "Gosto"
+    darLike: async (postId) => {
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/like`, 'PUT');
+            if (res && res.success) {
+                // Atualiza o número visualmente sem recarregar a página toda
+                const el = document.getElementById(`likes-count-${postId}`);
+                if (el) el.innerText = parseInt(el.innerText) + 1;
+            }
+        } catch (e) {
+            console.error("Erro ao dar gosto", e);
+        }
+    },
+
+    // 🚀 NOVO: Função para o dono ou o Gestor apagarem o Post
+    apagarPost: async (postId) => {
+        if (!confirm("Tem a certeza que deseja apagar esta publicação? A ação não pode ser desfeita.")) return;
+        
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
+            if (res && res.success) {
+                if (window.App && App.showToast) App.showToast("Publicação apagada com sucesso.", "success");
+                await Workspace.Feed.carregarPosts(); // Puxa o mural limpo novamente
+            } else {
+                if (window.App && App.showToast) App.showToast("Erro ao apagar publicação.", "error");
+            }
+        } catch (e) {
+            console.error("Erro ao apagar", e);
+        }
     },
 
     // 🚀 NOVO: Função para abrir e fechar a área de comentários
