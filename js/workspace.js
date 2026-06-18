@@ -5,6 +5,7 @@ import { CONFIG } from './config.js';
 import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
+import './modulos/workspace/sidebar.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -62,6 +63,7 @@ Object.assign(Workspace, {
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.Upload) Workspace.Upload.init();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
+        if (Workspace.Sidebar) await Workspace.Sidebar.init();
     },
 
     fazerLogin: async () => {
