@@ -3,6 +3,7 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Feed = {
     postsCache: [],
+    comentariosAbertos: new Set(), // 🧠 Memória: Guarda quais comentários estão abertos
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -14,10 +15,11 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A procurar publicações na nuvem... ⏳</div>';
+        if(Workspace.Feed.postsCache.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A procurar publicações na nuvem... ⏳</div>';
+        }
 
         try {
-            // Se for aluno, avisa o servidor enviando o ID dele para a fechadura atuar!
             const refId = Workspace.usuario.alunoRefId || '';
             const posts = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
 
@@ -43,19 +45,16 @@ Workspace.Feed = {
         let html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">';
         
         anexos.forEach(anexo => {
-            // 🛡️ CORREÇÃO 1: Garante que a URL é absoluta ou começa com '/' para não quebrar a rota
             let urlCorrigida = anexo.url;
             if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
                 urlCorrigida = '/' + urlCorrigida;
             }
 
-            // Detecta se é um documento do Office (Word, Excel, PowerPoint)
             const nomeMinusculo = (anexo.nome || '').toLowerCase();
             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || 
                              nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || 
                              nomeMinusculo.endsWith('.pptx');
 
-            // 🛡️ CORREÇÃO 2: Se for arquivo do Office, força o Download em vez de tentar abrir na tela
             const attrDownload = ehOffice ? `download="${anexo.nome}"` : '';
 
             if (anexo.tipo.includes('image')) {
@@ -63,7 +62,6 @@ Workspace.Feed = {
             } else if (anexo.tipo.includes('video')) {
                 html += `<video controls style="width:100%; max-width:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
-                // É um documento (PDF, Word, etc)
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📎';
                 let textoAcao = ehOffice ? 'Baixar ⬇️' : 'Abrir ↗';
 
@@ -87,6 +85,7 @@ Workspace.Feed = {
 
     renderizarLista: (posts) => {
         const container = document.getElementById('ws-posts-area');
+        const meuId = Workspace.usuario.id;
         
         const html = posts.map(p => {
             const dataFormatada = new Date(p.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
@@ -95,16 +94,25 @@ Workspace.Feed = {
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
             const btnApagar = ehDonoOuGestor 
-                ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` 
+                ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar Post</span>` 
                 : '';
 
-            // 🚀 ETIQUETA DE DESTINO (Mostra se é para todos ou para uma turma)
-            let destinoBadge = '';
-            if (p.destino === 'global') {
-                destinoBadge = `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`;
-            } else {
-                destinoBadge = `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
-            }
+            let destinoBadge = p.destino === 'global' 
+                ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
+                : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
+
+            // 🚀 LÓGICA DE CURTIDAS
+            const likesArr = Array.isArray(p.likes) ? p.likes : [];
+            const dislikesArr = Array.isArray(p.dislikes) ? p.dislikes : [];
+            
+            const euCurti = likesArr.includes(meuId);
+            const euNaoCurti = dislikesArr.includes(meuId);
+
+            const corLike = euCurti ? '#27ae60' : '#666';
+            const corDislike = euNaoCurti ? '#e74c3c' : '#666';
+
+            // Verifica se este comentário deve aparecer aberto (memória do sistema)
+            const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
             return `
                 <div class="ws-card" style="animation: fadeIn 0.4s ease;">
@@ -120,21 +128,35 @@ Workspace.Feed = {
                     ${Workspace.Feed.renderizarAnexos(p.anexos)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; gap:20px; color:#666; font-size:13px; font-weight:600;">
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.darLike('${p.id}')">👍 Gosto (<span id="likes-count-${p.id}">${p.likes || 0}</span>)</span>
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                        <div style="display:flex; gap:15px; color:#666; font-size:13px; font-weight:600;">
+                            
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corLike}; font-weight:${euCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euCurti ? 'none' : 'like'}')">
+                                👍 Curtir (${likesArr.length})
+                            </span>
+                            
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corDislike}; font-weight:${euNaoCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euNaoCurti ? 'none' : 'dislike'}')">
+                                👎 Não Curtir (${dislikesArr.length})
+                            </span>
+
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
+                                💬 Comentar (${p.comentarios ? p.comentarios.length : 0})
+                            </span>
                         </div>
                         ${btnApagar}
                     </div>
 
-                    <div id="box-comentarios-${p.id}" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
+                    <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
                         <div style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
-                            ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => `
-                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px;">
+                            ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => {
+                                const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
+                                return `
+                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px;">
                                     <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}:</strong> 
                                     <span style="color: #444;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                                    ${ehDonoComentario ? `<span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️</span>` : ''}
                                 </div>
-                            `).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
+                                `;
+                            }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
                         </div>
                         <div style="display:flex; gap:10px;">
                             <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:13px;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
@@ -148,12 +170,15 @@ Workspace.Feed = {
         container.innerHTML = html;
     },
 
-    darLike: async (postId) => {
+    reagir: async (postId, tipo) => {
         try {
-            const res = await Workspace.api(`/workspace/posts/${postId}/like`, 'PUT');
+            // O tipo pode ser 'like', 'dislike' ou 'none' (para tirar a reação)
+            const res = await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
+                userId: Workspace.usuario.id,
+                tipo: tipo
+            });
             if (res && res.success) {
-                const el = document.getElementById(`likes-count-${postId}`);
-                if (el) el.innerText = parseInt(el.innerText) + 1;
+                await Workspace.Feed.carregarPosts(); 
             }
         } catch (e) {}
     },
@@ -166,13 +191,25 @@ Workspace.Feed = {
         } catch (e) {}
     },
 
+    apagarComentario: async (postId, comentarioId) => {
+        if (!confirm("Apagar este comentário?")) return;
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
+            if (res && res.success) await Workspace.Feed.carregarPosts(); 
+        } catch (e) {}
+    },
+
     toggleComentarios: (id) => {
         const box = document.getElementById(`box-comentarios-${id}`);
         if(box) {
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
-            if(box.style.display === 'block') {
+            if (box.style.display === 'none') {
+                box.style.display = 'block';
+                Workspace.Feed.comentariosAbertos.add(id); // Guarda na memória que abriu
                 const input = document.getElementById(`input-comentario-${id}`);
                 if(input) input.focus();
+            } else {
+                box.style.display = 'none';
+                Workspace.Feed.comentariosAbertos.delete(id); // Esquece
             }
         }
     },
@@ -196,8 +233,8 @@ Workspace.Feed = {
 
             if(res && res.success) {
                 input.value = '';
+                Workspace.Feed.comentariosAbertos.add(postId); // Mantém aberto
                 await Workspace.Feed.carregarPosts(); 
-                setTimeout(() => Workspace.Feed.toggleComentarios(postId), 50); 
             }
         } catch(e) {} finally {
             if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
@@ -208,7 +245,6 @@ Workspace.Feed = {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (!boxCriarPost) return;
 
-        // 🚀 INJETA O MENU SUSPENSO DE PÚBLICO NA CAIXA DE CRIAÇÃO
         if (!document.getElementById('ws-post-destino')) {
             const areaBotoes = boxCriarPost.querySelector('div[style*="justify-content: space-between"]');
             if (areaBotoes) {
@@ -219,7 +255,6 @@ Workspace.Feed = {
                 `;
                 areaBotoes.insertAdjacentHTML('afterbegin', htmlSelect);
 
-                // Vai buscar as turmas para preencher as opções
                 try {
                     const turmas = await Workspace.api('/turmas', 'GET');
                     if (turmas && turmas.length > 0) {
