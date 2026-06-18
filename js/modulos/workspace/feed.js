@@ -41,21 +41,41 @@ Workspace.Feed = {
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         let html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">';
+        
         anexos.forEach(anexo => {
+            // 🛡️ CORREÇÃO 1: Garante que a URL é absoluta ou começa com '/' para não quebrar a rota
+            let urlCorrigida = anexo.url;
+            if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
+                urlCorrigida = '/' + urlCorrigida;
+            }
+
+            // Detecta se é um documento do Office (Word, Excel, PowerPoint)
+            const nomeMinusculo = (anexo.nome || '').toLowerCase();
+            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || 
+                             nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || 
+                             nomeMinusculo.endsWith('.pptx');
+
+            // 🛡️ CORREÇÃO 2: Se for arquivo do Office, força o Download em vez de tentar abrir na tela
+            const attrDownload = ehOffice ? `download="${anexo.nome}"` : '';
+
             if (anexo.tipo.includes('image')) {
-                html += `<a href="${anexo.url}" target="_blank" style="flex:1; min-width:150px; max-width:250px;"><img src="${anexo.url}" style="width:100%; border-radius:8px; border:1px solid #eee; object-fit:cover; aspect-ratio:16/9; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"></a>`;
+                html += `<a href="${urlCorrigida}" target="_blank" style="flex:1; min-width:150px; max-width:250px;"><img src="${urlCorrigida}" style="width:100%; border-radius:8px; border:1px solid #eee; object-fit:cover; aspect-ratio:16/9; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"></a>`;
             } else if (anexo.tipo.includes('video')) {
-                html += `<video controls style="width:100%; max-width:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${anexo.url}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
+                html += `<video controls style="width:100%; max-width:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
-                let icone = anexo.tipo.includes('pdf') ? '📕' : '📎';
+                // É um documento (PDF, Word, etc)
+                let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📎';
+                let textoAcao = ehOffice ? 'Baixar ⬇️' : 'Abrir ↗';
+
                 html += `
-                    <a href="${anexo.url}" target="_blank" style="display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; text-decoration:none; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">
+                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; text-decoration:none; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">
                         <span style="font-size:24px;">${icone}</span>
                         <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span>
-                        <span style="color:#3498db; font-size:12px; font-weight:bold;">Abrir ↗</span>
+                        <span style="color:#3498db; font-size:12px; font-weight:bold;">${textoAcao}</span>
                     </a>`;
             }
         });
+        
         html += '</div>';
         return html;
     },

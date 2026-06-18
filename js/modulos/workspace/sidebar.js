@@ -249,27 +249,23 @@ Workspace.Sidebar = {
         const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if (!evento) return;
 
-        // Preenche o Cabeçalho comum a todos
         document.getElementById('ws-tarefa-id').value = evento.id;
         document.getElementById('ws-tarefa-titulo').innerText = evento.descricao || evento.tipo;
         const dataFormatada = new Date(evento.data).toLocaleDateString('pt-BR');
         document.getElementById('ws-tarefa-data').innerText = `📅 Prazo: ${dataFormatada}`;
         document.getElementById('ws-tarefa-desc').innerHTML = evento.detalhes ? Workspace.Sidebar.escapeHTML(evento.detalhes).replace(/\n/g, '<br>') : 'Acompanhe os detalhes desta atividade.';
 
-        // Esconde tudo por defeito para limpar o modal
         document.getElementById('ws-area-entrega').style.display = 'none';
         document.getElementById('ws-area-entregue').style.display = 'none';
         const areaProfessor = document.getElementById('ws-area-professor');
         if (areaProfessor) areaProfessor.style.display = 'none';
 
-        // Mostra a janela preta de fundo
         document.getElementById('ws-tarefa-modal').style.display = 'flex';
 
-        // 🧠 O CÉREBRO: Quem está a ver isto?
         const ehAluno = Workspace.usuario.tipo === 'Aluno';
 
         if (!ehAluno) {
-            // 👨‍🏫 MESA DO PROFESSOR / SECRETARIA / GESTOR
+            // 👨‍🏫 MESA DO PROFESSOR
             if (areaProfessor) {
                 areaProfessor.style.display = 'block';
                 document.getElementById('ws-lista-entregas').innerHTML = '<p style="font-size: 12px; color: #999; text-align: center;">A buscar trabalhos... ⏳</p>';
@@ -283,7 +279,16 @@ Workspace.Sidebar = {
                         let htmlEntregas = '';
                         entregas.forEach(ent => {
                             const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
-                            // Desenha em "Cartões" para ficar perfeito no telemóvel do professor
+                            
+                            // 🛡️ CORREÇÃO: Trata a URL e força download se for Office
+                            let urlCorrigida = ent.arquivoUrl;
+                            if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
+                                urlCorrigida = '/' + urlCorrigida;
+                            }
+                            const nomeMinusculo = (ent.arquivoNome || '').toLowerCase();
+                            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
+                            const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
+
                             htmlEntregas += `
                                 <div style="background: #f4f6f7; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -291,7 +296,7 @@ Workspace.Sidebar = {
                                         <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
-                                    <a href="${ent.arquivoUrl}" target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Abrir / Baixar Trabalho</a>
+                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Abrir / Baixar Trabalho</a>
                                 </div>
                             `;
                         });
@@ -311,13 +316,25 @@ Workspace.Sidebar = {
                 const res = await Workspace.api(`/workspace/entregas/verificar/${evento.id}/${alunoRefId}`, 'GET');
                 
                 if (res && res.entregue && res.detalhes) {
-                    // Já entregou! Mostra o selo verde.
                     document.getElementById('ws-area-entregue').style.display = 'block';
                     const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
                     document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
-                    document.getElementById('ws-tarefa-link-entregue').href = res.detalhes.arquivoUrl;
+                    
+                    // 🛡️ CORREÇÃO: Trata a URL do anexo que o aluno já enviou
+                    let urlCorrigida = res.detalhes.arquivoUrl;
+                    if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
+                        urlCorrigida = '/' + urlCorrigida;
+                    }
+                    const nomeMinusculo = (res.detalhes.arquivoNome || '').toLowerCase();
+                    const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
+                    const attrDownload = ehOffice ? `download="${res.detalhes.arquivoNome}"` : '';
+
+                    const btnLink = document.getElementById('ws-tarefa-link-entregue');
+                    btnLink.href = urlCorrigida;
+                    if(ehOffice) btnLink.setAttribute('download', res.detalhes.arquivoNome);
+                    else btnLink.removeAttribute('download');
+
                 } else {
-                    // Ainda não entregou, mostra o campo de Upload
                     document.getElementById('ws-area-entrega').style.display = 'block';
                 }
             } catch (e) {
