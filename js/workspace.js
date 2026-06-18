@@ -104,7 +104,7 @@ Object.assign(Workspace, {
         }
     },
 
-    // 👤 LÓGICA DO MEU PERFIL (MENU SUSPENSO)
+    // 👤 LÓGICA DO MEU PERFIL E CONFIGURAÇÕES
     togglePerfil: () => {
         const dropdown = document.getElementById('ws-perfil-dropdown');
         if (!dropdown) return;
@@ -114,23 +114,36 @@ Object.assign(Workspace, {
             document.getElementById('ws-menu-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
             document.getElementById('ws-menu-login').innerText = `@${Workspace.usuario.login}`;
             document.getElementById('ws-menu-avatar').innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
-            document.getElementById('ws-senha-atual').value = '';
-            document.getElementById('ws-nova-senha').value = '';
         } else {
             dropdown.style.display = 'none';
         }
     },
 
+    abrirModalSenha: () => {
+        document.getElementById('ws-perfil-dropdown').style.display = 'none'; // Fecha o menu suspenso
+        document.getElementById('ws-senha-modal').style.display = 'flex'; // Abre a tela de senha
+        
+        // Limpa os campos para segurança
+        document.getElementById('ws-senha-atual').value = '';
+        document.getElementById('ws-nova-senha').value = '';
+        document.getElementById('ws-confirma-senha').value = '';
+    },
+
     salvarNovaSenha: async () => {
         const senhaAtual = document.getElementById('ws-senha-atual').value;
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
+        const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
         
-        if (!senhaAtual || !novaSenha) {
-            alert("Preencha a senha atual e a nova senha.");
+        if (!senhaAtual || !novaSenha || !confirmaSenha) {
+            alert("Preencha todos os campos para continuar.");
             return;
         }
         if (novaSenha.length < 6) {
             alert("A nova senha deve ter pelo menos 6 caracteres.");
+            return;
+        }
+        if (novaSenha !== confirmaSenha) {
+            alert("A nova senha e a confirmação não coincidem.");
             return;
         }
 
@@ -147,11 +160,11 @@ Object.assign(Workspace, {
             });
 
             if (res && res.success) {
-                alert("✅ Senha atualizada com sucesso!");
-                document.getElementById('ws-perfil-dropdown').style.display = 'none';
-                Workspace.logout(); // Desloga o aluno para o obrigar a entrar com a senha nova
+                alert("✅ Senha atualizada com sucesso! Por favor, entre novamente.");
+                document.getElementById('ws-senha-modal').style.display = 'none';
+                Workspace.logout(); // O aluno é deslogado para confirmar a senha nova
             } else {
-                alert(res.error || "Erro ao atualizar perfil.");
+                alert(res.error || "Erro ao atualizar a senha.");
             }
         } catch (e) {
             alert("Erro de comunicação com o servidor.");

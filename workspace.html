@@ -48,7 +48,7 @@
         </div>
     </div>
 
- <nav class="ws-navbar" id="ws-navbar" style="display: none; position: relative;">
+<nav class="ws-navbar" id="ws-navbar" style="display: none; position: relative;">
         <div style="display: flex; align-items: center; gap: 15px;">
             <h2 style="margin: 0; font-size: 18px;">🎓 Workspace</h2>
         </div>
@@ -76,11 +76,9 @@
                     <div style="padding: 15px 20px;">
                         <div style="font-size: 11px; font-weight: bold; color: #999; text-transform: uppercase; margin-bottom: 10px;">⚙️ Configurações</div>
                         
-                        <input type="password" id="ws-senha-atual" placeholder="Senha Atual" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 8px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
-                        
-                        <input type="password" id="ws-nova-senha" placeholder="Nova Senha" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-family: inherit; margin-bottom: 10px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
-                        
-                        <button class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 10px; border-radius: 6px; font-size: 13px;" onclick="Workspace.salvarNovaSenha()">💾 Salvar Senha</button>
+                        <button class="ws-btn" style="width: 100%; background: #f0f2f5; color: #333; padding: 10px; border-radius: 6px; font-size: 13px; text-align: left; display: flex; align-items: center; gap: 8px; border: 1px solid #ddd; transition: 0.2s;" onmouseover="this.style.background='#e2e6ea'" onmouseout="this.style.background='#f0f2f5'" onclick="Workspace.abrirModalSenha()">
+                            <span>🔑</span> Alterar Senha
+                        </button>
                     </div>
 
                     <div style="border-top: 1px solid #eee; padding: 10px;">
@@ -162,7 +160,25 @@
         </div>
     </div>
 
-     
+    <div id="ws-senha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">🔑 Alterar Senha</h3>
+                <button onclick="document.getElementById('ws-senha-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+            </div>
+            <div style="padding: 20px;">
+                <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 20px;">Por questões de segurança, confirme a sua senha atual antes de escolher uma nova.</p>
+                
+                <input type="password" id="ws-senha-atual" placeholder="Senha Atual" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
+                
+                <input type="password" id="ws-nova-senha" placeholder="Nova Senha" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
+
+                <input type="password" id="ws-confirma-senha" placeholder="Confirmar Nova Senha" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
+                
+                <button class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 12px; border-radius: 8px; font-size: 14px;" onclick="Workspace.salvarNovaSenha()">💾 Confirmar e Salvar</button>
+            </div>
+        </div>
+    </div>     
 
     <script type="module" src="./js/workspace.js"></script>
 </body>
