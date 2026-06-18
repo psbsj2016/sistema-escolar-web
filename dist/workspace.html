@@ -14,8 +14,9 @@
         .ws-container { display: grid; grid-template-columns: 250px 1fr 300px; gap: 20px; max-width: 1200px; margin: 20px auto; padding: 0 20px; }
         
         @media(max-width: 900px) { 
-            .ws-container { grid-template-columns: 1fr; } 
-            .ws-sidebar-left, .ws-sidebar-right { display: none; } 
+            .ws-container { display: flex; flex-direction: column; } 
+            .ws-sidebar-right { display: none; } /* Esconde só as tarefas à direita */
+            .ws-sidebar-left { margin-bottom: -10px; } /* O menu do chat fica em cima do feed */
         }
         
         .ws-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -24,7 +25,7 @@
         .ws-btn:hover { background: #2980b9; }
         .ws-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; position: absolute; top: -5px; right: -5px; font-weight: bold; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-I8GbXJum.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-DTVQEfp0.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/site-CuorVS2D.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D9g4eEYO.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -68,11 +69,17 @@
 
     <main class="ws-container" id="ws-main-container" style="display: none;">
         
-        <aside class="ws-sidebar-left">
+       <aside class="ws-sidebar-left">
             <div class="ws-card">
-                <h3 style="margin-top:0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #2c3e50;">📚 As Minhas Turmas</h3>
-                <div id="ws-lista-turmas" style="font-size: 13px; color: #666;">
-                    Geral
+                <h3 style="margin-top:0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #2c3e50;">🧭 Menu Principal</h3>
+                
+                <div style="padding: 10px 15px; cursor: pointer; font-weight: bold; color: #3498db; margin-bottom: 15px; background: #e8f4f8; border-radius: 8px; border: 1px solid #d4eaf4; transition: 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('ws-chat-modal').style.display='none'">
+                    📰 Feed Geral
+                </div>
+
+                <h4 style="margin: 15px 0 10px 0; font-size: 12px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px;">📚 Fóruns / Bate-Papo</h4>
+                <div id="ws-lista-turmas" style="font-size: 13px; color: #666; max-height: 300px; overflow-y: auto;">
+                    A carregar...
                 </div>
             </div>
         </aside>
@@ -103,6 +110,27 @@
         </aside>
 
     </main>
+
+    <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px;">Sala de Bate-Papo</h3>
+                    <div style="font-size: 12px; opacity: 0.8; margin-top: 3px;">Logado como: <strong id="ws-chat-aluno-nome">...</strong></div>
+                </div>
+                <button onclick="Workspace.Sidebar.fecharChat()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+            </div>
+            
+            <div id="ws-chat-mensagens" style="flex: 1; padding: 20px; overflow-y: auto; background: #e5ddd5; display: flex; flex-direction: column; gap: 12px;">
+                </div>
+
+            <div style="padding: 15px; background: #f0f2f5; border-top: 1px solid #ddd; display: flex; gap: 10px;">
+                <input type="text" id="ws-chat-input" placeholder="Digite a sua mensagem para a turma..." style="flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
+                <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="border-radius: 20px; padding: 0 25px; background: #27ae60;">Enviar</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
