@@ -2,66 +2,93 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Workspace - Ambiente Virtual Escolar</title>
     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2c3e50">
-    <link rel="icon" href="assets/icone.png" type="image/png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" href="assets/icone.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/icone.png">
     
-<style>
+    <title>Workspace - Portal do Aluno</title>
+    
+    
+    <style>
         body { background-color: #f0f2f5; margin: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         .ws-navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .ws-container { display: grid; grid-template-columns: 250px 1fr 300px; gap: 20px; max-width: 1200px; margin: 20px auto; padding: 0 20px; }
         
         .ws-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .ws-post-input { width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 15px; resize: none; font-family: inherit; margin-bottom: 10px; background: #f9f9f9; box-sizing: border-box; }
+        .ws-post-input { width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 15px; resize: none; font-family: inherit; margin-bottom: 10px; background: #f9f9f9; box-sizing: border-box; outline: none; }
         .ws-btn { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; box-sizing: border-box; text-align: center; }
         .ws-btn:hover { background: #2980b9; }
         .ws-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; position: absolute; top: -5px; right: -5px; font-weight: bold; }
 
         /* =========================================================
-           📱 MODO CELULAR (MOBILE FIRST) PARA O WORKSPACE
+           📱 MODO APP PWA NATIVO (FORÇADO)
            ========================================================= */
-        @media(max-width: 900px) { 
-            /* Transforma as 3 colunas numa única coluna vertical */
+        @media screen and (max-width: 900px) { 
+            /* Trava o scroll horizontal e ajusta padding para o "notch" do iPhone */
+            html, body { width: 100vw !important; overflow-x: hidden !important; }
+            
+            .ws-navbar { 
+                padding: 10px 15px !important; 
+                padding-top: max(10px, env(safe-area-inset-top)) !important; 
+            }
+            
+            /* Coluna única, ocupando 100% da tela de ponta a ponta */
             .ws-container { 
-                display: flex; 
-                flex-direction: column; 
-                padding: 10px; 
-                margin: 10px auto; 
-                gap: 15px; 
+                display: flex !important; 
+                flex-direction: column !important; 
+                padding: 10px !important; 
+                margin: 0 !important; 
+                gap: 15px !important; 
+                width: 100vw !important;
+                box-sizing: border-box !important;
             } 
             
-            .ws-sidebar-right { display: none; } /* Esconde as tarefas pendentes na direita para não poluir */
-            .ws-sidebar-left { margin-bottom: 0; }
-            .ws-navbar { padding: 12px 15px; }
-            .ws-navbar h2 { font-size: 16px; }
-            .ws-card { padding: 15px; }
+            /* Esconde as tarefas na direita para focar no Feed/Chat */
+            .ws-sidebar-right { display: none !important; }
+            .ws-sidebar-left { width: 100% !important; margin: 0 !important; }
             
-            /* Ajusta o menu suspenso do perfil para não vazar a tela à direita */
-            #ws-perfil-dropdown { 
-                width: calc(100vw - 30px) !important; 
-                right: -10px !important; 
-                top: 55px !important; 
+            /* Os cards perdem as margens laterais enormes e grudam na tela */
+            .ws-card { 
+                padding: 15px !important; 
+                width: 100% !important; 
+                box-sizing: border-box !important; 
+                margin-bottom: 0 !important;
             }
             
-            /* Garante que as imagens e vídeos dos professores nunca passem do tamanho da tela do aluno */
-            .ws-card img, .ws-card video { 
+            /* Menu de perfil desce perfeitamente sem criar barra de rolagem lateral */
+            #ws-perfil-dropdown { 
+                position: fixed !important; 
+                top: 70px !important; 
+                right: 10px !important; 
+                width: calc(100vw - 20px) !important; 
+                max-width: 350px !important;
+            }
+            
+            /* Imagens e vídeos nunca podem "vazar" da tela do celular */
+            .ws-card img, .ws-card video, .ws-card iframe { 
                 max-width: 100% !important; 
                 height: auto !important; 
+                border-radius: 8px !important;
             }
             
-            /* Coloca os botões de Like/Comentar em cima e o botão de Apagar por baixo */
-            .ws-card > div[style*="justify-content:space-between"] {
-                flex-direction: column;
-                align-items: flex-start !important;
-                gap: 15px;
+            /* Botão de curtir, comentar e apagar flexíveis em telas pequenas */
+            div[style*="justify-content:space-between"] {
+                flex-wrap: wrap !important;
+                gap: 10px !important;
             }
+            
+            /* Botões do celular devem ser fáceis de clicar com o dedo (largura total) */
+            #ws-btn-entregar, .ws-btn-publicar { width: 100% !important; } 
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-khjQXJCN.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/site-jBMX6KIc.js">
-  <link rel="stylesheet" crossorigin href="/assets/site-D7LMCEVW.css">
+  <script type="module" crossorigin src="/assets/workspace-Bj8bneW2.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/config-D5aoyuWT.js">
+  <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
