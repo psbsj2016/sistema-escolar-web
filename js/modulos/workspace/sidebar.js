@@ -249,43 +249,80 @@ Workspace.Sidebar = {
         const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if (!evento) return;
 
-        // Preenche o Modal com as informações da atividade
+        // Preenche o Cabeçalho comum a todos
         document.getElementById('ws-tarefa-id').value = evento.id;
         document.getElementById('ws-tarefa-titulo').innerText = evento.descricao || evento.tipo;
-        
         const dataFormatada = new Date(evento.data).toLocaleDateString('pt-BR');
         document.getElementById('ws-tarefa-data').innerText = `📅 Prazo: ${dataFormatada}`;
-        
-        // Se o professor tiver escrito detalhes da tarefa, mostramos. Se não, metemos um genérico.
-        document.getElementById('ws-tarefa-desc').innerHTML = evento.detalhes ? Workspace.Sidebar.escapeHTML(evento.detalhes).replace(/\n/g, '<br>') : 'Envie a sua resolução/trabalho através do campo abaixo antes do prazo terminar.';
+        document.getElementById('ws-tarefa-desc').innerHTML = evento.detalhes ? Workspace.Sidebar.escapeHTML(evento.detalhes).replace(/\n/g, '<br>') : 'Acompanhe os detalhes desta atividade.';
 
-        // Limpa os campos de envio
-        document.getElementById('ws-tarefa-arquivo').value = '';
-        document.getElementById('ws-tarefa-obs').value = '';
-        
-        // Abre o modal em modo de carregamento
-        document.getElementById('ws-tarefa-modal').style.display = 'flex';
+        // Esconde tudo por defeito para limpar o modal
         document.getElementById('ws-area-entrega').style.display = 'none';
         document.getElementById('ws-area-entregue').style.display = 'none';
+        const areaProfessor = document.getElementById('ws-area-professor');
+        if (areaProfessor) areaProfessor.style.display = 'none';
 
-        // 🛡️ Verifica no servidor se o aluno JÁ entregou isto antes
-        try {
-            const alunoRefId = Workspace.usuario.alunoRefId || Workspace.usuario.id; // Se for aluno, usa a ref dele
-            const res = await Workspace.api(`/workspace/entregas/verificar/${evento.id}/${alunoRefId}`, 'GET');
-            
-            if (res && res.entregue && res.detalhes) {
-                // Já entregou! Mostra o selo verde.
-                document.getElementById('ws-area-entregue').style.display = 'block';
-                const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
-                document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
-                document.getElementById('ws-tarefa-link-entregue').href = res.detalhes.arquivoUrl;
-            } else {
-                // Ainda não entregou, mostra o campo de Upload
-                document.getElementById('ws-area-entrega').style.display = 'block';
+        // Mostra a janela preta de fundo
+        document.getElementById('ws-tarefa-modal').style.display = 'flex';
+
+        // 🧠 O CÉREBRO: Quem está a ver isto?
+        const ehAluno = Workspace.usuario.tipo === 'Aluno';
+
+        if (!ehAluno) {
+            // 👨‍🏫 MESA DO PROFESSOR / SECRETARIA / GESTOR
+            if (areaProfessor) {
+                areaProfessor.style.display = 'block';
+                document.getElementById('ws-lista-entregas').innerHTML = '<p style="font-size: 12px; color: #999; text-align: center;">A buscar trabalhos... ⏳</p>';
+                
+                try {
+                    const entregas = await Workspace.api(`/workspace/entregas/tarefa/${evento.id}`, 'GET');
+                    
+                    if (!entregas || entregas.length === 0) {
+                        document.getElementById('ws-lista-entregas').innerHTML = '<div style="background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center;"><div style="font-size:24px; margin-bottom:5px;">📭</div><div style="font-size:13px; color:#7f8c8d;">Nenhum aluno entregou este trabalho ainda.</div></div>';
+                    } else {
+                        let htmlEntregas = '';
+                        entregas.forEach(ent => {
+                            const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                            // Desenha em "Cartões" para ficar perfeito no telemóvel do professor
+                            htmlEntregas += `
+                                <div style="background: #f4f6f7; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <strong style="color: #2c3e50; font-size: 13px;">👨‍🎓 ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}</strong>
+                                        <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
+                                    </div>
+                                    ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
+                                    <a href="${ent.arquivoUrl}" target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Abrir / Baixar Trabalho</a>
+                                </div>
+                            `;
+                        });
+                        document.getElementById('ws-lista-entregas').innerHTML = htmlEntregas;
+                    }
+                } catch(e) {
+                    document.getElementById('ws-lista-entregas').innerHTML = '<p style="color: #e74c3c; font-size: 12px; text-align:center;">Erro ao buscar entregas.</p>';
+                }
             }
-        } catch (e) {
-            console.error("Erro ao verificar entrega:", e);
-            document.getElementById('ws-area-entrega').style.display = 'block'; // Fallback
+        } else {
+            // 🎓 LÓGICA DO ALUNO
+            document.getElementById('ws-tarefa-arquivo').value = '';
+            document.getElementById('ws-tarefa-obs').value = '';
+
+            try {
+                const alunoRefId = Workspace.usuario.alunoRefId || Workspace.usuario.id;
+                const res = await Workspace.api(`/workspace/entregas/verificar/${evento.id}/${alunoRefId}`, 'GET');
+                
+                if (res && res.entregue && res.detalhes) {
+                    // Já entregou! Mostra o selo verde.
+                    document.getElementById('ws-area-entregue').style.display = 'block';
+                    const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
+                    document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
+                    document.getElementById('ws-tarefa-link-entregue').href = res.detalhes.arquivoUrl;
+                } else {
+                    // Ainda não entregou, mostra o campo de Upload
+                    document.getElementById('ws-area-entrega').style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('ws-area-entrega').style.display = 'block'; 
+            }
         }
     },
 
