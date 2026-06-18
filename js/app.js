@@ -20,12 +20,14 @@ window.LISTA_FUNCIONALIDADES = [
     { id: 'ped_notas', nome: 'Lançar Nota', icon: '📝', acao: "App.renderizarTela('avaliacoes')", roles: ['Gestor', 'Secretaria', 'Professor'] },
     { id: 'ped_plan', nome: 'Planejamento', icon: '📅', acao: "App.renderizarTela('planejamento')", roles: ['Gestor', 'Secretaria', 'Professor'] },
     { id: 'ped_bol', nome: 'Boletins', icon: '🖨️', acao: "App.renderizarTela('boletins')", roles: ['Gestor', 'Secretaria', 'Professor'] },
-    { id: 'gerir_workspace', nome: 'Workspace', icon: '🎓', acao: "App.renderizarWorkspaceAdmin()", roles: ['Gestor', 'Secretaria'] },
     { id: 'fin_inad', nome: 'Inadimplência', icon: '⚠️', acao: "App.renderizarTela('inadimplencia')", roles: ['Gestor', 'Secretaria'] },
     { id: 'fin_rel', nome: 'Rel. Financeiro', icon: '📊', acao: "App.renderizarRelatorio('financeiro')", roles: ['Gestor', 'Secretaria'] },
     { id: 'doc_ficha', nome: 'Ficha Matrícula', icon: '📄', acao: "App.renderizarRelatorio('ficha')", roles: ['Gestor', 'Secretaria'] },
     { id: 'doc_dossie', nome: 'Dossiê Executivo', icon: '📁', acao: "App.renderizarRelatorio('dossie')", roles: ['Gestor'] },
-    { id: 'doc_gerador', nome: 'Documentos', icon: '🎓', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] } 
+    { id: 'doc_gerador', nome: 'Documentos', icon: '📄', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] },
+    
+    // 👇 O BOTÃO DO WORKSPACE FICA AQUI NO FINAL DO MENU (Abaixo dos documentos/contratos)
+    { id: 'gerir_workspace', nome: 'Workspace', icon: '🎓', acao: "App.renderizarWorkspaceAdmin()", roles: ['Gestor', 'Secretaria'] }
 ];
 
 // =========================================================
