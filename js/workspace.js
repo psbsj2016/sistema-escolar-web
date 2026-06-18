@@ -95,6 +95,52 @@ Object.assign(Workspace, {
         }
     },
 
+    // 👤 LÓGICA DO MEU PERFIL
+    abrirPerfil: () => {
+        document.getElementById('ws-perfil-modal').style.display = 'flex';
+        document.getElementById('ws-perfil-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
+        document.getElementById('ws-perfil-login').innerText = `@${Workspace.usuario.login}`;
+        document.getElementById('ws-perfil-avatar-preview').innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
+        document.getElementById('ws-perfil-senha').value = '';
+    },
+
+    salvarPerfil: async () => {
+        const senha = document.getElementById('ws-perfil-senha').value.trim();
+        if (!senha) {
+            alert("Digite uma nova senha para atualizar.");
+            return;
+        }
+        if (senha.length < 6) {
+            alert("A senha deve ter pelo menos 6 caracteres.");
+            return;
+        }
+
+        const btn = document.querySelector('.btn-salvar-perfil');
+        const txt = btn.innerText;
+        btn.innerText = "A guardar... ⏳";
+        btn.disabled = true;
+
+        try {
+            // Envia a nova senha para o backend usando o ID do utilizador logado
+            const res = await Workspace.api('/workspace/perfil', 'PUT', { 
+                id: Workspace.usuario.id,
+                senha: senha 
+            });
+
+            if (res && res.success) {
+                alert("✅ Senha atualizada com sucesso!");
+                document.getElementById('ws-perfil-modal').style.display = 'none';
+            } else {
+                alert(res.error || "Erro ao atualizar perfil.");
+            }
+        } catch (e) {
+            alert("Erro de comunicação com o servidor.");
+        } finally {
+            btn.innerText = txt;
+            btn.disabled = false;
+        }
+    },
+
     logout: async () => {
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         localStorage.removeItem('ws_usuario_logado');

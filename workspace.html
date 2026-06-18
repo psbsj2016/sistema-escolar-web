@@ -48,9 +48,8 @@
         </div>
     </div>
 
-    <nav class="ws-navbar" id="ws-navbar" style="display: none;">
+  <nav class="ws-navbar" id="ws-navbar" style="display: none;">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <button onclick="Workspace.logout()" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor:pointer;" title="Sair da Conta">⬅ Sair</button>
             <h2 style="margin: 0; font-size: 18px;">🎓 Workspace</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 20px;">
@@ -58,9 +57,11 @@
                 <span style="font-size: 22px;">🔔</span>
                 <span class="ws-badge" id="ws-noti-count" style="display:none;">0</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
+            
+            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPerfil()">
                 <div id="ws-user-avatar" style="width: 35px; height: 35px; border-radius: 50%; background: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">?</div>
                 <span id="ws-user-name" style="font-weight: 600; font-size: 14px;">A carregar...</span>
+                <span style="font-size: 10px;">▼</span>
             </div>
         </div>
     </nav>
@@ -130,6 +131,37 @@
             <div style="padding: 15px; background: #f0f2f5; border-top: 1px solid #ddd; display: flex; gap: 10px;">
                 <input type="text" id="ws-chat-input" placeholder="Digite a sua mensagem para a turma..." style="flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
                 <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="border-radius: 20px; padding: 0 25px; background: #27ae60;">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+     <div id="ws-perfil-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
+            
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3>
+                <button onclick="document.getElementById('ws-perfil-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+            </div>
+            
+            <div style="padding: 25px 20px;">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div id="ws-perfil-avatar-preview" style="width: 80px; height: 80px; border-radius: 50%; background: #3498db; color: white; font-size: 30px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">?</div>
+                    <h4 id="ws-perfil-nome" style="margin: 0; color: #2c3e50; font-size: 18px;">A carregar...</h4>
+                    <p style="margin: 0; font-size: 13px; color: #7f8c8d; font-weight: bold;" id="ws-perfil-login">@login</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #555;">Alterar Senha</label>
+                    <input type="password" id="ws-perfil-senha" placeholder="Digite uma nova senha..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; margin-top: 5px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
+                </div>
+
+                <button class="ws-btn btn-salvar-perfil" style="width: 100%; background: #27ae60; margin-bottom: 20px; padding: 12px; border-radius: 8px;" onclick="Workspace.salvarPerfil()">💾 Salvar Nova Senha</button>
+
+                <div style="border-top: 1px dashed #ddd; margin-bottom: 20px;"></div>
+
+                <button class="ws-btn" style="width: 100%; background: #e74c3c; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 8px;" onclick="Workspace.logout()">
+                    <span>⬅️</span> Sair da Conta
+                </button>
             </div>
         </div>
     </div>
