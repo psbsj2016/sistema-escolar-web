@@ -65,12 +65,18 @@ Object.assign(Workspace, {
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
 
-        // 🚀 Fecha o menu de perfil se clicar fora dele
+        // 🚀 Fecha os menus suspensos se clicar fora deles
         document.addEventListener('click', (e) => {
-            const container = document.getElementById('ws-perfil-container');
-            const dropdown = document.getElementById('ws-perfil-dropdown');
-            if (container && dropdown && !container.contains(e.target)) {
-                dropdown.style.display = 'none';
+            const perfilContainer = document.getElementById('ws-perfil-container');
+            const perfilDropdown = document.getElementById('ws-perfil-dropdown');
+            if (perfilContainer && perfilDropdown && !perfilContainer.contains(e.target)) {
+                perfilDropdown.style.display = 'none';
+            }
+
+            const forunsContainer = document.getElementById('ws-menu-left-container');
+            const forunsDropdown = document.getElementById('ws-foruns-dropdown');
+            if (forunsContainer && forunsDropdown && !forunsContainer.contains(e.target)) {
+                forunsDropdown.style.display = 'none';
             }
         });
     },
@@ -171,6 +177,29 @@ Object.assign(Workspace, {
         } finally {
             btn.innerText = txt;
             btn.disabled = false;
+        }
+    },
+
+    // 🏠 VOLTAR AO FEED (HOME)
+    voltarAoFeed: () => {
+        const modalChat = document.getElementById('ws-chat-modal');
+        if (modalChat) modalChat.style.display = 'none';
+        
+        // Rola suavemente para o topo do feed
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    // ☰ MENU HAMBÚRGUER (FÓRUNS)
+    toggleMenuForuns: () => {
+        const dropdown = document.getElementById('ws-foruns-dropdown');
+        if (!dropdown) return;
+        
+        if (dropdown.style.display === 'none') {
+            dropdown.style.display = 'block';
+            document.getElementById('ws-perfil-dropdown').style.display = 'none'; // Fecha o outro menu se estiver aberto
+            if (Workspace.Sidebar) Workspace.Sidebar.carregarTurmas(); // Força o carregamento da lista
+        } else {
+            dropdown.style.display = 'none';
         }
     },
 

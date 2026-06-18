@@ -32,66 +32,31 @@ Workspace.Sidebar = {
 
     // 🛡️ A BARREIRA DE ACESSO ÀS SALAS
     carregarTurmas: async () => {
-        const container = document.getElementById('ws-lista-turmas');
+        const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
 
+        container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>';
+
         try {
-            // Vai buscar a lista de turmas e a lista de todos os alunos da escola
-            const [turmas, alunos] = await Promise.all([
-                Workspace.api('/turmas', 'GET'),
-                Workspace.api('/alunos', 'GET')
-            ]);
-            
+            const turmas = await Workspace.api('/turmas', 'GET');
             if (!turmas || turmas.error || turmas.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px;">Nenhuma turma encontrada na escola.</div>';
-                return;
-            }
-
-            let turmasPermitidas = [];
-
-            // Se for um Aluno, liga o cadeado!
-            if (Workspace.usuario.tipo === 'Aluno') {
-                // Procura a ficha de matrícula deste aluno específico
-                const meuPerfil = alunos.find(a => a.id === Workspace.usuario.alunoRefId);
-                
-                if (meuPerfil) {
-                    // Extrai as turmas onde ele está matriculado (compatível com texto ou multi-select)
-                    let minhasTurmas = [];
-                    if (meuPerfil.turmas) {
-                        minhasTurmas = Array.isArray(meuPerfil.turmas) ? meuPerfil.turmas : [meuPerfil.turmas];
-                    } else if (meuPerfil.turma) {
-                        minhasTurmas = [meuPerfil.turma];
-                    }
-
-                    // Filtra a lista geral e deixa passar SÓ as turmas dele
-                    turmasPermitidas = turmas.filter(t => minhasTurmas.includes(t.id) || minhasTurmas.includes(t.nome));
-                }
-            } else {
-                // Gestor, Secretaria e Professores têm a "Chave Mestra", veem todas as turmas!
-                turmasPermitidas = turmas;
-            }
-
-            // Se o aluno não estiver matriculado em lado nenhum
-            if (turmasPermitidas.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Você não está matriculado em nenhuma turma.</div>';
+                container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Nenhuma turma encontrada.</div>';
                 return;
             }
 
             let html = '';
-            turmasPermitidas.forEach(t => {
-                const nomeSeguro = Workspace.Sidebar.escapeHTML(t.nome);
+            turmas.forEach(t => {
+                const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
                 html += `
-                    <div style="padding: 8px 10px; border-radius: 6px; margin-bottom: 5px; margin-top: 5px; cursor: pointer; transition: 0.2s; background: #fff; border: 1px solid #e9ecef;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#bdc3c7'" onmouseout="this.style.background='#fff'; this.style.borderColor='#e9ecef'" onclick="Workspace.Sidebar.abrirChat('${t.id}', '${nomeSeguro}')">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="width: 24px; height: 24px; border-radius: 6px; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">💬</div>
-                            <span style="font-weight: 500; color: #2c3e50; font-size: 12px;">${nomeSeguro}</span>
-                        </div>
+                    <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="document.getElementById('ws-foruns-dropdown').style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">#</div>
+                        <span style="font-size: 13px; color: #2c3e50; font-weight: 600;">${nomeTurma}</span>
                     </div>
                 `;
             });
             container.innerHTML = html;
         } catch (e) {
-            container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar turmas.</div>';
+            container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>';
         }
     },
 
