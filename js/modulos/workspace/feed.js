@@ -172,9 +172,9 @@ Workspace.Feed = {
 
     reagir: async (postId, tipo) => {
         try {
-            // O tipo pode ser 'like', 'dislike' ou 'none' (para tirar a reação)
             const res = await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
                 userId: Workspace.usuario.id,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login, // 🔔 Passa o nome para o gatilho de notificação
                 tipo: tipo
             });
             if (res && res.success) {
