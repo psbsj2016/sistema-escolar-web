@@ -25,7 +25,7 @@
         .ws-btn:hover { background: #2980b9; }
         .ws-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; position: absolute; top: -5px; right: -5px; font-weight: bold; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-CtCdiHU6.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-BFnQZfAT.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/site-CuorVS2D.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D9g4eEYO.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -181,6 +181,39 @@
             </div>
         </div>
     </div>     
+
+   <div id="ws-tarefa-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 450px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
+            <div style="background: #3498db; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">📝 Detalhes da Atividade</h3>
+                <button onclick="document.getElementById('ws-tarefa-modal').style.display='none'" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <h4 id="ws-tarefa-titulo" style="margin: 0 0 5px 0; color: #2c3e50; font-size: 18px;">Título</h4>
+                <p id="ws-tarefa-data" style="margin: 0 0 15px 0; font-size: 12px; color: #e74c3c; font-weight: bold;">Prazo: ...</p>
+                <div id="ws-tarefa-desc" style="font-size: 13px; color: #555; background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px; line-height: 1.5;">Descrição do que é para fazer...</div>
+
+                <div id="ws-area-entrega">
+                    <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">O seu Trabalho (Foto, PDF, Word):</label>
+                    <input type="file" id="ws-tarefa-arquivo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 13px; background: #fdfdfd; cursor: pointer;">
+                    
+                    <textarea id="ws-tarefa-obs" rows="2" placeholder="Comentário para o professor (opcional)..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; font-size: 13px; box-sizing: border-box; resize: none; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'"></textarea>
+                    
+                    <input type="hidden" id="ws-tarefa-id">
+                    
+                    <button class="ws-btn" id="ws-btn-entregar" style="width: 100%; background: #27ae60; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold;" onclick="Workspace.Sidebar.enviarTarefa()">📤 Enviar Trabalho</button>
+                </div>
+
+                <div id="ws-area-entregue" style="display: none; text-align: center; padding: 25px 20px; background: #eafaf1; border: 2px solid #2ecc71; border-radius: 12px;">
+                    <div style="font-size: 35px; margin-bottom: 5px;">✅</div>
+                    <h4 style="margin: 0 0 5px 0; color: #27ae60; font-size: 16px;">Trabalho Entregue!</h4>
+                    <p style="margin: 0; font-size: 12px; color: #666;" id="ws-tarefa-data-entregue">Data: ...</p>
+                    <a id="ws-tarefa-link-entregue" href="#" target="_blank" style="display: inline-block; margin-top: 15px; background: #fff; border: 1px solid #ccc; padding: 8px 15px; border-radius: 6px; font-size: 12px; color: #333; font-weight: bold; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'">Ver Ficheiro Anexado ↗</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
