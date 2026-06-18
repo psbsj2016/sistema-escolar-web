@@ -11,13 +11,11 @@ Workspace.Sidebar = {
         await Workspace.Sidebar.carregarTarefas();
     },
 
-    // Formata o nome da turma de forma segura (Resolveu o bug que travava a lista)
     escapeHTML: (str) => {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     },
 
-    // O Efeito "Sanfona" (Abre/Fecha a lista de turmas)
     toggleTurmas: () => {
         const lista = document.getElementById('ws-lista-turmas');
         const icone = document.getElementById('ws-icon-turmas');
@@ -32,20 +30,55 @@ Workspace.Sidebar = {
         }
     },
 
+    // 🛡️ A BARREIRA DE ACESSO ÀS SALAS
     carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas');
         if (!container) return;
 
         try {
-            const turmas = await Workspace.api('/turmas', 'GET');
+            // Vai buscar a lista de turmas e a lista de todos os alunos da escola
+            const [turmas, alunos] = await Promise.all([
+                Workspace.api('/turmas', 'GET'),
+                Workspace.api('/alunos', 'GET')
+            ]);
             
             if (!turmas || turmas.error || turmas.length === 0) {
-                container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px;">Nenhuma turma encontrada.</div>';
+                container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px;">Nenhuma turma encontrada na escola.</div>';
+                return;
+            }
+
+            let turmasPermitidas = [];
+
+            // Se for um Aluno, liga o cadeado!
+            if (Workspace.usuario.tipo === 'Aluno') {
+                // Procura a ficha de matrícula deste aluno específico
+                const meuPerfil = alunos.find(a => a.id === Workspace.usuario.alunoRefId);
+                
+                if (meuPerfil) {
+                    // Extrai as turmas onde ele está matriculado (compatível com texto ou multi-select)
+                    let minhasTurmas = [];
+                    if (meuPerfil.turmas) {
+                        minhasTurmas = Array.isArray(meuPerfil.turmas) ? meuPerfil.turmas : [meuPerfil.turmas];
+                    } else if (meuPerfil.turma) {
+                        minhasTurmas = [meuPerfil.turma];
+                    }
+
+                    // Filtra a lista geral e deixa passar SÓ as turmas dele
+                    turmasPermitidas = turmas.filter(t => minhasTurmas.includes(t.id) || minhasTurmas.includes(t.nome));
+                }
+            } else {
+                // Gestor, Secretaria e Professores têm a "Chave Mestra", veem todas as turmas!
+                turmasPermitidas = turmas;
+            }
+
+            // Se o aluno não estiver matriculado em lado nenhum
+            if (turmasPermitidas.length === 0) {
+                container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Você não está matriculado em nenhuma turma.</div>';
                 return;
             }
 
             let html = '';
-            turmas.forEach(t => {
+            turmasPermitidas.forEach(t => {
                 const nomeSeguro = Workspace.Sidebar.escapeHTML(t.nome);
                 html += `
                     <div style="padding: 8px 10px; border-radius: 6px; margin-bottom: 5px; margin-top: 5px; cursor: pointer; transition: 0.2s; background: #fff; border: 1px solid #e9ecef;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#bdc3c7'" onmouseout="this.style.background='#fff'; this.style.borderColor='#e9ecef'" onclick="Workspace.Sidebar.abrirChat('${t.id}', '${nomeSeguro}')">
@@ -58,7 +91,7 @@ Workspace.Sidebar = {
             });
             container.innerHTML = html;
         } catch (e) {
-            container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px;">Erro ao carregar turmas.</div>';
+            container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar turmas.</div>';
         }
     },
 
@@ -149,7 +182,7 @@ Workspace.Sidebar = {
             });
             await Workspace.Sidebar.carregarMensagensChat();
         } catch (e) {
-            alert("Erro ao enviar mensagem.");
+            if (window.App && App.showToast) App.showToast("Erro ao enviar mensagem.", "error");
         }
     },
 
