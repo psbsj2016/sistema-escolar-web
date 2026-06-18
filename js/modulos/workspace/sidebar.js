@@ -31,7 +31,7 @@ Workspace.Sidebar = {
     },
 
     // 🛡️ A BARREIRA DE ACESSO ÀS SALAS
-    carregarTurmas: async () => {
+   carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
 
@@ -47,23 +47,42 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // 🔒 3. FILTRO DE PRIVACIDADE DO ALUNO
-            // Se quem está a usar for um Aluno, vamos apagar as turmas das outras pessoas da lista!
+            // 🔒 3. FILTRO DE PRIVACIDADE DO ALUNO (VERSÃO INTELIGENTE)
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
+                const u = Workspace.usuario;
                 
-                // Descobre a(s) turma(s) em que este aluno está matriculado
-                if (Workspace.usuario.turmas) {
-                    minhasTurmas = Array.isArray(Workspace.usuario.turmas) ? Workspace.usuario.turmas : [Workspace.usuario.turmas];
-                } else if (Workspace.usuario.turma) {
-                    minhasTurmas = [Workspace.usuario.turma];
+                // Reúne todas as variáveis possíveis onde a turma possa estar guardada
+                if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+                if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+                if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+                if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
+                
+                // Normaliza tudo para texto minúsculo e sem espaços extra para garantir o match
+                const turmasDoAlunoSeguras = minhasTurmas
+                    .filter(t => t) // Remove vazios
+                    .map(t => String(t).toLowerCase().trim());
+
+                // 🧠 HACK DE LÓGICA: Se não encontrou a turma no perfil, vai ler os posts do Feed
+                // Como o servidor já filtrou os posts, se o aluno vê um post da "Turma A", é porque pertence a ela!
+                if (Workspace.Feed && Workspace.Feed.postsCache) {
+                    Workspace.Feed.postsCache.forEach(post => {
+                        if (post.destino && post.destino !== 'global') {
+                            turmasDoAlunoSeguras.push(String(post.destino).toLowerCase().trim());
+                            turmasDoAlunoSeguras.push(String(post.destinoNome).toLowerCase().trim());
+                        }
+                    });
                 }
 
-                // Filtra o array: só deixa passar as turmas cujo ID ou Nome coincidam com as do Aluno
-                turmas = turmas.filter(t => minhasTurmas.includes(t.id) || minhasTurmas.includes(t.nome));
+                // Aplica o corte: Só passam as turmas que dão match com o ID ou Nome
+                turmas = turmas.filter(t => {
+                    const idGeral = String(t.id).toLowerCase().trim();
+                    const nomeGeral = String(t.nome).toLowerCase().trim();
+                    return turmasDoAlunoSeguras.includes(idGeral) || turmasDoAlunoSeguras.includes(nomeGeral);
+                });
             }
 
-            // Se após o filtro o aluno ficar sem turmas, avisamos de forma amigável
+            // Se o aluno realmente não estiver em nenhuma turma
             if (turmas.length === 0) {
                  container.innerHTML = '<div style="padding:10px; color:#7f8c8d; font-size:12px; text-align:center;">Ainda não está associado a nenhum fórum.</div>';
                  return;
