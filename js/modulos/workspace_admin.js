@@ -9,16 +9,20 @@ Object.assign(App, {
         div.innerHTML = '<p style="text-align:center; padding:40px; color:#666;">A carregar lista de alunos e acessos... ⏳</p>';
 
         try {
-            // Vai buscar todos os alunos e utilizadores em simultâneo
-            const [alunos, usuarios] = await Promise.all([ App.api('/alunos'), App.api('/usuarios') ]);
+            // Vai buscar todos os alunos e utilizadores
+            const alunosRes = await App.api('/alunos');
+            const usuariosRes = await App.api('/usuarios');
             
+            // 🛡️ Proteção extra: Garante que são listas mesmo se não houver cadastros
+            const alunos = Array.isArray(alunosRes) ? alunosRes : [];
+            const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
+
             const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
             const usuariosAlunos = usuarios.filter(u => u.tipo === 'Aluno' || u.alunoRefId);
 
-            // Guarda em memória para a pesquisa funcionar instantaneamente
+            // Guarda em memória para a pesquisa rápida funcionar
             App.workspaceCache = { alunos: alunosAtivos, usuarios: usuariosAlunos };
 
-            // O Design da Barra de Pesquisa igual ao sistema principal
             const barraBusca = `
                 <div class="toolbar" style="max-width: 800px; margin: 0 auto 20px auto; display: flex; gap: 15px;">
                     <div class="search-wrapper" style="flex: 1; position: relative;">
@@ -36,13 +40,13 @@ Object.assign(App, {
                     </div>
                 </div>
                 <div class="card" style="padding:0; overflow:hidden;" id="ws-admin-tabela-container">
-                    </div>
+                </div>
             `;
 
-            // Desenha a tabela na tela
             App.filtrarWorkspaceAdmin();
 
         } catch (e) {
+            console.error("Erro na gestão:", e);
             div.innerHTML = '<p style="color:#e74c3c; text-align:center; padding:40px;">Erro ao carregar a lista de alunos.</p>';
         }
     },
@@ -76,14 +80,16 @@ Object.assign(App, {
         filtrados.forEach(aluno => {
             const conta = usuarios.find(u => u.alunoRefId === aluno.id);
             
-            // Design Limpo para o Status
             const statusHtml = conta 
                 ? `<span style="background:#eafaf1; color:#27ae60; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #2ecc71;">✅ ${App.escapeHTML(conta.login)}</span>` 
                 : `<span style="background:#fdf2f2; color:#e74c3c; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #e74c3c;">❌ Sem Acesso</span>`;
             
+            // Corrige problemas com aspas nos nomes (Ex: D'Artagnan)
+            const nomeSeguro = App.escapeHTML(aluno.nome).replace(/'/g, "\\'");
+
             const btnHtml = conta
                 ? `<button class="btn-cancel" style="padding:8px 15px; font-size:12px; width:auto; font-weight:bold; color:#e74c3c; border-color:#e74c3c;" onclick="App.excluirAcessoWorkspace('${conta.id}')">🗑️ Revogar Acesso</button>`
-                : `<button class="btn-primary" style="padding:8px 15px; font-size:12px; width:auto; font-weight:bold; background:#8e44ad; border-color:#8e44ad;" onclick="App.abrirModalAcessoWorkspace('${aluno.id}', '${App.escapeJS(aluno.nome)}')">🔑 Gerar Acesso</button>`;
+                : `<button class="btn-primary" style="padding:8px 15px; font-size:12px; width:auto; font-weight:bold; background:#8e44ad; border-color:#8e44ad;" onclick="App.abrirModalAcessoWorkspace('${aluno.id}', '${nomeSeguro}')">🔑 Gerar Acesso</button>`;
 
             html += `
                 <tr style="border-bottom:1px solid #f9f9f9; transition: background 0.2s;" onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='transparent'">
@@ -107,7 +113,6 @@ Object.assign(App, {
             document.body.appendChild(modal);
         }
         
-        // Sugestão de login automático e intuitivo (ex: maria451)
         const partes = nomeAluno.split(' ');
         const sugestao = (partes[0] + (partes.length > 1 ? partes[partes.length-1] : '')).toLowerCase().replace(/[^a-z0-9]/g, '') + Math.floor(100 + Math.random() * 900);
 
@@ -115,7 +120,7 @@ Object.assign(App, {
             <div style="background:#fff; padding:30px; border-radius:16px; max-width:400px; width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.3s ease;">
                 <div style="text-align:center; font-size:40px; margin-bottom:10px;">🎓</div>
                 <h3 style="margin-top:0; color:#2c3e50; text-align:center;">Acesso ao Workspace</h3>
-                <p style="font-size:13px; color:#666; text-align:center; margin-bottom:25px;">Crie as credenciais para:<br><strong style="color:#3498db; font-size:15px;">${App.escapeHTML(nomeAluno)}</strong></p>
+                <p style="font-size:13px; color:#666; text-align:center; margin-bottom:25px;">Crie as credenciais para:<br><strong style="color:#3498db; font-size:15px;">${nomeAluno}</strong></p>
                 
                 <div class="input-group" style="margin-bottom:15px; text-align:left;">
                     <label style="font-weight:bold; font-size:12px; color:#555;">Login de Acesso</label>
@@ -130,7 +135,7 @@ Object.assign(App, {
 
                 <div style="display:flex; gap:10px;">
                     <button class="btn-cancel" style="flex:1; justify-content:center; padding:12px; border-radius:8px;" onclick="document.getElementById('modal-acesso-ws').style.display='none'">Cancelar</button>
-                    <button class="btn-primary" id="ws-btn-salvar-acesso" style="flex:1; justify-content:center; padding:12px; border-radius:8px; background:#27ae60; border:none;" onclick="App.salvarAcessoWorkspace('${alunoId}', '${App.escapeJS(nomeAluno)}')">💾 Guardar</button>
+                    <button class="btn-primary" id="ws-btn-salvar-acesso" style="flex:1; justify-content:center; padding:12px; border-radius:8px; background:#27ae60; border:none;" onclick="App.salvarAcessoWorkspace('${alunoId}', '${nomeAluno.replace(/'/g, "\\'")}')">💾 Guardar</button>
                 </div>
             </div>
         `;
@@ -148,7 +153,6 @@ Object.assign(App, {
         btn.innerHTML = "A salvar... ⏳"; btn.disabled = true;
 
         try {
-            // A mágica: Criamos um utilizador do tipo "Aluno", vinculado ao ID do cadastro
             const payload = { nome: nomeAluno, login: login, senha: senha, tipo: 'Aluno', alunoRefId: alunoId };
             const res = await App.api('/usuarios', 'POST', payload);
 
