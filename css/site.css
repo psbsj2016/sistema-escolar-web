@@ -962,3 +962,31 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         min-width: 480px !important; 
     }
 }
+
+/* =========================================================
+   📱 FIX: RESPONSIVIDADE DO PAINEL ADMIN (TELAS PEQUENAS)
+   ========================================================= */
+@media (max-width: 768px) {
+    /* Garante que qualquer tabela (incluindo a de Acessos ao Workspace) deslize com o dedo */
+    .table-responsive-wrapper {
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important; /* Rolagem super suave no iOS/Android */
+        border-radius: 8px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+    }
+    
+    .table-responsive-wrapper table {
+        min-width: 650px !important; /* Força a tabela a manter a forma perfeita */
+    }
+    
+    /* Ajusta a barra de pesquisa para ocupar a tela toda */
+    .toolbar {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .search-wrapper {
+        width: 100% !important;
+    }
+}
