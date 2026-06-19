@@ -181,6 +181,68 @@
         </div>
     </section>
 
+    <section id="ws-tarefas-professor-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>👨‍🏫 Painel do Professor: Tarefas</span>
+            </h3>
+
+            <div id="ws-prof-menu-tarefas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelNovaTarefa()">
+                    <div style="font-size: 35px; margin-bottom: 10px;">📤</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Enviar Nova Tarefa</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Crie e envie atividades para as turmas.</p>
+                </div>
+
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelTarefasRecebidas()">
+                    <div style="font-size: 35px; margin-bottom: 10px;">📥</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Tarefas Recebidas</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Avalie os trabalhos entregues pelos alunos.</p>
+                </div>
+            </div>
+
+            <div id="ws-prof-nova-tarefa" style="display:none; margin-top: 15px;">
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()"><span>⬅️</span> Voltar ao Menu</button>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Título da Atividade *</label>
+                        <input type="text" id="ws-nova-tarefa-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Redação sobre História">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Turma de Destino *</label>
+                        <select id="ws-nova-tarefa-turma" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;">
+                            <option value="">A carregar turmas...</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Prazo Limite de Entrega *</label>
+                        <input type="date" id="ws-nova-tarefa-data" class="ws-post-input" style="padding:12px; margin-bottom:0;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Ficheiro de Apoio (Opcional)</label>
+                        <input type="file" id="ws-nova-tarefa-arquivo" class="ws-post-input" style="padding:9px; margin-bottom:0; background:white; cursor:pointer;">
+                    </div>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Instruções da Tarefa</label>
+                    <textarea id="ws-nova-tarefa-desc" class="ws-post-input" rows="4" placeholder="Descreva passo a passo o que os alunos devem fazer e como devem entregar o trabalho..."></textarea>
+                </div>
+                <button class="ws-btn" id="ws-btn-salvar-tarefa" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Sidebar.salvarNovaTarefa()">🚀 Publicar Atividade para a Turma</button>
+            </div>
+
+            <div id="ws-prof-lista-recebidas" style="display:none; margin-top: 15px;">
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()"><span>⬅️</span> Voltar ao Menu</button>
+                
+                <div id="ws-prof-tarefas-grid" style="display: flex; flex-direction: column; gap: 12px;">
+                    </div>
+            </div>
+
+        </div>
+    </section>
+
     <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>

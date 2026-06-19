@@ -180,23 +180,36 @@ Object.assign(Workspace, {
     },
 
     // ==========================================
-    // 📝 PÁGINA DE TAREFAS
+    // 📝 PÁGINA DE TAREFAS (ROTEADOR DE PERFIS)
     // ==========================================
     abrirPaginaTarefas: () => {
-        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; // Fecha o menu hambúrguer
-        
-        document.getElementById('ws-main-container').style.display = 'none'; // Esconde Feed
-        document.getElementById('ws-config-container').style.display = 'none'; // Esconde Configs
-        
-        document.getElementById('ws-tarefas-container').style.display = 'block'; // Mostra as Tarefas
-        
-        // Arranca o motor para procurar e desenhar as tarefas fresquinhas na grelha!
-        if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
+        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; 
+        document.getElementById('ws-main-container').style.display = 'none'; 
+        document.getElementById('ws-config-container').style.display = 'none'; 
+
+        // 🛡️ DESVIO DE TRÁFEGO: Aluno vs Professor
+        if (Workspace.usuario.tipo === 'Aluno') {
+            document.getElementById('ws-tarefas-professor-container').style.display = 'none';
+            document.getElementById('ws-tarefas-container').style.display = 'block';
+            if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
+        } else {
+            // Professor, Gestor ou Secretaria
+            document.getElementById('ws-tarefas-container').style.display = 'none';
+            document.getElementById('ws-tarefas-professor-container').style.display = 'block';
+            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); // Reseta para os dois botões
+        }
     },
 
     abrirConfiguracoes: () => {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none';
         document.getElementById('ws-main-container').style.display = 'none';
+        
+        // Esconde tarefas de quem quer que seja
+        const tProf = document.getElementById('ws-tarefas-professor-container');
+        const tAlun = document.getElementById('ws-tarefas-container');
+        if(tProf) tProf.style.display = 'none';
+        if(tAlun) tAlun.style.display = 'none';
+
         document.getElementById('ws-config-container').style.display = 'block';
     },
 
@@ -231,13 +244,15 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         const configPage = document.getElementById('ws-config-container');
         const tarefasPage = document.getElementById('ws-tarefas-container');
+        const tarefasProfPage = document.getElementById('ws-tarefas-professor-container');
         
         if (dropdown) dropdown.style.display = 'none';
         if (modalChat) modalChat.style.display = 'none';
         if (configPage) configPage.style.display = 'none';
-        if (tarefasPage) tarefasPage.style.display = 'none'; // Fecha as Tarefas
+        if (tarefasPage) tarefasPage.style.display = 'none'; 
+        if (tarefasProfPage) tarefasProfPage.style.display = 'none'; 
         
-        document.getElementById('ws-main-container').style.display = 'block'; // Retorna ao Feed 
+        document.getElementById('ws-main-container').style.display = 'block'; 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
