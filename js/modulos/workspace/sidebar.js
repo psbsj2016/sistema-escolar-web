@@ -31,7 +31,7 @@ Workspace.Sidebar = {
     },
 
     // 🛡️ A BARREIRA DE ACESSO ÀS SALAS
-   carregarTurmas: async () => {
+    carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
 
@@ -64,7 +64,6 @@ Workspace.Sidebar = {
                     .map(t => String(t).toLowerCase().trim());
 
                 // 🧠 HACK DE LÓGICA: Se não encontrou a turma no perfil, vai ler os posts do Feed
-                // Como o servidor já filtrou os posts, se o aluno vê um post da "Turma A", é porque pertence a ela!
                 if (Workspace.Feed && Workspace.Feed.postsCache) {
                     Workspace.Feed.postsCache.forEach(post => {
                         if (post.destino && post.destino !== 'global') {
@@ -92,8 +91,9 @@ Workspace.Sidebar = {
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
+                // 🛡️ CORREÇÃO: O clique agora fecha o 'ws-main-menu-dropdown' corretamente sem dar erro!
                 html += `
-                    <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="document.getElementById('ws-foruns-dropdown').style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
+                    <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="const menu = document.getElementById('ws-main-menu-dropdown'); if(menu) menu.style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
                         <div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">#</div>
                         <span style="font-size: 13px; color: #2c3e50; font-weight: 600;">${nomeTurma}</span>
                     </div>
