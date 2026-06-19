@@ -86,7 +86,7 @@
             #ws-btn-entregar, .ws-btn-publicar { width: 100% !important; } 
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-DqcAK1uR.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-DURj2i9t.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/config-D5aoyuWT.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -114,7 +114,7 @@
 <nav class="ws-navbar" id="ws-navbar" style="display: none; position: relative;">
         <div style="display: flex; align-items: center; gap: 15px; position: relative;" id="ws-menu-left-container">
             
-            <div style="cursor: pointer; padding: 5px 10px; font-size: 20px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuForuns()">
+            <div style="cursor: pointer; padding: 5px 10px; font-size: 20px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuPrincipal()">
                 ☰
             </div>
             
@@ -122,12 +122,30 @@
                 Workspace
             </h2>
 
-            <div id="ws-foruns-dropdown" style="display: none; position: absolute; left: 10px; top: 55px; width: 280px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; overflow: hidden; color: #333; border: 1px solid #eee;">
-                <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #eee; font-weight: bold; color: #8e44ad; display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 18px;">📚</span> Fóruns / Bate-Papo
-                </div>
-                <div id="ws-lista-turmas-menu" style="max-height: 350px; overflow-y: auto; padding: 10px;">
-                    <div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>
+            <div id="ws-main-menu-dropdown" style="display: none; position: absolute; left: 10px; top: 55px; width: 280px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; overflow: hidden; color: #333; border: 1px solid #eee;">
+                <div style="padding: 10px; display: flex; flex-direction: column; gap: 5px;">
+                    
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirModalPerfil()">
+                        <span style="font-size: 18px;">👤</span> Meu Perfil
+                    </button>
+                    
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuChat()">
+                        <span style="font-size: 18px;">💬</span> Chat
+                    </button>
+                    <div id="ws-lista-turmas-menu" style="display: none; padding: 5px 10px 5px 30px; max-height: 200px; overflow-y: auto; background: #fafafa; border-radius: 8px; margin-bottom: 5px;">
+                        <div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar chats... ⏳</div>
+                    </div>
+
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()">
+                        <span style="font-size: 18px;">⚙️</span> Configurações
+                    </button>
+                    
+                    <div style="border-top: 1px solid #eee; margin: 5px 0;"></div>
+                    
+                    <button class="ws-btn" style="background: transparent; color: #e74c3c; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.logout()">
+                        <span style="font-size: 18px;">⬅️</span> Sair da Conta
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -136,33 +154,6 @@
             <div style="position: relative; cursor: pointer;" id="ws-bell" title="Notificações">
                 <span style="font-size: 22px;">🔔</span>
                 <span class="ws-badge" id="ws-noti-count" style="display:none;">0</span>
-            </div>
-            
-            <div style="position: relative;" id="ws-perfil-container">
-                <div style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 5px 10px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="Workspace.togglePerfil()">
-                    <div id="ws-user-avatar" style="width: 35px; height: 35px; border-radius: 50%; background: #3498db; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">?</div>
-                    <span id="ws-user-name" style="font-weight: 600; font-size: 14px;">A carregar...</span>
-                    <span style="font-size: 10px;">▼</span>
-                </div>
-
-                <div id="ws-perfil-dropdown" style="display: none; position: absolute; right: 0; top: 55px; width: 280px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; overflow: hidden; color: #333; cursor: default; border: 1px solid #eee;">
-                    <div style="padding: 20px; text-align: center; background: #f8f9fa; border-bottom: 1px solid #eee;">
-                        <div id="ws-menu-avatar" style="width: 60px; height: 60px; border-radius: 50%; background: #3498db; color: white; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto;">?</div>
-                        <h4 id="ws-menu-nome" style="margin: 0; color: #2c3e50; font-size: 16px;">Nome</h4>
-                        <p id="ws-menu-login" style="margin: 5px 0 0 0; font-size: 12px; color: #7f8c8d; font-weight: bold;">@login</p>
-                    </div>
-                    <div style="padding: 15px 20px;">
-                        <div style="font-size: 11px; font-weight: bold; color: #999; text-transform: uppercase; margin-bottom: 10px;">⚙️ Configurações</div>
-                        <button class="ws-btn" style="width: 100%; background: #f0f2f5; color: #333; padding: 10px; border-radius: 6px; font-size: 13px; text-align: left; display: flex; align-items: center; gap: 8px; border: 1px solid #ddd; transition: 0.2s;" onmouseover="this.style.background='#e2e6ea'" onmouseout="this.style.background='#f0f2f5'" onclick="Workspace.abrirModalSenha()">
-                            <span>🔑</span> Alterar Senha
-                        </button>
-                    </div>
-                    <div style="border-top: 1px solid #eee; padding: 10px;">
-                        <button class="ws-btn" style="width: 100%; background: transparent; color: #e74c3c; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 6px; transition: 0.2s;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.logout()">
-                            <span>⬅️</span> Sair da Conta
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     </nav>
@@ -195,6 +186,54 @@
         </aside>
 
     </main>
+
+<section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Atualize a sua credencial de acesso.</p>
+                </div>
+
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; opacity: 0.6; position: relative;">
+                    <span style="position: absolute; top: 10px; right: 10px; background: #e67e22; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: bold;">EM BREVE</span>
+                    <div style="font-size: 30px; margin-bottom: 10px;">💳</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Ativações</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Gerencie os seus planos e assinaturas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="ws-perfil-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3>
+                <button onclick="document.getElementById('ws-perfil-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+            </div>
+            <div style="padding: 30px 20px; text-align: center;">
+                
+                <div style="position: relative; display: inline-block; cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 90px; height: 90px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="document.getElementById('ws-avatar-overlay').style.opacity='1'" onmouseout="document.getElementById('ws-avatar-overlay').style.opacity='0'">
+                    <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 35px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
+                    
+                    <div id="ws-avatar-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 0.2s;">
+                        <span style="font-size: 24px;">📷</span>
+                    </div>
+                </div>
+                
+                <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
+                
+                <h3 id="ws-perfil-modal-nome" style="margin: 15px 0 5px 0; color: #2c3e50; font-size: 18px;">Nome</h3>
+                <p id="ws-perfil-modal-login" style="margin: 0; font-size: 13px; color: #7f8c8d; font-weight: bold;">@login</p>
+                
+                <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">⏳ A guardar a nova foto na nuvem...</div>
+            </div>
+        </div>
+    </div>
 
     <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div class="ws-card" style="width: 95%; max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">

@@ -30,7 +30,6 @@ Object.assign(Workspace, {
         console.log("🚀 A iniciar o Motor do Workspace...");
         
         // 1. Validar Sessão Específica do Workspace
-        // Repare que usamos 'ws_usuario_logado' em vez do login normal do gestor
         const cacheUser = localStorage.getItem('ws_usuario_logado');
         
         if (!cacheUser) {
@@ -49,11 +48,6 @@ Object.assign(Workspace, {
         document.getElementById('ws-navbar').style.display = 'flex';
         document.getElementById('ws-main-container').style.display = 'grid';
 
-        const nomeEl = document.getElementById('ws-user-name');
-        const avatarEl = document.getElementById('ws-user-avatar');
-        if (nomeEl) nomeEl.innerText = Workspace.usuario.nome || Workspace.usuario.login;
-        if (avatarEl) avatarEl.innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
-
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost && ['Gestor', 'Professor', 'Secretaria'].includes(Workspace.usuario.tipo)) {
             boxCriarPost.style.display = 'block';
@@ -65,18 +59,12 @@ Object.assign(Workspace, {
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
 
-        // 🚀 Fecha os menus suspensos se clicar fora deles
+        // 🚀 Fecha o menu hambúrguer principal se clicar fora dele
         document.addEventListener('click', (e) => {
-            const perfilContainer = document.getElementById('ws-perfil-container');
-            const perfilDropdown = document.getElementById('ws-perfil-dropdown');
-            if (perfilContainer && perfilDropdown && !perfilContainer.contains(e.target)) {
-                perfilDropdown.style.display = 'none';
-            }
-
-            const forunsContainer = document.getElementById('ws-menu-left-container');
-            const forunsDropdown = document.getElementById('ws-foruns-dropdown');
-            if (forunsContainer && forunsDropdown && !forunsContainer.contains(e.target)) {
-                forunsDropdown.style.display = 'none';
+            const menuContainer = document.getElementById('ws-menu-left-container');
+            const menuDropdown = document.getElementById('ws-main-menu-dropdown');
+            if (menuContainer && menuDropdown && !menuContainer.contains(e.target)) {
+                menuDropdown.style.display = 'none';
             }
         });
     },
@@ -110,26 +98,116 @@ Object.assign(Workspace, {
         }
     },
 
-    // 👤 LÓGICA DO MEU PERFIL E CONFIGURAÇÕES
-    togglePerfil: () => {
-        const dropdown = document.getElementById('ws-perfil-dropdown');
+    // ==========================================
+    // 🍔 MESTRE DO MENU HAMBÚRGUER E NAVEGAÇÃO
+    // ==========================================
+    toggleMenuPrincipal: () => {
+        const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (!dropdown) return;
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    },
+
+    toggleMenuChat: () => {
+        const subMenu = document.getElementById('ws-lista-turmas-menu');
+        if (!subMenu) return;
         
-        if (dropdown.style.display === 'none') {
-            dropdown.style.display = 'block';
-            document.getElementById('ws-menu-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
-            document.getElementById('ws-menu-login').innerText = `@${Workspace.usuario.login}`;
-            document.getElementById('ws-menu-avatar').innerText = (Workspace.usuario.nome || Workspace.usuario.login).charAt(0).toUpperCase();
+        if (subMenu.style.display === 'none') {
+            subMenu.style.display = 'block';
+            if (Workspace.Sidebar) Workspace.Sidebar.carregarTurmas(); // Dispara o motor de turmas
         } else {
-            dropdown.style.display = 'none';
+            subMenu.style.display = 'none';
         }
     },
 
-    abrirModalSenha: () => {
-        document.getElementById('ws-perfil-dropdown').style.display = 'none'; // Fecha o menu suspenso
-        document.getElementById('ws-senha-modal').style.display = 'flex'; // Abre a tela de senha
+    // ==========================================
+    // 👤 MEU PERFIL E UPLOAD DA FOTO
+    // ==========================================
+    abrirModalPerfil: () => {
+        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; // Fecha menu
+        document.getElementById('ws-perfil-modal').style.display = 'flex'; // Abre modal
         
-        // Limpa os campos para segurança
+        const nome = Workspace.usuario.nome || Workspace.usuario.login;
+        document.getElementById('ws-perfil-modal-nome').innerText = nome;
+        document.getElementById('ws-perfil-modal-login').innerText = `@${Workspace.usuario.login}`;
+
+        const imgEl = document.getElementById('ws-perfil-img');
+        const letrasEl = document.getElementById('ws-perfil-letras');
+
+        // Se ele já tiver foto guardada, mostra a foto
+        if (Workspace.usuario.avatar) {
+            imgEl.src = Workspace.usuario.avatar;
+            imgEl.style.display = 'block';
+            letrasEl.style.display = 'none';
+        } else {
+            // Se não, mostra a Letra inicial
+            imgEl.style.display = 'none';
+            letrasEl.style.display = 'flex';
+            letrasEl.innerText = nome.charAt(0).toUpperCase();
+        }
+    },
+
+    uploadAvatar: async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Limita a 5MB para fotos de perfil
+        if (file.size > 5 * 1024 * 1024) {
+            alert("A imagem é muito pesada. Escolha uma foto até 5MB.");
+            return;
+        }
+
+        const loading = document.getElementById('ws-avatar-loading');
+        loading.style.display = 'block';
+
+        try {
+            // 1. Envia a foto para a Nuvem
+            const formData = new FormData();
+            formData.append('anexos', file);
+
+            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+            const uploadData = await uploadRes.json();
+            
+            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no envio.");
+            const novaFotoUrl = uploadData.anexos[0].url;
+
+            // 2. Grava a nova URL no perfil do Aluno na Base de Dados
+            const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', { 
+                id: Workspace.usuario.id,
+                alunoRefId: Workspace.usuario.alunoRefId,
+                avatarUrl: novaFotoUrl
+            });
+
+            if (res && res.success) {
+                // Atualiza a memória e a cache do navegador para não perder ao recarregar
+                Workspace.usuario.avatar = novaFotoUrl;
+                localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+                
+                // Força o ecrã a atualizar a foto sem precisar fechar e abrir
+                Workspace.abrirModalPerfil(); 
+            }
+        } catch (e) {
+            alert("Falha ao guardar a foto. Tente novamente.");
+        } finally {
+            loading.style.display = 'none';
+            event.target.value = ''; // Limpa o input
+        }
+    },
+
+    // ==========================================
+    // ⚙️ CONFIGURAÇÕES E SEGURANÇA
+    // ==========================================
+    abrirConfiguracoes: () => {
+        document.getElementById('ws-main-menu-dropdown').style.display = 'none';
+        
+        // Esconde o Feed e as Tarefas
+        document.getElementById('ws-main-container').style.display = 'none';
+        
+        // Mostra a Tela de Configurações
+        document.getElementById('ws-config-container').style.display = 'block';
+    },
+
+    abrirModalSenha: () => {
+        document.getElementById('ws-senha-modal').style.display = 'flex';
         document.getElementById('ws-senha-atual').value = '';
         document.getElementById('ws-nova-senha').value = '';
         document.getElementById('ws-confirma-senha').value = '';
@@ -180,27 +258,23 @@ Object.assign(Workspace, {
         }
     },
 
+    // ==========================================
     // 🏠 VOLTAR AO FEED (HOME)
+    // ==========================================
     voltarAoFeed: () => {
+        // Fecha todos os modais e menus abertos
+        const dropdown = document.getElementById('ws-main-menu-dropdown');
         const modalChat = document.getElementById('ws-chat-modal');
+        const configPage = document.getElementById('ws-config-container');
+        
+        if (dropdown) dropdown.style.display = 'none';
         if (modalChat) modalChat.style.display = 'none';
         
-        // Rola suavemente para o topo do feed
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-
-    // ☰ MENU HAMBÚRGUER (FÓRUNS)
-    toggleMenuForuns: () => {
-        const dropdown = document.getElementById('ws-foruns-dropdown');
-        if (!dropdown) return;
+        // Esconde Configurações e Volta a mostrar o Feed
+        if (configPage) configPage.style.display = 'none';
+        document.getElementById('ws-main-container').style.display = 'grid'; // Retorna o Grid Original
         
-        if (dropdown.style.display === 'none') {
-            dropdown.style.display = 'block';
-            document.getElementById('ws-perfil-dropdown').style.display = 'none'; // Fecha o outro menu se estiver aberto
-            if (Workspace.Sidebar) Workspace.Sidebar.carregarTurmas(); // Força o carregamento da lista
-        } else {
-            dropdown.style.display = 'none';
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     logout: async () => {
