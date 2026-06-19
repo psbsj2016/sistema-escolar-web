@@ -89,35 +89,31 @@ Workspace.Feed = {
         
         const html = posts.map(p => {
             const dataFormatada = new Date(p.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
-            const avatar = p.autorNome.charAt(0).toUpperCase();
+            
+            // 📸 Foto de Perfil do Autor do Post
+            const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
+            
             const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
-            const btnApagar = ehDonoOuGestor 
-                ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar Post</span>` 
-                : '';
+            const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar Post</span>` : '';
 
             let destinoBadge = p.destino === 'global' 
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
 
-            // 🚀 LÓGICA DE CURTIDAS
             const likesArr = Array.isArray(p.likes) ? p.likes : [];
             const dislikesArr = Array.isArray(p.dislikes) ? p.dislikes : [];
-            
             const euCurti = likesArr.includes(meuId);
             const euNaoCurti = dislikesArr.includes(meuId);
-
             const corLike = euCurti ? '#27ae60' : '#666';
             const corDislike = euNaoCurti ? '#e74c3c' : '#666';
-
-            // Verifica se este comentário deve aparecer aberto (memória do sistema)
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
             return `
                 <div class="ws-card" style="animation: fadeIn 0.4s ease;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                        <div style="width:40px; height:40px; border-radius:50%; background:#2c3e50; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px;">${avatar}</div>
+                        ${avatarPost}
                         <div>
                             <div style="font-weight:700; color:#2c3e50; font-size:15px;">${p.autorNome} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
                             <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${dataFormatada} ${destinoBadge}</div>
@@ -129,31 +125,29 @@ Workspace.Feed = {
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; gap:15px; color:#666; font-size:13px; font-weight:600;">
-                            
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corLike}; font-weight:${euCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euCurti ? 'none' : 'like'}')">
-                                👍 Curtir (${likesArr.length})
-                            </span>
-                            
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corDislike}; font-weight:${euNaoCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euNaoCurti ? 'none' : 'dislike'}')">
-                                👎 Não Curtir (${dislikesArr.length})
-                            </span>
-
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
-                                💬 Comentar (${p.comentarios ? p.comentarios.length : 0})
-                            </span>
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corLike}; font-weight:${euCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euCurti ? 'none' : 'like'}')">👍 Curtir (${likesArr.length})</span>
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corDislike}; font-weight:${euNaoCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euNaoCurti ? 'none' : 'dislike'}')">👎 Não Curtir (${dislikesArr.length})</span>
+                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
                         </div>
                         ${btnApagar}
                     </div>
 
                     <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
-                        <div style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
                             ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
+                                
+                                // 📸 Foto de Perfil do Comentário
+                                const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
+                                
                                 return `
-                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px;">
-                                    <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}:</strong> 
-                                    <span style="color: #444;">${Workspace.Feed.limparTexto(c.texto)}</span>
-                                    ${ehDonoComentario ? `<span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️</span>` : ''}
+                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start;">
+                                    ${avatarComentario}
+                                    <div style="flex:1;">
+                                        <strong style="color: #2c3e50; display:block; margin-bottom:2px;">${Workspace.Feed.limparTexto(c.autorNome)}</strong> 
+                                        <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                                    </div>
+                                    ${ehDonoComentario ? `<span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️</span>` : ''}
                                 </div>
                                 `;
                             }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}

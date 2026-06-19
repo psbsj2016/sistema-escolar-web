@@ -85,17 +85,23 @@ Workspace.Alertas = {
             if (qtd === 0) {
                 dropdown.innerHTML = '<div style="text-align:center; color:#999; font-size:13px; padding:20px 0;">Nenhuma notificação nova.</div>';
             } else {
-                dropdown.innerHTML = `
+               dropdown.innerHTML = `
                     <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px; color:#2c3e50;">Novidades (${qtd})</div>
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
-                        // Passamos as propriedades guardadas no banco como strings seguras para a função de clique
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
+                        
+                        // 📸 Foto nas Notificações
+                        const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
+
                         return `
-                        <div style="padding:10px; border-bottom:1px solid #f5f5f5; font-size:12px; background:#fdfefe; border-radius:6px; margin-bottom:5px; cursor:pointer; transition:0.2s;"
+                        <div style="padding:10px; border-bottom:1px solid #f5f5f5; background:#fdfefe; border-radius:6px; margin-bottom:5px; cursor:pointer; transition:0.2s; display: flex; gap: 12px; align-items: flex-start;"
                              onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='#fdfefe'"
                              onclick="Workspace.Alertas.processarClique('${n.origem}', '${n.origemId}', '${destino}')">
-                            <strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}
-                            <div style="font-size:10px; color:#aaa; margin-top:4px;">Agora mesmo</div>
+                            ${avatarSino}
+                            <div style="flex: 1;">
+                                <div style="font-size:12px; color:#444; line-height:1.3;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
+                                <div style="font-size:10px; color:#aaa; margin-top:4px;">Agora mesmo</div>
+                            </div>
                         </div>
                         `;
                     }).join('')}

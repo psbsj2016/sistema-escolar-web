@@ -156,12 +156,18 @@ Workspace.Sidebar = {
                 const corFundo = ehMinha ? '#dcf8c6' : '#ffffff';
                 const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+                // 📸 Foto no Bate-Papo
+                const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
+
                 html += `
-                    <div style="display: flex; flex-direction: column; align-items: ${alinhamento};">
-                        ${!ehMinha ? `<span style="font-size: 11px; color: #666; margin-bottom: 2px; margin-left: 5px; font-weight: bold;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</span>` : ''}
-                        <div style="background: ${corFundo}; padding: 10px 15px; border-radius: 15px; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #333; line-height: 1.4;">
-                            ${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}
-                            <div style="font-size: 10px; color: #999; text-align: right; margin-top: 5px; margin-right: -5px;">${hora}</div>
+                    <div style="display: flex; gap: 10px; flex-direction: ${ehMinha ? 'row-reverse' : 'row'}; align-items: flex-end; margin-bottom: 12px;">
+                        ${avatarChat}
+                        <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; max-width: 75%;">
+                            ${!ehMinha ? `<span style="font-size: 11px; color: #666; margin-bottom: 2px; margin-left: 5px; font-weight: bold;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</span>` : ''}
+                            <div style="background: ${corFundo}; padding: 10px 15px; border-radius: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #333; line-height: 1.4; border-bottom-${ehMinha ? 'right' : 'left'}-radius: 4px;">
+                                ${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}
+                                <div style="font-size: 10px; color: #999; text-align: right; margin-top: 5px; margin-right: -5px;">${hora}</div>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -300,10 +306,16 @@ Workspace.Sidebar = {
                             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
                             const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
 
+                           // 📸 Foto na lista de Trabalhos Entregues (Para o Professor)
+                            const avatarAluno = window.Workspace.renderizarAvatar(ent.alunoNome, 28);
+
                             htmlEntregas += `
                                 <div style="background: #f4f6f7; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <strong style="color: #2c3e50; font-size: 13px;">👨‍🎓 ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}</strong>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            ${avatarAluno}
+                                            <strong style="color: #2c3e50; font-size: 13px;">${Workspace.Sidebar.escapeHTML(ent.alunoNome)}</strong>
+                                        </div>
                                         <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
