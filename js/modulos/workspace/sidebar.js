@@ -35,11 +35,9 @@ Workspace.Sidebar = {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
 
-        // 1. Mensagem de carregamento inicial
         container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>';
 
         try {
-            // 2. Busca TODAS as turmas na nuvem
             let turmas = await Workspace.api('/turmas', 'GET');
             
             if (!turmas || turmas.error || turmas.length === 0) {
@@ -47,23 +45,17 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // 🔒 3. FILTRO DE PRIVACIDADE DO ALUNO (VERSÃO INTELIGENTE)
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
                 
-                // Reúne todas as variáveis possíveis onde a turma possa estar guardada
                 if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
                 if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
                 if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
                 if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
                 
-                // Normaliza tudo para texto minúsculo e sem espaços extra para garantir o match
-                const turmasDoAlunoSeguras = minhasTurmas
-                    .filter(t => t) // Remove vazios
-                    .map(t => String(t).toLowerCase().trim());
+                const turmasDoAlunoSeguras = minhasTurmas.filter(t => t).map(t => String(t).toLowerCase().trim());
 
-                // 🧠 HACK DE LÓGICA: Se não encontrou a turma no perfil, vai ler os posts do Feed
                 if (Workspace.Feed && Workspace.Feed.postsCache) {
                     Workspace.Feed.postsCache.forEach(post => {
                         if (post.destino && post.destino !== 'global') {
@@ -73,7 +65,6 @@ Workspace.Sidebar = {
                     });
                 }
 
-                // Aplica o corte: Só passam as turmas que dão match com o ID ou Nome
                 turmas = turmas.filter(t => {
                     const idGeral = String(t.id).toLowerCase().trim();
                     const nomeGeral = String(t.nome).toLowerCase().trim();
@@ -81,17 +72,14 @@ Workspace.Sidebar = {
                 });
             }
 
-            // Se o aluno realmente não estiver em nenhuma turma
             if (turmas.length === 0) {
                  container.innerHTML = '<div style="padding:10px; color:#7f8c8d; font-size:12px; text-align:center;">Ainda não está associado a nenhum fórum.</div>';
                  return;
             }
 
-            // 4. Desenha apenas os fóruns autorizados no menu
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
-                // 🛡️ CORREÇÃO: O clique agora fecha o 'ws-main-menu-dropdown' corretamente sem dar erro!
                 html += `
                     <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="const menu = document.getElementById('ws-main-menu-dropdown'); if(menu) menu.style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
                         <div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">#</div>
@@ -112,12 +100,9 @@ Workspace.Sidebar = {
 
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
-        
         document.getElementById('ws-chat-titulo').innerText = `Fórum: ${turmaNome}`;
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
-        
         document.getElementById('ws-chat-modal').style.display = 'flex';
-        
         document.getElementById('ws-chat-input').value = '';
         setTimeout(() => document.getElementById('ws-chat-input').focus(), 100);
 
@@ -134,7 +119,6 @@ Workspace.Sidebar = {
 
     carregarMensagensChat: async () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
-        
         const container = document.getElementById('ws-chat-mensagens');
         
         try {
@@ -156,7 +140,6 @@ Workspace.Sidebar = {
                 const corFundo = ehMinha ? '#dcf8c6' : '#ffffff';
                 const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-                // 📸 Foto no Bate-Papo
                 const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
 
                 html += `
@@ -178,9 +161,7 @@ Workspace.Sidebar = {
                 container.scrollTop = container.scrollHeight;
             }
 
-        } catch (e) {
-            console.error("Erro ao carregar chat", e);
-        }
+        } catch (e) { console.error("Erro ao carregar chat", e); }
     },
 
     enviarMensagemChat: async () => {
@@ -194,8 +175,7 @@ Workspace.Sidebar = {
 
         try {
             await Workspace.api(`/workspace/chat/${turmaId}`, 'POST', {
-                texto: texto,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                texto: texto, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
             await Workspace.Sidebar.carregarMensagensChat();
         } catch (e) {
@@ -208,7 +188,6 @@ Workspace.Sidebar = {
     // ==========================================
     tarefasCache: [],
 
-    // 📝 O NOVO MOTOR DE TAREFAS EM GRELHA (CARDS)
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
@@ -223,21 +202,24 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // Filtra só o que for Tarefa/Trabalho
             let tarefas = eventos.filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
 
-            // 🔒 Filtro de Privacidade (Aluno só vê as da turma dele)
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
                 if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
                 if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+                if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+                if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
                 
                 const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t).toLowerCase().trim());
 
+                // 🛡️ CORREÇÃO DO FILTRO: Cruza ID e Nome para garantir que a tarefa aparece!
                 tarefas = tarefas.filter(t => {
                     if (!t.turma || String(t.turma).toLowerCase().trim() === 'global') return true;
-                    return turmasSeguras.includes(String(t.turma).toLowerCase().trim());
+                    const matchId = turmasSeguras.includes(String(t.turma).toLowerCase().trim());
+                    const matchNome = t.turmaNome ? turmasSeguras.includes(String(t.turmaNome).toLowerCase().trim()) : false;
+                    return matchId || matchNome;
                 });
             }
 
@@ -246,14 +228,14 @@ Workspace.Sidebar = {
                  return;
             }
 
-            // Ordena (As que terminam mais rápido primeiro)
             tarefas.sort((a, b) => new Date(a.data) - new Date(b.data));
+            Workspace.Sidebar.tarefasCache = tarefas; 
 
             let html = '';
             tarefas.forEach(t => {
                 const dataObj = new Date(t.data);
                 const hoje = new Date();
-                hoje.setHours(0,0,0,0); // Ignora a hora exata para o cálculo do dia
+                hoje.setHours(0,0,0,0);
                 
                 const passou = dataObj < hoje;
                 const corEstado = passou ? '#e74c3c' : '#27ae60';
@@ -261,27 +243,22 @@ Workspace.Sidebar = {
                 const textoEstado = passou ? 'Prazo Terminado' : 'No Prazo';
                 const dataFormatada = dataObj.toLocaleDateString('pt-BR');
 
-                // O Card de Tarefa
                 html += `
                     <div style="background: white; border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02);" onmouseover="this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'; this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)'">
-                        
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                                 <div style="background: #f4f6f7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    📚 ${Workspace.Sidebar.escapeHTML(t.turma || 'Geral')}
+                                    📚 ${Workspace.Sidebar.escapeHTML(t.turmaNome || 'Geral')}
                                 </div>
                                 <div style="font-size: 10px; font-weight: bold; color: ${corEstado}; background: ${fundoEstado}; padding: 4px 8px; border-radius: 8px;">
                                     ${textoEstado}
                                 </div>
                             </div>
-                            
-                            <h4 style="margin: 0 0 8px 0; color: #3498db; font-size: 17px;">${Workspace.Sidebar.escapeHTML(t.titulo || t.nome)}</h4>
-                            
+                            <h4 style="margin: 0 0 8px 0; color: #3498db; font-size: 17px;">${Workspace.Sidebar.escapeHTML(t.titulo || t.nome || 'Atividade')}</h4>
                             <p style="margin: 0 0 20px 0; font-size: 13px; color: #666; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                ${Workspace.Sidebar.escapeHTML(t.descricao || 'Clique para ver as instruções detalhadas.')}
+                                ${Workspace.Sidebar.escapeHTML(t.descricao || 'Clique em Detalhes para ver as instruções completas.')}
                             </p>
                         </div>
-                        
                         <div style="border-top: 1px solid #f0f2f5; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
                             <div style="font-size: 12px; color: #7f8c8d; display: flex; align-items: center; gap: 5px; font-weight: 500;">
                                 <span style="font-size:14px;">📅</span> Entrega: ${dataFormatada}
@@ -290,7 +267,6 @@ Workspace.Sidebar = {
                                 Detalhes ↗
                             </button>
                         </div>
-                        
                     </div>
                 `;
             });
@@ -304,11 +280,32 @@ Workspace.Sidebar = {
         const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if (!evento) return;
 
+        // 🛡️ CORREÇÕES DOS DADOS E VARIÁVEIS NO ECRÃ
         document.getElementById('ws-tarefa-id').value = evento.id;
-        document.getElementById('ws-tarefa-titulo').innerText = evento.descricao || evento.tipo;
+        document.getElementById('ws-tarefa-titulo').innerText = evento.titulo || evento.nome || evento.tipo;
         const dataFormatada = new Date(evento.data).toLocaleDateString('pt-BR');
-        document.getElementById('ws-tarefa-data').innerText = `📅 Prazo: ${dataFormatada}`;
-        document.getElementById('ws-tarefa-desc').innerHTML = evento.detalhes ? Workspace.Sidebar.escapeHTML(evento.detalhes).replace(/\n/g, '<br>') : 'Acompanhe os detalhes desta atividade.';
+        document.getElementById('ws-tarefa-data').innerText = `📅 Prazo Limite: ${dataFormatada}`;
+        
+        // 🎞️ LÓGICA MULTIMÉDIA PARA ANEXOS DO PROFESSOR
+        let htmlAnexo = '';
+        if (evento.anexoUrl) {
+            let urlCorrigida = evento.anexoUrl.startsWith('http') || evento.anexoUrl.startsWith('/') ? evento.anexoUrl : '/' + evento.anexoUrl;
+            const urlLower = urlCorrigida.toLowerCase();
+            const ehImagem = urlLower.match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlLower.includes('image');
+            const ehVideo = urlLower.match(/\.(mp4|webm|ogg)$/) != null || urlLower.includes('video');
+
+            if (ehImagem) {
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><img src="${urlCorrigida}" style="width:100%; border-radius:8px; border:1px solid #ddd;"></div>`;
+            } else if (ehVideo) {
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><video controls style="width:100%; border-radius:8px; border:1px solid #ddd; background:#000;"><source src="${urlCorrigida}">Seu navegador não suporta este vídeo.</video></div>`;
+            } else {
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><a href="${urlCorrigida}" target="_blank" style="display:flex; align-items:center; gap:8px; background:#3498db; color:white; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#2980b9'">📎 Abrir / Baixar Ficheiro de Apoio</a></div>`;
+            }
+        }
+
+        // Junta a descrição correta com o anexo processado
+        const textoInstrucoes = evento.descricao ? Workspace.Sidebar.escapeHTML(evento.descricao).replace(/\n/g, '<br>') : 'Nenhuma instrução adicional foi fornecida pelo professor.';
+        document.getElementById('ws-tarefa-desc').innerHTML = textoInstrucoes + htmlAnexo;
 
         document.getElementById('ws-area-entrega').style.display = 'none';
         document.getElementById('ws-area-entregue').style.display = 'none';
@@ -320,7 +317,6 @@ Workspace.Sidebar = {
         const ehAluno = Workspace.usuario.tipo === 'Aluno';
 
         if (!ehAluno) {
-            // 👨‍🏫 MESA DO PROFESSOR
             if (areaProfessor) {
                 areaProfessor.style.display = 'block';
                 document.getElementById('ws-lista-entregas').innerHTML = '<p style="font-size: 12px; color: #999; text-align: center;">A buscar trabalhos... ⏳</p>';
@@ -335,7 +331,6 @@ Workspace.Sidebar = {
                         entregas.forEach(ent => {
                             const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
                             
-                            // 🛡️ CORREÇÃO: Trata a URL e força download se for Office
                             let urlCorrigida = ent.arquivoUrl;
                             if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
                                 urlCorrigida = '/' + urlCorrigida;
@@ -344,7 +339,6 @@ Workspace.Sidebar = {
                             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
                             const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
 
-                           // 📸 Foto na lista de Trabalhos Entregues (Para o Professor)
                             const avatarAluno = window.Workspace.renderizarAvatar(ent.alunoNome, 28);
 
                             htmlEntregas += `
@@ -368,7 +362,6 @@ Workspace.Sidebar = {
                 }
             }
         } else {
-            // 🎓 LÓGICA DO ALUNO
             document.getElementById('ws-tarefa-arquivo').value = '';
             document.getElementById('ws-tarefa-obs').value = '';
 
@@ -381,7 +374,6 @@ Workspace.Sidebar = {
                     const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
                     document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
                     
-                    // 🛡️ CORREÇÃO: Trata a URL do anexo que o aluno já enviou
                     let urlCorrigida = res.detalhes.arquivoUrl;
                     if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
                         urlCorrigida = '/' + urlCorrigida;
@@ -415,8 +407,6 @@ Workspace.Sidebar = {
         }
 
         const file = fileInput.files[0];
-        
-        // Bloqueio de tamanho (Máx 10MB)
         if (file.size > 10 * 1024 * 1024) {
             alert("⚠️ O ficheiro é muito pesado. Tente um ficheiro até 10MB.");
             return;
@@ -428,27 +418,21 @@ Workspace.Sidebar = {
         btn.disabled = true;
 
         try {
-            // 1. Faz upload do ficheiro para a Nuvem (Cloudinary) usando a rota que já criámos na Fase 3
             const formData = new FormData();
             formData.append('anexos', file);
 
             const uploadRes = await fetch('/api/workspace/upload', {
-                method: 'POST',
-                credentials: 'include',
-                body: formData 
+                method: 'POST', credentials: 'include', body: formData 
             });
 
             const uploadData = await uploadRes.json();
-            
             if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
                 throw new Error("Falha no upload do ficheiro.");
             }
 
             const arquivoFinalUrl = uploadData.anexos[0].url;
-
             btn.innerText = "📝 A gravar entrega...";
 
-            // 2. Grava a Entrega na Base de Dados
             const payload = {
                 eventoId: eventoId,
                 alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
@@ -462,12 +446,10 @@ Workspace.Sidebar = {
 
             if (entregaRes && entregaRes.success) {
                 alert("🎉 Trabalho entregue com sucesso!");
-                // Recarrega o modal para mostrar a tela verde de sucesso
                 Workspace.Sidebar.abrirModalTarefa(eventoId);
             } else {
                 throw new Error(entregaRes.error || "Erro ao gravar entrega.");
             }
-
         } catch (e) {
             console.error(e);
             alert("Erro ao enviar trabalho. Tente novamente.");
@@ -476,7 +458,7 @@ Workspace.Sidebar = {
             btn.disabled = false;
         }
     },
-    
+
     // ==========================================
     // 👨‍🏫 PAINEL DO PROFESSOR (GESTÃO DE TAREFAS)
     // ==========================================
@@ -490,7 +472,6 @@ Workspace.Sidebar = {
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
         document.getElementById('ws-prof-nova-tarefa').style.display = 'block';
 
-        // Carrega turmas da escola no select
         const sel = document.getElementById('ws-nova-tarefa-turma');
         sel.innerHTML = '<option value="">A carregar turmas...</option>';
         try {
@@ -523,7 +504,6 @@ Workspace.Sidebar = {
         try {
             let anexoUrl = null;
             
-            // 1. Upload do Arquivo Base do Professor (Se houver)
             if(fileInput.files.length > 0) {
                 const formData = new FormData();
                 formData.append('anexos', fileInput.files[0]);
@@ -534,7 +514,6 @@ Workspace.Sidebar = {
                 }
             }
 
-            // 2. Cria a Tarefa na Tabela de Eventos
             const payload = {
                 tipo: 'Tarefa',
                 titulo: titulo,
@@ -549,12 +528,11 @@ Workspace.Sidebar = {
             const res = await Workspace.api('/eventos', 'POST', payload);
             if(res && !res.error) {
                 alert("✅ Atividade publicada com sucesso nas agendas dos alunos!");
-                // Limpa formulário
                 document.getElementById('ws-nova-tarefa-titulo').value = '';
                 document.getElementById('ws-nova-tarefa-data').value = '';
                 document.getElementById('ws-nova-tarefa-desc').value = '';
                 fileInput.value = '';
-                Workspace.Sidebar.voltarMenuTarefasProf(); // Volta ao menu de botões
+                Workspace.Sidebar.voltarMenuTarefasProf(); 
             } else {
                 alert(res.error || "Erro ao criar tarefa.");
             }
@@ -578,13 +556,11 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // Ordena as mais recentes primeiro
             tarefas.sort((a,b) => new Date(b.data) - new Date(a.data));
 
             let html = '';
             tarefas.forEach(t => {
                 const dataF = new Date(t.data).toLocaleDateString('pt-BR');
-                // Componente Sanfona (Accordion) Elegante
                 html += `
                     <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                         <div style="background: #f8f9fa; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition:0.2s;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='#f8f9fa'" onclick="Workspace.Sidebar.carregarEntregasDaTarefa('${t.id}')">
@@ -612,7 +588,6 @@ Workspace.Sidebar = {
         const box = document.getElementById(`entregas-prof-${eventoId}`);
         if(!box) return;
 
-        // Se clicou e já estava aberto, ele apenas fecha a sanfona
         if(box.style.display === 'block') {
             box.style.display = 'none';
             return;
@@ -658,5 +633,4 @@ Workspace.Sidebar = {
             box.innerHTML = '<div style="font-size:12px; color:#e74c3c; text-align:center;">Erro ao carregar entregas.</div>';
         }
     }
-
 };
