@@ -179,6 +179,21 @@ Object.assign(Workspace, {
         finally { loading.style.display = 'none'; event.target.value = ''; }
     },
 
+    // ==========================================
+    // 📝 PÁGINA DE TAREFAS
+    // ==========================================
+    abrirPaginaTarefas: () => {
+        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; // Fecha o menu hambúrguer
+        
+        document.getElementById('ws-main-container').style.display = 'none'; // Esconde Feed
+        document.getElementById('ws-config-container').style.display = 'none'; // Esconde Configs
+        
+        document.getElementById('ws-tarefas-container').style.display = 'block'; // Mostra as Tarefas
+        
+        // Arranca o motor para procurar e desenhar as tarefas fresquinhas na grelha!
+        if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
+    },
+
     abrirConfiguracoes: () => {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none';
         document.getElementById('ws-main-container').style.display = 'none';
@@ -215,10 +230,14 @@ Object.assign(Workspace, {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         const modalChat = document.getElementById('ws-chat-modal');
         const configPage = document.getElementById('ws-config-container');
+        const tarefasPage = document.getElementById('ws-tarefas-container');
+        
         if (dropdown) dropdown.style.display = 'none';
         if (modalChat) modalChat.style.display = 'none';
         if (configPage) configPage.style.display = 'none';
-        document.getElementById('ws-main-container').style.display = 'grid'; 
+        if (tarefasPage) tarefasPage.style.display = 'none'; // Fecha as Tarefas
+        
+        document.getElementById('ws-main-container').style.display = 'block'; // Retorna ao Feed 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 

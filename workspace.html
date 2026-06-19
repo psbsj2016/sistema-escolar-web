@@ -18,7 +18,9 @@
     <style>
         body { background-color: #f0f2f5; margin: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
         .ws-navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .ws-container { display: grid; grid-template-columns: 1fr 300px; gap: 20px; max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        
+        /* 🌟 Feed Centralizado sem Barra Lateral */
+        .ws-container { max-width: 800px; margin: 20px auto; padding: 0 20px; padding-bottom: 80px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
         
         .ws-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .ws-post-input { width: 100%; border: 1px solid #eee; border-radius: 8px; padding: 15px; resize: none; font-family: inherit; margin-bottom: 10px; background: #f9f9f9; box-sizing: border-box; outline: none; }
@@ -40,18 +42,10 @@
             
             /* Coluna única, ocupando 100% da tela de ponta a ponta */
             .ws-container { 
-                display: flex !important; 
-                flex-direction: column !important; 
                 padding: 10px !important; 
                 margin: 0 !important; 
-                gap: 15px !important; 
                 width: 100vw !important;
-                box-sizing: border-box !important;
             } 
-            
-            /* Esconde as tarefas na direita para focar no Feed/Chat */
-            .ws-sidebar-right { display: none !important; }
-            .ws-sidebar-left { width: 100% !important; margin: 0 !important; }
             
             /* Os cards perdem as margens laterais enormes e grudam na tela */
             .ws-card { 
@@ -62,10 +56,10 @@
             }
             
             /* Menu de perfil desce perfeitamente sem criar barra de rolagem lateral */
-            #ws-perfil-dropdown { 
+            #ws-perfil-dropdown, #ws-main-menu-dropdown { 
                 position: fixed !important; 
                 top: 70px !important; 
-                right: 10px !important; 
+                left: 10px !important; 
                 width: calc(100vw - 20px) !important; 
                 max-width: 350px !important;
             }
@@ -97,19 +91,17 @@
             <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 30px;">Entre com as credenciais fornecidas pela escola.</p>
             
             <form onsubmit="event.preventDefault(); Workspace.fazerLogin();" style="width: 100%;">
-    <input type="text" id="ws-login-user" placeholder="O seu Login" autocomplete="username" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; text-align: center; box-sizing: border-box;">
-    
-    <input type="password" id="ws-login-pass" placeholder="A sua Senha" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; font-family: inherit; text-align: center; box-sizing: border-box;">
-    
-    <button type="submit" class="ws-btn" style="width: 100%; padding: 12px; font-size: 16px;">Entrar na Turma</button>
-</form>
+                <input type="text" id="ws-login-user" placeholder="O seu Login" autocomplete="username" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; text-align: center; box-sizing: border-box;">
+                <input type="password" id="ws-login-pass" placeholder="A sua Senha" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; font-family: inherit; text-align: center; box-sizing: border-box;">
+                <button type="submit" class="ws-btn" style="width: 100%; padding: 12px; font-size: 16px;">Entrar na Turma</button>
+            </form>
             
             <p style="margin-top: 20px; font-size: 12px; color: #aaa;">Se não tem acesso, contacte a secretaria.</p>
             <button onclick="window.location.href='/'" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:13px; margin-top:10px;">Voltar ao site da escola</button>
         </div>
     </div>
 
-<nav class="ws-navbar" id="ws-navbar" style="display: none; position: relative;">
+    <nav class="ws-navbar" id="ws-navbar" style="display: none; position: relative;">
         <div style="display: flex; align-items: center; gap: 15px; position: relative;" id="ws-menu-left-container">
             
             <div style="cursor: pointer; padding: 5px 10px; font-size: 20px; border-radius: 6px; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuPrincipal()">
@@ -134,6 +126,10 @@
                         <div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar chats... ⏳</div>
                     </div>
 
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaTarefas()">
+                        <span style="font-size: 18px;">📝</span> Tarefas
+                    </button>
+
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()">
                         <span style="font-size: 18px;">⚙️</span> Configurações
                     </button>
@@ -141,7 +137,7 @@
                     <div style="border-top: 1px solid #eee; margin: 5px 0;"></div>
                     
                     <button class="ws-btn" style="background: transparent; color: #e74c3c; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.logout()">
-                        <span style="font-size: 18px;">⬅️</span> Sair da Conta
+                        <span style="font-size: 18px;">⬅️</span> Sair
                     </button>
 
                 </div>
@@ -157,8 +153,7 @@
     </nav>
 
     <main class="ws-container" id="ws-main-container" style="display: none;">
-        
-            <section class="ws-feed" id="ws-feed-container">
+        <section class="ws-feed" id="ws-feed-container">
             <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
                 <textarea class="ws-post-input" rows="3" placeholder="Partilhe uma atividade, vídeo ou material com a turma..."></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -173,19 +168,20 @@
                 <div style="text-align: center; padding: 40px; color: #999;">A preparar o mural... ⏳</div>
             </div>
         </section>
-
-        <aside class="ws-sidebar-right">
-            <div class="ws-card">
-                <h3 style="margin-top:0; font-size: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #2c3e50;">⚠️ Tarefas Pendentes</h3>
-                <div id="ws-tarefas-pendentes">
-                    <p style="font-size: 13px; color: #7f8c8d;">Nenhuma atividade pendente.</p>
-                </div>
-            </div>
-        </aside>
-
     </main>
 
-<section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px;">
+    <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📝 As Minhas Tarefas e Trabalhos</span>
+            </h3>
+            
+            <div id="ws-lista-tarefas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                </div>
+        </div>
+    </section>
+
+    <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
             
@@ -265,16 +261,15 @@
                 
                 <form onsubmit="event.preventDefault(); Workspace.salvarNovaSenha();" style="width: 100%;">
                     <input type="password" id="ws-senha-atual" placeholder="Senha Atual" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
-                    
                     <input type="password" id="ws-nova-senha" placeholder="Nova Senha" autocomplete="new-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
-
                     <input type="password" id="ws-confirma-senha" placeholder="Confirmar Nova Senha" autocomplete="new-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
-                    
                     <button type="submit" class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 12px; border-radius: 8px; font-size: 14px;">💾 Confirmar e Salvar</button>
                 </form>
             </div>
+        </div>
+    </div>
 
-   <div id="ws-tarefa-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div id="ws-tarefa-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div class="ws-card" style="width: 95%; max-width: 450px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
             <div style="background: #3498db; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; font-size: 16px;">📝 Detalhes da Atividade</h3>
@@ -289,11 +284,8 @@
                 <div id="ws-area-entrega">
                     <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">O seu Trabalho (Foto, PDF, Word):</label>
                     <input type="file" id="ws-tarefa-arquivo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; font-size: 13px; background: #fdfdfd; cursor: pointer;">
-                    
                     <textarea id="ws-tarefa-obs" rows="2" placeholder="Comentário para o professor (opcional)..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; font-size: 13px; box-sizing: border-box; resize: none; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'"></textarea>
-                    
                     <input type="hidden" id="ws-tarefa-id">
-                    
                     <button class="ws-btn" id="ws-btn-entregar" style="width: 100%; background: #27ae60; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold;" onclick="Workspace.Sidebar.enviarTarefa()">📤 Enviar Trabalho</button>
                 </div>
 

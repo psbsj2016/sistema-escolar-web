@@ -208,57 +208,95 @@ Workspace.Sidebar = {
     // ==========================================
     tarefasCache: [],
 
+    // 📝 O NOVO MOTOR DE TAREFAS EM GRELHA (CARDS)
     carregarTarefas: async () => {
-        const container = document.getElementById('ws-tarefas-pendentes');
+        const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
 
-        container.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">A procurar agenda... ⏳</p>';
+        container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">A procurar atividades na nuvem... ⏳</div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');
+            
             if (!eventos || eventos.error || eventos.length === 0) {
-                container.innerHTML = '<p style="font-size: 13px; color: #7f8c8d; text-align:center;">Nenhuma atividade pendente.</p>';
+                container.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; color:#7f8c8d; font-size:16px; text-align:center;">🎉 Que maravilha! Não há tarefas agendadas no momento.</div>';
                 return;
             }
 
-            Workspace.Sidebar.tarefasCache = eventos; // Guarda na memória
+            // Filtra só o que for Tarefa/Trabalho
+            let tarefas = eventos.filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
 
-            const hoje = new Date();
-            hoje.setHours(0, 0, 0, 0);
+            // 🔒 Filtro de Privacidade (Aluno só vê as da turma dele)
+            if (Workspace.usuario.tipo === 'Aluno') {
+                let minhasTurmas = [];
+                const u = Workspace.usuario;
+                if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+                if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+                
+                const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t).toLowerCase().trim());
 
-            // Filtra as atividades futuras e ordena por data
-            const proximos = eventos.filter(e => new Date(e.data) >= hoje).sort((a, b) => new Date(a.data) - new Date(b.data)).slice(0, 5);
-
-            if(proximos.length === 0) {
-                container.innerHTML = '<p style="font-size: 13px; color: #7f8c8d; text-align:center;">Nenhuma atividade futura.</p>';
-                return;
+                tarefas = tarefas.filter(t => {
+                    if (!t.turma || String(t.turma).toLowerCase().trim() === 'global') return true;
+                    return turmasSeguras.includes(String(t.turma).toLowerCase().trim());
+                });
             }
+
+            if (tarefas.length === 0) {
+                 container.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; color:#7f8c8d; font-size:16px; text-align:center;">🎉 Nenhuma tarefa pendente para a sua turma!</div>';
+                 return;
+            }
+
+            // Ordena (As que terminam mais rápido primeiro)
+            tarefas.sort((a, b) => new Date(a.data) - new Date(b.data));
 
             let html = '';
-            proximos.forEach(ev => {
-                let cor = '#3498db'; 
-                let icone = '📌';
-                if(ev.tipo === 'Feriado') { cor = '#e74c3c'; icone = '🏖️'; }
-                if(ev.tipo === 'Evento') { cor = '#2ecc71'; icone = '🎉'; }
-                if(ev.tipo === 'Reunião') { cor = '#f39c12'; icone = '👥'; }
-                if(ev.tipo === 'Prova' || ev.tipo === 'Trabalho') { cor = '#9b59b6'; icone = '📝'; }
-
-                const dataFormatada = new Date(ev.data).toLocaleDateString('pt-BR', {day: '2-digit', month: 'short'});
+            tarefas.forEach(t => {
+                const dataObj = new Date(t.data);
+                const hoje = new Date();
+                hoje.setHours(0,0,0,0); // Ignora a hora exata para o cálculo do dia
                 
-                // 🚀 ADICIONADO: Ao clicar, abre o modal de tarefa
+                const passou = dataObj < hoje;
+                const corEstado = passou ? '#e74c3c' : '#27ae60';
+                const fundoEstado = passou ? '#fdf2f2' : '#eafaf1';
+                const textoEstado = passou ? 'Prazo Terminado' : 'No Prazo';
+                const dataFormatada = dataObj.toLocaleDateString('pt-BR');
+
+                // O Card de Tarefa
                 html += `
-                    <div onclick="Workspace.Sidebar.abrirModalTarefa('${ev.id}')" style="background: #fff; border-left: 4px solid ${cor}; padding: 12px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 12px; transition: 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
-                        <div style="font-weight: 700; font-size: 13px; color: #2c3e50; margin-bottom: 6px; line-height: 1.3;">${icone} ${Workspace.Sidebar.escapeHTML(ev.descricao || ev.tipo)}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: 10px; color: #7f8c8d; background: #f0f2f5; padding: 3px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase;">${Workspace.Sidebar.escapeHTML(ev.tipo)}</span>
-                            <span style="font-size: 11px; color: ${cor}; font-weight: bold;">📅 ${dataFormatada}</span>
+                    <div style="background: white; border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02);" onmouseover="this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'; this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)'">
+                        
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div style="background: #f4f6f7; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    📚 ${Workspace.Sidebar.escapeHTML(t.turma || 'Geral')}
+                                </div>
+                                <div style="font-size: 10px; font-weight: bold; color: ${corEstado}; background: ${fundoEstado}; padding: 4px 8px; border-radius: 8px;">
+                                    ${textoEstado}
+                                </div>
+                            </div>
+                            
+                            <h4 style="margin: 0 0 8px 0; color: #3498db; font-size: 17px;">${Workspace.Sidebar.escapeHTML(t.titulo || t.nome)}</h4>
+                            
+                            <p style="margin: 0 0 20px 0; font-size: 13px; color: #666; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                ${Workspace.Sidebar.escapeHTML(t.descricao || 'Clique para ver as instruções detalhadas.')}
+                            </p>
                         </div>
+                        
+                        <div style="border-top: 1px solid #f0f2f5; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 12px; color: #7f8c8d; display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                                <span style="font-size:14px;">📅</span> Entrega: ${dataFormatada}
+                            </div>
+                            <button class="ws-btn" style="padding: 8px 15px; font-size: 12px; border-radius: 6px; background: #2c3e50;" onclick="Workspace.Sidebar.abrirModalTarefa('${t.id}')">
+                                Detalhes ↗
+                            </button>
+                        </div>
+                        
                     </div>
                 `;
             });
             container.innerHTML = html;
-        } catch(e) { 
-            container.innerHTML = '<p style="color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar agenda.</p>'; 
+        } catch (e) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color:#e74c3c; font-size:14px; text-align:center;">Erro ao carregar atividades. Tente atualizar a página.</div>';
         }
     },
 
