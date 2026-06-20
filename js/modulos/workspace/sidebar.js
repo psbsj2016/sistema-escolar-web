@@ -31,6 +31,9 @@ Workspace.Sidebar = {
         }
     },
 
+    // ==========================================
+    // 🛡️ A BARREIRA DE ACESSO ÀS SALAS (FÓRUNS)
+    // ==========================================
     carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
@@ -94,6 +97,9 @@ Workspace.Sidebar = {
         }
     },
 
+    // ==========================================
+    // 💬 LÓGICA DO BATE-PAPO / FÓRUM DA TURMA
+    // ==========================================
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         document.getElementById('ws-chat-titulo').innerText = `Fórum: ${turmaNome}`;
@@ -165,9 +171,7 @@ Workspace.Sidebar = {
         try {
             await Workspace.api(`/workspace/chat/${turmaId}`, 'POST', { texto: texto, autorNome: Workspace.usuario.nome || Workspace.usuario.login });
             await Workspace.Sidebar.carregarMensagensChat();
-        } catch (e) { 
-            Workspace.mostrarAviso("Erro ao enviar mensagem.", "error"); 
-        }
+        } catch (e) { if (window.App && App.showToast) App.showToast("Erro ao enviar mensagem.", "error"); }
     },
 
     // ==========================================
@@ -258,6 +262,229 @@ Workspace.Sidebar = {
         }
     },
 
+    enviarTarefa: async () => {
+        const eventoId = document.getElementById('ws-tarefa-id').value;
+        const fileInput = document.getElementById('ws-tarefa-arquivo');
+        const obs = document.getElementById('ws-tarefa-obs').value.trim();
+
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert("⚠️ Selecione um ficheiro (PDF, Word ou Imagem) para enviar o seu trabalho.");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        if (file.size > 10 * 1024 * 1024) return alert("⚠️ O ficheiro é muito pesado. Tente um ficheiro até 10MB.");
+
+        const btn = document.getElementById('ws-btn-entregar');
+        const txtOriginal = btn.innerText;
+        btn.innerText = "☁️ A subir ficheiro para a Nuvem...";
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('anexos', file);
+            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+            const uploadData = await uploadRes.json();
+            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload do ficheiro.");
+
+            const arquivoFinalUrl = uploadData.anexos[0].url;
+            btn.innerText = "📝 A gravar entrega...";
+
+            const payload = {
+                eventoId: eventoId,
+                alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                arquivoUrl: arquivoFinalUrl,
+                arquivoNome: file.name,
+                observacao: obs
+            };
+
+            const entregaRes = await Workspace.api('/workspace/entregas', 'POST', payload);
+
+            if (entregaRes && entregaRes.success) {
+                alert("🎉 Trabalho entregue com sucesso!");
+                Workspace.Sidebar.abrirModalTarefa(eventoId);
+            } else throw new Error(entregaRes.error || "Erro ao gravar entrega.");
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao enviar trabalho. Tente novamente.");
+        } finally {
+            btn.innerText = txtOriginal;
+            btn.disabled = false;
+        }
+    },
+
+    // ==========================================
+    // 👨‍🏫 PAINEL DO PROFESSOR (CRIAR, EDITAR E APAGAR)
+    // ==========================================
+    voltarMenuTarefasProf: () => {
+        document.getElementById('ws-prof-menu-tarefas').style.display = 'grid';
+        document.getElementById('ws-prof-nova-tarefa').style.display = 'none';
+        document.getElementById('ws-prof-lista-recebidas').style.display = 'none';
+    },
+
+    abrirPainelNovaTarefa: async () => {
+        document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
+        document.getElementById('ws-prof-nova-tarefa').style.display = 'block';
+
+        const sel = document.getElementById('ws-nova-tarefa-turma');
+        sel.innerHTML = '<option value="">A carregar turmas...</option>';
+        try {
+            const turmas = await Workspace.api('/turmas', 'GET');
+            sel.innerHTML = '<option value="global">🌍 Todas as Turmas (Público Geral)</option>';
+            if(turmas && turmas.length > 0) {
+                turmas.forEach(t => {
+                    sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.Sidebar.escapeHTML(t.nome)}</option>`;
+                });
+            }
+        } catch(e) { sel.innerHTML = '<option value="global">🌍 Global</option>'; }
+    },
+
+    salvarNovaTarefa: async () => {
+        const titulo = document.getElementById('ws-nova-tarefa-titulo').value.trim();
+        const turmaId = document.getElementById('ws-nova-tarefa-turma').value;
+        const selTurma = document.getElementById('ws-nova-tarefa-turma');
+        const turmaNome = selTurma.options[selTurma.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
+        const data = document.getElementById('ws-nova-tarefa-data').value;
+        const desc = document.getElementById('ws-nova-tarefa-desc').value.trim();
+        const fileInput = document.getElementById('ws-nova-tarefa-arquivo');
+
+        if(!titulo || !turmaId || !data) return alert("⚠️ Preencha o Título, a Turma e o Prazo Limite!");
+
+        const btn = document.getElementById('ws-btn-salvar-tarefa');
+        const txt = btn.innerText;
+        btn.innerText = "⏳ A gravar...";
+        btn.disabled = true;
+
+        try {
+            let anexoUrl = null;
+            if(fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('anexos', fileInput.files[0]);
+                const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+                const uploadData = await uploadRes.json();
+                if(uploadData.success && uploadData.anexos.length > 0) {
+                    anexoUrl = uploadData.anexos[0].url;
+                }
+            }
+
+            const payload = {
+                tipo: 'Tarefa', titulo: titulo, turma: turmaId, turmaNome: turmaNome,
+                data: data, descricao: desc, anexoUrl: anexoUrl, autorNome: Workspace.usuario.nome || Workspace.usuario.login
+            };
+
+            const res = await Workspace.api('/eventos', 'POST', payload);
+            if(res && !res.error) {
+                alert("✅ Atividade publicada com sucesso nas agendas dos alunos!");
+                document.getElementById('ws-nova-tarefa-titulo').value = '';
+                document.getElementById('ws-nova-tarefa-data').value = '';
+                document.getElementById('ws-nova-tarefa-desc').value = '';
+                fileInput.value = '';
+                Workspace.Sidebar.voltarMenuTarefasProf(); 
+            } else alert(res.error || "Erro ao criar tarefa.");
+        } catch(e) { alert("Erro de comunicação."); } 
+        finally { btn.innerText = txt; btn.disabled = false; }
+    },
+
+    apagarTarefa: async (id) => {
+        if(!confirm("⚠️ Tem a certeza que deseja APAGAR esta tarefa?\nTodos os trabalhos já entregues pelos alunos também serão eliminados!")) return;
+        try {
+            const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
+            if(res && res.success) {
+                alert("🗑️ Tarefa removida com sucesso!");
+                Workspace.Sidebar.abrirPainelTarefasRecebidas(); // Recarrega a lista
+            } else alert("Erro ao apagar tarefa.");
+        } catch(e) { alert("Erro de comunicação com o servidor."); }
+    },
+
+    editarTarefaInstrucoes: (id) => {
+        const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
+        if(!evento) return;
+        
+        const descArea = document.getElementById('ws-tarefa-desc');
+        const textoAtual = evento.descricao || '';
+        
+        // Transforma o texto numa caixa de edição
+        descArea.innerHTML = `
+            <div style="background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
+                <label style="font-size:12px; font-weight:bold; color:#e67e22; display:block; margin-bottom:10px;">✏️ Modo de Edição de Instruções</label>
+                <textarea id="ws-edit-desc-input" rows="8" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; margin-bottom:10px; resize:vertical; box-sizing:border-box;">${textoAtual}</textarea>
+                <div style="display:flex; gap:10px;">
+                    <button class="ws-btn" style="background:#27ae60; flex:1;" onclick="Workspace.Sidebar.salvarEdicaoTarefa('${id}')">💾 Guardar Alterações</button>
+                    <button class="ws-btn" style="background:#95a5a6; flex:1;" onclick="Workspace.Sidebar.abrirModalTarefa('${id}')">Cancelar</button>
+                </div>
+            </div>
+        `;
+    },
+
+    salvarEdicaoTarefa: async (id) => {
+        const novoTexto = document.getElementById('ws-edit-desc-input').value;
+        const btn = event.target;
+        btn.innerText = "⏳ A guardar...";
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api(`/eventos/${id}`, 'PUT', { descricao: novoTexto });
+            if(res && res.success) {
+                // Atualiza a memória e recarrega o modal instantaneamente!
+                const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
+                if(evento) evento.descricao = novoTexto;
+                Workspace.Sidebar.abrirModalTarefa(id);
+            } else alert("Erro ao atualizar instruções.");
+        } catch(e) { 
+            alert("Erro de comunicação com o servidor."); 
+            btn.innerText = "Guardar Alterações"; btn.disabled = false; 
+        }
+    },
+
+    abrirPainelTarefasRecebidas: async () => {
+        document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
+        document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
+        
+        const container = document.getElementById('ws-prof-tarefas-grid');
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">A procurar atividades criadas... ⏳</div>';
+
+        try {
+            const eventos = await Workspace.api('/eventos', 'GET');
+            let tarefas = (eventos || []).filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
+            
+            if(tarefas.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">Nenhuma tarefa enviada ainda. Crie uma nova tarefa primeiro!</div>';
+                return;
+            }
+
+            tarefas.sort((a,b) => new Date(b.data) - new Date(a.data));
+            Workspace.Sidebar.tarefasCache = tarefas; // Guarda na memória para podermos abrir os detalhes!
+
+            let html = '';
+            tarefas.forEach(t => {
+                const dataF = new Date(t.data).toLocaleDateString('pt-BR');
+                html += `
+                    <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1; cursor: pointer;" onclick="Workspace.Sidebar.carregarEntregasDaTarefa('${t.id}')">
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size:15px;">${Workspace.Sidebar.escapeHTML(t.titulo || 'Tarefa Sem Título')}</h4>
+                                <div style="font-size: 11px; color: #7f8c8d; font-weight:bold;">📚 ${t.turmaNome || 'Global'} &nbsp;|&nbsp; 📅 Entrega até: <span style="color:#e74c3c;">${dataF}</span></div>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button onclick="Workspace.Sidebar.abrirModalTarefa('${t.id}')" style="background:#3498db; color:white; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2980b9'">👁️ Detalhes</button>
+                                <button onclick="Workspace.Sidebar.apagarTarefa('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#c0392b'">🗑️ Apagar</button>
+                                <div style="color: #3498db; font-size: 13px; font-weight: bold; margin-left:10px; cursor: pointer;" onclick="Workspace.Sidebar.carregarEntregasDaTarefa('${t.id}')">Trabalhos ▼</div>
+                            </div>
+                        </div>
+                        <div id="entregas-prof-${t.id}" style="display: none; padding: 15px; background: white; border-top: 1px solid #eee;">
+                            <div style="text-align:center; font-size:12px; color:#999; padding:10px;">A procurar alunos que entregaram... ⏳</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } catch(e) {
+            container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar lista de tarefas.</div>';
+        }
+    },
+
     abrirModalTarefa: async (eventoId) => {
         const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if (!evento) return;
@@ -286,6 +513,7 @@ Workspace.Sidebar = {
         const textoInstrucoes = evento.descricao ? Workspace.Sidebar.escapeHTML(evento.descricao).replace(/\n/g, '<br>') : 'Nenhuma instrução adicional foi fornecida pelo professor.';
         const ehAluno = Workspace.usuario.tipo === 'Aluno';
         
+        // ✏️ Botão de Edição Dinâmico (Só para professores)
         let htmlEditar = '';
         if(!ehAluno) {
             htmlEditar = `<div style="display:flex; justify-content:flex-end; margin-bottom:10px;"><button onclick="Workspace.Sidebar.editarTarefaInstrucoes('${evento.id}')" style="background:#e8f4f8; color:#3498db; border:1px solid #bde0fe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'">✏️ Editar Instruções</button></div>`;
@@ -338,6 +566,7 @@ Workspace.Sidebar = {
                 } catch(e) { document.getElementById('ws-lista-entregas').innerHTML = '<p style="color: #e74c3c; font-size: 12px; text-align:center;">Erro ao buscar entregas.</p>'; }
             }
         } else {
+            // ... (Lógica do Aluno Mantida)
             document.getElementById('ws-tarefa-arquivo').value = '';
             document.getElementById('ws-tarefa-obs').value = '';
 
@@ -365,252 +594,12 @@ Workspace.Sidebar = {
         }
     },
 
-    enviarTarefa: async () => {
-        const eventoId = document.getElementById('ws-tarefa-id').value;
-        const fileInput = document.getElementById('ws-tarefa-arquivo');
-        const obs = document.getElementById('ws-tarefa-obs').value.trim();
-
-        if (!fileInput.files || fileInput.files.length === 0) {
-            Workspace.mostrarAviso("Selecione um ficheiro (PDF, Word ou Imagem) para enviar o seu trabalho.", "warning");
-            return;
-        }
-
-        const file = fileInput.files[0];
-        if (file.size > 10 * 1024 * 1024) return Workspace.mostrarAviso("O ficheiro é muito pesado. Tente um ficheiro até 10MB.", "warning");
-
-        const btn = document.getElementById('ws-btn-entregar');
-        const txtOriginal = btn.innerText;
-        btn.innerText = "☁️ A subir ficheiro para a Nuvem...";
-        btn.disabled = true;
-
-        try {
-            const formData = new FormData();
-            formData.append('anexos', file);
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload do ficheiro.");
-
-            const arquivoFinalUrl = uploadData.anexos[0].url;
-            btn.innerText = "📝 A gravar entrega...";
-
-            const payload = {
-                eventoId: eventoId,
-                alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                arquivoUrl: arquivoFinalUrl,
-                arquivoNome: file.name,
-                observacao: obs
-            };
-
-            const entregaRes = await Workspace.api('/workspace/entregas', 'POST', payload);
-
-            if (entregaRes && entregaRes.success) {
-                Workspace.mostrarAviso("Trabalho entregue com sucesso!", "success");
-                Workspace.Sidebar.abrirModalTarefa(eventoId);
-            } else throw new Error(entregaRes.error || "Erro ao gravar entrega.");
-        } catch (e) {
-            console.error(e);
-            Workspace.mostrarAviso("Erro ao enviar trabalho. Tente novamente.", "error");
-        } finally {
-            btn.innerText = txtOriginal;
-            btn.disabled = false;
-        }
-    },
-
-    // ==========================================
-    // 👨‍🏫 PAINEL DO PROFESSOR (CRIAR, EDITAR E APAGAR)
-    // ==========================================
-    voltarMenuTarefasProf: () => {
-        document.getElementById('ws-prof-menu-tarefas').style.display = 'grid';
-        document.getElementById('ws-prof-nova-tarefa').style.display = 'none';
-        document.getElementById('ws-prof-lista-recebidas').style.display = 'none';
-    },
-
-    abrirPainelNovaTarefa: async () => {
-        document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
-        document.getElementById('ws-prof-nova-tarefa').style.display = 'block';
-
-        const sel = document.getElementById('ws-nova-tarefa-turma');
-        sel.innerHTML = '<option value="">A carregar turmas...</option>';
-        try {
-            const turmas = await Workspace.api('/turmas', 'GET');
-            sel.innerHTML = '<option value="global">🌍 Todas as Turmas (Público Geral)</option>';
-            if(turmas && turmas.length > 0) {
-                turmas.forEach(t => {
-                    sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.Sidebar.escapeHTML(t.nome)}</option>`;
-                });
-            }
-        } catch(e) { sel.innerHTML = '<option value="global">🌍 Global</option>'; }
-    },
-
-    salvarNovaTarefa: async () => {
-        const titulo = document.getElementById('ws-nova-tarefa-titulo').value.trim();
-        const turmaId = document.getElementById('ws-nova-tarefa-turma').value;
-        const selTurma = document.getElementById('ws-nova-tarefa-turma');
-        const turmaNome = selTurma.options[selTurma.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
-        const data = document.getElementById('ws-nova-tarefa-data').value;
-        const desc = document.getElementById('ws-nova-tarefa-desc').value.trim();
-        const fileInput = document.getElementById('ws-nova-tarefa-arquivo');
-
-        if(!titulo || !turmaId || !data) return Workspace.mostrarAviso("Preencha o Título, a Turma e o Prazo Limite!", "warning");
-
-        const btn = document.getElementById('ws-btn-salvar-tarefa');
-        const txt = btn.innerText;
-        btn.innerText = "⏳ A gravar e a notificar alunos...";
-        btn.disabled = true;
-
-        try {
-            let anexoUrl = null;
-            if(fileInput.files.length > 0) {
-                const formData = new FormData();
-                formData.append('anexos', fileInput.files[0]);
-                const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-                const uploadData = await uploadRes.json();
-                if(uploadData.success && uploadData.anexos.length > 0) {
-                    anexoUrl = uploadData.anexos[0].url;
-                }
-            }
-
-            const payload = {
-                tipo: 'Tarefa', titulo: titulo, turma: turmaId, turmaNome: turmaNome,
-                data: data, descricao: desc, anexoUrl: anexoUrl, autorNome: Workspace.usuario.nome || Workspace.usuario.login
-            };
-
-            const res = await Workspace.api('/eventos', 'POST', payload);
-            if(res && !res.error) {
-                Workspace.mostrarAviso("Atividade publicada com sucesso nas agendas dos alunos!", "success");
-                document.getElementById('ws-nova-tarefa-titulo').value = '';
-                document.getElementById('ws-nova-tarefa-data').value = '';
-                document.getElementById('ws-nova-tarefa-desc').value = '';
-                fileInput.value = '';
-                Workspace.Sidebar.voltarMenuTarefasProf(); 
-            } else {
-                Workspace.mostrarAviso(res.error || "Erro ao criar tarefa.", "error");
-            }
-        } catch(e) { 
-            Workspace.mostrarAviso("Erro de comunicação.", "error"); 
-        } finally { 
-            btn.innerText = txt; 
-            btn.disabled = false; 
-        }
-    },
-
-    apagarTarefa: async (id) => {
-        if(!confirm("⚠️ Tem a certeza que deseja APAGAR esta tarefa?\nTodos os trabalhos já entregues pelos alunos também serão eliminados!")) return;
-        try {
-            const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
-            if(res && res.success) {
-                Workspace.mostrarAviso("Tarefa removida com sucesso!", "success");
-                Workspace.Sidebar.abrirPainelTarefasRecebidas(); 
-            } else {
-                Workspace.mostrarAviso("Erro ao apagar tarefa.", "error");
-            }
-        } catch(e) { 
-            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
-        }
-    },
-
-    editarTarefaInstrucoes: (id) => {
-        const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
-        if(!evento) return;
-        
-        const descArea = document.getElementById('ws-tarefa-desc');
-        const textoAtual = evento.descricao || '';
-        
-        descArea.innerHTML = `
-            <div style="background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
-                <label style="font-size:12px; font-weight:bold; color:#e67e22; display:block; margin-bottom:10px;">✏️ Modo de Edição de Instruções</label>
-                <textarea id="ws-edit-desc-input" rows="8" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; margin-bottom:10px; resize:vertical; box-sizing:border-box;">${textoAtual}</textarea>
-                <div style="display:flex; gap:10px;">
-                    <button class="ws-btn" style="background:#27ae60; flex:1;" onclick="Workspace.Sidebar.salvarEdicaoTarefa('${id}')">💾 Guardar Alterações</button>
-                    <button class="ws-btn" style="background:#95a5a6; flex:1;" onclick="Workspace.Sidebar.abrirModalTarefa('${id}')">Cancelar</button>
-                </div>
-            </div>
-        `;
-    },
-
-    salvarEdicaoTarefa: async (id) => {
-        const novoTexto = document.getElementById('ws-edit-desc-input').value;
-        const btn = event.target;
-        btn.innerText = "⏳ A guardar...";
-        btn.disabled = true;
-
-        try {
-            const res = await Workspace.api(`/eventos/${id}`, 'PUT', { descricao: novoTexto });
-            if(res && res.success) {
-                Workspace.mostrarAviso("Instruções atualizadas com sucesso!", "success");
-                const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
-                if(evento) evento.descricao = novoTexto;
-                Workspace.Sidebar.abrirModalTarefa(id);
-            } else {
-                Workspace.mostrarAviso("Erro ao atualizar instruções.", "error");
-            }
-        } catch(e) { 
-            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
-            btn.innerText = "Guardar Alterações"; 
-            btn.disabled = false; 
-        }
-    },
-
-    abrirPainelTarefasRecebidas: async () => {
-        document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
-        document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
-        
-        const container = document.getElementById('ws-prof-tarefas-grid');
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">A procurar atividades criadas... ⏳</div>';
-
-        try {
-            const eventos = await Workspace.api('/eventos', 'GET');
-            let tarefas = (eventos || []).filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
-            
-            if(tarefas.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">Nenhuma tarefa enviada ainda. Crie uma nova tarefa primeiro!</div>';
-                return;
-            }
-
-            tarefas.sort((a,b) => new Date(b.data) - new Date(a.data));
-            Workspace.Sidebar.tarefasCache = tarefas; 
-
-            let html = '';
-            tarefas.forEach(t => {
-                const dataF = new Date(t.data).toLocaleDateString('pt-BR');
-                html += `
-                    <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                        <div style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                            <div style="flex: 1; cursor: pointer;" onclick="Workspace.Sidebar.carregarEntregasDaTarefa('${t.id}')">
-                                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size:15px;">${Workspace.Sidebar.escapeHTML(t.titulo || 'Tarefa Sem Título')}</h4>
-                                <div style="font-size: 11px; color: #7f8c8d; font-weight:bold;">📚 ${t.turmaNome || 'Global'} &nbsp;|&nbsp; 📅 Entrega até: <span style="color:#e74c3c;">${dataF}</span></div>
-                            </div>
-                            
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <button onclick="Workspace.Sidebar.abrirModalTarefa('${t.id}')" style="background:#3498db; color:white; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2980b9'">👁️ Detalhes</button>
-                                <button onclick="Workspace.Sidebar.apagarTarefa('${t.id}')" style="background:#e74c3c; color:white; border:none; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#c0392b'">🗑️ Apagar</button>
-                                <div style="color: #3498db; font-size: 13px; font-weight: bold; margin-left:10px; cursor: pointer;" onclick="Workspace.Sidebar.carregarEntregasDaTarefa('${t.id}')">Trabalhos ▼</div>
-                            </div>
-                        </div>
-                        <div id="entregas-prof-${t.id}" style="display: none; padding: 15px; background: white; border-top: 1px solid #eee;">
-                            <div style="text-align:center; font-size:12px; color:#999; padding:10px;">A procurar alunos que entregaram... ⏳</div>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        } catch(e) {
-            container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar lista de tarefas.</div>';
-        }
-    },
-
     carregarEntregasDaTarefa: async (eventoId) => {
         const box = document.getElementById(`entregas-prof-${eventoId}`);
         if(!box) return;
-
-        if(box.style.display === 'block') {
-            box.style.display = 'none';
-            return;
-        }
+        if(box.style.display === 'block') { box.style.display = 'none'; return; }
         
         box.style.display = 'block';
-
         try {
             const entregas = await Workspace.api(`/workspace/entregas/tarefa/${eventoId}`, 'GET');
             if(!entregas || entregas.length === 0) {
@@ -622,7 +611,6 @@ Workspace.Sidebar = {
             entregas.forEach(ent => {
                 const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
                 let urlCorrigida = ent.arquivoUrl.startsWith('http') || ent.arquivoUrl.startsWith('/') ? ent.arquivoUrl : '/' + ent.arquivoUrl;
-                
                 const nomeMinusculo = (ent.arquivoNome || '').toLowerCase();
                 const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
                 const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
@@ -645,8 +633,6 @@ Workspace.Sidebar = {
                 `;
             });
             box.innerHTML = html;
-        } catch(e) {
-            box.innerHTML = '<div style="font-size:12px; color:#e74c3c; text-align:center;">Erro ao carregar entregas.</div>';
-        }
+        } catch(e) { box.innerHTML = '<div style="font-size:12px; color:#e74c3c; text-align:center;">Erro ao carregar entregas.</div>'; }
     }
 };
