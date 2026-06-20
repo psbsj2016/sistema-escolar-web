@@ -40,17 +40,15 @@ Workspace.Feed = {
         }
     },
 
-    // 🌟 NOVA FUNÇÃO: VISUALIZADOR DE IMAGENS INTERNO (LIGHTBOX)
+    // 🌟 VISUALIZADOR DE IMAGENS
     abrirImagemInteira: (url) => {
         const id = 'ws-lightbox-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
 
         const overlay = document.createElement('div');
         overlay.id = id;
-        // Fundo escuro com desfoque (blur)
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
         
-        // Estrutura da Imagem Ampliada
         overlay.innerHTML = `
             <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">&times;</span>
             <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out;">
@@ -58,18 +56,52 @@ Workspace.Feed = {
         
         document.body.appendChild(overlay);
 
-        // Dispara a animação visual de entrada
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
             overlay.querySelector('img').style.transform = 'scale(1)';
         });
 
-        // Fechar ao clicar fora da imagem (no fundo escuro)
         overlay.addEventListener('click', (e) => {
             if(e.target === overlay) {
                 overlay.style.opacity = '0';
                 setTimeout(()=> overlay.remove(), 200);
             }
+        });
+    },
+
+    // 🌟 NOVO: VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT)
+    abrirDocumento: (url, nome, ehOffice) => {
+        const id = 'ws-doc-modal';
+        if(document.getElementById(id)) document.getElementById(id).remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = id;
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
+
+        let iframeSrc = url;
+        
+        // Se for Office, usamos o motor de visualização da Microsoft conectado ao seu ficheiro na Cloudinary
+        if (ehOffice) {
+            const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+            iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`;
+        }
+
+        overlay.innerHTML = `
+            <div style="width: 90vw; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 5px;">
+                <a href="${url}" download="${nome}" target="_blank" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">⬇️ Baixar Ficheiro Oficial</a>
+                <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">&times;</span>
+            </div>
+            <div style="width: 90vw; max-width: 1000px; height: 80vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
+                ${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}
+                <iframe src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            overlay.querySelector('div:nth-child(2)').style.transform = 'scale(1)';
         });
     },
 
@@ -86,25 +118,23 @@ Workspace.Feed = {
             const nomeMinusculo = (anexo.nome || '').toLowerCase();
             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || 
                              nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || 
-                             nomeMinusculo.endsWith('.pptx');
+                             nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
 
-            const attrDownload = ehOffice ? `download="${anexo.nome}"` : '';
-
-            // 📸 AJUSTE AQUI: Fim do corte, imagem inteira e com chamada para o Lightbox!
             if (anexo.tipo.includes('image')) {
                 html += `<img src="${urlCorrigida}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${urlCorrigida}')" title="Clique para ampliar">`;
             } else if (anexo.tipo.includes('video')) {
                 html += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
-                let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📎';
-                let textoAcao = ehOffice ? 'Baixar ⬇️' : 'Abrir ↗';
+                // Modificado para transformar os links de ficheiros em Botões que chamam o Modal Interno!
+                let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
+                let textoAcao = 'Ler Documento ↗';
 
                 html += `
-                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; text-decoration:none; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'" onmouseout="this.style.background='#f4f6f7'">
+                    <div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'">
                         <span style="font-size:24px;">${icone}</span>
                         <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span>
                         <span style="color:#3498db; font-size:12px; font-weight:bold;">${textoAcao}</span>
-                    </a>`;
+                    </div>`;
             }
         });
         
