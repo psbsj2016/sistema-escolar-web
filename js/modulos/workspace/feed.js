@@ -3,7 +3,7 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Feed = {
     postsCache: [],
-    comentariosAbertos: new Set(), // 🧠 Memória: Guarda quais comentários estão abertos
+    comentariosAbertos: new Set(),
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -40,6 +40,39 @@ Workspace.Feed = {
         }
     },
 
+    // 🌟 NOVA FUNÇÃO: VISUALIZADOR DE IMAGENS INTERNO (LIGHTBOX)
+    abrirImagemInteira: (url) => {
+        const id = 'ws-lightbox-modal';
+        if(document.getElementById(id)) document.getElementById(id).remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = id;
+        // Fundo escuro com desfoque (blur)
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
+        
+        // Estrutura da Imagem Ampliada
+        overlay.innerHTML = `
+            <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">&times;</span>
+            <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out;">
+        `;
+        
+        document.body.appendChild(overlay);
+
+        // Dispara a animação visual de entrada
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            overlay.querySelector('img').style.transform = 'scale(1)';
+        });
+
+        // Fechar ao clicar fora da imagem (no fundo escuro)
+        overlay.addEventListener('click', (e) => {
+            if(e.target === overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(()=> overlay.remove(), 200);
+            }
+        });
+    },
+
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         let html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">';
@@ -57,10 +90,11 @@ Workspace.Feed = {
 
             const attrDownload = ehOffice ? `download="${anexo.nome}"` : '';
 
+            // 📸 AJUSTE AQUI: Fim do corte, imagem inteira e com chamada para o Lightbox!
             if (anexo.tipo.includes('image')) {
-                html += `<a href="${urlCorrigida}" target="_blank" style="flex:1; min-width:150px; max-width:250px;"><img src="${urlCorrigida}" style="width:100%; border-radius:8px; border:1px solid #eee; object-fit:cover; aspect-ratio:16/9; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"></a>`;
+                html += `<img src="${urlCorrigida}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${urlCorrigida}')" title="Clique para ampliar">`;
             } else if (anexo.tipo.includes('video')) {
-                html += `<video controls style="width:100%; max-width:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
+                html += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📎';
                 let textoAcao = ehOffice ? 'Baixar ⬇️' : 'Abrir ↗';
@@ -168,7 +202,6 @@ Workspace.Feed = {
         container.innerHTML = html;
     },
 
-    // ⚡ LÓGICA OTIMISTA PARA CURTIR / NÃO CURTIR
     reagir: async (postId, tipoDesejado) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if (!post) return;
@@ -180,12 +213,10 @@ Workspace.Feed = {
         const jaCurtiu = post.likes.includes(meuId);
         const jaNaoCurtiu = post.dislikes.includes(meuId);
 
-        // Lógica de Toggle: Se clicar no "Like" e já tiver curtido, remove o "Like" (manda 'none')
         let acaoFinal = tipoDesejado;
         if (tipoDesejado === 'like' && jaCurtiu) acaoFinal = 'none';
         if (tipoDesejado === 'dislike' && jaNaoCurtiu) acaoFinal = 'none';
 
-        // 1️⃣ ATUALIZAÇÃO VISUAL INSTANTÂNEA (Sem recarregar!)
         post.likes = post.likes.filter(id => id !== meuId);
         post.dislikes = post.dislikes.filter(id => id !== meuId);
 
@@ -213,24 +244,20 @@ Workspace.Feed = {
             countDislike.innerText = post.dislikes.length;
         }
 
-        // 2️⃣ MANDA PARA O SERVIDOR EM SILÊNCIO
         try {
             await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
                 userId: meuId,
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login,
                 tipo: acaoFinal
             });
-            // Não chamamos carregarPosts() para não piscar a tela!
         } catch (e) {
             if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha ao registar interação na base de dados.", "warning");
         }
     },
 
-    // ⚡ LÓGICA OTIMISTA PARA APAGAR POST
     apagarPost: async (postId) => {
         if (!confirm("Tem a certeza que deseja apagar esta publicação?")) return;
         
-        // Esconde imediatamente o post do ecrã!
         const postCard = document.getElementById(`post-${postId}`);
         if(postCard) postCard.style.display = 'none';
 
@@ -239,7 +266,7 @@ Workspace.Feed = {
             if (res && res.success) {
                 if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação removida com sucesso!", "success");
             } else {
-                if(postCard) postCard.style.display = 'block'; // Voltou atrás se der erro
+                if(postCard) postCard.style.display = 'block'; 
                 if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
             }
         } catch (e) {
@@ -248,15 +275,12 @@ Workspace.Feed = {
         }
     },
 
-    // ⚡ LÓGICA OTIMISTA PARA APAGAR COMENTÁRIOS
     apagarComentario: async (postId, comentarioId) => {
         if (!confirm("Apagar este comentário?")) return;
         
-        // Esconde imediatamente
         const comEl = document.getElementById(`comentario-${comentarioId}`);
         if (comEl) comEl.style.display = 'none';
 
-        // Atualiza contador
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if (post && post.comentarios) {
             post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
@@ -267,7 +291,7 @@ Workspace.Feed = {
         try {
             const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
             if (!res || !res.success) {
-                if (comEl) comEl.style.display = 'flex'; // Reverte se der erro
+                if (comEl) comEl.style.display = 'flex';
             }
         } catch (e) {
             if (comEl) comEl.style.display = 'flex';
@@ -289,7 +313,6 @@ Workspace.Feed = {
         }
     },
 
-    // ⚡ LÓGICA OTIMISTA PARA ENVIAR COMENTÁRIOS
     enviarComentario: async (postId) => {
         const input = document.getElementById(`input-comentario-${postId}`);
         if(!input) return;
@@ -310,7 +333,6 @@ Workspace.Feed = {
             if(res && res.success) {
                 input.value = '';
                 
-                // 1️⃣ Cria o visual do comentário na hora
                 const listaComentarios = document.getElementById(`lista-comentarios-${postId}`);
                 const countComment = document.getElementById(`count-comment-${postId}`);
                 
@@ -336,11 +358,9 @@ Workspace.Feed = {
                     <span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️</span>
                 </div>`;
 
-                // Insere no fim da lista e desliza para baixo
                 listaComentarios.insertAdjacentHTML('beforeend', novoComentarioHTML);
                 listaComentarios.scrollTop = listaComentarios.scrollHeight;
 
-                // Atualiza o contador de bolha
                 if(countComment) {
                     const post = Workspace.Feed.postsCache.find(p => p.id === postId);
                     if(post) {
