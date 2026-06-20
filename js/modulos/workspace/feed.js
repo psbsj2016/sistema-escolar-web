@@ -69,7 +69,7 @@ Workspace.Feed = {
         });
     },
 
-    // 🌟 NOVO: VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT)
+    // 🌟 VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT) MÁXIMO ECRÃ
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -80,18 +80,17 @@ Workspace.Feed = {
 
         let iframeSrc = url;
         
-        // Se for Office, usamos o motor de visualização da Microsoft conectado ao seu ficheiro na Cloudinary
         if (ehOffice) {
             const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
             iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`;
         }
 
+        // 🚀 Ajustado para 95vw (largura) e 90vh (altura), limpando o botão de download
         overlay.innerHTML = `
-            <div style="width: 90vw; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 5px;">
-                <a href="${url}" download="${nome}" target="_blank" style="background: #3498db; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">⬇️ Baixar Ficheiro Oficial</a>
+            <div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px;">
                 <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">&times;</span>
             </div>
-            <div style="width: 90vw; max-width: 1000px; height: 80vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
+            <div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
                 ${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}
                 <iframe src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
             </div>
@@ -125,7 +124,6 @@ Workspace.Feed = {
             } else if (anexo.tipo.includes('video')) {
                 html += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
             } else {
-                // Modificado para transformar os links de ficheiros em Botões que chamam o Modal Interno!
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
                 let textoAcao = 'Ler Documento ↗';
 
