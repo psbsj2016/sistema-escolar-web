@@ -89,14 +89,11 @@ Workspace.Feed = {
         
         const html = posts.map(p => {
             const dataFormatada = new Date(p.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
-            
-            // 📸 Foto de Perfil do Autor do Post
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
-            
             const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
-            const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar Post</span>` : '';
+            const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` : '';
 
             let destinoBadge = p.destino === 'global' 
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
@@ -106,16 +103,15 @@ Workspace.Feed = {
             const dislikesArr = Array.isArray(p.dislikes) ? p.dislikes : [];
             const euCurti = likesArr.includes(meuId);
             const euNaoCurti = dislikesArr.includes(meuId);
-            const corLike = euCurti ? '#27ae60' : '#666';
-            const corDislike = euNaoCurti ? '#e74c3c' : '#666';
+            
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
             return `
-                <div class="ws-card" style="animation: fadeIn 0.4s ease;">
+                <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
                         ${avatarPost}
                         <div>
-                            <div style="font-weight:700; color:#2c3e50; font-size:15px;">${p.autorNome} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
+                            <div style="font-weight:700; color:#2c3e50; font-size:15px;">${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
                             <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${dataFormatada} ${destinoBadge}</div>
                         </div>
                     </div>
@@ -124,24 +120,32 @@ Workspace.Feed = {
                     ${Workspace.Feed.renderizarAnexos(p.anexos)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; gap:15px; color:#666; font-size:13px; font-weight:600;">
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corLike}; font-weight:${euCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euCurti ? 'none' : 'like'}')">👍 Curtir (${likesArr.length})</span>
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; color:${corDislike}; font-weight:${euNaoCurti ? 'bold' : 'normal'}; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', '${euNaoCurti ? 'none' : 'dislike'}')">👎 Não Curtir (${dislikesArr.length})</span>
-                            <span style="cursor:pointer; display:flex; align-items:center; gap:5px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#666'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">💬 Comentar (${p.comentarios ? p.comentarios.length : 0})</span>
+                        
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button id="btn-like-${p.id}" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
+                                👍 <span id="count-like-${p.id}">${likesArr.length}</span>
+                            </button>
+                            
+                            <button id="btn-dislike-${p.id}" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
+                                👎 <span id="count-dislike-${p.id}">${dislikesArr.length}</span>
+                            </button>
+                            
+                            <button style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
+                                💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
+                            </button>
                         </div>
+                        
                         ${btnApagar}
                     </div>
 
                     <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
-                        <div style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
+                        <div id="lista-comentarios-${p.id}" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
                             ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
-                                
-                                // 📸 Foto de Perfil do Comentário
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
                                 return `
-                                <div style="background: #f4f6f7; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start;">
+                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start;">
                                     ${avatarComentario}
                                     <div style="flex:1;">
                                         <strong style="color: #2c3e50; display:block; margin-bottom:2px;">${Workspace.Feed.limparTexto(c.autorNome)}</strong> 
@@ -153,8 +157,8 @@ Workspace.Feed = {
                             }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:13px;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
-                            <button class="ws-btn" style="padding:10px 15px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
+                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
+                            <button class="ws-btn" style="padding:10px 20px; border-radius:20px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -164,33 +168,110 @@ Workspace.Feed = {
         container.innerHTML = html;
     },
 
-    reagir: async (postId, tipo) => {
+    // ⚡ LÓGICA OTIMISTA PARA CURTIR / NÃO CURTIR
+    reagir: async (postId, tipoDesejado) => {
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if (!post) return;
+
+        const meuId = Workspace.usuario.id;
+        if(!post.likes) post.likes = [];
+        if(!post.dislikes) post.dislikes = [];
+
+        const jaCurtiu = post.likes.includes(meuId);
+        const jaNaoCurtiu = post.dislikes.includes(meuId);
+
+        // Lógica de Toggle: Se clicar no "Like" e já tiver curtido, remove o "Like" (manda 'none')
+        let acaoFinal = tipoDesejado;
+        if (tipoDesejado === 'like' && jaCurtiu) acaoFinal = 'none';
+        if (tipoDesejado === 'dislike' && jaNaoCurtiu) acaoFinal = 'none';
+
+        // 1️⃣ ATUALIZAÇÃO VISUAL INSTANTÂNEA (Sem recarregar!)
+        post.likes = post.likes.filter(id => id !== meuId);
+        post.dislikes = post.dislikes.filter(id => id !== meuId);
+
+        if (acaoFinal === 'like') post.likes.push(meuId);
+        if (acaoFinal === 'dislike') post.dislikes.push(meuId);
+
+        const btnLike = document.getElementById(`btn-like-${postId}`);
+        const btnDislike = document.getElementById(`btn-dislike-${postId}`);
+        const countLike = document.getElementById(`count-like-${postId}`);
+        const countDislike = document.getElementById(`count-dislike-${postId}`);
+
+        if (btnLike && countLike) {
+            const isLike = acaoFinal === 'like';
+            btnLike.style.background = isLike ? '#eafaf1' : '#f0f2f5';
+            btnLike.style.color = isLike ? '#27ae60' : '#555';
+            btnLike.style.border = isLike ? '1px solid #27ae60' : '1px solid transparent';
+            countLike.innerText = post.likes.length;
+        }
+
+        if (btnDislike && countDislike) {
+            const isDislike = acaoFinal === 'dislike';
+            btnDislike.style.background = isDislike ? '#fdf2f2' : '#f0f2f5';
+            btnDislike.style.color = isDislike ? '#e74c3c' : '#555';
+            btnDislike.style.border = isDislike ? '1px solid #e74c3c' : '1px solid transparent';
+            countDislike.innerText = post.dislikes.length;
+        }
+
+        // 2️⃣ MANDA PARA O SERVIDOR EM SILÊNCIO
         try {
-            const res = await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
-                userId: Workspace.usuario.id,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login, // 🔔 Passa o nome para o gatilho de notificação
-                tipo: tipo
+            await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
+                userId: meuId,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                tipo: acaoFinal
             });
-            if (res && res.success) {
-                await Workspace.Feed.carregarPosts(); 
-            }
-        } catch (e) {}
+            // Não chamamos carregarPosts() para não piscar a tela!
+        } catch (e) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha ao registar interação na base de dados.", "warning");
+        }
     },
 
+    // ⚡ LÓGICA OTIMISTA PARA APAGAR POST
     apagarPost: async (postId) => {
         if (!confirm("Tem a certeza que deseja apagar esta publicação?")) return;
+        
+        // Esconde imediatamente o post do ecrã!
+        const postCard = document.getElementById(`post-${postId}`);
+        if(postCard) postCard.style.display = 'none';
+
         try {
             const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
-            if (res && res.success) await Workspace.Feed.carregarPosts(); 
-        } catch (e) {}
+            if (res && res.success) {
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação removida com sucesso!", "success");
+            } else {
+                if(postCard) postCard.style.display = 'block'; // Voltou atrás se der erro
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
+            }
+        } catch (e) {
+            if(postCard) postCard.style.display = 'block';
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
+        }
     },
 
+    // ⚡ LÓGICA OTIMISTA PARA APAGAR COMENTÁRIOS
     apagarComentario: async (postId, comentarioId) => {
         if (!confirm("Apagar este comentário?")) return;
+        
+        // Esconde imediatamente
+        const comEl = document.getElementById(`comentario-${comentarioId}`);
+        if (comEl) comEl.style.display = 'none';
+
+        // Atualiza contador
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if (post && post.comentarios) {
+            post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
+            const countComment = document.getElementById(`count-comment-${postId}`);
+            if (countComment) countComment.innerText = post.comentarios.length;
+        }
+
         try {
             const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-            if (res && res.success) await Workspace.Feed.carregarPosts(); 
-        } catch (e) {}
+            if (!res || !res.success) {
+                if (comEl) comEl.style.display = 'flex'; // Reverte se der erro
+            }
+        } catch (e) {
+            if (comEl) comEl.style.display = 'flex';
+        }
     },
 
     toggleComentarios: (id) => {
@@ -198,16 +279,17 @@ Workspace.Feed = {
         if(box) {
             if (box.style.display === 'none') {
                 box.style.display = 'block';
-                Workspace.Feed.comentariosAbertos.add(id); // Guarda na memória que abriu
+                Workspace.Feed.comentariosAbertos.add(id); 
                 const input = document.getElementById(`input-comentario-${id}`);
                 if(input) input.focus();
             } else {
                 box.style.display = 'none';
-                Workspace.Feed.comentariosAbertos.delete(id); // Esquece
+                Workspace.Feed.comentariosAbertos.delete(id); 
             }
         }
     },
 
+    // ⚡ LÓGICA OTIMISTA PARA ENVIAR COMENTÁRIOS
     enviarComentario: async (postId) => {
         const input = document.getElementById(`input-comentario-${postId}`);
         if(!input) return;
@@ -227,10 +309,53 @@ Workspace.Feed = {
 
             if(res && res.success) {
                 input.value = '';
-                Workspace.Feed.comentariosAbertos.add(postId); // Mantém aberto
-                await Workspace.Feed.carregarPosts(); 
+                
+                // 1️⃣ Cria o visual do comentário na hora
+                const listaComentarios = document.getElementById(`lista-comentarios-${postId}`);
+                const countComment = document.getElementById(`count-comment-${postId}`);
+                
+                const c = {
+                    id: res.comentarioId || Date.now().toString(),
+                    autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                    texto: texto
+                };
+
+                const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
+                
+                if(listaComentarios.innerHTML.includes('Seja o primeiro')) {
+                    listaComentarios.innerHTML = '';
+                }
+
+                const novoComentarioHTML = `
+                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease;">
+                    ${avatarComentario}
+                    <div style="flex:1;">
+                        <strong style="color: #2c3e50; display:block; margin-bottom:2px;">${Workspace.Feed.limparTexto(c.autorNome)}</strong> 
+                        <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                    </div>
+                    <span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️</span>
+                </div>`;
+
+                // Insere no fim da lista e desliza para baixo
+                listaComentarios.insertAdjacentHTML('beforeend', novoComentarioHTML);
+                listaComentarios.scrollTop = listaComentarios.scrollHeight;
+
+                // Atualiza o contador de bolha
+                if(countComment) {
+                    const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                    if(post) {
+                        if(!post.comentarios) post.comentarios = [];
+                        post.comentarios.push(c);
+                        countComment.innerText = post.comentarios.length;
+                    }
+                }
+                Workspace.Feed.comentariosAbertos.add(postId);
+            } else {
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao enviar comentário.", "error");
             }
-        } catch(e) {} finally {
+        } catch(e) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
+        } finally {
             if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
         }
     },
@@ -277,7 +402,7 @@ Workspace.Feed = {
                 const destinoNome = selDestino ? selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '') : 'Público Geral';
 
                 if (!texto && anexosLocais.length === 0) {
-                    alert("Escreva algo ou anexe um ficheiro primeiro.");
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Escreva algo ou anexe um ficheiro primeiro.", "warning");
                     return;
                 }
 
@@ -313,13 +438,14 @@ Workspace.Feed = {
                     if (postRes && postRes.success) {
                         inputTexto.value = '';
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
+                        if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
                         await Workspace.Feed.carregarPosts(); 
                     } else {
                         throw new Error("Falha ao gravar publicação.");
                     }
 
                 } catch (e) {
-                    alert("Falha na publicação.");
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha na publicação.", "error");
                 } finally {
                     novoBtn.innerText = "Publicar";
                     novoBtn.disabled = false;
