@@ -13,6 +13,16 @@ Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, // 🧠 Memória global de fotos da escola
 
+    // 🛡️ MOTOR INTELIGENTE DE AVISOS (À Prova de Falhas)
+    mostrarAviso: (mensagem, tipo = 'info') => {
+        // Tenta usar o nosso Toast Premium, se falhar, usa o alerta clássico como plano B!
+        if (window.Toast && typeof window.Toast.show === 'function') {
+            window.Toast.show(mensagem, tipo);
+        } else {
+            alert(mensagem);
+        }
+    },
+
     api: async (endpoint, method = 'GET', body = null) => {
         const options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
         if (body) options.body = JSON.stringify(body);
@@ -67,7 +77,8 @@ Object.assign(Workspace, {
     fazerLogin: async () => {
         const login = document.getElementById('ws-login-user').value.trim();
         const pass = document.getElementById('ws-login-pass').value.trim();
-        if(!login || !pass) return alert("Preencha utilizador e senha");
+        
+        if(!login || !pass) return Workspace.mostrarAviso("Preencha utilizador e senha", "warning");
 
         const btn = document.querySelector('#ws-login-screen button');
         const txt = btn.innerText; 
@@ -79,9 +90,15 @@ Object.assign(Workspace, {
             if(res && res.success) {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(res.usuario));
                 Workspace.init(); 
-            } else alert(res.error || "Login ou senha incorretos");
-        } catch(e) { alert("Erro de comunicação."); } 
-        finally { btn.innerText = txt; btn.disabled = false; }
+            } else {
+                Workspace.mostrarAviso(res.error || "Login ou senha incorretos", "error");
+            }
+        } catch(e) { 
+            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
     // ==========================================
@@ -143,7 +160,7 @@ Object.assign(Workspace, {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) return alert("A imagem é muito pesada. Escolha uma foto até 5MB.");
+        if (file.size > 5 * 1024 * 1024) return Workspace.mostrarAviso("A imagem é muito pesada. Escolha uma foto até 5MB.", "warning");
 
         const loading = document.getElementById('ws-avatar-loading');
         loading.style.display = 'block';
@@ -170,13 +187,18 @@ Object.assign(Workspace, {
                 Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = novaFotoUrl;
 
                 Workspace.abrirModalPerfil(); 
+                Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
                 
                 // Recarrega ecrãs em tempo real
                 if (Workspace.Feed) Workspace.Feed.carregarPosts();
                 if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) Workspace.Sidebar.carregarMensagensChat();
             }
-        } catch (e) { alert("Falha ao guardar a foto. Tente novamente."); } 
-        finally { loading.style.display = 'none'; event.target.value = ''; }
+        } catch (e) { 
+            Workspace.mostrarAviso("Falha ao guardar a foto. Tente novamente.", "error"); 
+        } finally { 
+            loading.style.display = 'none'; 
+            event.target.value = ''; 
+        }
     },
 
     // ==========================================
@@ -221,22 +243,33 @@ Object.assign(Workspace, {
     },
 
     salvarNovaSenha: async () => {
-        // ... (Mantém a sua lógica intacta)
         const senhaAtual = document.getElementById('ws-senha-atual').value;
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
-        if (!senhaAtual || !novaSenha || !confirmaSenha) return alert("Preencha todos os campos.");
-        if (novaSenha !== confirmaSenha) return alert("A nova senha e a confirmação não coincidem.");
+        
+        if (!senhaAtual || !novaSenha || !confirmaSenha) return Workspace.mostrarAviso("Preencha todos os campos.", "warning");
+        if (novaSenha !== confirmaSenha) return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
+        
         const btn = document.getElementById('ws-btn-salvar-senha');
-        const txt = btn.innerText; btn.innerText = "⏳ A gravar..."; btn.disabled = true;
+        const txt = btn.innerText; 
+        btn.innerText = "⏳ A gravar..."; 
+        btn.disabled = true;
+        
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { id: Workspace.usuario.id, senhaAtual, novaSenha });
             if (res && res.success) {
-                alert("✅ Senha atualizada com sucesso! Por favor, entre novamente.");
+                Workspace.mostrarAviso("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
                 document.getElementById('ws-senha-modal').style.display = 'none';
-                Workspace.logout();
-            } else alert(res.error || "Erro ao atualizar a senha.");
-        } catch (e) { alert("Erro de comunicação."); } finally { btn.innerText = txt; btn.disabled = false; }
+                setTimeout(() => Workspace.logout(), 2500);
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao atualizar a senha.", "error");
+            }
+        } catch (e) { 
+            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
     voltarAoFeed: () => {
