@@ -11,6 +11,43 @@ Workspace.Feed = {
         Workspace.Feed.configurarEventosCriacao();
     },
 
+    // ⏱️ NOVA FUNÇÃO: Calcula o Tempo Relativo (Estilo Redes Sociais)
+    calcularTempoRelativo: (dataString) => {
+        if (!dataString) return '';
+        
+        const dataPost = new Date(dataString);
+        const agora = new Date();
+        const diferencaSegundos = Math.floor((agora - dataPost) / 1000);
+
+        if (diferencaSegundos < 60) {
+            return 'Agora mesmo';
+        }
+        
+        const diferencaMinutos = Math.floor(diferencaSegundos / 60);
+        if (diferencaMinutos < 60) {
+            return `Há ${diferencaMinutos} min`;
+        }
+        
+        const diferencaHoras = Math.floor(diferencaMinutos / 60);
+        if (diferencaHoras < 24) {
+            return `Há ${diferencaHoras} h`;
+        }
+        
+        const diferencaDias = Math.floor(diferencaHoras / 24);
+        if (diferencaDias === 1) {
+            const horas = dataPost.getHours().toString().padStart(2, '0');
+            const minutos = dataPost.getMinutes().toString().padStart(2, '0');
+            return `Ontem às ${horas}:${minutos}`;
+        }
+        
+        if (diferencaDias < 7) {
+            return `Há ${diferencaDias} dias`;
+        }
+        
+        // Se for mais antigo que uma semana, mostra dia e mês (ex: 15 de jun)
+        return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+    },
+
     carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
@@ -69,7 +106,7 @@ Workspace.Feed = {
         });
     },
 
-    // 🌟 VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT) MÁXIMO ECRÃ
+    // 🌟 VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -85,7 +122,6 @@ Workspace.Feed = {
             iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`;
         }
 
-        // 🚀 Ajustado para 95vw (largura) e 90vh (altura), limpando o botão de download
         overlay.innerHTML = `
             <div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px;">
                 <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">&times;</span>
@@ -150,7 +186,9 @@ Workspace.Feed = {
         const meuId = Workspace.usuario.id;
         
         const html = posts.map(p => {
-            const dataFormatada = new Date(p.dataCriacao).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+            // 🚀 AQUI ACONTECE A MAGIA DO TEMPO RELATIVO
+            const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
+            
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
             const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
@@ -174,7 +212,7 @@ Workspace.Feed = {
                         ${avatarPost}
                         <div>
                             <div style="font-weight:700; color:#2c3e50; font-size:15px;">${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
-                            <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${dataFormatada} ${destinoBadge}</div>
+                            <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${tempoAmigavel} ${destinoBadge}</div>
                         </div>
                     </div>
                     
@@ -203,6 +241,7 @@ Workspace.Feed = {
                     <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
                         <div id="lista-comentarios-${p.id}" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
                             ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => {
+                                const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
@@ -210,7 +249,10 @@ Workspace.Feed = {
                                 <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start;">
                                     ${avatarComentario}
                                     <div style="flex:1;">
-                                        <strong style="color: #2c3e50; display:block; margin-bottom:2px;">${Workspace.Feed.limparTexto(c.autorNome)}</strong> 
+                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                            <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                                            <span style="font-size:10px; color:#aaa;">${tempoComentario}</span>
+                                        </div>
                                         <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
                                     </div>
                                     ${ehDonoComentario ? `<span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️</span>` : ''}
