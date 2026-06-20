@@ -1,6 +1,9 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
+// 🌟 IMPORTAÇÃO CORRETA PARA O VITE (Fim do erro 404!)
+import './toast.js'; 
+
 import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
@@ -15,11 +18,10 @@ Object.assign(Workspace, {
 
     // 🛡️ MOTOR INTELIGENTE DE AVISOS (À Prova de Falhas)
     mostrarAviso: (mensagem, tipo = 'info') => {
-        // Tenta usar o nosso Toast Premium, se falhar, usa o alerta clássico como plano B!
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo);
         } else {
-            alert(mensagem);
+            alert(mensagem); // Salva-vidas caso a internet falhe
         }
     },
 
@@ -101,9 +103,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // ==========================================
-    // 🎨 MOTOR DE AVATARES GLOBAIS
-    // ==========================================
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
@@ -116,9 +115,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // ==========================================
-    // 🍔 MESTRE DO MENU HAMBÚRGUER
-    // ==========================================
     toggleMenuPrincipal: () => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (!dropdown) return;
@@ -189,7 +185,6 @@ Object.assign(Workspace, {
                 Workspace.abrirModalPerfil(); 
                 Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
                 
-                // Recarrega ecrãs em tempo real
                 if (Workspace.Feed) Workspace.Feed.carregarPosts();
                 if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) Workspace.Sidebar.carregarMensagensChat();
             }
@@ -201,24 +196,21 @@ Object.assign(Workspace, {
         }
     },
 
-    // ==========================================
-    // 📝 PÁGINA DE TAREFAS (ROTEADOR DE PERFIS)
-    // ==========================================
     abrirPaginaTarefas: () => {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none'; 
         document.getElementById('ws-main-container').style.display = 'none'; 
         document.getElementById('ws-config-container').style.display = 'none'; 
 
-        // 🛡️ DESVIO DE TRÁFEGO: Aluno vs Professor
         if (Workspace.usuario.tipo === 'Aluno') {
-            document.getElementById('ws-tarefas-professor-container').style.display = 'none';
+            const pProf = document.getElementById('ws-tarefas-professor-container');
+            if(pProf) pProf.style.display = 'none';
             document.getElementById('ws-tarefas-container').style.display = 'block';
             if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         } else {
-            // Professor, Gestor ou Secretaria
-            document.getElementById('ws-tarefas-container').style.display = 'none';
+            const pAlun = document.getElementById('ws-tarefas-container');
+            if(pAlun) pAlun.style.display = 'none';
             document.getElementById('ws-tarefas-professor-container').style.display = 'block';
-            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); // Reseta para os dois botões
+            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); 
         }
     },
 
@@ -226,7 +218,6 @@ Object.assign(Workspace, {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none';
         document.getElementById('ws-main-container').style.display = 'none';
         
-        // Esconde tarefas de quem quer que seja
         const tProf = document.getElementById('ws-tarefas-professor-container');
         const tAlun = document.getElementById('ws-tarefas-container');
         if(tProf) tProf.style.display = 'none';
@@ -247,7 +238,7 @@ Object.assign(Workspace, {
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
         
-        if (!senhaAtual || !novaSenha || !confirmaSenha) return Workspace.mostrarAviso("Preencha todos os campos.", "warning");
+        if (!senhaAtual || !novaSenha || !confirmaSenha) return Workspace.mostrarAviso("Preencha todos os campos para continuar.", "warning");
         if (novaSenha !== confirmaSenha) return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
         
         const btn = document.getElementById('ws-btn-salvar-senha');

@@ -13,7 +13,7 @@ Workspace.Sidebar = {
         await Workspace.Sidebar.carregarTarefas();
     },
 
-    // Limpa textos para evitar problemas de segurança e quebras no HTML
+    // Limpa textos para evitar problemas de segurança
     escapeHTML: (str) => {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -51,7 +51,7 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // Se for aluno, filtra apenas as turmas a que ele pertence
+            // Filtro para alunos
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
@@ -84,7 +84,6 @@ Workspace.Sidebar = {
                  return;
             }
 
-            // Constrói o visual do menu lateral de fóruns
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
@@ -198,7 +197,6 @@ Workspace.Sidebar = {
 
             let tarefas = eventos.filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
 
-            // Filtro rigoroso para alunos: Apenas veem as tarefas da sua própria turma
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
@@ -225,7 +223,6 @@ Workspace.Sidebar = {
             tarefas.sort((a, b) => new Date(a.data) - new Date(b.data));
             Workspace.Sidebar.tarefasCache = tarefas; 
 
-            // Constrói o layout visual (Cards)
             let html = '';
             tarefas.forEach(t => {
                 const dataObj = new Date(t.data);
@@ -378,7 +375,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // Envia o ficheiro com o trabalho do aluno para o backend
     enviarTarefa: async () => {
         const eventoId = document.getElementById('ws-tarefa-id').value;
         const fileInput = document.getElementById('ws-tarefa-arquivo');
@@ -510,10 +506,8 @@ Workspace.Sidebar = {
     },
 
     apagarTarefa: async (id) => {
-        // Exceção didática: mantemos o confirm() clássico porque uma ação que destrói
-        // ficheiros e trabalhos já entregues exige um clique de interrupção forçada.
+        // Mantemos o confirm() porque apagar é uma ação irreversível
         if(!confirm("⚠️ Tem a certeza que deseja APAGAR esta tarefa?\nTodos os trabalhos já entregues pelos alunos também serão eliminados!")) return;
-        
         try {
             const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
             if(res && res.success) {
