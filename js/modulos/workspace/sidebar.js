@@ -4,22 +4,19 @@ window.Workspace = window.Workspace || {};
 Workspace.Sidebar = {
     turmaIdAberta: null,
     radarChat: null,
-    tarefasCache: [], // Guarda as tarefas na memória para o modal funcionar rápido
+    tarefasCache: [],
 
-    // Inicializa os componentes da barra lateral
     init: async () => {
         console.log("📊 Motor do Menu Lateral iniciado.");
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
     },
 
-    // Limpa textos para evitar problemas de segurança
     escapeHTML: (str) => {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     },
 
-    // Abre e fecha a lista de fóruns/turmas
     toggleTurmas: () => {
         const lista = document.getElementById('ws-lista-turmas');
         const icone = document.getElementById('ws-icon-turmas');
@@ -51,7 +48,6 @@ Workspace.Sidebar = {
                 return;
             }
 
-            // Filtro para alunos
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
@@ -505,20 +501,68 @@ Workspace.Sidebar = {
         }
     },
 
-    apagarTarefa: async (id) => {
-        // Mantemos o confirm() porque apagar é uma ação irreversível
-        if(!confirm("⚠️ Tem a certeza que deseja APAGAR esta tarefa?\nTodos os trabalhos já entregues pelos alunos também serão eliminados!")) return;
-        try {
-            const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
-            if(res && res.success) {
-                Workspace.mostrarAviso("Tarefa removida com sucesso!", "success");
-                Workspace.Sidebar.abrirPainelTarefasRecebidas(); 
-            } else {
-                Workspace.mostrarAviso("Erro ao apagar tarefa.", "error");
+    // 🌟 NOVA FUNÇÃO: MODAL DE CONFIRMAÇÃO LÚDICO E PREMIUM
+    mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
+        const id = 'ws-custom-confirm-modal';
+        if(document.getElementById(id)) document.getElementById(id).remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = id;
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10005; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); opacity:0; transition: opacity 0.2s;";
+        
+        overlay.innerHTML = `
+            <div style="background:white; padding:25px; border-radius:16px; width:90%; max-width:320px; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.3); transform:scale(0.9); transition: transform 0.2s;">
+                <div style="font-size:45px; margin-bottom:10px;">🗑️</div>
+                <h3 style="margin:0 0 10px 0; color:#2c3e50; font-size:18px;">${titulo}</h3>
+                <p style="color:#7f8c8d; font-size:13px; margin:0 0 25px 0; line-height:1.5;">${mensagem}</p>
+                <div style="display:flex; gap:10px;">
+                    <button id="ws-confirm-btn-nao" style="flex:1; padding:12px; border:none; background:#f0f2f5; color:#555; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px; transition:0.2s;" onmouseover="this.style.background='#e2e6ea'" onmouseout="this.style.background='#f0f2f5'">Cancelar</button>
+                    <button id="ws-confirm-btn-sim" style="flex:1; padding:12px; border:none; background:#e74c3c; color:white; border-radius:8px; font-weight:bold; cursor:pointer; font-size:13px; transition:0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">Sim, Apagar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Dispara a animação visual de entrada
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            overlay.firstElementChild.style.transform = 'scale(1)';
+        });
+
+        // Lógica de fecho com animação
+        const fechar = () => {
+            overlay.style.opacity = '0';
+            overlay.firstElementChild.style.transform = 'scale(0.9)';
+            setTimeout(() => overlay.remove(), 200);
+        };
+
+        document.getElementById('ws-confirm-btn-nao').onclick = fechar;
+        document.getElementById('ws-confirm-btn-sim').onclick = () => {
+            fechar(); // Fecha o modal e...
+            callbackSim(); // ...executa a remoção na BD
+        };
+    },
+
+    apagarTarefa: (id) => {
+        // Dispara o novo Modal Premium em vez do Pop-up nativo feio!
+        Workspace.Sidebar.mostrarConfirmacao(
+            "Apagar Tarefa?",
+            "Esta ação é irreversível. Todos os trabalhos entregues pelos alunos também serão destruídos. Tem a certeza?",
+            async () => {
+                try {
+                    const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
+                    if(res && res.success) {
+                        // Se deu certo, mostra o Toast verde por cima!
+                        Workspace.mostrarAviso("Tarefa removida com sucesso!", "success");
+                        Workspace.Sidebar.abrirPainelTarefasRecebidas(); 
+                    } else {
+                        Workspace.mostrarAviso("Erro ao apagar tarefa.", "error");
+                    }
+                } catch(e) { 
+                    Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
+                }
             }
-        } catch(e) { 
-            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
-        }
+        );
     },
 
     editarTarefaInstrucoes: (id) => {
