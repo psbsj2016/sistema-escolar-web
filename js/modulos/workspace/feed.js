@@ -7,11 +7,39 @@ Workspace.Feed = {
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
+        Workspace.Feed.injetarCSSSkeleton(); // 💉 Prepara as animações de carregamento
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
     },
 
-    // ⏱️ NOVA FUNÇÃO: Calcula o Tempo Relativo (Estilo Redes Sociais)
+    // 🎨 NOVA FUNÇÃO: Injeta o design Premium do Skeleton Loading
+    injetarCSSSkeleton: () => {
+        if (!document.getElementById('ws-skeleton-styles')) {
+            const style = document.createElement('style');
+            style.id = 'ws-skeleton-styles';
+            style.innerHTML = `
+                @keyframes skeleton-shimmer {
+                    0% { background-position: -468px 0; }
+                    100% { background-position: 468px 0; }
+                }
+                .skeleton-box {
+                    background: #f6f7f8;
+                    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+                    background-repeat: no-repeat;
+                    background-size: 800px 100%;
+                    animation-duration: 1.5s;
+                    animation-fill-mode: forwards;
+                    animation-iteration-count: infinite;
+                    animation-name: skeleton-shimmer;
+                    animation-timing-function: linear;
+                    border-radius: 4px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    },
+
+    // ⏱️ FUNÇÃO: Calcula o Tempo Relativo
     calcularTempoRelativo: (dataString) => {
         if (!dataString) return '';
         
@@ -19,19 +47,13 @@ Workspace.Feed = {
         const agora = new Date();
         const diferencaSegundos = Math.floor((agora - dataPost) / 1000);
 
-        if (diferencaSegundos < 60) {
-            return 'Agora mesmo';
-        }
+        if (diferencaSegundos < 60) return 'Agora mesmo';
         
         const diferencaMinutos = Math.floor(diferencaSegundos / 60);
-        if (diferencaMinutos < 60) {
-            return `Há ${diferencaMinutos} min`;
-        }
+        if (diferencaMinutos < 60) return `Há ${diferencaMinutos} min`;
         
         const diferencaHoras = Math.floor(diferencaMinutos / 60);
-        if (diferencaHoras < 24) {
-            return `Há ${diferencaHoras} h`;
-        }
+        if (diferencaHoras < 24) return `Há ${diferencaHoras} h`;
         
         const diferencaDias = Math.floor(diferencaHoras / 24);
         if (diferencaDias === 1) {
@@ -40,11 +62,8 @@ Workspace.Feed = {
             return `Ontem às ${horas}:${minutos}`;
         }
         
-        if (diferencaDias < 7) {
-            return `Há ${diferencaDias} dias`;
-        }
+        if (diferencaDias < 7) return `Há ${diferencaDias} dias`;
         
-        // Se for mais antigo que uma semana, mostra dia e mês (ex: 15 de jun)
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
@@ -53,7 +72,25 @@ Workspace.Feed = {
         if (!container) return;
 
         if(Workspace.Feed.postsCache.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A procurar publicações na nuvem... ⏳</div>';
+            // 🦴 SKELETON LOADING (Adeus "Aguarde...⏳")
+            let skeletonHTML = '';
+            for(let i=0; i<3; i++) {
+                skeletonHTML += `
+                <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%; flex-shrink:0;"></div>
+                        <div style="flex: 1;">
+                            <div class="skeleton-box" style="width: 35%; height: 12px; margin-bottom: 8px;"></div>
+                            <div class="skeleton-box" style="width: 20%; height: 10px;"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-box" style="width: 100%; height: 12px; margin-bottom: 8px;"></div>
+                    <div class="skeleton-box" style="width: 90%; height: 12px; margin-bottom: 8px;"></div>
+                    <div class="skeleton-box" style="width: 60%; height: 12px; margin-bottom: 20px;"></div>
+                    <div class="skeleton-box" style="width: 100%; height: 180px; border-radius: 8px;"></div>
+                </div>`;
+            }
+            container.innerHTML = skeletonHTML;
         }
 
         try {
@@ -77,7 +114,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🌟 VISUALIZADOR DE IMAGENS
     abrirImagemInteira: (url) => {
         const id = 'ws-lightbox-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -106,7 +142,6 @@ Workspace.Feed = {
         });
     },
 
-    // 🌟 VISUALIZADOR DE DOCUMENTOS (PDF, Word, Excel, PPT)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -186,9 +221,7 @@ Workspace.Feed = {
         const meuId = Workspace.usuario.id;
         
         const html = posts.map(p => {
-            // 🚀 AQUI ACONTECE A MAGIA DO TEMPO RELATIVO
             const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
-            
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
             const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
 
@@ -422,7 +455,10 @@ Workspace.Feed = {
                 <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease;">
                     ${avatarComentario}
                     <div style="flex:1;">
-                        <strong style="color: #2c3e50; display:block; margin-bottom:2px;">${Workspace.Feed.limparTexto(c.autorNome)}</strong> 
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                            <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                            <span style="font-size:10px; color:#aaa;">Agora mesmo</span>
+                        </div>
                         <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
                     </div>
                     <span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️</span>
@@ -529,6 +565,9 @@ Workspace.Feed = {
                         inputTexto.value = '';
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
                         if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
+                        
+                        // Volta o Skeleton antes de carregar
+                        Workspace.Feed.postsCache = [];
                         await Workspace.Feed.carregarPosts(); 
                     } else {
                         throw new Error("Falha ao gravar publicação.");
