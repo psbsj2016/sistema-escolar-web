@@ -11,7 +11,7 @@ const Workspace = window.Workspace;
 
 Object.assign(Workspace, {
     usuario: null,
-    avatarsCache: {}, // 🧠 Memória global de fotos da escola
+    avatarsCache: {}, 
 
     api: async (endpoint, method = 'GET', body = null) => {
         const options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
@@ -46,7 +46,6 @@ Object.assign(Workspace, {
             boxCriarPost.style.display = 'block';
         }
 
-        // 📸 Carrega as fotos de todo o mundo numa fração de segundo
         Workspace.avatarsCache = await Workspace.api('/workspace/avatars', 'GET') || {};
         Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
 
@@ -67,7 +66,9 @@ Object.assign(Workspace, {
     fazerLogin: async () => {
         const login = document.getElementById('ws-login-user').value.trim();
         const pass = document.getElementById('ws-login-pass').value.trim();
-        if(!login || !pass) return alert("Preencha utilizador e senha");
+        
+        // 🌟 TOAST AQUI
+        if(!login || !pass) return Toast.show("Preencha utilizador e senha", "warning");
 
         const btn = document.querySelector('#ws-login-screen button');
         const txt = btn.innerText; 
@@ -79,14 +80,18 @@ Object.assign(Workspace, {
             if(res && res.success) {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(res.usuario));
                 Workspace.init(); 
-            } else alert(res.error || "Login ou senha incorretos");
-        } catch(e) { alert("Erro de comunicação."); } 
-        finally { btn.innerText = txt; btn.disabled = false; }
+            } else {
+                // 🌟 TOAST AQUI
+                Toast.show(res.error || "Login ou senha incorretos", "error");
+            }
+        } catch(e) { 
+            Toast.show("Erro de comunicação com o servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
-    // ==========================================
-    // 🎨 MOTOR DE AVATARES GLOBAIS
-    // ==========================================
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
@@ -99,9 +104,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // ==========================================
-    // 🍔 MESTRE DO MENU HAMBÚRGUER
-    // ==========================================
     toggleMenuPrincipal: () => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (!dropdown) return;
@@ -143,7 +145,8 @@ Object.assign(Workspace, {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) return alert("A imagem é muito pesada. Escolha uma foto até 5MB.");
+        // 🌟 TOAST AQUI
+        if (file.size > 5 * 1024 * 1024) return Toast.show("A imagem é muito pesada. Escolha uma foto até 5MB.", "warning");
 
         const loading = document.getElementById('ws-avatar-loading');
         loading.style.display = 'block';
@@ -170,33 +173,32 @@ Object.assign(Workspace, {
                 Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = novaFotoUrl;
 
                 Workspace.abrirModalPerfil(); 
+                Toast.show("Foto de perfil atualizada!", "success");
                 
-                // Recarrega ecrãs em tempo real
                 if (Workspace.Feed) Workspace.Feed.carregarPosts();
                 if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) Workspace.Sidebar.carregarMensagensChat();
             }
-        } catch (e) { alert("Falha ao guardar a foto. Tente novamente."); } 
-        finally { loading.style.display = 'none'; event.target.value = ''; }
+        } catch (e) { 
+            Toast.show("Falha ao guardar a foto. Tente novamente.", "error"); 
+        } finally { 
+            loading.style.display = 'none'; 
+            event.target.value = ''; 
+        }
     },
 
-    // ==========================================
-    // 📝 PÁGINA DE TAREFAS (ROTEADOR DE PERFIS)
-    // ==========================================
     abrirPaginaTarefas: () => {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none'; 
         document.getElementById('ws-main-container').style.display = 'none'; 
         document.getElementById('ws-config-container').style.display = 'none'; 
 
-        // 🛡️ DESVIO DE TRÁFEGO: Aluno vs Professor
         if (Workspace.usuario.tipo === 'Aluno') {
             document.getElementById('ws-tarefas-professor-container').style.display = 'none';
             document.getElementById('ws-tarefas-container').style.display = 'block';
             if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         } else {
-            // Professor, Gestor ou Secretaria
             document.getElementById('ws-tarefas-container').style.display = 'none';
             document.getElementById('ws-tarefas-professor-container').style.display = 'block';
-            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); // Reseta para os dois botões
+            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); 
         }
     },
 
@@ -204,7 +206,6 @@ Object.assign(Workspace, {
         document.getElementById('ws-main-menu-dropdown').style.display = 'none';
         document.getElementById('ws-main-container').style.display = 'none';
         
-        // Esconde tarefas de quem quer que seja
         const tProf = document.getElementById('ws-tarefas-professor-container');
         const tAlun = document.getElementById('ws-tarefas-container');
         if(tProf) tProf.style.display = 'none';
@@ -221,22 +222,34 @@ Object.assign(Workspace, {
     },
 
     salvarNovaSenha: async () => {
-        // ... (Mantém a sua lógica intacta)
         const senhaAtual = document.getElementById('ws-senha-atual').value;
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
-        if (!senhaAtual || !novaSenha || !confirmaSenha) return alert("Preencha todos os campos.");
-        if (novaSenha !== confirmaSenha) return alert("A nova senha e a confirmação não coincidem.");
+        
+        // 🌟 TOASTS AQUI
+        if (!senhaAtual || !novaSenha || !confirmaSenha) return Toast.show("Preencha todos os campos para continuar.", "warning");
+        if (novaSenha !== confirmaSenha) return Toast.show("A nova senha e a confirmação não coincidem.", "warning");
+        
         const btn = document.getElementById('ws-btn-salvar-senha');
-        const txt = btn.innerText; btn.innerText = "⏳ A gravar..."; btn.disabled = true;
+        const txt = btn.innerText; 
+        btn.innerText = "⏳ A gravar..."; 
+        btn.disabled = true;
+        
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { id: Workspace.usuario.id, senhaAtual, novaSenha });
             if (res && res.success) {
-                alert("✅ Senha atualizada com sucesso! Por favor, entre novamente.");
+                Toast.show("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
                 document.getElementById('ws-senha-modal').style.display = 'none';
-                Workspace.logout();
-            } else alert(res.error || "Erro ao atualizar a senha.");
-        } catch (e) { alert("Erro de comunicação."); } finally { btn.innerText = txt; btn.disabled = false; }
+                setTimeout(() => Workspace.logout(), 2000);
+            } else {
+                Toast.show(res.error || "Erro ao atualizar a senha.", "error");
+            }
+        } catch (e) { 
+            Toast.show("Erro de comunicação com o servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
     voltarAoFeed: () => {
