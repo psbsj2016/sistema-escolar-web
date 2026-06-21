@@ -7,7 +7,7 @@ Workspace.Feed = {
     comentariosAbertos: new Set(),
     paginaAtual: 1,
     observer: null,
-    radarNovosPosts: null, // 📡 O nosso radar que procura posts em segundo plano
+    radarNovosPosts: null, 
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -16,7 +16,6 @@ Workspace.Feed = {
         Workspace.Feed.configurarEventosCriacao();
     },
 
-    // 🎨 ATUALIZADO: Skeleton + Animações de Gamificação (Dopamina) + Pílula Flutuante
     injetarCSSAnimacoes: () => {
         if (!document.getElementById('ws-feed-styles')) {
             const style = document.createElement('style');
@@ -33,7 +32,6 @@ Workspace.Feed = {
                     animation: skeleton-shimmer 1.5s infinite linear; border-radius: 4px;
                 }
                 
-                /* ✨ Gamificação: Efeito Pop no Botão de Curtir */
                 @keyframes pop-effect {
                     0% { transform: scale(1); }
                     40% { transform: scale(1.25); }
@@ -42,7 +40,6 @@ Workspace.Feed = {
                 .like-animated { animation: pop-effect 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
                 .ws-btn-gamified:active { transform: scale(0.95); transition: 0.1s; }
 
-                /* ⬆️ A Pílula do Twitter/X */
                 .new-posts-pill {
                     position: sticky; top: 15px; z-index: 999; background: #3498db; color: white;
                     padding: 10px 24px; border-radius: 30px; margin: 0 auto 20px auto;
@@ -52,6 +49,11 @@ Workspace.Feed = {
                 }
                 .new-posts-pill.show { transform: translateY(0); opacity: 1; }
                 .new-posts-pill:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
+
+                /* 📸 ETAPA 1: Estilos do Carrossel (Esconde scrollbars nativas e cria o "magnetismo" das imagens) */
+                .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; }
+                .ws-carousel-container::-webkit-scrollbar { display: none; }
+                .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
             `;
             document.head.appendChild(style);
         }
@@ -163,8 +165,6 @@ Workspace.Feed = {
 
             Workspace.Feed.carregarMaisPosts();
             Workspace.Feed.configurarScrollInfinito();
-            
-            // 📡 Inicia o Radar após o primeiro carregamento!
             Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
@@ -172,31 +172,24 @@ Workspace.Feed = {
         }
     },
 
-    // 📡 NOVA FUNÇÃO: Radar Silencioso (Polling)
     iniciarRadarNovosPosts: () => {
         if (Workspace.Feed.radarNovosPosts) clearInterval(Workspace.Feed.radarNovosPosts);
         
         Workspace.Feed.radarNovosPosts = setInterval(async () => {
             try {
                 const refId = Workspace.usuario.alunoRefId || '';
-                // Procura em silêncio...
                 const postsAtuais = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
                 
                 if (postsAtuais && Workspace.Feed.todosOsPosts.length > 0) {
                     const ultimoPostIdConhecido = Workspace.Feed.todosOsPosts[0].id;
-                    
-                    // Conta quantos posts novos existem antes do nosso último post conhecido
                     const qtdNovos = postsAtuais.findIndex(p => p.id === ultimoPostIdConhecido);
                     
-                    if (qtdNovos > 0) {
-                        Workspace.Feed.mostrarPilulaNovosPosts(qtdNovos, postsAtuais);
-                    }
+                    if (qtdNovos > 0) Workspace.Feed.mostrarPilulaNovosPosts(qtdNovos, postsAtuais);
                 }
             } catch(e) {}
-        }, 20000); // Pesquisa a cada 20 segundos
+        }, 20000); 
     },
 
-    // 💊 NOVA FUNÇÃO: O design da Pílula Flutuante
     mostrarPilulaNovosPosts: (qtd, novosPostsData) => {
         let pill = document.getElementById('ws-new-posts-pill');
         if (!pill) {
@@ -204,18 +197,15 @@ Workspace.Feed = {
             pill.id = 'ws-new-posts-pill';
             pill.className = 'new-posts-pill';
             const container = document.getElementById('ws-posts-area');
-            container.parentNode.insertBefore(pill, container); // Insere em cima do feed
+            container.parentNode.insertBefore(pill, container);
         }
         
         pill.innerHTML = `⬆️ Ver ${qtd} nova${qtd > 1 ? 's' : ''} publicação${qtd > 1 ? 'ões' : ''}`;
         pill.classList.add('show');
         
-        // Ação ao clicar na pílula
         pill.onclick = () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe suavemente
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
             pill.classList.remove('show');
-            
-            // Atualiza a memória e recarrega o feed sem o Skeleton
             Workspace.Feed.todosOsPosts = novosPostsData;
             Workspace.Feed.paginaAtual = 1;
             Workspace.Feed.postsCache = [];
@@ -229,7 +219,6 @@ Workspace.Feed = {
         const inicio = (Workspace.Feed.paginaAtual - 1) * limite;
         const fim = inicio + limite;
         const novosPosts = Workspace.Feed.todosOsPosts.slice(inicio, fim);
-        
         const sentinela = document.getElementById('ws-feed-sentinela');
 
         if (novosPosts.length === 0) {
@@ -241,7 +230,6 @@ Workspace.Feed = {
         }
 
         Workspace.Feed.postsCache = [...Workspace.Feed.postsCache, ...novosPosts];
-        
         const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
         const container = document.getElementById('ws-posts-area');
         container.insertAdjacentHTML('beforeend', html);
@@ -259,7 +247,6 @@ Workspace.Feed = {
     configurarScrollInfinito: () => {
         const sentinela = document.getElementById('ws-feed-sentinela');
         if (!sentinela) return;
-        
         if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
         
         Workspace.Feed.observer = new IntersectionObserver((entries) => {
@@ -327,7 +314,35 @@ Workspace.Feed = {
         });
     },
 
-    renderizarAnexos: (anexos) => {
+    // 📸 ETAPA 4: Lógica do Carrossel (Atualiza o contador e move a imagem)
+    scrollCarrossel: (postId, total) => {
+        const container = document.getElementById(`carousel-${postId}`);
+        if(!container) return;
+        const width = container.offsetWidth;
+        const scrollPos = container.scrollLeft;
+        
+        // Determina qual imagem está no centro da tela (índice 0 a total-1)
+        const index = Math.round(scrollPos / width);
+        
+        const counter = document.getElementById(`counter-${postId}`);
+        if(counter) counter.innerText = `${index + 1} / ${total}`;
+        
+        const btnLeft = document.getElementById(`btn-left-${postId}`);
+        const btnRight = document.getElementById(`btn-right-${postId}`);
+        if(btnLeft) btnLeft.style.display = index === 0 ? 'none' : 'flex';
+        if(btnRight) btnRight.style.display = index === total - 1 ? 'none' : 'flex';
+    },
+
+    moverCarrossel: (postId, direcao) => {
+        const container = document.getElementById(`carousel-${postId}`);
+        if(!container) return;
+        const width = container.offsetWidth;
+        // Move o contêiner 1 largura inteira para a esquerda (-1) ou direita (1)
+        container.scrollBy({ left: direcao * width, behavior: 'smooth' });
+    },
+
+    // 📸 ETAPA 2: Adicionado o parâmetro 'postId' na função para identificação
+    renderizarAnexos: (anexos, postId) => {
         if (!anexos || anexos.length === 0) return '';
         
         const imagens = anexos.filter(a => a.tipo.includes('image'));
@@ -336,49 +351,39 @@ Workspace.Feed = {
         
         let htmlFinal = '';
         
+        // 📸 ETAPA 3: Implementação do Carrossel Estilo Instagram
         if (imagens.length > 0) {
             const qtd = imagens.length;
-            let gridStyle = 'display: grid; gap: 8px; margin-top: 15px; border-radius: 12px; overflow: hidden; width: 100%;';
             
             if (qtd === 1) {
                 let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
                 htmlFinal += `<img src="${url}" loading="lazy" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
-                if (qtd === 2) {
-                    gridStyle += 'grid-template-columns: 1fr 1fr; height: 260px;';
-                } else if (qtd === 3) {
-                    gridStyle += 'grid-template-columns: 1.5fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
-                } else { 
-                    gridStyle += 'grid-template-columns: 1fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
-                }
-                
-                htmlFinal += `<div style="${gridStyle}">`;
-                
-                imagens.forEach((img, index) => {
-                    if (index >= 4) return;
+                // Estrutura principal do Carrossel (Fundo acinzentado preservado para uniformidade)
+                htmlFinal += `
+                <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #f9f9f9; border: 1px solid #eee; margin-top: 15px;">
+                    <!-- Indicador de quantidade no topo direito -->
+                    <div id="counter-${postId}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: bold; z-index: 10; pointer-events: none;">1 / ${qtd}</div>
                     
+                    <!-- Botões de navegação (visíveis no computador) -->
+                    <button id="btn-left-${postId}" onclick="Workspace.Feed.moverCarrossel('${postId}', -1)" style="display:none; position: absolute; top: 50%; transform: translateY(-50%); left: 10px; background: rgba(255,255,255,0.85); border: none; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: 0.2s;">❮</button>
+                    <button id="btn-right-${postId}" onclick="Workspace.Feed.moverCarrossel('${postId}', 1)" style="position: absolute; top: 50%; transform: translateY(-50%); right: 10px; background: rgba(255,255,255,0.85); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: 0.2s;">❯</button>
+                    
+                    <!-- Contêiner deslizante de imagens -->
+                    <div id="carousel-${postId}" class="ws-carousel-container" onscroll="Workspace.Feed.scrollCarrossel('${postId}', ${qtd})">`;
+                    
+                imagens.forEach((img) => {
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
-                    let itemStyle = 'width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: 0.2s; display: block;';
-                    let extraOverlay = '';
                     
-                    if (qtd === 3 && index === 0) itemStyle += ' grid-row: span 2;';
-                    
-                    if (index === 3 && qtd > 4) {
-                        extraOverlay = `
-                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; pointer-events: none; font-family: sans-serif;">
-                                +${qtd - 3}
-                            </div>
-                        `;
-                    }
-                    
+                    // Cada slide ocupa 100% da largura do contêiner e exibe a imagem de forma íntegra
                     htmlFinal += `
-                        <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #f9f9f9; border: 1px solid #f0f2f5; border-radius: 8px;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
-                            <img src="${url}" loading="lazy" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'">
-                            ${extraOverlay}
+                        <div class="ws-carousel-slide">
+                            <img src="${url}" loading="lazy" style="width: 100%; max-height: 400px; object-fit: contain; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
                         </div>
                     `;
                 });
-                htmlFinal += '</div>';
+                
+                htmlFinal += `</div></div>`;
             }
         }
         
@@ -512,7 +517,9 @@ Workspace.Feed = {
                     </div>
                     
                     <div id="texto-post-${p.id}" style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
-                    ${Workspace.Feed.renderizarAnexos(p.anexos)}
+                    
+                    <!-- 📸 O POST ID AGORA É ENVIADO PARA RENDERIZAR OS ANEXOS -->
+                    ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
                         
@@ -605,10 +612,9 @@ Workspace.Feed = {
             btnLike.style.border = isLike ? '1px solid #27ae60' : '1px solid transparent';
             countLike.innerText = post.likes.length;
             
-            // ✨ APLICA A MAGIA DA DOPAMINA (Efeito Pop no Clique)
             if (isLike) {
                 btnLike.classList.remove('like-animated');
-                void btnLike.offsetWidth; // Força o navegador a reiniciar a animação
+                void btnLike.offsetWidth; 
                 btnLike.classList.add('like-animated');
             }
         }
