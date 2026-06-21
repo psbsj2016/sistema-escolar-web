@@ -286,7 +286,7 @@ Workspace.Feed = {
         Workspace.Feed.observer.observe(sentinela);
 
         if (fim >= lista.length && sentinela) {
-            sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+            sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">Chegou ao fim do feed!</div>';
             Workspace.Feed.observer.disconnect();
         }
     },
