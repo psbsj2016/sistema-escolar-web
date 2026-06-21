@@ -15,6 +15,7 @@ const Workspace = window.Workspace;
 Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
+    deferredPrompt: null, // 🧠 Guarda o evento de instalação para disparar quando quisermos
 
     mostrarAviso: (mensagem, tipo = 'info') => {
         if (window.Toast && typeof window.Toast.show === 'function') {
@@ -102,46 +103,91 @@ Object.assign(Workspace, {
                 Workspace.navegarPara('feed', false);
             }
         });
+
+        // 🧠 OUVINTES PWA: Captura o pop-up de instalação nativo e customiza-o
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Impede o navegador de agir de forma silenciosa
+            Workspace.deferredPrompt = e; // Guarda o evento na nossa memória
+            
+            // Se o utilizador já tiver a App instalada, não mostra nada
+            if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+            // Mostra o pop-up premium de instalação na interface
+            Workspace.injetarPopUpInstalacao();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            Workspace.deferredPrompt = null;
+            const banner = document.getElementById('ws-pwa-install-banner');
+            if (banner) banner.remove();
+            Workspace.mostrarAviso("Aplicação Workspace instalada com sucesso! 🎉", "success");
+        });
     },
 
-    // 🎬 MOTOR DE TRANSIÇÃO (AGORA COM O PERFIL)
+    // 🖥️ INOVAÇÃO: Injeta dinamicamente um aviso elegante estilo Pop-up de App
+    injetarPopUpInstalacao: () => {
+        if (document.getElementById('ws-pwa-install-banner')) return;
+
+        const banner = document.createElement('div');
+        banner.id = 'ws-pwa-install-banner';
+        banner.style.cssText = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 30px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10009; font-family: sans-serif; font-size: 13px; font-weight: 600; width: max-content; max-width: 90vw; animation: fadeIn 0.4s ease;";
+        
+        banner.innerHTML = `
+            <span>📱 Gostaria de instalar a App do Workspace no ecrã principal?</span>
+            <div style="display: flex; gap: 8px;">
+                <button id="ws-pwa-btn-instalar" style="background: #3498db; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Instalar</button>
+                <button id="ws-pwa-btn-fechar" style="background: transparent; color: #bbb; border: none; cursor: pointer; font-size: 16px; padding: 0 5px;">&times;</button>
+            </div>
+        `;
+        
+        document.body.appendChild(banner);
+
+        document.getElementById('ws-pwa-btn-instalar').addEventListener('click', async () => {
+            if (!Workspace.deferredPrompt) return;
+            
+            // Abre o prompt oficial do sistema operativo (Android/iOS/Windows)
+            Workspace.deferredPrompt.prompt();
+            
+            const { outcome } = await Workspace.deferredPrompt.userChoice;
+            console.log(`Utilizador escolheu: ${outcome}`);
+            
+            Workspace.deferredPrompt = null;
+            banner.remove();
+        });
+
+        document.getElementById('ws-pwa-btn-fechar').addEventListener('click', () => {
+            banner.remove();
+        });
+    },
+
     navegarPara: (tela, registarNoHistorico = true) => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
-        
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 🧠 Adicionámos o Perfil ao nosso "Mapa" de ecrãs
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
             'tarefas_aluno': 'ws-tarefas-container',
             'tarefas_prof': 'ws-tarefas-professor-container',
-            'perfil': 'ws-perfil-modal' // O ID atual do seu perfil
+            'perfil': 'ws-perfil-modal' 
         };
 
         if (tela === 'tarefas') {
             tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         }
 
-        // Esconde todos os ecrãs
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
-        // Revela o ecrã pretendido com animação suave
         const ecraAtivo = document.getElementById(ecras[tela]);
         if (ecraAtivo) {
-            // O feed precisa de ser GRID, o perfil precisa de ser FLEX, os restantes BLOCK
-            if (tela === 'feed') {
-                ecraAtivo.style.display = 'grid';
-            } else if (tela === 'perfil') {
-                ecraAtivo.style.display = 'flex';
-            } else {
-                ecraAtivo.style.display = 'block';
-            }
+            if (tela === 'feed') ecraAtivo.style.display = 'grid';
+            else if (tela === 'perfil') ecraAtivo.style.display = 'flex';
+            else ecraAtivo.style.display = 'block';
             
             ecraAtivo.style.animation = 'fadeIn 0.3s ease-out';
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -210,7 +256,6 @@ Object.assign(Workspace, {
         } else subMenu.style.display = 'none';
     },
 
-    // 👤 NOVA FUNÇÃO: Substitui o antigo Modal
     abrirPaginaPerfil: () => {
         const nome = Workspace.usuario.nome || Workspace.usuario.login;
         document.getElementById('ws-perfil-modal-nome').innerText = nome;
@@ -230,7 +275,6 @@ Object.assign(Workspace, {
             letrasEl.style.background = Workspace.gerarCorPorNome(nome);
         }
 
-        // Em vez de forçar o display no DOM, entregamos o trabalho ao Gestor de Rotas
         Workspace.navegarPara('perfil');
     },
 
@@ -264,8 +308,8 @@ Object.assign(Workspace, {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
                 Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = novaFotoUrl;
 
-                Workspace.abrirPaginaPerfil(); // 🚀 Redireciona para a NOVA ROTA
-                Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
+                Workspace.abrirPaginaPerfil(); 
+                Workspace.mostrarAviso("Foto de perfil updated!", "success");
                 
                 if (Workspace.Feed) Workspace.Feed.carregarPosts();
                 if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) Workspace.Sidebar.carregarMensagensChat();
@@ -278,7 +322,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // Rotas atalho redirecionadas para o Motor Central
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
@@ -306,7 +349,7 @@ Object.assign(Workspace, {
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { id: Workspace.usuario.id, senhaAtual, novaSenha });
             if (res && res.success) {
-                Workspace.mostrarAviso("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
+                Workspace.mostrarAviso("Senha updated com sucesso! Por favor, entre novamente.", "success");
                 document.getElementById('ws-senha-modal').style.display = 'none';
                 setTimeout(() => Workspace.logout(), 2500);
             } else {
