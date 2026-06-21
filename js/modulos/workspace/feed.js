@@ -7,18 +7,20 @@ Workspace.Feed = {
     comentariosAbertos: new Set(),
     paginaAtual: 1,
     observer: null,
+    radarNovosPosts: null, // 📡 O nosso radar que procura posts em segundo plano
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
-        Workspace.Feed.injetarCSSSkeleton(); 
+        Workspace.Feed.injetarCSSAnimacoes(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
     },
 
-    injetarCSSSkeleton: () => {
-        if (!document.getElementById('ws-skeleton-styles')) {
+    // 🎨 ATUALIZADO: Skeleton + Animações de Gamificação (Dopamina) + Pílula Flutuante
+    injetarCSSAnimacoes: () => {
+        if (!document.getElementById('ws-feed-styles')) {
             const style = document.createElement('style');
-            style.id = 'ws-skeleton-styles';
+            style.id = 'ws-feed-styles';
             style.innerHTML = `
                 @keyframes skeleton-shimmer {
                     0% { background-position: -468px 0; }
@@ -27,15 +29,29 @@ Workspace.Feed = {
                 .skeleton-box {
                     background: #f6f7f8;
                     background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
-                    background-repeat: no-repeat;
-                    background-size: 800px 100%;
-                    animation-duration: 1.5s;
-                    animation-fill-mode: forwards;
-                    animation-iteration-count: infinite;
-                    animation-name: skeleton-shimmer;
-                    animation-timing-function: linear;
-                    border-radius: 4px;
+                    background-repeat: no-repeat; background-size: 800px 100%;
+                    animation: skeleton-shimmer 1.5s infinite linear; border-radius: 4px;
                 }
+                
+                /* ✨ Gamificação: Efeito Pop no Botão de Curtir */
+                @keyframes pop-effect {
+                    0% { transform: scale(1); }
+                    40% { transform: scale(1.25); }
+                    100% { transform: scale(1); }
+                }
+                .like-animated { animation: pop-effect 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                .ws-btn-gamified:active { transform: scale(0.95); transition: 0.1s; }
+
+                /* ⬆️ A Pílula do Twitter/X */
+                .new-posts-pill {
+                    position: sticky; top: 15px; z-index: 999; background: #3498db; color: white;
+                    padding: 10px 24px; border-radius: 30px; margin: 0 auto 20px auto;
+                    width: max-content; font-weight: 700; font-size: 13px; cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+                    transform: translateY(-100px); opacity: 0; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+                }
+                .new-posts-pill.show { transform: translateY(0); opacity: 1; }
+                .new-posts-pill:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
             `;
             document.head.appendChild(style);
         }
@@ -62,17 +78,13 @@ Workspace.Feed = {
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
-    // 🚀 ATUALIZADO: Parse de Markdown (Negrito, Itálico) e YouTube
     processarTextoComEmbeds: (textoOriginal) => {
         if (!textoOriginal) return '';
-        
         let texto = Workspace.Feed.limparTexto(textoOriginal);
         
-        // Magia do Markdown Básico
-        texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // **Negrito**
-        texto = texto.replace(/\*(.*?)\*/g, '<strong>$1</strong>');     // *Negrito*
-        texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');               // _Itálico_
-        
+        texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+        texto = texto.replace(/\*(.*?)\*/g, '<strong>$1</strong>');     
+        texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');               
         texto = texto.replace(/\n/g, '<br>');
 
         const iframesYouTube = [];
@@ -151,10 +163,65 @@ Workspace.Feed = {
 
             Workspace.Feed.carregarMaisPosts();
             Workspace.Feed.configurarScrollInfinito();
+            
+            // 📡 Inicia o Radar após o primeiro carregamento!
+            Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
         }
+    },
+
+    // 📡 NOVA FUNÇÃO: Radar Silencioso (Polling)
+    iniciarRadarNovosPosts: () => {
+        if (Workspace.Feed.radarNovosPosts) clearInterval(Workspace.Feed.radarNovosPosts);
+        
+        Workspace.Feed.radarNovosPosts = setInterval(async () => {
+            try {
+                const refId = Workspace.usuario.alunoRefId || '';
+                // Procura em silêncio...
+                const postsAtuais = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
+                
+                if (postsAtuais && Workspace.Feed.todosOsPosts.length > 0) {
+                    const ultimoPostIdConhecido = Workspace.Feed.todosOsPosts[0].id;
+                    
+                    // Conta quantos posts novos existem antes do nosso último post conhecido
+                    const qtdNovos = postsAtuais.findIndex(p => p.id === ultimoPostIdConhecido);
+                    
+                    if (qtdNovos > 0) {
+                        Workspace.Feed.mostrarPilulaNovosPosts(qtdNovos, postsAtuais);
+                    }
+                }
+            } catch(e) {}
+        }, 20000); // Pesquisa a cada 20 segundos
+    },
+
+    // 💊 NOVA FUNÇÃO: O design da Pílula Flutuante
+    mostrarPilulaNovosPosts: (qtd, novosPostsData) => {
+        let pill = document.getElementById('ws-new-posts-pill');
+        if (!pill) {
+            pill = document.createElement('div');
+            pill.id = 'ws-new-posts-pill';
+            pill.className = 'new-posts-pill';
+            const container = document.getElementById('ws-posts-area');
+            container.parentNode.insertBefore(pill, container); // Insere em cima do feed
+        }
+        
+        pill.innerHTML = `⬆️ Ver ${qtd} nova${qtd > 1 ? 's' : ''} publicação${qtd > 1 ? 'ões' : ''}`;
+        pill.classList.add('show');
+        
+        // Ação ao clicar na pílula
+        pill.onclick = () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe suavemente
+            pill.classList.remove('show');
+            
+            // Atualiza a memória e recarrega o feed sem o Skeleton
+            Workspace.Feed.todosOsPosts = novosPostsData;
+            Workspace.Feed.paginaAtual = 1;
+            Workspace.Feed.postsCache = [];
+            document.getElementById('ws-posts-area').innerHTML = '';
+            Workspace.Feed.carregarMaisPosts();
+        };
     },
 
     carregarMaisPosts: () => {
@@ -260,7 +327,6 @@ Workspace.Feed = {
         });
     },
 
-    // 🚀 ATUALIZADO: Lazy Loading Nativo nas imagens do Mosaico
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         
@@ -352,7 +418,6 @@ Workspace.Feed = {
         return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     },
 
-    // 🚀 LÓGICA DE EDIÇÃO EM LINHA (INLINE)
     editarPost: (postId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post) return;
@@ -364,8 +429,8 @@ Workspace.Feed = {
             <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;">
                 <textarea id="edit-input-${postId}" rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="ws-btn" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
-                    <button class="ws-btn" style="background:#95a5a6; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">Cancelar</button>
+                    <button class="ws-btn ws-btn-gamified" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
+                    <button class="ws-btn ws-btn-gamified" style="background:#95a5a6; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">Cancelar</button>
                 </div>
             </div>
         `;
@@ -393,7 +458,7 @@ Workspace.Feed = {
                 const post = Workspace.Feed.postsCache.find(p => p.id === postId);
                 if(post) post.texto = novoTexto;
                 
-                Workspace.Feed.cancelarEdicaoPost(postId); // Volta ao visual normal e aplica o Markdown
+                Workspace.Feed.cancelarEdicaoPost(postId);
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
             } else throw new Error();
         } catch(e) {
@@ -403,9 +468,7 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 LÓGICA DE PARTILHA (SHARE API)
     partilharPost: (postId) => {
-        // Usa a API nativa do navegador para colar na área de transferência (Clipboard)
         const urlPartilha = window.location.origin + window.location.pathname + '#post-' + postId;
         navigator.clipboard.writeText(urlPartilha).then(() => {
             if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Link copiado! Já pode colar onde quiser.", "success");
@@ -424,7 +487,6 @@ Workspace.Feed = {
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
             
-            // 🚀 BOTOES DE CONTROLE (EDITAR / APAGAR)
             const btnEditar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#f39c12; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.editarPost('${p.id}')">✏️ Editar</span>` : '';
             const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` : '';
 
@@ -455,19 +517,19 @@ Workspace.Feed = {
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
                         
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button id="btn-like-${p.id}" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
+                            <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                                 👍 <span id="count-like-${p.id}">${likesArr.length}</span>
                             </button>
                             
-                            <button id="btn-dislike-${p.id}" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
+                            <button id="btn-dislike-${p.id}" class="ws-btn-gamified" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
                                 👎 <span id="count-dislike-${p.id}">${dislikesArr.length}</span>
                             </button>
                             
-                            <button style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
+                            <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
                                 💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
                             </button>
 
-                            <button style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.partilharPost('${p.id}')">
+                            <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.partilharPost('${p.id}')">
                                 📤 Partilhar
                             </button>
                         </div>
@@ -502,7 +564,7 @@ Workspace.Feed = {
                         </div>
                         <div style="display:flex; gap:10px;">
                             <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
-                            <button class="ws-btn" style="padding:10px 20px; border-radius:20px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
+                            <button class="ws-btn ws-btn-gamified" style="padding:10px 20px; border-radius:20px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -542,6 +604,13 @@ Workspace.Feed = {
             btnLike.style.color = isLike ? '#27ae60' : '#555';
             btnLike.style.border = isLike ? '1px solid #27ae60' : '1px solid transparent';
             countLike.innerText = post.likes.length;
+            
+            // ✨ APLICA A MAGIA DA DOPAMINA (Efeito Pop no Clique)
+            if (isLike) {
+                btnLike.classList.remove('like-animated');
+                void btnLike.offsetWidth; // Força o navegador a reiniciar a animação
+                btnLike.classList.add('like-animated');
+            }
         }
 
         if (btnDislike && countDislike) {
@@ -550,6 +619,12 @@ Workspace.Feed = {
             btnDislike.style.color = isDislike ? '#e74c3c' : '#555';
             btnDislike.style.border = isDislike ? '1px solid #e74c3c' : '1px solid transparent';
             countDislike.innerText = post.dislikes.length;
+            
+            if (isDislike) {
+                btnDislike.classList.remove('like-animated');
+                void btnDislike.offsetWidth; 
+                btnDislike.classList.add('like-animated');
+            }
         }
 
         try {
