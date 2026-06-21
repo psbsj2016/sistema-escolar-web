@@ -200,53 +200,47 @@ Workspace.Feed = {
         });
     },
 
-    // 🌟 MOTOR REESCRITO: Grelha de Mosaicos Avançada (Gadrão Google/Twitter)
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         
-        // Separação cirúrgica por famílias de ficheiros
         const imagens = anexos.filter(a => a.tipo.includes('image'));
         const videos = anexos.filter(a => a.tipo.includes('video'));
         const documentos = anexos.filter(a => !a.tipo.includes('image') && !a.tipo.includes('video'));
         
         let htmlFinal = '';
         
-        // 1️⃣ ALGORITMO DO MOSAICO DE IMAGENS
+        // 1️⃣ ALGORITMO DO MOSAICO DE IMAGENS (AGORA TOTALMENTE INTEIRAS!)
         if (imagens.length > 0) {
             const qtd = imagens.length;
             let gridStyle = 'display: grid; gap: 8px; margin-top: 15px; border-radius: 12px; overflow: hidden; width: 100%;';
             
             if (qtd === 1) {
-                // Padrão clássico de ecrã inteiro para foto única
                 let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
                 htmlFinal += `<img src="${url}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
-                // Define a arquitetura das colunas com base no número de ficheiros enviados
                 if (qtd === 2) {
                     gridStyle += 'grid-template-columns: 1fr 1fr; height: 260px;';
                 } else if (qtd === 3) {
                     gridStyle += 'grid-template-columns: 1.5fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
                 } else { 
-                    // 4 ou mais fotografias
                     gridStyle += 'grid-template-columns: 1fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
                 }
                 
                 htmlFinal += `<div style="${gridStyle}">`;
                 
                 imagens.forEach((img, index) => {
-                    // O mosaico visual só aguenta até 4 fotos no ecrã para não poluir o feed
                     if (index >= 4) return;
                     
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
-                    let itemStyle = 'width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.2s; display: block;';
+                    
+                    // 🚀 CORREÇÃO AQUI: Mudado para object-fit: contain e adicionado background moderno
+                    let itemStyle = 'width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: 0.2s; display: block;';
                     let extraOverlay = '';
                     
-                    // Se houver 3 fotos, a primeira estica-se verticalmente para dar um aspeto editorial premium
                     if (qtd === 3 && index === 0) {
                         itemStyle += ' grid-row: span 2;';
                     }
                     
-                    // Se houver mais de 4 fotografias, a última ganha a película escura com o contador "+X"
                     if (index === 3 && qtd > 4) {
                         extraOverlay = `
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; pointer-events: none; font-family: sans-serif;">
@@ -256,8 +250,8 @@ Workspace.Feed = {
                     }
                     
                     htmlFinal += `
-                        <div style="position: relative; width: 100%; height: 100%; overflow: hidden;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
-                            <img src="${url}" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.85)'" onmouseout="this.style.filter='brightness(1)'">
+                        <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #f9f9f9; border: 1px solid #f0f2f5; border-radius: 8px;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
+                            <img src="${url}" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'">
                             ${extraOverlay}
                         </div>
                     `;
