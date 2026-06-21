@@ -2,8 +2,11 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Feed = {
-    postsCache: [],
+    todosOsPosts: [], // 🧠 Guarda TODOS os posts vindos da API
+    postsCache: [],   // 🧠 Guarda apenas os posts já desenhados na tela
     comentariosAbertos: new Set(),
+    paginaAtual: 1,
+    observer: null,   // 📸 O nosso "Sentinela" invisível
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -93,11 +96,13 @@ Workspace.Feed = {
         return texto;
     },
 
+    // 🚀 O NOVO MOTOR CENTRAL DE CARREGAMENTO
     carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        if(Workspace.Feed.postsCache.length === 0) {
+        // 1. Mostra Skeletons se for a primeira vez
+        if(Workspace.Feed.todosOsPosts.length === 0) {
             let skeletonHTML = '';
             for(let i=0; i<3; i++) {
                 skeletonHTML += `
@@ -122,6 +127,7 @@ Workspace.Feed = {
             const refId = Workspace.usuario.alunoRefId || '';
             const posts = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
 
+            // 2. Se o feed estiver vazio na BD
             if (!posts || posts.length === 0) {
                 container.innerHTML = `
                     <div class="ws-card" style="text-align: center; padding: 40px; color: #7f8c8d;">
@@ -129,14 +135,88 @@ Workspace.Feed = {
                         <h3 style="margin: 0 0 5px 0;">O mural está vazio</h3>
                         <p style="margin: 0; font-size: 13px;">Nenhuma publicação recente para a sua turma.</p>
                     </div>`;
+                const sentinela = document.getElementById('ws-feed-sentinela');
+                if (sentinela) sentinela.style.display = 'none';
                 return;
             }
 
-            Workspace.Feed.postsCache = posts;
-            Workspace.Feed.renderizarLista(posts);
+            // 3. Reseta a memória e prepara a paginação
+            Workspace.Feed.todosOsPosts = posts;
+            Workspace.Feed.paginaAtual = 1;
+            Workspace.Feed.postsCache = [];
+            container.innerHTML = ''; // Limpa os skeletons
+
+            // 4. Cria ou reposiciona o elemento Sentinela (Câmara) no fundo
+            let sentinela = document.getElementById('ws-feed-sentinela');
+            if (!sentinela) {
+                sentinela = document.createElement('div');
+                sentinela.id = 'ws-feed-sentinela';
+                container.parentNode.insertBefore(sentinela, container.nextSibling);
+            }
+            sentinela.style.display = 'block';
+            sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
+
+            // 5. Dá o arranque inicial (carrega a 1ª página)
+            Workspace.Feed.carregarMaisPosts();
+            Workspace.Feed.configurarScrollInfinito();
+
         } catch (error) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
         }
+    },
+
+    // 🚀 LÓGICA DO LOTE: Desenha de 5 em 5 posts
+    carregarMaisPosts: () => {
+        const limite = 5; // Pode alterar para 10 se preferir
+        const inicio = (Workspace.Feed.paginaAtual - 1) * limite;
+        const fim = inicio + limite;
+        const novosPosts = Workspace.Feed.todosOsPosts.slice(inicio, fim);
+        
+        const sentinela = document.getElementById('ws-feed-sentinela');
+
+        if (novosPosts.length === 0) {
+            if(sentinela) {
+                sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+                if(Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
+            }
+            return;
+        }
+
+        // Adiciona os novos posts à memória ativa da tela
+        Workspace.Feed.postsCache = [...Workspace.Feed.postsCache, ...novosPosts];
+        
+        // Desenha APENAS os 5 novos (sem apagar e recarregar os antigos!)
+        const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
+        const container = document.getElementById('ws-posts-area');
+        container.insertAdjacentHTML('beforeend', html);
+
+        Workspace.Feed.paginaAtual++;
+
+        // Verifica se já não sobraram posts para a próxima vez
+        if (fim >= Workspace.Feed.todosOsPosts.length) {
+            if(sentinela) {
+                sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+                if(Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
+            }
+        }
+    },
+
+    // 📸 O VIGILANTE: A câmara que vigia se chegou ao fundo da tela
+    configurarScrollInfinito: () => {
+        const sentinela = document.getElementById('ws-feed-sentinela');
+        if (!sentinela) return;
+        
+        if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
+        
+        // IntersectionObserver é a tecnologia padrão da Google para Scroll Infinito
+        Workspace.Feed.observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                // Se o utilizador rolou até ao fundo, carrega o próximo lote!
+                Workspace.Feed.carregarMaisPosts();
+            }
+        }, { rootMargin: '300px' }); // Ativa a câmara 300px antes de bater no fundo
+        
+        Workspace.Feed.observer.observe(sentinela);
     },
 
     abrirImagemInteira: (url) => {
@@ -209,7 +289,6 @@ Workspace.Feed = {
         
         let htmlFinal = '';
         
-        // 1️⃣ ALGORITMO DO MOSAICO DE IMAGENS (AGORA TOTALMENTE INTEIRAS!)
         if (imagens.length > 0) {
             const qtd = imagens.length;
             let gridStyle = 'display: grid; gap: 8px; margin-top: 15px; border-radius: 12px; overflow: hidden; width: 100%;';
@@ -233,7 +312,6 @@ Workspace.Feed = {
                     
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
                     
-                    // 🚀 CORREÇÃO AQUI: Mudado para object-fit: contain e adicionado background moderno
                     let itemStyle = 'width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: 0.2s; display: block;';
                     let extraOverlay = '';
                     
@@ -261,7 +339,6 @@ Workspace.Feed = {
             }
         }
         
-        // 2️⃣ ALGORITMO DE VÍDEOS
         if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
@@ -269,7 +346,6 @@ Workspace.Feed = {
             });
         }
         
-        // 3️⃣ ALGORITMO DE DOCUMENTOS
         if (documentos.length > 0) {
             htmlFinal += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; width:100%;">';
             documentos.forEach(anexo => {
@@ -299,11 +375,11 @@ Workspace.Feed = {
         return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     },
 
-    renderizarLista: (posts) => {
-        const container = document.getElementById('ws-posts-area');
+    // 🚀 LÓGICA REDUZIDA: Apenas constrói e devolve o HTML
+    gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
-        const html = posts.map(p => {
+        return posts.map(p => {
             const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
@@ -384,8 +460,6 @@ Workspace.Feed = {
                 </div>
             `;
         }).join('');
-        
-        container.innerHTML = html;
     },
 
     reagir: async (postId, tipoDesejado) => {
@@ -649,7 +723,7 @@ Workspace.Feed = {
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
                         if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
                         
-                        Workspace.Feed.postsCache = [];
+                        Workspace.Feed.todosOsPosts = [];
                         await Workspace.Feed.carregarPosts(); 
                     } else {
                         throw new Error("Falha ao gravar publicação.");
