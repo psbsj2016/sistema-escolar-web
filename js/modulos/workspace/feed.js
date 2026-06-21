@@ -8,7 +8,7 @@ Workspace.Feed = {
     paginaAtual: 1,
     observer: null,
     radarNovosPosts: null, 
-    listenerFechamentoConfigurado: false, // 🧠 Variável para evitar duplicar o clique global
+    listenerFechamentoConfigurado: false,
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -16,9 +16,9 @@ Workspace.Feed = {
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         
-        // 🧠 ETAPA 1: O "Ouvinte" Global. Se clicar fora do menu, ele fecha-se automaticamente!
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
             document.addEventListener('click', (e) => {
+                // Se clicar fora de qualquer botão de menu, fecha todos os dropdowns abertos
                 if (!e.target.closest('.ws-menu-ancora')) {
                     Workspace.Feed.fecharMenus();
                 }
@@ -27,13 +27,13 @@ Workspace.Feed = {
         }
     },
 
-    // 🧠 ETAPA 2: Funções para Abrir e Fechar os novos menus de 3 pontinhos
-    toggleMenu: (event, postId) => {
-        event.stopPropagation(); // Impede que o "Ouvinte Global" feche o menu na mesma hora que clicamos para abrir
-        const menu = document.getElementById(`menu-post-${postId}`);
-        const estaAberto = menu.style.display === 'block';
+    toggleMenu: (event, idUnico) => {
+        event.stopPropagation(); 
+        const menu = document.getElementById(`menu-dropdown-${idUnico}`);
+        if (!menu) return;
         
-        Workspace.Feed.fecharMenus(); // Por segurança, garante que se houver outro menu aberto noutro post, ele fecha
+        const estaAberto = menu.style.display === 'block';
+        Workspace.Feed.fecharMenus(); 
         
         if (!estaAberto) {
             menu.style.display = 'block';
@@ -41,7 +41,6 @@ Workspace.Feed = {
     },
 
     fecharMenus: () => {
-        // Encontra todos os menus flutuantes e esconde-os
         const menus = document.querySelectorAll('.ws-post-dropdown');
         menus.forEach(m => m.style.display = 'none');
     },
@@ -491,6 +490,58 @@ Workspace.Feed = {
         }
     },
 
+    // 🚀 NOVO MOTOR: Edição em Linha para Comentários!
+    editarComentarioInline: (postId, comentarioId) => {
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if(!post || !post.comentarios) return;
+        const c = post.comentarios.find(com => com.id === comentarioId);
+        if(!c) return;
+
+        const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
+        if(!containerTexto) return;
+
+        containerTexto.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;">
+                <input type="text" id="input-edit-com-${comentarioId}" value="${c.texto}" style="padding:6px 12px; border-radius:14px; border:1px solid #3498db; font-size:13px; outline:none; background:#fff; width:100%; box-sizing:border-box;">
+                <div style="display:flex; gap:6px;">
+                    <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.salvarEdicaoComentario('${postId}', '${comentarioId}')">💾 Guardar</span>
+                    <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.cancelarEdicaoComentario('${postId}', '${comentarioId}')">Cancelar</span>
+                </div>
+            </div>
+        `;
+    },
+
+    cancelarEdicaoComentario: (postId, comentarioId) => {
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if(!post || !post.comentarios) return;
+        const c = post.comentarios.find(com => com.id === comentarioId);
+        if(!c) return;
+
+        const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
+        if(containerTexto) containerTexto.innerHTML = Workspace.Feed.limparTexto(c.texto);
+    },
+
+    salvarEdicaoComentario: async (postId, comentarioId) => {
+        const input = document.getElementById(`input-edit-com-${comentarioId}`);
+        if(!input) return;
+        const novoTexto = input.value.trim();
+        if(!novoTexto) return;
+
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'PUT', { texto: novoTexto });
+            if(res && res.success) {
+                const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                if(post && post.comentarios) {
+                    const c = post.comentarios.find(com => com.id === comentarioId);
+                    if(c) c.texto = novoTexto;
+                }
+                Workspace.Feed.cancelarEdicaoComentario(postId, comentarioId);
+            }
+        } catch(e) {
+            if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao atualizar o comentário.", "error");
+        }
+    },
+
     partilharPost: (postId) => {
         const urlPartilha = window.location.origin + window.location.pathname + '#post-' + postId;
         navigator.clipboard.writeText(urlPartilha).then(() => {
@@ -524,7 +575,6 @@ Workspace.Feed = {
             return `
                 <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease;">
                     
-                    <!-- 🧠 ETAPA 3: Cabeçalho com o novo Menu Kebab de Três Pontinhos -->
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
                         <div style="display:flex; align-items:center; gap:12px;">
                             ${avatarPost}
@@ -534,11 +584,10 @@ Workspace.Feed = {
                             </div>
                         </div>
                         
-                        <!-- ⚙️ MENU DE 3 PONTINHOS -->
                         <div class="ws-menu-ancora" style="position:relative;">
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
                             
-                            <div id="menu-post-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px; transition:0.2s;" onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">📤</span> Partilhar
                                 </div>
@@ -557,7 +606,6 @@ Workspace.Feed = {
                     <div id="texto-post-${p.id}" style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
-                    <!-- 🧠 ETAPA 4: A Barra inferior agora está perfeitamente limpa e focada no essencial! -->
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap;">
                         <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                             👍 <span id="count-like-${p.id}">${likesArr.length}</span>
@@ -579,17 +627,27 @@ Workspace.Feed = {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
+                                // 🚀 ATUALIZADO: Menu de 3 pontinhos inserido de forma elegante na linha do comentário
                                 return `
-                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start;">
+                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                                     ${avatarComentario}
-                                    <div style="flex:1;">
+                                    <div style="flex:1; padding-right: 25px;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                                             <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                                            <span style="font-size:10px; color:#aaa;">${tempoComentario}</span>
+                                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:10px;">${tempoComentario}</span>
+                                            
+                                            ${ehDonoComentario ? `
+                                            <div class="ws-menu-ancora" style="position:relative;">
+                                                <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
+                                                <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
+                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
+                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
+                                                </div>
+                                            </div>
+                                            ` : ''}
                                         </div>
-                                        <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
                                     </div>
-                                    ${ehDonoComentario ? `<span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️</span>` : ''}
                                 </div>
                                 `;
                             }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
@@ -753,7 +811,8 @@ Workspace.Feed = {
                 const c = {
                     id: res.comentarioId || Date.now().toString(),
                     autorNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    texto: texto
+                    texto: texto,
+                    dataCriacao: new Date().toISOString()
                 };
 
                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
@@ -763,16 +822,23 @@ Workspace.Feed = {
                 }
 
                 const novoComentarioHTML = `
-                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; padding-right: 35px; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease;">
+                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease;">
                     ${avatarComentario}
-                    <div style="flex:1;">
+                    <div style="flex:1; padding-right: 25px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                             <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                            <span style="font-size:10px; color:#aaa;">Agora mesmo</span>
+                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:10px;">Agora mesmo</span>
+                            
+                            <div class="ws-menu-ancora" style="position:relative;">
+                                <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
+                                <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
+                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
+                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
+                                </div>
+                            </div>
                         </div>
-                        <span style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
                     </div>
-                    <span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#e74c3c; font-size:14px;" title="Apagar comentário" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️</span>
                 </div>`;
 
                 listaComentarios.insertAdjacentHTML('beforeend', novoComentarioHTML);
