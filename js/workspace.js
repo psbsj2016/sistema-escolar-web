@@ -1,7 +1,7 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
-// 🌟 IMPORTAÇÃO CORRETA PARA O VITE (Fim do erro 404!)
+// 🌟 IMPORTAÇÃO CORRETA PARA O VITE
 import './toast.js'; 
 
 import './modulos/workspace/feed.js';
@@ -14,28 +14,51 @@ const Workspace = window.Workspace;
 
 Object.assign(Workspace, {
     usuario: null,
-    avatarsCache: {}, // 🧠 Memória global de fotos da escola
+    avatarsCache: {}, 
 
-    // 🛡️ MOTOR INTELIGENTE DE AVISOS (À Prova de Falhas)
     mostrarAviso: (mensagem, tipo = 'info') => {
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo);
         } else {
-            alert(mensagem); // Salva-vidas caso a internet falhe
+            alert(mensagem); 
         }
     },
 
+    // 🛡️ INOVAÇÃO 2: Escudo de Segurança API (Interceptor 401)
     api: async (endpoint, method = 'GET', body = null) => {
         const options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
         if (body) options.body = JSON.stringify(body);
+        
         try {
             const res = await fetch(`/api${endpoint}`, options);
+            
+            // Interceta sessão expirada instantaneamente
+            if (res.status === 401 && endpoint !== '/auth/login') {
+                Workspace.mostrarAviso("A sua sessão expirou por segurança. Faça login novamente.", "warning");
+                Workspace.logout(true); // Desloga de forma forçada e limpa
+                return null;
+            }
+            
             if (!res.ok) throw new Error('Falha na resposta do servidor');
             return await res.json();
         } catch (e) {
             console.error(`❌ Erro API Workspace [${endpoint}]:`, e);
             return null;
         }
+    },
+
+    // 🎨 INOVAÇÃO 3: Gerador Inteligente de Cores por Hash
+    gerarCorPorNome: (nome) => {
+        const cores = [
+            '#e74c3c', '#8e44ad', '#2980b9', '#27ae60', '#f39c12', 
+            '#d35400', '#c0392b', '#16a085', '#34495e', '#ff5252'
+        ];
+        let hash = 0;
+        for (let i = 0; i < nome.length; i++) {
+            hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        hash = Math.abs(hash);
+        return cores[hash % cores.length];
     },
 
     init: async () => {
@@ -51,14 +74,15 @@ Object.assign(Workspace, {
         
         document.getElementById('ws-login-screen').style.display = 'none';
         document.getElementById('ws-navbar').style.display = 'flex';
-        document.getElementById('ws-main-container').style.display = 'grid';
+        
+        // Define o estado inicial da rota
+        Workspace.navegarPara('feed', true);
 
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost && ['Gestor', 'Professor', 'Secretaria'].includes(Workspace.usuario.tipo)) {
             boxCriarPost.style.display = 'block';
         }
 
-        // 📸 Carrega as fotos de todo o mundo numa fração de segundo
         Workspace.avatarsCache = await Workspace.api('/workspace/avatars', 'GET') || {};
         Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
 
@@ -74,6 +98,61 @@ Object.assign(Workspace, {
                 menuDropdown.style.display = 'none';
             }
         });
+
+        // 🔙 INOVAÇÃO 1: Detetor do botão "Voltar" do telemóvel/navegador (History API)
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.tela) {
+                Workspace.navegarPara(e.state.tela, false); // false = não adiciona ao histórico novamente
+            } else {
+                Workspace.navegarPara('feed', false);
+            }
+        });
+    },
+
+    // 🎬 INOVAÇÃO 4: Motor de Transição de Ecrãs (Central Router)
+    navegarPara: (tela, registarNoHistorico = true) => {
+        // 1. Fechar menus sobrepostos
+        const dropdown = document.getElementById('ws-main-menu-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+        
+        const modalChat = document.getElementById('ws-chat-modal');
+        if (modalChat) modalChat.style.display = 'none';
+
+        // 2. Mapeamento dos ecrãs (IDs)
+        const ecras = {
+            'feed': 'ws-main-container',
+            'configuracoes': 'ws-config-container',
+            'tarefas_aluno': 'ws-tarefas-container',
+            'tarefas_prof': 'ws-tarefas-professor-container'
+        };
+
+        // Descobre qual é a aba exata de tarefas consoante o tipo de utilizador
+        if (tela === 'tarefas') {
+            tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
+        }
+
+        // Esconde todos
+        Object.values(ecras).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Mostra o ecrã pretendido com animação
+        const ecraAtivo = document.getElementById(ecras[tela]);
+        if (ecraAtivo) {
+            ecraAtivo.style.display = tela === 'feed' ? 'grid' : 'block';
+            ecraAtivo.style.animation = 'fadeIn 0.3s ease-out';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Ações específicas de arranque por ecrã
+        if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
+        if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
+
+        // Regista o movimento no histórico do telemóvel
+        if (registarNoHistorico) {
+            history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
+        }
     },
 
     fazerLogin: async () => {
@@ -108,10 +187,12 @@ Object.assign(Workspace, {
         const url = Workspace.avatarsCache[nomeStr];
         
         if (url) {
-            return `<img src="${url}" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
+            return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
         } else {
             const letra = nomeStr.charAt(0).toUpperCase();
-            return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; background:#3498db; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${letra}</div>`;
+            // 🎨 Chama a cor matemática dinâmica gerada a partir do nome!
+            const corFundo = Workspace.gerarCorPorNome(nomeStr);
+            return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${letra}</div>`;
         }
     },
 
@@ -149,6 +230,7 @@ Object.assign(Workspace, {
             imgEl.style.display = 'none';
             letrasEl.style.display = 'flex';
             letrasEl.innerText = nome.charAt(0).toUpperCase();
+            letrasEl.style.background = Workspace.gerarCorPorNome(nome);
         }
     },
 
@@ -196,35 +278,10 @@ Object.assign(Workspace, {
         }
     },
 
-    abrirPaginaTarefas: () => {
-        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; 
-        document.getElementById('ws-main-container').style.display = 'none'; 
-        document.getElementById('ws-config-container').style.display = 'none'; 
-
-        if (Workspace.usuario.tipo === 'Aluno') {
-            const pProf = document.getElementById('ws-tarefas-professor-container');
-            if(pProf) pProf.style.display = 'none';
-            document.getElementById('ws-tarefas-container').style.display = 'block';
-            if (Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
-        } else {
-            const pAlun = document.getElementById('ws-tarefas-container');
-            if(pAlun) pAlun.style.display = 'none';
-            document.getElementById('ws-tarefas-professor-container').style.display = 'block';
-            if (Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf(); 
-        }
-    },
-
-    abrirConfiguracoes: () => {
-        document.getElementById('ws-main-menu-dropdown').style.display = 'none';
-        document.getElementById('ws-main-container').style.display = 'none';
-        
-        const tProf = document.getElementById('ws-tarefas-professor-container');
-        const tAlun = document.getElementById('ws-tarefas-container');
-        if(tProf) tProf.style.display = 'none';
-        if(tAlun) tAlun.style.display = 'none';
-
-        document.getElementById('ws-config-container').style.display = 'block';
-    },
+    // Rotas atalho redirecionadas para o Motor Central
+    abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
+    abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
+    voltarAoFeed: () => Workspace.navegarPara('feed'),
 
     abrirModalSenha: () => {
         document.getElementById('ws-senha-modal').style.display = 'flex';
@@ -263,27 +320,18 @@ Object.assign(Workspace, {
         }
     },
 
-    voltarAoFeed: () => {
-        const dropdown = document.getElementById('ws-main-menu-dropdown');
-        const modalChat = document.getElementById('ws-chat-modal');
-        const configPage = document.getElementById('ws-config-container');
-        const tarefasPage = document.getElementById('ws-tarefas-container');
-        const tarefasProfPage = document.getElementById('ws-tarefas-professor-container');
-        
-        if (dropdown) dropdown.style.display = 'none';
-        if (modalChat) modalChat.style.display = 'none';
-        if (configPage) configPage.style.display = 'none';
-        if (tarefasPage) tarefasPage.style.display = 'none'; 
-        if (tarefasProfPage) tarefasProfPage.style.display = 'none'; 
-        
-        document.getElementById('ws-main-container').style.display = 'block'; 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-
-    logout: async () => {
+    logout: async (forcado = false) => {
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         localStorage.removeItem('ws_usuario_logado');
-        window.location.reload(); 
+        
+        if(forcado) {
+            document.getElementById('ws-login-screen').style.display = 'flex';
+            document.getElementById('ws-navbar').style.display = 'none';
+            document.getElementById('ws-main-container').style.display = 'none';
+            Workspace.usuario = null;
+        } else {
+            window.location.reload(); 
+        }
     }
 });
 
