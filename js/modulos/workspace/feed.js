@@ -9,6 +9,7 @@ Workspace.Feed = {
     observer: null,
     radarNovosPosts: null, 
     listenerFechamentoConfigurado: false,
+    filtroAtivo: 'todos', // 🧠 Novo: Controla o filtro dinâmico atual
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -18,7 +19,6 @@ Workspace.Feed = {
         
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
             document.addEventListener('click', (e) => {
-                // Se clicar fora de qualquer botão de menu, fecha todos os dropdowns abertos
                 if (!e.target.closest('.ws-menu-ancora')) {
                     Workspace.Feed.fecharMenus();
                 }
@@ -35,9 +35,7 @@ Workspace.Feed = {
         const estaAberto = menu.style.display === 'block';
         Workspace.Feed.fecharMenus(); 
         
-        if (!estaAberto) {
-            menu.style.display = 'block';
-        }
+        if (!estaAberto) menu.style.display = 'block';
     },
 
     fecharMenus: () => {
@@ -45,6 +43,7 @@ Workspace.Feed = {
         menus.forEach(m => m.style.display = 'none');
     },
 
+    // 🎨 ATUALIZADO: Inclui estilos para o Carrossel, Pílula, Filtros Rápidos e Colapso de Texto
     injetarCSSAnimacoes: () => {
         if (!document.getElementById('ws-feed-styles')) {
             const style = document.createElement('style');
@@ -77,13 +76,37 @@ Workspace.Feed = {
                     transform: translateY(-100px); opacity: 0; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                 }
                 .new-posts-pill.show { transform: translateY(0); opacity: 1; }
-                .new-posts-pill:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
-
+                
                 .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; }
                 .ws-carousel-container::-webkit-scrollbar { display: none; }
                 .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
+
+                /* ✂️ CSS do Colapso de Texto Inteligente */
+                .ws-text-collapsed { max-height: 110px; overflow: hidden; position: relative; transition: max-height 0.3s ease-out; }
+                .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
+                .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
+                
+                /* 🏁 CSS das pílulas de filtros rápidos */
+                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+                .ws-filter-chip.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
             `;
             document.head.appendChild(style);
+        }
+    },
+
+    // ✂️ NOVA FUNÇÃO: Controla a expansão visual do "Ver mais"
+    toggleTextoPost: (btn, postId) => {
+        const wrap = document.getElementById(`text-wrap-${postId}`);
+        if (!wrap) return;
+        
+        if (wrap.classList.contains('ws-text-expanded')) {
+            wrap.classList.remove('ws-text-expanded');
+            btn.innerText = "Ler mais ⬇️";
+            // Dá um scroll suave de volta para o topo do cartão se o utilizador recolher o texto
+            document.getElementById(`post-${postId}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            wrap.classList.add('ws-text-expanded');
+            btn.innerText = "Subir / Ocultar ⬆️";
         }
     },
 
@@ -140,21 +163,32 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
+        // Injeta a Barra de Filtros Rápidos se ela ainda não existir na tela
+        if (!document.getElementById('ws-feed-filter-bar')) {
+            const filterBarHTML = `
+                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px;">
+                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
+                    <button class="ws-filter-chip" id="filter-media" onclick="Workspace.Feed.filtrarFeed('media')">🖼️ Multimédia</button>
+                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
+                </div>
+            `;
+            container.parentNode.insertBefore(Workspace.Feed.htmlParaElemento(filterBarHTML), container);
+        }
+
         if(Workspace.Feed.todosOsPosts.length === 0) {
             let skeletonHTML = '';
             for(let i=0; i<3; i++) {
                 skeletonHTML += `
-                <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee;">
                     <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%; flex-shrink:0;"></div>
+                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%;"></div>
                         <div style="flex: 1;">
                             <div class="skeleton-box" style="width: 35%; height: 12px; margin-bottom: 8px;"></div>
                             <div class="skeleton-box" style="width: 20%; height: 10px;"></div>
                         </div>
                     </div>
                     <div class="skeleton-box" style="width: 100%; height: 12px; margin-bottom: 8px;"></div>
-                    <div class="skeleton-box" style="width: 90%; height: 12px; margin-bottom: 8px;"></div>
-                    <div class="skeleton-box" style="width: 60%; height: 12px; margin-bottom: 20px;"></div>
+                    <div class="skeleton-box" style="width: 90%; height: 12px; margin-bottom: 20px;"></div>
                     <div class="skeleton-box" style="width: 100%; height: 180px; border-radius: 8px;"></div>
                 </div>`;
             }
@@ -170,7 +204,6 @@ Workspace.Feed = {
                     <div class="ws-card" style="text-align: center; padding: 40px; color: #7f8c8d;">
                         <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
                         <h3 style="margin: 0 0 5px 0;">O mural está vazio</h3>
-                        <p style="margin: 0; font-size: 13px;">Nenhuma publicação recente para a sua turma.</p>
                     </div>`;
                 const sentinela = document.getElementById('ws-feed-sentinela');
                 if (sentinela) sentinela.style.display = 'none';
@@ -178,25 +211,83 @@ Workspace.Feed = {
             }
 
             Workspace.Feed.todosOsPosts = posts;
-            Workspace.Feed.paginaAtual = 1;
-            Workspace.Feed.postsCache = [];
-            container.innerHTML = ''; 
-
-            let sentinela = document.getElementById('ws-feed-sentinela');
-            if (!sentinela) {
-                sentinela = document.createElement('div');
-                sentinela.id = 'ws-feed-sentinela';
-                container.parentNode.insertBefore(sentinela, container.nextSibling);
-            }
-            sentinela.style.display = 'block';
-            sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
-
-            Workspace.Feed.carregarMaisPosts();
-            Workspace.Feed.configurarScrollInfinito();
+            Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); // Renderiza respeitando o filtro selecionado
             Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
+        }
+    },
+
+    // 🏁 NOVA FUNÇÃO: Gerencia os botões de Filtro sem fazer requisições pesadas à API
+    filtrarFeed: (tipoFiltro) => {
+        Workspace.Feed.filtroAtivo = tipoFiltro;
+        Workspace.Feed.paginaAtual = 1;
+        Workspace.Feed.postsCache = [];
+        
+        // Atualiza a pílula ativa visualmente
+        document.querySelectorAll('.ws-filter-chip').forEach(btn => btn.classList.remove('active'));
+        const btnAtivo = document.getElementById(`filter-${tipoFiltro}`);
+        if(btnAtivo) btnAtivo.classList.add('active');
+
+        // Filtra a lista em memória de forma instantânea (Performance Google)
+        let listaFiltrada = Workspace.Feed.todosOsPosts;
+        if (tipoFiltro === 'media') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image') || a.tipo.includes('video')));
+        } else if (tipoFiltro === 'docs') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
+        }
+
+        const container = document.getElementById('ws-posts-area');
+        if (container) container.innerHTML = ''; // Limpa a tela
+
+        // Reinicia e reposiciona o Sentinela do Scroll Infinito
+        let sentinela = document.getElementById('ws-feed-sentinela');
+        if (!sentinela) {
+            sentinela = document.createElement('div');
+            sentinela.id = 'ws-feed-sentinela';
+            container.parentNode.insertBefore(sentinela, container.nextSibling);
+        }
+        sentinela.style.display = 'block';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
+
+        // Executa a paginação para a lista filtrada
+        Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
+    },
+
+    carregarLoteFiltrado: (lista) => {
+        const limite = 5; 
+        const inicio = (Workspace.Feed.paginaAtual - 1) * limite;
+        const fim = inicio + limite;
+        const novosPosts = lista.slice(inicio, fim);
+        const sentinela = document.getElementById('ws-feed-sentinela');
+
+        if (novosPosts.length === 0 && Workspace.Feed.paginaAtual === 1) {
+            document.getElementById('ws-posts-area').innerHTML = '<div class="ws-card" style="text-align:center; padding:30px; color:#999; font-size:13px;">Nenhuma publicação encontrada nesta categoria.</div>';
+            if(sentinela) sentinela.style.display = 'none';
+            return;
+        }
+
+        if (novosPosts.length === 0) {
+            if(sentinela) sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+            return;
+        }
+
+        Workspace.Feed.postsCache = [...Workspace.Feed.postsCache, ...novosPosts];
+        const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
+        document.getElementById('ws-posts-area').insertAdjacentHTML('beforeend', html);
+
+        Workspace.Feed.paginaAtual++;
+
+        if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
+        Workspace.Feed.observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) Workspace.Feed.carregarLoteFiltrado(lista);
+        }, { rootMargin: '300px' });
+        Workspace.Feed.observer.observe(sentinela);
+
+        if (fim >= lista.length && sentinela) {
+            sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+            Workspace.Feed.observer.disconnect();
         }
     },
 
@@ -235,53 +326,8 @@ Workspace.Feed = {
             window.scrollTo({ top: 0, behavior: 'smooth' }); 
             pill.classList.remove('show');
             Workspace.Feed.todosOsPosts = novosPostsData;
-            Workspace.Feed.paginaAtual = 1;
-            Workspace.Feed.postsCache = [];
-            document.getElementById('ws-posts-area').innerHTML = '';
-            Workspace.Feed.carregarMaisPosts();
+            Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
         };
-    },
-
-    carregarMaisPosts: () => {
-        const limite = 5; 
-        const inicio = (Workspace.Feed.paginaAtual - 1) * limite;
-        const fim = inicio + limite;
-        const novosPosts = Workspace.Feed.todosOsPosts.slice(inicio, fim);
-        const sentinela = document.getElementById('ws-feed-sentinela');
-
-        if (novosPosts.length === 0) {
-            if(sentinela) {
-                sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
-                if(Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
-            }
-            return;
-        }
-
-        Workspace.Feed.postsCache = [...Workspace.Feed.postsCache, ...novosPosts];
-        const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
-        const container = document.getElementById('ws-posts-area');
-        container.insertAdjacentHTML('beforeend', html);
-
-        Workspace.Feed.paginaAtual++;
-
-        if (fim >= Workspace.Feed.todosOsPosts.length) {
-            if(sentinela) {
-                sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
-                if(Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
-            }
-        }
-    },
-
-    configurarScrollInfinito: () => {
-        const sentinela = document.getElementById('ws-feed-sentinela');
-        if (!sentinela) return;
-        if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
-        
-        Workspace.Feed.observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) Workspace.Feed.carregarMaisPosts();
-        }, { rootMargin: '300px' }); 
-        
-        Workspace.Feed.observer.observe(sentinela);
     },
 
     abrirImagemInteira: (url) => {
@@ -490,7 +536,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVO MOTOR: Edição em Linha para Comentários!
     editarComentarioInline: (postId, comentarioId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post || !post.comentarios) return;
@@ -560,7 +605,6 @@ Workspace.Feed = {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
-            
             let destinoBadge = p.destino === 'global' 
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
@@ -572,8 +616,12 @@ Workspace.Feed = {
             
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
+            // Verifica se o texto é longo o suficiente (aproximadamente mais de 350 caracteres) para sofrer colapso
+            const ehTextoLongo = (p.texto && p.texto.length > 350);
+            const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
+
             return `
-                <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease;">
+                <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
                     
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
                         <div style="display:flex; align-items:center; gap:12px;">
@@ -588,14 +636,14 @@ Workspace.Feed = {
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
                             
                             <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px; transition:0.2s;" onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">📤</span> Partilhar
                                 </div>
                                 ${ehDonoOuGestor ? `
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9; transition:0.2s;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">✏️</span> Editar
                                 </div>
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9; transition:0.2s;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">🗑️</span> Apagar
                                 </div>
                                 ` : ''}
@@ -603,19 +651,24 @@ Workspace.Feed = {
                         </div>
                     </div>
                     
-                    <div id="texto-post-${p.id}" style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
+                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6;">
+                        ${textoSeguro}
+                        ${ehTextoLongo ? '<div class="ws-text-fade"></div>' : ''}
+                    </div>
+                    ${btnVerMais}
+                    
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap;">
-                        <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
+                        <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                             👍 <span id="count-like-${p.id}">${likesArr.length}</span>
                         </button>
                         
-                        <button id="btn-dislike-${p.id}" class="ws-btn-gamified" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
+                        <button id="btn-dislike-${p.id}" class="ws-btn-gamified" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
                             👎 <span id="count-dislike-${p.id}">${dislikesArr.length}</span>
                         </button>
                         
-                        <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
+                        <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
                             💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
                         </button>
                     </div>
@@ -627,7 +680,6 @@ Workspace.Feed = {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
-                                // 🚀 ATUALIZADO: Menu de 3 pontinhos inserido de forma elegante na linha do comentário
                                 return `
                                 <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                                     ${avatarComentario}
@@ -640,8 +692,8 @@ Workspace.Feed = {
                                             <div class="ws-menu-ancora" style="position:relative;">
                                                 <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
                                                 <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
-                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
-                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
+                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
+                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
                                                 </div>
                                             </div>
                                             ` : ''}
@@ -653,7 +705,7 @@ Workspace.Feed = {
                             }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
+                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
                             <button class="ws-btn ws-btn-gamified" style="padding:10px 20px; border-radius:20px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
                         </div>
                     </div>
@@ -832,8 +884,8 @@ Workspace.Feed = {
                             <div class="ws-menu-ancora" style="position:relative;">
                                 <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
                                 <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
-                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
-                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
+                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
+                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
                                 </div>
                             </div>
                         </div>
@@ -861,6 +913,13 @@ Workspace.Feed = {
         } finally {
             if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
         }
+    },
+
+    // 🧠 AUXILIAR: Transforma texto bruto HTML num nó manipulável do DOM
+    htmlParaElemento: (htmlString) => {
+        const template = document.createElement('template');
+        template.innerHTML = htmlString.trim();
+        return template.content.firstChild;
     },
 
     configurarEventosCriacao: async () => {
@@ -893,6 +952,18 @@ Workspace.Feed = {
         const inputTexto = boxCriarPost.querySelector('textarea');
 
         if (btnPublicar && inputTexto) {
+            
+            // 💾 ETAPA 2: Mecanismo de Recuperação de Rascunho Ativado!
+            const rascunhoGuardado = localStorage.getItem('ws_draft_post');
+            if (rascunhoGuardado) {
+                inputTexto.value = rascunhoGuardado;
+            }
+
+            // Ouve as teclas digitadas para fazer o salvamento dinâmico em background
+            inputTexto.addEventListener('input', (e) => {
+                localStorage.setItem('ws_draft_post', e.target.value);
+            });
+
             const novoBtn = btnPublicar.cloneNode(true);
             btnPublicar.parentNode.replaceChild(novoBtn, btnPublicar);
 
@@ -940,6 +1011,8 @@ Workspace.Feed = {
 
                     if (postRes && postRes.success) {
                         inputTexto.value = '';
+                        localStorage.removeItem('ws_draft_post'); // 💾 Limpa o rascunho apenas em caso de sucesso!
+                        
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
                         if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
                         
