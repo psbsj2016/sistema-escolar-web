@@ -9,7 +9,7 @@ Workspace.Feed = {
     observer: null,
     radarNovosPosts: null, 
     listenerFechamentoConfigurado: false,
-    filtroAtivo: 'todos', // 🧠 Novo: Controla o filtro dinâmico atual
+    filtroAtivo: 'todos', 
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -43,7 +43,6 @@ Workspace.Feed = {
         menus.forEach(m => m.style.display = 'none');
     },
 
-    // 🎨 ATUALIZADO: Inclui estilos para o Carrossel, Pílula, Filtros Rápidos e Colapso de Texto
     injetarCSSAnimacoes: () => {
         if (!document.getElementById('ws-feed-styles')) {
             const style = document.createElement('style');
@@ -81,20 +80,17 @@ Workspace.Feed = {
                 .ws-carousel-container::-webkit-scrollbar { display: none; }
                 .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
 
-                /* ✂️ CSS do Colapso de Texto Inteligente */
                 .ws-text-collapsed { max-height: 110px; overflow: hidden; position: relative; transition: max-height 0.3s ease-out; }
                 .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
                 .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
                 
-                /* 🏁 CSS das pílulas de filtros rápidos */
-                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
                 .ws-filter-chip.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
             `;
             document.head.appendChild(style);
         }
     },
 
-    // ✂️ NOVA FUNÇÃO: Controla a expansão visual do "Ver mais"
     toggleTextoPost: (btn, postId) => {
         const wrap = document.getElementById(`text-wrap-${postId}`);
         if (!wrap) return;
@@ -102,7 +98,6 @@ Workspace.Feed = {
         if (wrap.classList.contains('ws-text-expanded')) {
             wrap.classList.remove('ws-text-expanded');
             btn.innerText = "Ler mais ⬇️";
-            // Dá um scroll suave de volta para o topo do cartão se o utilizador recolher o texto
             document.getElementById(`post-${postId}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             wrap.classList.add('ws-text-expanded');
@@ -163,12 +158,13 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // Injeta a Barra de Filtros Rápidos se ela ainda não existir na tela
+        // 🚀 INOVAÇÃO: Barra de Filtros com Imagens e Vídeos separados
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
                 <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px;">
                     <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
-                    <button class="ws-filter-chip" id="filter-media" onclick="Workspace.Feed.filtrarFeed('media')">🖼️ Multimédia</button>
+                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
+                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
                     <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
                 </div>
             `;
@@ -211,7 +207,7 @@ Workspace.Feed = {
             }
 
             Workspace.Feed.todosOsPosts = posts;
-            Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); // Renderiza respeitando o filtro selecionado
+            Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
             Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
@@ -219,7 +215,7 @@ Workspace.Feed = {
         }
     },
 
-    // 🏁 NOVA FUNÇÃO: Gerencia os botões de Filtro sem fazer requisições pesadas à API
+    // 🚀 LÓGICA DE FILTRAGEM ATUALIZADA
     filtrarFeed: (tipoFiltro) => {
         Workspace.Feed.filtroAtivo = tipoFiltro;
         Workspace.Feed.paginaAtual = 1;
@@ -230,18 +226,23 @@ Workspace.Feed = {
         const btnAtivo = document.getElementById(`filter-${tipoFiltro}`);
         if(btnAtivo) btnAtivo.classList.add('active');
 
-        // Filtra a lista em memória de forma instantânea (Performance Google)
+        // Filtra a lista baseando-se no novo modelo
         let listaFiltrada = Workspace.Feed.todosOsPosts;
-        if (tipoFiltro === 'media') {
-            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image') || a.tipo.includes('video')));
+        if (tipoFiltro === 'imagens') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
+        } else if (tipoFiltro === 'videos') {
+            // Nota: Este filtro apanha tanto vídeos enviados diretamente como vídeos do YouTube processados via embed no texto
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => 
+                (p.anexos && p.anexos.some(a => a.tipo.includes('video'))) || 
+                (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be'))
+            );
         } else if (tipoFiltro === 'docs') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
         }
 
         const container = document.getElementById('ws-posts-area');
-        if (container) container.innerHTML = ''; // Limpa a tela
+        if (container) container.innerHTML = ''; 
 
-        // Reinicia e reposiciona o Sentinela do Scroll Infinito
         let sentinela = document.getElementById('ws-feed-sentinela');
         if (!sentinela) {
             sentinela = document.createElement('div');
@@ -251,7 +252,6 @@ Workspace.Feed = {
         sentinela.style.display = 'block';
         sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
 
-        // Executa a paginação para a lista filtrada
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
 
@@ -263,13 +263,13 @@ Workspace.Feed = {
         const sentinela = document.getElementById('ws-feed-sentinela');
 
         if (novosPosts.length === 0 && Workspace.Feed.paginaAtual === 1) {
-            document.getElementById('ws-posts-area').innerHTML = '<div class="ws-card" style="text-align:center; padding:30px; color:#999; font-size:13px;">Nenhuma publicação encontrada nesta categoria.</div>';
+            document.getElementById('ws-posts-area').innerHTML = '<div class="ws-card" style="text-align:center; padding:40px; color:#999; font-size:14px;">📭 Nenhuma publicação encontrada nesta categoria.</div>';
             if(sentinela) sentinela.style.display = 'none';
             return;
         }
 
         if (novosPosts.length === 0) {
-            if(sentinela) sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
+            if(sentinela) sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">Chegou ao fim do feed!</div>';
             return;
         }
 
@@ -616,7 +616,6 @@ Workspace.Feed = {
             
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
-            // Verifica se o texto é longo o suficiente (aproximadamente mais de 350 caracteres) para sofrer colapso
             const ehTextoLongo = (p.texto && p.texto.length > 350);
             const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
 
@@ -915,7 +914,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🧠 AUXILIAR: Transforma texto bruto HTML num nó manipulável do DOM
     htmlParaElemento: (htmlString) => {
         const template = document.createElement('template');
         template.innerHTML = htmlString.trim();
@@ -953,13 +951,11 @@ Workspace.Feed = {
 
         if (btnPublicar && inputTexto) {
             
-            // 💾 ETAPA 2: Mecanismo de Recuperação de Rascunho Ativado!
             const rascunhoGuardado = localStorage.getItem('ws_draft_post');
             if (rascunhoGuardado) {
                 inputTexto.value = rascunhoGuardado;
             }
 
-            // Ouve as teclas digitadas para fazer o salvamento dinâmico em background
             inputTexto.addEventListener('input', (e) => {
                 localStorage.setItem('ws_draft_post', e.target.value);
             });
@@ -1011,7 +1007,7 @@ Workspace.Feed = {
 
                     if (postRes && postRes.success) {
                         inputTexto.value = '';
-                        localStorage.removeItem('ws_draft_post'); // 💾 Limpa o rascunho apenas em caso de sucesso!
+                        localStorage.removeItem('ws_draft_post'); 
                         
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
                         if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
