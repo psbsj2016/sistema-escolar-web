@@ -83,7 +83,6 @@ Workspace.Feed = {
             return ''; 
         });
 
-        // 🛠️ CORREÇÃO AQUI: Utilizadas crases (backticks) para evitar erros de parsing com aspas simples!
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
         texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
@@ -201,40 +200,104 @@ Workspace.Feed = {
         });
     },
 
+    // 🌟 MOTOR REESCRITO: Grelha de Mosaicos Avançada (Gadrão Google/Twitter)
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
-        let html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;">';
         
-        anexos.forEach(anexo => {
-            let urlCorrigida = anexo.url;
-            if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
-                urlCorrigida = '/' + urlCorrigida;
-            }
-
-            const nomeMinusculo = (anexo.nome || '').toLowerCase();
-            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || 
-                             nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || 
-                             nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
-
-            if (anexo.tipo.includes('image')) {
-                html += `<img src="${urlCorrigida}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${urlCorrigida}')" title="Clique para ampliar">`;
-            } else if (anexo.tipo.includes('video')) {
-                html += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${urlCorrigida}" type="${anexo.tipo}">O seu navegador não suporta vídeos.</video>`;
+        // Separação cirúrgica por famílias de ficheiros
+        const imagens = anexos.filter(a => a.tipo.includes('image'));
+        const videos = anexos.filter(a => a.tipo.includes('video'));
+        const documentos = anexos.filter(a => !a.tipo.includes('image') && !a.tipo.includes('video'));
+        
+        let htmlFinal = '';
+        
+        // 1️⃣ ALGORITMO DO MOSAICO DE IMAGENS
+        if (imagens.length > 0) {
+            const qtd = imagens.length;
+            let gridStyle = 'display: grid; gap: 8px; margin-top: 15px; border-radius: 12px; overflow: hidden; width: 100%;';
+            
+            if (qtd === 1) {
+                // Padrão clássico de ecrã inteiro para foto única
+                let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
+                htmlFinal += `<img src="${url}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
+                // Define a arquitetura das colunas com base no número de ficheiros enviados
+                if (qtd === 2) {
+                    gridStyle += 'grid-template-columns: 1fr 1fr; height: 260px;';
+                } else if (qtd === 3) {
+                    gridStyle += 'grid-template-columns: 1.5fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
+                } else { 
+                    // 4 ou mais fotografias
+                    gridStyle += 'grid-template-columns: 1fr 1fr; grid-template-rows: 126px 126px; height: 260px;';
+                }
+                
+                htmlFinal += `<div style="${gridStyle}">`;
+                
+                imagens.forEach((img, index) => {
+                    // O mosaico visual só aguenta até 4 fotos no ecrã para não poluir o feed
+                    if (index >= 4) return;
+                    
+                    let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
+                    let itemStyle = 'width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: 0.2s; display: block;';
+                    let extraOverlay = '';
+                    
+                    // Se houver 3 fotos, a primeira estica-se verticalmente para dar um aspeto editorial premium
+                    if (qtd === 3 && index === 0) {
+                        itemStyle += ' grid-row: span 2;';
+                    }
+                    
+                    // Se houver mais de 4 fotografias, a última ganha a película escura com o contador "+X"
+                    if (index === 3 && qtd > 4) {
+                        extraOverlay = `
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; pointer-events: none; font-family: sans-serif;">
+                                +${qtd - 3}
+                            </div>
+                        `;
+                    }
+                    
+                    htmlFinal += `
+                        <div style="position: relative; width: 100%; height: 100%; overflow: hidden;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
+                            <img src="${url}" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.85)'" onmouseout="this.style.filter='brightness(1)'">
+                            ${extraOverlay}
+                        </div>
+                    `;
+                });
+                
+                htmlFinal += '</div>';
+            }
+        }
+        
+        // 2️⃣ ALGORITMO DE VÍDEOS
+        if (videos.length > 0) {
+            videos.forEach(video => {
+                let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
+                htmlFinal += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
+            });
+        }
+        
+        // 3️⃣ ALGORITMO DE DOCUMENTOS
+        if (documentos.length > 0) {
+            htmlFinal += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; width:100%;">';
+            documentos.forEach(anexo => {
+                let urlCorrigida = anexo.url.startsWith('http') || anexo.url.startsWith('/') ? anexo.url : '/' + anexo.url;
+                const nomeMinusculo = (anexo.nome || '').toLowerCase();
+                const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || 
+                                 nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || 
+                                 nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
                 let textoAcao = 'Ler Documento ↗';
 
-                html += `
-                    <div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; width:100%; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'">
+                htmlFinal += `
+                    <div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'">
                         <span style="font-size:24px;">${icone}</span>
                         <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span>
                         <span style="color:#3498db; font-size:12px; font-weight:bold;">${textoAcao}</span>
                     </div>`;
-            }
-        });
+            });
+            htmlFinal += '</div>';
+        }
         
-        html += '</div>';
-        return html;
+        return htmlFinal;
     },
 
     limparTexto: (txt) => {
@@ -249,7 +312,6 @@ Workspace.Feed = {
         const html = posts.map(p => {
             const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
-            
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
