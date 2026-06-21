@@ -2,11 +2,11 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Feed = {
-    todosOsPosts: [], // 🧠 Guarda TODOS os posts vindos da API
-    postsCache: [],   // 🧠 Guarda apenas os posts já desenhados na tela
+    todosOsPosts: [],
+    postsCache: [],
     comentariosAbertos: new Set(),
     paginaAtual: 1,
-    observer: null,   // 📸 O nosso "Sentinela" invisível
+    observer: null,
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
@@ -43,35 +43,36 @@ Workspace.Feed = {
 
     calcularTempoRelativo: (dataString) => {
         if (!dataString) return '';
-        
         const dataPost = new Date(dataString);
         const agora = new Date();
         const diferencaSegundos = Math.floor((agora - dataPost) / 1000);
 
         if (diferencaSegundos < 60) return 'Agora mesmo';
-        
         const diferencaMinutos = Math.floor(diferencaSegundos / 60);
         if (diferencaMinutos < 60) return `Há ${diferencaMinutos} min`;
-        
         const diferencaHoras = Math.floor(diferencaMinutos / 60);
         if (diferencaHoras < 24) return `Há ${diferencaHoras} h`;
-        
         const diferencaDias = Math.floor(diferencaHoras / 24);
         if (diferencaDias === 1) {
             const horas = dataPost.getHours().toString().padStart(2, '0');
             const minutos = dataPost.getMinutes().toString().padStart(2, '0');
             return `Ontem às ${horas}:${minutos}`;
         }
-        
         if (diferencaDias < 7) return `Há ${diferencaDias} dias`;
-        
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
+    // 🚀 ATUALIZADO: Parse de Markdown (Negrito, Itálico) e YouTube
     processarTextoComEmbeds: (textoOriginal) => {
         if (!textoOriginal) return '';
         
         let texto = Workspace.Feed.limparTexto(textoOriginal);
+        
+        // Magia do Markdown Básico
+        texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // **Negrito**
+        texto = texto.replace(/\*(.*?)\*/g, '<strong>$1</strong>');     // *Negrito*
+        texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');               // _Itálico_
+        
         texto = texto.replace(/\n/g, '<br>');
 
         const iframesYouTube = [];
@@ -80,7 +81,7 @@ Workspace.Feed = {
         texto = texto.replace(regexYouTube, (match, id) => {
             iframesYouTube.push(`
                 <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
-                    <iframe src="https://www.youtube.com/embed/${id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe loading="lazy" src="https://www.youtube.com/embed/${id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             `);
             return ''; 
@@ -89,19 +90,14 @@ Workspace.Feed = {
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
         texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
-        if (iframesYouTube.length > 0) {
-            texto += iframesYouTube.join('');
-        }
-
+        if (iframesYouTube.length > 0) texto += iframesYouTube.join('');
         return texto;
     },
 
-    // 🚀 O NOVO MOTOR CENTRAL DE CARREGAMENTO
     carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // 1. Mostra Skeletons se for a primeira vez
         if(Workspace.Feed.todosOsPosts.length === 0) {
             let skeletonHTML = '';
             for(let i=0; i<3; i++) {
@@ -127,7 +123,6 @@ Workspace.Feed = {
             const refId = Workspace.usuario.alunoRefId || '';
             const posts = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
 
-            // 2. Se o feed estiver vazio na BD
             if (!posts || posts.length === 0) {
                 container.innerHTML = `
                     <div class="ws-card" style="text-align: center; padding: 40px; color: #7f8c8d;">
@@ -140,13 +135,11 @@ Workspace.Feed = {
                 return;
             }
 
-            // 3. Reseta a memória e prepara a paginação
             Workspace.Feed.todosOsPosts = posts;
             Workspace.Feed.paginaAtual = 1;
             Workspace.Feed.postsCache = [];
-            container.innerHTML = ''; // Limpa os skeletons
+            container.innerHTML = ''; 
 
-            // 4. Cria ou reposiciona o elemento Sentinela (Câmara) no fundo
             let sentinela = document.getElementById('ws-feed-sentinela');
             if (!sentinela) {
                 sentinela = document.createElement('div');
@@ -156,7 +149,6 @@ Workspace.Feed = {
             sentinela.style.display = 'block';
             sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
 
-            // 5. Dá o arranque inicial (carrega a 1ª página)
             Workspace.Feed.carregarMaisPosts();
             Workspace.Feed.configurarScrollInfinito();
 
@@ -165,9 +157,8 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 LÓGICA DO LOTE: Desenha de 5 em 5 posts
     carregarMaisPosts: () => {
-        const limite = 5; // Pode alterar para 10 se preferir
+        const limite = 5; 
         const inicio = (Workspace.Feed.paginaAtual - 1) * limite;
         const fim = inicio + limite;
         const novosPosts = Workspace.Feed.todosOsPosts.slice(inicio, fim);
@@ -182,17 +173,14 @@ Workspace.Feed = {
             return;
         }
 
-        // Adiciona os novos posts à memória ativa da tela
         Workspace.Feed.postsCache = [...Workspace.Feed.postsCache, ...novosPosts];
         
-        // Desenha APENAS os 5 novos (sem apagar e recarregar os antigos!)
         const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
         const container = document.getElementById('ws-posts-area');
         container.insertAdjacentHTML('beforeend', html);
 
         Workspace.Feed.paginaAtual++;
 
-        // Verifica se já não sobraram posts para a próxima vez
         if (fim >= Workspace.Feed.todosOsPosts.length) {
             if(sentinela) {
                 sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">✅ Chegou ao fim do mural!</div>';
@@ -201,20 +189,15 @@ Workspace.Feed = {
         }
     },
 
-    // 📸 O VIGILANTE: A câmara que vigia se chegou ao fundo da tela
     configurarScrollInfinito: () => {
         const sentinela = document.getElementById('ws-feed-sentinela');
         if (!sentinela) return;
         
         if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
         
-        // IntersectionObserver é a tecnologia padrão da Google para Scroll Infinito
         Workspace.Feed.observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) {
-                // Se o utilizador rolou até ao fundo, carrega o próximo lote!
-                Workspace.Feed.carregarMaisPosts();
-            }
-        }, { rootMargin: '300px' }); // Ativa a câmara 300px antes de bater no fundo
+            if (entries[0].isIntersecting) Workspace.Feed.carregarMaisPosts();
+        }, { rootMargin: '300px' }); 
         
         Workspace.Feed.observer.observe(sentinela);
     },
@@ -231,7 +214,6 @@ Workspace.Feed = {
             <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">&times;</span>
             <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out;">
         `;
-        
         document.body.appendChild(overlay);
 
         requestAnimationFrame(() => {
@@ -256,7 +238,6 @@ Workspace.Feed = {
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
 
         let iframeSrc = url;
-        
         if (ehOffice) {
             const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
             iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`;
@@ -268,10 +249,9 @@ Workspace.Feed = {
             </div>
             <div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
                 ${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}
-                <iframe src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
+                <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
             </div>
         `;
-
         document.body.appendChild(overlay);
 
         requestAnimationFrame(() => {
@@ -280,6 +260,7 @@ Workspace.Feed = {
         });
     },
 
+    // 🚀 ATUALIZADO: Lazy Loading Nativo nas imagens do Mosaico
     renderizarAnexos: (anexos) => {
         if (!anexos || anexos.length === 0) return '';
         
@@ -295,7 +276,7 @@ Workspace.Feed = {
             
             if (qtd === 1) {
                 let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
-                htmlFinal += `<img src="${url}" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
+                htmlFinal += `<img src="${url}" loading="lazy" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
                 if (qtd === 2) {
                     gridStyle += 'grid-template-columns: 1fr 1fr; height: 260px;';
@@ -311,13 +292,10 @@ Workspace.Feed = {
                     if (index >= 4) return;
                     
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
-                    
                     let itemStyle = 'width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: 0.2s; display: block;';
                     let extraOverlay = '';
                     
-                    if (qtd === 3 && index === 0) {
-                        itemStyle += ' grid-row: span 2;';
-                    }
+                    if (qtd === 3 && index === 0) itemStyle += ' grid-row: span 2;';
                     
                     if (index === 3 && qtd > 4) {
                         extraOverlay = `
@@ -329,12 +307,11 @@ Workspace.Feed = {
                     
                     htmlFinal += `
                         <div style="position: relative; width: 100%; height: 100%; overflow: hidden; background: #f9f9f9; border: 1px solid #f0f2f5; border-radius: 8px;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
-                            <img src="${url}" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'">
+                            <img src="${url}" loading="lazy" style="${itemStyle}" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'">
                             ${extraOverlay}
                         </div>
                     `;
                 });
-                
                 htmlFinal += '</div>';
             }
         }
@@ -375,7 +352,68 @@ Workspace.Feed = {
         return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     },
 
-    // 🚀 LÓGICA REDUZIDA: Apenas constrói e devolve o HTML
+    // 🚀 LÓGICA DE EDIÇÃO EM LINHA (INLINE)
+    editarPost: (postId) => {
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if(!post) return;
+        const containerText = document.getElementById(`texto-post-${postId}`);
+        if(!containerText) return;
+
+        const textAtual = post.texto || '';
+        containerText.innerHTML = `
+            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;">
+                <textarea id="edit-input-${postId}" rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="ws-btn" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
+                    <button class="ws-btn" style="background:#95a5a6; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">Cancelar</button>
+                </div>
+            </div>
+        `;
+    },
+
+    cancelarEdicaoPost: (postId) => {
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if(!post) return;
+        const containerText = document.getElementById(`texto-post-${postId}`);
+        if(containerText) containerText.innerHTML = Workspace.Feed.processarTextoComEmbeds(post.texto);
+    },
+
+    salvarEdicaoPost: async (postId) => {
+        const input = document.getElementById(`edit-input-${postId}`);
+        if(!input) return;
+        const novoTexto = input.value.trim();
+        const btn = event.target;
+        
+        btn.innerText = "⏳ A gravar..."; 
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}`, 'PUT', { texto: novoTexto });
+            if(res && res.success) {
+                const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                if(post) post.texto = novoTexto;
+                
+                Workspace.Feed.cancelarEdicaoPost(postId); // Volta ao visual normal e aplica o Markdown
+                if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
+            } else throw new Error();
+        } catch(e) {
+            if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao editar a publicação.", "error");
+            btn.innerText = "💾 Guardar Alterações"; 
+            btn.disabled = false;
+        }
+    },
+
+    // 🚀 LÓGICA DE PARTILHA (SHARE API)
+    partilharPost: (postId) => {
+        // Usa a API nativa do navegador para colar na área de transferência (Clipboard)
+        const urlPartilha = window.location.origin + window.location.pathname + '#post-' + postId;
+        navigator.clipboard.writeText(urlPartilha).then(() => {
+            if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Link copiado! Já pode colar onde quiser.", "success");
+        }).catch(err => {
+            if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Não foi possível copiar o link automaticamente.", "error");
+        });
+    },
+
     gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
@@ -385,6 +423,9 @@ Workspace.Feed = {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
+            
+            // 🚀 BOTOES DE CONTROLE (EDITAR / APAGAR)
+            const btnEditar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#f39c12; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.editarPost('${p.id}')">✏️ Editar</span>` : '';
             const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` : '';
 
             let destinoBadge = p.destino === 'global' 
@@ -408,12 +449,12 @@ Workspace.Feed = {
                         </div>
                     </div>
                     
-                    <div style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
+                    <div id="texto-post-${p.id}" style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
                     ${Workspace.Feed.renderizarAnexos(p.anexos)}
                     
                     <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
                         
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button id="btn-like-${p.id}" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                                 👍 <span id="count-like-${p.id}">${likesArr.length}</span>
                             </button>
@@ -425,9 +466,16 @@ Workspace.Feed = {
                             <button style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
                                 💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
                             </button>
+
+                            <button style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.partilharPost('${p.id}')">
+                                📤 Partilhar
+                            </button>
                         </div>
                         
-                        ${btnApagar}
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            ${btnEditar}
+                            ${btnApagar}
+                        </div>
                     </div>
 
                     <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
