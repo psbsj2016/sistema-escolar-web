@@ -24,7 +24,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // 🛡️ INOVAÇÃO 2: Escudo de Segurança API (Interceptor 401)
     api: async (endpoint, method = 'GET', body = null) => {
         const options = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include' };
         if (body) options.body = JSON.stringify(body);
@@ -32,10 +31,9 @@ Object.assign(Workspace, {
         try {
             const res = await fetch(`/api${endpoint}`, options);
             
-            // Interceta sessão expirada instantaneamente
             if (res.status === 401 && endpoint !== '/auth/login') {
                 Workspace.mostrarAviso("A sua sessão expirou por segurança. Faça login novamente.", "warning");
-                Workspace.logout(true); // Desloga de forma forçada e limpa
+                Workspace.logout(true); 
                 return null;
             }
             
@@ -47,7 +45,6 @@ Object.assign(Workspace, {
         }
     },
 
-    // 🎨 INOVAÇÃO 3: Gerador Inteligente de Cores por Hash
     gerarCorPorNome: (nome) => {
         const cores = [
             '#e74c3c', '#8e44ad', '#2980b9', '#27ae60', '#f39c12', 
@@ -75,7 +72,6 @@ Object.assign(Workspace, {
         document.getElementById('ws-login-screen').style.display = 'none';
         document.getElementById('ws-navbar').style.display = 'flex';
         
-        // Define o estado inicial da rota
         Workspace.navegarPara('feed', true);
 
         const boxCriarPost = document.getElementById('ws-criar-post');
@@ -99,57 +95,61 @@ Object.assign(Workspace, {
             }
         });
 
-        // 🔙 INOVAÇÃO 1: Detetor do botão "Voltar" do telemóvel/navegador (History API)
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.tela) {
-                Workspace.navegarPara(e.state.tela, false); // false = não adiciona ao histórico novamente
+                Workspace.navegarPara(e.state.tela, false); 
             } else {
                 Workspace.navegarPara('feed', false);
             }
         });
     },
 
-    // 🎬 INOVAÇÃO 4: Motor de Transição de Ecrãs (Central Router)
+    // 🎬 MOTOR DE TRANSIÇÃO (AGORA COM O PERFIL)
     navegarPara: (tela, registarNoHistorico = true) => {
-        // 1. Fechar menus sobrepostos
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
         
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 2. Mapeamento dos ecrãs (IDs)
+        // 🧠 Adicionámos o Perfil ao nosso "Mapa" de ecrãs
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
             'tarefas_aluno': 'ws-tarefas-container',
-            'tarefas_prof': 'ws-tarefas-professor-container'
+            'tarefas_prof': 'ws-tarefas-professor-container',
+            'perfil': 'ws-perfil-modal' // O ID atual do seu perfil
         };
 
-        // Descobre qual é a aba exata de tarefas consoante o tipo de utilizador
         if (tela === 'tarefas') {
             tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         }
 
-        // Esconde todos
+        // Esconde todos os ecrãs
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
-        // Mostra o ecrã pretendido com animação
+        // Revela o ecrã pretendido com animação suave
         const ecraAtivo = document.getElementById(ecras[tela]);
         if (ecraAtivo) {
-            ecraAtivo.style.display = tela === 'feed' ? 'grid' : 'block';
+            // O feed precisa de ser GRID, o perfil precisa de ser FLEX, os restantes BLOCK
+            if (tela === 'feed') {
+                ecraAtivo.style.display = 'grid';
+            } else if (tela === 'perfil') {
+                ecraAtivo.style.display = 'flex';
+            } else {
+                ecraAtivo.style.display = 'block';
+            }
+            
             ecraAtivo.style.animation = 'fadeIn 0.3s ease-out';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Ações específicas de arranque por ecrã
         if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
 
-        // Regista o movimento no histórico do telemóvel
         if (registarNoHistorico) {
             history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
         }
@@ -190,7 +190,6 @@ Object.assign(Workspace, {
             return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
         } else {
             const letra = nomeStr.charAt(0).toUpperCase();
-            // 🎨 Chama a cor matemática dinâmica gerada a partir do nome!
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
             return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${letra}</div>`;
         }
@@ -211,10 +210,8 @@ Object.assign(Workspace, {
         } else subMenu.style.display = 'none';
     },
 
-    abrirModalPerfil: () => {
-        document.getElementById('ws-main-menu-dropdown').style.display = 'none'; 
-        document.getElementById('ws-perfil-modal').style.display = 'flex'; 
-        
+    // 👤 NOVA FUNÇÃO: Substitui o antigo Modal
+    abrirPaginaPerfil: () => {
         const nome = Workspace.usuario.nome || Workspace.usuario.login;
         document.getElementById('ws-perfil-modal-nome').innerText = nome;
         document.getElementById('ws-perfil-modal-login').innerText = `@${Workspace.usuario.login}`;
@@ -232,6 +229,9 @@ Object.assign(Workspace, {
             letrasEl.innerText = nome.charAt(0).toUpperCase();
             letrasEl.style.background = Workspace.gerarCorPorNome(nome);
         }
+
+        // Em vez de forçar o display no DOM, entregamos o trabalho ao Gestor de Rotas
+        Workspace.navegarPara('perfil');
     },
 
     uploadAvatar: async (event) => {
@@ -264,7 +264,7 @@ Object.assign(Workspace, {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
                 Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = novaFotoUrl;
 
-                Workspace.abrirModalPerfil(); 
+                Workspace.abrirPaginaPerfil(); // 🚀 Redireciona para a NOVA ROTA
                 Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
                 
                 if (Workspace.Feed) Workspace.Feed.carregarPosts();
