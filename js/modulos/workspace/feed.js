@@ -7,12 +7,11 @@ Workspace.Feed = {
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
-        Workspace.Feed.injetarCSSSkeleton(); // 💉 Prepara as animações de carregamento
+        Workspace.Feed.injetarCSSSkeleton(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
     },
 
-    // 🎨 NOVA FUNÇÃO: Injeta o design Premium do Skeleton Loading
     injetarCSSSkeleton: () => {
         if (!document.getElementById('ws-skeleton-styles')) {
             const style = document.createElement('style');
@@ -39,7 +38,6 @@ Workspace.Feed = {
         }
     },
 
-    // ⏱️ FUNÇÃO: Calcula o Tempo Relativo
     calcularTempoRelativo: (dataString) => {
         if (!dataString) return '';
         
@@ -67,12 +65,40 @@ Workspace.Feed = {
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
+    processarTextoComEmbeds: (textoOriginal) => {
+        if (!textoOriginal) return '';
+        
+        let texto = Workspace.Feed.limparTexto(textoOriginal);
+        texto = texto.replace(/\n/g, '<br>');
+
+        const iframesYouTube = [];
+        const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g;
+        
+        texto = texto.replace(regexYouTube, (match, id) => {
+            iframesYouTube.push(`
+                <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
+                    <iframe src="https://www.youtube.com/embed/${id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            `);
+            return ''; 
+        });
+
+        // 🛠️ CORREÇÃO AQUI: Utilizadas crases (backticks) para evitar erros de parsing com aspas simples!
+        const regexLinks = /(https?:\/\/[^\s<]+)/g;
+        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
+
+        if (iframesYouTube.length > 0) {
+            texto += iframesYouTube.join('');
+        }
+
+        return texto;
+    },
+
     carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
         if(Workspace.Feed.postsCache.length === 0) {
-            // 🦴 SKELETON LOADING (Adeus "Aguarde...⏳")
             let skeletonHTML = '';
             for(let i=0; i<3; i++) {
                 skeletonHTML += `
@@ -223,7 +249,8 @@ Workspace.Feed = {
         const html = posts.map(p => {
             const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
-            const textoSeguro = Workspace.Feed.limparTexto(p.texto).replace(/\n/g, '<br>');
+            
+            const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
             const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` : '';
@@ -566,7 +593,6 @@ Workspace.Feed = {
                         if (Workspace.Upload) Workspace.Upload.limparAnexos();
                         if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicado com sucesso!", "success");
                         
-                        // Volta o Skeleton antes de carregar
                         Workspace.Feed.postsCache = [];
                         await Workspace.Feed.carregarPosts(); 
                     } else {
