@@ -502,7 +502,7 @@ Workspace.Feed = {
 
         containerTexto.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;">
-                <input type="text" id="input-edit-com-${comentarioId}" value="${c.texto}" style="padding:6px 12px; border-radius:14px; border:1px solid #3498db; font-size:5px; outline:none; background:#fff; width:100%; box-sizing:border-box;">
+                <input type="text" id="input-edit-com-${comentarioId}" value="${c.texto}" style="padding:6px 12px; border-radius:14px; border:1px solid #3498db; font-size:13px; outline:none; background:#fff; width:100%; box-sizing:border-box;">
                 <div style="display:flex; gap:6px;">
                     <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.salvarEdicaoComentario('${postId}', '${comentarioId}')">💾 Guardar</span>
                     <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.cancelarEdicaoComentario('${postId}', '${comentarioId}')">Cancelar</span>
