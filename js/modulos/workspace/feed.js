@@ -8,12 +8,42 @@ Workspace.Feed = {
     paginaAtual: 1,
     observer: null,
     radarNovosPosts: null, 
+    listenerFechamentoConfigurado: false, // 🧠 Variável para evitar duplicar o clique global
 
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
+        
+        // 🧠 ETAPA 1: O "Ouvinte" Global. Se clicar fora do menu, ele fecha-se automaticamente!
+        if (!Workspace.Feed.listenerFechamentoConfigurado) {
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.ws-menu-ancora')) {
+                    Workspace.Feed.fecharMenus();
+                }
+            });
+            Workspace.Feed.listenerFechamentoConfigurado = true;
+        }
+    },
+
+    // 🧠 ETAPA 2: Funções para Abrir e Fechar os novos menus de 3 pontinhos
+    toggleMenu: (event, postId) => {
+        event.stopPropagation(); // Impede que o "Ouvinte Global" feche o menu na mesma hora que clicamos para abrir
+        const menu = document.getElementById(`menu-post-${postId}`);
+        const estaAberto = menu.style.display === 'block';
+        
+        Workspace.Feed.fecharMenus(); // Por segurança, garante que se houver outro menu aberto noutro post, ele fecha
+        
+        if (!estaAberto) {
+            menu.style.display = 'block';
+        }
+    },
+
+    fecharMenus: () => {
+        // Encontra todos os menus flutuantes e esconde-os
+        const menus = document.querySelectorAll('.ws-post-dropdown');
+        menus.forEach(m => m.style.display = 'none');
     },
 
     injetarCSSAnimacoes: () => {
@@ -50,7 +80,6 @@ Workspace.Feed = {
                 .new-posts-pill.show { transform: translateY(0); opacity: 1; }
                 .new-posts-pill:hover { background: #2980b9; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5); }
 
-                /* 📸 ETAPA 1: Estilos do Carrossel (Esconde scrollbars nativas e cria o "magnetismo" das imagens) */
                 .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; }
                 .ws-carousel-container::-webkit-scrollbar { display: none; }
                 .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
@@ -314,14 +343,12 @@ Workspace.Feed = {
         });
     },
 
-    // 📸 ETAPA 4: Lógica do Carrossel (Atualiza o contador e move a imagem)
     scrollCarrossel: (postId, total) => {
         const container = document.getElementById(`carousel-${postId}`);
         if(!container) return;
         const width = container.offsetWidth;
         const scrollPos = container.scrollLeft;
         
-        // Determina qual imagem está no centro da tela (índice 0 a total-1)
         const index = Math.round(scrollPos / width);
         
         const counter = document.getElementById(`counter-${postId}`);
@@ -337,11 +364,9 @@ Workspace.Feed = {
         const container = document.getElementById(`carousel-${postId}`);
         if(!container) return;
         const width = container.offsetWidth;
-        // Move o contêiner 1 largura inteira para a esquerda (-1) ou direita (1)
         container.scrollBy({ left: direcao * width, behavior: 'smooth' });
     },
 
-    // 📸 ETAPA 2: Adicionado o parâmetro 'postId' na função para identificação
     renderizarAnexos: (anexos, postId) => {
         if (!anexos || anexos.length === 0) return '';
         
@@ -351,7 +376,6 @@ Workspace.Feed = {
         
         let htmlFinal = '';
         
-        // 📸 ETAPA 3: Implementação do Carrossel Estilo Instagram
         if (imagens.length > 0) {
             const qtd = imagens.length;
             
@@ -359,23 +383,17 @@ Workspace.Feed = {
                 let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
                 htmlFinal += `<img src="${url}" loading="lazy" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
-                // Estrutura principal do Carrossel (Fundo acinzentado preservado para uniformidade)
                 htmlFinal += `
                 <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #f9f9f9; border: 1px solid #eee; margin-top: 15px;">
-                    <!-- Indicador de quantidade no topo direito -->
                     <div id="counter-${postId}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: bold; z-index: 10; pointer-events: none;">1 / ${qtd}</div>
                     
-                    <!-- Botões de navegação (visíveis no computador) -->
                     <button id="btn-left-${postId}" onclick="Workspace.Feed.moverCarrossel('${postId}', -1)" style="display:none; position: absolute; top: 50%; transform: translateY(-50%); left: 10px; background: rgba(255,255,255,0.85); border: none; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: 0.2s;">❮</button>
                     <button id="btn-right-${postId}" onclick="Workspace.Feed.moverCarrossel('${postId}', 1)" style="position: absolute; top: 50%; transform: translateY(-50%); right: 10px; background: rgba(255,255,255,0.85); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: 0.2s;">❯</button>
                     
-                    <!-- Contêiner deslizante de imagens -->
                     <div id="carousel-${postId}" class="ws-carousel-container" onscroll="Workspace.Feed.scrollCarrossel('${postId}', ${qtd})">`;
                     
                 imagens.forEach((img) => {
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
-                    
-                    // Cada slide ocupa 100% da largura do contêiner e exibe a imagem de forma íntegra
                     htmlFinal += `
                         <div class="ws-carousel-slide">
                             <img src="${url}" loading="lazy" style="width: 100%; max-height: 400px; object-fit: contain; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
@@ -492,9 +510,6 @@ Workspace.Feed = {
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
             
-            const btnEditar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#f39c12; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.editarPost('${p.id}')">✏️ Editar</span>` : '';
-            const btnApagar = ehDonoOuGestor ? `<span style="cursor:pointer; color:#e74c3c; font-size:12px; font-weight:bold; transition:0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.apagarPost('${p.id}')">🗑️ Apagar</span>` : '';
-
             let destinoBadge = p.destino === 'global' 
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
@@ -508,43 +523,53 @@ Workspace.Feed = {
 
             return `
                 <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease;">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                        ${avatarPost}
-                        <div>
-                            <div style="font-weight:700; color:#2c3e50; font-size:15px;">${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
-                            <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${tempoAmigavel} ${destinoBadge}</div>
+                    
+                    <!-- 🧠 ETAPA 3: Cabeçalho com o novo Menu Kebab de Três Pontinhos -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${avatarPost}
+                            <div>
+                                <div style="font-weight:700; color:#2c3e50; font-size:15px;">${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span></div>
+                                <div style="font-size:12px; color:#7f8c8d; margin-top:2px;">${tempoAmigavel} ${destinoBadge}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- ⚙️ MENU DE 3 PONTINHOS -->
+                        <div class="ws-menu-ancora" style="position:relative;">
+                            <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
+                            
+                            <div id="menu-post-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px; transition:0.2s;" onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">📤</span> Partilhar
+                                </div>
+                                ${ehDonoOuGestor ? `
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9; transition:0.2s;" onmouseover="this.style.background='#fdf8e3'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">✏️</span> Editar
+                                </div>
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9; transition:0.2s;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">🗑️</span> Apagar
+                                </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                     
                     <div id="texto-post-${p.id}" style="font-size:14px; color:#333; line-height:1.6;">${textoSeguro}</div>
-                    
-                    <!-- 📸 O POST ID AGORA É ENVIADO PARA RENDERIZAR OS ANEXOS -->
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <!-- 🧠 ETAPA 4: A Barra inferior agora está perfeitamente limpa e focada no essencial! -->
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
+                            👍 <span id="count-like-${p.id}">${likesArr.length}</span>
+                        </button>
                         
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
-                                👍 <span id="count-like-${p.id}">${likesArr.length}</span>
-                            </button>
-                            
-                            <button id="btn-dislike-${p.id}" class="ws-btn-gamified" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
-                                👎 <span id="count-dislike-${p.id}">${dislikesArr.length}</span>
-                            </button>
-                            
-                            <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
-                                💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
-                            </button>
-
-                            <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.partilharPost('${p.id}')">
-                                📤 Partilhar
-                            </button>
-                        </div>
+                        <button id="btn-dislike-${p.id}" class="ws-btn-gamified" style="background:${euNaoCurti ? '#fdf2f2' : '#f0f2f5'}; color:${euNaoCurti ? '#e74c3c' : '#555'}; border: 1px solid ${euNaoCurti ? '#e74c3c' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.reagir('${p.id}', 'dislike')">
+                            👎 <span id="count-dislike-${p.id}">${dislikesArr.length}</span>
+                        </button>
                         
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            ${btnEditar}
-                            ${btnApagar}
-                        </div>
+                        <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onmouseover="this.style.filter='brightness(0.95)'" onmouseout="this.style.filter='brightness(1)'" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
+                            💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
+                        </button>
                     </div>
 
                     <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
