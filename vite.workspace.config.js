@@ -48,10 +48,9 @@ export default defineConfig({
   },
   build: {
     outDir: resolve(__dirname, 'dist/workspace'),
-    emptyOutDir: true,
+    emptyOutDir: false, // 🛡️ CORREÇÃO: Impede que o Vite apague o site principal na Vercel!
     rollupOptions: {
       input: {
-        // 🚀 CRÍTICO: Chave e caminho corretos para o ficheiro na raiz!
         workspace: resolve(__dirname, 'workspace.html')
       }
     }
