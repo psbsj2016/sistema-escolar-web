@@ -20,9 +20,18 @@
       "source": "/matricula-online",
       "destination": "/matricula-online.html"
     },
+    // 👇 A PARTIR DAQUI SÃO AS NOVAS ROTAS DO WORKSPACE 👇
     {
       "source": "/workspace",
-      "destination": "/workspace.html"
+      "destination": "/workspace/workspace.html"
+    },
+    {
+      "source": "/workspace/",
+      "destination": "/workspace/workspace.html"
+    },
+    {
+      "source": "/workspace.html",
+      "destination": "/workspace/workspace.html"
     }
   ]
 }

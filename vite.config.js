@@ -24,8 +24,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // 🛡️ Segurança: Força esta PWA a ignorar o workspace e as rotas administrativas
-        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/, /^\/hub-matriculas/, /^\/workspace/]
+        // 🛡️ CORREÇÃO CRÍTICA: Ignora a pasta E o ficheiro do workspace!
+        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/, /^\/hub-matriculas/, /^\/workspace/, /workspace\.html$/]
       }
     })
   ],
