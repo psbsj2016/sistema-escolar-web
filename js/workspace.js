@@ -278,6 +278,9 @@ Object.assign(Workspace, {
         Workspace.navegarPara('perfil');
     },
 
+    // 🛡️ VACINA ANTI-CACHE: Se o HTML antigo chamar a função velha, ela aciona a nova!
+    abrirModalPerfil: () => Workspace.abrirPaginaPerfil(),
+
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;

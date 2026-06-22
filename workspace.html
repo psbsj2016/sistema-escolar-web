@@ -344,6 +344,8 @@
                 <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 20px;">Por questões de segurança, confirme a sua senha atual antes de escolher uma nova.</p>
                 
                 <form onsubmit="event.preventDefault(); Workspace.salvarNovaSenha();" style="width: 100%;">
+                    <input type="text" autocomplete="username" value="user_oculto" style="display: none;">
+                    
                     <input type="password" id="ws-senha-atual" placeholder="Senha Atual" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
                     <input type="password" id="ws-nova-senha" placeholder="Nova Senha" autocomplete="new-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
                     <input type="password" id="ws-confirma-senha" placeholder="Confirmar Nova Senha" autocomplete="new-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; font-size: 13px; box-sizing: border-box; outline: none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
