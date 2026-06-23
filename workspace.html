@@ -47,7 +47,7 @@
         
         /* 🛡️ MARGENS LATERAIS RIGOROSAMENTE IDÊNTICAS PARA TODAS AS SECÇÕES (FEED, TAREFAS, CONFIGS) */
         .ws-container, section[id$="-container"] { 
-            max-width: 1000px; /* Adapta-se fluidamente ao máximo permitido */
+            max-width: 1000px; 
             margin: 20px auto !important; 
             padding: 0 16px 80px 16px !important; 
             display: flex; 
@@ -67,16 +67,14 @@
             max-width: 100%;
             min-width: 0; 
             word-break: break-word;
-            overflow: visible !important; /* Permite o menu de 3 pontinhos do feed fluir livremente */
+            overflow: visible !important; 
         }
 
         /* 🛡️ BLINDAGEM ESPECÍFICA DE MODAIS E GRELHAS DE TAREFAS */
-        /* Impede que modais sobrepostos (Chat, Perfil) percam o canto arredondado */
         div[id$="-modal"] .ws-card {
             overflow: hidden !important;
         }
 
-        /* Protege as Tarefas Recebidas de serem esmagadas pela regra global do feed.js */
         section[id$="-container"] .ws-card * {
             max-width: none;
         }
@@ -88,51 +86,42 @@
             box-sizing: border-box !important;
         }
         
-        /* Geometria perfeita para o Chat */
+        /* 💬 ESTILIZAÇÃO DO CHAT (DESIGN NATIVO WHATSAPP) */
         #ws-chat-modal .ws-card {
             display: flex !important;
             flex-direction: column !important;
             padding: 0 !important;
-            height: 85vh !important;
+            height: 100% !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important; 
         }
+        
         #ws-chat-mensagens {
             flex: 1 !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
-        }
-        #ws-chat-input {
-            max-width: none !important;
+            align-items: stretch !important; 
         }
         
-        .ws-post-input { 
-            width: 100%; 
-            border: 1px solid #eee; 
-            border-radius: 8px; 
-            padding: 15px; 
-            resize: none; 
-            font-family: inherit; 
-            margin-bottom: 10px; 
-            background: #f9f9f9; 
-            box-sizing: border-box; 
-            outline: none; 
+        #ws-chat-mensagens > div {
+            align-items: flex-start !important; 
+            max-width: 85% !important; 
+            width: fit-content !important; 
+            margin-bottom: 12px !important;
         }
         
-        .ws-btn { 
-            background: #3498db; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: 0.2s; 
-            box-sizing: border-box; 
-            text-align: center; 
+        #ws-chat-mensagens > div > div:first-child {
+            margin-top: 0 !important; 
         }
-        .ws-btn:hover { background: #2980b9; }
-        .ws-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; position: absolute; top: -5px; right: -5px; font-weight: bold; }
 
-        /* 📱 CALIBRAÇÃO MOBILE ABSOLUTA E SIMÉTRICA PARA TODO O SISTEMA */
+        @media screen and (min-width: 768px) {
+            #ws-chat-modal .ws-card {
+                height: 85vh !important;
+                max-height: 85vh !important;
+                border-radius: 12px !important; 
+            }
+        }
+
         @media screen and (max-width: 900px) { 
             html, body { 
                 width: 100% !important; 
@@ -145,7 +134,6 @@
                 padding-top: max(12px, env(safe-area-inset-top)) !important; 
             }
             
-            /* Todas as secções ganham as mesmas margens milimétricas e o respiro do ecrã Edge */
             .ws-container, section[id$="-container"] { 
                 padding: 12px max(12px, env(safe-area-inset-right)) 20px max(12px, env(safe-area-inset-left)) !important; 
                 margin: 0 auto !important; 
@@ -269,13 +257,10 @@
     <main class="ws-container" id="ws-main-container" style="display: none;">
         <section class="ws-feed" id="ws-feed-container">
             
-            <!-- 🛡️ ÁREA DE CRIAÇÃO OTIMIZADA: Botões Maiores, mas na mesma linha -->
             <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
                 <textarea class="ws-post-input" rows="3" placeholder="Partilhe uma atividade, vídeo ou material com a turma..."></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
-                    <!-- Os botões gerados dinamicamente vão ancorar-se aqui na mesma linha -->
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
-                        <!-- O Javascript injetará o select aqui -->
                         <button id="ws-btn-anexar" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Ficheiro</button>
                     </div>
                     <button class="ws-btn" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
@@ -386,18 +371,25 @@
     </section>
 
     <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="ws-card" style="width: 95%; max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px;">Sala de Bate-Papo</h3>
-                    <div style="font-size: 12px; opacity: 0.8; margin-top: 3px;">Logado como: <strong id="ws-chat-aluno-nome">...</strong></div>
+        <div class="ws-card" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div style="background: #075e54; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button onclick="Workspace.Sidebar.fecharChat()" style="background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; font-weight: bold;">⬅</button>
+                    <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #ccc; border-radius: 50%; font-size: 20px; overflow: hidden;">👥</div>
+                    <div>
+                        <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px; font-weight: 600;">Sala de Bate-Papo</h3>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">Você: <strong id="ws-chat-aluno-nome">...</strong></div>
+                    </div>
                 </div>
-                <button onclick="Workspace.Sidebar.fecharChat()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
             </div>
-            <div id="ws-chat-mensagens" style="flex: 1; padding: 20px; overflow-y: auto; background: #e5ddd5; display: flex; flex-direction: column; gap: 12px;"></div>
-            <div style="padding: 15px; background: #f0f2f5; border-top: 1px solid #ddd; display: flex; gap: 10px;">
-                <input type="text" id="ws-chat-input" placeholder="Digite a sua mensagem para a turma..." style="flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-family: inherit; font-size: 14px;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
-                <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="border-radius: 20px; padding: 0 25px; background: #27ae60;">Enviar</button>
+            <div id="ws-chat-mensagens" style="flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; background: #e5ddd5; display: flex; flex-direction: column; gap: 12px;"></div>
+            <div style="padding: 10px; background: #f0f2f5; display: flex; gap: 8px; align-items: center; flex-shrink: 0; width: 100%; box-sizing: border-box;">
+                <div style="flex: 1; display: flex; align-items: center; background: white; border-radius: 25px; padding: 0 15px; height: 45px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 0;">
+                    <input type="text" id="ws-chat-input" placeholder="Mensagem" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 15px; background: transparent; min-width: 0; padding: 0; height: 100%;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
+                </div>
+                <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="width: 45px; height: 45px; border-radius: 50%; padding: 0; background: #128c7e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    <span style="color: white; font-size: 18px; margin-left: -2px;">➤</span>
+                </button>
             </div>
         </div>
     </div>
@@ -460,7 +452,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
     <script type="module" src="./js/workspace.js"></script>
 </body>
 </html>
