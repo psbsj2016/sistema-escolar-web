@@ -49,31 +49,48 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
-                /* 🛡️ REGRAS DE LAYOUT MOBILE PERFEITO (Zero Esmagamento e Zero Corte) */
-                .ws-card { overflow: visible !important; }
-                .ws-card * { max-width: 100%; box-sizing: border-box; }
-                
-                @media screen and (max-width: 600px) {
-                    /* Empilha o Select e os Botões elegantemente no telemóvel para não esticar a tela */
-                    #ws-criar-post > div:last-child {
-                        flex-direction: column !important;
-                        align-items: stretch !important;
-                        gap: 12px !important;
-                    }
-                    #ws-criar-post > div:last-child > div {
-                        display: flex !important;
-                        flex-direction: column !important;
-                        width: 100% !important;
-                    }
-                    #ws-post-destino {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        margin-bottom: 5px !important;
-                    }
-                    #ws-criar-post .ws-btn, #ws-criar-post button {
-                        width: 100% !important;
-                        text-align: center !important;
-                    }
+                /* 🛡️ DESIGN DE FILTROS EVOLUÍDO, PRÓXIMOS E PREMIUM */
+                #ws-feed-filter-bar {
+                    display: flex !important;
+                    gap: 6px !important; /* Filtros mais próximos */
+                    margin-bottom: 16px !important;
+                    overflow-x: auto !important;
+                    padding-bottom: 4px !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+                .ws-filter-chip { 
+                    background: #ffffff !important; 
+                    color: #555 !important; 
+                    border: 1px solid #e1e4e6 !important; 
+                    padding: 6px 12px !important; /* Tamanho otimizado */
+                    border-radius: 20px !important; 
+                    font-size: 12px !important; 
+                    font-weight: 600 !important; 
+                    cursor: pointer !important; 
+                    transition: all 0.2s ease !important; 
+                    white-space: nowrap !important;
+                    flex-shrink: 0 !important;
+                    scroll-snap-align: start !important;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+                }
+                .ws-filter-chip:hover {
+                    background: #f8fafc !important;
+                    border-color: #cbd5e1 !important;
+                }
+                .ws-filter-chip.active { 
+                    background: #2c3e50 !important; 
+                    color: #fff !important; 
+                    border-color: #2c3e50 !important;
+                    box-shadow: 0 4px 8px rgba(44, 62, 80, 0.15) !important; 
+                }
+
+                /* 🛡️ CENTRAGEM ABSOLUTA DE CONTEÚDOS INTERNOS */
+                .ws-card img, .ws-card video, .ws-card iframe {
+                    display: block !important;
+                    margin: 12px auto 0 auto !important; /* Perfeitamente centralizados */
+                    max-width: 100% !important;
+                    border-radius: 8px !important;
                 }
 
                 @keyframes skeleton-shimmer {
@@ -111,9 +128,6 @@ Workspace.Feed = {
                 .ws-text-collapsed { max-height: 110px; overflow: hidden; position: relative; transition: max-height 0.3s ease-out; }
                 .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
                 .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
-                
-                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; scroll-snap-align: start;}
-                .ws-filter-chip.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
             `;
             document.head.appendChild(style);
         }
@@ -176,7 +190,7 @@ Workspace.Feed = {
         });
 
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
-        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
+        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
         if (iframesYouTube.length > 0) texto += iframesYouTube.join('');
         return texto;
@@ -188,7 +202,7 @@ Workspace.Feed = {
 
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
+                <div id="ws-feed-filter-bar" style="scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
                     <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
                     <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
                     <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
@@ -203,9 +217,9 @@ Workspace.Feed = {
             for(let i=0; i<3; i++) {
                 skeletonHTML += `
                 <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee;">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; min-width: 0;">
-                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%; flex-shrink: 0;"></div>
-                        <div style="flex: 1; min-width: 0;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%;"></div>
+                        <div style="flex: 1;">
                             <div class="skeleton-box" style="width: 35%; height: 12px; margin-bottom: 8px;"></div>
                             <div class="skeleton-box" style="width: 20%; height: 10px;"></div>
                         </div>
@@ -693,10 +707,10 @@ Workspace.Feed = {
                             </div>
                         </div>
                         
-                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto;">
+                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto; padding-right: 5px;">
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
                             
-                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">📤</span> Partilhar
                                 </div>
@@ -988,11 +1002,12 @@ Workspace.Feed = {
         if (!boxCriarPost) return;
 
         if (!document.getElementById('ws-post-destino')) {
-            const areaBotoes = boxCriarPost.querySelector('div[style*="justify-content: space-between"]');
+            const areaBotoes = document.getElementById('ws-action-flex-wrapper');
             if (areaBotoes) {
+                // 🛡️ INJEÇÃO CIRÚRGICA: Reduzido o padding, tamanho e fixado à esquerda na mesma linha
                 const htmlSelect = `
-                    <select id="ws-post-destino" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer;">
-                        <option value="global">🌍 Público Geral</option>
+                    <select id="ws-post-destino" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; font-size:11px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 110px; font-weight: 600; font-family: inherit; flex-shrink: 1; min-width: 0;">
+                        <option value="global">🌍 Geral</option>
                     </select>
                 `;
                 areaBotoes.insertAdjacentHTML('afterbegin', htmlSelect);
@@ -1039,7 +1054,7 @@ Workspace.Feed = {
                     return;
                 }
 
-                novoBtn.innerText = "⏳ A enviar...";
+                novoBtn.innerText = "⏳";
                 novoBtn.disabled = true;
 
                 try {
