@@ -7,6 +7,7 @@ Workspace.Feed = {
     comentariosAbertos: new Set(),
     paginaAtual: 1,
     observer: null,
+    videoObserver: null,
     radarNovosPosts: null, 
     listenerFechamentoConfigurado: false,
     filtroAtivo: 'todos', 
@@ -140,8 +141,9 @@ Workspace.Feed = {
         
         texto = texto.replace(regexYouTube, (match, id) => {
             iframesYouTube.push(`
+                
                 <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
-                    <iframe loading="lazy" src="https://www.youtube.com/embed/${id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             `);
             return ''; 
@@ -158,14 +160,14 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // 🚀 INOVAÇÃO: Barra de Filtros com Imagens e Vídeos separados
+       // 🚀 INOVAÇÃO: Barra de Filtros com Imagens e Vídeos separados (Design Premium)
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px;">
-                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
-                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
-                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
-                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
+                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
+                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')" style="flex-shrink: 0; scroll-snap-align: start;">📋 Tudo</button>
+                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')" style="flex-shrink: 0; scroll-snap-align: start;">🖼️ Imagens</button>
+                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')" style="flex-shrink: 0; scroll-snap-align: start;">🎥 Vídeos</button>
+                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')" style="flex-shrink: 0; scroll-snap-align: start;">📕 Documentos</button>
                 </div>
             `;
             container.parentNode.insertBefore(Workspace.Feed.htmlParaElemento(filterBarHTML), container);
@@ -277,6 +279,8 @@ Workspace.Feed = {
         const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
         document.getElementById('ws-posts-area').insertAdjacentHTML('beforeend', html);
 
+        Workspace.Feed.iniciarMotorDeVideos(); // 🚀 ATIVA O CONTROLO DE VÍDEOS AQUI
+
         Workspace.Feed.paginaAtual++;
 
         if (Workspace.Feed.observer) Workspace.Feed.observer.disconnect();
@@ -307,6 +311,45 @@ Workspace.Feed = {
                 }
             } catch(e) {}
         }, 20000); 
+    },
+ 
+    iniciarMotorDeVideos: () => {
+        // 1. Regra "Só Toca Um": Quando um vídeo nativo começa, silencia todos os outros
+        document.querySelectorAll('.ws-feed-video').forEach(video => {
+            video.onplay = function() {
+                // Pausa outros vídeos nativos
+                document.querySelectorAll('.ws-feed-video').forEach(v => {
+                    if (v !== this && !v.paused) v.pause();
+                });
+                // Pausa os vídeos do YouTube
+                document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                });
+            };
+        });
+
+        // 2. Radar de Scroll: Desliga o vídeo se ele sair do ecrã
+        if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect();
+        
+        Workspace.Feed.videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Se o vídeo sair da área visível (IntersectionObserver dita isso)
+                if (!entry.isIntersecting) {
+                    const el = entry.target;
+                    if (el.tagName === 'VIDEO' && !el.paused) {
+                        el.pause(); // Pausa vídeo nativo
+                    } else if (el.tagName === 'IFRAME') {
+                        // Manda mensagem silenciosa à API do YouTube para pausar
+                        el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    }
+                }
+            });
+        }, { threshold: 0.2 }); // Dispara quando 80% do vídeo já não está visível
+
+        // Ativa o radar em todos os vídeos gerados
+        document.querySelectorAll('.ws-feed-video, .ws-video-embed').forEach(el => {
+            Workspace.Feed.videoObserver.observe(el);
+        });
     },
 
     mostrarPilulaNovosPosts: (qtd, novosPostsData) => {
@@ -453,7 +496,7 @@ Workspace.Feed = {
         if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
-                htmlFinal += `<video controls style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
+                htmlFinal += `<video controls class="ws-feed-video" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
             });
         }
         
