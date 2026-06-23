@@ -67,7 +67,29 @@
             max-width: 100%;
             min-width: 0; 
             word-break: break-word;
-            overflow: visible !important; 
+            overflow: visible !important; /* Permite que o menu dropdown flutue para fora no feed sem cortar */
+        }
+
+        /* 🛡️ BLINDAGEM DOS MODAIS (CHAT, TAREFAS, SENHA, PERFIL) */
+        /* Impede que as janelas sobrepostas herdem o 'overflow: visible' do feed, restaurando a forma perfeita */
+        div[id$="-modal"] .ws-card {
+            overflow: hidden !important;
+        }
+        
+        /* Proteção específica para a geometria e área de scroll do Chat */
+        #ws-chat-modal .ws-card {
+            display: flex !important;
+            flex-direction: column !important;
+            padding: 0 !important;
+            height: 85vh !important;
+        }
+        #ws-chat-mensagens {
+            flex: 1 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        #ws-chat-input {
+            max-width: none !important;
         }
         
         .ws-post-input { 
