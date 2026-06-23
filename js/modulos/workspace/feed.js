@@ -163,7 +163,7 @@ Workspace.Feed = {
        // 🚀 INOVAÇÃO: Barra de Filtros com Imagens e Vídeos separados (Design Premium)
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
+                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory; width: 100%; box-sizing: border-box;">
                     <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')" style="flex-shrink: 0; scroll-snap-align: start;">📋 Tudo</button>
                     <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')" style="flex-shrink: 0; scroll-snap-align: start;">🖼️ Imagens</button>
                     <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')" style="flex-shrink: 0; scroll-snap-align: start;">🎥 Vídeos</button>
@@ -698,7 +698,7 @@ Workspace.Feed = {
                         </div>
                     </div>
                     
-                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6;">
+                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; word-break: break-word; overflow-wrap: break-word; width: 100%; box-sizing: border-box;">
                         ${textoSeguro}
                         ${ehTextoLongo ? '<div class="ws-text-fade"></div>' : ''}
                     </div>
