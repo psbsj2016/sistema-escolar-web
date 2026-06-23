@@ -66,7 +66,7 @@
             max-width: 100%;
             min-width: 0; 
             word-break: break-word;
-            overflow: visible !important; /* Permite que o menu dropdown flutue para fora sem cortar */
+            overflow: visible !important; 
         }
         
         .ws-post-input { 
@@ -158,7 +158,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-ZSSbtLwi.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-CcZzjtTF.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/config-D5aoyuWT.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -207,7 +207,7 @@
                     </div>
 
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaTarefas()">
-                        <span style="font-size: 18px;">📝</span> Tasks
+                        <span style="font-size: 18px;">📝</span> Tarefas
                     </button>
 
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()">
@@ -235,13 +235,16 @@
     <main class="ws-container" id="ws-main-container" style="display: none;">
         <section class="ws-feed" id="ws-feed-container">
             
+            <!-- 🛡️ ÁREA DE CRIAÇÃO OTIMIZADA: Botões Maiores, mas na mesma linha -->
             <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
                 <textarea class="ws-post-input" rows="3" placeholder="Partilhe uma atividade, vídeo ou material com a turma..."></textarea>
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 4px; width: 100%;">
-                    <div style="display: flex; gap: 4px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
-                        <button style="background: #f0f2f5; color:#555; border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 11px; white-space: nowrap; flex-shrink: 0;">📎 Anexar</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
+                    <!-- Os botões gerados dinamicamente vão ancorar-se aqui na mesma linha -->
+                    <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
+                        <!-- O Javascript injetará o select aqui -->
+                        <button id="ws-btn-anexar" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Ficheiro</button>
                     </div>
-                    <button class="ws-btn" style="padding: 6px 12px; font-size: 11px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
+                    <button class="ws-btn" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
                 </div>
             </div>
 

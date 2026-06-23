@@ -52,7 +52,7 @@ Workspace.Feed = {
                 /* 🛡️ DESIGN DE FILTROS EVOLUÍDO, PRÓXIMOS E PREMIUM */
                 #ws-feed-filter-bar {
                     display: flex !important;
-                    gap: 6px !important; /* Filtros mais próximos */
+                    gap: 6px !important; 
                     margin-bottom: 16px !important;
                     overflow-x: auto !important;
                     padding-bottom: 4px !important;
@@ -63,7 +63,7 @@ Workspace.Feed = {
                     background: #ffffff !important; 
                     color: #555 !important; 
                     border: 1px solid #e1e4e6 !important; 
-                    padding: 6px 12px !important; /* Tamanho otimizado */
+                    padding: 6px 12px !important; 
                     border-radius: 20px !important; 
                     font-size: 12px !important; 
                     font-weight: 600 !important; 
@@ -88,7 +88,7 @@ Workspace.Feed = {
                 /* 🛡️ CENTRAGEM ABSOLUTA DE CONTEÚDOS INTERNOS */
                 .ws-card img, .ws-card video, .ws-card iframe {
                     display: block !important;
-                    margin: 12px auto 0 auto !important; /* Perfeitamente centralizados */
+                    margin: 12px auto 0 auto !important; 
                     max-width: 100% !important;
                     border-radius: 8px !important;
                 }
@@ -190,7 +190,7 @@ Workspace.Feed = {
         });
 
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
-        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
+        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
         if (iframesYouTube.length > 0) texto += iframesYouTube.join('');
         return texto;
@@ -707,10 +707,10 @@ Workspace.Feed = {
                             </div>
                         </div>
                         
-                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto; padding-right: 5px;">
+                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto;">
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
                             
-                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">📤</span> Partilhar
                                 </div>
@@ -954,7 +954,7 @@ Workspace.Feed = {
                     <div style="flex-shrink: 0;">${avatarComentario}</div>
                     <div style="flex:1; padding-right: 15px; min-width: 0;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                            <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                            <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
                             <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:5px; flex-shrink: 0;">Agora mesmo</span>
                             
                             <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0;">
@@ -1004,9 +1004,9 @@ Workspace.Feed = {
         if (!document.getElementById('ws-post-destino')) {
             const areaBotoes = document.getElementById('ws-action-flex-wrapper');
             if (areaBotoes) {
-                // 🛡️ INJEÇÃO CIRÚRGICA: Reduzido o padding, tamanho e fixado à esquerda na mesma linha
+                // 🛡️ Aumentámos a fonte e o padding para dar mais conforto ao toque
                 const htmlSelect = `
-                    <select id="ws-post-destino" style="padding:4px 6px; border-radius:6px; border:1px solid #ccc; font-size:11px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 110px; font-weight: 600; font-family: inherit; flex-shrink: 1; min-width: 0;">
+                    <select id="ws-post-destino" style="padding:6px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 120px; font-weight: 600; font-family: inherit; flex-shrink: 1; min-width: 0;">
                         <option value="global">🌍 Geral</option>
                     </select>
                 `;
@@ -1054,7 +1054,7 @@ Workspace.Feed = {
                     return;
                 }
 
-                novoBtn.innerText = "⏳";
+                novoBtn.innerText = "⏳ A enviar...";
                 novoBtn.disabled = true;
 
                 try {
