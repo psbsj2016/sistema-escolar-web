@@ -44,9 +44,9 @@
             width: 100%; 
         }
         
-        /* 🛡️ MARGENS LATERAIS RIGOROSAMENTE IDÊNTICAS E CENTRALIZADAS */
-        .ws-container { 
-            max-width: 800px; 
+        /* 🛡️ MARGENS LATERAIS RIGOROSAMENTE IDÊNTICAS PARA TODAS AS SECÇÕES (FEED, TAREFAS, CONFIGS) */
+        .ws-container, section[id$="-container"] { 
+            max-width: 1000px; /* Adapta-se fluidamente ao máximo permitido */
             margin: 20px auto !important; 
             padding: 0 16px 80px 16px !important; 
             display: flex; 
@@ -66,16 +66,28 @@
             max-width: 100%;
             min-width: 0; 
             word-break: break-word;
-            overflow: visible !important; /* Permite que o menu dropdown flutue para fora no feed sem cortar */
+            overflow: visible !important; /* Permite o menu de 3 pontinhos do feed fluir livremente */
         }
 
-        /* 🛡️ BLINDAGEM DOS MODAIS (CHAT, TAREFAS, SENHA, PERFIL) */
-        /* Impede que as janelas sobrepostas herdem o 'overflow: visible' do feed, restaurando a forma perfeita */
+        /* 🛡️ BLINDAGEM ESPECÍFICA DE MODAIS E GRELHAS DE TAREFAS */
+        /* Impede que modais sobrepostos (Chat, Perfil) percam o canto arredondado */
         div[id$="-modal"] .ws-card {
             overflow: hidden !important;
         }
+
+        /* Protege as Tarefas Recebidas de serem esmagadas pela regra global do feed.js */
+        section[id$="-container"] .ws-card * {
+            max-width: none;
+        }
+        section[id$="-container"] .ws-card img,
+        section[id$="-container"] .ws-card input,
+        section[id$="-container"] .ws-card textarea,
+        section[id$="-container"] .ws-card select {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
         
-        /* Proteção específica para a geometria e área de scroll do Chat */
+        /* Geometria perfeita para o Chat */
         #ws-chat-modal .ws-card {
             display: flex !important;
             flex-direction: column !important;
@@ -119,6 +131,7 @@
         .ws-btn:hover { background: #2980b9; }
         .ws-badge { background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; position: absolute; top: -5px; right: -5px; font-weight: bold; }
 
+        /* 📱 CALIBRAÇÃO MOBILE ABSOLUTA E SIMÉTRICA PARA TODO O SISTEMA */
         @media screen and (max-width: 900px) { 
             html, body { 
                 width: 100% !important; 
@@ -131,8 +144,8 @@
                 padding-top: max(12px, env(safe-area-inset-top)) !important; 
             }
             
-            /* 🛡️ CALIBRAÇÃO DE SIMETRIA ABSOLUTA PARA SMARTPHONES */
-            .ws-container { 
+            /* Todas as secções ganham as mesmas margens milimétricas e o respiro do ecrã Edge */
+            .ws-container, section[id$="-container"] { 
                 padding: 12px max(12px, env(safe-area-inset-right)) 20px max(12px, env(safe-area-inset-left)) !important; 
                 margin: 0 auto !important; 
                 width: 100% !important;
@@ -152,6 +165,7 @@
             .ws-video-container { height: 250px !important; }
         }
 
+        /* 🛡️ ESTRUTURA BLINDADA PARA AS TAREFAS */
         .ws-tarefa-grid {
             display: flex;
             flex-direction: column;
