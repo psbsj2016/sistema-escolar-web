@@ -655,7 +655,7 @@ Workspace.Feed = {
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
             let destinoBadge = p.destino === 'global' 
-                ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
+                ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 4px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
 
             const likesArr = Array.isArray(p.likes) ? p.likes : [];
