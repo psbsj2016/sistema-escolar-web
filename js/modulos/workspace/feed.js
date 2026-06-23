@@ -13,7 +13,7 @@ Workspace.Feed = {
     filtroAtivo: 'todos', 
 
     init: async () => {
-        console.log("📚 Motor do Feed ligado à API.");
+        console.log("📚 Motor do Feed ligado à API e blindado para Mobile.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
@@ -49,6 +49,24 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
+                /* 🛡️ BLINDAGEM MÁXIMA MOBILE INJETADA PELO FEED 🛡️ */
+                .ws-card, #ws-posts-area, .ws-feed, .ws-container {
+                    box-sizing: border-box !important;
+                    max-width: 100% !important;
+                    width: 100% !important;
+                }
+                .ws-card * {
+                    box-sizing: border-box !important;
+                    max-width: 100% !important;
+                }
+                /* Força o Menu de Criação de Post a nunca sangrar a tela */
+                div[style*="justify-content: space-between"] {
+                    flex-wrap: wrap !important;
+                    gap: 10px !important;
+                    min-width: 0 !important;
+                }
+                img, video, iframe { max-width: 100% !important; }
+
                 @keyframes skeleton-shimmer {
                     0% { background-position: -468px 0; }
                     100% { background-position: 468px 0; }
@@ -77,7 +95,7 @@ Workspace.Feed = {
                 }
                 .new-posts-pill.show { transform: translateY(0); opacity: 1; }
                 
-                .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; }
+                .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; box-sizing: border-box; }
                 .ws-carousel-container::-webkit-scrollbar { display: none; }
                 .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
 
@@ -85,7 +103,7 @@ Workspace.Feed = {
                 .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
                 .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
                 
-                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; scroll-snap-align: start; }
                 .ws-filter-chip.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
             `;
             document.head.appendChild(style);
@@ -133,7 +151,7 @@ Workspace.Feed = {
         
         texto = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
         texto = texto.replace(/\*(.*?)\*/g, '<strong>$1</strong>');     
-        texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');               
+        texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');                
         texto = texto.replace(/\n/g, '<br>');
 
         const iframesYouTube = [];
@@ -141,8 +159,7 @@ Workspace.Feed = {
         
         texto = texto.replace(regexYouTube, (match, id) => {
             iframesYouTube.push(`
-                
-                <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
+                <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; box-sizing: border-box; width: 100%;">
                     <iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             `);
@@ -150,7 +167,7 @@ Workspace.Feed = {
         });
 
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
-        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
+        texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
         if (iframesYouTube.length > 0) texto += iframesYouTube.join('');
         return texto;
@@ -160,14 +177,14 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-       // 🚀 INOVAÇÃO: Barra de Filtros com Imagens e Vídeos separados (Design Premium)
+       // 🚀 Filtros blindados com width 100% e box-sizing
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory; width: 100%; box-sizing: border-box;">
-                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')" style="flex-shrink: 0; scroll-snap-align: start;">📋 Tudo</button>
-                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')" style="flex-shrink: 0; scroll-snap-align: start;">🖼️ Imagens</button>
-                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')" style="flex-shrink: 0; scroll-snap-align: start;">🎥 Vídeos</button>
-                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')" style="flex-shrink: 0; scroll-snap-align: start;">📕 Documentos</button>
+                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; width: 100%; box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
+                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
+                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
+                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
+                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
                 </div>
             `;
             container.parentNode.insertBefore(Workspace.Feed.htmlParaElemento(filterBarHTML), container);
@@ -177,10 +194,10 @@ Workspace.Feed = {
             let skeletonHTML = '';
             for(let i=0; i<3; i++) {
                 skeletonHTML += `
-                <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee;">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%;"></div>
-                        <div style="flex: 1;">
+                <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee; box-sizing: border-box; width: 100%; overflow: hidden;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; min-width: 0;">
+                        <div class="skeleton-box" style="width:45px; height:45px; border-radius:50%; flex-shrink: 0;"></div>
+                        <div style="flex: 1; min-width: 0;">
                             <div class="skeleton-box" style="width: 35%; height: 12px; margin-bottom: 8px;"></div>
                             <div class="skeleton-box" style="width: 20%; height: 10px;"></div>
                         </div>
@@ -199,7 +216,7 @@ Workspace.Feed = {
 
             if (!posts || posts.length === 0) {
                 container.innerHTML = `
-                    <div class="ws-card" style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <div class="ws-card" style="text-align: center; padding: 40px; color: #7f8c8d; box-sizing: border-box; width: 100%;">
                         <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
                         <h3 style="margin: 0 0 5px 0;">O mural está vazio</h3>
                     </div>`;
@@ -213,27 +230,23 @@ Workspace.Feed = {
             Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c; width: 100%; box-sizing: border-box;">Erro de ligação ao carregar o feed.</div>';
         }
     },
 
-    // 🚀 LÓGICA DE FILTRAGEM ATUALIZADA
     filtrarFeed: (tipoFiltro) => {
         Workspace.Feed.filtroAtivo = tipoFiltro;
         Workspace.Feed.paginaAtual = 1;
         Workspace.Feed.postsCache = [];
         
-        // Atualiza a pílula ativa visualmente
         document.querySelectorAll('.ws-filter-chip').forEach(btn => btn.classList.remove('active'));
         const btnAtivo = document.getElementById(`filter-${tipoFiltro}`);
         if(btnAtivo) btnAtivo.classList.add('active');
 
-        // Filtra a lista baseando-se no novo modelo
         let listaFiltrada = Workspace.Feed.todosOsPosts;
         if (tipoFiltro === 'imagens') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
         } else if (tipoFiltro === 'videos') {
-            // Nota: Este filtro apanha tanto vídeos enviados diretamente como vídeos do YouTube processados via embed no texto
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => 
                 (p.anexos && p.anexos.some(a => a.tipo.includes('video'))) || 
                 (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be'))
@@ -252,7 +265,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px; width: 100%;">A carregar mais... ⏳</div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
@@ -265,13 +278,13 @@ Workspace.Feed = {
         const sentinela = document.getElementById('ws-feed-sentinela');
 
         if (novosPosts.length === 0 && Workspace.Feed.paginaAtual === 1) {
-            document.getElementById('ws-posts-area').innerHTML = '<div class="ws-card" style="text-align:center; padding:40px; color:#999; font-size:14px;">📭 Nenhuma publicação encontrada nesta categoria.</div>';
+            document.getElementById('ws-posts-area').innerHTML = '<div class="ws-card" style="text-align:center; padding:40px; color:#999; font-size:14px; box-sizing: border-box; width: 100%;">📭 Nenhuma publicação encontrada nesta categoria.</div>';
             if(sentinela) sentinela.style.display = 'none';
             return;
         }
 
         if (novosPosts.length === 0) {
-            if(sentinela) sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">Chegou ao fim do feed!</div>';
+            if(sentinela) sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold; width: 100%;">Chegou ao fim do feed!</div>';
             return;
         }
 
@@ -279,7 +292,7 @@ Workspace.Feed = {
         const html = Workspace.Feed.gerarHTMLPosts(novosPosts);
         document.getElementById('ws-posts-area').insertAdjacentHTML('beforeend', html);
 
-        Workspace.Feed.iniciarMotorDeVideos(); // 🚀 ATIVA O CONTROLO DE VÍDEOS AQUI
+        Workspace.Feed.iniciarMotorDeVideos();
 
         Workspace.Feed.paginaAtual++;
 
@@ -290,7 +303,7 @@ Workspace.Feed = {
         Workspace.Feed.observer.observe(sentinela);
 
         if (fim >= lista.length && sentinela) {
-            sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold;">Chegou ao fim do feed!</div>';
+            sentinela.innerHTML = '<div style="text-align:center; padding:30px; color:#bbb; font-size:14px; font-weight:bold; width: 100%;">Chegou ao fim do feed!</div>';
             Workspace.Feed.observer.disconnect();
         }
     },
@@ -314,39 +327,32 @@ Workspace.Feed = {
     },
  
     iniciarMotorDeVideos: () => {
-        // 1. Regra "Só Toca Um": Quando um vídeo nativo começa, silencia todos os outros
         document.querySelectorAll('.ws-feed-video').forEach(video => {
             video.onplay = function() {
-                // Pausa outros vídeos nativos
                 document.querySelectorAll('.ws-feed-video').forEach(v => {
                     if (v !== this && !v.paused) v.pause();
                 });
-                // Pausa os vídeos do YouTube
                 document.querySelectorAll('.ws-video-embed').forEach(iframe => {
                     iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                 });
             };
         });
 
-        // 2. Radar de Scroll: Desliga o vídeo se ele sair do ecrã
         if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect();
         
         Workspace.Feed.videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // Se o vídeo sair da área visível (IntersectionObserver dita isso)
                 if (!entry.isIntersecting) {
                     const el = entry.target;
                     if (el.tagName === 'VIDEO' && !el.paused) {
-                        el.pause(); // Pausa vídeo nativo
+                        el.pause(); 
                     } else if (el.tagName === 'IFRAME') {
-                        // Manda mensagem silenciosa à API do YouTube para pausar
                         el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                     }
                 }
             });
-        }, { threshold: 0.2 }); // Dispara quando 80% do vídeo já não está visível
+        }, { threshold: 0.2 }); 
 
-        // Ativa o radar em todos os vídeos gerados
         document.querySelectorAll('.ws-feed-video, .ws-video-embed').forEach(el => {
             Workspace.Feed.videoObserver.observe(el);
         });
@@ -383,7 +389,7 @@ Workspace.Feed = {
         
         overlay.innerHTML = `
             <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">&times;</span>
-            <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out;">
+            <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out; box-sizing: border-box;">
         `;
         document.body.appendChild(overlay);
 
@@ -415,12 +421,12 @@ Workspace.Feed = {
         }
 
         overlay.innerHTML = `
-            <div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px;">
+            <div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px; box-sizing: border-box;">
                 <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">&times;</span>
             </div>
-            <div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
+            <div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative; box-sizing: border-box;">
                 ${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}
-                <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
+                <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white; box-sizing: border-box;"></iframe>
             </div>
         `;
         document.body.appendChild(overlay);
@@ -469,10 +475,10 @@ Workspace.Feed = {
             
             if (qtd === 1) {
                 let url = imagens[0].url.startsWith('http') || imagens[0].url.startsWith('/') ? imagens[0].url : '/' + imagens[0].url;
-                htmlFinal += `<img src="${url}" loading="lazy" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
+                htmlFinal += `<img src="${url}" loading="lazy" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; object-fit:contain; background:#f9f9f9; cursor:pointer; transition:0.2s; margin-top:15px; box-sizing: border-box;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">`;
             } else {
                 htmlFinal += `
-                <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #f9f9f9; border: 1px solid #eee; margin-top: 15px;">
+                <div style="position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #f9f9f9; border: 1px solid #eee; margin-top: 15px; box-sizing: border-box;">
                     <div id="counter-${postId}" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 14px; font-size: 12px; font-weight: bold; z-index: 10; pointer-events: none;">1 / ${qtd}</div>
                     
                     <button id="btn-left-${postId}" onclick="Workspace.Feed.moverCarrossel('${postId}', -1)" style="display:none; position: absolute; top: 50%; transform: translateY(-50%); left: 10px; background: rgba(255,255,255,0.85); border: none; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; cursor: pointer; z-index: 10; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: 0.2s;">❮</button>
@@ -484,7 +490,7 @@ Workspace.Feed = {
                     let url = img.url.startsWith('http') || img.url.startsWith('/') ? img.url : '/' + img.url;
                     htmlFinal += `
                         <div class="ws-carousel-slide">
-                            <img src="${url}" loading="lazy" style="width: 100%; max-height: 400px; object-fit: contain; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
+                            <img src="${url}" loading="lazy" style="width: 100%; max-height: 400px; object-fit: contain; cursor: pointer; box-sizing: border-box;" onclick="Workspace.Feed.abrirImagemInteira('${url}')" title="Clique para ampliar">
                         </div>
                     `;
                 });
@@ -496,12 +502,12 @@ Workspace.Feed = {
         if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
-                htmlFinal += `<video controls class="ws-feed-video" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
+                htmlFinal += `<video controls class="ws-feed-video" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000; box-sizing: border-box;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
             });
         }
         
         if (documentos.length > 0) {
-            htmlFinal += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; width:100%;">';
+            htmlFinal += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; width:100%; box-sizing: border-box;">';
             documentos.forEach(anexo => {
                 let urlCorrigida = anexo.url.startsWith('http') || anexo.url.startsWith('/') ? anexo.url : '/' + anexo.url;
                 const nomeMinusculo = (anexo.nome || '').toLowerCase();
@@ -512,10 +518,10 @@ Workspace.Feed = {
                 let textoAcao = 'Ler Documento ↗';
 
                 htmlFinal += `
-                    <div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'">
-                        <span style="font-size:24px;">${icone}</span>
+                    <div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:100%; box-sizing: border-box; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'">
+                        <span style="font-size:24px; flex-shrink: 0;">${icone}</span>
                         <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span>
-                        <span style="color:#3498db; font-size:12px; font-weight:bold;">${textoAcao}</span>
+                        <span style="color:#3498db; font-size:12px; font-weight:bold; flex-shrink: 0;">${textoAcao}</span>
                     </div>`;
             });
             htmlFinal += '</div>';
@@ -537,9 +543,9 @@ Workspace.Feed = {
 
         const textAtual = post.texto || '';
         containerText.innerHTML = `
-            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;">
+            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s; box-sizing: border-box; width: 100%;">
                 <textarea id="edit-input-${postId}" rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
-                <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
                     <button class="ws-btn ws-btn-gamified" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
                     <button class="ws-btn ws-btn-gamified" style="background:#95a5a6; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">Cancelar</button>
                 </div>
@@ -589,9 +595,9 @@ Workspace.Feed = {
         if(!containerTexto) return;
 
         containerTexto.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;">
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s; box-sizing: border-box; width: 100%;">
                 <input type="text" id="input-edit-com-${comentarioId}" value="${c.texto}" style="padding:6px 12px; border-radius:14px; border:1px solid #3498db; font-size:13px; outline:none; background:#fff; width:100%; box-sizing:border-box;">
-                <div style="display:flex; gap:6px;">
+                <div style="display:flex; gap:6px; flex-wrap: wrap;">
                     <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.salvarEdicaoComentario('${postId}', '${comentarioId}')">💾 Guardar</span>
                     <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.cancelarEdicaoComentario('${postId}', '${comentarioId}')">Cancelar</span>
                 </div>
@@ -660,16 +666,16 @@ Workspace.Feed = {
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
             const ehTextoLongo = (p.texto && p.texto.length > 350);
-            const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
+            const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px; box-sizing: border-box; width: 100%;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
 
             return `
-          <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
+          <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px; box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden;">
                     
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; width:100%; box-sizing:border-box; gap:8px;">
                         
-                        <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0; overflow:hidden;">
+                        <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0; box-sizing: border-box;">
                             <div style="flex-shrink:0;">${avatarPost}</div>
-                            <div style="flex: 1; min-width: 0; overflow:hidden;">
+                            <div style="flex: 1; min-width: 0; overflow:hidden; box-sizing: border-box;">
                                 <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     ${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
@@ -698,7 +704,7 @@ Workspace.Feed = {
                         </div>
                     </div>
                     
-                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; word-break: break-word; overflow-wrap: break-word; width: 100%; box-sizing: border-box;">
+                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; word-break: break-all; overflow-wrap: break-word; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0;">
                         ${textoSeguro}
                         ${ehTextoLongo ? '<div class="ws-text-fade"></div>' : ''}
                     </div>
@@ -706,7 +712,7 @@ Workspace.Feed = {
                     
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap;">
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap; width: 100%; box-sizing: border-box;">
                         <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                             👍 <span id="count-like-${p.id}">${likesArr.length}</span>
                         </button>
@@ -720,23 +726,23 @@ Workspace.Feed = {
                         </button>
                     </div>
 
-                    <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd;">
-                        <div id="lista-comentarios-${p.id}" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
+                    <div id="box-comentarios-${p.id}" style="display:${displayComentarios}; margin-top:15px; padding-top:15px; border-top:1px dashed #ddd; width: 100%; box-sizing: border-box;">
+                        <div id="lista-comentarios-${p.id}" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; box-sizing: border-box;">
                             ${p.comentarios && p.comentarios.length > 0 ? p.comentarios.map(c => {
                                 const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
                                 return `
-                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
-                                    ${avatarComentario}
-                                    <div style="flex:1; padding-right: 25px;">
+                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; width: 100%; max-width: 100%; box-sizing: border-box;">
+                                    <div style="flex-shrink: 0;">${avatarComentario}</div>
+                                    <div style="flex:1; padding-right: 15px; min-width: 0; box-sizing: border-box;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                                            <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:10px;">${tempoComentario}</span>
+                                            <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:5px; flex-shrink: 0;">${tempoComentario}</span>
                                             
                                             ${ehDonoComentario ? `
-                                            <div class="ws-menu-ancora" style="position:relative;">
+                                            <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0;">
                                                 <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
                                                 <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
                                                     <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
@@ -745,15 +751,16 @@ Workspace.Feed = {
                                             </div>
                                             ` : ''}
                                         </div>
-                                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-all; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box;">${Workspace.Feed.limparTexto(c.texto)}</span>
                                     </div>
                                 </div>
                                 `;
                             }).join('') : '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>'}
                         </div>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
-                            <button class="ws-btn ws-btn-gamified" style="padding:10px 20px; border-radius:20px;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
+                        
+                        <div style="display:flex; gap:10px; width: 100%; box-sizing: border-box; align-items: center;">
+                            <input type="text" id="input-comentario-${p.id}" placeholder="Escreva um comentário..." style="flex:1; min-width: 0; padding:10px 15px; border-radius:20px; border:1px solid #ddd; font-size:13px; outline:none; background:#f9f9f9; box-sizing: border-box;" onkeypress="if(event.key === 'Enter') Workspace.Feed.enviarComentario('${p.id}')">
+                            <button class="ws-btn ws-btn-gamified" style="flex-shrink: 0; padding:10px 20px; border-radius:20px; box-sizing: border-box;" onclick="Workspace.Feed.enviarComentario('${p.id}')">Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -921,14 +928,14 @@ Workspace.Feed = {
                 }
 
                 const novoComentarioHTML = `
-                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease;">
-                    ${avatarComentario}
-                    <div style="flex:1; padding-right: 25px;">
+                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.4s ease; width: 100%; max-width: 100%; box-sizing: border-box;">
+                    <div style="flex-shrink: 0;">${avatarComentario}</div>
+                    <div style="flex:1; padding-right: 15px; min-width: 0; box-sizing: border-box;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                            <strong style="color: #2c3e50;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:10px;">Agora mesmo</span>
+                            <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:5px; flex-shrink: 0;">Agora mesmo</span>
                             
-                            <div class="ws-menu-ancora" style="position:relative;">
+                            <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0;">
                                 <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
                                 <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
                                     <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
@@ -936,7 +943,7 @@ Workspace.Feed = {
                                 </div>
                             </div>
                         </div>
-                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-all; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box;">${Workspace.Feed.limparTexto(c.texto)}</span>
                     </div>
                 </div>`;
 
@@ -975,8 +982,9 @@ Workspace.Feed = {
         if (!document.getElementById('ws-post-destino')) {
             const areaBotoes = boxCriarPost.querySelector('div[style*="justify-content: space-between"]');
             if (areaBotoes) {
+                // 🛡️ O select é injetado com limites de largura para impedir a barra de ferro no botão Publicar
                 const htmlSelect = `
-                    <select id="ws-post-destino" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 150px;">
+                    <select id="ws-post-destino" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 100%; flex-shrink: 1; box-sizing: border-box;">
                         <option value="global">🌍 Público Geral</option>
                     </select>
                 `;
