@@ -13,7 +13,7 @@ Workspace.Feed = {
     filtroAtivo: 'todos', 
 
     init: async () => {
-        console.log("📚 Motor do Feed ligado à API.");
+        console.log("📚 Motor do Feed ligado à API e blindado para Mobile.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
@@ -49,41 +49,23 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
-                /* 🛡️ BLINDAGEM E ALINHAMENTO PERFEITO (Zero Esmagamento) 🛡️ */
-                .ws-card, #ws-posts-area, .ws-feed {
+                /* 🛡️ BLINDAGEM MÁXIMA MOBILE INJETADA PELO FEED 🛡️ */
+                .ws-card, #ws-posts-area, .ws-feed, .ws-container {
                     box-sizing: border-box !important;
                     max-width: 100% !important;
-                    margin-left: 0 !important;
-                    margin-right: 0 !important;
+                    width: 100% !important;
                 }
-                
-                /* Inteligência para os Botões de Criar Post (Nativo Mobile) */
-                #ws-criar-post > div:last-child {
-                    display: flex !important;
+                .ws-card * {
+                    box-sizing: border-box !important;
+                    max-width: 100% !important;
+                }
+                /* Força o Menu de Criação de Post a nunca sangrar a tela */
+                div[style*="justify-content: space-between"] {
                     flex-wrap: wrap !important;
-                    gap: 12px !important;
-                    align-items: center !important;
-                    justify-content: space-between !important;
+                    gap: 10px !important;
+                    min-width: 0 !important;
                 }
-                
-                @media screen and (max-width: 600px) {
-                    /* Em telas pequenas, o Select ganha a sua própria linha e os botões dividem a linha de baixo sem amassar */
-                    #ws-post-destino {
-                        flex: 1 1 100% !important;
-                        margin-bottom: 5px !important;
-                    }
-                    #ws-criar-post > div:last-child > div {
-                        flex: 1 1 auto !important;
-                    }
-                    #ws-criar-post > div:last-child > div > button {
-                        width: 100% !important;
-                        text-align: center !important;
-                    }
-                    #ws-criar-post .ws-btn {
-                        flex: 1 1 auto !important;
-                        text-align: center !important;
-                    }
-                }
+                img, video, iframe { max-width: 100% !important; }
 
                 @keyframes skeleton-shimmer {
                     0% { background-position: -468px 0; }
@@ -113,7 +95,7 @@ Workspace.Feed = {
                 }
                 .new-posts-pill.show { transform: translateY(0); opacity: 1; }
                 
-                .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; }
+                .ws-carousel-container { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; width: 100%; box-sizing: border-box; }
                 .ws-carousel-container::-webkit-scrollbar { display: none; }
                 .ws-carousel-slide { flex: 0 0 100%; width: 100%; scroll-snap-align: center; display: flex; justify-content: center; align-items: center; position: relative; }
 
@@ -121,7 +103,7 @@ Workspace.Feed = {
                 .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
                 .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
                 
-                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+                .ws-filter-chip { background: #f0f2f5; color: #555; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; flex-shrink: 0; scroll-snap-align: start; }
                 .ws-filter-chip.active { background: #2c3e50; color: #fff; box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2); }
             `;
             document.head.appendChild(style);
@@ -177,7 +159,7 @@ Workspace.Feed = {
         
         texto = texto.replace(regexYouTube, (match, id) => {
             iframesYouTube.push(`
-                <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
+                <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; box-sizing: border-box; width: 100%;">
                     <iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
             `);
@@ -195,13 +177,14 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
+       // 🚀 Filtros blindados com width 100% e box-sizing
         if (!document.getElementById('ws-feed-filter-bar')) {
             const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; padding-left: env(safe-area-inset-left); padding-right: calc(20px + env(safe-area-inset-right)); scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory; width: 100%; box-sizing: border-box;">
-                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')" style="flex-shrink: 0; scroll-snap-align: start;">📋 Tudo</button>
-                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')" style="flex-shrink: 0; scroll-snap-align: start;">🖼️ Imagens</button>
-                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')" style="flex-shrink: 0; scroll-snap-align: start;">🎥 Vídeos</button>
-                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')" style="flex-shrink: 0; scroll-snap-align: start;">📕 Documentos</button>
+                <div id="ws-feed-filter-bar" style="display:flex; gap:10px; margin-bottom: 20px; overflow-x:auto; padding-bottom:5px; width: 100%; box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
+                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
+                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
+                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
+                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
                 </div>
             `;
             container.parentNode.insertBefore(Workspace.Feed.htmlParaElemento(filterBarHTML), container);
@@ -247,7 +230,7 @@ Workspace.Feed = {
             Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c; box-sizing: border-box; width: 100%;">Erro de ligação ao carregar o feed.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c; width: 100%; box-sizing: border-box;">Erro de ligação ao carregar o feed.</div>';
         }
     },
 
@@ -282,7 +265,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px; width:100%;">A carregar mais... ⏳</div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px; width: 100%;">A carregar mais... ⏳</div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
@@ -999,9 +982,9 @@ Workspace.Feed = {
         if (!document.getElementById('ws-post-destino')) {
             const areaBotoes = boxCriarPost.querySelector('div[style*="justify-content: space-between"]');
             if (areaBotoes) {
-                // 🛡️ O select é injetado sem estragar o Flexbox
+                // 🛡️ O select é injetado com limites de largura para impedir a barra de ferro no botão Publicar
                 const htmlSelect = `
-                    <select id="ws-post-destino" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; width: 100%; box-sizing: border-box;">
+                    <select id="ws-post-destino" style="padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 100%; flex-shrink: 1; box-sizing: border-box;">
                         <option value="global">🌍 Público Geral</option>
                     </select>
                 `;
