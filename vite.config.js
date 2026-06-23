@@ -6,11 +6,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'prompt', 
+      registerType: 'autoUpdate', // Atualiza o site no fundo automaticamente
       includeAssets: ['assets/icone.png'],
       manifest: {
-        // 🛡️ ID único para que o telemóvel saiba que esta é a App Principal
-        id: "/sistema-geral-app-id",
         name: "Gestão Escolar SaaS",
         short_name: "Gestão Escolar",
         description: "Sistema completo de Gestão Escolar e Financeira",
@@ -24,8 +22,8 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // 🛡️ CORREÇÃO CRÍTICA: Ignora a pasta E o ficheiro do workspace!
-        navigateFallbackDenylist: [/^\/matricula/, /^\/admin/, /^\/hub-matriculas/, /^\/workspace/, /workspace\.html$/]
+        // Ignoramos apenas a API para não causar falhas de rede no Service Worker
+        navigateFallbackDenylist: [/^\/api/] 
       }
     })
   ],
@@ -52,8 +50,8 @@ export default defineConfig({
         admin: resolve(__dirname, 'admin.html'),
         matricula: resolve(__dirname, 'matricula.html'),
         hub: resolve(__dirname, 'hub-matriculas.html'),
-        online: resolve(__dirname, 'matricula-online.html')
-        // ✂️ Entrada do workspace removida daqui!
+        online: resolve(__dirname, 'matricula-online.html'),
+        workspace: resolve(__dirname, 'workspace.html') // 🚀 O Workspace voltou para casa!
       }
     }
   }
