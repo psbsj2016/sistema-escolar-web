@@ -663,14 +663,15 @@ Workspace.Feed = {
             const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
 
             return `
-           <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
+          <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
                     
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; width:100%; box-sizing:border-box;">
-                        <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
-                            ${avatarPost}
-                            <div style="flex: 1; min-width: 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; width:100%; box-sizing:border-box; gap:8px;">
+                        
+                        <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0; overflow:hidden;">
+                            <div style="flex-shrink:0;">${avatarPost}</div>
+                            <div style="flex: 1; min-width: 0; overflow:hidden;">
                                 <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    ${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:5px;">• ${p.autorTipo}</span>
+                                    ${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     ${tempoAmigavel} ${destinoBadge}
@@ -678,7 +679,7 @@ Workspace.Feed = {
                             </div>
                         </div>
                         
-                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: 10px;">
+                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto;">
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
                             
                             <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
