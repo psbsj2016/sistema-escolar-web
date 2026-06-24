@@ -122,7 +122,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const escolaId = urlParams.get('escola');
         const API_BASE = '/api';
-     
+
+        import './pwa-updater.js';     
+
         // 🚀 FORÇAR ATUALIZAÇÃO DE CACHE (COLE ISTO AQUI)
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {

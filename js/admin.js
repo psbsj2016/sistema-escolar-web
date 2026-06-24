@@ -3,6 +3,8 @@ const API_URL = '/api';
 
 let cacheClientes = [];
 
+import './pwa-updater.js';
+
 const Admin = {
     // 🛡️ Protege o HTML contra quebras visuais
     escapeHTML: (str) => {
