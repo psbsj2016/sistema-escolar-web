@@ -15,7 +15,7 @@ Workspace.Feed = {
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
-        Workspace.Feed.injetarModaisGlobais(); // 🚀 Injeta apenas o modal de exclusão
+        Workspace.Feed.injetarModaisGlobais(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         
@@ -81,6 +81,18 @@ Workspace.Feed = {
         };
     },
 
+    // 🚀 Lógica de alternância (Mostrar/Ocultar botões ao clicar no comentário)
+    toggleOpcoesComentario: (idAcoes) => {
+        const el = document.getElementById(idAcoes);
+        if (el) {
+            if (el.style.display === 'none') {
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+    },
+
     toggleMenu: (event, idUnico) => {
         event.stopPropagation(); 
         const menu = document.getElementById(`menu-dropdown-${idUnico}`);
@@ -102,6 +114,10 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
+                /* 🛡️ Animação de clique no balão do comentário */
+                .ws-comentario-click { cursor: pointer; transition: background 0.2s, transform 0.1s; }
+                .ws-comentario-click:active { background: #f0f4f8 !important; transform: scale(0.99); }
+
                 #ws-feed-filter-bar {
                     display: flex !important;
                     gap: 6px !important; 
@@ -668,7 +684,7 @@ Workspace.Feed = {
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(!containerTexto) return;
 
-        // Esconde os botões de ação do comentário, se existirem
+        // Esconde os botões de ação do comentário temporariamente enquanto edita
         const acoesEl = document.getElementById(`acoes-comentario-${comentarioId}`);
         if(acoesEl) acoesEl.style.display = 'none';
 
@@ -692,9 +708,9 @@ Workspace.Feed = {
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(containerTexto) containerTexto.innerHTML = Workspace.Feed.limparTexto(c.texto);
 
-        // Devolve os botões em linha para o ecrã
+        // Devolve os botões inline para o estado padrão
         const acoesEl = document.getElementById(`acoes-comentario-${comentarioId}`);
-        if(acoesEl) acoesEl.style.display = 'flex';
+        if(acoesEl) acoesEl.style.display = 'none';
     },
 
     salvarEdicaoComentario: async (postId, comentarioId) => {
@@ -815,16 +831,20 @@ Workspace.Feed = {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
-                                // 🚀 Gera as opções inline se o usuário for o dono do comentário
+                                // 🚀 LÓGICA DO CLIQUE: Permite revelar os botões abaixo do texto
+                                const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
+                                const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
+                                
+                                // 🚀 AÇÕES INLINE INVISÍVEIS (Apenas reveladas no clique)
                                 const acoesInline = ehDonoComentario ? `
-                                    <div id="acoes-comentario-${c.id}" style="display:flex; gap:10px; margin-top:6px;">
-                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">✏️ Editar</span>
-                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️ Apagar</span>
+                                    <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
+                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">✏️ Editar</span>
+                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️ Apagar</span>
                                     </div>
                                 ` : '';
                                 
                                 return `
-                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+                                <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                                     <div style="flex-shrink: 0;">${avatarComentario}</div>
                                     <div style="flex:1; padding-right: 5px; min-width: 0;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
@@ -1008,16 +1028,19 @@ Workspace.Feed = {
                     listaComentarios.innerHTML = '';
                 }
 
-                // 🚀 Novo comentário ganha diretamente as ações inline
+                const ehDonoComentario = true;
+                const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
+                const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
+
                 const acoesInline = `
-                    <div id="acoes-comentario-${c.id}" style="display:flex; gap:10px; margin-top:6px;">
-                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">✏️ Editar</span>
-                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️ Apagar</span>
+                    <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
+                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">✏️ Editar</span>
+                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️ Apagar</span>
                     </div>
                 `;
 
                 const novoComentarioHTML = `
-                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+                <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                     <div style="flex-shrink: 0;">${avatarComentario}</div>
                     <div style="flex:1; padding-right: 5px; min-width: 0;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
