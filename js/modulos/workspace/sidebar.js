@@ -462,7 +462,7 @@ Workspace.Sidebar = {
 
         const btn = document.getElementById('ws-btn-salvar-tarefa');
         const txt = btn.innerText;
-        btn.innerText = "⏳ A gravar e a notificar alunos...";
+        btn.innerText = "Salvando a atividade e notificando os alunos... ⏳";
         btn.disabled = true;
 
         try {
@@ -669,7 +669,7 @@ Workspace.Sidebar = {
         try {
             const entregas = await Workspace.api(`/workspace/entregas/tarefa/${eventoId}`, 'GET');
             if(!entregas || entregas.length === 0) {
-                box.innerHTML = '<div style="font-size:13px; color:#7f8c8d; text-align:center; padding:15px; background:#fdfdfd; border-radius:8px; border:1px dashed #ddd;">Nenhum aluno entregou esta tarefa ainda.</div>';
+                box.innerHTML = '<div style="font-size:13px; color:#7f8c8d; text-align:center; padding:15px; background:#fdfdfd; border-radius:8px; border:1px dashed #ddd;">Nenhum aluno entregou esta atividade ainda.</div>';
                 return;
             }
 
@@ -694,7 +694,7 @@ Workspace.Sidebar = {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${ent.observacao ? `<span title="${Workspace.Sidebar.escapeHTML(ent.observacao)}" style="cursor:help; font-size:20px; color:#f1c40f;">💬</span>` : ''}
-                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Arquivo do Aluno</a>
+                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
                         </div>
                     </div>
                 `;

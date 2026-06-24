@@ -788,14 +788,14 @@ Workspace.Feed = {
                             
                             <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">📤</span> Partilhar
+                                    <span style="font-size:16px;">📤</span> Copiar Link
                                 </div>
                                 ${ehDonoOuGestor ? `
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">✏️</span> Editar
+                                    <span style="font-size:16px;"></span> Editar
                                 </div>
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">🗑️</span> Apagar
+                                    <span style="font-size:16px;"></span> Apagar
                                 </div>
                                 ` : ''}
                             </div>
@@ -838,8 +838,8 @@ Workspace.Feed = {
                                 // 🚀 AÇÕES INLINE INVISÍVEIS (Apenas reveladas no clique)
                                 const acoesInline = ehDonoComentario ? `
                                     <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
-                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">✏️ Editar</span>
-                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️ Apagar</span>
+                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">Editar</span>
+                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">Apagar</span>
                                     </div>
                                 ` : '';
                                 
@@ -1034,8 +1034,8 @@ Workspace.Feed = {
 
                 const acoesInline = `
                     <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
-                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">✏️ Editar</span>
-                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">🗑️ Apagar</span>
+                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">Editar</span>
+                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">Apagar</span>
                     </div>
                 `;
 
