@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate', // Atualiza o site no fundo automaticamente
+      registerType: 'prompt', // 🚀 A REGRA DE OURO: Agora o PWA espera pela permissão do usuário
       includeAssets: ['assets/icone.png'],
       manifest: {
         name: "Gestão Escolar SaaS",

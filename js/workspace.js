@@ -1,7 +1,9 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
-// 🌟 IMPORTAÇÃO CORRETA PARA O VITE
+// 🌟 IMPORTAÇÃO CORRETA PARA O VITE PWA (Escuta novas atualizações)
+import { registerSW } from 'virtual:pwa-register';
+
 import './toast.js'; 
 
 import './modulos/workspace/feed.js';
@@ -12,10 +14,65 @@ import './modulos/workspace/sidebar.js';
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
 
+// 🚀 Sistema PWA: Alerta de Atualização
+const updateSW = registerSW({
+    onNeedRefresh() {
+        console.log("🔄 Nova atualização detetada pelo Vite PWA!");
+        Workspace.mostrarAlertaAtualizacaoPWA();
+    },
+    onOfflineReady() {
+        console.log("✅ PWA pronto para uso offline.");
+    }
+});
+
 Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
-    deferredPrompt: null, // 🧠 Guarda o evento de instalação para disparar quando quisermos
+    deferredPrompt: null, // 🧠 Guarda o evento de instalação PWA
+
+    mostrarAlertaAtualizacaoPWA: () => {
+        if (document.getElementById('ws-pwa-update-prompt')) return;
+
+        const aviso = document.createElement('div');
+        aviso.id = 'ws-pwa-update-prompt';
+        aviso.style.cssText = `
+            position: fixed; 
+            bottom: 25px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #2c3e50; 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            z-index: 999999; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            font-family: 'Poppins', sans-serif; 
+            width: 90%; 
+            max-width: 350px;
+            animation: fadeIn 0.3s ease;
+        `;
+        
+        aviso.innerHTML = `
+            <div style="flex: 1;">
+                <strong style="display: block; font-size: 14px; margin-bottom: 2px;">🚀 Nova Versão Disponível!</strong>
+                <span style="font-size: 11px; color: #bdc3c7;">Atualize para receber as últimas melhorias.</span>
+            </div>
+            <button id="ws-btn-atualizar-pwa" style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s;">
+                Atualizar
+            </button>
+        `;
+        document.body.appendChild(aviso);
+
+        document.getElementById('ws-btn-atualizar-pwa').addEventListener('click', () => {
+            const btn = document.getElementById('ws-btn-atualizar-pwa');
+            btn.innerText = "⏳";
+            btn.style.background = "#f39c12";
+            updateSW(true); // Confirma a atualização e recarrega a página
+        });
+    },
 
     mostrarAviso: (mensagem, tipo = 'info') => {
         if (window.Toast && typeof window.Toast.show === 'function') {
@@ -104,15 +161,11 @@ Object.assign(Workspace, {
             }
         });
 
-        // 🧠 OUVINTES PWA: Captura o pop-up de instalação nativo e customiza-o
+        // 🧠 OUVINTES PWA: Captura o pop-up de instalação nativo
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Impede o navegador de agir de forma silenciosa
-            Workspace.deferredPrompt = e; // Guarda o evento na nossa memória
-            
-            // Se o utilizador já tiver a App instalada, não mostra nada
+            e.preventDefault(); 
+            Workspace.deferredPrompt = e; 
             if (window.matchMedia('(display-mode: standalone)').matches) return;
-
-            // Mostra o pop-up premium de instalação na interface
             Workspace.injetarPopUpInstalacao();
         });
 
@@ -124,7 +177,6 @@ Object.assign(Workspace, {
         });
     },
 
-    // 🖥️ INOVAÇÃO: Injeta dinamicamente um aviso elegante estilo Pop-up de App
     injetarPopUpInstalacao: () => {
         if (document.getElementById('ws-pwa-install-banner')) return;
 
@@ -144,13 +196,9 @@ Object.assign(Workspace, {
 
         document.getElementById('ws-pwa-btn-instalar').addEventListener('click', async () => {
             if (!Workspace.deferredPrompt) return;
-            
-            // Abre o prompt oficial do sistema operativo (Android/iOS/Windows)
             Workspace.deferredPrompt.prompt();
-            
             const { outcome } = await Workspace.deferredPrompt.userChoice;
             console.log(`Utilizador escolheu: ${outcome}`);
-            
             Workspace.deferredPrompt = null;
             banner.remove();
         });
@@ -278,7 +326,6 @@ Object.assign(Workspace, {
         Workspace.navegarPara('perfil');
     },
 
-    // 🛡️ VACINA ANTI-CACHE: Se o HTML antigo chamar a função velha, ela aciona a nova!
     abrirModalPerfil: () => Workspace.abrirPaginaPerfil(),
 
     uploadAvatar: async (event) => {
