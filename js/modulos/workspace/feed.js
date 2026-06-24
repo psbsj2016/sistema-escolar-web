@@ -15,6 +15,7 @@ Workspace.Feed = {
     init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
+        Workspace.Feed.injetarModaisGlobais(); // 🚀 Injeta modais de exclusão bonitos
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         
@@ -26,6 +27,103 @@ Workspace.Feed = {
             });
             Workspace.Feed.listenerFechamentoConfigurado = true;
         }
+    },
+
+    // 🚀 NOVIDADE: Injeta Modal Bonito de Confirmação e Action Sheet de Comentários
+    injetarModaisGlobais: () => {
+        if (!document.getElementById('ws-confirm-modal')) {
+            const modaisHTML = `
+                <div id="ws-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s;">
+                    <div class="ws-card" style="width: 90%; max-width: 340px; text-align: center; padding: 30px 20px; transform: scale(0.9); transition: transform 0.2s; margin: 0; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
+                        <div style="font-size: 50px; margin-bottom: 10px; line-height: 1;">⚠️</div>
+                        <h3 id="ws-confirm-title" style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">Atenção</h3>
+                        <p id="ws-confirm-message" style="font-size: 14px; color: #666; margin-bottom: 25px; line-height: 1.5;">Tem certeza?</p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button id="ws-confirm-btn-cancel" class="ws-btn" style="background: #f0f2f5; color: #555; flex: 1; padding: 12px; font-size: 14px; box-shadow: none;">Cancelar</button>
+                            <button id="ws-confirm-btn-ok" class="ws-btn" style="background: #e74c3c; flex: 1; padding: 12px; font-size: 14px; box-shadow: none;">Sim, Apagar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ws-comment-action-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10005; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s;">
+                    <div class="ws-card" style="width: 100%; max-width: 500px; padding: 20px 20px 30px 20px; border-radius: 24px 24px 0 0 !important; margin: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 -10px 40px rgba(0,0,0,0.2);">
+                        <div style="width: 40px; height: 5px; background: #ddd; border-radius: 5px; margin: 0 auto 20px auto;"></div>
+                        <h4 style="margin: 0 0 15px 0; text-align: center; color: #7f8c8d; font-size: 14px;">Opções do Comentário</h4>
+                        <button id="ws-comment-action-edit" class="ws-btn" style="width: 100%; background: #fdf8e3; color: #f39c12; margin-bottom: 10px; font-size: 15px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: none;"><span style="font-size: 18px;">✏️</span> Editar Comentário</button>
+                        <button id="ws-comment-action-delete" class="ws-btn" style="width: 100%; background: #fdf2f2; color: #e74c3c; margin-bottom: 15px; font-size: 15px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: none;"><span style="font-size: 18px;">🗑️</span> Apagar Comentário</button>
+                        <button onclick="Workspace.Feed.fecharMenuComentario()" class="ws-btn" style="width: 100%; background: white; color: #333; border: 1px solid #ddd; font-size: 15px; padding: 12px; box-shadow: none;">Cancelar</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modaisHTML);
+        }
+    },
+
+    // 🚀 NOVIDADE: Motor visual de confirmação em substituição do window.confirm
+    confirmarAcao: (titulo, mensagem, onConfirm) => {
+        const modal = document.getElementById('ws-confirm-modal');
+        if(!modal) {
+            if(confirm(mensagem)) onConfirm();
+            return;
+        }
+
+        document.getElementById('ws-confirm-title').innerText = titulo;
+        document.getElementById('ws-confirm-message').innerText = mensagem;
+
+        const btnOk = document.getElementById('ws-confirm-btn-ok');
+        const btnCancel = document.getElementById('ws-confirm-btn-cancel');
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            modal.children[0].style.transform = 'scale(1)';
+        });
+
+        const fechar = () => {
+            modal.style.opacity = '0';
+            modal.children[0].style.transform = 'scale(0.9)';
+            setTimeout(() => modal.style.display = 'none', 200);
+        };
+
+        btnCancel.onclick = fechar;
+        btnOk.onclick = () => {
+            fechar();
+            onConfirm();
+        };
+    },
+
+    abrirMenuComentario: (postId, comentarioId) => {
+        const modal = document.getElementById('ws-comment-action-modal');
+        const btnEdit = document.getElementById('ws-comment-action-edit');
+        const btnDelete = document.getElementById('ws-comment-action-delete');
+
+        if(!modal) return;
+
+        modal.style.display = 'flex';
+        modal.onclick = (e) => { if(e.target === modal) Workspace.Feed.fecharMenuComentario(); };
+
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            modal.children[0].style.transform = 'translateY(0)';
+        });
+
+        btnEdit.onclick = () => {
+            Workspace.Feed.fecharMenuComentario();
+            Workspace.Feed.editarComentarioInline(postId, comentarioId);
+        };
+
+        btnDelete.onclick = () => {
+            Workspace.Feed.fecharMenuComentario();
+            Workspace.Feed.apagarComentario(postId, comentarioId);
+        };
+    },
+
+    fecharMenuComentario: () => {
+        const modal = document.getElementById('ws-comment-action-modal');
+        if(!modal) return;
+        modal.style.opacity = '0';
+        modal.children[0].style.transform = 'translateY(100%)';
+        setTimeout(() => modal.style.display = 'none', 300);
     },
 
     toggleMenu: (event, idUnico) => {
@@ -49,7 +147,10 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
-                /* 🛡️ DESIGN DE FILTROS EVOLUÍDO, PRÓXIMOS E PREMIUM */
+                /* 🛡️ REGRAS DE ANIMAÇÃO E INTERAÇÃO CLICK-TO-ACTION */
+                .ws-comentario-click { cursor: pointer; transition: transform 0.1s, background 0.2s; }
+                .ws-comentario-click:active { background: #f0f4f8 !important; transform: scale(0.98); }
+
                 #ws-feed-filter-bar {
                     display: flex !important;
                     gap: 6px !important; 
@@ -85,7 +186,6 @@ Workspace.Feed = {
                     box-shadow: 0 4px 8px rgba(44, 62, 80, 0.15) !important; 
                 }
 
-                /* 🛡️ CENTRAGEM ABSOLUTA DE CONTEÚDOS INTERNOS */
                 .ws-card img, .ws-card video, .ws-card iframe {
                     display: block !important;
                     margin: 12px auto 0 auto !important; 
@@ -617,11 +717,11 @@ Workspace.Feed = {
         if(!containerTexto) return;
 
         containerTexto.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;">
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;" onclick="event.stopPropagation()">
                 <input type="text" id="input-edit-com-${comentarioId}" value="${c.texto}" style="padding:6px 12px; border-radius:14px; border:1px solid #3498db; font-size:13px; outline:none; background:#fff; width:100%; box-sizing:border-box;">
                 <div style="display:flex; gap:6px;">
-                    <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.salvarEdicaoComentario('${postId}', '${comentarioId}')">💾 Guardar</span>
-                    <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="Workspace.Feed.cancelarEdicaoComentario('${postId}', '${comentarioId}')">Cancelar</span>
+                    <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.salvarEdicaoComentario('${postId}', '${comentarioId}')">💾 Guardar</span>
+                    <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.cancelarEdicaoComentario('${postId}', '${comentarioId}')">Cancelar</span>
                 </div>
             </div>
         `;
@@ -755,23 +855,17 @@ Workspace.Feed = {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
+                                // 🚀 O Menu interno desaparece. O comentário ganha poder de clique se for dono.
+                                const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.abrirMenuComentario('${p.id}', '${c.id}')" title="Toque para ver opções"` : '';
+                                const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
+                                
                                 return `
-                                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+                                <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                                     <div style="flex-shrink: 0;">${avatarComentario}</div>
-                                    <div style="flex:1; padding-right: 15px; min-width: 0;">
+                                    <div style="flex:1; padding-right: 5px; min-width: 0;">
                                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                                             <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:5px; flex-shrink: 0;">${tempoComentario}</span>
-                                            
-                                            ${ehDonoComentario ? `
-                                            <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0;">
-                                                <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
-                                                <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
-                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
-                                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarComentario('${p.id}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
-                                                </div>
-                                            </div>
-                                            ` : ''}
+                                            <span style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
                                         </div>
                                         <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
                                     </div>
@@ -856,46 +950,48 @@ Workspace.Feed = {
     },
 
     apagarPost: async (postId) => {
-        if (!confirm("Tem a certeza que deseja apagar esta publicação?")) return;
-        
-        const postCard = document.getElementById(`post-${postId}`);
-        if(postCard) postCard.style.display = 'none';
+        // 🚀 Substitui o feio confirm() pelo belo ConfirmarAcao()
+        Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza que deseja apagar permanentemente esta publicação?", async () => {
+            const postCard = document.getElementById(`post-${postId}`);
+            if(postCard) postCard.style.display = 'none';
 
-        try {
-            const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
-            if (res && res.success) {
-                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação removida com sucesso!", "success");
-            } else {
-                if(postCard) postCard.style.display = 'block'; 
-                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
+            try {
+                const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
+                if (res && res.success) {
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação removida com sucesso!", "success");
+                } else {
+                    if(postCard) postCard.style.display = 'block'; 
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
+                }
+            } catch (e) {
+                if(postCard) postCard.style.display = 'block';
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
             }
-        } catch (e) {
-            if(postCard) postCard.style.display = 'block';
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
-        }
+        });
     },
 
     apagarComentario: async (postId, comentarioId) => {
-        if (!confirm("Apagar este comentário?")) return;
-        
-        const comEl = document.getElementById(`comentario-${comentarioId}`);
-        if (comEl) comEl.style.display = 'none';
+        // 🚀 Substitui o confirm()
+        Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja mesmo remover este comentário do mural?", async () => {
+            const comEl = document.getElementById(`comentario-${comentarioId}`);
+            if (comEl) comEl.style.display = 'none';
 
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
-        if (post && post.comentarios) {
-            post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
-            const countComment = document.getElementById(`count-comment-${postId}`);
-            if (countComment) countComment.innerText = post.comentarios.length;
-        }
+            const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+            if (post && post.comentarios) {
+                post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
+                const countComment = document.getElementById(`count-comment-${postId}`);
+                if (countComment) countComment.innerText = post.comentarios.length;
+            }
 
-        try {
-            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-            if (!res || !res.success) {
+            try {
+                const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
+                if (!res || !res.success) {
+                    if (comEl) comEl.style.display = 'flex';
+                }
+            } catch (e) {
                 if (comEl) comEl.style.display = 'flex';
             }
-        } catch (e) {
-            if (comEl) comEl.style.display = 'flex';
-        }
+        });
     },
 
     toggleComentarios: (id) => {
@@ -949,21 +1045,17 @@ Workspace.Feed = {
                     listaComentarios.innerHTML = '';
                 }
 
+                const ehDonoComentario = true;
+                const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.abrirMenuComentario('${postId}', '${c.id}')" title="Toque para ver opções"` : '';
+                const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
+
                 const novoComentarioHTML = `
-                <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+                <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
                     <div style="flex-shrink: 0;">${avatarComentario}</div>
-                    <div style="flex:1; padding-right: 15px; min-width: 0;">
+                    <div style="flex:1; padding-right: 5px; min-width: 0;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                             <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                            <span style="font-size:10px; color:#aaa; margin-left:auto; margin-right:5px; flex-shrink: 0;">Agora mesmo</span>
-                            
-                            <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0;">
-                                <span onclick="Workspace.Feed.toggleMenu(event, '${c.id}')" style="cursor:pointer; color:#aaa; font-weight:bold; padding:0 5px; font-size:14px;" onmouseover="this.style.color='#333'">⋮</span>
-                                <div id="menu-dropdown-${c.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #eee; border-radius:6px; box-shadow:0 5px 15px rgba(0,0,0,0.1); width:110px; z-index:101; overflow:hidden;">
-                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:6px;" onclick="Workspace.Feed.editarComentarioInline('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">✏️ Editar</div>
-                                    <div style="padding:8px 12px; cursor:pointer; font-size:12px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:6px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarComentario('${postId}', '${c.id}'); Workspace.Feed.fecharMenus()">🗑️ Apagar</div>
-                                </div>
-                            </div>
+                            <span style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">Agora mesmo</span>
                         </div>
                         <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
                     </div>
@@ -1004,7 +1096,6 @@ Workspace.Feed = {
         if (!document.getElementById('ws-post-destino')) {
             const areaBotoes = document.getElementById('ws-action-flex-wrapper');
             if (areaBotoes) {
-                // 🛡️ Aumentámos a fonte e o padding para dar mais conforto ao toque
                 const htmlSelect = `
                     <select id="ws-post-destino" style="padding:6px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 120px; font-weight: 600; font-family: inherit; flex-shrink: 1; min-width: 0;">
                         <option value="global">🌍 Geral</option>
