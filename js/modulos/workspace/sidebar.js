@@ -182,7 +182,7 @@ Workspace.Sidebar = {
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
-        container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">A procurar atividades na nuvem... ⏳</div>';
+        container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">Atualizando Painel de Atividades ⏳... </div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');
@@ -285,7 +285,7 @@ Workspace.Sidebar = {
             } else if (ehVideo) {
                 htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><video controls style="width:100%; border-radius:8px; border:1px solid #ddd; background:#000;"><source src="${urlCorrigida}">Seu navegador não suporta este vídeo.</video></div>`;
             } else {
-                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><a href="${urlCorrigida}" target="_blank" style="display:flex; align-items:center; gap:8px; background:#3498db; color:white; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#2980b9'">📎 Abrir / Baixar Ficheiro de Apoio</a></div>`;
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><a href="${urlCorrigida}" target="_blank" style="display:flex; align-items:center; gap:8px; background:#3498db; color:white; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#2980b9'">📎 Abrir Material de Apoio</a></div>`;
             }
         }
 
@@ -335,7 +335,7 @@ Workspace.Sidebar = {
                                         <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
-                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Abrir / Baixar Trabalho</a>
+                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Trabalho</a>
                                 </div>
                             `;
                         });
@@ -377,16 +377,16 @@ Workspace.Sidebar = {
         const obs = document.getElementById('ws-tarefa-obs').value.trim();
 
         if (!fileInput.files || fileInput.files.length === 0) {
-            Workspace.mostrarAviso("Selecione um ficheiro (PDF, Word ou Imagem) para enviar o seu trabalho.", "warning");
+            Workspace.mostrarAviso("Selecione um material (PDF, Imagem, Power Point ou Word) para enviar o seu trabalho.", "warning");
             return;
         }
 
         const file = fileInput.files[0];
-        if (file.size > 10 * 1024 * 1024) return Workspace.mostrarAviso("O ficheiro é muito pesado. Tente um ficheiro até 10MB.", "warning");
+        if (file.size > 10 * 1024 * 1024) return Workspace.mostrarAviso("O documento é muito pesado. Tente um documento até 10MB.", "warning");
 
         const btn = document.getElementById('ws-btn-entregar');
         const txtOriginal = btn.innerText;
-        btn.innerText = "☁️ A subir ficheiro para a Nuvem...";
+        btn.innerText = "🔄 Enviando, aguarde...";
         btn.disabled = true;
 
         try {
@@ -394,10 +394,10 @@ Workspace.Sidebar = {
             formData.append('anexos', file);
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload do ficheiro.");
+            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload do documento.");
 
             const arquivoFinalUrl = uploadData.anexos[0].url;
-            btn.innerText = "📝 A gravar entrega...";
+            btn.innerText = "📝 Registrando a entrega...";
 
             const payload = {
                 eventoId: eventoId,
@@ -612,7 +612,7 @@ Workspace.Sidebar = {
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
         const container = document.getElementById('ws-prof-tarefas-grid');
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">A procurar atividades criadas... ⏳</div>';
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Procurando atividades criadas ⏳... </div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');
@@ -644,7 +644,7 @@ Workspace.Sidebar = {
                             </div>
                         </div>
                         <div id="entregas-prof-${t.id}" style="display: none; padding: 15px; background: white; border-top: 1px solid #eee;">
-                            <div style="text-align:center; font-size:12px; color:#999; padding:10px;">A procurar alunos que entregaram... ⏳</div>
+                            <div style="text-align:center; font-size:12px; color:#999; padding:10px;">Procurando alunos que entregaram... ⏳</div>
                         </div>
                     </div>
                 `;
@@ -694,7 +694,7 @@ Workspace.Sidebar = {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${ent.observacao ? `<span title="${Workspace.Sidebar.escapeHTML(ent.observacao)}" style="cursor:help; font-size:20px; color:#f1c40f;">💬</span>` : ''}
-                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Ficheiro do Aluno</a>
+                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Arquivo do Aluno</a>
                         </div>
                     </div>
                 `;
