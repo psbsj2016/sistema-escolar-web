@@ -209,7 +209,7 @@ Object.assign(Workspace, {
 
         const btn = document.querySelector('#ws-login-screen button');
         const txt = btn.innerText; 
-        btn.innerText = "A autenticar... ⏳"; 
+        btn.innerText = "Logando... ⏳"; 
         btn.disabled = true;
 
         try {
