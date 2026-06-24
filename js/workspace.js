@@ -214,12 +214,14 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
+        // 🛡️ INTEGRADO: Mapeamento do novo contentor de avaliações
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
             'tarefas_aluno': 'ws-tarefas-container',
             'tarefas_prof': 'ws-tarefas-professor-container',
-            'perfil': 'ws-perfil-modal' 
+            'perfil': 'ws-perfil-modal',
+            'avaliacoes': 'ws-avaliacoes-container' 
         };
 
         if (tela === 'tarefas') {
@@ -373,6 +375,7 @@ Object.assign(Workspace, {
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
+    abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'), // 🚀 Redirecionamento público de avaliações
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 

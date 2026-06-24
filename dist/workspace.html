@@ -71,14 +71,14 @@
 
         /* 🛡️ DEVOLVER O TAMANHO E DESTAQUE À CAIXA DE PUBLICAÇÃO */
         #ws-criar-post {
-            padding: 20px !important; /* Blinda a caixa contra reduções no mobile */
+            padding: 20px !important; 
         }
         
         #ws-criar-post .ws-post-input {
-            min-height: 100px !important; /* Garante uma área de digitação ampla e confortável */
-            font-size: 15px !important; /* Aumenta ligeiramente a leitura */
-            padding: 16px !important; /* Respiro interno superior */
-            margin-bottom: 15px !important; /* Empurra os botões ligeiramente para baixo */
+            min-height: 100px !important; 
+            font-size: 15px !important; 
+            padding: 16px !important; 
+            margin-bottom: 15px !important; 
         }
 
         /* 🛡️ BLINDAGEM ESPECÍFICA DE MODAIS E GRELHAS DE TAREFAS */
@@ -180,7 +180,6 @@
                 max-width: 100% !important;
             } 
             
-            /* Apenas os cartões comuns reduzem no mobile. O #ws-criar-post está protegido acima */
             .ws-card { 
                 padding: 14px !important; 
                 margin-bottom: 15px !important; 
@@ -223,7 +222,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-CleoTiIW.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-DVjQ0vML.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/virtual_pwa-register-8VxblsL9.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
@@ -236,8 +235,8 @@
             <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 30px;">Entre com as credenciais fornecidas pela escola.</p>
             
             <form onsubmit="event.preventDefault(); Workspace.fazerLogin();" style="width: 100%;">
-                <input type="text" id="ws-login-user" placeholder="O seu Login" autocomplete="username" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; text-align: center; box-sizing: border-box;">
-                <input type="password" id="ws-login-pass" placeholder="A sua Senha" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; font-family: inherit; text-align: center; box-sizing: border-box;">
+                <input type="text" id="ws-login-user" placeholder="Login" autocomplete="username" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; text-align: center; box-sizing: border-box;">
+                <input type="password" id="ws-login-pass" placeholder="Senha" autocomplete="current-password" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px; font-family: inherit; text-align: center; box-sizing: border-box;">
                 <button type="submit" class="ws-btn" style="width: 100%; padding: 12px; font-size: 16px;">Fazer Login</button>
             </form>
             
@@ -275,6 +274,10 @@
                         <span style="font-size: 18px;">📖</span> Atividades
                     </button>
 
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaAvaliacoes()">
+                        <span style="font-size: 18px;">📝</span> Avaliações
+                    </button>
+
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()">
                         <span style="font-size: 18px;">⚙️</span> Configurações
                     </button>
@@ -304,7 +307,6 @@
                 <textarea class="ws-post-input" rows="3" placeholder="Partilhe uma atividade, imagem, vídeo ou documento com os alunos..."></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
-                        <!-- O Javascript injetará o select aqui -->
                         <button id="ws-btn-anexar" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Arquivo</button>
                     </div>
                     <button class="ws-btn" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
@@ -323,6 +325,46 @@
                 <span>📖 Minhas Atividades</span>
             </h3>
             <div id="ws-lista-tarefas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;"></div>
+        </div>
+    </section>
+
+    <section id="ws-avaliacoes-container" style="display: none;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📝 Central de Avaliações Pedagógicas</span>
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+                
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">✍️</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Escrita</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Responda a dissertações e testes online. Digite textos, escolha alternativas corretas e selecione multiplas opções de resposta.</p>
+                    </div>
+                    <button class="ws-btn" style="width: 100%; font-size: 13px; padding: 10px;">Iniciar Exame</button>
+                </div>
+
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">🎤</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Oral (Áudios)</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente de fala e conversação. Grave e submeta arquivos de áudio completos para análise de pronúncia e avaliação do tutor.</p>
+                    </div>
+                    <button class="ws-btn" style="width: 100%; font-size: 13px; padding: 10px; background: #2c3e50;">Gravar Áudio</button>
+                </div>
+
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa; opacity: 0.85; position: relative;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <span style="position: absolute; top: 12px; right: 12px; background: #e67e22; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: bold; letter-spacing: 0.5px;">EM BREVE</span>
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Online</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente em direto para videoconferências. Integração futura com salas oficiais do Microsoft Teams e Google Meet.</p>
+                    </div>
+                    <button class="ws-btn" style="width: 100%; font-size: 13px; padding: 10px; background: #95a5a6; cursor: not-allowed;" disabled>Aguardando Sala</button>
+                </div>
+
+            </div>
         </div>
     </section>
 
