@@ -1,7 +1,7 @@
 // js/workspace.js
 import { CONFIG } from './config.js';
 
-// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL
+// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL (Já gere os avisos PWA)
 import './pwa-updater.js';
 
 import './toast.js'; 
@@ -14,65 +14,10 @@ import './modulos/workspace/sidebar.js';
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
 
-// 🚀 Sistema PWA: Alerta de Atualização
-const updateSW = registerSW({
-    onNeedRefresh() {
-        console.log("🔄 Nova atualização detetada pelo Vite PWA!");
-        Workspace.mostrarAlertaAtualizacaoPWA();
-    },
-    onOfflineReady() {
-        console.log("✅ PWA pronto para uso offline.");
-    }
-});
-
 Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
     deferredPrompt: null,
-
-    mostrarAlertaAtualizacaoPWA: () => {
-        if (document.getElementById('ws-pwa-update-prompt')) return;
-
-        const aviso = document.createElement('div');
-        aviso.id = 'ws-pwa-update-prompt';
-        aviso.style.cssText = `
-            position: fixed; 
-            bottom: 25px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: #2c3e50; 
-            color: white; 
-            padding: 12px 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
-            z-index: 999999; 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            font-family: 'Poppins', sans-serif; 
-            width: 90%; 
-            max-width: 350px;
-            animation: fadeIn 0.3s ease;
-        `;
-        
-        aviso.innerHTML = `
-            <div style="flex: 1;">
-                <strong style="display: block; font-size: 14px; margin-bottom: 2px;">🚀 Nova Versão Disponível!</strong>
-                <span style="font-size: 11px; color: #bdc3c7;">Atualize para receber as últimas melhorias.</span>
-            </div>
-            <button id="ws-btn-atualizar-pwa" style="background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s;">
-                Atualizar
-            </button>
-        `;
-        document.body.appendChild(aviso);
-
-        document.getElementById('ws-btn-atualizar-pwa').addEventListener('click', () => {
-            const btn = document.getElementById('ws-btn-atualizar-pwa');
-            btn.innerText = "⏳";
-            btn.style.background = "#f39c12";
-            updateSW(true); 
-        });
-    },
 
     mostrarAviso: (mensagem, tipo = 'info') => {
         if (window.Toast && typeof window.Toast.show === 'function') {
@@ -132,7 +77,7 @@ Object.assign(Workspace, {
         
         Workspace.navegarPara('feed', true);
 
-        // 🚀 CADEADO REMOVIDO: A caixa de criar post agora aparece para TODOS os utilizadores (Alunos inclusos)
+        // 🚀 CADEADO REMOVIDO: A caixa de criar post agora aparece para TODOS os utilizadores
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) {
             boxCriarPost.style.display = 'block';
@@ -214,13 +159,16 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
+        // 🛡️ MOTOR DE NAVEGAÇÃO: Mapeia o Loby das Avaliações (Fase 1)
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
             'tarefas_aluno': 'ws-tarefas-container',
             'tarefas_prof': 'ws-tarefas-professor-container',
             'perfil': 'ws-perfil-modal',
-            'avaliacoes': 'ws-avaliacoes-container' 
+            'avaliacoes': 'ws-avaliacoes-container',
+            'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
+            'avaliacoes_oral': 'ws-avaliacoes-oral-container'
         };
 
         if (tela === 'tarefas') {
@@ -374,7 +322,7 @@ Object.assign(Workspace, {
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
-    abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'), 
+    abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'),
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 
@@ -395,7 +343,7 @@ Object.assign(Workspace, {
         
         const btn = document.getElementById('ws-btn-salvar-senha');
         const txt = btn.innerText; 
-        btn.innerText = "⏳ A gravar..."; 
+        btn.innerText = "Salvando... ⏳"; 
         btn.disabled = true;
         
         try {
