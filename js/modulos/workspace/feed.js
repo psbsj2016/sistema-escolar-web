@@ -179,7 +179,6 @@ Workspace.Feed = {
                 /* 🚀 A SOLUÇÃO MÁGICA: Efeito de clique e feedback tátil universal */
                 .ws-btn-gamified { transition: transform 0.1s ease, filter 0.1s ease !important; }
                 .ws-btn-gamified:active { transform: scale(0.92) !important; filter: brightness(0.9); }
-                /* O Safari do iPhone bloqueia o :active se não o ativarmos, por isso criámos a classe via JS abaixo */
                 .btn-tapped { transform: scale(0.92) !important; filter: brightness(0.9) !important; }
 
                 .new-posts-pill {
@@ -202,8 +201,6 @@ Workspace.Feed = {
             document.head.appendChild(style);
         }
         
-        // 🚀 O ATIVADOR MUNDIAL DE TOUCH PARA IPHONE E ANDROID
-        // Isto injeta fisicamente uma classe que encolhe o botão instantaneamente ao tocar
         document.addEventListener('touchstart', function(e) {
             const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar');
             if (btn) btn.classList.add('btn-tapped');
@@ -212,7 +209,7 @@ Workspace.Feed = {
         document.addEventListener('touchend', function(e) {
             const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar');
             if (btn) {
-                setTimeout(() => btn.classList.remove('btn-tapped'), 150); // Mantém o efeito afundado por 150ms
+                setTimeout(() => btn.classList.remove('btn-tapped'), 150);
             }
         }, { passive: true });
         
@@ -257,7 +254,6 @@ Workspace.Feed = {
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
-    // 🚀 O NOVO MOTOR UNIVERSAL DE EMBEDS (YouTube, Instagram, TikTok)
     processarTextoComEmbeds: (textoOriginal) => {
         if (!textoOriginal) return '';
         let texto = Workspace.Feed.limparTexto(textoOriginal);
@@ -269,7 +265,6 @@ Workspace.Feed = {
 
         const embedsInjetados = [];
         
-        // 1. YouTube
         const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g;
         texto = texto.replace(regexYouTube, (match, id) => {
             embedsInjetados.push(`
@@ -280,7 +275,6 @@ Workspace.Feed = {
             return ''; 
         });
 
-        // 2. TikTok
         const regexTikTok = /https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)/g;
         texto = texto.replace(regexTikTok, (match, id) => {
             embedsInjetados.push(`
@@ -294,7 +288,6 @@ Workspace.Feed = {
             return '';
         });
 
-        // 3. Instagram (Reels & Posts)
         const regexInsta = /https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/g;
         texto = texto.replace(regexInsta, (match, id) => {
             embedsInjetados.push(`
@@ -305,7 +298,6 @@ Workspace.Feed = {
             return '';
         });
 
-        // 4. Spotify (Músicas ou Podcasts)
         const regexSpotify = /https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)/g;
         texto = texto.replace(regexSpotify, (match, type, id) => {
             embedsInjetados.push(`
@@ -681,18 +673,19 @@ Workspace.Feed = {
 
     limparTexto: (txt) => {
         if(!txt) return '';
-        return txt.replace(/</g, "<").replace(/>/g, ">");
+        return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     },
 
+    // 🚀 CORREÇÃO DO ID: "text-wrap-X" EM VEZ DE "texto-post-X"
     editarPost: (postId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post) return;
-        const containerText = document.getElementById(`texto-post-${postId}`);
+        const containerText = document.getElementById(`text-wrap-${postId}`);
         if(!containerText) return;
 
         const textAtual = post.texto || '';
         containerText.innerHTML = `
-            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;">
+            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;" onclick="event.stopPropagation()">
                 <textarea id="edit-input-${postId}" rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button class="ws-btn ws-btn-gamified" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
@@ -702,11 +695,16 @@ Workspace.Feed = {
         `;
     },
 
+    // 🚀 CORREÇÃO DO ID: "text-wrap-X" E RESTAURO DO CSS DO TEXTO LONGO
     cancelarEdicaoPost: (postId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post) return;
-        const containerText = document.getElementById(`texto-post-${postId}`);
-        if(containerText) containerText.innerHTML = Workspace.Feed.processarTextoComEmbeds(post.texto);
+        const containerText = document.getElementById(`text-wrap-${postId}`);
+        if(containerText) {
+            const ehTextoLongo = (post.texto && post.texto.length > 350);
+            containerText.innerHTML = Workspace.Feed.processarTextoComEmbeds(post.texto) + (ehTextoLongo ? '<div class="ws-text-fade"></div>' : '');
+            if(ehTextoLongo) containerText.classList.add('ws-text-collapsed');
+        }
     },
 
     salvarEdicaoPost: async (postId) => {
@@ -922,217 +920,6 @@ Workspace.Feed = {
                 </div>
             `;
         }).join('');
-    },
-
-    reagir: async (postId, tipoDesejado) => {
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
-        if (!post) return;
-
-        const meuId = Workspace.usuario.id;
-        if(!post.likes) post.likes = [];
-        if(!post.dislikes) post.dislikes = [];
-
-        const jaCurtiu = post.likes.includes(meuId);
-        const jaNaoCurtiu = post.dislikes.includes(meuId);
-
-        let acaoFinal = tipoDesejado;
-        if (tipoDesejado === 'like' && jaCurtiu) acaoFinal = 'none';
-        if (tipoDesejado === 'dislike' && jaNaoCurtiu) acaoFinal = 'none';
-
-        post.likes = post.likes.filter(id => id !== meuId);
-        post.dislikes = post.dislikes.filter(id => id !== meuId);
-
-        if (acaoFinal === 'like') post.likes.push(meuId);
-        if (acaoFinal === 'dislike') post.dislikes.push(meuId);
-
-        const btnLike = document.getElementById(`btn-like-${postId}`);
-        const btnDislike = document.getElementById(`btn-dislike-${postId}`);
-        const countLike = document.getElementById(`count-like-${postId}`);
-        const countDislike = document.getElementById(`count-dislike-${postId}`);
-
-        if (btnLike && countLike) {
-            const isLike = acaoFinal === 'like';
-            btnLike.style.background = isLike ? '#eafaf1' : '#f0f2f5';
-            btnLike.style.color = isLike ? '#27ae60' : '#555';
-            btnLike.style.border = isLike ? '1px solid #27ae60' : '1px solid transparent';
-            countLike.innerText = post.likes.length;
-            
-            if (isLike) {
-                btnLike.classList.remove('like-animated');
-                void btnLike.offsetWidth; 
-                btnLike.classList.add('like-animated');
-            }
-        }
-
-        if (btnDislike && countDislike) {
-            const isDislike = acaoFinal === 'dislike';
-            btnDislike.style.background = isDislike ? '#fdf2f2' : '#f0f2f5';
-            btnDislike.style.color = isDislike ? '#e74c3c' : '#555';
-            btnDislike.style.border = isDislike ? '1px solid #e74c3c' : '1px solid transparent';
-            countDislike.innerText = post.dislikes.length;
-            
-            if (isDislike) {
-                btnDislike.classList.remove('like-animated');
-                void btnDislike.offsetWidth; 
-                btnDislike.classList.add('like-animated');
-            }
-        }
-
-        try {
-            await Workspace.api(`/workspace/posts/${postId}/reacao`, 'PUT', {
-                userId: meuId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
-                tipo: acaoFinal
-            });
-        } catch (e) {
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha ao registar interação na base de dados.", "warning");
-        }
-    },
-
-    apagarPost: async (postId) => {
-        Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza que deseja apagar permanentemente esta publicação?", async () => {
-            const postCard = document.getElementById(`post-${postId}`);
-            if(postCard) postCard.style.display = 'none';
-
-            try {
-                const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
-                if (res && res.success) {
-                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação removida com sucesso!", "success");
-                } else {
-                    if(postCard) postCard.style.display = 'block'; 
-                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
-                }
-            } catch (e) {
-                if(postCard) postCard.style.display = 'block';
-                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
-            }
-        });
-    },
-
-    apagarComentario: async (postId, comentarioId) => {
-        Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja mesmo remover este comentário do mural?", async () => {
-            const comEl = document.getElementById(`comentario-${comentarioId}`);
-            if (comEl) comEl.style.display = 'none';
-
-            const post = Workspace.Feed.postsCache.find(p => p.id === postId);
-            if (post && post.comentarios) {
-                post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
-                const countComment = document.getElementById(`count-comment-${postId}`);
-                if (countComment) countComment.innerText = post.comentarios.length;
-            }
-
-            try {
-                const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-                if (!res || !res.success) {
-                    if (comEl) comEl.style.display = 'flex';
-                }
-            } catch (e) {
-                if (comEl) comEl.style.display = 'flex';
-            }
-        });
-    },
-
-    toggleComentarios: (id) => {
-        const box = document.getElementById(`box-comentarios-${id}`);
-        if(box) {
-            if (box.style.display === 'none') {
-                box.style.display = 'block';
-                Workspace.Feed.comentariosAbertos.add(id); 
-                const input = document.getElementById(`input-comentario-${id}`);
-                if(input) input.focus();
-            } else {
-                box.style.display = 'none';
-                Workspace.Feed.comentariosAbertos.delete(id); 
-            }
-        }
-    },
-
-    enviarComentario: async (postId) => {
-        const input = document.getElementById(`input-comentario-${postId}`);
-        if(!input) return;
-        
-        const texto = input.value.trim();
-        if(!texto) return;
-
-        const btn = input.nextElementSibling;
-        const txtOriginal = btn.innerText;
-        btn.innerText = "⏳";
-        btn.disabled = true;
-
-        try {
-            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios`, 'POST', {
-                texto: texto, autorNome: Workspace.usuario.nome || Workspace.usuario.login
-            });
-
-            if(res && res.success) {
-                input.value = '';
-                
-                const listaComentarios = document.getElementById(`lista-comentarios-${postId}`);
-                const countComment = document.getElementById(`count-comment-${postId}`);
-                
-                const c = {
-                    id: res.comentarioId || Date.now().toString(),
-                    autorNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    texto: texto,
-                    dataCriacao: new Date().toISOString()
-                };
-
-                const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
-                
-                if(listaComentarios.innerHTML.includes('Seja o primeiro')) {
-                    listaComentarios.innerHTML = '';
-                }
-
-                const ehDonoComentario = true;
-                const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
-                const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
-
-                const acoesInline = `
-                    <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
-                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">Editar</span>
-                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">Apagar</span>
-                    </div>
-                `;
-
-                const novoComentarioHTML = `
-                <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
-                    <div style="flex-shrink: 0;">${avatarComentario}</div>
-                    <div style="flex:1; padding-right: 5px; min-width: 0;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                            <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                            <span style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">Agora mesmo</span>
-                        </div>
-                        <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
-                        ${acoesInline}
-                    </div>
-                </div>`;
-
-                listaComentarios.insertAdjacentHTML('beforeend', novoComentarioHTML);
-                listaComentarios.scrollTop = listaComentarios.scrollHeight;
-
-                if(countComment) {
-                    const post = Workspace.Feed.postsCache.find(p => p.id === postId);
-                    if(post) {
-                        if(!post.comentarios) post.comentarios = [];
-                        post.comentarios.push(c);
-                        countComment.innerText = post.comentarios.length;
-                    }
-                }
-                Workspace.Feed.comentariosAbertos.add(postId);
-            } else {
-                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao enviar comentário.", "error");
-            }
-        } catch(e) {
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro de comunicação.", "error");
-        } finally {
-            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; }
-        }
-    },
-
-    htmlParaElemento: (htmlString) => {
-        const template = document.createElement('template');
-        template.innerHTML = htmlString.trim();
-        return template.content.firstChild;
     },
 
     configurarEventosCriacao: async () => {
