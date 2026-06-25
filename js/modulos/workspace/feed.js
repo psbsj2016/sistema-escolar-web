@@ -32,7 +32,6 @@ Workspace.Feed = {
     injetarModaisGlobais: () => {
         if (!document.getElementById('ws-confirm-modal')) {
             const modaisHTML = `
-                <!-- 🛡️ Card de Confirmação Elegante (Exclusão) -->
                 <div id="ws-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s;">
                     <div class="ws-card" style="width: 90%; max-width: 340px; text-align: center; padding: 30px 20px; transform: scale(0.9); transition: transform 0.2s; margin: 0; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
                         <div style="font-size: 50px; margin-bottom: 10px; line-height: 1;">⚠️</div>
@@ -81,7 +80,6 @@ Workspace.Feed = {
         };
     },
 
-    // 🚀 Lógica de alternância (Mostrar/Ocultar botões ao clicar no comentário)
     toggleOpcoesComentario: (idAcoes) => {
         const el = document.getElementById(idAcoes);
         if (el) {
@@ -177,7 +175,12 @@ Workspace.Feed = {
                     100% { transform: scale(1); }
                 }
                 .like-animated { animation: pop-effect 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-                .ws-btn-gamified:active { transform: scale(0.95); transition: 0.1s; }
+                
+                /* 🚀 A SOLUÇÃO MÁGICA: Efeito de clique e feedback tátil universal */
+                .ws-btn-gamified { transition: transform 0.1s ease, filter 0.1s ease !important; }
+                .ws-btn-gamified:active { transform: scale(0.92) !important; filter: brightness(0.9); }
+                /* O Safari do iPhone bloqueia o :active se não o ativarmos, por isso criámos a classe via JS abaixo */
+                .btn-tapped { transform: scale(0.92) !important; filter: brightness(0.9) !important; }
 
                 .new-posts-pill {
                     position: sticky; top: 15px; z-index: 999; background: #3498db; color: white;
@@ -198,6 +201,25 @@ Workspace.Feed = {
             `;
             document.head.appendChild(style);
         }
+        
+        // 🚀 O ATIVADOR MUNDIAL DE TOUCH PARA IPHONE E ANDROID
+        // Isto injeta fisicamente uma classe que encolhe o botão instantaneamente ao tocar
+        document.addEventListener('touchstart', function(e) {
+            const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar');
+            if (btn) btn.classList.add('btn-tapped');
+        }, { passive: true });
+        
+        document.addEventListener('touchend', function(e) {
+            const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar');
+            if (btn) {
+                setTimeout(() => btn.classList.remove('btn-tapped'), 150); // Mantém o efeito afundado por 150ms
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchcancel', function(e) {
+            const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar');
+            if (btn) btn.classList.remove('btn-tapped');
+        }, { passive: true });
     },
 
     toggleTextoPost: (btn, postId) => {
@@ -235,6 +257,7 @@ Workspace.Feed = {
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
+    // 🚀 O NOVO MOTOR UNIVERSAL DE EMBEDS (YouTube, Instagram, TikTok)
     processarTextoComEmbeds: (textoOriginal) => {
         if (!textoOriginal) return '';
         let texto = Workspace.Feed.limparTexto(textoOriginal);
@@ -244,11 +267,12 @@ Workspace.Feed = {
         texto = texto.replace(/_(.*?)_/g, '<em>$1</em>');                
         texto = texto.replace(/\n/g, '<br>');
 
-        const iframesYouTube = [];
-        const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g;
+        const embedsInjetados = [];
         
+        // 1. YouTube
+        const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g;
         texto = texto.replace(regexYouTube, (match, id) => {
-            iframesYouTube.push(`
+            embedsInjetados.push(`
                 <div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;">
                     <iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
@@ -256,10 +280,46 @@ Workspace.Feed = {
             return ''; 
         });
 
+        // 2. TikTok
+        const regexTikTok = /https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)/g;
+        texto = texto.replace(regexTikTok, (match, id) => {
+            embedsInjetados.push(`
+                <div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;">
+                    <blockquote class="tiktok-embed" cite="${match}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" >
+                        <section></section>
+                    </blockquote>
+                    <script async src="https://www.tiktok.com/embed.js"></script>
+                </div>
+            `);
+            return '';
+        });
+
+        // 3. Instagram (Reels & Posts)
+        const regexInsta = /https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/g;
+        texto = texto.replace(regexInsta, (match, id) => {
+            embedsInjetados.push(`
+                <div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;">
+                    <iframe src="https://www.instagram.com/p/${id}/embed" width="400" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></iframe>
+                </div>
+            `);
+            return '';
+        });
+
+        // 4. Spotify (Músicas ou Podcasts)
+        const regexSpotify = /https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)/g;
+        texto = texto.replace(regexSpotify, (match, type, id) => {
+            embedsInjetados.push(`
+                <div style="margin-top: 15px; width: 100%;">
+                    <iframe src="https://open.spotify.com/embed/$${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe>
+                </div>
+            `);
+            return '';
+        });
+
         const regexLinks = /(https?:\/\/[^\s<]+)/g;
         texto = texto.replace(regexLinks, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
 
-        if (iframesYouTube.length > 0) texto += iframesYouTube.join('');
+        if (embedsInjetados.length > 0) texto += embedsInjetados.join('');
         return texto;
     },
 
@@ -338,7 +398,7 @@ Workspace.Feed = {
         } else if (tipoFiltro === 'videos') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => 
                 (p.anexos && p.anexos.some(a => a.tipo.includes('video'))) || 
-                (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be'))
+                (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be') || p.texto && p.texto.includes('tiktok.com') || p.texto && p.texto.includes('instagram.com/reel'))
             );
         } else if (tipoFiltro === 'docs') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
@@ -477,7 +537,7 @@ Workspace.Feed = {
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
         
         overlay.innerHTML = `
-            <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">&times;</span>
+            <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">×</span>
             <img src="${url}" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,0.6); transform:scale(0.95); transition: transform 0.2s ease-out;">
         `;
         document.body.appendChild(overlay);
@@ -511,7 +571,7 @@ Workspace.Feed = {
 
         overlay.innerHTML = `
             <div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px;">
-                <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">&times;</span>
+                <span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">×</span>
             </div>
             <div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
                 ${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}
@@ -621,7 +681,7 @@ Workspace.Feed = {
 
     limparTexto: (txt) => {
         if(!txt) return '';
-        return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return txt.replace(/</g, "<").replace(/>/g, ">");
     },
 
     editarPost: (postId) => {
@@ -674,7 +734,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 Lógica atualizada de Edição Inline de Comentários
     editarComentarioInline: (postId, comentarioId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post || !post.comentarios) return;
@@ -684,7 +743,6 @@ Workspace.Feed = {
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(!containerTexto) return;
 
-        // Esconde os botões de ação do comentário temporariamente enquanto edita
         const acoesEl = document.getElementById(`acoes-comentario-${comentarioId}`);
         if(acoesEl) acoesEl.style.display = 'none';
 
@@ -708,7 +766,6 @@ Workspace.Feed = {
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(containerTexto) containerTexto.innerHTML = Workspace.Feed.limparTexto(c.texto);
 
-        // Devolve os botões inline para o estado padrão
         const acoesEl = document.getElementById(`acoes-comentario-${comentarioId}`);
         if(acoesEl) acoesEl.style.display = 'none';
     },
@@ -831,11 +888,9 @@ Workspace.Feed = {
                                 const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
                                 const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
                                 
-                                // 🚀 LÓGICA DO CLIQUE: Permite revelar os botões abaixo do texto
                                 const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
                                 const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
                                 
-                                // 🚀 AÇÕES INLINE INVISÍVEIS (Apenas reveladas no clique)
                                 const acoesInline = ehDonoComentario ? `
                                     <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
                                         <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">Editar</span>
