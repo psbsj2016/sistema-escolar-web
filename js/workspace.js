@@ -10,6 +10,7 @@ import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
 import './modulos/workspace/sidebar.js';
+import './modulos/workspace/avaliacoes.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -90,6 +91,7 @@ Object.assign(Workspace, {
         if (Workspace.Upload) Workspace.Upload.init();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
+        if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
 
         document.addEventListener('click', (e) => {
             const menuContainer = document.getElementById('ws-menu-left-container');
