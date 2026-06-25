@@ -767,7 +767,6 @@ validarCadastroInst: async () => {
         }
     },
 
-    // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO
     // 🖨️ NOVA FUNÇÃO: O MOTOR DE IMPRESSÃO INVISÍVEL (IFRAME)
     imprimirDossieFrequencia: () => {
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};

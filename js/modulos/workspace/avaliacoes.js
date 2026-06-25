@@ -36,10 +36,11 @@ Workspace.Avaliacoes = {
         // Bloqueia a rolagem da página por baixo do exame
         document.body.style.overflow = 'hidden'; 
         
-        const container = document.getElementById('ws-exame-foco-container');
-        container.style.display = 'block';
-        container.style.animation = 'fadeIn 0.3s ease-out';
-        container.scrollTop = 0; // Garante que a prova começa no topo
+        // 🚀 PROCURA PELO NOVO ID BLINDADO
+        const tela = document.getElementById('ws-exame-foco-tela');
+        tela.style.display = 'block';
+        tela.style.animation = 'fadeIn 0.3s ease-out';
+        tela.scrollTop = 0; // Garante que a prova começa no topo
 
         // Recupera o Rascunho (Se o aluno atualizou a página sem querer, não perde nada!)
         const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
@@ -154,7 +155,8 @@ Workspace.Avaliacoes = {
 
     fecharModoFoco: () => {
         document.body.style.overflow = ''; // Devolve o scroll do site
-        document.getElementById('ws-exame-foco-container').style.display = 'none';
+        // 🚀 ID ATUALIZADO AQUI
+        document.getElementById('ws-exame-foco-tela').style.display = 'none';
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         Workspace.Avaliacoes.exameAtivo = null;
     }
