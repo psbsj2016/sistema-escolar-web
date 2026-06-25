@@ -14,8 +14,9 @@ Workspace.Upload = {
         const boxCriar = document.getElementById('ws-criar-post');
         if (!boxCriar) return;
 
-        // Procura o botão de anexar que criámos no HTML
-        const btnAnexar = Array.from(boxCriar.querySelectorAll('button')).find(b => b.innerText.includes('Anexar Ficheiro'));
+        // 🎯 CORREÇÃO 1 (CRÍTICA): Em vez de buscar por texto instável ("Anexar Ficheiro"),
+        // capturamos diretamente pelo ID nativo e blindado do botão que definimos no HTML!
+        const btnAnexar = document.getElementById('ws-btn-anexar');
         
         if (btnAnexar) {
             // Cria um input de ficheiro invisível
@@ -34,8 +35,16 @@ Workspace.Upload = {
             boxCriar.insertBefore(areaPreview, boxCriar.querySelector('div[style*="display: flex; justify-content: space-between"]'));
             boxCriar.appendChild(inputFicheiro);
 
-            // Quando clica no botão, aciona o input invisível
-            btnAnexar.addEventListener('click', () => inputFicheiro.click());
+            // 🚀 CORREÇÃO 2 (MOBILE PROOF): Os sistemas operativos móveis (iOS/Android) bloqueiam a abertura da galeria
+            // por .click() se houver qualquer atraso ou intermediação assíncrona.
+            // Vinculamos uma função direta de disparo instantâneo tanto para clique quanto para toque físico direto!
+            const dispararUploadNativamente = (e) => {
+                e.preventDefault(); // Impede duplo disparo e comportamento de delay nativo do mobile
+                inputFicheiro.click();
+            };
+
+            btnAnexar.addEventListener('click', dispararUploadNativamente);
+            btnAnexar.addEventListener('touchstart', dispararUploadNativamente, { passive: false });
             
             // Quando escolhe um ficheiro, processa
             inputFicheiro.addEventListener('change', Workspace.Upload.processarFicheiros);
@@ -47,7 +56,6 @@ Workspace.Upload = {
         if (files.length === 0) return;
 
         files.forEach(file => {
-            // 1. Validação de Segurança e Tamanho
             const tipo = file.type.split('/')[0];
             const extensao = file.name.split('.').pop().toLowerCase();
             const tamanhoMB = file.size / (1024 * 1024);
@@ -58,16 +66,19 @@ Workspace.Upload = {
             else if (extensao === 'pdf') limiteRecomendado = Workspace.Upload.limiteTamanhoMB.pdf;
 
             if (tamanhoMB > limiteRecomendado) {
-                if (window.App && App.showToast) App.showToast(`O ficheiro ${file.name} é demasiado grande (Máx: ${limiteRecomendado}MB).`, "error");
+                // 🎯 CORREÇÃO 3 (INTEGRAÇÃO): O código antigo chamava "App.showToast" que não existe no seu ecossistema.
+                // Ajustado para apontar nativamente para o seu "Workspace.mostrarAviso" que consome o seu toast.js!
+                if (Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso(`O ficheiro ${file.name} é demasiado grande (Máx: ${limiteRecomendado}MB).`, "error");
+                }
                 return;
             }
 
-            // 2. Guardar em memória
             Workspace.Upload.arquivosAtuais.push(file);
         });
 
         Workspace.Upload.renderizarPreview();
-        event.target.value = ''; // Reseta o input para permitir selecionar o mesmo ficheiro novamente se for apagado
+        event.target.value = ''; // Permite selecionar o mesmo arquivo novamente se for apagado e selecionado de novo
     },
 
     renderizarPreview: () => {

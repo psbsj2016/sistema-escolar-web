@@ -1,9 +1,12 @@
+// js/admin.js
+
+// 🌟 O IMPORT FICA SEMPRE AQUI NO TOPO!
+import './pwa-updater.js';
+
 // Use apenas esta declaração segura
 const API_URL = '/api';
 
 let cacheClientes = [];
-
-import './pwa-updater.js';
 
 const Admin = {
     // 🛡️ Protege o HTML contra quebras visuais
