@@ -673,7 +673,7 @@ Workspace.Feed = {
 
     limparTexto: (txt) => {
         if(!txt) return '';
-        return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return txt.replace(/</g, "<").replace(/>/g, ">");
     },
 
     // 🚀 CORREÇÃO DO ID: "text-wrap-X" EM VEZ DE "texto-post-X"
@@ -920,6 +920,13 @@ Workspace.Feed = {
                 </div>
             `;
         }).join('');
+    },
+
+    // 🚀 CORRECAO: Devolver a função utilitária vital que gera os filtros visuais no topo
+    htmlParaElemento: (htmlString) => {
+        const template = document.createElement('template');
+        template.innerHTML = htmlString.trim();
+        return template.content.firstChild;
     },
 
     configurarEventosCriacao: async () => {
