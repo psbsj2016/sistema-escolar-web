@@ -222,7 +222,7 @@ Object.assign(App, {
         if(!login || !pass) return App.showToast("Preencha utilizador e senha", "warning");
         
         const btn = document.querySelector('#tela-login button[type="submit"]');
-        const txt = btn.innerText; btn.innerText = "Autenticando... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "Acessando... ⏳"; btn.disabled = true;
         
         try {
             const deviceId = App.getDeviceId ? App.getDeviceId() : 'dev_web';

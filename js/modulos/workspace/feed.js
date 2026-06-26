@@ -112,7 +112,6 @@ Workspace.Feed = {
             const style = document.createElement('style');
             style.id = 'ws-feed-styles';
             style.innerHTML = `
-                /* 🛡️ Animação de clique no balão do comentário */
                 .ws-comentario-click { cursor: pointer; transition: background 0.2s, transform 0.1s; }
                 .ws-comentario-click:active { background: #f0f4f8 !important; transform: scale(0.99); }
 
@@ -176,7 +175,6 @@ Workspace.Feed = {
                 }
                 .like-animated { animation: pop-effect 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
                 
-                /* 🚀 A SOLUÇÃO MÁGICA: Efeito de clique e feedback tátil universal */
                 .ws-btn-gamified { transition: transform 0.1s ease, filter 0.1s ease !important; }
                 .ws-btn-gamified:active { transform: scale(0.92) !important; filter: brightness(0.9); }
                 .btn-tapped { transform: scale(0.92) !important; filter: brightness(0.9) !important; }
@@ -676,7 +674,179 @@ Workspace.Feed = {
         return txt.replace(/</g, "<").replace(/>/g, ">");
     },
 
-    // 🚀 CORREÇÃO DO ID: "text-wrap-X" EM VEZ DE "texto-post-X"
+    // 🚀 RESTAURADO: REAÇÕES EM TEMPO REAL NOS BOTÕES DE POST (LIKE / DISLIKE)
+    reagir: async (postId, tipo) => {
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo });
+            if (res && res.success) {
+                const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                if (post) {
+                    post.likes = res.likes;
+                    post.dislikes = res.dislikes;
+                }
+                
+                const btnLike = document.getElementById(`btn-like-${postId}`);
+                const btnDislike = document.getElementById(`btn-dislike-${postId}`);
+                const countLike = document.getElementById(`count-like-${postId}`);
+                const countDislike = document.getElementById(`count-dislike-${postId}`);
+                const meuId = Workspace.usuario.id;
+                
+                if (countLike) countLike.innerText = res.likes.length;
+                if (countDislike) countDislike.innerText = res.dislikes.length;
+                
+                if (res.likes.includes(meuId)) {
+                    btnLike.style.background = '#eafaf1';
+                    btnLike.style.color = '#27ae60';
+                    btnLike.style.borderColor = '#27ae60';
+                    btnLike.classList.add('like-animated');
+                    setTimeout(() => btnLike.classList.remove('like-animated'), 400);
+                } else {
+                    btnLike.style.background = '#f0f2f5';
+                    btnLike.style.color = '#555';
+                    btnLike.style.borderColor = 'transparent';
+                }
+                
+                if (res.dislikes.includes(meuId)) {
+                    btnDislike.style.background = '#fdf2f2';
+                    btnDislike.style.color = '#e74c3c';
+                    btnDislike.style.borderColor = '#e74c3c';
+                } else {
+                    btnDislike.style.background = '#f0f2f5';
+                    btnDislike.style.color = '#555';
+                    btnDislike.style.borderColor = 'transparent';
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    },
+
+    // 🚀 RESTAURADO: EXPANSÃO DA GAVETA DE COMENTÁRIOS COM ANIMAÇÃO
+    toggleComentarios: (postId) => {
+        const box = document.getElementById(`box-comentarios-${postId}`);
+        if (!box) return;
+        if (box.style.display === 'none') {
+            box.style.display = 'block';
+            box.style.animation = 'fadeIn 0.3s ease';
+            Workspace.Feed.comentariosAbertos.add(postId);
+        } else {
+            box.style.display = 'none';
+            Workspace.Feed.comentariosAbertos.delete(postId);
+        }
+    },
+
+    // 🚀 RESTAURADO: MOTOR DE ENVIO E INJEÇÃO IMEDIATA DE COMENTÁRIOS NA UI
+    enviarComentario: async (postId) => {
+        const input = document.getElementById(`input-comentario-${postId}`);
+        if (!input) return;
+        const texto = input.value.trim();
+        if (!texto) return;
+
+        input.value = '';
+        try {
+            const res = await Workspace.api(`/workspace/posts/${postId}/comentarios`, 'POST', {
+                texto,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if (res && res.success) {
+                const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                if (post) {
+                    if (!post.comentarios) post.comentarios = [];
+                    post.comentarios.push(res.comentario);
+                    
+                    const countComment = document.getElementById(`count-comment-${postId}`);
+                    if (countComment) countComment.innerText = post.comentarios.length;
+                    
+                    const lista = document.getElementById(`lista-comentarios-${postId}`);
+                    if (lista) {
+                        const avatarComentario = window.Workspace.renderizarAvatar(res.comentario.autorNome, 30);
+                        const clickAttr = `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${res.comentario.id}')" title="Toque para ver opções"`;
+                        
+                        const novoComentarioHTML = `
+                        <div id="comentario-${res.comentario.id}" ${clickAttr} class="ws-comentario-click" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; animation: fadeIn 0.3s ease;">
+                            <div style="flex-shrink: 0;">${avatarComentario}</div>
+                            <div style="flex:1; padding-right: 5px; min-width: 0;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                    <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(res.comentario.autorNome)}</strong>
+                                    <span style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">Agora mesmo</span>
+                                </div>
+                                <span id="texto-comentario-${res.comentario.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(res.comentario.texto)}</span>
+                                <div id="acoes-comentario-${res.comentario.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
+                                    <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${res.comentario.id}')">Editar</span>
+                                    <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${res.comentario.id}')">Apagar</span>
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        if (lista.innerHTML.includes("Seja o primeiro a comentar!")) {
+                            lista.innerHTML = novoComentarioHTML;
+                        } else {
+                            lista.insertAdjacentHTML('beforeend', novoComentarioHTML);
+                        }
+                        lista.scrollTop = lista.scrollHeight;
+                    }
+                }
+            }
+        } catch (e) { console.error(e); }
+    },
+
+    // 🚀 RESTAURADO: LÓGICA DE EXCLUSÃO DE PUBLICAÇÕES COM CONFIRMAÇÃO MODAL
+    apagarPost: (postId) => {
+        Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
+            try {
+                const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
+                if (res && res.success) {
+                    const el = document.getElementById(`post-${postId}`);
+                    if (el) {
+                        el.style.transform = 'scale(0.95)';
+                        el.style.opacity = '0';
+                        el.style.transition = 'all 0.3s ease';
+                        setTimeout(() => {
+                            el.remove();
+                            Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => p.id !== postId);
+                            Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => p.id !== postId);
+                        }, 300);
+                    }
+                    if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada com sucesso!", "success");
+                }
+            } catch (e) {
+                if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao apagar publicação.", "error");
+            }
+        });
+    },
+
+    // 🚀 RESTAURADO: LÓGICA DE EXCLUSÃO DE COMENTÁRIOS COM TRANSICÃO FLUIDA
+    apagarComentario: (postId, comentarioId) => {
+        Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja eliminar este comentário definitivamente?", async () => {
+            try {
+                const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
+                if (res && res.success) {
+                    const el = document.getElementById(`comentario-${comentarioId}`);
+                    if (el) {
+                        el.style.opacity = '0';
+                        el.style.transition = 'opacity 0.2s ease';
+                        setTimeout(() => {
+                            el.remove();
+                            const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                            if (post && post.comentarios) {
+                                post.comentarios = post.comentarios.filter(c => c.id !== comentarioId);
+                                const countComment = document.getElementById(`count-comment-${postId}`);
+                                if (countComment) countComment.innerText = post.comentarios.length;
+                                if (post.comentarios.length === 0) {
+                                    const lista = document.getElementById(`lista-comentarios-${postId}`);
+                                    if (lista) lista.innerHTML = '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>';
+                                }
+                            }
+                        }, 200);
+                    }
+                }
+            } catch (e) {
+                if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao eliminar comentário.", "error");
+            }
+        });
+    },
+
     editarPost: (postId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post) return;
@@ -695,7 +865,6 @@ Workspace.Feed = {
         `;
     },
 
-    // 🚀 CORREÇÃO DO ID: "text-wrap-X" E RESTAURO DO CSS DO TEXTO LONGO
     cancelarEdicaoPost: (postId) => {
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if(!post) return;
@@ -891,8 +1060,8 @@ Workspace.Feed = {
                                 
                                 const acoesInline = ehDonoComentario ? `
                                     <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
-                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">✏️ Editar</span>
-                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">🗑️ Apagar</span>
+                                        <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${p.id}', '${c.id}')">Editar</span>
+                                        <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${p.id}', '${c.id}')">Apagar</span>
                                     </div>
                                 ` : '';
                                 
@@ -922,7 +1091,6 @@ Workspace.Feed = {
         }).join('');
     },
 
-    // 🚀 CORRECAO: Devolver a função utilitária vital que gera os filtros visuais no topo
     htmlParaElemento: (htmlString) => {
         const template = document.createElement('template');
         template.innerHTML = htmlString.trim();
@@ -959,7 +1127,6 @@ Workspace.Feed = {
         const inputTexto = boxCriarPost.querySelector('textarea');
 
         if (btnPublicar && inputTexto) {
-            
             const rascunhoGuardado = localStorage.getItem('ws_draft_post');
             if (rascunhoGuardado) {
                 inputTexto.value = rascunhoGuardado;

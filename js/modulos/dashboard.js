@@ -37,7 +37,7 @@ export const renderizarInicio = async () => {
     App.verificarNotificacoes(); 
     App.setTitulo("Visão Geral"); 
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Carregando painel de métricas...</p>';
+    
     
     try {
         const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
