@@ -985,7 +985,7 @@ Workspace.Feed = {
                     return;
                 }
 
-                novoBtn.innerText = "⏳ A enviar...";
+                novoBtn.innerText = "Publicando... ⏳";
                 novoBtn.disabled = true;
 
                 try {

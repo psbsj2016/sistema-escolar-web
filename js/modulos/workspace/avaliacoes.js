@@ -10,7 +10,7 @@ Workspace.Avaliacoes = {
     abaEscrita: 'pendentes',
     abaOral: 'pendentes',
     avaliacaoEmEdicao: null,
-    turmasCarregadas: false, // 🚀 Controle para buscar turmas só 1x
+    turmasCarregadas: false, 
     
     exameAtivo: null,
     cronometroInterval: null,
@@ -24,11 +24,14 @@ Workspace.Avaliacoes = {
     streamMicrofone: null,
     gravacaoInterval: null,
     segundosGravados: 0,
+    
+    radarInterval: null, // 🚀 NOVO: Guarda o temporizador do Radar
 
     init: () => {
-        console.log("📝 Motor de Avaliações Blindado e Segmentado.");
+        console.log("📝 Motor de Avaliações: Radar Tempo Real Ativado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
+            Workspace.Avaliacoes.iniciarRadarAvaliacoes(); // 🚀 Inicia o Modo Escuta
         }
     },
 
@@ -73,6 +76,76 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
+    // 🛡️ O RADAR EM TEMPO REAL (NOVO)
+    // ==========================================
+    iniciarRadarAvaliacoes: () => {
+        if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
+        
+        Workspace.Avaliacoes.radarInterval = setInterval(async () => {
+            try {
+                const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+                if (resAval && resAval.success) {
+                    const avaliacoesNovas = resAval.avaliacoes;
+                    const idAtivo = Workspace.Avaliacoes.exameAtivo || Workspace.Avaliacoes.estudioAtivo;
+                    
+                    if (idAtivo) {
+                        const provaAtualizada = avaliacoesNovas.find(a => a.id === idAtivo);
+                        const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
+                        const isParaMim = provaAtualizada && (provaAtualizada.destino === 'global' || provaAtualizada.destino === myTurma || (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === provaAtualizada.destino || t === provaAtualizada.destino)));
+                        
+                        // 💥 Situação 1: Foi ocultada, excluída ou tirada desta turma
+                        if (!provaAtualizada || provaAtualizada.status !== 'ativa' || !isParaMim) {
+                            Workspace.Avaliacoes.expulsarAluno("O professor encerrou ou ocultou esta avaliação. A sua sessão foi interrompida.");
+                        } 
+                        // 💥 Situação 2: Foi editada (O conteúdo mudou e o aluno não pode enviar respostas obsoletas)
+                        else {
+                            const provaVelha = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === idAtivo);
+                            if (provaVelha && provaAtualizada.ultimaAtualizacao !== provaVelha.ultimaAtualizacao) {
+                                Workspace.Avaliacoes.expulsarAluno("O professor atualizou as perguntas ou instruções deste teste. Por favor, inicie-o novamente para ver as alterações.");
+                            }
+                        }
+                    }
+
+                    // Atualiza a UI do Lobby sem piscar o ecrã (se estiver vazio)
+                    const hashAntigo = JSON.stringify(Workspace.Avaliacoes.avaliacoesDisponiveis);
+                    const hashNovo = JSON.stringify(avaliacoesNovas);
+                    if (hashAntigo !== hashNovo) {
+                        Workspace.Avaliacoes.avaliacoesDisponiveis = avaliacoesNovas;
+                        if (!idAtivo) Workspace.Avaliacoes.renderizarLobbies();
+                    }
+                }
+            } catch(e) {}
+        }, 10000); // ⏱️ Bate no servidor a cada 10 segundos
+    },
+
+    expulsarAluno: (mensagem) => {
+        // Limpa tudo à força
+        document.body.style.overflow = '';
+        const telaEscrita = document.getElementById('ws-exame-foco-tela');
+        const telaOral = document.getElementById('ws-audio-foco-tela');
+        if(telaEscrita) telaEscrita.style.display = 'none';
+        if(telaOral) telaOral.style.display = 'none';
+
+        if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
+        if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+        
+        // Desliga o microfone se estiver ligado
+        if(Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
+            Workspace.Avaliacoes.mediaRecorder.stop();
+            if(Workspace.Avaliacoes.streamMicrofone) Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop());
+        }
+
+        Workspace.Avaliacoes.exameAtivo = null;
+        Workspace.Avaliacoes.estudioAtivo = null;
+        Workspace.Avaliacoes.resetarInterfaceDeAudio();
+        
+        Workspace.Avaliacoes.renderizarLobbies();
+
+        // Avisa o aluno de forma elegante
+        Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
+    },
+
+    // ==========================================
     // 🌐 LOBBY DO ALUNO
     // ==========================================
     carregarLobbies: async () => {
@@ -91,14 +164,12 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        // 🚀 FILTRO INTELIGENTE: Pega apenas provas ativas E que sejam da turma do aluno (ou global)
         const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
         
         const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.status !== 'ativa') return false;
             if (a.destino === 'global') return true;
             if (a.destino === myTurma) return true;
-            // Validação extra caso use array de turmas
             if (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === a.destino || t === a.destino)) return true;
             return false;
         });
@@ -113,7 +184,6 @@ Workspace.Avaliacoes = {
         const orPendentes = orais.filter(a => !entreguesIds.includes(a.id));
         const orConcluidas = orais.filter(a => entreguesIds.includes(a.id));
 
-        // 🚀 ATUALIZADOS OS NÚMEROS NAS ABAS DE CONCLUÍDAS
         const tEscPend = document.getElementById('tab-escrita-pendentes');
         const tEscConc = document.getElementById('tab-escrita-concluidas');
         if (tEscPend && tEscConc) {
@@ -165,7 +235,7 @@ Workspace.Avaliacoes = {
         if (contOrais) {
             const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
             if (listaAtivaOral.length === 0) {
-                contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações pendentes.</div>`;
+                contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações.</div>`;
             } else {
                 contOrais.innerHTML = listaAtivaOral.map(p => {
                     const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
@@ -430,7 +500,7 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // 🎓 PAINEL DO PROFESSOR (CRIAÇÃO, EDIÇÃO E GESTÃO)
+    // 🎓 PAINEL DO PROFESSOR E CORREÇÕES
     // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
@@ -440,7 +510,7 @@ Workspace.Avaliacoes = {
                 const selEscrita = document.getElementById('ws-nova-prova-destino');
                 const selOral = document.getElementById('ws-nova-oral-destino');
                 let options = '<option value="global">🌍 Todas as Turmas</option>';
-                turmas.forEach(t => options += `<option value="${t.id}">📚 ${t.nome}</option>`);
+                turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`);
                 if(selEscrita) selEscrita.innerHTML = options;
                 if(selOral) selOral.innerHTML = options;
             }
@@ -704,9 +774,6 @@ Workspace.Avaliacoes = {
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // ==========================================
-    // 🎓 CORREÇÃO E REVISÃO (Professor e Aluno)
-    // ==========================================
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -755,11 +822,9 @@ Workspace.Avaliacoes = {
         const prova = Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!entrega || !prova) return;
 
-        // Injeta temporariamente nos caches para usar a mesma função modal do professor
         Workspace.Avaliacoes.entregasEmCache = [entrega];
         Workspace.Avaliacoes.provasEmCache = { [prova.id]: prova };
-        
-        Workspace.Avaliacoes.verCorrecao(entrega.id, true); // O 'true' diz que é modo aluno
+        Workspace.Avaliacoes.verCorrecao(entrega.id, true);
     },
 
     verCorrecao: (entregaId, isAluno = false) => {
@@ -802,7 +867,6 @@ Workspace.Avaliacoes = {
         }
 
         const tituloModal = isAluno ? "A Minha Entrega" : `Avaliação de ${entrega.alunoNome}`;
-
         const modalId = 'modal-ver-entrega';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
