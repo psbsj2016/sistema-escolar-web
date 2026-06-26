@@ -9,7 +9,8 @@ Workspace.Avaliacoes = {
     provasEmCache: {},
     abaEscrita: 'pendentes',
     abaOral: 'pendentes',
-    avaliacaoEmEdicao: null, // Controla se o professor está a criar ou editar
+    avaliacaoEmEdicao: null,
+    turmasCarregadas: false, // 🚀 Controle para buscar turmas só 1x
     
     exameAtivo: null,
     cronometroInterval: null,
@@ -25,15 +26,12 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
 
     init: () => {
-        console.log("📝 Motor de Avaliações Blindado.");
+        console.log("📝 Motor de Avaliações Blindado e Segmentado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
         }
     },
 
-    // ==========================================
-    // 🎨 NOVO MODAL ELEGANTE (Anti-Navegador)
-    // ==========================================
     confirmarDialog: (titulo, mensagem, textoBtnConfirma, corBtnConfirma, onConfirm) => {
         let modal = document.getElementById('ws-aval-confirm-modal');
         if (!modal) {
@@ -55,15 +53,11 @@ Workspace.Avaliacoes = {
 
         document.getElementById('ws-aval-confirm-title').innerText = titulo;
         document.getElementById('ws-aval-confirm-msg').innerText = mensagem;
-        
         const btnConfirma = document.getElementById('ws-aval-confirm-btn');
         btnConfirma.innerText = textoBtnConfirma;
         btnConfirma.style.background = corBtnConfirma;
-        
         const icon = document.getElementById('ws-aval-confirm-icon');
-        if(corBtnConfirma === '#e74c3c') icon.innerText = '🚨';
-        else if(corBtnConfirma === '#27ae60') icon.innerText = '✅';
-        else icon.innerText = '⚠️';
+        icon.innerText = corBtnConfirma === '#e74c3c' ? '🚨' : (corBtnConfirma === '#27ae60' ? '✅' : '⚠️');
 
         modal.style.display = 'flex';
         requestAnimationFrame(() => {
@@ -90,33 +84,44 @@ Workspace.Avaliacoes = {
             if (resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasFeitas = resEntregas.entregas;
 
             Workspace.Avaliacoes.renderizarLobbies();
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     },
 
     mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        // Aluno só vê o que está ATIVO!
-        const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.status === 'ativa');
+        // 🚀 FILTRO INTELIGENTE: Pega apenas provas ativas E que sejam da turma do aluno (ou global)
+        const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
+        
+        const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
+            if (a.status !== 'ativa') return false;
+            if (a.destino === 'global') return true;
+            if (a.destino === myTurma) return true;
+            // Validação extra caso use array de turmas
+            if (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === a.destino || t === a.destino)) return true;
+            return false;
+        });
+
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
 
         const entreguesIds = Workspace.Avaliacoes.entregasFeitas.map(e => e.avaliacaoId);
 
         const escPendentes = escritas.filter(a => !entreguesIds.includes(a.id));
-        const escConcluidas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'escrita' && entreguesIds.includes(a.id));
+        const escConcluidas = escritas.filter(a => entreguesIds.includes(a.id));
         const orPendentes = orais.filter(a => !entreguesIds.includes(a.id));
-        const orConcluidas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'oral' && entreguesIds.includes(a.id));
+        const orConcluidas = orais.filter(a => entreguesIds.includes(a.id));
 
+        // 🚀 ATUALIZADOS OS NÚMEROS NAS ABAS DE CONCLUÍDAS
         const tEscPend = document.getElementById('tab-escrita-pendentes');
         const tEscConc = document.getElementById('tab-escrita-concluidas');
         if (tEscPend && tEscConc) {
             tEscPend.innerText = `Pendentes (${escPendentes.length})`;
             tEscPend.style.background = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? '#2c3e50' : 'transparent';
             tEscPend.style.color = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? 'white' : '#7f8c8d';
+            
+            tEscConc.innerText = `Concluídas (${escConcluidas.length})`;
             tEscConc.style.background = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? '#2c3e50' : 'transparent';
             tEscConc.style.color = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? 'white' : '#7f8c8d';
         }
@@ -127,6 +132,8 @@ Workspace.Avaliacoes = {
             tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
             tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
             tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
+            
+            tOrConc.innerText = `Enviados (${orConcluidas.length})`;
             tOrConc.style.background = Workspace.Avaliacoes.abaOral === 'concluidas' ? '#2c3e50' : 'transparent';
             tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
         }
@@ -137,7 +144,9 @@ Workspace.Avaliacoes = {
             if (listaAtiva.length === 0) {
                 contEscritas.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎉 Nenhuma prova nesta lista.</div>`;
             } else {
-                contEscritas.innerHTML = listaAtiva.map(p => `
+                contEscritas.innerHTML = listaAtiva.map(p => {
+                    const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
+                    return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
@@ -145,10 +154,10 @@ Workspace.Avaliacoes = {
                         </div>
                         ${Workspace.Avaliacoes.abaEscrita === 'pendentes' 
                             ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>`
-                            : `<span style="color:#27ae60; font-size:12px; font-weight:bold;">✅ Entregue</span>`
+                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${entrega?.id}', '${p.id}')">Ver Respostas</button>`
                         }
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
 
@@ -158,7 +167,9 @@ Workspace.Avaliacoes = {
             if (listaAtivaOral.length === 0) {
                 contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações pendentes.</div>`;
             } else {
-                contOrais.innerHTML = listaAtivaOral.map(p => `
+                contOrais.innerHTML = listaAtivaOral.map(p => {
+                    const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
+                    return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
@@ -166,17 +177,17 @@ Workspace.Avaliacoes = {
                         </div>
                         ${Workspace.Avaliacoes.abaOral === 'pendentes' 
                             ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>`
-                            : `<span style="color:#27ae60; font-size:12px; font-weight:bold;">✅ Enviado</span>`
+                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${entrega?.id}', '${p.id}')">Ouvir Gravação</button>`
                         }
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
     },
 
 
     // ==========================================
-    // ✍️ EXECUÇÃO ESCRITA (Com Novo Modal)
+    // ✍️ EXECUÇÃO ESCRITA & ORAL DO ALUNO
     // ==========================================
     iniciarExame: (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
@@ -268,10 +279,7 @@ Workspace.Avaliacoes = {
 
     sairDoExame: () => {
         Workspace.Avaliacoes.confirmarDialog(
-            "Abandonar Prova?", 
-            "Tem a certeza que deseja sair agora? O cronómetro continuará a contar em segundo plano.", 
-            "Sair da Prova", 
-            "#e74c3c", 
+            "Abandonar Prova?", "Tem a certeza que deseja sair agora? O cronómetro continuará a contar.", "Sair da Prova", "#e74c3c", 
             () => {
                 document.body.style.overflow = ''; 
                 document.getElementById('ws-exame-foco-tela').style.display = 'none';
@@ -288,7 +296,6 @@ Workspace.Avaliacoes = {
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
                     respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
                 });
-
                 if(res && res.success) {
                     Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
                     localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
@@ -302,20 +309,9 @@ Workspace.Avaliacoes = {
         };
 
         if (forcar) processarEntrega();
-        else {
-            Workspace.Avaliacoes.confirmarDialog(
-                "Finalizar Avaliação", 
-                "Tem a certeza que deseja entregar a prova de forma definitiva? Não será possível alterar as respostas depois.", 
-                "Entregar Agora", 
-                "#27ae60", 
-                processarEntrega
-            );
-        }
+        else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
 
-    // ==========================================
-    // 🎤 ESTÚDIO ORAL (Com Novo Modal)
-    // ==========================================
     iniciarTesteOral: (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!teste) return;
@@ -387,9 +383,7 @@ Workspace.Avaliacoes = {
         }
     },
 
-    descartarAudio: () => { 
-        Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); 
-    },
+    descartarAudio: () => { Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); },
 
     enviarAudio: async () => {
         if (!Workspace.Avaliacoes.audioBlob) return;
@@ -438,8 +432,25 @@ Workspace.Avaliacoes = {
     // ==========================================
     // 🎓 PAINEL DO PROFESSOR (CRIAÇÃO, EDIÇÃO E GESTÃO)
     // ==========================================
+    carregarTurmasProf: async () => {
+        if (Workspace.Avaliacoes.turmasCarregadas) return;
+        try {
+            const turmas = await Workspace.api('/turmas', 'GET');
+            if (turmas && turmas.length > 0) {
+                const selEscrita = document.getElementById('ws-nova-prova-destino');
+                const selOral = document.getElementById('ws-nova-oral-destino');
+                let options = '<option value="global">🌍 Todas as Turmas</option>';
+                turmas.forEach(t => options += `<option value="${t.id}">📚 ${t.nome}</option>`);
+                if(selEscrita) selEscrita.innerHTML = options;
+                if(selOral) selOral.innerHTML = options;
+            }
+            Workspace.Avaliacoes.turmasCarregadas = true;
+        } catch(e) {}
+    },
+
     abrirNovaEscrita: () => {
-        Workspace.Avaliacoes.avaliacaoEmEdicao = null; // Modo Criar
+        Workspace.Avaliacoes.carregarTurmasProf();
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
         document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
         
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
@@ -450,11 +461,13 @@ Workspace.Avaliacoes = {
         
         document.getElementById('ws-nova-prova-titulo').value = '';
         document.getElementById('ws-nova-prova-tempo').value = 60;
+        document.getElementById('ws-nova-prova-destino').value = 'global';
         document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
 
     abrirNovaOral: () => {
-        Workspace.Avaliacoes.avaliacaoEmEdicao = null; // Modo Criar
+        Workspace.Avaliacoes.carregarTurmasProf();
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
         document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
 
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
@@ -465,6 +478,7 @@ Workspace.Avaliacoes = {
 
         document.getElementById('ws-nova-oral-titulo').value = '';
         document.getElementById('ws-nova-oral-instrucoes').value = '';
+        document.getElementById('ws-nova-oral-destino').value = 'global';
     },
 
     voltarMenuProf: () => {
@@ -475,7 +489,6 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
     },
 
-    // 🚀 O NOVO GESTOR DE AVALIAÇÕES DO PROFESSOR
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
@@ -512,6 +525,7 @@ Workspace.Avaliacoes = {
                     <div>
                         <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
                         <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                        <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
                         <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada a: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
                     </div>
                 </div>
@@ -535,7 +549,7 @@ Workspace.Avaliacoes = {
     },
 
     excluirAvaliacao: (id) => {
-        Workspace.Avaliacoes.confirmarDialog("Excluir Definitivamente", "Deseja apagar esta avaliação para sempre? Esta ação não pode ser desfeita.", "Sim, Apagar", "#e74c3c", async () => {
+        Workspace.Avaliacoes.confirmarDialog("Excluir Definitivamente", "Deseja apagar esta avaliação para sempre?", "Sim, Apagar", "#e74c3c", async () => {
             try {
                 await Workspace.api(`/workspace/avaliacoes/${id}`, 'DELETE');
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache = Workspace.Avaliacoes.avaliacoesGerenciadorCache.filter(x => x.id !== id);
@@ -545,7 +559,8 @@ Workspace.Avaliacoes = {
         });
     },
 
-    editarAvaliacao: (id) => {
+    editarAvaliacao: async (id) => {
+        await Workspace.Avaliacoes.carregarTurmasProf();
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
         if(!prova) return;
 
@@ -557,6 +572,7 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-prova-titulo').value = prova.titulo;
             document.getElementById('ws-nova-prova-tempo').value = prova.tempo || 60;
+            document.getElementById('ws-nova-prova-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-escrita').innerText = "💾 Guardar Alterações";
             
             document.getElementById('ws-builder-questoes').innerHTML = '';
@@ -569,6 +585,7 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-oral-titulo').value = prova.titulo;
             document.getElementById('ws-nova-oral-instrucoes').value = prova.instrucoes;
+            document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
         }
     },
@@ -610,6 +627,10 @@ Workspace.Avaliacoes = {
     salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
+        const selDestino = document.getElementById('ws-nova-prova-destino');
+        const destino = selDestino.value;
+        const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
+
         if(!titulo) return Workspace.mostrarAviso("Defina um título.", "warning");
 
         const qCards = document.querySelectorAll('.ws-questao-build');
@@ -622,7 +643,6 @@ Workspace.Avaliacoes = {
             const pergunta = card.querySelector('.q-pergunta').value.trim();
             if(!pergunta) erro = true;
 
-            // BUG 2 Cimentado: Em vez da cor, procuramos se existe a classe .q-op dentro do card para saber se é escolha multipla
             if(card.querySelector('.q-op')) { 
                 const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
                 if(opcoes.some(o => o === '')) erro = true;
@@ -647,13 +667,11 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
             });
 
             if (res && res.success) {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Avaliação publicada!", "success");
-                document.getElementById('ws-nova-prova-titulo').value = '';
-                document.getElementById('ws-builder-questoes').innerHTML = '';
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
@@ -662,6 +680,10 @@ Workspace.Avaliacoes = {
     salvarProvaOral: async () => {
         const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
         const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
+        const selDestino = document.getElementById('ws-nova-oral-destino');
+        const destino = selDestino.value;
+        const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
+
         if(!titulo || !instrucoes) return Workspace.mostrarAviso("Preencha título e instruções.", "warning");
 
         const btn = event.target;
@@ -672,20 +694,18 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'oral', instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                titulo, tipo: 'oral', instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
             });
 
             if (res && res.success) {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Teste Oral publicado!", "success");
-                document.getElementById('ws-nova-oral-titulo').value = '';
-                document.getElementById('ws-nova-oral-instrucoes').value = '';
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     // ==========================================
-    // 🎓 CORREÇÃO DE EXAMES
+    // 🎓 CORREÇÃO E REVISÃO (Professor e Aluno)
     // ==========================================
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
@@ -722,17 +742,27 @@ Workspace.Avaliacoes = {
                                 <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
                                 <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | Data: ${new Date(e.dataEntrega).toLocaleDateString('pt-BR')}</span>
                             </div>
-                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}')">Ver Respostas</button>
+                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
                         </div>
                     `;
                 }).join('');
             }
-        } catch (err) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar.</div>';
-        }
+        } catch (err) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar.</div>'; }
     },
 
-    verCorrecao: (entregaId) => {
+    verMinhaCorrecao: (entregaId, avaliacaoId) => {
+        const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.id === entregaId);
+        const prova = Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
+        if(!entrega || !prova) return;
+
+        // Injeta temporariamente nos caches para usar a mesma função modal do professor
+        Workspace.Avaliacoes.entregasEmCache = [entrega];
+        Workspace.Avaliacoes.provasEmCache = { [prova.id]: prova };
+        
+        Workspace.Avaliacoes.verCorrecao(entrega.id, true); // O 'true' diz que é modo aluno
+    },
+
+    verCorrecao: (entregaId, isAluno = false) => {
         const entrega = Workspace.Avaliacoes.entregasEmCache.find(e => e.id === entregaId);
         const prova = Workspace.Avaliacoes.provasEmCache[entrega.avaliacaoId];
         if(!entrega || !prova) return;
@@ -763,13 +793,15 @@ Workspace.Avaliacoes = {
                 htmlRespostas += `
                     <div style="background: ${corBg}; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
                         <div style="font-weight:bold; color:#2c3e50; font-size:13px; margin-bottom:8px;">${q.pergunta}</div>
-                        <div style="color:#555; font-size:13px; margin-bottom:5px;"><strong>Resposta do Aluno:</strong><br>${respAluno}</div>
+                        <div style="color:#555; font-size:13px; margin-bottom:5px;"><strong>${isAluno ? 'Sua Resposta' : 'Resposta do Aluno'}:</strong><br>${respAluno}</div>
                         ${validacaoHtml}
                     </div>
                 `;
             });
             htmlRespostas += `</div>`;
         }
+
+        const tituloModal = isAluno ? "A Minha Entrega" : `Avaliação de ${entrega.alunoNome}`;
 
         const modalId = 'modal-ver-entrega';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -780,7 +812,7 @@ Workspace.Avaliacoes = {
         modal.innerHTML = `
             <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative;">
                 <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
-                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">Avaliação de ${entrega.alunoNome}</h3>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">${tituloModal}</h3>
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo}</span>
                 ${htmlRespostas}
             </div>

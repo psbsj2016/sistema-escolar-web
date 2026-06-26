@@ -229,7 +229,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-D-TOydVd.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-BEkT3sUI.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-BszXJhRn.js">
   <link rel="modulepreload" crossorigin href="/assets/config-DJ1KJpAl.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
@@ -312,7 +312,7 @@
         <section class="ws-feed" id="ws-feed-container">
             
             <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
-                <textarea class="ws-post-input" rows="3" placeholder="Partilhe uma atividade, imagem, vídeo ou documento com os alunos..."></textarea>
+                <textarea class="ws-post-input" rows="3" placeholder="Compartilhe imagem, vídeo ou documento..."></textarea>
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
                         <button id="ws-btn-anexar" ontouchstart="" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Arquivo</button>
@@ -680,14 +680,21 @@
 
             <div id="ws-prof-nova-escrita" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Título do Exame *</label>
                         <input type="text" id="ws-nova-prova-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Prova Final de História">
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:bold; color:#555;">Tempo Limite (Minutos) *</label>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Tempo (Minutos) *</label>
                         <input type="number" id="ws-nova-prova-tempo" class="ws-post-input" style="padding:12px; margin-bottom:0;" value="60">
+                    </div>
+                    <!-- 🚀 NOVO CAMPO: SELECIONAR TURMA -->
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Disponibilizar para *</label>
+                        <select id="ws-nova-prova-destino" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;">
+                            <option value="global">🌍 Todas as Turmas</option>
+                        </select>
                     </div>
                 </div>
 
@@ -708,6 +715,13 @@
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Título do Teste Oral *</label>
                         <input type="text" id="ws-nova-oral-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Leitura em Inglês">
+                    </div>
+                    <!-- 🚀 NOVO CAMPO: SELECIONAR TURMA -->
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Disponibilizar para *</label>
+                        <select id="ws-nova-oral-destino" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;">
+                            <option value="global">🌍 Todas as Turmas</option>
+                        </select>
                     </div>
                 </div>
                 <div style="margin-bottom:15px;">
