@@ -653,6 +653,82 @@
         </div>
     </div>
 
+    <section id="ws-avaliacoes-prof-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>🎓 Painel do Professor: Avaliações</span>
+            </h3>
+            
+            <div id="ws-prof-menu-avaliacoes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaEscrita()" ontouchstart="">
+                    <div style="font-size: 35px; margin-bottom: 10px;">✍️</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Nova Avaliação Escrita</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Testes de múltipla escolha e dissertações.</p>
+                </div>
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaOral()" ontouchstart="">
+                    <div style="font-size: 35px; margin-bottom: 10px;">🎤</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Novo Teste Oral</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Testes com gravação de áudio no estúdio.</p>
+                </div>
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirRecebidas()" ontouchstart="">
+                    <div style="font-size: 35px; margin-bottom: 10px;">📥</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Corrigir Exames</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Avalie e dê nota às provas entregues.</p>
+                </div>
+            </div>
+
+            <div id="ws-prof-nova-escrita" style="display:none; margin-top: 15px;">
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Título do Exame *</label>
+                        <input type="text" id="ws-nova-prova-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Prova Final de História">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Tempo Limite (Minutos) *</label>
+                        <input type="number" id="ws-nova-prova-tempo" class="ws-post-input" style="padding:12px; margin-bottom:0;" value="60">
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #2c3e50;">Construtor de Questões</h4>
+                    <div id="ws-builder-questoes" style="display: flex; flex-direction: column; gap: 15px;"></div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="ws-btn" style="background: #3498db; flex: 1;" onclick="Workspace.Avaliacoes.adicionarQuestaoBuilder('escolha')" ontouchstart="">+ Múltipla Escolha</button>
+                        <button class="ws-btn" style="background: #9b59b6; flex: 1;" onclick="Workspace.Avaliacoes.adicionarQuestaoBuilder('texto')" ontouchstart="">+ Dissertativa (Texto)</button>
+                    </div>
+                </div>
+
+                <button class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaEscrita()" ontouchstart="">🚀 Publicar Exame</button>
+            </div>
+
+            <div id="ws-prof-nova-oral" style="display:none; margin-top: 15px;">
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Título do Teste Oral *</label>
+                        <input type="text" id="ws-nova-oral-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Leitura em Inglês">
+                    </div>
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Instruções para o Aluno (O que deve falar) *</label>
+                    <textarea id="ws-nova-oral-instrucoes" class="ws-post-input" rows="4" placeholder="Ex: Leia o texto XYZ em voz alta e expresse a sua opinião no final..."></textarea>
+                </div>
+
+                <button class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaOral()" ontouchstart="">🎤 Publicar Teste Oral</button>
+            </div>
+            
+            <div id="ws-prof-recebidas" style="display:none; margin-top: 15px;">
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+                <div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div>
+            </div>
+            
+        </div>
+    </section>
+
     <script type="module" src="./js/workspace.js"></script>
 </body>
 </html>

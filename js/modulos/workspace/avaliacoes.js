@@ -274,5 +274,128 @@ Workspace.Avaliacoes = {
         document.body.style.overflow = '';
         document.getElementById('ws-audio-foco-tela').style.display = 'none';
         Workspace.Avaliacoes.estudioAtivo = null;
-    }
+    },
+
+   // ==========================================
+    // 🎓 FASE 4: LÓGICA DO PROFESSOR (CONSTRUTOR)
+    // ==========================================
+    abrirNovaEscrita: () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-nova-escrita').style.display = 'block';
+        document.getElementById('ws-builder-questoes').innerHTML = ''; // Limpa construtor
+    },
+
+    abrirNovaOral: () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'block';
+    },
+
+    abrirRecebidas: () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'block';
+        // Futuro: fetch() para carregar lista da API
+    },
+
+    voltarMenuProf: () => {
+        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
+    },
+
+    adicionarQuestaoBuilder: (tipo) => {
+        const area = document.getElementById('ws-builder-questoes');
+        const qId = Date.now(); // ID único para a pergunta
+        let html = '';
+
+        if (tipo === 'escolha') {
+            html = `
+            <div class="ws-card ws-questao-build" style="border: 2px solid #3498db; position: relative; padding: 15px; margin-bottom: 0;">
+                <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
+                <div style="font-weight:bold; color:#3498db; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Múltipla Escolha</div>
+                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta..." style="margin-bottom:15px; font-weight:bold;">
+                <div style="display:flex; flex-direction:column; gap:10px; padding-left:10px; border-left:3px solid #eee;">
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="0" checked style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção A" style="margin:0; flex:1;"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="1" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção B" style="margin:0; flex:1;"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="2" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção C" style="margin:0; flex:1;"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="3" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção D" style="margin:0; flex:1;"></div>
+                </div>
+                <div style="font-size:11px; color:#7f8c8d; margin-top:10px;">Selecione o "círculo" ao lado da resposta que é a correta.</div>
+            </div>`;
+        } else {
+            html = `
+            <div class="ws-card ws-questao-build" style="border: 2px solid #9b59b6; position: relative; padding: 15px; margin-bottom: 0;">
+                <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
+                <div style="font-weight:bold; color:#9b59b6; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Dissertativa (Texto)</div>
+                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta para o aluno dissertar..." style="margin-bottom:5px; font-weight:bold;">
+                <div style="font-size:11px; color:#7f8c8d; font-style:italic;">O aluno receberá uma caixa de texto grande para escrever livremente.</div>
+            </div>`;
+        }
+
+        area.insertAdjacentHTML('beforeend', html);
+    },
+
+    salvarProvaEscrita: () => {
+        const titulo = document.getElementById('ws-nova-prova-titulo').value;
+        const tempo = document.getElementById('ws-nova-prova-tempo').value;
+        
+        if(!titulo) return Workspace.mostrarAviso("Defina um título para a prova.", "warning");
+
+        const qCards = document.querySelectorAll('.ws-questao-build');
+        if(qCards.length === 0) return Workspace.mostrarAviso("Adicione pelo menos uma pergunta ao exame.", "warning");
+
+        const questaoData = [];
+        let erro = false;
+
+        qCards.forEach((card, index) => {
+            const pergunta = card.querySelector('.q-pergunta').value.trim();
+            if(!pergunta) erro = true;
+
+            if(card.style.borderColor.includes('db')) { // É Múltipla Escolha
+                const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
+                if(opcoes.some(o => o === '')) erro = true;
+
+                const rds = Array.from(card.querySelectorAll('input[type="radio"]'));
+                const indexCorreta = rds.findIndex(r => r.checked);
+
+                questaoData.push({
+                    id: `q${index+1}`,
+                    tipo: 'escolha',
+                    pergunta: `${index+1}. ${pergunta}`,
+                    opcoes: opcoes,
+                    respostaCorreta: opcoes[indexCorreta]
+                });
+            } else { // É Texto
+                questaoData.push({
+                    id: `q${index+1}`,
+                    tipo: 'texto',
+                    pergunta: `${index+1}. ${pergunta}`
+                });
+            }
+        });
+
+        if(erro) return Workspace.mostrarAviso("Existem perguntas ou opções em branco. Preencha tudo.", "warning");
+
+        console.log("📝 Prova Pronta para Backend:", { titulo, tempo, questoes: questaoData });
+        Workspace.mostrarAviso("Simulação: Prova montada com sucesso!", "success");
+        Workspace.Avaliacoes.voltarMenuProf();
+    },
+
+    salvarProvaOral: () => {
+        const titulo = document.getElementById('ws-nova-oral-titulo').value;
+        const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value;
+        
+        if(!titulo || !instrucoes) return Workspace.mostrarAviso("Preencha título e instruções.", "warning");
+
+        console.log("🎤 Teste Oral Pronto para Backend:", { titulo, instrucoes });
+        Workspace.mostrarAviso("Simulação: Teste Oral criado com sucesso!", "success");
+        Workspace.Avaliacoes.voltarMenuProf();
+    }     
+
 };

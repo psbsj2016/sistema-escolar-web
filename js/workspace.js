@@ -155,26 +155,31 @@ Object.assign(Workspace, {
         });
     },
 
-    navegarPara: (tela, registarNoHistorico = true) => {
+   navegarPara: (tela, registarNoHistorico = true) => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 🛡️ MOTOR DE NAVEGAÇÃO: Mapeia o Loby das Avaliações (Fase 1)
+        // 🛡️ MOTOR DE NAVEGAÇÃO
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
             'tarefas_aluno': 'ws-tarefas-container',
             'tarefas_prof': 'ws-tarefas-professor-container',
             'perfil': 'ws-perfil-modal',
-            'avaliacoes': 'ws-avaliacoes-container',
+            'avaliacoes_aluno': 'ws-avaliacoes-container',
+            'avaliacoes_prof': 'ws-avaliacoes-prof-container',
             'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
             'avaliacoes_oral': 'ws-avaliacoes-oral-container'
         };
 
+        // 🚀 Desvio Inteligente: Separa Alunos de Professores/Gestores
         if (tela === 'tarefas') {
             tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
+        }
+        if (tela === 'avaliacoes') {
+            tela = Workspace.usuario.tipo === 'Aluno' ? 'avaliacoes_aluno' : 'avaliacoes_prof';
         }
 
         Object.values(ecras).forEach(id => {
