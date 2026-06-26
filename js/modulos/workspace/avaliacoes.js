@@ -25,13 +25,13 @@ Workspace.Avaliacoes = {
     gravacaoInterval: null,
     segundosGravados: 0,
     
-    radarInterval: null, // 🚀 NOVO: Guarda o temporizador do Radar
+    radarInterval: null, 
 
     init: () => {
-        console.log("📝 Motor de Avaliações: Radar Tempo Real Ativado.");
+        console.log("📝 Motor de Avaliações: Proteção de Integridade Ativa.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
-            Workspace.Avaliacoes.iniciarRadarAvaliacoes(); // 🚀 Inicia o Modo Escuta
+            Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
         }
     },
 
@@ -75,9 +75,6 @@ Workspace.Avaliacoes = {
         };
     },
 
-    // ==========================================
-    // 🛡️ O RADAR EM TEMPO REAL (NOVO)
-    // ==========================================
     iniciarRadarAvaliacoes: () => {
         if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
         
@@ -93,11 +90,9 @@ Workspace.Avaliacoes = {
                         const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
                         const isParaMim = provaAtualizada && (provaAtualizada.destino === 'global' || provaAtualizada.destino === myTurma || (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === provaAtualizada.destino || t === provaAtualizada.destino)));
                         
-                        // 💥 Situação 1: Foi ocultada, excluída ou tirada desta turma
                         if (!provaAtualizada || provaAtualizada.status !== 'ativa' || !isParaMim) {
                             Workspace.Avaliacoes.expulsarAluno("O professor encerrou ou ocultou esta avaliação. A sua sessão foi interrompida.");
                         } 
-                        // 💥 Situação 2: Foi editada (O conteúdo mudou e o aluno não pode enviar respostas obsoletas)
                         else {
                             const provaVelha = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === idAtivo);
                             if (provaVelha && provaAtualizada.ultimaAtualizacao !== provaVelha.ultimaAtualizacao) {
@@ -106,7 +101,6 @@ Workspace.Avaliacoes = {
                         }
                     }
 
-                    // Atualiza a UI do Lobby sem piscar o ecrã (se estiver vazio)
                     const hashAntigo = JSON.stringify(Workspace.Avaliacoes.avaliacoesDisponiveis);
                     const hashNovo = JSON.stringify(avaliacoesNovas);
                     if (hashAntigo !== hashNovo) {
@@ -115,11 +109,10 @@ Workspace.Avaliacoes = {
                     }
                 }
             } catch(e) {}
-        }, 10000); // ⏱️ Bate no servidor a cada 10 segundos
+        }, 10000); 
     },
 
     expulsarAluno: (mensagem) => {
-        // Limpa tudo à força
         document.body.style.overflow = '';
         const telaEscrita = document.getElementById('ws-exame-foco-tela');
         const telaOral = document.getElementById('ws-audio-foco-tela');
@@ -129,7 +122,6 @@ Workspace.Avaliacoes = {
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
         
-        // Desliga o microfone se estiver ligado
         if(Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
             Workspace.Avaliacoes.mediaRecorder.stop();
             if(Workspace.Avaliacoes.streamMicrofone) Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop());
@@ -140,14 +132,9 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.resetarInterfaceDeAudio();
         
         Workspace.Avaliacoes.renderizarLobbies();
-
-        // Avisa o aluno de forma elegante
         Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
     },
 
-    // ==========================================
-    // 🌐 LOBBY DO ALUNO
-    // ==========================================
     carregarLobbies: async () => {
         try {
             const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -235,7 +222,7 @@ Workspace.Avaliacoes = {
         if (contOrais) {
             const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
             if (listaAtivaOral.length === 0) {
-                contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações.</div>`;
+                contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações pendentes.</div>`;
             } else {
                 contOrais.innerHTML = listaAtivaOral.map(p => {
                     const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
@@ -255,10 +242,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-
-    // ==========================================
-    // ✍️ EXECUÇÃO ESCRITA & ORAL DO ALUNO
-    // ==========================================
     iniciarExame: (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!exame) return;
@@ -499,9 +482,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // 🎓 PAINEL DO PROFESSOR E CORREÇÕES
-    // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
         try {
@@ -559,6 +539,7 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
     },
 
+    // 🚀 LOBBY DO PROFESSOR (Agora protege o Botão de Edição)
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
@@ -568,8 +549,11 @@ Workspace.Avaliacoes = {
 
         try {
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET'); 
+
             if(res && res.success) {
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache = res.avaliacoes || [];
+                if(resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas || [];
                 Workspace.Avaliacoes.renderizarListaGerenciador();
             }
         } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
@@ -589,6 +573,12 @@ Workspace.Avaliacoes = {
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
 
+            // 🔒 LÓGICA DE BLOQUEIO DO BOTÃO EDITAR
+            const temEntrega = Workspace.Avaliacoes.entregasEmCache.some(e => e.avaliacaoId === a.id);
+            const btnEditar = temEntrega
+                ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação já possui respostas entregues e não pode ser editada para não prejudicar as notas dos alunos.', 'warning')">🔒 Bloqueado</button>`
+                : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
+
             return `
             <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -600,7 +590,7 @@ Workspace.Avaliacoes = {
                     </div>
                 </div>
                 <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
-                    <button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>
+                    ${btnEditar}
                     <button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.mudarStatusAvaliacao('${a.id}', '${a.status === 'ativa' ? 'inativa' : 'ativa'}')">${a.status === 'ativa' ? '⏸️ Ocultar' : '▶️ Publicar'}</button>
                     <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                 </div>
@@ -744,7 +734,7 @@ Workspace.Avaliacoes = {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Avaliação publicada!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+        } catch (e) { Workspace.mostrarAviso("Erro ao salvar. Verifique se existem alunos com entregas feitas.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     salvarProvaOral: async () => {
@@ -771,9 +761,10 @@ Workspace.Avaliacoes = {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Teste Oral publicado!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+        } catch (e) { Workspace.mostrarAviso("Erro ao salvar. Verifique se existem alunos com entregas feitas.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
+    // 🚀 AGORA AS HORAS SÃO EXIBIDAS EXATAMENTE (Corrigir e Ver Respostas)
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -802,12 +793,15 @@ Workspace.Avaliacoes = {
                     const prova = provasMap[e.avaliacaoId];
                     const tituloProva = prova ? prova.titulo : 'Prova Excluída';
                     const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
+                    
+                    const dataObj = new Date(e.dataEntrega);
+                    const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
 
                     return `
                         <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                             <div>
                                 <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
-                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | Data: ${new Date(e.dataEntrega).toLocaleDateString('pt-BR')}</span>
+                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada}</span>
                             </div>
                             <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
                         </div>
@@ -867,6 +861,9 @@ Workspace.Avaliacoes = {
         }
 
         const tituloModal = isAluno ? "A Minha Entrega" : `Avaliação de ${entrega.alunoNome}`;
+        const dataObj = new Date(entrega.dataEntrega);
+        const dataStr = `${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+
         const modalId = 'modal-ver-entrega';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
@@ -877,7 +874,7 @@ Workspace.Avaliacoes = {
             <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative;">
                 <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                 <h3 style="margin: 0 0 5px 0; color: #2c3e50;">${tituloModal}</h3>
-                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo}</span>
+                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo} | Entregue em: ${dataStr}</span>
                 ${htmlRespostas}
             </div>
         `;
