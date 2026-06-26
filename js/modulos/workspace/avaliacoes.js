@@ -965,7 +965,7 @@ Workspace.Avaliacoes = {
         } catch (err) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar.</div>'; }
     },
 
-    verMinhaCorrecao: (entregaId, avaliacaoId) => {
+   verMinhaCorrecao: (entregaId, avaliacaoId) => {
         const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.id === entregaId);
         const prova = Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!entrega || !prova) return;
@@ -992,23 +992,32 @@ Workspace.Avaliacoes = {
             `;
         }
 
+        // 🚀 CORREÇÃO DO CRASH: Garante que as respostas não são null (se o aluno desistiu do exame a meio)
+        const respostasAluno = entrega.respostas || {};
+
         if(prova.tipo === 'oral') {
+            const audioHtml = entrega.audioUrl 
+                ? `<audio controls src="${entrega.audioUrl}" style="width: 100%; outline: none; margin-bottom: 10px;"></audio>
+                   <a href="${entrega.audioUrl}" target="_blank" style="font-size:12px; color:#3498db;">Fazer Download do Áudio</a>`
+                : `<div style="padding:20px; color:#e74c3c; font-weight:bold; background:#fdf2f2; border-radius:8px;">⚠️ O aluno desistiu ou abandonou a prova sem gravar áudio.</div>`;
+                
             htmlRespostas = `
                 ${htmlAuditoria}
                 <div style="margin-top: 20px; text-align:center;">
-                    <audio controls src="${entrega.audioUrl}" style="width: 100%; outline: none; margin-bottom: 10px;"></audio>
-                    <a href="${entrega.audioUrl}" target="_blank" style="font-size:12px; color:#3498db;">Fazer Download do Áudio</a>
+                    ${audioHtml}
                 </div>
             `;
         } else {
             htmlRespostas = `<div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">${htmlAuditoria}`;
             prova.questoes.forEach(q => {
-                const respAluno = entrega.respostas[q.id] || '<span style="color:#aaa;">Não respondeu</span>';
+                // 🚀 Puxa a resposta de forma segura
+                const respAluno = respostasAluno[q.id] || '<span style="color:#aaa;">Não respondeu (Deixou em branco)</span>';
                 let validacaoHtml = '';
                 let corBg = '#f9f9f9';
 
                 if(q.tipo === 'escolha') {
                     const acertou = (respAluno === q.respostaCorreta);
+                    // Se estiver vazio, marca como erro automaticamente
                     corBg = acertou ? '#eafaf1' : '#fdf2f2';
                     validacaoHtml = acertou 
                         ? `<div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px;">✅ Acertou</div>` 
@@ -1027,8 +1036,11 @@ Workspace.Avaliacoes = {
         }
 
         const tituloModal = isAluno ? "A Minha Entrega" : `Avaliação de ${entrega.alunoNome}`;
-        const dataObj = new Date(entrega.dataEntrega);
-        const dataStr = `${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        let dataStr = "Abandonado a meio / Não Submetido";
+        if (entrega.dataEntrega) {
+            const dataObj = new Date(entrega.dataEntrega);
+            dataStr = `${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
+        }
 
         const modalId = 'modal-ver-entrega';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -1040,7 +1052,7 @@ Workspace.Avaliacoes = {
             <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative;">
                 <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                 <h3 style="margin: 0 0 5px 0; color: #2c3e50;">${tituloModal}</h3>
-                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo} | Entregue em: ${dataStr}</span>
+                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo} | Entregue: ${dataStr}</span>
                 ${htmlRespostas}
             </div>
         `;
