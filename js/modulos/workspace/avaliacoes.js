@@ -13,7 +13,7 @@ Workspace.Avaliacoes = {
     turmasCarregadas: false, 
     
     exameAtivo: null,
-    tentativaAtivaId: null, // 🚀 NOVO: Guarda o ID da tentativa em curso
+    tentativaAtivaId: null, 
     cronometroInterval: null,
     segundosRestantes: 0,
     respostas: {},
@@ -55,24 +55,21 @@ Workspace.Avaliacoes = {
 
         if(Workspace.Avaliacoes.heartbeatInterval) clearInterval(Workspace.Avaliacoes.heartbeatInterval);
         
-        // 🚀 O HEARTBEAT: Bate a cada segundo. Se o mobile "congelar" o browser, o delta será enorme!
         Workspace.Avaliacoes.heartbeatInterval = setInterval(() => {
             if (!Workspace.Avaliacoes.monitorandoFraude) return;
             const agora = Date.now();
             const delta = agora - Workspace.Avaliacoes.ultimoTick;
             
-            if (delta > 2500) { // Se demorou mais de 2.5s entre "batimentos", a app esteve suspensa
+            if (delta > 2500) { 
                 Workspace.Avaliacoes.fugasCount++;
                 Workspace.Avaliacoes.tempoFora += (delta / 1000);
             }
             Workspace.Avaliacoes.ultimoTick = agora;
         }, 1000);
 
-        // Ouve a perda de foco clássica no Computador
         window.addEventListener('blur', Workspace.Avaliacoes.registrarSaida);
         window.addEventListener('focus', Workspace.Avaliacoes.registrarVolta);
         
-        // Bloqueia Refresh (F5) acidental
         window.onbeforeunload = () => "Tem a certeza? Se sair perderá esta tentativa.";
     },
 
@@ -85,7 +82,7 @@ Workspace.Avaliacoes = {
     registrarVolta: () => {
         if (!Workspace.Avaliacoes.monitorandoFraude || !Workspace.Avaliacoes.momentoSaidaBlur) return;
         const ausente = (Date.now() - Workspace.Avaliacoes.momentoSaidaBlur) / 1000;
-        if(ausente > 1) Workspace.Avaliacoes.tempoFora += ausente; // Ignora se foi menos de 1 segundo (cliques acidentais)
+        if(ausente > 1) Workspace.Avaliacoes.tempoFora += ausente; 
         Workspace.Avaliacoes.momentoSaidaBlur = null;
     },
 
@@ -344,7 +341,7 @@ Workspace.Avaliacoes = {
     },
 
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
-        Workspace.Avaliacoes.exameAtivo = examenId;
+        Workspace.Avaliacoes.exameAtivo = exameId; // 🚀 CORREÇÃO AQUI (Tinha examenId)
         document.getElementById('ws-exame-titulo').innerText = titulo;
         document.body.style.overflow = 'hidden'; 
         
@@ -966,8 +963,15 @@ Workspace.Avaliacoes = {
             if (res && res.success) {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado!" : "Avaliação publicada!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
-            } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao guardar a avaliação.", "error");
+            }
+        } catch (e) { 
+            Workspace.mostrarAviso("Erro de ligação ao servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
     salvarProvaOral: async () => {
@@ -994,8 +998,15 @@ Workspace.Avaliacoes = {
             if (res && res.success) {
                 Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado!" : "Teste Oral publicado!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
-            } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao guardar a avaliação.", "error");
+            }
+        } catch (e) { 
+            Workspace.mostrarAviso("Erro de ligação ao servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
     abrirRecebidas: async () => {
