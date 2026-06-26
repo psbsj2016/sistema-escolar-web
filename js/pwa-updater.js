@@ -9,6 +9,22 @@ const updateSW = registerSW({
     },
     onOfflineReady() {
         console.log("✅ PWA pronto para uso offline.");
+    },
+    onRegistered(r) {
+        console.log("📡 Radar PWA ativado: A escutar novas versões em tempo real.");
+        if (r) {
+            // 1. Procura por atualizações a cada 60 segundos em segundo plano
+            setInterval(() => {
+                r.update().catch(err => console.log("Erro ao procurar atualizações PWA:", err));
+            }, 60000);
+
+            // 2. Procura imediatamente sempre que o aluno volta para a aba do portal
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    r.update().catch(err => console.log("Erro ao procurar atualizações PWA:", err));
+                }
+            });
+        }
     }
 });
 
