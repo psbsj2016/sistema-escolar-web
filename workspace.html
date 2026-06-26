@@ -677,7 +677,7 @@
 
             <div id="ws-prof-nova-escrita" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:15px;">
+               <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Título do Exame *</label>
                         <input type="text" id="ws-nova-prova-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Prova Final de História">
@@ -686,7 +686,10 @@
                         <label style="font-size:12px; font-weight:bold; color:#555;">Tempo (Minutos) *</label>
                         <input type="number" id="ws-nova-prova-tempo" class="ws-post-input" style="padding:12px; margin-bottom:0;" value="60">
                     </div>
-                    <!-- 🚀 NOVO CAMPO: SELECIONAR TURMA -->
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Tentativas Permitidas *</label>
+                        <input type="number" id="ws-nova-prova-tentativas" class="ws-post-input" style="padding:12px; margin-bottom:0;" value="1" min="1">
+                    </div>
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Disponibilizar para *</label>
                         <select id="ws-nova-prova-destino" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;">
@@ -708,12 +711,15 @@
 
             <div id="ws-prof-nova-oral" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
+               <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Título do Teste Oral *</label>
                         <input type="text" id="ws-nova-oral-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Leitura em Inglês">
                     </div>
-                    <!-- 🚀 NOVO CAMPO: SELECIONAR TURMA -->
+                    <div>
+                        <label style="font-size:12px; font-weight:bold; color:#555;">Tentativas Permitidas *</label>
+                        <input type="number" id="ws-nova-oral-tentativas" class="ws-post-input" style="padding:12px; margin-bottom:0;" value="1" min="1">
+                    </div>
                     <div>
                         <label style="font-size:12px; font-weight:bold; color:#555;">Disponibilizar para *</label>
                         <select id="ws-nova-oral-destino" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;">

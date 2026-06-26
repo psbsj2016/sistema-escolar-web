@@ -26,12 +26,58 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
     
     radarInterval: null, 
+    
+    // 🛡️ VARIÁVEIS ANTIFRAUDE
+    monitorandoFraude: false,
+    fugasCount: 0,
+    tempoFora: 0,
+    momentoSaida: null,
 
     init: () => {
-        console.log("📝 Motor de Avaliações: Proteção de Integridade Ativa.");
+        console.log("📝 Motor de Avaliações: Sistema Antifraude e Tentativas Ativo.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
+        }
+        
+        // 🛡️ Ouve mudanças de aba nativamente
+        document.addEventListener('visibilitychange', Workspace.Avaliacoes.monitorarFugaVisibilidade);
+    },
+
+    // ==========================================
+    // 🛡️ SISTEMA ANTIFRAUDE E DE AUDITORIA
+    // ==========================================
+    iniciarSensorFraude: () => {
+        Workspace.Avaliacoes.monitorandoFraude = true;
+        Workspace.Avaliacoes.fugasCount = 0;
+        Workspace.Avaliacoes.tempoFora = 0;
+        Workspace.Avaliacoes.momentoSaida = null;
+        console.log("🛡️ Sensores Antifraude Ligados.");
+    },
+
+    pararSensorFraude: () => {
+        Workspace.Avaliacoes.monitorandoFraude = false;
+        console.log("🛡️ Sensores Antifraude Desligados.");
+        return {
+            fugas: Workspace.Avaliacoes.fugasCount,
+            tempoFora: Math.round(Workspace.Avaliacoes.tempoFora)
+        };
+    },
+
+    monitorarFugaVisibilidade: () => {
+        if (!Workspace.Avaliacoes.monitorandoFraude) return;
+        
+        if (document.hidden) {
+            // O aluno mudou de aba ou minimizou!
+            Workspace.Avaliacoes.momentoSaida = Date.now();
+            Workspace.Avaliacoes.fugasCount++;
+        } else {
+            // O aluno voltou! Calcula o tempo que esteve fora
+            if (Workspace.Avaliacoes.momentoSaida) {
+                const tempoAusente = (Date.now() - Workspace.Avaliacoes.momentoSaida) / 1000;
+                Workspace.Avaliacoes.tempoFora += tempoAusente;
+                Workspace.Avaliacoes.momentoSaida = null;
+            }
         }
     },
 
@@ -121,6 +167,7 @@ Workspace.Avaliacoes = {
 
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+        Workspace.Avaliacoes.pararSensorFraude(); // Para os sensores
         
         if(Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
             Workspace.Avaliacoes.mediaRecorder.stop();
@@ -135,6 +182,9 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
     },
 
+    // ==========================================
+    // 🌐 LOBBY DO ALUNO E FILTRO DE TENTATIVAS
+    // ==========================================
     carregarLobbies: async () => {
         try {
             const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -164,12 +214,16 @@ Workspace.Avaliacoes = {
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
 
-        const entreguesIds = Workspace.Avaliacoes.entregasFeitas.map(e => e.avaliacaoId);
+        // 🚀 LÓGICA DE TENTATIVAS: Conta quantas vezes o aluno já entregou esta prova
+        const entregasCount = {};
+        Workspace.Avaliacoes.entregasFeitas.forEach(e => {
+            entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
+        });
 
-        const escPendentes = escritas.filter(a => !entreguesIds.includes(a.id));
-        const escConcluidas = escritas.filter(a => entreguesIds.includes(a.id));
-        const orPendentes = orais.filter(a => !entreguesIds.includes(a.id));
-        const orConcluidas = orais.filter(a => entreguesIds.includes(a.id));
+        const escPendentes = escritas.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
+        const escConcluidas = escritas.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
+        const orPendentes = orais.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
+        const orConcluidas = orais.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
 
         const tEscPend = document.getElementById('tab-escrita-pendentes');
         const tEscConc = document.getElementById('tab-escrita-concluidas');
@@ -202,16 +256,22 @@ Workspace.Avaliacoes = {
                 contEscritas.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎉 Nenhuma prova nesta lista.</div>`;
             } else {
                 contEscritas.innerHTML = listaAtiva.map(p => {
-                    const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
+                    const tentativaAtual = (entregasCount[p.id] || 0) + 1;
+                    const maxTentativas = p.tentativas || 1;
+                    // Se estiver em concluídas, a tentativa atual excede o máximo, por isso fixamos visualmente
+                    const textTentativa = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
+                    // A última entrega serve para rever
+                    const ultimaEntrega = [...Workspace.Avaliacoes.entregasFeitas].reverse().find(e => e.avaliacaoId === p.id);
+
                     return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Questões</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Q. | 🔄 ${textTentativa}</span>
                         </div>
                         ${Workspace.Avaliacoes.abaEscrita === 'pendentes' 
                             ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>`
-                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${entrega?.id}', '${p.id}')">Ver Respostas</button>`
+                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ver Respostas</button>`
                         }
                     </div>
                 `}).join('');
@@ -225,16 +285,20 @@ Workspace.Avaliacoes = {
                 contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações pendentes.</div>`;
             } else {
                 contOrais.innerHTML = listaAtivaOral.map(p => {
-                    const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.avaliacaoId === p.id);
+                    const ultimaEntrega = [...Workspace.Avaliacoes.entregasFeitas].reverse().find(e => e.avaliacaoId === p.id);
+                    const tentativaAtual = (entregasCount[p.id] || 0) + 1;
+                    const maxTentativas = p.tentativas || 1;
+                    const textTentativa = Workspace.Avaliacoes.abaOral === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
+
                     return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Teste Oral de Idiomas/Leitura</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Conversação | 🔄 ${textTentativa}</span>
                         </div>
                         ${Workspace.Avaliacoes.abaOral === 'pendentes' 
                             ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>`
-                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${entrega?.id}', '${p.id}')">Ouvir Gravação</button>`
+                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ouvir Gravação</button>`
                         }
                     </div>
                 `}).join('');
@@ -242,6 +306,9 @@ Workspace.Avaliacoes = {
         }
     },
 
+    // ==========================================
+    // ✍️ EXECUÇÃO ESCRITA E ORAL COM SENSORES
+    // ==========================================
     iniciarExame: (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!exame) return;
@@ -264,6 +331,8 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.renderizarQuestoes(questoes);
         if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60);
         else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
+        
+        Workspace.Avaliacoes.iniciarSensorFraude(); // 🛡️ Liga Sensores
     },
 
     renderizarQuestoes: (questoes) => {
@@ -337,6 +406,7 @@ Workspace.Avaliacoes = {
                 document.body.style.overflow = ''; 
                 document.getElementById('ws-exame-foco-tela').style.display = 'none';
                 if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
+                Workspace.Avaliacoes.pararSensorFraude(); // Desliga sensor
                 Workspace.Avaliacoes.exameAtivo = null;
             }
         );
@@ -345,9 +415,16 @@ Workspace.Avaliacoes = {
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
             Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
+            
+            // 🛡️ Captura o Relatório de Fugas antes de entregar
+            const relatorio = Workspace.Avaliacoes.pararSensorFraude();
+
             try {
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
-                    respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                    respostas: Workspace.Avaliacoes.respostas, 
+                    alunoId: Workspace.usuario.id, 
+                    alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                    relatorioFraude: relatorio // 🚀 Envia relatório
                 });
                 if(res && res.success) {
                     Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
@@ -375,6 +452,8 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-audio-foco-tela').style.display = 'block';
         document.getElementById('ws-audio-foco-tela').scrollTop = 0;
         Workspace.Avaliacoes.resetarInterfaceDeAudio();
+        
+        Workspace.Avaliacoes.iniciarSensorFraude(); // 🛡️ Liga Sensores
     },
 
     resetarInterfaceDeAudio: () => {
@@ -443,6 +522,8 @@ Workspace.Avaliacoes = {
         const btn = document.getElementById('ws-btn-enviar-audio');
         btn.innerText = "A Enviar... ⏳"; btn.disabled = true;
 
+        const relatorio = Workspace.Avaliacoes.pararSensorFraude(); // 🛡️ Captura Relatório
+
         try {
             const formData = new FormData();
             formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' }));
@@ -453,7 +534,7 @@ Workspace.Avaliacoes = {
             const audioUrlFinal = uploadData.anexos[0].url;
 
             const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', {
-                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio
             });
 
             if (res && res.success) {
@@ -471,17 +552,22 @@ Workspace.Avaliacoes = {
         if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
             Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", "Ainda está a gravar! Se sair perderá o áudio atual. Deseja mesmo sair?", "Sair sem Guardar", "#e74c3c", () => {
                 Workspace.Avaliacoes.pararGravacao();
+                Workspace.Avaliacoes.pararSensorFraude();
                 document.body.style.overflow = '';
                 document.getElementById('ws-audio-foco-tela').style.display = 'none';
                 Workspace.Avaliacoes.estudioAtivo = null;
             });
         } else {
+            Workspace.Avaliacoes.pararSensorFraude();
             document.body.style.overflow = '';
             document.getElementById('ws-audio-foco-tela').style.display = 'none';
             Workspace.Avaliacoes.estudioAtivo = null;
         }
     },
 
+    // ==========================================
+    // 🎓 PAINEL DO PROFESSOR (COM AS NOVAS TENTATIVAS)
+    // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
         try {
@@ -511,6 +597,7 @@ Workspace.Avaliacoes = {
         
         document.getElementById('ws-nova-prova-titulo').value = '';
         document.getElementById('ws-nova-prova-tempo').value = 60;
+        document.getElementById('ws-nova-prova-tentativas').value = 1;
         document.getElementById('ws-nova-prova-destino').value = 'global';
         document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
@@ -528,6 +615,7 @@ Workspace.Avaliacoes = {
 
         document.getElementById('ws-nova-oral-titulo').value = '';
         document.getElementById('ws-nova-oral-instrucoes').value = '';
+        document.getElementById('ws-nova-oral-tentativas').value = 1;
         document.getElementById('ws-nova-oral-destino').value = 'global';
     },
 
@@ -539,7 +627,6 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
     },
 
-    // 🚀 LOBBY DO PROFESSOR (Agora protege o Botão de Edição)
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
@@ -573,10 +660,9 @@ Workspace.Avaliacoes = {
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
 
-            // 🔒 LÓGICA DE BLOQUEIO DO BOTÃO EDITAR
             const temEntrega = Workspace.Avaliacoes.entregasEmCache.some(e => e.avaliacaoId === a.id);
             const btnEditar = temEntrega
-                ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação já possui respostas entregues e não pode ser editada para não prejudicar as notas dos alunos.', 'warning')">🔒 Bloqueado</button>`
+                ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
             return `
@@ -632,6 +718,7 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-prova-titulo').value = prova.titulo;
             document.getElementById('ws-nova-prova-tempo').value = prova.tempo || 60;
+            document.getElementById('ws-nova-prova-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-prova-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-escrita').innerText = "💾 Guardar Alterações";
             
@@ -645,6 +732,7 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-oral-titulo').value = prova.titulo;
             document.getElementById('ws-nova-oral-instrucoes').value = prova.instrucoes;
+            document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
         }
@@ -687,6 +775,7 @@ Workspace.Avaliacoes = {
     salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
+        const tentativas = document.getElementById('ws-nova-prova-tentativas').value;
         const selDestino = document.getElementById('ws-nova-prova-destino');
         const destino = selDestino.value;
         const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
@@ -727,19 +816,20 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), tentativas: parseInt(tentativas, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
             });
 
             if (res && res.success) {
-                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Avaliação publicada!", "success");
+                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado!" : "Avaliação publicada!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro ao salvar. Verifique se existem alunos com entregas feitas.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     salvarProvaOral: async () => {
         const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
         const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
+        const tentativas = document.getElementById('ws-nova-oral-tentativas').value;
         const selDestino = document.getElementById('ws-nova-oral-destino');
         const destino = selDestino.value;
         const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
@@ -754,17 +844,17 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'oral', instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+                titulo, tipo: 'oral', tentativas: parseInt(tentativas, 10), instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
             });
 
             if (res && res.success) {
-                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Teste Oral publicado!", "success");
+                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado!" : "Teste Oral publicado!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else throw new Error();
-        } catch (e) { Workspace.mostrarAviso("Erro ao salvar. Verifique se existem alunos com entregas feitas.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // 🚀 AGORA AS HORAS SÃO EXIBIDAS EXATAMENTE (Corrigir e Ver Respostas)
+    // 🚀 O PROFESSOR VÊ AS TENTATIVAS DE FRAUDE NO PAINEL DE CORREÇÃO
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -793,15 +883,19 @@ Workspace.Avaliacoes = {
                     const prova = provasMap[e.avaliacaoId];
                     const tituloProva = prova ? prova.titulo : 'Prova Excluída';
                     const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
-                    
                     const dataObj = new Date(e.dataEntrega);
                     const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    // 🛡️ Alerta visual de fraude no lobby do professor
+                    const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
+                        ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ Ausência Detetada</span>` 
+                        : '';
 
                     return `
                         <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                             <div>
                                 <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
-                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada}</span>
+                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
                             </div>
                             <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
                         </div>
@@ -827,15 +921,28 @@ Workspace.Avaliacoes = {
         if(!entrega || !prova) return;
 
         let htmlRespostas = '';
+        
+        // 🛡️ Injeta a Caixa de Auditoria para o Professor
+        let htmlAuditoria = '';
+        if (!isAluno && entrega.relatorioFraude && entrega.relatorioFraude.fugas > 0) {
+            htmlAuditoria = `
+                <div style="background: #fdf2f2; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin:0 0 5px 0; color:#c0392b;">🚨 Relatório de Auditoria (Antifraude)</h4>
+                    <p style="margin:0; font-size:13px; color:#e74c3c;">O aluno mudou de separador ou minimizou o exame <strong>${entrega.relatorioFraude.fugas} vez(es)</strong>, ficando ausente da prova por um total de <strong>${entrega.relatorioFraude.tempoFora} segundos</strong>.</p>
+                </div>
+            `;
+        }
+
         if(prova.tipo === 'oral') {
             htmlRespostas = `
+                ${htmlAuditoria}
                 <div style="margin-top: 20px; text-align:center;">
                     <audio controls src="${entrega.audioUrl}" style="width: 100%; outline: none; margin-bottom: 10px;"></audio>
                     <a href="${entrega.audioUrl}" target="_blank" style="font-size:12px; color:#3498db;">Fazer Download do Áudio</a>
                 </div>
             `;
         } else {
-            htmlRespostas = `<div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">`;
+            htmlRespostas = `<div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">${htmlAuditoria}`;
             prova.questoes.forEach(q => {
                 const respAluno = entrega.respostas[q.id] || '<span style="color:#aaa;">Não respondeu</span>';
                 let validacaoHtml = '';
