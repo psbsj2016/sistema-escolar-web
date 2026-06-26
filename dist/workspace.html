@@ -229,7 +229,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-Db0W23fH.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-CeY_rduV.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-Bwb5N2uj.js">
   <link rel="modulepreload" crossorigin href="/assets/config-DJ1KJpAl.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
@@ -384,16 +384,10 @@
             </h3>
             <div style="margin-top: 15px;">
                 <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
-                    <button class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" ontouchstart="">Pendentes (0)</button>
-                    <button class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" ontouchstart="">Concluídas</button>
+                    <button id="tab-escrita-pendentes" class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaEscrita('pendentes')" ontouchstart="">Pendentes</button>
+                    <button id="tab-escrita-concluidas" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaEscrita('concluidas')" ontouchstart="">Concluídas</button>
                 </div>
-                <div id="ws-lista-provas-escritas">
-                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Tudo em dia!</h4>
-                        <p style="font-size: 13px; margin: 0;">Não há nenhuma avaliação escrita pendente no momento.</p>
-                    </div>
-                </div>
+                <div id="ws-lista-provas-escritas"></div>
             </div>
         </div>
     </section>
@@ -406,16 +400,10 @@
             </h3>
             <div style="margin-top: 15px;">
                 <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
-                    <button class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" ontouchstart="">Para Gravar (0)</button>
-                    <button class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" ontouchstart="">Enviados</button>
+                    <button id="tab-oral-pendentes" class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOral('pendentes')" ontouchstart="">Para Gravar</button>
+                    <button id="tab-oral-concluidas" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOral('concluidas')" ontouchstart="">Enviados</button>
                 </div>
-                <div id="ws-lista-provas-orais">
-                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🎧</div>
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Voz descansada!</h4>
-                        <p style="font-size: 13px; margin: 0;">Não tem testes de áudio pendentes de envio.</p>
-                    </div>
-                </div>
+                <div id="ws-lista-provas-orais"></div>
             </div>
         </div>
     </section>
@@ -724,10 +712,12 @@
                 <button class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaOral()" ontouchstart="">🎤 Publicar Teste Oral</button>
             </div>
             
-            <div id="ws-prof-recebidas" style="display:none; margin-top: 15px;">
-                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
-                <div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div>
-            </div>
+           <div id="ws-prof-recebidas" style="display:none; margin-top: 15px;">
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+        <div id="ws-prof-recebidas-lista">
+            <div style="text-align: center; padding: 40px; color: #999;">Carregando provas recebidas da API... ⏳</div>
+        </div>
+    </div>
             
         </div>
     </section>

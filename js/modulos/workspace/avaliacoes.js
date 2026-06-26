@@ -2,16 +2,18 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Avaliacoes = {
-    // Variáveis Globais
     avaliacoesDisponiveis: [],
+    entregasFeitas: [], // Guarda o histórico do aluno
+    entregasEmCache: [], // Guarda entregas globais para o professor
+    provasEmCache: {},
+    abaEscrita: 'pendentes',
+    abaOral: 'pendentes',
     
-    // Variáveis da Prova Escrita
     exameAtivo: null,
     cronometroInterval: null,
     segundosRestantes: 0,
     respostas: {},
 
-    // Variáveis do Estúdio Oral
     estudioAtivo: null,
     mediaRecorder: null,
     audioChunks: [],
@@ -21,82 +23,105 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
 
     init: () => {
-        console.log("📝 Motor de Avaliações conectado à API.");
-        // Carrega os lobbies silenciosamente em plano de fundo para quando o aluno lá clicar já estar tudo pronto
+        console.log("📝 Motor de Avaliações blindado e ativo.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
         }
     },
 
     // ==========================================
-    // 🌐 INTEGRAÇÃO COM O BACKEND (O LOBBY DO ALUNO)
+    // 🌐 BUG 1 RESOLVIDO: O LOBBY INTELIGENTE
     // ==========================================
     carregarLobbies: async () => {
-        const containerEscritas = document.getElementById('ws-lista-provas-escritas');
-        const containerOrais = document.getElementById('ws-lista-provas-orais');
-        
-        if(containerEscritas) containerEscritas.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">A carregar os seus exames... ⏳</div>';
-        if(containerOrais) containerOrais.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">A carregar testes orais... ⏳</div>';
-
         try {
-            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
-            if (res && res.success) {
-                // Aqui no futuro pode filtrar para mostrar apenas as "pendentes" (que ele ainda não entregou)
-                Workspace.Avaliacoes.avaliacoesDisponiveis = res.avaliacoes || [];
-                Workspace.Avaliacoes.renderizarLobbies();
-            }
+            const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            if (resAval && resAval.success) Workspace.Avaliacoes.avaliacoesDisponiveis = resAval.avaliacoes;
+
+            const resEntregas = await Workspace.api(`/workspace/avaliacoes/minhas-entregas/${Workspace.usuario.id}`, 'GET');
+            if (resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasFeitas = resEntregas.entregas;
+
+            Workspace.Avaliacoes.renderizarLobbies();
         } catch (e) {
             console.error(e);
-            Workspace.mostrarAviso("Erro ao ligar ao servidor de exames.", "error");
         }
     },
+
+    mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+    mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
         const escritas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'escrita');
         const orais = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'oral');
 
-        const containerEscritas = document.getElementById('ws-lista-provas-escritas');
-        const containerOrais = document.getElementById('ws-lista-provas-orais');
+        const entreguesIds = Workspace.Avaliacoes.entregasFeitas.map(e => e.avaliacaoId);
 
-        // Renderiza Lobbby Escrito
-        if (containerEscritas) {
-            if (escritas.length === 0) {
-                containerEscritas.innerHTML = `
-                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Tudo em dia!</h4>
-                        <p style="font-size: 13px; margin: 0;">Não há nenhuma avaliação escrita pendente no momento.</p>
-                    </div>`;
+        // Separa pendentes de concluídas
+        const escPendentes = escritas.filter(a => !entreguesIds.includes(a.id));
+        const escConcluidas = escritas.filter(a => entreguesIds.includes(a.id));
+        const orPendentes = orais.filter(a => !entreguesIds.includes(a.id));
+        const orConcluidas = orais.filter(a => entreguesIds.includes(a.id));
+
+        // UI das Abas Escritas
+        const tEscPend = document.getElementById('tab-escrita-pendentes');
+        const tEscConc = document.getElementById('tab-escrita-concluidas');
+        if (tEscPend && tEscConc) {
+            tEscPend.innerText = `Pendentes (${escPendentes.length})`;
+            tEscPend.style.background = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? '#2c3e50' : 'transparent';
+            tEscPend.style.color = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? 'white' : '#7f8c8d';
+            tEscConc.style.background = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? '#2c3e50' : 'transparent';
+            tEscConc.style.color = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? 'white' : '#7f8c8d';
+        }
+
+        // UI das Abas Orais
+        const tOrPend = document.getElementById('tab-oral-pendentes');
+        const tOrConc = document.getElementById('tab-oral-concluidas');
+        if (tOrPend && tOrConc) {
+            tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
+            tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
+            tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
+            tOrConc.style.background = Workspace.Avaliacoes.abaOral === 'concluidas' ? '#2c3e50' : 'transparent';
+            tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
+        }
+
+        // Render Escritas
+        const contEscritas = document.getElementById('ws-lista-provas-escritas');
+        if (contEscritas) {
+            const listaAtiva = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? escPendentes : escConcluidas;
+            if (listaAtiva.length === 0) {
+                contEscritas.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎉 Nenhuma prova nesta lista.</div>`;
             } else {
-                containerEscritas.innerHTML = escritas.map(p => `
-                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                contEscritas.innerHTML = listaAtiva.map(p => `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Sem limite'} | 📝 ${p.questoes ? p.questoes.length : 0} Questões</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Questões</span>
                         </div>
-                        <button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')" ontouchstart="">Iniciar Exame</button>
+                        ${Workspace.Avaliacoes.abaEscrita === 'pendentes' 
+                            ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>`
+                            : `<span style="color:#27ae60; font-size:12px; font-weight:bold;">✅ Entregue</span>`
+                        }
                     </div>
                 `).join('');
             }
         }
 
-        // Renderiza Lobby Oral
-        if (containerOrais) {
-            if (orais.length === 0) {
-                containerOrais.innerHTML = `
-                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
-                        <div style="font-size: 40px; margin-bottom: 10px;">🎧</div>
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Voz descansada!</h4>
-                        <p style="font-size: 13px; margin: 0;">Não tem testes de áudio pendentes de envio.</p>
-                    </div>`;
+        // Render Orais
+        const contOrais = document.getElementById('ws-lista-provas-orais');
+        if (contOrais) {
+            const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
+            if (listaAtivaOral.length === 0) {
+                contOrais.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">🎧 Sem gravações pendentes.</div>`;
             } else {
-                containerOrais.innerHTML = orais.map(p => `
-                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                contOrais.innerHTML = listaAtivaOral.map(p => `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Teste de Conversação/Leitura</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Teste Oral de Idiomas/Leitura</span>
                         </div>
-                        <button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')" ontouchstart="">Entrar no Estúdio</button>
+                        ${Workspace.Avaliacoes.abaOral === 'pendentes' 
+                            ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>`
+                            : `<span style="color:#27ae60; font-size:12px; font-weight:bold;">✅ Enviado</span>`
+                        }
                     </div>
                 `).join('');
             }
@@ -105,7 +130,7 @@ Workspace.Avaliacoes = {
 
 
     // ==========================================
-    // ✍️ FASE 2: LÓGICA DA AVALIAÇÃO ESCRITA
+    // ✍️ EXECUÇÃO ESCRITA & ESTÚDIO ORAL (Sem alterações)
     // ==========================================
     iniciarExame: (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
@@ -120,7 +145,6 @@ Workspace.Avaliacoes = {
         
         const tela = document.getElementById('ws-exame-foco-tela');
         tela.style.display = 'block';
-        tela.style.animation = 'fadeIn 0.3s ease-out';
         tela.scrollTop = 0;
 
         const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
@@ -135,7 +159,6 @@ Workspace.Avaliacoes = {
     renderizarQuestoes: (questoes) => {
         const area = document.getElementById('ws-exame-questoes-area');
         let html = '';
-
         questoes.forEach(q => {
             let htmlResposta = '';
             const respostaSalva = Workspace.Avaliacoes.respostas[q.id] || '';
@@ -147,15 +170,15 @@ Workspace.Avaliacoes = {
                     const corFundo = selecionado ? '#e8f4f8' : '#f9f9f9';
                     const corBorda = selecionado ? '#3498db' : '#eee';
                     htmlResposta += `
-                        <label style="background: ${corFundo}; border: 2px solid ${corBorda}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='${corBorda}'">
+                        <label style="background: ${corFundo}; border: 2px solid ${corBorda}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;">
                             <input type="radio" name="questao_${q.id}" value="${opcao}" ${selecionado ? 'checked' : ''} onchange="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)" style="transform: scale(1.3); margin:0;">
                             <span style="color: #2c3e50; font-weight: 500;">${opcao}</span>
                         </label>
                     `;
                 });
                 htmlResposta += `</div>`;
-            } else if (q.tipo === 'texto') {
-                htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a sua resposta aqui..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#eee'" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`;
+            } else {
+                htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`;
             }
 
             html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
@@ -186,7 +209,7 @@ Workspace.Avaliacoes = {
             if (s <= 0) {
                 clearInterval(Workspace.Avaliacoes.cronometroInterval);
                 visor.innerText = "00:00:00";
-                Workspace.mostrarAviso("O tempo esgotou! A prova será entregue automaticamente.", "warning");
+                Workspace.mostrarAviso("O tempo esgotou! Prova entregue automaticamente.", "warning");
                 Workspace.Avaliacoes.finalizarExame(true);
                 return;
             }
@@ -198,7 +221,7 @@ Workspace.Avaliacoes = {
     },
 
     sairDoExame: () => {
-        if (confirm("Tem a certeza que deseja abandonar a prova? O cronómetro não irá parar e poderá ficar sem tempo para concluir.")) {
+        if (confirm("Deseja abandonar a prova? O cronómetro continuará a contar.")) {
             document.body.style.overflow = ''; 
             document.getElementById('ws-exame-foco-tela').style.display = 'none';
             if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
@@ -207,55 +230,35 @@ Workspace.Avaliacoes = {
     },
 
     finalizarExame: async (forcar = false) => {
-        if (!forcar && !confirm("Deseja entregar o exame de forma definitiva? Não poderá alterar as respostas depois.")) return;
-
+        if (!forcar && !confirm("Entregar exame definitivamente? Não poderá alterar as respostas.")) return;
         Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
         
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
-                respostas: Workspace.Avaliacoes.respostas,
-                alunoId: Workspace.usuario.id,
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
             });
 
             if(res && res.success) {
                 Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
                 localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
-                
                 document.body.style.overflow = ''; 
                 document.getElementById('ws-exame-foco-tela').style.display = 'none';
                 if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
                 Workspace.Avaliacoes.exameAtivo = null;
-                
-                Workspace.Avaliacoes.carregarLobbies(); // Refresh
-            } else {
-                throw new Error("Erro na entrega.");
-            }
-        } catch(e) {
-            Workspace.mostrarAviso("Erro ao entregar a prova. Verifique a sua ligação à internet.", "error");
-        }
+                Workspace.Avaliacoes.carregarLobbies(); 
+            } else throw new Error("Erro na entrega.");
+        } catch(e) { Workspace.mostrarAviso("Erro ao entregar a prova. Verifique a internet.", "error"); }
     },
 
-    // ==========================================
-    // 🎤 FASE 3: LÓGICA DO ESTÚDIO DE ÁUDIO
-    // ==========================================
     iniciarTesteOral: (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!teste) return;
-        Workspace.Avaliacoes.abrirEstudioAudio(teste.id, teste.titulo, teste.instrucoes);
-    },
-
-    abrirEstudioAudio: (exameId, titulo, instrucoes) => {
-        Workspace.Avaliacoes.estudioAtivo = exameId;
-        document.getElementById('ws-audio-titulo').innerText = titulo;
-        document.getElementById('ws-audio-pergunta').innerText = instrucoes;
-        
+        Workspace.Avaliacoes.estudioAtivo = teste.id;
+        document.getElementById('ws-audio-titulo').innerText = teste.titulo;
+        document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes;
         document.body.style.overflow = 'hidden'; 
-        const tela = document.getElementById('ws-audio-foco-tela');
-        tela.style.display = 'block';
-        tela.style.animation = 'fadeIn 0.3s ease-out';
-        tela.scrollTop = 0;
-
+        document.getElementById('ws-audio-foco-tela').style.display = 'block';
+        document.getElementById('ws-audio-foco-tela').scrollTop = 0;
         Workspace.Avaliacoes.resetarInterfaceDeAudio();
     },
 
@@ -276,25 +279,17 @@ Workspace.Avaliacoes = {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             Workspace.Avaliacoes.streamMicrofone = stream;
-            
             Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream);
             Workspace.Avaliacoes.audioChunks = [];
 
-            Workspace.Avaliacoes.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) Workspace.Avaliacoes.audioChunks.push(event.data);
-            };
-
+            Workspace.Avaliacoes.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) Workspace.Avaliacoes.audioChunks.push(e.data); };
             Workspace.Avaliacoes.mediaRecorder.onstop = () => {
                 Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' });
-                const audioUrl = URL.createObjectURL(Workspace.Avaliacoes.audioBlob);
-                
-                document.getElementById('ws-audio-preview').src = audioUrl;
+                document.getElementById('ws-audio-preview').src = URL.createObjectURL(Workspace.Avaliacoes.audioBlob);
                 document.getElementById('ws-area-gravacao').style.display = 'none';
                 document.getElementById('ws-area-player').style.display = 'block';
-
-                Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(track => track.stop());
+                Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop());
             };
-
             Workspace.Avaliacoes.mediaRecorder.start();
 
             document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none';
@@ -311,17 +306,12 @@ Workspace.Avaliacoes = {
                 const min = Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0');
                 const seg = (Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0');
                 document.getElementById('ws-audio-cronometro').innerText = `${min}:${seg}`;
-                
                 if(Workspace.Avaliacoes.segundosGravados >= 600) {
                     Workspace.Avaliacoes.pararGravacao();
-                    Workspace.mostrarAviso("Tempo máximo de 10 minutos atingido.", "info");
+                    Workspace.mostrarAviso("Tempo máximo atingido.", "info");
                 }
             }, 1000);
-
-        } catch (err) {
-            console.error("Erro no microfone:", err);
-            Workspace.mostrarAviso("O seu dispositivo bloqueou o acesso ao microfone. Verifique as permissões do navegador.", "error");
-        }
+        } catch (err) { Workspace.mostrarAviso("Microfone bloqueado. Verifique as permissões.", "error"); }
     },
 
     pararGravacao: () => {
@@ -331,75 +321,49 @@ Workspace.Avaliacoes = {
         }
     },
 
-    descartarAudio: () => {
-        if(confirm("Tem a certeza que deseja apagar esta gravação e começar de novo?")) {
-            Workspace.Avaliacoes.resetarInterfaceDeAudio();
-        }
-    },
+    descartarAudio: () => { if(confirm("Apagar gravação e começar de novo?")) Workspace.Avaliacoes.resetarInterfaceDeAudio(); },
 
     enviarAudio: async () => {
         if (!Workspace.Avaliacoes.audioBlob) return;
-
         const btn = document.getElementById('ws-btn-enviar-audio');
-        btn.innerText = "A Enviar... ⏳";
-        btn.disabled = true;
+        btn.innerText = "A Enviar... ⏳"; btn.disabled = true;
 
         try {
-            // 1. Converte o Blob num Arquivo e envia para a sua Rota de Uploads
             const formData = new FormData();
-            const arquivoAudio = new File([Workspace.Avaliacoes.audioBlob], `oral_${Workspace.Avaliacoes.estudioAtivo}_${Date.now()}.webm`, { type: 'audio/webm' });
-            formData.append('anexos', arquivoAudio);
-
-            const uploadRes = await fetch('/api/workspace/upload', {
-                method: 'POST', credentials: 'include', body: formData 
-            });
+            formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' }));
+            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
-                throw new Error("Falha no upload físico do áudio.");
-            }
-
+            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload.");
             const audioUrlFinal = uploadData.anexos[0].url;
 
-            // 2. Envia o link final do áudio para a Rota de Entrega das Avaliações
             const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', {
-                audioUrl: audioUrlFinal,
-                alunoId: Workspace.usuario.id,
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
             });
 
             if (res && res.success) {
-                Workspace.mostrarAviso("Áudio enviado com sucesso! O professor será notificado.", "success");
-                
+                Workspace.mostrarAviso("Áudio enviado com sucesso!", "success");
                 document.body.style.overflow = '';
                 document.getElementById('ws-audio-foco-tela').style.display = 'none';
                 Workspace.Avaliacoes.estudioAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies(); // Refresh
-            } else {
-                throw new Error("Erro no backend ao gravar entrega.");
-            }
-        } catch(e) {
-            console.error(e);
-            Workspace.mostrarAviso("Falha ao enviar o áudio. Tente novamente.", "error");
-        } finally {
-            btn.innerText = "📤 Enviar Áudio";
-            btn.disabled = false;
-        }
+                Workspace.Avaliacoes.carregarLobbies(); 
+            } else throw new Error("Erro no backend.");
+        } catch(e) { Workspace.mostrarAviso("Falha ao enviar o áudio.", "error"); } 
+        finally { btn.innerText = "📤 Enviar Áudio"; btn.disabled = false; }
     },
 
     sairDoEstudio: () => {
         if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
-            if(!confirm("Ainda está a gravar! Se sair agora perderá o áudio atual. Deseja mesmo sair?")) return;
+            if(!confirm("Ainda está a gravar! Deseja sair e perder o áudio?")) return;
             Workspace.Avaliacoes.pararGravacao();
         }
-        
         document.body.style.overflow = '';
         document.getElementById('ws-audio-foco-tela').style.display = 'none';
         Workspace.Avaliacoes.estudioAtivo = null;
     },
 
     // ==========================================
-    // 🎓 FASE 4: LÓGICA DO PROFESSOR (CONSTRUTOR)
+    // 🎓 FASE 4 E 5: PAINEL DO PROFESSOR (CRIAÇÃO E BUG 2 E 3 RESOLVIDOS)
     // ==========================================
     abrirNovaEscrita: () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
@@ -414,13 +378,6 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'block';
-    },
-
-    abrirRecebidas: () => {
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'none';
-        document.getElementById('ws-prof-recebidas').style.display = 'block';
     },
 
     voltarMenuProf: () => {
@@ -447,7 +404,6 @@ Workspace.Avaliacoes = {
                     <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="2" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção C" style="margin:0; flex:1;"></div>
                     <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="3" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção D" style="margin:0; flex:1;"></div>
                 </div>
-                <div style="font-size:11px; color:#7f8c8d; margin-top:10px;">Selecione o "círculo" ao lado da resposta que é a correta.</div>
             </div>`;
         } else {
             html = `
@@ -455,21 +411,18 @@ Workspace.Avaliacoes = {
                 <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
                 <div style="font-weight:bold; color:#9b59b6; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Dissertativa (Texto)</div>
                 <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta para o aluno dissertar..." style="margin-bottom:5px; font-weight:bold;">
-                <div style="font-size:11px; color:#7f8c8d; font-style:italic;">O aluno receberá uma caixa de texto grande para escrever livremente.</div>
             </div>`;
         }
-
         area.insertAdjacentHTML('beforeend', html);
     },
 
     salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
-        
-        if(!titulo) return Workspace.mostrarAviso("Defina um título para a prova.", "warning");
+        if(!titulo) return Workspace.mostrarAviso("Defina um título.", "warning");
 
         const qCards = document.querySelectorAll('.ws-questao-build');
-        if(qCards.length === 0) return Workspace.mostrarAviso("Adicione pelo menos uma pergunta ao exame.", "warning");
+        if(qCards.length === 0) return Workspace.mostrarAviso("Adicione perguntas.", "warning");
 
         const questaoData = [];
         let erro = false;
@@ -478,95 +431,162 @@ Workspace.Avaliacoes = {
             const pergunta = card.querySelector('.q-pergunta').value.trim();
             if(!pergunta) erro = true;
 
-            if(card.style.borderColor.includes('db')) { 
+            // 🚀 BUG 2 RESOLVIDO: Procura fisicamente pelas opções para confirmar se é múltipla escolha, em vez de depender da cor!
+            if(card.querySelector('.q-op')) { 
                 const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
                 if(opcoes.some(o => o === '')) erro = true;
 
                 const rds = Array.from(card.querySelectorAll('input[type="radio"]'));
                 const indexCorreta = rds.findIndex(r => r.checked);
 
-                questaoData.push({
-                    id: `q${index+1}`,
-                    tipo: 'escolha',
-                    pergunta: `${index+1}. ${pergunta}`,
-                    opcoes: opcoes,
-                    respostaCorreta: opcoes[indexCorreta]
-                });
+                questaoData.push({ id: `q${index+1}`, tipo: 'escolha', pergunta: `${index+1}. ${pergunta}`, opcoes: opcoes, respostaCorreta: opcoes[indexCorreta] });
             } else { 
-                questaoData.push({
-                    id: `q${index+1}`,
-                    tipo: 'texto',
-                    pergunta: `${index+1}. ${pergunta}`
-                });
+                questaoData.push({ id: `q${index+1}`, tipo: 'texto', pergunta: `${index+1}. ${pergunta}` });
             }
         });
 
-        if(erro) return Workspace.mostrarAviso("Existem perguntas ou opções em branco. Preencha tudo.", "warning");
+        if(erro) return Workspace.mostrarAviso("Existem espaços em branco.", "warning");
 
         const btn = event.target;
-        const txtOriginal = btn.innerText;
-        btn.innerText = "⏳ A gravar...";
-        btn.disabled = true;
+        const txt = btn.innerText;
+        btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
             const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
-                titulo: titulo,
-                tipo: 'escrita',
-                tempo: parseInt(tempo, 10),
-                questoes: questaoData,
-                escolaId: Workspace.usuario.escolaId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
-
             if (res && res.success) {
-                Workspace.mostrarAviso("Avaliação Escrita publicada com sucesso!", "success");
+                Workspace.mostrarAviso("Avaliação publicada!", "success");
                 document.getElementById('ws-nova-prova-titulo').value = '';
                 document.getElementById('ws-builder-questoes').innerHTML = '';
                 Workspace.Avaliacoes.voltarMenuProf();
-            } else {
-                throw new Error("Erro do servidor.");
-            }
-        } catch (e) {
-            Workspace.mostrarAviso("Falha ao comunicar com o servidor.", "error");
-        } finally {
-            btn.innerText = txtOriginal;
-            btn.disabled = false;
-        }
+            } else throw new Error();
+        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     salvarProvaOral: async () => {
         const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
         const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
-        
         if(!titulo || !instrucoes) return Workspace.mostrarAviso("Preencha título e instruções.", "warning");
 
         const btn = event.target;
-        const txtOriginal = btn.innerText;
-        btn.innerText = "⏳ A gravar...";
-        btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
             const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
-                titulo: titulo,
-                tipo: 'oral',
-                instrucoes: instrucoes,
-                escolaId: Workspace.usuario.escolaId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                titulo, tipo: 'oral', instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
-
             if (res && res.success) {
-                Workspace.mostrarAviso("Teste Oral publicado com sucesso!", "success");
+                Workspace.mostrarAviso("Teste Oral publicado!", "success");
                 document.getElementById('ws-nova-oral-titulo').value = '';
                 document.getElementById('ws-nova-oral-instrucoes').value = '';
                 Workspace.Avaliacoes.voltarMenuProf();
-            } else {
-                throw new Error("Erro do servidor.");
+            } else throw new Error();
+        } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
+    },
+
+    // ==========================================
+    // 🚀 BUG 3 RESOLVIDO: PAINEL DE CORREÇÃO DO PROFESSOR
+    // ==========================================
+    abrirRecebidas: async () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'block';
+        
+        const container = document.getElementById('ws-prof-recebidas-lista');
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div>';
+
+        try {
+            const resProvas = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
+
+            if (resEntregas && resEntregas.success && resProvas && resProvas.success) {
+                const provasMap = {};
+                resProvas.avaliacoes.forEach(p => provasMap[p.id] = p);
+
+                if (resEntregas.entregas.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Nenhuma prova entregue ainda.</div>';
+                    return;
+                }
+
+                Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
+                Workspace.Avaliacoes.provasEmCache = provasMap;
+
+                container.innerHTML = resEntregas.entregas.map(e => {
+                    const prova = provasMap[e.avaliacaoId];
+                    const tituloProva = prova ? prova.titulo : 'Prova Excluída';
+                    const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
+
+                    return `
+                        <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
+                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | Data: ${new Date(e.dataEntrega).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}')">Ver Respostas</button>
+                        </div>
+                    `;
+                }).join('');
             }
-        } catch (e) {
-            Workspace.mostrarAviso("Falha ao comunicar com o servidor.", "error");
-        } finally {
-            btn.innerText = txtOriginal;
-            btn.disabled = false;
+        } catch (err) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar.</div>';
         }
+    },
+
+    verCorrecao: (entregaId) => {
+        const entrega = Workspace.Avaliacoes.entregasEmCache.find(e => e.id === entregaId);
+        const prova = Workspace.Avaliacoes.provasEmCache[entrega.avaliacaoId];
+        if(!entrega || !prova) return;
+
+        let htmlRespostas = '';
+        if(prova.tipo === 'oral') {
+            htmlRespostas = `
+                <div style="margin-top: 20px; text-align:center;">
+                    <audio controls src="${entrega.audioUrl}" style="width: 100%; outline: none; margin-bottom: 10px;"></audio>
+                    <a href="${entrega.audioUrl}" target="_blank" style="font-size:12px; color:#3498db;">Fazer Download do Áudio</a>
+                </div>
+            `;
+        } else {
+            htmlRespostas = `<div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">`;
+            prova.questoes.forEach(q => {
+                const respAluno = entrega.respostas[q.id] || '<span style="color:#aaa;">Não respondeu</span>';
+                let validacaoHtml = '';
+                let corBg = '#f9f9f9';
+
+                if(q.tipo === 'escolha') {
+                    const acertou = (respAluno === q.respostaCorreta);
+                    corBg = acertou ? '#eafaf1' : '#fdf2f2';
+                    validacaoHtml = acertou 
+                        ? `<div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px;">✅ Acertou</div>` 
+                        : `<div style="color:#e74c3c; font-size:12px; font-weight:bold; margin-top:8px;">❌ Errou (Correta: ${q.respostaCorreta})</div>`;
+                }
+
+                htmlRespostas += `
+                    <div style="background: ${corBg}; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                        <div style="font-weight:bold; color:#2c3e50; font-size:13px; margin-bottom:8px;">${q.pergunta}</div>
+                        <div style="color:#555; font-size:13px; margin-bottom:5px;"><strong>Resposta do Aluno:</strong><br>${respAluno}</div>
+                        ${validacaoHtml}
+                    </div>
+                `;
+            });
+            htmlRespostas += `</div>`;
+        }
+
+        const modalId = 'modal-ver-entrega';
+        if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+        modal.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative;">
+                <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">Avaliação de ${entrega.alunoNome}</h3>
+                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo}</span>
+                ${htmlRespostas}
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 };
