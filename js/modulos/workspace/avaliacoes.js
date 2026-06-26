@@ -998,9 +998,6 @@ Workspace.Avaliacoes = {
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // ==========================================
-    // 🚀 ETAPA B: CORREÇÃO & PAINEL DE ANALYTICS
-    // ==========================================
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -1025,7 +1022,7 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                // 📊 COMPILAÇÃO DAS MÉTRICAS EM TEMPO REAL
+                // 📊 O MOTOR DE ESTATÍSTICAS (ETAPA B RESTAURADA)
                 let totalAlertas = 0;
                 const erroPorQuestao = {};
                 let somaAcertos = 0;
@@ -1059,7 +1056,6 @@ Workspace.Avaliacoes = {
                     });
                 });
 
-                // Encontra a questão com maior taxa de erro (Mapa de Calor)
                 let piorQuestao = null;
                 let maiorTaxaErro = 0;
 
@@ -1075,7 +1071,6 @@ Workspace.Avaliacoes = {
                 const mediaAcertosTurma = totalRespostasMultipla > 0 ? Math.round((somaAcertos / totalRespostasMultipla) * 100) : null;
                 const taxaErroFormatada = Math.round(maiorTaxaErro * 100);
 
-                // Desanha os Cards Modernos de Estatística
                 let htmlAnalytics = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
