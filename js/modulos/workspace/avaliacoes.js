@@ -13,6 +13,7 @@ Workspace.Avaliacoes = {
     turmasCarregadas: false, 
     
     exameAtivo: null,
+    tentativaAtivaId: null, // 🚀 NOVO: Guarda o ID da tentativa em curso
     cronometroInterval: null,
     segundosRestantes: 0,
     respostas: {},
@@ -27,58 +28,78 @@ Workspace.Avaliacoes = {
     
     radarInterval: null, 
     
-    // 🛡️ VARIÁVEIS ANTIFRAUDE
+    // 🛡️ SENSORES DE AUDITORIA EXTREMA
     monitorandoFraude: false,
     fugasCount: 0,
     tempoFora: 0,
-    momentoSaida: null,
+    ultimoTick: null,
+    heartbeatInterval: null,
+    momentoSaidaBlur: null,
 
     init: () => {
-        console.log("📝 Motor de Avaliações: Sistema Antifraude e Tentativas Ativo.");
+        console.log("📝 Motor de Avaliações: Auditoria Extrema Ativada.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
         }
-        
-        // 🛡️ Ouve mudanças de aba nativamente
-        document.addEventListener('visibilitychange', Workspace.Avaliacoes.monitorarFugaVisibilidade);
     },
 
     // ==========================================
-    // 🛡️ SISTEMA ANTIFRAUDE E DE AUDITORIA
+    // 🛡️ O MOTOR ANTIFRAUDE (HEARTBEAT & EVENTOS)
     // ==========================================
     iniciarSensorFraude: () => {
         Workspace.Avaliacoes.monitorandoFraude = true;
         Workspace.Avaliacoes.fugasCount = 0;
         Workspace.Avaliacoes.tempoFora = 0;
-        Workspace.Avaliacoes.momentoSaida = null;
-        console.log("🛡️ Sensores Antifraude Ligados.");
+        Workspace.Avaliacoes.ultimoTick = Date.now();
+
+        if(Workspace.Avaliacoes.heartbeatInterval) clearInterval(Workspace.Avaliacoes.heartbeatInterval);
+        
+        // 🚀 O HEARTBEAT: Bate a cada segundo. Se o mobile "congelar" o browser, o delta será enorme!
+        Workspace.Avaliacoes.heartbeatInterval = setInterval(() => {
+            if (!Workspace.Avaliacoes.monitorandoFraude) return;
+            const agora = Date.now();
+            const delta = agora - Workspace.Avaliacoes.ultimoTick;
+            
+            if (delta > 2500) { // Se demorou mais de 2.5s entre "batimentos", a app esteve suspensa
+                Workspace.Avaliacoes.fugasCount++;
+                Workspace.Avaliacoes.tempoFora += (delta / 1000);
+            }
+            Workspace.Avaliacoes.ultimoTick = agora;
+        }, 1000);
+
+        // Ouve a perda de foco clássica no Computador
+        window.addEventListener('blur', Workspace.Avaliacoes.registrarSaida);
+        window.addEventListener('focus', Workspace.Avaliacoes.registrarVolta);
+        
+        // Bloqueia Refresh (F5) acidental
+        window.onbeforeunload = () => "Tem a certeza? Se sair perderá esta tentativa.";
+    },
+
+    registrarSaida: () => {
+        if (!Workspace.Avaliacoes.monitorandoFraude) return;
+        Workspace.Avaliacoes.momentoSaidaBlur = Date.now();
+        Workspace.Avaliacoes.fugasCount++;
+    },
+
+    registrarVolta: () => {
+        if (!Workspace.Avaliacoes.monitorandoFraude || !Workspace.Avaliacoes.momentoSaidaBlur) return;
+        const ausente = (Date.now() - Workspace.Avaliacoes.momentoSaidaBlur) / 1000;
+        if(ausente > 1) Workspace.Avaliacoes.tempoFora += ausente; // Ignora se foi menos de 1 segundo (cliques acidentais)
+        Workspace.Avaliacoes.momentoSaidaBlur = null;
     },
 
     pararSensorFraude: () => {
         Workspace.Avaliacoes.monitorandoFraude = false;
-        console.log("🛡️ Sensores Antifraude Desligados.");
+        if(Workspace.Avaliacoes.heartbeatInterval) clearInterval(Workspace.Avaliacoes.heartbeatInterval);
+        window.removeEventListener('blur', Workspace.Avaliacoes.registrarSaida);
+        window.removeEventListener('focus', Workspace.Avaliacoes.registrarVolta);
+        window.onbeforeunload = null;
+        
         return {
             fugas: Workspace.Avaliacoes.fugasCount,
             tempoFora: Math.round(Workspace.Avaliacoes.tempoFora)
         };
-    },
-
-    monitorarFugaVisibilidade: () => {
-        if (!Workspace.Avaliacoes.monitorandoFraude) return;
-        
-        if (document.hidden) {
-            // O aluno mudou de aba ou minimizou!
-            Workspace.Avaliacoes.momentoSaida = Date.now();
-            Workspace.Avaliacoes.fugasCount++;
-        } else {
-            // O aluno voltou! Calcula o tempo que esteve fora
-            if (Workspace.Avaliacoes.momentoSaida) {
-                const tempoAusente = (Date.now() - Workspace.Avaliacoes.momentoSaida) / 1000;
-                Workspace.Avaliacoes.tempoFora += tempoAusente;
-                Workspace.Avaliacoes.momentoSaida = null;
-            }
-        }
     },
 
     confirmarDialog: (titulo, mensagem, textoBtnConfirma, corBtnConfirma, onConfirm) => {
@@ -167,7 +188,7 @@ Workspace.Avaliacoes = {
 
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
-        Workspace.Avaliacoes.pararSensorFraude(); // Para os sensores
+        Workspace.Avaliacoes.pararSensorFraude(); 
         
         if(Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
             Workspace.Avaliacoes.mediaRecorder.stop();
@@ -214,7 +235,7 @@ Workspace.Avaliacoes = {
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
 
-        // 🚀 LÓGICA DE TENTATIVAS: Conta quantas vezes o aluno já entregou esta prova
+        // Conta as tentativas ativas ou finalizadas!
         const entregasCount = {};
         Workspace.Avaliacoes.entregasFeitas.forEach(e => {
             entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
@@ -258,7 +279,6 @@ Workspace.Avaliacoes = {
                 contEscritas.innerHTML = listaAtiva.map(p => {
                     const tentativaAtual = (entregasCount[p.id] || 0) + 1;
                     const maxTentativas = p.tentativas || 1;
-                    // Se estiver em concluídas, a tentativa atual excede o máximo, por isso fixamos visualmente
                     const textTentativa = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
                     // A última entrega serve para rever
                     const ultimaEntrega = [...Workspace.Avaliacoes.entregasFeitas].reverse().find(e => e.avaliacaoId === p.id);
@@ -307,12 +327,29 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // ✍️ EXECUÇÃO ESCRITA E ORAL COM SENSORES
+    // ✍️ EXECUÇÃO ESCRITA E ORAL COM CONSUMO INSTANTÂNEO
     // ==========================================
-    iniciarExame: (id) => {
+    iniciarExame: async (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!exame) return;
-        Workspace.Avaliacoes.entrarModoFoco(exame.id, exame.titulo, exame.tempo, exame.questoes);
+
+        Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
+        
+        try {
+            // 🚀 BATE NA API: Regista o Início e queima a tentativa!
+            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
+                alunoId: Workspace.usuario.id,
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+            
+            if (res && res.success) {
+                Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
+                Workspace.Avaliacoes.entrarModoFoco(exame.id, exame.titulo, exame.tempo, exame.questoes);
+            } else {
+                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
+                Workspace.Avaliacoes.carregarLobbies(); 
+            }
+        } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
     },
 
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
@@ -401,13 +438,14 @@ Workspace.Avaliacoes = {
 
     sairDoExame: () => {
         Workspace.Avaliacoes.confirmarDialog(
-            "Abandonar Prova?", "Tem a certeza que deseja sair agora? O cronómetro continuará a contar.", "Sair da Prova", "#e74c3c", 
+            "Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", 
             () => {
                 document.body.style.overflow = ''; 
                 document.getElementById('ws-exame-foco-tela').style.display = 'none';
                 if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-                Workspace.Avaliacoes.pararSensorFraude(); // Desliga sensor
+                Workspace.Avaliacoes.pararSensorFraude(); 
                 Workspace.Avaliacoes.exameAtivo = null;
+                Workspace.Avaliacoes.carregarLobbies(); // Atualiza contador de tentativas UI
             }
         );
     },
@@ -416,16 +454,18 @@ Workspace.Avaliacoes = {
         const processarEntrega = async () => {
             Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
             
-            // 🛡️ Captura o Relatório de Fugas antes de entregar
             const relatorio = Workspace.Avaliacoes.pararSensorFraude();
 
             try {
+                // 🚀 Envia também o ID da tentativa (entregaId) para trancar!
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
                     respostas: Workspace.Avaliacoes.respostas, 
                     alunoId: Workspace.usuario.id, 
                     alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    relatorioFraude: relatorio // 🚀 Envia relatório
+                    relatorioFraude: relatorio,
+                    entregaId: Workspace.Avaliacoes.tentativaAtivaId
                 });
+                
                 if(res && res.success) {
                     Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
                     localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
@@ -442,18 +482,35 @@ Workspace.Avaliacoes = {
         else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
 
-    iniciarTesteOral: (id) => {
+    iniciarTesteOral: async (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!teste) return;
-        Workspace.Avaliacoes.estudioAtivo = teste.id;
-        document.getElementById('ws-audio-titulo').innerText = teste.titulo;
-        document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes;
-        document.body.style.overflow = 'hidden'; 
-        document.getElementById('ws-audio-foco-tela').style.display = 'block';
-        document.getElementById('ws-audio-foco-tela').scrollTop = 0;
-        Workspace.Avaliacoes.resetarInterfaceDeAudio();
         
-        Workspace.Avaliacoes.iniciarSensorFraude(); // 🛡️ Liga Sensores
+        Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
+        
+        try {
+            // 🚀 BATE NA API: Regista o Início e queima a tentativa!
+            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
+                alunoId: Workspace.usuario.id,
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+            
+            if (res && res.success) {
+                Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
+                Workspace.Avaliacoes.estudioAtivo = teste.id;
+                document.getElementById('ws-audio-titulo').innerText = teste.titulo;
+                document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes;
+                document.body.style.overflow = 'hidden'; 
+                document.getElementById('ws-audio-foco-tela').style.display = 'block';
+                document.getElementById('ws-audio-foco-tela').scrollTop = 0;
+                Workspace.Avaliacoes.resetarInterfaceDeAudio();
+                
+                Workspace.Avaliacoes.iniciarSensorFraude();
+            } else {
+                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
+                Workspace.Avaliacoes.carregarLobbies(); 
+            }
+        } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
     },
 
     resetarInterfaceDeAudio: () => {
@@ -522,7 +579,7 @@ Workspace.Avaliacoes = {
         const btn = document.getElementById('ws-btn-enviar-audio');
         btn.innerText = "A Enviar... ⏳"; btn.disabled = true;
 
-        const relatorio = Workspace.Avaliacoes.pararSensorFraude(); // 🛡️ Captura Relatório
+        const relatorio = Workspace.Avaliacoes.pararSensorFraude(); 
 
         try {
             const formData = new FormData();
@@ -534,7 +591,7 @@ Workspace.Avaliacoes = {
             const audioUrlFinal = uploadData.anexos[0].url;
 
             const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', {
-                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio
+                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId
             });
 
             if (res && res.success) {
@@ -549,24 +606,29 @@ Workspace.Avaliacoes = {
     },
 
     sairDoEstudio: () => {
+        const mensagemSair = "⚠️ A sua tentativa já foi registada. Se sair, perderá a chance de avaliação. Deseja mesmo sair?";
         if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
-            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", "Ainda está a gravar! Se sair perderá o áudio atual. Deseja mesmo sair?", "Sair sem Guardar", "#e74c3c", () => {
+            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
                 Workspace.Avaliacoes.pararGravacao();
                 Workspace.Avaliacoes.pararSensorFraude();
                 document.body.style.overflow = '';
                 document.getElementById('ws-audio-foco-tela').style.display = 'none';
                 Workspace.Avaliacoes.estudioAtivo = null;
+                Workspace.Avaliacoes.carregarLobbies();
             });
         } else {
-            Workspace.Avaliacoes.pararSensorFraude();
-            document.body.style.overflow = '';
-            document.getElementById('ws-audio-foco-tela').style.display = 'none';
-            Workspace.Avaliacoes.estudioAtivo = null;
+            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
+                Workspace.Avaliacoes.pararSensorFraude();
+                document.body.style.overflow = '';
+                document.getElementById('ws-audio-foco-tela').style.display = 'none';
+                Workspace.Avaliacoes.estudioAtivo = null;
+                Workspace.Avaliacoes.carregarLobbies();
+            });
         }
     },
 
     // ==========================================
-    // 🎓 PAINEL DO PROFESSOR (COM AS NOVAS TENTATIVAS)
+    // 🎓 PAINEL DO PROFESSOR
     // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
@@ -854,7 +916,6 @@ Workspace.Avaliacoes = {
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // 🚀 O PROFESSOR VÊ AS TENTATIVAS DE FRAUDE NO PAINEL DE CORREÇÃO
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -886,9 +947,8 @@ Workspace.Avaliacoes = {
                     const dataObj = new Date(e.dataEntrega);
                     const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
-                    // 🛡️ Alerta visual de fraude no lobby do professor
                     const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
-                        ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ Ausência Detetada</span>` 
+                        ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
                         : '';
 
                     return `
@@ -922,7 +982,6 @@ Workspace.Avaliacoes = {
 
         let htmlRespostas = '';
         
-        // 🛡️ Injeta a Caixa de Auditoria para o Professor
         let htmlAuditoria = '';
         if (!isAluno && entrega.relatorioFraude && entrega.relatorioFraude.fugas > 0) {
             htmlAuditoria = `
