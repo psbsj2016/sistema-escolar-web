@@ -64,8 +64,8 @@ function mostrarAlertaAtualizacaoGlobal() {
     
     aviso.innerHTML = `
         <div style="flex: 1;">
-            <strong style="display: block; font-size: 15px; margin-bottom: 4px;">🚀 Site Atualizado!</strong>
-            <span style="font-size: 12px; color: #bdc3c7;">Há uma nova versão disponível com melhorias.</span>
+            <strong style="display: block; font-size: 15px; margin-bottom: 4px;">🚀 Nova Atualização Disponível!</strong>
+            <span style="font-size: 12px; color: #bdc3c7;">Há uma nova versão disponível cheia de novidades e melhorias.</span>
         </div>
         <button id="btn-atualizar-global" style="background: #27ae60; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);">
             Atualizar Agora
@@ -76,7 +76,7 @@ function mostrarAlertaAtualizacaoGlobal() {
 
     document.getElementById('btn-atualizar-global').addEventListener('click', () => {
         const btn = document.getElementById('btn-atualizar-global');
-        btn.innerText = "A atualizar... ⏳";
+        btn.innerText = "Atualizando... ⏳";
         btn.style.background = "#f39c12";
         btn.style.boxShadow = "none";
         

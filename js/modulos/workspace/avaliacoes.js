@@ -3,11 +3,13 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Avaliacoes = {
     avaliacoesDisponiveis: [],
-    entregasFeitas: [], // Guarda o histórico do aluno
-    entregasEmCache: [], // Guarda entregas globais para o professor
+    avaliacoesGerenciadorCache: [],
+    entregasFeitas: [], 
+    entregasEmCache: [], 
     provasEmCache: {},
     abaEscrita: 'pendentes',
     abaOral: 'pendentes',
+    avaliacaoEmEdicao: null, // Controla se o professor está a criar ou editar
     
     exameAtivo: null,
     cronometroInterval: null,
@@ -23,14 +25,61 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
 
     init: () => {
-        console.log("📝 Motor de Avaliações blindado e ativo.");
+        console.log("📝 Motor de Avaliações Blindado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
         }
     },
 
     // ==========================================
-    // 🌐 BUG 1 RESOLVIDO: O LOBBY INTELIGENTE
+    // 🎨 NOVO MODAL ELEGANTE (Anti-Navegador)
+    // ==========================================
+    confirmarDialog: (titulo, mensagem, textoBtnConfirma, corBtnConfirma, onConfirm) => {
+        let modal = document.getElementById('ws-aval-confirm-modal');
+        if (!modal) {
+            const modalHtml = `
+            <div id="ws-aval-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); z-index: 999999; align-items: center; justify-content: center; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s;">
+                <div class="ws-card" style="width: 90%; max-width: 400px; text-align: center; padding: 30px; transform: scale(0.9); transition: transform 0.3s; margin: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.4); background: white; border-radius: 16px;">
+                    <div id="ws-aval-confirm-icon" style="font-size: 55px; margin-bottom: 15px; line-height: 1;">⚠️</div>
+                    <h3 id="ws-aval-confirm-title" style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px;">Atenção</h3>
+                    <p id="ws-aval-confirm-msg" style="font-size: 15px; color: #555; margin-bottom: 25px; line-height: 1.5;">Tem a certeza?</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button class="ws-btn" style="background: #f0f2f5; color: #555; flex: 1; padding: 12px; font-size: 14px; border-radius: 30px; font-weight: bold; border: none; cursor: pointer;" onclick="document.getElementById('ws-aval-confirm-modal').style.opacity=0; setTimeout(()=>document.getElementById('ws-aval-confirm-modal').style.display='none',300)">Cancelar</button>
+                        <button id="ws-aval-confirm-btn" class="ws-btn" style="flex: 1; padding: 12px; font-size: 14px; border-radius: 30px; color: white; font-weight: bold; border: none; cursor: pointer;">Confirmar</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('ws-aval-confirm-modal');
+        }
+
+        document.getElementById('ws-aval-confirm-title').innerText = titulo;
+        document.getElementById('ws-aval-confirm-msg').innerText = mensagem;
+        
+        const btnConfirma = document.getElementById('ws-aval-confirm-btn');
+        btnConfirma.innerText = textoBtnConfirma;
+        btnConfirma.style.background = corBtnConfirma;
+        
+        const icon = document.getElementById('ws-aval-confirm-icon');
+        if(corBtnConfirma === '#e74c3c') icon.innerText = '🚨';
+        else if(corBtnConfirma === '#27ae60') icon.innerText = '✅';
+        else icon.innerText = '⚠️';
+
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            modal.querySelector('.ws-card').style.transform = 'scale(1)';
+        });
+
+        btnConfirma.onclick = () => {
+            modal.style.opacity = '0';
+            modal.querySelector('.ws-card').style.transform = 'scale(0.9)';
+            setTimeout(() => { modal.style.display = 'none'; onConfirm(); }, 300);
+        };
+    },
+
+    // ==========================================
+    // 🌐 LOBBY DO ALUNO
     // ==========================================
     carregarLobbies: async () => {
         try {
@@ -50,18 +99,18 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        const escritas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'escrita');
-        const orais = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'oral');
+        // Aluno só vê o que está ATIVO!
+        const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.status === 'ativa');
+        const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
+        const orais = avalAtivas.filter(a => a.tipo === 'oral');
 
         const entreguesIds = Workspace.Avaliacoes.entregasFeitas.map(e => e.avaliacaoId);
 
-        // Separa pendentes de concluídas
         const escPendentes = escritas.filter(a => !entreguesIds.includes(a.id));
-        const escConcluidas = escritas.filter(a => entreguesIds.includes(a.id));
+        const escConcluidas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'escrita' && entreguesIds.includes(a.id));
         const orPendentes = orais.filter(a => !entreguesIds.includes(a.id));
-        const orConcluidas = orais.filter(a => entreguesIds.includes(a.id));
+        const orConcluidas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'oral' && entreguesIds.includes(a.id));
 
-        // UI das Abas Escritas
         const tEscPend = document.getElementById('tab-escrita-pendentes');
         const tEscConc = document.getElementById('tab-escrita-concluidas');
         if (tEscPend && tEscConc) {
@@ -72,7 +121,6 @@ Workspace.Avaliacoes = {
             tEscConc.style.color = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? 'white' : '#7f8c8d';
         }
 
-        // UI das Abas Orais
         const tOrPend = document.getElementById('tab-oral-pendentes');
         const tOrConc = document.getElementById('tab-oral-concluidas');
         if (tOrPend && tOrConc) {
@@ -83,7 +131,6 @@ Workspace.Avaliacoes = {
             tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
         }
 
-        // Render Escritas
         const contEscritas = document.getElementById('ws-lista-provas-escritas');
         if (contEscritas) {
             const listaAtiva = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? escPendentes : escConcluidas;
@@ -105,7 +152,6 @@ Workspace.Avaliacoes = {
             }
         }
 
-        // Render Orais
         const contOrais = document.getElementById('ws-lista-provas-orais');
         if (contOrais) {
             const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
@@ -130,7 +176,7 @@ Workspace.Avaliacoes = {
 
 
     // ==========================================
-    // ✍️ EXECUÇÃO ESCRITA & ESTÚDIO ORAL (Sem alterações)
+    // ✍️ EXECUÇÃO ESCRITA (Com Novo Modal)
     // ==========================================
     iniciarExame: (id) => {
         const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
@@ -221,35 +267,55 @@ Workspace.Avaliacoes = {
     },
 
     sairDoExame: () => {
-        if (confirm("Deseja abandonar a prova? O cronómetro continuará a contar.")) {
-            document.body.style.overflow = ''; 
-            document.getElementById('ws-exame-foco-tela').style.display = 'none';
-            if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-            Workspace.Avaliacoes.exameAtivo = null;
-        }
-    },
-
-    finalizarExame: async (forcar = false) => {
-        if (!forcar && !confirm("Entregar exame definitivamente? Não poderá alterar as respostas.")) return;
-        Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
-        
-        try {
-            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
-                respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
-            });
-
-            if(res && res.success) {
-                Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
-                localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
+        Workspace.Avaliacoes.confirmarDialog(
+            "Abandonar Prova?", 
+            "Tem a certeza que deseja sair agora? O cronómetro continuará a contar em segundo plano.", 
+            "Sair da Prova", 
+            "#e74c3c", 
+            () => {
                 document.body.style.overflow = ''; 
                 document.getElementById('ws-exame-foco-tela').style.display = 'none';
                 if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
                 Workspace.Avaliacoes.exameAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies(); 
-            } else throw new Error("Erro na entrega.");
-        } catch(e) { Workspace.mostrarAviso("Erro ao entregar a prova. Verifique a internet.", "error"); }
+            }
+        );
     },
 
+    finalizarExame: (forcar = false) => {
+        const processarEntrega = async () => {
+            Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
+            try {
+                const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
+                    respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                });
+
+                if(res && res.success) {
+                    Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
+                    localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
+                    document.body.style.overflow = ''; 
+                    document.getElementById('ws-exame-foco-tela').style.display = 'none';
+                    if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
+                    Workspace.Avaliacoes.exameAtivo = null;
+                    Workspace.Avaliacoes.carregarLobbies(); 
+                } else throw new Error();
+            } catch(e) { Workspace.mostrarAviso("Erro ao entregar a prova.", "error"); }
+        };
+
+        if (forcar) processarEntrega();
+        else {
+            Workspace.Avaliacoes.confirmarDialog(
+                "Finalizar Avaliação", 
+                "Tem a certeza que deseja entregar a prova de forma definitiva? Não será possível alterar as respostas depois.", 
+                "Entregar Agora", 
+                "#27ae60", 
+                processarEntrega
+            );
+        }
+    },
+
+    // ==========================================
+    // 🎤 ESTÚDIO ORAL (Com Novo Modal)
+    // ==========================================
     iniciarTesteOral: (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!teste) return;
@@ -321,7 +387,9 @@ Workspace.Avaliacoes = {
         }
     },
 
-    descartarAudio: () => { if(confirm("Apagar gravação e começar de novo?")) Workspace.Avaliacoes.resetarInterfaceDeAudio(); },
+    descartarAudio: () => { 
+        Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); 
+    },
 
     enviarAudio: async () => {
         if (!Workspace.Avaliacoes.audioBlob) return;
@@ -354,55 +422,178 @@ Workspace.Avaliacoes = {
 
     sairDoEstudio: () => {
         if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
-            if(!confirm("Ainda está a gravar! Deseja sair e perder o áudio?")) return;
-            Workspace.Avaliacoes.pararGravacao();
+            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", "Ainda está a gravar! Se sair perderá o áudio atual. Deseja mesmo sair?", "Sair sem Guardar", "#e74c3c", () => {
+                Workspace.Avaliacoes.pararGravacao();
+                document.body.style.overflow = '';
+                document.getElementById('ws-audio-foco-tela').style.display = 'none';
+                Workspace.Avaliacoes.estudioAtivo = null;
+            });
+        } else {
+            document.body.style.overflow = '';
+            document.getElementById('ws-audio-foco-tela').style.display = 'none';
+            Workspace.Avaliacoes.estudioAtivo = null;
         }
-        document.body.style.overflow = '';
-        document.getElementById('ws-audio-foco-tela').style.display = 'none';
-        Workspace.Avaliacoes.estudioAtivo = null;
     },
 
     // ==========================================
-    // 🎓 FASE 4 E 5: PAINEL DO PROFESSOR (CRIAÇÃO E BUG 2 E 3 RESOLVIDOS)
+    // 🎓 PAINEL DO PROFESSOR (CRIAÇÃO, EDIÇÃO E GESTÃO)
     // ==========================================
     abrirNovaEscrita: () => {
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null; // Modo Criar
+        document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
+        
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'block';
+        
+        document.getElementById('ws-nova-prova-titulo').value = '';
+        document.getElementById('ws-nova-prova-tempo').value = 60;
         document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
 
     abrirNovaOral: () => {
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null; // Modo Criar
+        document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
+
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'block';
+
+        document.getElementById('ws-nova-oral-titulo').value = '';
+        document.getElementById('ws-nova-oral-instrucoes').value = '';
     },
 
     voltarMenuProf: () => {
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
     },
 
-    adicionarQuestaoBuilder: (tipo) => {
+    // 🚀 O NOVO GESTOR DE AVALIAÇÕES DO PROFESSOR
+    abrirGerenciador: async () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
+        
+        const container = document.getElementById('ws-prof-gerir-lista');
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar base de dados... ⏳</div>';
+
+        try {
+            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            if(res && res.success) {
+                Workspace.Avaliacoes.avaliacoesGerenciadorCache = res.avaliacoes || [];
+                Workspace.Avaliacoes.renderizarListaGerenciador();
+            }
+        } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
+    },
+
+    renderizarListaGerenciador: () => {
+        const container = document.getElementById('ws-prof-gerir-lista');
+        const avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
+
+        if(avaliacoes.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não criou nenhuma avaliação.</div>';
+            return;
+        }
+
+        container.innerHTML = avaliacoes.map(a => {
+            const icone = a.tipo === 'oral' ? '🎤' : '✍️';
+            const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
+            const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
+
+            return `
+            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
+                        <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                        <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada a: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
+                    <button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>
+                    <button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.mudarStatusAvaliacao('${a.id}', '${a.status === 'ativa' ? 'inativa' : 'ativa'}')">${a.status === 'ativa' ? '⏸️ Ocultar' : '▶️ Publicar'}</button>
+                    <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    mudarStatusAvaliacao: async (id, novoStatus) => {
+        try {
+            await Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: novoStatus });
+            const p = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(x => x.id === id);
+            if(p) p.status = novoStatus;
+            Workspace.Avaliacoes.renderizarListaGerenciador();
+            Workspace.mostrarAviso("Status alterado com sucesso!", "success");
+        } catch(e) { Workspace.mostrarAviso("Erro ao alterar o status.", "error"); }
+    },
+
+    excluirAvaliacao: (id) => {
+        Workspace.Avaliacoes.confirmarDialog("Excluir Definitivamente", "Deseja apagar esta avaliação para sempre? Esta ação não pode ser desfeita.", "Sim, Apagar", "#e74c3c", async () => {
+            try {
+                await Workspace.api(`/workspace/avaliacoes/${id}`, 'DELETE');
+                Workspace.Avaliacoes.avaliacoesGerenciadorCache = Workspace.Avaliacoes.avaliacoesGerenciadorCache.filter(x => x.id !== id);
+                Workspace.Avaliacoes.renderizarListaGerenciador();
+                Workspace.mostrarAviso("Avaliação apagada com sucesso!", "success");
+            } catch(e) { Workspace.mostrarAviso("Erro ao apagar.", "error"); }
+        });
+    },
+
+    editarAvaliacao: (id) => {
+        const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
+        if(!prova) return;
+
+        Workspace.Avaliacoes.avaliacaoEmEdicao = prova.id;
+
+        if (prova.tipo === 'escrita') {
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-escrita').style.display = 'block';
+            
+            document.getElementById('ws-nova-prova-titulo').value = prova.titulo;
+            document.getElementById('ws-nova-prova-tempo').value = prova.tempo || 60;
+            document.getElementById('ws-btn-salvar-escrita').innerText = "💾 Guardar Alterações";
+            
+            document.getElementById('ws-builder-questoes').innerHTML = '';
+            if(prova.questoes) {
+                prova.questoes.forEach(q => Workspace.Avaliacoes.adicionarQuestaoBuilder(q.tipo, q));
+            }
+        } else {
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-oral').style.display = 'block';
+            
+            document.getElementById('ws-nova-oral-titulo').value = prova.titulo;
+            document.getElementById('ws-nova-oral-instrucoes').value = prova.instrucoes;
+            document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
+        }
+    },
+
+    adicionarQuestaoBuilder: (tipo, questaoExistente = null) => {
         const area = document.getElementById('ws-builder-questoes');
-        const qId = Date.now(); 
+        const qId = Date.now() + Math.floor(Math.random()*1000); 
         let html = '';
 
+        let perguntaStr = questaoExistente ? questaoExistente.pergunta.replace(/^\d+\.\s*/, '') : '';
+
         if (tipo === 'escolha') {
+            let ops = questaoExistente ? questaoExistente.opcoes : ['', '', '', ''];
+            let rC = questaoExistente ? questaoExistente.respostaCorreta : ops[0];
+            
             html = `
             <div class="ws-card ws-questao-build" style="border: 2px solid #3498db; position: relative; padding: 15px; margin-bottom: 0;">
                 <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
                 <div style="font-weight:bold; color:#3498db; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Múltipla Escolha</div>
-                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta..." style="margin-bottom:15px; font-weight:bold;">
+                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta..." style="margin-bottom:15px; font-weight:bold;" value="${perguntaStr}">
                 <div style="display:flex; flex-direction:column; gap:10px; padding-left:10px; border-left:3px solid #eee;">
-                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="0" checked style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção A" style="margin:0; flex:1;"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="1" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção B" style="margin:0; flex:1;"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="2" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção C" style="margin:0; flex:1;"></div>
-                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="3" style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção D" style="margin:0; flex:1;"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="0" ${rC===ops[0]?'checked':''} style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção A" style="margin:0; flex:1;" value="${ops[0]}"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="1" ${rC===ops[1]?'checked':''} style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção B" style="margin:0; flex:1;" value="${ops[1]}"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="2" ${rC===ops[2]?'checked':''} style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção C" style="margin:0; flex:1;" value="${ops[2]}"></div>
+                    <div style="display:flex; align-items:center; gap:10px;"><input type="radio" name="correta_${qId}" value="3" ${rC===ops[3]?'checked':''} style="transform:scale(1.2);"><input type="text" class="ws-post-input q-op" placeholder="Opção D" style="margin:0; flex:1;" value="${ops[3]}"></div>
                 </div>
             </div>`;
         } else {
@@ -410,7 +601,7 @@ Workspace.Avaliacoes = {
             <div class="ws-card ws-questao-build" style="border: 2px solid #9b59b6; position: relative; padding: 15px; margin-bottom: 0;">
                 <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
                 <div style="font-weight:bold; color:#9b59b6; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Dissertativa (Texto)</div>
-                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta para o aluno dissertar..." style="margin-bottom:5px; font-weight:bold;">
+                <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta para o aluno dissertar..." style="margin-bottom:5px; font-weight:bold;" value="${perguntaStr}">
             </div>`;
         }
         area.insertAdjacentHTML('beforeend', html);
@@ -431,7 +622,7 @@ Workspace.Avaliacoes = {
             const pergunta = card.querySelector('.q-pergunta').value.trim();
             if(!pergunta) erro = true;
 
-            // 🚀 BUG 2 RESOLVIDO: Procura fisicamente pelas opções para confirmar se é múltipla escolha, em vez de depender da cor!
+            // BUG 2 Cimentado: Em vez da cor, procuramos se existe a classe .q-op dentro do card para saber se é escolha multipla
             if(card.querySelector('.q-op')) { 
                 const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
                 if(opcoes.some(o => o === '')) erro = true;
@@ -452,11 +643,15 @@ Workspace.Avaliacoes = {
         btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
-            const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
+            const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
+            const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
+
+            const res = await Workspace.api(endpoint, metodo, {
                 titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
+
             if (res && res.success) {
-                Workspace.mostrarAviso("Avaliação publicada!", "success");
+                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Avaliação publicada!", "success");
                 document.getElementById('ws-nova-prova-titulo').value = '';
                 document.getElementById('ws-builder-questoes').innerHTML = '';
                 Workspace.Avaliacoes.voltarMenuProf();
@@ -473,11 +668,15 @@ Workspace.Avaliacoes = {
         const txt = btn.innerText; btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
-            const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
+            const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
+            const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
+
+            const res = await Workspace.api(endpoint, metodo, {
                 titulo, tipo: 'oral', instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
+
             if (res && res.success) {
-                Workspace.mostrarAviso("Teste Oral publicado!", "success");
+                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Atualizado com sucesso!" : "Teste Oral publicado!", "success");
                 document.getElementById('ws-nova-oral-titulo').value = '';
                 document.getElementById('ws-nova-oral-instrucoes').value = '';
                 Workspace.Avaliacoes.voltarMenuProf();
@@ -486,12 +685,11 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // 🚀 BUG 3 RESOLVIDO: PAINEL DE CORREÇÃO DO PROFESSOR
+    // 🎓 CORREÇÃO DE EXAMES
     // ==========================================
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'block';
         
         const container = document.getElementById('ws-prof-recebidas-lista');
