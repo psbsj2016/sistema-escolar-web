@@ -102,7 +102,7 @@ Workspace.Avaliacoes = {
         };
     },
 
-    confirmarDialog: (titulo, mensagem, textoBtnConfirma, corBtnConfirma, onConfirm) => {
+    confirmarDialog: (titulo, message, textoBtnConfirma, corBtnConfirma, onConfirm) => {
         let modal = document.getElementById('ws-aval-confirm-modal');
         if (!modal) {
             const modalHtml = `
@@ -122,7 +122,7 @@ Workspace.Avaliacoes = {
         }
 
         document.getElementById('ws-aval-confirm-title').innerText = titulo;
-        document.getElementById('ws-aval-confirm-msg').innerText = mensagem;
+        document.getElementById('ws-aval-confirm-msg').innerText = message;
         const btnConfirma = document.getElementById('ws-aval-confirm-btn');
         btnConfirma.innerText = textoBtnConfirma;
         btnConfirma.style.background = corBtnConfirma;
@@ -203,9 +203,6 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
     },
 
-    // ==========================================
-    // 🌐 LOBBY DO ALUNO E FILTRO DE TENTATIVAS
-    // ==========================================
     carregarLobbies: async () => {
         try {
             const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -235,7 +232,6 @@ Workspace.Avaliacoes = {
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
 
-        // Conta as tentativas ativas ou finalizadas!
         const entregasCount = {};
         Workspace.Avaliacoes.entregasFeitas.forEach(e => {
             entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
@@ -280,7 +276,6 @@ Workspace.Avaliacoes = {
                     const tentativaAtual = (entregasCount[p.id] || 0) + 1;
                     const maxTentativas = p.tentativas || 1;
                     const textTentativa = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
-                    // A última entrega serve para rever
                     const ultimaEntrega = [...Workspace.Avaliacoes.entregasFeitas].reverse().find(e => e.avaliacaoId === p.id);
 
                     return `
@@ -326,17 +321,13 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // ✍️ EXECUÇÃO ESCRITA E ORAL COM CONSUMO INSTANTÂNEO
-    // ==========================================
     iniciarExame: async (id) => {
-        const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
-        if(!exame) return;
+        const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
+        if(!examen) return;
 
         Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
         
         try {
-            // 🚀 BATE NA API: Regista o Início e queima a tentativa!
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
                 alunoId: Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login
@@ -344,7 +335,7 @@ Workspace.Avaliacoes = {
             
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
-                Workspace.Avaliacoes.entrarModoFoco(exame.id, exame.titulo, exame.tempo, exame.questoes);
+                Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo, examen.tempo, examen.questoes);
             } else {
                 Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
                 Workspace.Avaliacoes.carregarLobbies(); 
@@ -353,7 +344,7 @@ Workspace.Avaliacoes = {
     },
 
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
-        Workspace.Avaliacoes.exameAtivo = exameId;
+        Workspace.Avaliacoes.exameAtivo = examenId;
         document.getElementById('ws-exame-titulo').innerText = titulo;
         document.body.style.overflow = 'hidden'; 
         
@@ -369,7 +360,7 @@ Workspace.Avaliacoes = {
         if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60);
         else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
         
-        Workspace.Avaliacoes.iniciarSensorFraude(); // 🛡️ Liga Sensores
+        Workspace.Avaliacoes.iniciarSensorFraude(); 
     },
 
     renderizarQuestoes: (questoes) => {
@@ -445,7 +436,7 @@ Workspace.Avaliacoes = {
                 if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
                 Workspace.Avaliacoes.pararSensorFraude(); 
                 Workspace.Avaliacoes.exameAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies(); // Atualiza contador de tentativas UI
+                Workspace.Avaliacoes.carregarLobbies(); 
             }
         );
     },
@@ -457,7 +448,6 @@ Workspace.Avaliacoes = {
             const relatorio = Workspace.Avaliacoes.pararSensorFraude();
 
             try {
-                // 🚀 Envia também o ID da tentativa (entregaId) para trancar!
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
                     respostas: Workspace.Avaliacoes.respostas, 
                     alunoId: Workspace.usuario.id, 
@@ -489,7 +479,6 @@ Workspace.Avaliacoes = {
         Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
         
         try {
-            // 🚀 BATE NA API: Regista o Início e queima a tentativa!
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
                 alunoId: Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login
@@ -628,7 +617,7 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // 🎓 PAINEL DO PROFESSOR
+    // 🎓 PAINEL DO PROFESSOR (COM ANALYTICS ATUALIZADO)
     // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
@@ -800,19 +789,26 @@ Workspace.Avaliacoes = {
         }
     },
 
+    // ==========================================
+    // 🚀 ETAPA C: BANCO DE QUESTÕES (FRONTEND)
+    // ==========================================
     adicionarQuestaoBuilder: (tipo, questaoExistente = null) => {
         const area = document.getElementById('ws-builder-questoes');
         const qId = Date.now() + Math.floor(Math.random()*1000); 
         let html = '';
 
         let perguntaStr = questaoExistente ? questaoExistente.pergunta.replace(/^\d+\.\s*/, '') : '';
+        
+        // 🚀 O BOTÃO DE GUARDAR NO BANCO
+        const btnGuardarBanco = `<button onclick="Workspace.Avaliacoes.salvarQuestaoNoBanco(this, '${tipo}')" style="position:absolute; right:45px; top:10px; background:#f39c12; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#e67e22'" onmouseout="this.style.background='#f39c12'" title="Guardar no Banco de Questões">⭐ Guardar</button>`;
 
         if (tipo === 'escolha') {
-            let ops = questaoExistente ? questaoExistente.opcoes : ['', '', '', ''];
+            let ops = questaoExistente && questaoExistente.opcoes ? questaoExistente.opcoes : ['', '', '', ''];
             let rC = questaoExistente ? questaoExistente.respostaCorreta : ops[0];
             
             html = `
             <div class="ws-card ws-questao-build" style="border: 2px solid #3498db; position: relative; padding: 15px; margin-bottom: 0;">
+                ${btnGuardarBanco}
                 <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
                 <div style="font-weight:bold; color:#3498db; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Múltipla Escolha</div>
                 <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta..." style="margin-bottom:15px; font-weight:bold;" value="${perguntaStr}">
@@ -826,12 +822,98 @@ Workspace.Avaliacoes = {
         } else {
             html = `
             <div class="ws-card ws-questao-build" style="border: 2px solid #9b59b6; position: relative; padding: 15px; margin-bottom: 0;">
+                ${btnGuardarBanco}
                 <button onclick="this.parentElement.remove()" style="position:absolute; right:10px; top:10px; background:#e74c3c; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; font-weight:bold;">×</button>
                 <div style="font-weight:bold; color:#9b59b6; font-size:12px; margin-bottom:10px; text-transform:uppercase;">Dissertativa (Texto)</div>
                 <input type="text" class="ws-post-input q-pergunta" placeholder="Digite a pergunta para o aluno dissertar..." style="margin-bottom:5px; font-weight:bold;" value="${perguntaStr}">
             </div>`;
         }
         area.insertAdjacentHTML('beforeend', html);
+    },
+
+    salvarQuestaoNoBanco: async (btn, tipo) => {
+        const card = btn.closest('.ws-questao-build');
+        const pergunta = card.querySelector('.q-pergunta').value.trim();
+        if(!pergunta) return Workspace.mostrarAviso("A pergunta não pode estar vazia.", "warning");
+
+        let questaoData = { tipo, pergunta };
+
+        if(tipo === 'escolha') {
+            const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
+            if(opcoes.some(o => o === '')) return Workspace.mostrarAviso("Preencha todas as opções antes de guardar.", "warning");
+            const rds = Array.from(card.querySelectorAll('input[type="radio"]'));
+            const indexCorreta = rds.findIndex(r => r.checked);
+            questaoData.opcoes = opcoes;
+            questaoData.respostaCorreta = opcoes[indexCorreta];
+        }
+
+        const textoOriginal = btn.innerText;
+        btn.innerText = "⏳";
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api('/workspace/avaliacoes/banco-questoes', 'POST', {
+                questao: questaoData, escolaId: Workspace.usuario.escolaId
+            });
+            if(res && res.success) {
+                Workspace.mostrarAviso("Questão guardada no banco com sucesso! ⭐", "success");
+                btn.innerText = "✔️ Guardada";
+                btn.style.background = "#27ae60";
+            } else throw new Error();
+        } catch(e) {
+            Workspace.mostrarAviso("Erro ao guardar questão.", "error");
+            btn.innerText = textoOriginal; btn.disabled = false;
+        }
+    },
+
+    abrirModalBancoQuestoes: async () => {
+        const modalId = 'ws-modal-banco-questoes';
+        if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+        modal.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; display:flex; flex-direction:column; overflow: hidden; padding: 0; position: relative;">
+                <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                    <h3 style="margin: 0; color: #2c3e50;">⭐ O Seu Banco de Questões</h3>
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
+                </div>
+                <div id="ws-banco-lista" style="padding: 20px; overflow-y: auto; flex: 1; background: #fff;">
+                    <div style="text-align: center; padding: 40px; color: #999;">A carregar o seu cofre de perguntas... ⏳</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        try {
+            const res = await Workspace.api(`/workspace/avaliacoes/banco-questoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            const container = document.getElementById('ws-banco-lista');
+            
+            if(res && res.success && res.questoes.length > 0) {
+                container.innerHTML = res.questoes.map(q => {
+                    const icone = q.tipo === 'escolha' ? '🔘' : '📝';
+                    return `
+                    <div style="border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="flex: 1; padding-right: 15px;">
+                            <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">${icone} ${q.tipo === 'escolha' ? 'Múltipla Escolha' : 'Texto'}</div>
+                            <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">${q.pergunta}</div>
+                        </div>
+                        <button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px; white-space: nowrap;" onclick="Workspace.Avaliacoes.importarQuestaoDoBanco('${btoa(unescape(encodeURIComponent(JSON.stringify(q))))}'); document.getElementById('${modalId}').remove();">➕ Importar</button>
+                    </div>`;
+                }).join('');
+            } else {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;"><div style="font-size: 40px; margin-bottom: 15px;">📭</div>O seu banco está vazio. Crie uma questão no construtor e clique em "⭐ Guardar" para preencher este cofre.</div>';
+            }
+        } catch(e) { document.getElementById('ws-banco-lista').innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar o banco de questões.</div>'; }
+    },
+
+    importarQuestaoDoBanco: (questaoBase64) => {
+        try {
+            const questao = JSON.parse(decodeURIComponent(escape(atob(questaoBase64))));
+            Workspace.Avaliacoes.adicionarQuestaoBuilder(questao.tipo, questao);
+            Workspace.mostrarAviso("Questão importada para o exame!", "success");
+        } catch(e) { Workspace.mostrarAviso("Erro ao ler a questão.", "error"); }
     },
 
     salvarProvaEscrita: async () => {
@@ -916,6 +998,9 @@ Workspace.Avaliacoes = {
         } catch (e) { Workspace.mostrarAviso("Erro no servidor.", "error"); } finally { btn.innerText = txt; btn.disabled = false; }
     },
 
+    // ==========================================
+    // 🚀 ETAPA B: CORREÇÃO & PAINEL DE ANALYTICS
+    // ==========================================
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -940,7 +1025,96 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                container.innerHTML = resEntregas.entregas.map(e => {
+                // 📊 COMPILAÇÃO DAS MÉTRICAS EM TEMPO REAL
+                let totalAlertas = 0;
+                const erroPorQuestao = {};
+                let somaAcertos = 0;
+                let totalRespostasMultipla = 0;
+
+                resEntregas.entregas.forEach(e => {
+                    if (e.relatorioFraude && e.relatorioFraude.fugas > 0) totalAlertas++;
+                    
+                    const prova = provasMap[e.avaliacaoId];
+                    if (!prova || !prova.questoes || !e.respostas) return;
+                    
+                    prova.questoes.forEach(q => {
+                        if (q.tipo === 'escolha') {
+                            const chaveUnica = `${e.avaliacaoId}_${q.id}`;
+                            if (!erroPorQuestao[chaveUnica]) {
+                                erroPorQuestao[chaveUnica] = { 
+                                    erros: 0, 
+                                    total: 0, 
+                                    pergunta: q.pergunta, 
+                                    tituloProva: prova.titulo 
+                                };
+                            }
+                            erroPorQuestao[chaveUnica].total++;
+                            const respAluno = e.respostas[q.id];
+                            if (respAluno !== q.respostaCorreta) {
+                                erroPorQuestao[chaveUnica].erros++;
+                            }
+                            somaAcertos += (respAluno === q.respostaCorreta ? 1 : 0);
+                            totalRespostasMultipla++;
+                        }
+                    });
+                });
+
+                // Encontra a questão com maior taxa de erro (Mapa de Calor)
+                let piorQuestao = null;
+                let maiorTaxaErro = 0;
+
+                Object.keys(erroPorQuestao).forEach(chave => {
+                    const item = erroPorQuestao[chave];
+                    const taxa = item.erros / item.total;
+                    if (taxa > maiorTaxaErro && item.erros > 0) {
+                        maiorTaxaErro = taxa;
+                        piorQuestao = item;
+                    }
+                });
+
+                const mediaAcertosTurma = totalRespostasMultipla > 0 ? Math.round((somaAcertos / totalRespostasMultipla) * 100) : null;
+                const taxaErroFormatada = Math.round(maiorTaxaErro * 100);
+
+                // Desanha os Cards Modernos de Estatística
+                let htmlAnalytics = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">📊 Desempenho nas Objetivas</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">${mediaAcertosTurma !== null ? mediaAcertosTurma + '%' : '---'}</div>
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Média global de acerto da escola</div>
+                    </div>
+                `;
+
+                if (piorQuestao) {
+                    htmlAnalytics += `
+                    <div style="background: #fdf2f2; border: 1px solid #fadbd8; border-radius: 12px; padding: 15px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                        <div style="font-size: 11px; font-weight: bold; color: #c0392b; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
+                        <div style="font-size: 13px; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="${piorQuestao.pergunta}">${piorQuestao.pergunta}</div>
+                        <div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-top: 4px;">Falha de ${taxaErroFormatada}% em: ${piorQuestao.tituloProva}</div>
+                    </div>
+                    `;
+                } else {
+                    htmlAnalytics += `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #95a5a6; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
+                        <div style="font-size: 14px; font-weight: bold; color: #7f8c8d; margin-top: 5px;">Sem anomalias detetadas</div>
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Nenhuma questão crítica alarmante</div>
+                    </div>
+                    `;
+                }
+
+                htmlAnalytics += `
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #f39c12; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🛡️ Alertas de Fraude</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #d35400;">${totalAlertas}</div>
+                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Ausências de ecrã registadas</div>
+                    </div>
+                </div>
+                <h3 style="font-size:15px; color:#2c3e50; margin:25px 0 15px 0; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:8px;">📥 Exames Recebidos para Avaliação</h3>
+                `;
+
+                // Renderiza a lista física de alunos abaixo das métricas
+                const htmlListaAlunos = resEntregas.entregas.map(e => {
                     const prova = provasMap[e.avaliacaoId];
                     const tituloProva = prova ? prova.titulo : 'Prova Excluída';
                     const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
@@ -961,11 +1135,13 @@ Workspace.Avaliacoes = {
                         </div>
                     `;
                 }).join('');
+
+                container.innerHTML = htmlAnalytics + htmlListaAlunos;
             }
-        } catch (err) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar.</div>'; }
+        } catch (err) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar o dashboard de analytics.</div>'; }
     },
 
-   verMinhaCorrecao: (entregaId, avaliacaoId) => {
+    verMinhaCorrecao: (entregaId, avaliacaoId) => {
         const entrega = Workspace.Avaliacoes.entregasFeitas.find(e => e.id === entregaId);
         const prova = Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!entrega || !prova) return;
@@ -992,7 +1168,6 @@ Workspace.Avaliacoes = {
             `;
         }
 
-        // 🚀 CORREÇÃO DO CRASH: Garante que as respostas não são null (se o aluno desistiu do exame a meio)
         const respostasAluno = entrega.respostas || {};
 
         if(prova.tipo === 'oral') {
@@ -1010,14 +1185,12 @@ Workspace.Avaliacoes = {
         } else {
             htmlRespostas = `<div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">${htmlAuditoria}`;
             prova.questoes.forEach(q => {
-                // 🚀 Puxa a resposta de forma segura
                 const respAluno = respostasAluno[q.id] || '<span style="color:#aaa;">Não respondeu (Deixou em branco)</span>';
                 let validacaoHtml = '';
                 let corBg = '#f9f9f9';
 
                 if(q.tipo === 'escolha') {
                     const acertou = (respAluno === q.respostaCorreta);
-                    // Se estiver vazio, marca como erro automaticamente
                     corBg = acertou ? '#eafaf1' : '#fdf2f2';
                     validacaoHtml = acertou 
                         ? `<div style="color:#27ae60; font-size:12px; font-weight:bold; margin-top:8px;">✅ Acertou</div>` 
