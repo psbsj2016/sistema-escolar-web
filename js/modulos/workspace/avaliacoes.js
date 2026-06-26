@@ -2,13 +2,16 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Avaliacoes = {
-    // Variáveis da Prova Escrita (Fase 2)
+    // Variáveis Globais
+    avaliacoesDisponiveis: [],
+    
+    // Variáveis da Prova Escrita
     exameAtivo: null,
     cronometroInterval: null,
     segundosRestantes: 0,
     respostas: {},
 
-    // Variáveis do Estúdio Oral (Fase 3)
+    // Variáveis do Estúdio Oral
     estudioAtivo: null,
     mediaRecorder: null,
     audioChunks: [],
@@ -18,18 +21,96 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
 
     init: () => {
-        console.log("📝 Motor de Avaliações (Fase 2 e 3) iniciado. Microfones prontos.");
+        console.log("📝 Motor de Avaliações conectado à API.");
+        // Carrega os lobbies silenciosamente em plano de fundo para quando o aluno lá clicar já estar tudo pronto
+        if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
+            Workspace.Avaliacoes.carregarLobbies();
+        }
     },
+
+    // ==========================================
+    // 🌐 INTEGRAÇÃO COM O BACKEND (O LOBBY DO ALUNO)
+    // ==========================================
+    carregarLobbies: async () => {
+        const containerEscritas = document.getElementById('ws-lista-provas-escritas');
+        const containerOrais = document.getElementById('ws-lista-provas-orais');
+        
+        if(containerEscritas) containerEscritas.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">A carregar os seus exames... ⏳</div>';
+        if(containerOrais) containerOrais.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">A carregar testes orais... ⏳</div>';
+
+        try {
+            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            if (res && res.success) {
+                // Aqui no futuro pode filtrar para mostrar apenas as "pendentes" (que ele ainda não entregou)
+                Workspace.Avaliacoes.avaliacoesDisponiveis = res.avaliacoes || [];
+                Workspace.Avaliacoes.renderizarLobbies();
+            }
+        } catch (e) {
+            console.error(e);
+            Workspace.mostrarAviso("Erro ao ligar ao servidor de exames.", "error");
+        }
+    },
+
+    renderizarLobbies: () => {
+        const escritas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'escrita');
+        const orais = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => a.tipo === 'oral');
+
+        const containerEscritas = document.getElementById('ws-lista-provas-escritas');
+        const containerOrais = document.getElementById('ws-lista-provas-orais');
+
+        // Renderiza Lobbby Escrito
+        if (containerEscritas) {
+            if (escritas.length === 0) {
+                containerEscritas.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Tudo em dia!</h4>
+                        <p style="font-size: 13px; margin: 0;">Não há nenhuma avaliação escrita pendente no momento.</p>
+                    </div>`;
+            } else {
+                containerEscritas.innerHTML = escritas.map(p => `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
+                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Sem limite'} | 📝 ${p.questoes ? p.questoes.length : 0} Questões</span>
+                        </div>
+                        <button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')" ontouchstart="">Iniciar Exame</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Renderiza Lobby Oral
+        if (containerOrais) {
+            if (orais.length === 0) {
+                containerOrais.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">🎧</div>
+                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">Voz descansada!</h4>
+                        <p style="font-size: 13px; margin: 0;">Não tem testes de áudio pendentes de envio.</p>
+                    </div>`;
+            } else {
+                containerOrais.innerHTML = orais.map(p => `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
+                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Teste de Conversação/Leitura</span>
+                        </div>
+                        <button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')" ontouchstart="">Entrar no Estúdio</button>
+                    </div>
+                `).join('');
+            }
+        }
+    },
+
 
     // ==========================================
     // ✍️ FASE 2: LÓGICA DA AVALIAÇÃO ESCRITA
     // ==========================================
-    iniciarExameFalsoDeTeste: () => {
-        const questoesFalsas = [
-            { id: 'q1', tipo: 'escolha', pergunta: '1. Qual é a capital de Portugal?', opcoes: ['Lisboa', 'Porto', 'Faro', 'Coimbra'] },
-            { id: 'q2', tipo: 'texto', pergunta: '2. Descreva por suas palavras o impacto da Inteligência Artificial na educação moderna.' }
-        ];
-        Workspace.Avaliacoes.entrarModoFoco('exame_demo_123', 'Exame Global de Conhecimentos', 60, questoesFalsas);
+    iniciarExame: (id) => {
+        const exame = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
+        if(!exame) return;
+        Workspace.Avaliacoes.entrarModoFoco(exame.id, exame.titulo, exame.tempo, exame.questoes);
     },
 
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
@@ -47,7 +128,8 @@ Workspace.Avaliacoes = {
         else Workspace.Avaliacoes.respostas = {};
 
         Workspace.Avaliacoes.renderizarQuestoes(questoes);
-        Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60);
+        if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60);
+        else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
     },
 
     renderizarQuestoes: (questoes) => {
@@ -124,21 +206,43 @@ Workspace.Avaliacoes = {
         }
     },
 
-    finalizarExame: (forcar = false) => {
+    finalizarExame: async (forcar = false) => {
         if (!forcar && !confirm("Deseja entregar o exame de forma definitiva? Não poderá alterar as respostas depois.")) return;
-        Workspace.mostrarAviso("Avaliação entregue com sucesso!", "success");
-        localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
-        document.body.style.overflow = ''; 
-        document.getElementById('ws-exame-foco-tela').style.display = 'none';
-        if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-        Workspace.Avaliacoes.exameAtivo = null;
+
+        Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
+        
+        try {
+            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
+                respostas: Workspace.Avaliacoes.respostas,
+                alunoId: Workspace.usuario.id,
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if(res && res.success) {
+                Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
+                localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
+                
+                document.body.style.overflow = ''; 
+                document.getElementById('ws-exame-foco-tela').style.display = 'none';
+                if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
+                Workspace.Avaliacoes.exameAtivo = null;
+                
+                Workspace.Avaliacoes.carregarLobbies(); // Refresh
+            } else {
+                throw new Error("Erro na entrega.");
+            }
+        } catch(e) {
+            Workspace.mostrarAviso("Erro ao entregar a prova. Verifique a sua ligação à internet.", "error");
+        }
     },
 
     // ==========================================
     // 🎤 FASE 3: LÓGICA DO ESTÚDIO DE ÁUDIO
     // ==========================================
-    iniciarTesteDeAudioFalso: () => {
-        Workspace.Avaliacoes.abrirEstudioAudio('audio_demo_1', 'Teste de Conversação em Inglês', 'Please, introduce yourself, talk about your hobbies and explain why you want to learn English. (Speak for at least 1 minute).');
+    iniciarTesteOral: (id) => {
+        const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
+        if(!teste) return;
+        Workspace.Avaliacoes.abrirEstudioAudio(teste.id, teste.titulo, teste.instrucoes);
     },
 
     abrirEstudioAudio: (exameId, titulo, instrucoes) => {
@@ -170,11 +274,9 @@ Workspace.Avaliacoes = {
 
     iniciarGravacao: async () => {
         try {
-            // Pede permissão ao navegador para usar o microfone
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             Workspace.Avaliacoes.streamMicrofone = stream;
             
-            // Prepara o Gravador
             Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream);
             Workspace.Avaliacoes.audioChunks = [];
 
@@ -183,30 +285,24 @@ Workspace.Avaliacoes = {
             };
 
             Workspace.Avaliacoes.mediaRecorder.onstop = () => {
-                // Quando o aluno clica em Parar, gera o ficheiro físico (Blob)
                 Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' });
                 const audioUrl = URL.createObjectURL(Workspace.Avaliacoes.audioBlob);
                 
-                // Coloca o áudio no player para o aluno ouvir
                 document.getElementById('ws-audio-preview').src = audioUrl;
                 document.getElementById('ws-area-gravacao').style.display = 'none';
                 document.getElementById('ws-area-player').style.display = 'block';
 
-                // Desliga o microfone para tirar a luz vermelha da aba do navegador
                 Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(track => track.stop());
             };
 
-            // Inicia a gravação física
             Workspace.Avaliacoes.mediaRecorder.start();
 
-            // Altera o visual do ecrã para "Modo de Gravação (REC)"
             document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none';
             document.getElementById('ws-btn-parar-gravacao').style.display = 'inline-block';
             document.getElementById('ws-mic-ring').style.borderColor = '#e74c3c';
             document.getElementById('ws-mic-ring').style.background = 'rgba(231, 76, 60, 0.2)';
             document.getElementById('ws-audio-cronometro').style.color = '#e74c3c';
 
-            // Inicia o cronómetro progressivo
             Workspace.Avaliacoes.segundosGravados = 0;
             if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
             
@@ -216,7 +312,6 @@ Workspace.Avaliacoes = {
                 const seg = (Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0');
                 document.getElementById('ws-audio-cronometro').innerText = `${min}:${seg}`;
                 
-                // Se chegar a 10 minutos (600s), força a paragem por segurança
                 if(Workspace.Avaliacoes.segundosGravados >= 600) {
                     Workspace.Avaliacoes.pararGravacao();
                     Workspace.mostrarAviso("Tempo máximo de 10 minutos atingido.", "info");
@@ -249,20 +344,47 @@ Workspace.Avaliacoes = {
         btn.innerText = "A Enviar... ⏳";
         btn.disabled = true;
 
-        // Aqui, futuramente, faremos o envio do 'audioBlob' via FormData para a sua API!
-        // O ficheiro será tratado pelo Backend exatamente como se fosse um anexo normal.
-        console.log("Áudio pronto para ser enviado para o servidor!", Workspace.Avaliacoes.audioBlob);
+        try {
+            // 1. Converte o Blob num Arquivo e envia para a sua Rota de Uploads
+            const formData = new FormData();
+            const arquivoAudio = new File([Workspace.Avaliacoes.audioBlob], `oral_${Workspace.Avaliacoes.estudioAtivo}_${Date.now()}.webm`, { type: 'audio/webm' });
+            formData.append('anexos', arquivoAudio);
 
-        setTimeout(() => {
-            Workspace.mostrarAviso("Áudio enviado com sucesso! O professor será notificado.", "success");
+            const uploadRes = await fetch('/api/workspace/upload', {
+                method: 'POST', credentials: 'include', body: formData 
+            });
+            const uploadData = await uploadRes.json();
+            
+            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
+                throw new Error("Falha no upload físico do áudio.");
+            }
+
+            const audioUrlFinal = uploadData.anexos[0].url;
+
+            // 2. Envia o link final do áudio para a Rota de Entrega das Avaliações
+            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', {
+                audioUrl: audioUrlFinal,
+                alunoId: Workspace.usuario.id,
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if (res && res.success) {
+                Workspace.mostrarAviso("Áudio enviado com sucesso! O professor será notificado.", "success");
+                
+                document.body.style.overflow = '';
+                document.getElementById('ws-audio-foco-tela').style.display = 'none';
+                Workspace.Avaliacoes.estudioAtivo = null;
+                Workspace.Avaliacoes.carregarLobbies(); // Refresh
+            } else {
+                throw new Error("Erro no backend ao gravar entrega.");
+            }
+        } catch(e) {
+            console.error(e);
+            Workspace.mostrarAviso("Falha ao enviar o áudio. Tente novamente.", "error");
+        } finally {
             btn.innerText = "📤 Enviar Áudio";
             btn.disabled = false;
-            
-            // Fecha o estúdio e limpa a casa
-            document.body.style.overflow = '';
-            document.getElementById('ws-audio-foco-tela').style.display = 'none';
-            Workspace.Avaliacoes.estudioAtivo = null;
-        }, 1500); // Simulador de atraso de rede
+        }
     },
 
     sairDoEstudio: () => {
@@ -276,7 +398,7 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.estudioAtivo = null;
     },
 
-   // ==========================================
+    // ==========================================
     // 🎓 FASE 4: LÓGICA DO PROFESSOR (CONSTRUTOR)
     // ==========================================
     abrirNovaEscrita: () => {
@@ -284,7 +406,7 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'block';
-        document.getElementById('ws-builder-questoes').innerHTML = ''; // Limpa construtor
+        document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
 
     abrirNovaOral: () => {
@@ -299,7 +421,6 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'block';
-        // Futuro: fetch() para carregar lista da API
     },
 
     voltarMenuProf: () => {
@@ -311,7 +432,7 @@ Workspace.Avaliacoes = {
 
     adicionarQuestaoBuilder: (tipo) => {
         const area = document.getElementById('ws-builder-questoes');
-        const qId = Date.now(); // ID único para a pergunta
+        const qId = Date.now(); 
         let html = '';
 
         if (tipo === 'escolha') {
@@ -341,7 +462,7 @@ Workspace.Avaliacoes = {
         area.insertAdjacentHTML('beforeend', html);
     },
 
-    salvarProvaEscrita: () => {
+    salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
         
@@ -357,7 +478,7 @@ Workspace.Avaliacoes = {
             const pergunta = card.querySelector('.q-pergunta').value.trim();
             if(!pergunta) erro = true;
 
-            if(card.style.borderColor.includes('db')) { // É Múltipla Escolha
+            if(card.style.borderColor.includes('db')) { 
                 const opcoes = Array.from(card.querySelectorAll('.q-op')).map(i => i.value.trim());
                 if(opcoes.some(o => o === '')) erro = true;
 
@@ -371,7 +492,7 @@ Workspace.Avaliacoes = {
                     opcoes: opcoes,
                     respostaCorreta: opcoes[indexCorreta]
                 });
-            } else { // É Texto
+            } else { 
                 questaoData.push({
                     id: `q${index+1}`,
                     tipo: 'texto',
@@ -382,20 +503,70 @@ Workspace.Avaliacoes = {
 
         if(erro) return Workspace.mostrarAviso("Existem perguntas ou opções em branco. Preencha tudo.", "warning");
 
-        console.log("📝 Prova Pronta para Backend:", { titulo, tempo, questoes: questaoData });
-        Workspace.mostrarAviso("Simulação: Prova montada com sucesso!", "success");
-        Workspace.Avaliacoes.voltarMenuProf();
+        const btn = event.target;
+        const txtOriginal = btn.innerText;
+        btn.innerText = "⏳ A gravar...";
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
+                titulo: titulo,
+                tipo: 'escrita',
+                tempo: parseInt(tempo, 10),
+                questoes: questaoData,
+                escolaId: Workspace.usuario.escolaId,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if (res && res.success) {
+                Workspace.mostrarAviso("Avaliação Escrita publicada com sucesso!", "success");
+                document.getElementById('ws-nova-prova-titulo').value = '';
+                document.getElementById('ws-builder-questoes').innerHTML = '';
+                Workspace.Avaliacoes.voltarMenuProf();
+            } else {
+                throw new Error("Erro do servidor.");
+            }
+        } catch (e) {
+            Workspace.mostrarAviso("Falha ao comunicar com o servidor.", "error");
+        } finally {
+            btn.innerText = txtOriginal;
+            btn.disabled = false;
+        }
     },
 
-    salvarProvaOral: () => {
-        const titulo = document.getElementById('ws-nova-oral-titulo').value;
-        const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value;
+    salvarProvaOral: async () => {
+        const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
+        const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
         
         if(!titulo || !instrucoes) return Workspace.mostrarAviso("Preencha título e instruções.", "warning");
 
-        console.log("🎤 Teste Oral Pronto para Backend:", { titulo, instrucoes });
-        Workspace.mostrarAviso("Simulação: Teste Oral criado com sucesso!", "success");
-        Workspace.Avaliacoes.voltarMenuProf();
-    }     
+        const btn = event.target;
+        const txtOriginal = btn.innerText;
+        btn.innerText = "⏳ A gravar...";
+        btn.disabled = true;
 
+        try {
+            const res = await Workspace.api('/workspace/avaliacoes', 'POST', {
+                titulo: titulo,
+                tipo: 'oral',
+                instrucoes: instrucoes,
+                escolaId: Workspace.usuario.escolaId,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if (res && res.success) {
+                Workspace.mostrarAviso("Teste Oral publicado com sucesso!", "success");
+                document.getElementById('ws-nova-oral-titulo').value = '';
+                document.getElementById('ws-nova-oral-instrucoes').value = '';
+                Workspace.Avaliacoes.voltarMenuProf();
+            } else {
+                throw new Error("Erro do servidor.");
+            }
+        } catch (e) {
+            Workspace.mostrarAviso("Falha ao comunicar com o servidor.", "error");
+        } finally {
+            btn.innerText = txtOriginal;
+            btn.disabled = false;
+        }
+    }
 };
