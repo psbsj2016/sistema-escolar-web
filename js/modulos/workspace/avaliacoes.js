@@ -2,29 +2,32 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Avaliacoes = {
+    // Variáveis da Prova Escrita (Fase 2)
     exameAtivo: null,
     cronometroInterval: null,
     segundosRestantes: 0,
-    respostas: {}, // Guarda as opções escolhidas e textos digitados
+    respostas: {},
+
+    // Variáveis do Estúdio Oral (Fase 3)
+    estudioAtivo: null,
+    mediaRecorder: null,
+    audioChunks: [],
+    audioBlob: null,
+    streamMicrofone: null,
+    gravacaoInterval: null,
+    segundosGravados: 0,
 
     init: () => {
-        console.log("📝 Motor de Avaliações (Fase 2) iniciado. Modo Foco Pronto.");
+        console.log("📝 Motor de Avaliações (Fase 2 e 3) iniciado. Microfones prontos.");
     },
 
-    // 🚀 FUNÇÃO DE DEMONSTRAÇÃO (Para testar o layout)
+    // ==========================================
+    // ✍️ FASE 2: LÓGICA DA AVALIAÇÃO ESCRITA
+    // ==========================================
     iniciarExameFalsoDeTeste: () => {
         const questoesFalsas = [
-            { 
-                id: 'q1', tipo: 'escolha', pergunta: '1. Qual é a capital de Portugal?', 
-                opcoes: ['Lisboa', 'Porto', 'Faro', 'Coimbra'] 
-            },
-            { 
-                id: 'q2', tipo: 'texto', pergunta: '2. Descreva por suas palavras o impacto da Inteligência Artificial na educação moderna.' 
-            },
-            { 
-                id: 'q3', tipo: 'escolha', pergunta: '3. A água ferve a que temperatura (ao nível do mar)?', 
-                opcoes: ['50°C', '100°C', '150°C', '200°C'] 
-            }
+            { id: 'q1', tipo: 'escolha', pergunta: '1. Qual é a capital de Portugal?', opcoes: ['Lisboa', 'Porto', 'Faro', 'Coimbra'] },
+            { id: 'q2', tipo: 'texto', pergunta: '2. Descreva por suas palavras o impacto da Inteligência Artificial na educação moderna.' }
         ];
         Workspace.Avaliacoes.entrarModoFoco('exame_demo_123', 'Exame Global de Conhecimentos', 60, questoesFalsas);
     },
@@ -32,17 +35,13 @@ Workspace.Avaliacoes = {
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
         Workspace.Avaliacoes.exameAtivo = exameId;
         document.getElementById('ws-exame-titulo').innerText = titulo;
-        
-        // Bloqueia a rolagem da página por baixo do exame
         document.body.style.overflow = 'hidden'; 
         
-        // 🚀 PROCURA PELO NOVO ID BLINDADO
         const tela = document.getElementById('ws-exame-foco-tela');
         tela.style.display = 'block';
         tela.style.animation = 'fadeIn 0.3s ease-out';
-        tela.scrollTop = 0; // Garante que a prova começa no topo
+        tela.scrollTop = 0;
 
-        // Recupera o Rascunho (Se o aluno atualizou a página sem querer, não perde nada!)
         const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
         if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho);
         else Workspace.Avaliacoes.respostas = {};
@@ -61,11 +60,10 @@ Workspace.Avaliacoes = {
 
             if (q.tipo === 'escolha') {
                 htmlResposta = `<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">`;
-                q.opcoes.forEach((opcao, index) => {
+                q.opcoes.forEach((opcao) => {
                     const selecionado = respostaSalva === opcao;
                     const corFundo = selecionado ? '#e8f4f8' : '#f9f9f9';
                     const corBorda = selecionado ? '#3498db' : '#eee';
-                    
                     htmlResposta += `
                         <label style="background: ${corFundo}; border: 2px solid ${corBorda}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='${corBorda}'">
                             <input type="radio" name="questao_${q.id}" value="${opcao}" ${selecionado ? 'checked' : ''} onchange="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)" style="transform: scale(1.3); margin:0;">
@@ -75,27 +73,16 @@ Workspace.Avaliacoes = {
                 });
                 htmlResposta += `</div>`;
             } else if (q.tipo === 'texto') {
-                htmlResposta = `
-                    <div style="margin-top: 15px;">
-                        <textarea rows="6" placeholder="Digite a sua resposta aqui..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#eee'" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea>
-                    </div>
-                `;
+                htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a sua resposta aqui..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#eee'" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`;
             }
 
-            html += `
-                <div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);">
-                    <h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>
-                    ${htmlResposta}
-                </div>
-            `;
+            html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
         });
-
         area.innerHTML = html;
     },
 
     registarResposta: (questaoId, valor) => {
         Workspace.Avaliacoes.respostas[questaoId] = valor;
-        // Auto-save: Guarda secretamente a cada clique ou digitação
         localStorage.setItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`, JSON.stringify(Workspace.Avaliacoes.respostas));
     },
 
@@ -109,55 +96,183 @@ Workspace.Avaliacoes = {
     iniciarCronometro: (totalSegundos) => {
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         Workspace.Avaliacoes.segundosRestantes = totalSegundos;
-        
         const visor = document.getElementById('ws-exame-cronometro');
 
         Workspace.Avaliacoes.cronometroInterval = setInterval(() => {
             Workspace.Avaliacoes.segundosRestantes--;
             const s = Workspace.Avaliacoes.segundosRestantes;
-            
             if (s <= 0) {
                 clearInterval(Workspace.Avaliacoes.cronometroInterval);
                 visor.innerText = "00:00:00";
                 Workspace.mostrarAviso("O tempo esgotou! A prova será entregue automaticamente.", "warning");
-                Workspace.Avaliacoes.finalizarExame(true); // Força entrega automática
+                Workspace.Avaliacoes.finalizarExame(true);
                 return;
             }
-
             const horas = Math.floor(s / 3600).toString().padStart(2, '0');
             const minutos = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
             const seg = (s % 60).toString().padStart(2, '0');
             visor.innerText = `${horas}:${minutos}:${seg}`;
-
-            if (s < 300) visor.style.animation = 'pulse 1s infinite'; // Últimos 5 minutos fica a piscar
-            
         }, 1000);
     },
 
     sairDoExame: () => {
         if (confirm("Tem a certeza que deseja abandonar a prova? O cronómetro não irá parar e poderá ficar sem tempo para concluir.")) {
-            Workspace.Avaliacoes.fecharModoFoco();
+            document.body.style.overflow = ''; 
+            document.getElementById('ws-exame-foco-tela').style.display = 'none';
+            if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
+            Workspace.Avaliacoes.exameAtivo = null;
         }
     },
 
     finalizarExame: (forcar = false) => {
         if (!forcar && !confirm("Deseja entregar o exame de forma definitiva? Não poderá alterar as respostas depois.")) return;
-
-        // Aqui enviariamos "Workspace.Avaliacoes.respostas" para o Backend (via fetch)
-        console.log("Respostas Prontas para Envio Backend:", Workspace.Avaliacoes.respostas);
-
         Workspace.mostrarAviso("Avaliação entregue com sucesso!", "success");
-        
-        // Limpa o rascunho (pois já foi entregue)
         localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
-        Workspace.Avaliacoes.fecharModoFoco();
-    },
-
-    fecharModoFoco: () => {
-        document.body.style.overflow = ''; // Devolve o scroll do site
-        // 🚀 ID ATUALIZADO AQUI
+        document.body.style.overflow = ''; 
         document.getElementById('ws-exame-foco-tela').style.display = 'none';
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         Workspace.Avaliacoes.exameAtivo = null;
+    },
+
+    // ==========================================
+    // 🎤 FASE 3: LÓGICA DO ESTÚDIO DE ÁUDIO
+    // ==========================================
+    iniciarTesteDeAudioFalso: () => {
+        Workspace.Avaliacoes.abrirEstudioAudio('audio_demo_1', 'Teste de Conversação em Inglês', 'Please, introduce yourself, talk about your hobbies and explain why you want to learn English. (Speak for at least 1 minute).');
+    },
+
+    abrirEstudioAudio: (exameId, titulo, instrucoes) => {
+        Workspace.Avaliacoes.estudioAtivo = exameId;
+        document.getElementById('ws-audio-titulo').innerText = titulo;
+        document.getElementById('ws-audio-pergunta').innerText = instrucoes;
+        
+        document.body.style.overflow = 'hidden'; 
+        const tela = document.getElementById('ws-audio-foco-tela');
+        tela.style.display = 'block';
+        tela.style.animation = 'fadeIn 0.3s ease-out';
+        tela.scrollTop = 0;
+
+        Workspace.Avaliacoes.resetarInterfaceDeAudio();
+    },
+
+    resetarInterfaceDeAudio: () => {
+        document.getElementById('ws-area-gravacao').style.display = 'block';
+        document.getElementById('ws-area-player').style.display = 'none';
+        document.getElementById('ws-btn-iniciar-gravacao').style.display = 'inline-block';
+        document.getElementById('ws-btn-parar-gravacao').style.display = 'none';
+        document.getElementById('ws-audio-cronometro').innerText = '00:00';
+        document.getElementById('ws-audio-cronometro').style.color = '#fff';
+        document.getElementById('ws-mic-ring').style.borderColor = 'rgba(255,255,255,0.2)';
+        document.getElementById('ws-mic-ring').style.background = 'rgba(255,255,255,0.05)';
+        Workspace.Avaliacoes.audioBlob = null;
+        Workspace.Avaliacoes.audioChunks = [];
+    },
+
+    iniciarGravacao: async () => {
+        try {
+            // Pede permissão ao navegador para usar o microfone
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            Workspace.Avaliacoes.streamMicrofone = stream;
+            
+            // Prepara o Gravador
+            Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream);
+            Workspace.Avaliacoes.audioChunks = [];
+
+            Workspace.Avaliacoes.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) Workspace.Avaliacoes.audioChunks.push(event.data);
+            };
+
+            Workspace.Avaliacoes.mediaRecorder.onstop = () => {
+                // Quando o aluno clica em Parar, gera o ficheiro físico (Blob)
+                Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(Workspace.Avaliacoes.audioBlob);
+                
+                // Coloca o áudio no player para o aluno ouvir
+                document.getElementById('ws-audio-preview').src = audioUrl;
+                document.getElementById('ws-area-gravacao').style.display = 'none';
+                document.getElementById('ws-area-player').style.display = 'block';
+
+                // Desliga o microfone para tirar a luz vermelha da aba do navegador
+                Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(track => track.stop());
+            };
+
+            // Inicia a gravação física
+            Workspace.Avaliacoes.mediaRecorder.start();
+
+            // Altera o visual do ecrã para "Modo de Gravação (REC)"
+            document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none';
+            document.getElementById('ws-btn-parar-gravacao').style.display = 'inline-block';
+            document.getElementById('ws-mic-ring').style.borderColor = '#e74c3c';
+            document.getElementById('ws-mic-ring').style.background = 'rgba(231, 76, 60, 0.2)';
+            document.getElementById('ws-audio-cronometro').style.color = '#e74c3c';
+
+            // Inicia o cronómetro progressivo
+            Workspace.Avaliacoes.segundosGravados = 0;
+            if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+            
+            Workspace.Avaliacoes.gravacaoInterval = setInterval(() => {
+                Workspace.Avaliacoes.segundosGravados++;
+                const min = Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0');
+                const seg = (Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0');
+                document.getElementById('ws-audio-cronometro').innerText = `${min}:${seg}`;
+                
+                // Se chegar a 10 minutos (600s), força a paragem por segurança
+                if(Workspace.Avaliacoes.segundosGravados >= 600) {
+                    Workspace.Avaliacoes.pararGravacao();
+                    Workspace.mostrarAviso("Tempo máximo de 10 minutos atingido.", "info");
+                }
+            }, 1000);
+
+        } catch (err) {
+            console.error("Erro no microfone:", err);
+            Workspace.mostrarAviso("O seu dispositivo bloqueou o acesso ao microfone. Verifique as permissões do navegador.", "error");
+        }
+    },
+
+    pararGravacao: () => {
+        if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
+            Workspace.Avaliacoes.mediaRecorder.stop();
+            if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+        }
+    },
+
+    descartarAudio: () => {
+        if(confirm("Tem a certeza que deseja apagar esta gravação e começar de novo?")) {
+            Workspace.Avaliacoes.resetarInterfaceDeAudio();
+        }
+    },
+
+    enviarAudio: async () => {
+        if (!Workspace.Avaliacoes.audioBlob) return;
+
+        const btn = document.getElementById('ws-btn-enviar-audio');
+        btn.innerText = "A Enviar... ⏳";
+        btn.disabled = true;
+
+        // Aqui, futuramente, faremos o envio do 'audioBlob' via FormData para a sua API!
+        // O ficheiro será tratado pelo Backend exatamente como se fosse um anexo normal.
+        console.log("Áudio pronto para ser enviado para o servidor!", Workspace.Avaliacoes.audioBlob);
+
+        setTimeout(() => {
+            Workspace.mostrarAviso("Áudio enviado com sucesso! O professor será notificado.", "success");
+            btn.innerText = "📤 Enviar Áudio";
+            btn.disabled = false;
+            
+            // Fecha o estúdio e limpa a casa
+            document.body.style.overflow = '';
+            document.getElementById('ws-audio-foco-tela').style.display = 'none';
+            Workspace.Avaliacoes.estudioAtivo = null;
+        }, 1500); // Simulador de atraso de rede
+    },
+
+    sairDoEstudio: () => {
+        if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
+            if(!confirm("Ainda está a gravar! Se sair agora perderá o áudio atual. Deseja mesmo sair?")) return;
+            Workspace.Avaliacoes.pararGravacao();
+        }
+        
+        document.body.style.overflow = '';
+        document.getElementById('ws-audio-foco-tela').style.display = 'none';
+        Workspace.Avaliacoes.estudioAtivo = null;
     }
 };
