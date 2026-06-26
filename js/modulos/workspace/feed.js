@@ -674,10 +674,19 @@ Workspace.Feed = {
         return txt.replace(/</g, "<").replace(/>/g, ">");
     },
 
-    // 🚀 RESTAURADO: REAÇÕES EM TEMPO REAL NOS BOTÕES DE POST (LIKE / DISLIKE)
+   // 🚀 RESTAURADO E CORRIGIDO: REAÇÕES EM TEMPO REAL NOS BOTÕES DE POST
     reagir: async (postId, tipo) => {
         try {
-            const res = await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo });
+            const meuId = Workspace.usuario.id;
+            const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+
+            // 🚀 Agora envia o pacote de dados COMPLETO que o servidor exige
+            const res = await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { 
+                tipo: tipo,
+                userId: meuId,
+                autorNome: meuNome
+            });
+            
             if (res && res.success) {
                 const post = Workspace.Feed.postsCache.find(p => p.id === postId);
                 if (post) {
@@ -689,7 +698,6 @@ Workspace.Feed = {
                 const btnDislike = document.getElementById(`btn-dislike-${postId}`);
                 const countLike = document.getElementById(`count-like-${postId}`);
                 const countDislike = document.getElementById(`count-dislike-${postId}`);
-                const meuId = Workspace.usuario.id;
                 
                 if (countLike) countLike.innerText = res.likes.length;
                 if (countDislike) countDislike.innerText = res.dislikes.length;
@@ -717,7 +725,7 @@ Workspace.Feed = {
                 }
             }
         } catch (e) {
-            console.error(e);
+            console.error("Erro ao reagir:", e);
         }
     },
 
