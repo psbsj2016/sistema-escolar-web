@@ -1,50 +1,66 @@
-// js/modulos/workspace/alertas.js
 window.Workspace = window.Workspace || {};
 
 Workspace.Alertas = {
     radar: null,
     notificacoesAtuais: [],
+    idsConhecidos: new Set(),
 
     init: () => {
-        console.log("🔔 Motor de Alertas ativado com Cliques Direcionados.");
+        console.log("🔔 Motor de Alertas: Persistência Individual em Tempo Real Ativada.");
+        Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
-        Workspace.Alertas.buscarNotificacoes();
         
-        // O "Radar" que checa a base de dados a cada 15 segundos
-        Workspace.Alertas.radar = setInterval(Workspace.Alertas.buscarNotificacoes, 15000);
+        // Espera o usuário carregar antes de iniciar o radar
+        const aguardarUsuario = setInterval(() => {
+            if (Workspace.usuario && Workspace.usuario.nome) {
+                clearInterval(aguardarUsuario);
+                Workspace.Alertas.buscarNotificacoes();
+                Workspace.Alertas.radar = setInterval(Workspace.Alertas.buscarNotificacoes, 10000); // Batimento a cada 10s
+            }
+        }, 1000);
+    },
+
+    injetarCSS: () => {
+        if (document.getElementById('ws-alertas-css')) return;
+        const style = document.createElement('style');
+        style.id = 'ws-alertas-css';
+        style.innerHTML = `
+            .ws-noti-item { padding: 12px; border-bottom: 1px solid #f5f5f5; background: #fdfefe; border-radius: 6px; margin-bottom: 5px; cursor: pointer; transition: 0.2s; display: flex; gap: 12px; align-items: flex-start; position: relative; }
+            .ws-noti-item:hover { background: #f4f6f7; }
+            .ws-noti-item.riscando { animation: fadeOutRight 0.3s forwards; pointer-events: none; }
+            .ws-noti-close { background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 16px; padding: 2px 8px; margin-left: auto; transition: color 0.2s; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+            .ws-noti-close:hover { color: #e74c3c; background: #fdf2f2; }
+            
+            @keyframes fadeOutRight { to { opacity: 0; transform: translateX(100%); } }
+            @keyframes ringBell { 0% { transform: rotate(0); } 15% { transform: rotate(20deg); } 30% { transform: rotate(-20deg); } 45% { transform: rotate(15deg); } 60% { transform: rotate(-15deg); } 75% { transform: rotate(0); } }
+            .bell-ringing i, .bell-ringing { animation: ringBell 0.6s ease-in-out; color: #3498db !important; }
+        `;
+        document.head.appendChild(style);
     },
 
     construirDropdown: () => {
         const bell = document.getElementById('ws-bell');
         if (!bell) return;
 
-        // Cria a "gaveta" flutuante de notificações
         let dropdown = document.getElementById('ws-noti-dropdown');
         if (!dropdown) {
             dropdown = document.createElement('div');
             dropdown.id = 'ws-noti-dropdown';
-            dropdown.style.cssText = 'display:none; position:absolute; right:0; top:40px; width:300px; background:white; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.2); z-index:9999; padding:15px; color:#333; max-height:400px; overflow-y:auto; cursor:default;';
+            dropdown.style.cssText = 'display:none; position:absolute; right:0; top:45px; width:320px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:9999; padding:15px; color:#333; max-height:450px; overflow-y:auto; cursor:default; border: 1px solid #eee;';
             bell.appendChild(dropdown);
         }
 
-        // Evento de clique para abrir/fechar
-        bell.addEventListener('click', async (e) => {
+        // Abre e fecha, MAS NÃO MARCA COMO LIDO (Removemos a amnésia)
+        bell.addEventListener('click', (e) => {
             if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
                 const isOpen = dropdown.style.display === 'block';
                 dropdown.style.display = isOpen ? 'none' : 'block';
                 
-                // Fecha o menu de perfil se estiver aberto para não encavalar
                 const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                 if (perfilDropdown) perfilDropdown.style.display = 'none';
-                
-                // Se abriu e havia notificações, avisa o servidor que já as lemos!
-                if (!isOpen && Workspace.Alertas.notificacoesAtuais.length > 0) {
-                    await Workspace.Alertas.marcarComoLidas();
-                }
             }
         });
 
-        // Fecha se clicar fora
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#ws-bell')) {
                 dropdown.style.display = 'none';
@@ -56,14 +72,29 @@ Workspace.Alertas = {
         if (!Workspace.usuario || !Workspace.usuario.nome) return;
 
         try {
-            // Usa o nome do utilizador logado para buscar os seus avisos
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
             if (Array.isArray(data)) {
                 Workspace.Alertas.notificacoesAtuais = data;
+                
+                // Identifica se há notificações realmente novas
+                const idsAtuais = data.map(n => n.id);
+                const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
+
+                if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
+                    // Toca o sino e mostra o Toast Popup
+                    if (window.Toast && Toast.show) Toast.show(`🔔 Tem ${novas.length} nova(s) notificação(ões)!`, 'info');
+                    const bell = document.getElementById('ws-bell');
+                    if(bell) {
+                        bell.classList.add('bell-ringing');
+                        setTimeout(() => bell.classList.remove('bell-ringing'), 1000);
+                    }
+                }
+
+                Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
                 Workspace.Alertas.atualizarInterface();
             }
         } catch (e) {
-            console.error("Erro ao buscar alertas", e);
+            console.error("Radar de Alertas em espera...");
         }
     },
 
@@ -72,7 +103,6 @@ Workspace.Alertas = {
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
-        // Atualiza a bolinha vermelha
         if (badge) {
             badge.innerText = qtd > 99 ? '99+' : qtd;
             badge.style.display = qtd > 0 ? 'flex' : 'none';
@@ -80,51 +110,58 @@ Workspace.Alertas = {
             else badge.style.animation = 'none';
         }
 
-        // Atualiza o texto dentro da gaveta
         if (dropdown) {
             if (qtd === 0) {
-                dropdown.innerHTML = '<div style="text-align:center; color:#999; font-size:13px; padding:20px 0;">Nenhuma notificação nova.</div>';
+                dropdown.innerHTML = `
+                    <div style="text-align:center; color:#94a3b8; padding:30px 0;">
+                        <div style="font-size:35px; margin-bottom:10px;">📭</div>
+                        <div style="font-weight:600; font-size:14px;">Tudo limpo!</div>
+                        <div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div>
+                    </div>`;
             } else {
-               dropdown.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px; color:#2c3e50;">Novidades (${qtd})</div>
+                dropdown.innerHTML = `
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;">
+                        <span>Notificações (${qtd})</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:2px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
-                        
-                        // 📸 Foto nas Notificações
                         const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
 
                         return `
-                        <div style="padding:10px; border-bottom:1px solid #f5f5f5; background:#fdfefe; border-radius:6px; margin-bottom:5px; cursor:pointer; transition:0.2s; display: flex; gap: 12px; align-items: flex-start;"
-                             onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='#fdfefe'"
-                             onclick="Workspace.Alertas.processarClique('${n.origem}', '${n.origemId}', '${destino}')">
-                            ${avatarSino}
-                            <div style="flex: 1;">
-                                <div style="font-size:12px; color:#444; line-height:1.3;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
-                                <div style="font-size:10px; color:#aaa; margin-top:4px;">Agora mesmo</div>
+                        <div class="ws-noti-item" id="notif-item-${n.id}">
+                            <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
+                                ${avatarSino}
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
+                                    <div style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
+                                </div>
                             </div>
+                            <!-- O Botão de Riscar Individual -->
+                            <button class="ws-noti-close" onclick="Workspace.Alertas.riscar('${n.id}', event)" title="Marcar como lida">✖</button>
                         </div>
                         `;
                     }).join('')}
+                    </div>
                 `;
             }
         }
     },
 
-    marcarComoLidas: async () => {
-        if (!Workspace.usuario || !Workspace.usuario.nome) return;
-        try {
-            await Workspace.api(`/workspace/notificacoes/ler/${encodeURIComponent(Workspace.usuario.nome)}`, 'PUT');
-            // Mantemos os dados na tela para o usuário conseguir clicar mesmo após serem marcadas como lidas no banco
-        } catch (e) { console.error("Erro ao limpar notificações"); }
-    },
-
-    // 🚀 O DIRECIONADOR INTELIGENTE (O MOTOR DE CLIQUES)
-    processarClique: (origem, origemId, destinoNome) => {
-        // 1. Esconde a gaveta de notificações
+    // 🚀 LER E IR: Navegação Inteligente + Marcar como Lida
+    lerEIr: async (id, origem, origemId, destinoNome) => {
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
-        // 2. Reseta o feed principal simulando o botão Home (Volta ao topo e fecha o chat antigo se houver)
+        // 1. Marca na Base de Dados como LIDA instantaneamente
+        try {
+            await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
+            Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
+            Workspace.Alertas.idsConhecidos.delete(id);
+            Workspace.Alertas.atualizarInterface(); // Atualiza a bolinha vermelha e a lista sem refresh!
+        } catch(e) {}
+
+        // 2. Navegação Dinâmica
         if (window.Workspace && Workspace.voltarAoFeed) {
             Workspace.voltarAoFeed();
         } else {
@@ -133,31 +170,65 @@ Workspace.Alertas = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 3. Executa a ação baseada na origem do gatilho
         if (origem === 'post') {
-            // Procura o post no feed pelo ID da caixa de comentários
-            const postElement = document.getElementById(`box-comentarios-${origemId}`);
-            if (postElement) {
-                // Rola a tela suavemente até centralizar o post desejado
-                postElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Abre a caixa de comentários para que o usuário veja a nova interação
-                if (Workspace.Feed && Workspace.Feed.toggleComentarios) {
-                    Workspace.Feed.toggleComentarios(origemId);
+            // Caçador de Posts: Tenta encontrar o post mesmo se a página demorar a renderizar
+            const checkExist = setInterval(() => {
+                const postElement = document.getElementById(`box-comentarios-${origemId}`);
+                if (postElement) {
+                    clearInterval(checkExist);
+                    postElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    if (Workspace.Feed && Workspace.Feed.toggleComentarios) {
+                        if (postElement.style.display === 'none') {
+                            Workspace.Feed.toggleComentarios(origemId);
+                        }
+                    }
                 }
-            }
+            }, 200);
+            setTimeout(() => clearInterval(checkExist), 3000); 
         } 
         else if (origem === 'chat') {
-            // Abre a sala de bate-papo daquela turma imediatamente
             if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
                 Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
             }
         } 
         else if (origem === 'tarefa') {
-            // Abre o modal com os detalhes e arquivos da tarefa correspondente
             if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
                 Workspace.Sidebar.abrirModalTarefa(origemId);
             }
         }
+    },
+
+    // 🚀 RISCAR: Dispensar individualmente (Ação do X)
+    riscar: async (id, event) => {
+        event.stopPropagation(); // Impede de abrir o post ao clicar no X
+        const itemUI = document.getElementById(`notif-item-${id}`);
+        if(itemUI) itemUI.classList.add('riscando'); // Animação bonita de sair para a direita
+
+        try {
+            await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
+            setTimeout(() => {
+                Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
+                Workspace.Alertas.idsConhecidos.delete(id);
+                Workspace.Alertas.atualizarInterface();
+            }, 300); // Espera a animação terminar
+        } catch (e) {
+            if(itemUI) itemUI.classList.remove('riscando');
+        }
+    },
+
+    tempoRelativo: (dataString) => {
+        if (!dataString) return '';
+        const dataPost = new Date(dataString);
+        const agora = new Date();
+        const diff = Math.floor((agora - dataPost) / 1000);
+
+        if (diff < 60) return 'Agora mesmo';
+        const m = Math.floor(diff / 60);
+        if (m < 60) return `Há ${m} min`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `Há ${h} h`;
+        const d = Math.floor(h / 24);
+        if (d === 1) return `Ontem`;
+        return `Há ${d} dias`;
     }
 };
