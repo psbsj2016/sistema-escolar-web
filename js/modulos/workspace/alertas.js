@@ -10,7 +10,7 @@ Workspace.Alertas = {
         Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
         
-        // 🚀 Oculta os sinos imediatamente ao carregar a página (Esconde antes de buscar)
+        // Inicializa a interface (bolinha e gaveta)
         Workspace.Alertas.atualizarInterface();
         
         // Espera o usuário carregar antes de iniciar o radar
@@ -53,7 +53,7 @@ Workspace.Alertas = {
             bell.appendChild(dropdown);
         }
 
-        // Abre e fecha, MAS NÃO MARCA COMO LIDO (Removemos a amnésia)
+        // Abre e fecha a gaveta no sino fixo
         bell.addEventListener('click', (e) => {
             if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
                 const isOpen = dropdown.style.display === 'block';
@@ -84,16 +84,10 @@ Workspace.Alertas = {
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
-                    // Toca o sino e mostra o Toast Popup
+                    // Mostra o Toast Popup e toca o sino da barra superior
                     if (window.Toast && Toast.show) Toast.show(`🔔 Tem ${novas.length} nova(s) notificação(ões)!`, 'info');
                     
-                    const fab = document.getElementById('ws-notif-fab');
                     const bell = document.getElementById('ws-bell');
-                    
-                    if(fab) {
-                        fab.classList.add('bell-ringing');
-                        setTimeout(() => fab.classList.remove('bell-ringing'), 1000);
-                    }
                     if(bell) {
                         bell.classList.add('bell-ringing');
                         setTimeout(() => bell.classList.remove('bell-ringing'), 1000);
@@ -113,41 +107,7 @@ Workspace.Alertas = {
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
-        // 🚀 LÓGICA DE OCULTAÇÃO INTELIGENTE DO SININHO
-        const bell = document.getElementById('ws-bell');
-        const fab = document.getElementById('ws-notif-fab');
-
-        const toggleSino = (el, isVisible) => {
-            if (!el) return;
-            el.style.transition = 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)';
-            if (isVisible) {
-                // Para o FAB usa flex, para o sino normal volta ao original
-                el.style.display = el.id === 'ws-notif-fab' ? 'flex' : ''; 
-                setTimeout(() => {
-                    el.style.transform = 'scale(1) translateY(0)';
-                    el.style.opacity = '1';
-                    el.style.pointerEvents = 'auto';
-                }, 10);
-            } else {
-                el.style.transform = 'scale(0) translateY(20px)';
-                el.style.opacity = '0';
-                el.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    if (Workspace.Alertas.notificacoesAtuais.length === 0) el.style.display = 'none';
-                }, 400); // Aguarda o fim da animação de scale
-            }
-        };
-
-        if (qtd === 0) {
-            toggleSino(bell, false);
-            toggleSino(fab, false);
-            if (dropdown) dropdown.style.display = 'none'; // Fecha a gaveta
-        } else {
-            toggleSino(bell, true);
-            toggleSino(fab, true);
-        }
-
-        // Atualiza a bolinha vermelha no sino de topo (se existir)
+        // Atualiza a bolinha vermelha no sino de topo fixo
         if (badge) {
             badge.innerText = qtd > 99 ? '99+' : qtd;
             badge.style.display = qtd > 0 ? 'flex' : 'none';
@@ -155,32 +115,42 @@ Workspace.Alertas = {
             else badge.style.animation = 'none';
         }
 
-        if (dropdown && qtd > 0) {
-            dropdown.innerHTML = `
-                <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;">
-                    <span>Notificações (${qtd})</span>
-                </div>
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                ${Workspace.Alertas.notificacoesAtuais.map(n => {
-                    const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
-                    const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
-
-                    return `
-                    <div class="ws-noti-item" id="notif-item-${n.id}">
-                        <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
-                            ${avatarSino}
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
-                                <div style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
-                            </div>
-                        </div>
-                        <!-- O Botão de Riscar Individual -->
-                        <button class="ws-noti-close" onclick="Workspace.Alertas.riscar('${n.id}', event)" title="Marcar como lida">✖</button>
+        // Atualiza a gaveta de notificações
+        if (dropdown) {
+            if (qtd === 0) {
+                dropdown.innerHTML = `
+                    <div style="text-align:center; color:#94a3b8; padding:30px 0;">
+                        <div style="font-size:35px; margin-bottom:10px;">📭</div>
+                        <div style="font-weight:600; font-size:14px;">Tudo limpo!</div>
+                        <div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div>
+                    </div>`;
+            } else {
+                dropdown.innerHTML = `
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;">
+                        <span>Notificações (${qtd})</span>
                     </div>
-                    `;
-                }).join('')}
-                </div>
-            `;
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                    ${Workspace.Alertas.notificacoesAtuais.map(n => {
+                        const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
+                        const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
+
+                        return `
+                        <div class="ws-noti-item" id="notif-item-${n.id}">
+                            <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
+                                ${avatarSino}
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
+                                    <div style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
+                                </div>
+                            </div>
+                            <!-- O Botão de Riscar Individual -->
+                            <button class="ws-noti-close" onclick="Workspace.Alertas.riscar('${n.id}', event)" title="Marcar como lida">✖</button>
+                        </div>
+                        `;
+                    }).join('')}
+                    </div>
+                `;
+            }
         }
     },
 
@@ -194,7 +164,7 @@ Workspace.Alertas = {
             await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
             Workspace.Alertas.idsConhecidos.delete(id);
-            Workspace.Alertas.atualizarInterface(); // Esconde o sino se for a última!
+            Workspace.Alertas.atualizarInterface();
         } catch(e) {}
 
         // 2. Navegação Dinâmica
@@ -245,7 +215,7 @@ Workspace.Alertas = {
             setTimeout(() => {
                 Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
                 Workspace.Alertas.idsConhecidos.delete(id);
-                Workspace.Alertas.atualizarInterface(); // Se for o último 'X', o sino inteiro some!
+                Workspace.Alertas.atualizarInterface(); 
             }, 300); // Espera a animação terminar
         } catch (e) {
             if(itemUI) itemUI.classList.remove('riscando');
