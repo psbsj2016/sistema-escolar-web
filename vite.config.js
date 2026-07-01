@@ -22,8 +22,15 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Ignoramos apenas a API para não causar falhas de rede no Service Worker
-        navigateFallbackDenylist: [/^\/api/] 
+        // 🚀 O ESCUDO ANTI-SEQUESTRO: Diz ao PWA para NÃO atirar estas páginas de volta para o login (index.html)
+        navigateFallbackDenylist: [
+          /^\/api/,
+          /hub-matriculas\.html/,
+          /matricula\.html/,
+          /matricula-online\.html/,
+          /workspace\.html/,
+          /admin\.html/
+        ] 
       }
     })
   ],
