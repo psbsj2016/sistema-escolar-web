@@ -1,3 +1,5 @@
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+
 window.App = window.App || {};
 const App = window.App;
 
@@ -483,17 +485,11 @@ Object.assign(App, {
     },
 
     configurarBiometria: async () => {
-        // Acesso à biblioteca que importamos no index.html
-        const { startRegistration } = window.SimpleWebAuthnBrowser;
-        
-        if (!startRegistration) return App.showToast("A biblioteca de biometria não foi carregada.", "error");
-
         try {
             App.exibirOverlayBiometria("Configurar Acesso", "A aguardar a leitura do seu sensor...");
             
             // 1. Pedimos ao servidor as opções criptográficas
             const options = await App.api('/auth/biometria/gerar-registo', 'POST', { login: App.usuario.login });
-            
             if (options.error) throw new Error(options.error);
 
             // 2. O telemóvel acorda o FaceID/TouchID nativo
@@ -506,7 +502,6 @@ Object.assign(App, {
             });
 
             if (verificacao && verificacao.success) {
-                // Guardamos apenas uma "bandeira" de que este telemóvel está autorizado
                 localStorage.setItem('escola_bio_id', App.usuario.login);
                 App.removerOverlayBiometria();
                 App.showToast("✅ Biometria ativada e registada no servidor!", "success");
@@ -555,18 +550,15 @@ Object.assign(App, {
         document.getElementById('tela-sistema').style.display = 'none'; 
     },
 
-    entrarComBiometria: async () => {
+  entrarComBiometria: async () => {
         const loginGuardado = localStorage.getItem('escola_bio_id');
         if (!loginGuardado) return; // Se não tiver a flag local, não faz nada
-
-        const { startAuthentication } = window.SimpleWebAuthnBrowser;
 
         try {
             App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
             
             // 1. Pede o Desafio ao Servidor
             const options = await App.api('/auth/biometria/gerar-login', 'POST', { login: loginGuardado });
-            
             if (options.error) throw new Error(options.error);
 
             // 2. O telemóvel acorda e resolve o desafio matemático com a biometria
