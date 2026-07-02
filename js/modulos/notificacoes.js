@@ -11,6 +11,7 @@ Object.assign(App, {
         try {
             const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
 
+            // Puxa TODOS os dados diretos da fonte (Tempo Real)
             const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
             let alunos = await App.api('/alunos');
             const eventos = await App.api('/eventos');
@@ -18,8 +19,8 @@ Object.assign(App, {
             const planejamentos = await App.api('/planejamentos');
             const estoque = await App.api('/estoques');
             const escola = await App.api('/escola');
-            // 🚀 Bónus de Inteligência: Puxamos os cursos para saber a Carga Horária Exata!
             const cursos = await App.api('/cursos').catch(() => []); 
+            const chamadas = await App.api('/chamadas').catch(() => []); // 🚀 A nova Fonte da Verdade!
 
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
@@ -65,9 +66,9 @@ Object.assign(App, {
 
             const hoje = new Date();
             const ano = hoje.getFullYear();
-            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-            const dia = String(hoje.getDate()).padStart(2, '0');
-            const hojeStr = `${ano}-${mes}-${dia}`;
+            const mes = hoje.getMonth();
+            const dia = hoje.getDate();
+            const hojeStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             const hojeTime = hoje.getTime();
             
             const amanha = new Date(hoje);
@@ -107,7 +108,7 @@ Object.assign(App, {
 
             if (Array.isArray(alunos)) {
                 alunos.forEach(a => {
-                    if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
+                    if (a.nascimento && a.nascimento.substring(5) === `${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`) {
                         alertas.push({ 
                             icon: '🎂', 
                             texto: `Hoje é o aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`,
@@ -146,26 +147,11 @@ Object.assign(App, {
                 }
             }
 
-            if (Array.isArray(eventos)) {
-                eventos.forEach(e => {
-                    if (e.data === hojeStr) alertas.push({ 
-                        icon: '🚨', 
-                        texto: `<b>Hoje:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
-                        acao: "App.renderizarTela('calendario')" 
-                    });
-                    else if (e.data === amanhaStr) alertas.push({ 
-                        icon: '⏳', 
-                        texto: `<b>Amanhã:</b> ${App.escapeHTML(e.tipo)} - ${App.escapeHTML(e.descricao)}`,
-                        acao: "App.renderizarTela('calendario')" 
-                    });
-                });
-            }
-
             // ==========================================
-            // 🤖 IA PREDITIVA DE FATURAÇÃO PERDIDA
+            // 🤖 IA PREDITIVA DE FATURAÇÃO PERDIDA (EXATIDÃO MÁXIMA)
             // ==========================================
             if (tipoUtilizador !== 'Professor') {
-                if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
+                if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos) && Array.isArray(chamadas)) {
                     
                     const trintaDiasAtras = new Date(hojeTime - 30 * 24 * 60 * 60 * 1000);
 
@@ -173,7 +159,7 @@ Object.assign(App, {
                         const plano = planejamentos.find(p => p.idAluno === aluno.id);
                         let dataUltimaMensalidade = null;
                         
-                        // 1. Descobrir a data da ÚLTIMA parcela financeira gerada
+                        // 1. Descobrir a data da ÚLTIMA parcela financeira absoluta
                         financeiro.forEach(f => {
                             if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
                                 if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
@@ -182,80 +168,93 @@ Object.assign(App, {
                             }
                         });
 
-                        if (dataUltimaMensalidade && plano && plano.aulas) {
+                        if (dataUltimaMensalidade && plano) {
                             
-                            // A) Raio-X Financeiro (O Gatilho do Mês Final)
-                            const dataUltima = new Date(dataUltimaMensalidade);
-                            const diffTempo = dataUltima.getTime() - hojeTime;
+                            // A) Raio-X Financeiro (Garante cálculo de dias perfeitos via Timezone local)
+                            const partesVenc = dataUltimaMensalidade.split('-');
+                            const dataUltimaLocal = new Date(partesVenc[0], partesVenc[1] - 1, partesVenc[2]);
+                            const dataHojeLocal = new Date(ano, mes, dia);
+                            
+                            const diffTempo = dataUltimaLocal.getTime() - dataHojeLocal.getTime();
                             const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24));
                             
                             if (diffDias <= 30) {
-                                // B) Raio-X de Carga Horária do Curso (Cruza com o cadastro do curso do aluno)
+                                // B) Raio-X da Carga Horária Exigida (Curso do Aluno)
                                 const cursoInfo = cursos.find(c => c.id === aluno.cursoId || c.nome === aluno.planoCurso);
-                                // Define a Carga Horária exigida. Se não achar no curso, soma 2h por cada aula planeada.
-                                const cargaHorariaTotal = cursoInfo && cursoInfo.cargaHoraria ? parseInt(cursoInfo.cargaHoraria) : (plano.aulas.length * 2);
+                                const cargaHorariaTotal = cursoInfo && cursoInfo.cargaHoraria ? parseFloat(cursoInfo.cargaHoraria) : (plano.aulas ? plano.aulas.length * 2 : 40);
 
-                                // C) Auditoria de Presenças vs Faltas
+                                // C) Auditoria Fria na Base de Chamadas (Ignora o Planejamento, lê a realidade)
                                 let horasCumpridas = 0;
                                 let aulasNoUltimoMes = 0;
                                 let horasNoUltimoMes = 0;
                                 let dataUltimaAulaLogada = hojeTime;
+                                
+                                const chamadasAluno = chamadas.filter(c => c.idAluno === aluno.id);
 
-                                plano.aulas.forEach(aula => {
-                                    if (!aula.data) return;
+                                chamadasAluno.forEach(c => {
+                                    if (!c.data) return;
                                     
-                                    // Converte a data da aula
-                                    const partesData = aula.data.includes('/') ? aula.data.split('/') : null;
-                                    let dataAulaObj = partesData ? new Date(`${partesData[2]}-${partesData[1]}-${partesData[0]}`) : new Date(aula.data);
+                                    const partesData = c.data.includes('/') ? c.data.split('/') : c.data.split('-');
+                                    let dataAulaObj = new Date();
+                                    if (c.data.includes('/')) {
+                                        dataAulaObj = new Date(partesData[2], partesData[1] - 1, partesData[0], 12, 0, 0);
+                                    } else {
+                                        dataAulaObj = new Date(partesData[0], partesData[1] - 1, partesData[2], 12, 0, 0);
+                                    }
+
                                     if(isNaN(dataAulaObj.getTime())) dataAulaObj = new Date();
                                     
-                                    const duracaoAula = parseFloat(aula.duracao) || 2; // Assume 2h se não estiver especificado
+                                    // Parse da duração da aula (Ex: "01:30" vira 1.5 horas)
+                                    let duracaoAula = 2; // Padrão
+                                    if (c.duracao && c.duracao.includes(':')) {
+                                        const [h, m] = c.duracao.split(':').map(Number);
+                                        duracaoAula = h + ((m || 0) / 60);
+                                    } else if (c.duracao) {
+                                        duracaoAula = parseFloat(c.duracao) || 2;
+                                    }
 
-                                    if (aula.visto) { 
-                                        dataUltimaAulaLogada = Math.max(dataUltimaAulaLogada, dataAulaObj.getTime());
-                                        
-                                        // ⚠️ Filtro Rigoroso: Falta (Justificada ou Vermelha) NÃO conta como hora cumprida!
-                                        const isFalta = aula.status === 'Falta' || aula.status === 'Justificada' || aula.status === 'Faltou' || aula.presenca === false;
-                                        
-                                        if (!isFalta) {
-                                            horasCumpridas += duracaoAula;
-                                        }
+                                    dataUltimaAulaLogada = Math.max(dataUltimaAulaLogada, dataAulaObj.getTime());
+                                    
+                                    // SÓ CONTA COMO HORA CUMPRIDA SE O ALUNO FOI! (Faltas injustificadas ou justificadas são ignoradas = tem de pagar e repor)
+                                    if (c.status === 'Presença' || c.status === 'Reposição') {
+                                        horasCumpridas += duracaoAula;
+                                    }
 
-                                        // Ritmo Preditivo: Conta as aulas que o aluno ativamente agendou/participou no último mês
-                                        if (dataAulaObj >= trintaDiasAtras && dataAulaObj <= hojeTime) {
-                                            aulasNoUltimoMes++;
-                                            horasNoUltimoMes += duracaoAula; 
-                                        }
+                                    // Para calcular o Ritmo, contamos TUDO o que aconteceu no último mês (mesmo que ele tenha faltado)
+                                    if (dataAulaObj.getTime() >= trintaDiasAtras.getTime() && dataAulaObj.getTime() <= hojeTime) {
+                                        aulasNoUltimoMes++;
+                                        horasNoUltimoMes += duracaoAula; 
                                     }
                                 });
 
+                                // O Défice Exato
                                 const horasFaltantes = cargaHorariaTotal - horasCumpridas;
 
-                                // D) O Alarme Preditivo: Se acabou o dinheiro, mas ainda faltam horas letivas!
+                                // D) O Alarme Preditivo Cirúrgico
                                 if (horasFaltantes > 0) {
                                     
-                                    // Cálculo de Projeção: Como ele se comportou no último mês?
-                                    const ritmoHorasMensal = horasNoUltimoMes > 0 ? horasNoUltimoMes : 8; // Mínimo de 8h/mês se estiver parado
+                                    // Projeção baseada na velocidade do aluno
+                                    const ritmoHorasMensal = horasNoUltimoMes > 0 ? horasNoUltimoMes : 8; // Mínimo de 8h/mês se estiver congelado
                                     const duracaoMediaAula = aulasNoUltimoMes > 0 ? (horasNoUltimoMes / aulasNoUltimoMes) : 2;
                                     
                                     const aulasRestantesEstimadas = Math.ceil(horasFaltantes / duracaoMediaAula);
                                     const mesesNecessarios = horasFaltantes / ritmoHorasMensal;
                                     
-                                    // Data que ele efetivamente vai acabar o curso
+                                    // Calculadora do dia da Formatura
                                     const dataProjetada = new Date(dataUltimaAulaLogada);
                                     dataProjetada.setDate(dataProjetada.getDate() + Math.ceil(mesesNecessarios * 30));
                                     const dataProjStr = `${String(dataProjetada.getDate()).padStart(2, '0')}/${String(dataProjetada.getMonth() + 1).padStart(2, '0')}/${dataProjetada.getFullYear()}`;
 
-                                    // Renderiza o Texto Dinâmico
                                     let tempoTexto = diffDias < 0 ? `já venceu há ${Math.abs(diffDias)} dias` : (diffDias === 0 ? `vence hoje` : `vence em ${diffDias} dias`);
+                                    
+                                    const txtFaltas = (cargaHorariaTotal - horasCumpridas) > 0 ? `<br>Devido a faltas ou atrasos, cumpriu apenas <b>${parseFloat(horasCumpridas.toFixed(1))}h</b> das <b>${parseFloat(cargaHorariaTotal.toFixed(1))}h</b> do curso.` : '';
 
                                     alertas.push({ 
                                         icon: '🎯', 
                                         texto: `<div style="line-height:1.5;"><b>Auditoria Preditiva (Mensalidade Extra):</b><br>
-                                        A última mensalidade de <b style="color:#3498db;">${App.escapeHTML(aluno.nome)}</b> ${tempoTexto}.<br>
-                                        O curso exige <b>${cargaHorariaTotal}h</b>, mas o aluno cumpriu apenas <b>${horasCumpridas}h</b> devido a faltas ou reposições.<br>
-                                        Ainda faltam <b>${horasFaltantes}h</b> (aprox. ${aulasRestantesEstimadas} aulas). Pelo seu ritmo de assiduidade (${ritmoHorasMensal}h/mês), a formatação apenas acontecerá em <b style="color:#e74c3c;">${dataProjStr}</b>.<br>
-                                        <i>Recomendamos a geração de parcelas correspondentes ao período pendente!</i></div>`,
+                                        A última mensalidade de <b style="color:#3498db;">${App.escapeHTML(aluno.nome)}</b> ${tempoTexto}.${txtFaltas}<br>
+                                        Ainda restam <b>${parseFloat(horasFaltantes.toFixed(1))}h pendentes</b> (aprox. ${aulasRestantesEstimadas} aulas). Ao ritmo atual (${parseFloat(ritmoHorasMensal.toFixed(1))}h/mês), a conclusão será apenas em <b style="color:#e74c3c;">${dataProjStr}</b>.<br>
+                                        <i>Sugerimos gerar parcelas adicionais!</i></div>`,
                                         acao: "App.renderizarTela('mensalidades')"
                                     });
                                 }
