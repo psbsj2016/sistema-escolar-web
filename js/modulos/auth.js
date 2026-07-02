@@ -483,31 +483,41 @@ Object.assign(App, {
     },
 
     configurarBiometria: async () => {
-        if (!window.PublicKeyCredential) return App.showToast("Biometria não suportada neste aparelho.", "error");
+        // Acesso à biblioteca que importamos no index.html
+        const { startRegistration } = window.SimpleWebAuthnBrowser;
+        
+        if (!startRegistration) return App.showToast("A biblioteca de biometria não foi carregada.", "error");
+
         try {
-            App.exibirOverlayBiometria("Configurar Acesso", "Use o sensor digital para registrar este aparelho.");
-            const challenge = window.crypto.getRandomValues(new Uint8Array(32));
-            const userId = window.crypto.getRandomValues(new Uint8Array(16));
+            App.exibirOverlayBiometria("Configurar Acesso", "A aguardar a leitura do seu sensor...");
             
-            const cred = await navigator.credentials.create({
-                publicKey: {
-                    challenge: challenge,
-                    rp: { name: "Sistema PTT", id: window.location.hostname }, 
-                    user: { id: userId, name: App.usuario.login, displayName: App.usuario.nome },
-                    pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
-                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 60000
-                }
+            // 1. Pedimos ao servidor as opções criptográficas
+            const options = await App.api('/auth/biometria/gerar-registo', 'POST', { login: App.usuario.login });
+            
+            if (options.error) throw new Error(options.error);
+
+            // 2. O telemóvel acorda o FaceID/TouchID nativo
+            const respostaBio = await startRegistration(options);
+
+            // 3. Enviamos a resposta do telemóvel para o servidor validar
+            const verificacao = await App.api('/auth/biometria/verificar-registo', 'POST', { 
+                login: App.usuario.login, 
+                respostaBio 
             });
-            if (cred) {
-                localStorage.setItem('escola_bio_id', App.bufferToBase64(cred.rawId));
+
+            if (verificacao && verificacao.success) {
+                // Guardamos apenas uma "bandeira" de que este telemóvel está autorizado
+                localStorage.setItem('escola_bio_id', App.usuario.login);
                 App.removerOverlayBiometria();
-                App.showToast("✅ Biometria ativada com sucesso!", "success");
+                App.showToast("✅ Biometria ativada e registada no servidor!", "success");
                 if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
+            } else {
+                throw new Error("O servidor rejeitou a assinatura.");
             }
         } catch (e) { 
             App.removerOverlayBiometria(); 
-            App.showToast("Configuração cancelada ou bloqueada.", "warning"); 
+            console.error(e);
+            App.showToast("Configuração biométrica cancelada ou bloqueada.", "warning"); 
         }
     },
 
@@ -546,38 +556,49 @@ Object.assign(App, {
     },
 
     entrarComBiometria: async () => {
-        const bioId = localStorage.getItem('escola_bio_id');
-        if (!bioId) return;
+        const loginGuardado = localStorage.getItem('escola_bio_id');
+        if (!loginGuardado) return; // Se não tiver a flag local, não faz nada
+
+        const { startAuthentication } = window.SimpleWebAuthnBrowser;
+
         try {
-            App.exibirOverlayBiometria("Autenticação", "Aguardando leitura do sensor...");
-            const challenge = window.crypto.getRandomValues(new Uint8Array(32));
-            const rawId = App.base64ToBuffer(bioId);
+            App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
             
-            const assertion = await navigator.credentials.get({
-                publicKey: {
-                    challenge: challenge,
-                    rpId: window.location.hostname,
-                    allowCredentials: [{ type: "public-key", id: rawId }],
-                    userVerification: "required",
-                    timeout: 60000
-                }
+            // 1. Pede o Desafio ao Servidor
+            const options = await App.api('/auth/biometria/gerar-login', 'POST', { login: loginGuardado });
+            
+            if (options.error) throw new Error(options.error);
+
+            // 2. O telemóvel acorda e resolve o desafio matemático com a biometria
+            const respostaBio = await startAuthentication(options);
+
+            // 3. O servidor verifica e devolve o Login feito!
+            const authResultado = await App.api('/auth/biometria/verificar-login', 'POST', { 
+                login: loginGuardado, 
+                respostaBio 
             });
-            
-            if (assertion) {
+
+            if (authResultado && authResultado.success) {
                 App.removerOverlayBiometria();
                 
                 const telaTouch = document.getElementById('bio-touch-screen');
                 if (telaTouch) telaTouch.style.display = 'none';
                 
+                App.usuario = authResultado.usuario; // Guarda a sessão
+                localStorage.setItem('usuario_logado', JSON.stringify(authResultado.usuario));
+                
                 App.showToast("🔓 Bem-vindo de volta!", "success");
                 App.entrarNoSistema();
+            } else {
+                throw new Error("Credenciais recusadas pelo servidor.");
             }
         } catch (e) { 
             App.removerOverlayBiometria(); 
+            console.error(e);
             if (e.name === 'NotAllowedError') {
-                App.showToast("Toque no botão para entrar com Biometria.", "info");
+                App.showToast("Toque na tela ou no sensor para entrar com Biometria.", "info");
             } else {
-                App.showToast("A leitura falhou. Use a sua senha.", "info"); 
+                App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
             }
         }
     },
@@ -687,5 +708,22 @@ Object.assign(App, {
                 }
             }
         );
+    }
+});
+
+// =========================================================
+// 👆 DETETOR AUTOMÁTICO DE BIOMETRIA NO LOGIN
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Se o dispositivo já tiver gravado um acesso biométrico, mostramos o botão verde!
+    const loginBiometrico = localStorage.getItem('escola_bio_id');
+    const btnBio = document.getElementById('btn-biometria');
+    
+    if (loginBiometrico && btnBio) {
+        btnBio.style.display = 'flex'; // Faz a mágica de mostrar o botão
+        
+        // Bónus UX: Preenche o campo de e-mail automaticamente
+        const inputUser = document.getElementById('login-user');
+        if(inputUser) inputUser.value = loginBiometrico;
     }
 });
