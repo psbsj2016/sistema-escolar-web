@@ -2,67 +2,64 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - SININHO, RADAR E ALERTAS
+// MÓDULO NOTIFICAÇÕES - SININHO, RADAR E ALERTAS (COM IA PEDAGÓGICA)
 // =========================================================
 
 Object.assign(App, {
 
-verificarNotificacoes: async () => {
-    try {
-        const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
+    verificarNotificacoes: async () => {
+        try {
+            const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
 
-        const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
-        let alunos = await App.api('/alunos');
-        const eventos = await App.api('/eventos');
-        const financeiro = await App.api('/financeiro');
-        const planejamentos = await App.api('/planejamentos');
-        const estoque = await App.api('/estoques');
-        const escola = await App.api('/escola');
+            const notificacoesBanco = await App.api('/sistema/notificacoes/nao-lidas');
+            let alunos = await App.api('/alunos');
+            const eventos = await App.api('/eventos');
+            const financeiro = await App.api('/financeiro');
+            const planejamentos = await App.api('/planejamentos');
+            const estoque = await App.api('/estoques');
+            const escola = await App.api('/escola');
 
-        if (Array.isArray(alunos)) {
-            alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
-        }
+            if (Array.isArray(alunos)) {
+                alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
+            }
 
-        // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
-        if (
-            App.entidadeAtual === 'aluno' &&
-            Array.isArray(alunos) &&
-            Array.isArray(App.listaCache)
-        ) {
-            const idsAtuais = App.listaCache.map(a => a.id);
-            const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
+            // 🔄 Atualização automática da tela de alunos quando chegar matrícula pública
+            if (
+                App.entidadeAtual === 'aluno' &&
+                Array.isArray(alunos) &&
+                Array.isArray(App.listaCache)
+            ) {
+                const idsAtuais = App.listaCache.map(a => a.id);
+                const existeNovoAluno = alunos.some(a => !idsAtuais.includes(a.id));
 
-            if (existeNovoAluno) {
-                App.showToast("Novo aluno recebido pela matrícula online.", "success");
+                if (existeNovoAluno) {
+                    App.showToast("Novo aluno recebido pela matrícula online.", "success");
+                    App.listaCache = alunos;
+                    const inputBusca = document.getElementById('input-busca');
+                    if (inputBusca) inputBusca.value = '';
 
-                App.listaCache = alunos;
-
-                const inputBusca = document.getElementById('input-busca');
-                if (inputBusca) inputBusca.value = '';
-
-                if (typeof App.filtrarTabelaReativa === 'function') {
-                    App.filtrarTabelaReativa();
+                    if (typeof App.filtrarTabelaReativa === 'function') {
+                        App.filtrarTabelaReativa();
+                    }
                 }
             }
-        }
 
-        let alertas = [];
+            let alertas = [];
 
-        if (Array.isArray(notificacoesBanco)) {
-            notificacoesBanco
-                .filter(n => !n.lida)
-                .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
-                .slice(0, 10)
-                .forEach(n => {
-                    alertas.push({
-                        icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
-                        texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
-                        prioridade: 1,
-                        acao: "App.renderizarContratos()"
+            if (Array.isArray(notificacoesBanco)) {
+                notificacoesBanco
+                    .filter(n => !n.lida)
+                    .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
+                    .slice(0, 10)
+                    .forEach(n => {
+                        alertas.push({
+                            icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
+                            texto: `<b>${App.escapeHTML(n.titulo || 'Nova notificação')}</b><br>${App.escapeHTML(n.mensagem || '')}<br><small>Origem: ${App.escapeHTML(n.refLink || 'Direto')}</small>`,
+                            prioridade: 1,
+                            acao: "App.renderizarContratos()"
+                        });
                     });
-                });
-        }
-   
+            }
 
             const hoje = new Date();
             const ano = hoje.getFullYear();
@@ -99,7 +96,7 @@ verificarNotificacoes: async () => {
                     } else if (diasRestantes <= 0) {
                         alertas.push({ 
                             icon: '🚫', 
-                            texto: `<b>Urgente:</b> O seu acesso <b>expirou</b>! Regularize para continuar usando o sistema.`, 
+                            texto: `<b>Urgente:</b> O seu acesso <b>expirou</b>! Regularize para continuar a usar o sistema.`, 
                             acao: "App.renderizarTela('plano')" 
                         });
                     }
@@ -111,7 +108,7 @@ verificarNotificacoes: async () => {
                     if (a.nascimento && a.nascimento.substring(5) === `${mes}-${dia}`) {
                         alertas.push({ 
                             icon: '🎂', 
-                            texto: `Hoje é aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`,
+                            texto: `Hoje é o aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver.`,
                             acao: "App.renderizarLista('aluno')" 
                         });
                     }
@@ -123,12 +120,11 @@ verificarNotificacoes: async () => {
             // ==========================================
             if (Array.isArray(alunos)) {
                 alunos.forEach(a => {
-                    // Verifica se a dataMatricula existe e se começa com a data de hoje (YYYY-MM-DD)
                     if (a.dataMatricula && a.dataMatricula.startsWith(hojeStr)) {
                         alertas.push({ 
                             icon: '🎉', 
                             texto: `<b>Nova Matrícula!</b> O aluno <b>${App.escapeHTML(a.nome)}</b> foi registado hoje.`,
-                            acao: "App.renderizarContratos()" // Leva direto para o cofre de contratos
+                            acao: "App.renderizarContratos()" 
                         });
                     }
                 });
@@ -163,54 +159,56 @@ verificarNotificacoes: async () => {
                 });
             }
 
+            // ==========================================
+            // 🤖 INTELIGÊNCIA FINANCEIRA / PEDAGÓGICA (FATURAÇÃO PERDIDA)
+            // ==========================================
             if (tipoUtilizador !== 'Professor') {
                 if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
+                    
                     alunos.forEach(aluno => {
                         const plano = planejamentos.find(p => p.idAluno === aluno.id);
-                        let parcelasFuturas = 0;
                         let dataUltimaMensalidade = null;
                         
+                        // 1. Descobrir a data da ÚLTIMA parcela do aluno
                         financeiro.forEach(f => {
                             if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
                                 if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
                                     dataUltimaMensalidade = f.vencimento;
                                 }
-                                if (f.vencimento >= hojeStr) {
-                                    parcelasFuturas++;
-                                }
                             }
                         });
 
-                        if (dataUltimaMensalidade && dataUltimaMensalidade.startsWith(`${ano}-${mes}`)) {
-                            alertas.push({ 
-                                icon: '🎓', 
-                                texto: `A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> vence este mês. Clique para gerar renovação!`,
-                                acao: "App.renderizarTela('mensalidades')" 
-                            });
-                        }
+                        // Se o aluno tem um histórico financeiro, iniciamos o cruzamento
+                        if (dataUltimaMensalidade) {
+                            
+                            // A) Raio-X Financeiro
+                            const dataUltima = new Date(dataUltimaMensalidade);
+                            // Limpa a hora para calcular apenas os dias corretos
+                            const dataHojeLimpa = new Date(hojeStr); 
+                            
+                            const diffTempo = dataUltima.getTime() - dataHojeLimpa.getTime();
+                            const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24));
+                            
+                            // B) Raio-X Pedagógico
+                            let aulasPendentes = 0;
+                            if (plano && plano.aulas) {
+                                // Conta quantas aulas faltam ministrar (ou que o aluno faltou e terá de repor)
+                                aulasPendentes = plano.aulas.filter(a => !a.visto).length;
+                            }
 
-                        if (plano && plano.aulas) {
-                            const aulasPendentes = plano.aulas.filter(a => !a.visto).length;
-                            if (aulasPendentes > 0) {
-                                let aulasPorMes = 4; 
-                                if (plano.aulas.length > 1) {
-                                    const d1 = plano.aulas[0].data.split('/');
-                                    const d2 = plano.aulas[1].data.split('/');
-                                    const data1 = new Date(`${d1[2]}-${d1[1]}-${d1[0]}`);
-                                    const data2 = new Date(`${d2[2]}-${d2[1]}-${d2[0]}`);
-                                    const diffDias = Math.abs((data2 - data1) / (1000 * 60 * 60 * 24));
-                                    if (diffDias <= 4) aulasPorMes = 8; 
-                                    else if (diffDias <= 2) aulasPorMes = 12; 
-                                }
-                                const mesesDeAulaRestantes = Math.ceil(aulasPendentes / aulasPorMes);
+                            // C) O Match Inteligente: Se falta 1 mês ou menos para a última fatura, E ainda tem aulas para ter...
+                            if (diffDias <= 30 && aulasPendentes > 0 && tipoUtilizador === 'Gestor') {
+                                
+                                let tempoTexto = '';
+                                if (diffDias < 0) tempoTexto = `já venceu há ${Math.abs(diffDias)} dias`;
+                                else if (diffDias === 0) tempoTexto = `vence hoje`;
+                                else tempoTexto = `vence em ${diffDias} dias`;
 
-                                if (mesesDeAulaRestantes > parcelasFuturas && tipoUtilizador === 'Gestor') {
-                                    alertas.push({ 
-                                        icon: '⚠️', 
-                                        texto: `<b>Faturação Perdida!</b> <b>${App.escapeHTML(aluno.nome)}</b> precisa de ${aulasPendentes} aulas, mas não tem parcelas suficientes.`,
-                                        acao: "App.renderizarTela('mensalidades')"
-                                    });
-                                }
+                                alertas.push({ 
+                                    icon: '⚠️', 
+                                    texto: `<b>Faturação Perdida!</b> A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> ${tempoTexto}, mas o aluno ainda tem <b>${aulasPendentes} aula(s) pendente(s)</b>. Considere gerar parcela extra!`,
+                                    acao: "App.renderizarTela('mensalidades')"
+                                });
                             }
                         }
                     });
@@ -231,7 +229,6 @@ verificarNotificacoes: async () => {
                 }
             }
 
-       
             const badge = document.getElementById('noti-badge');
             const list = document.getElementById('noti-list');
             
