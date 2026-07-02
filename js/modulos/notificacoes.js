@@ -2,7 +2,7 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - SININHO, RADAR E ALERTAS (COM IA PEDAGÓGICA)
+// MÓDULO NOTIFICAÇÕES - SININHO, RADAR E ALERTAS (COM IA PREDITIVA DE FATURAÇÃO)
 // =========================================================
 
 Object.assign(App, {
@@ -18,6 +18,8 @@ Object.assign(App, {
             const planejamentos = await App.api('/planejamentos');
             const estoque = await App.api('/estoques');
             const escola = await App.api('/escola');
+            // 🚀 Bónus de Inteligência: Puxamos os cursos para saber a Carga Horária Exata!
+            const cursos = await App.api('/cursos').catch(() => []); 
 
             if (Array.isArray(alunos)) {
                 alunos = alunos.filter(a => !a.status || a.status === 'Ativo');
@@ -66,6 +68,7 @@ Object.assign(App, {
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
             const dia = String(hoje.getDate()).padStart(2, '0');
             const hojeStr = `${ano}-${mes}-${dia}`;
+            const hojeTime = hoje.getTime();
             
             const amanha = new Date(hoje);
             amanha.setDate(amanha.getDate() + 1);
@@ -73,7 +76,6 @@ Object.assign(App, {
 
             if (escola && tipoUtilizador === 'Gestor') {
                 const planoAtual = escola.plano || 'Teste';
-                const hojeTime = hoje.getTime();
                 
                 let diasRestantes = 0;
                 
@@ -160,16 +162,18 @@ Object.assign(App, {
             }
 
             // ==========================================
-            // 🤖 INTELIGÊNCIA FINANCEIRA / PEDAGÓGICA (FATURAÇÃO PERDIDA)
+            // 🤖 IA PREDITIVA DE FATURAÇÃO PERDIDA
             // ==========================================
             if (tipoUtilizador !== 'Professor') {
                 if (Array.isArray(financeiro) && Array.isArray(alunos) && Array.isArray(planejamentos)) {
                     
+                    const trintaDiasAtras = new Date(hojeTime - 30 * 24 * 60 * 60 * 1000);
+
                     alunos.forEach(aluno => {
                         const plano = planejamentos.find(p => p.idAluno === aluno.id);
                         let dataUltimaMensalidade = null;
                         
-                        // 1. Descobrir a data da ÚLTIMA parcela do aluno
+                        // 1. Descobrir a data da ÚLTIMA parcela financeira gerada
                         financeiro.forEach(f => {
                             if (f.idAluno === aluno.id && f.status !== 'Cancelado' && (!f.idCarne || !f.idCarne.includes('VENDA'))) {
                                 if (!dataUltimaMensalidade || f.vencimento > dataUltimaMensalidade) {
@@ -178,37 +182,83 @@ Object.assign(App, {
                             }
                         });
 
-                        // Se o aluno tem um histórico financeiro, iniciamos o cruzamento
-                        if (dataUltimaMensalidade) {
+                        if (dataUltimaMensalidade && plano && plano.aulas) {
                             
-                            // A) Raio-X Financeiro
+                            // A) Raio-X Financeiro (O Gatilho do Mês Final)
                             const dataUltima = new Date(dataUltimaMensalidade);
-                            // Limpa a hora para calcular apenas os dias corretos
-                            const dataHojeLimpa = new Date(hojeStr); 
-                            
-                            const diffTempo = dataUltima.getTime() - dataHojeLimpa.getTime();
+                            const diffTempo = dataUltima.getTime() - hojeTime;
                             const diffDias = Math.ceil(diffTempo / (1000 * 3600 * 24));
                             
-                            // B) Raio-X Pedagógico
-                            let aulasPendentes = 0;
-                            if (plano && plano.aulas) {
-                                // Conta quantas aulas faltam ministrar (ou que o aluno faltou e terá de repor)
-                                aulasPendentes = plano.aulas.filter(a => !a.visto).length;
-                            }
+                            if (diffDias <= 30) {
+                                // B) Raio-X de Carga Horária do Curso (Cruza com o cadastro do curso do aluno)
+                                const cursoInfo = cursos.find(c => c.id === aluno.cursoId || c.nome === aluno.planoCurso);
+                                // Define a Carga Horária exigida. Se não achar no curso, soma 2h por cada aula planeada.
+                                const cargaHorariaTotal = cursoInfo && cursoInfo.cargaHoraria ? parseInt(cursoInfo.cargaHoraria) : (plano.aulas.length * 2);
 
-                            // C) O Match Inteligente: Se falta 1 mês ou menos para a última fatura, E ainda tem aulas para ter...
-                            if (diffDias <= 30 && aulasPendentes > 0 && tipoUtilizador === 'Gestor') {
-                                
-                                let tempoTexto = '';
-                                if (diffDias < 0) tempoTexto = `já venceu há ${Math.abs(diffDias)} dias`;
-                                else if (diffDias === 0) tempoTexto = `vence hoje`;
-                                else tempoTexto = `vence em ${diffDias} dias`;
+                                // C) Auditoria de Presenças vs Faltas
+                                let horasCumpridas = 0;
+                                let aulasNoUltimoMes = 0;
+                                let horasNoUltimoMes = 0;
+                                let dataUltimaAulaLogada = hojeTime;
 
-                                alertas.push({ 
-                                    icon: '⚠️', 
-                                    texto: `<b>Faturação Perdida!</b> A última mensalidade de <b>${App.escapeHTML(aluno.nome)}</b> ${tempoTexto}, mas o aluno ainda tem <b>${aulasPendentes} aula(s) pendente(s)</b>. Considere gerar parcela extra!`,
-                                    acao: "App.renderizarTela('mensalidades')"
+                                plano.aulas.forEach(aula => {
+                                    if (!aula.data) return;
+                                    
+                                    // Converte a data da aula
+                                    const partesData = aula.data.includes('/') ? aula.data.split('/') : null;
+                                    let dataAulaObj = partesData ? new Date(`${partesData[2]}-${partesData[1]}-${partesData[0]}`) : new Date(aula.data);
+                                    if(isNaN(dataAulaObj.getTime())) dataAulaObj = new Date();
+                                    
+                                    const duracaoAula = parseFloat(aula.duracao) || 2; // Assume 2h se não estiver especificado
+
+                                    if (aula.visto) { 
+                                        dataUltimaAulaLogada = Math.max(dataUltimaAulaLogada, dataAulaObj.getTime());
+                                        
+                                        // ⚠️ Filtro Rigoroso: Falta (Justificada ou Vermelha) NÃO conta como hora cumprida!
+                                        const isFalta = aula.status === 'Falta' || aula.status === 'Justificada' || aula.status === 'Faltou' || aula.presenca === false;
+                                        
+                                        if (!isFalta) {
+                                            horasCumpridas += duracaoAula;
+                                        }
+
+                                        // Ritmo Preditivo: Conta as aulas que o aluno ativamente agendou/participou no último mês
+                                        if (dataAulaObj >= trintaDiasAtras && dataAulaObj <= hojeTime) {
+                                            aulasNoUltimoMes++;
+                                            horasNoUltimoMes += duracaoAula; 
+                                        }
+                                    }
                                 });
+
+                                const horasFaltantes = cargaHorariaTotal - horasCumpridas;
+
+                                // D) O Alarme Preditivo: Se acabou o dinheiro, mas ainda faltam horas letivas!
+                                if (horasFaltantes > 0) {
+                                    
+                                    // Cálculo de Projeção: Como ele se comportou no último mês?
+                                    const ritmoHorasMensal = horasNoUltimoMes > 0 ? horasNoUltimoMes : 8; // Mínimo de 8h/mês se estiver parado
+                                    const duracaoMediaAula = aulasNoUltimoMes > 0 ? (horasNoUltimoMes / aulasNoUltimoMes) : 2;
+                                    
+                                    const aulasRestantesEstimadas = Math.ceil(horasFaltantes / duracaoMediaAula);
+                                    const mesesNecessarios = horasFaltantes / ritmoHorasMensal;
+                                    
+                                    // Data que ele efetivamente vai acabar o curso
+                                    const dataProjetada = new Date(dataUltimaAulaLogada);
+                                    dataProjetada.setDate(dataProjetada.getDate() + Math.ceil(mesesNecessarios * 30));
+                                    const dataProjStr = `${String(dataProjetada.getDate()).padStart(2, '0')}/${String(dataProjetada.getMonth() + 1).padStart(2, '0')}/${dataProjetada.getFullYear()}`;
+
+                                    // Renderiza o Texto Dinâmico
+                                    let tempoTexto = diffDias < 0 ? `já venceu há ${Math.abs(diffDias)} dias` : (diffDias === 0 ? `vence hoje` : `vence em ${diffDias} dias`);
+
+                                    alertas.push({ 
+                                        icon: '🎯', 
+                                        texto: `<div style="line-height:1.5;"><b>Auditoria Preditiva (Mensalidade Extra):</b><br>
+                                        A última mensalidade de <b style="color:#3498db;">${App.escapeHTML(aluno.nome)}</b> ${tempoTexto}.<br>
+                                        O curso exige <b>${cargaHorariaTotal}h</b>, mas o aluno cumpriu apenas <b>${horasCumpridas}h</b> devido a faltas ou reposições.<br>
+                                        Ainda faltam <b>${horasFaltantes}h</b> (aprox. ${aulasRestantesEstimadas} aulas). Pelo seu ritmo de assiduidade (${ritmoHorasMensal}h/mês), a formatação apenas acontecerá em <b style="color:#e74c3c;">${dataProjStr}</b>.<br>
+                                        <i>Recomendamos a geração de parcelas correspondentes ao período pendente!</i></div>`,
+                                        acao: "App.renderizarTela('mensalidades')"
+                                    });
+                                }
                             }
                         }
                     });
@@ -262,7 +312,7 @@ Object.assign(App, {
                 
 if (list) list.innerHTML = btnMarcarLidas + alertas.map(a => `
                     <div class="noti-item" style="cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#f1f2f6'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
-                        <span class="noti-icon">${a.icon}</span>
+                        <span class="noti-icon" style="font-size: 20px;">${a.icon}</span>
                         <div>${a.texto}</div>
                     </div>
                 `).join('');
@@ -273,7 +323,7 @@ if (list) list.innerHTML = btnMarcarLidas + alertas.map(a => `
         } catch (e) { console.error("Erro nas notificações", e); }
     },
 
-toggleNotificacoes: () => {
+    toggleNotificacoes: () => {
         const dropdown = document.getElementById('noti-dropdown');
         if (dropdown) dropdown.classList.toggle('active');
     },
@@ -293,10 +343,10 @@ toggleNotificacoes: () => {
         }
 
        await Promise.all(
-    naoLidas.map(n =>
-        App.api(`/sistema/notificacoes/lida/${n.id}`, 'PUT')
-    )
-);
+            naoLidas.map(n =>
+                App.api(`/sistema/notificacoes/lida/${n.id}`, 'PUT')
+            )
+        );
 
         App.showToast("Notificações marcadas como lidas.", "success");
         await App.verificarNotificacoes();
