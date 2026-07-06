@@ -118,7 +118,7 @@ Object.assign(App, {
         }
     },
 
-   init: async () => {
+    init: async () => {
         localStorage.removeItem('escola_tema'); 
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
@@ -136,8 +136,6 @@ Object.assign(App, {
         const bioId = localStorage.getItem('escola_bio_id');
 
         if (salvo) { 
-            // 🚀 MUDANÇA 1: Se já tem login salvo, entra DIRETO para o Dashboard!
-            // Removemos aquele "Ecrã Preto" que exigia o FaceID todas as vezes.
             App.usuario = JSON.parse(salvo); 
             if (typeof App.aplicarTemaSalvo === 'function') App.aplicarTemaSalvo();
 
@@ -146,25 +144,33 @@ Object.assign(App, {
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
 
-            document.getElementById('tela-login')?.style.setProperty('display', 'none');
-            document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
-            
-            const el = document.getElementById('user-name');
-            if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
-            
-            if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
-            if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
+            // 🚀 A MÁGICA DA BIOMETRIA
+            if (bioId && window.PublicKeyCredential) {
+                document.getElementById('tela-login').style.display = 'none'; 
+                document.getElementById('tela-sistema').style.display = 'none';
+                App.exibirTelaTouchBiometria(); 
+            } else { 
+                document.getElementById('tela-login')?.style.setProperty('display', 'none');
+                document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
+                
+                const el = document.getElementById('user-name');
+                if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+                
+                if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
+                if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
 
-            const hashSalvo = window.location.hash.replace('#', '');
-            if (hashSalvo && hashSalvo !== 'login') {
-                setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 10);
-            } else {
-                if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+                const hashSalvo = window.location.hash.replace('#', '');
+                if (hashSalvo && hashSalvo !== 'login') {
+                    setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 10);
+                } else {
+                    if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+                }
             }
 
-            // Validação silenciosa para garantir que o token ainda é válido
+            // 🛡️ VALIDAÇÃO SILENCIOSA EM BACKGROUND
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); 
+
                 if (!escola || escola.error) {
                     if (escola?.error === 'Sessão não encontrada.' || escola?.error === 'Sessão expirada.') {
                         App.showToast("Sessão expirada por segurança. Faça login novamente.", "warning");
@@ -183,17 +189,9 @@ Object.assign(App, {
             }, 1000); 
 
         } else { 
-            // 🚀 MUDANÇA 2: Se não está logado, vai para a tela de Login...
             document.documentElement.removeAttribute('style'); 
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
-            
-            // ... e dispara a biometria AUTOMATICAMENTE após 1 segundo!
-            if (bioId && window.PublicKeyCredential) {
-                setTimeout(() => {
-                    App.entrarComBiometria(true); // 'true' diz ao sistema para fazer isto sozinho
-                }, 1000);
-            }
         }
         
         const dataEl = document.getElementById('data-hoje'); 
@@ -552,19 +550,21 @@ Object.assign(App, {
         document.getElementById('tela-sistema').style.display = 'none'; 
     },
 
-  entrarComBiometria: async (isAuto = false) => {
+  entrarComBiometria: async () => {
         const loginGuardado = localStorage.getItem('escola_bio_id');
-        if (!loginGuardado) return; 
+        if (!loginGuardado) return; // Se não tiver a flag local, não faz nada
 
         try {
-            // Só mostra o ecrã preto de "A aguardar leitura..." se clicou no botão manualmente
-            if (!isAuto) App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
+            App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
             
+            // 1. Pede o Desafio ao Servidor
             const options = await App.api('/auth/biometria/gerar-login', 'POST', { login: loginGuardado });
             if (options.error) throw new Error(options.error);
 
+            // 2. O telemóvel acorda e resolve o desafio matemático com a biometria
             const respostaBio = await startAuthentication(options);
 
+            // 3. O servidor verifica e devolve o Login feito!
             const authResultado = await App.api('/auth/biometria/verificar-login', 'POST', { 
                 login: loginGuardado, 
                 respostaBio 
@@ -576,7 +576,7 @@ Object.assign(App, {
                 const telaTouch = document.getElementById('bio-touch-screen');
                 if (telaTouch) telaTouch.style.display = 'none';
                 
-                App.usuario = authResultado.usuario; 
+                App.usuario = authResultado.usuario; // Guarda a sessão
                 localStorage.setItem('usuario_logado', JSON.stringify(authResultado.usuario));
                 
                 App.showToast("🔓 Bem-vindo de volta!", "success");
@@ -587,14 +587,10 @@ Object.assign(App, {
         } catch (e) { 
             App.removerOverlayBiometria(); 
             console.error(e);
-            
-            // Se falhou no modo automático, não mostra erro vermelho. Fica silencioso e o botão verde está lá como backup!
-            if (!isAuto) {
-                if (e.name === 'NotAllowedError') {
-                    App.showToast("Toque na tela ou no sensor para entrar com Biometria.", "info");
-                } else {
-                    App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
-                }
+            if (e.name === 'NotAllowedError') {
+                App.showToast("Toque na tela ou no sensor para entrar com Biometria.", "info");
+            } else {
+                App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
             }
         }
     },
