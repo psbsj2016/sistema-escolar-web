@@ -550,15 +550,18 @@ Object.assign(App, {
         document.getElementById('tela-sistema').style.display = 'none'; 
     },
 
-  entrarComBiometria: async () => {
+    entrarComBiometria: async () => {
         const loginGuardado = localStorage.getItem('escola_bio_id');
         if (!loginGuardado) return; // Se não tiver a flag local, não faz nada
+
+        const { startAuthentication } = window.SimpleWebAuthnBrowser;
 
         try {
             App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
             
             // 1. Pede o Desafio ao Servidor
             const options = await App.api('/auth/biometria/gerar-login', 'POST', { login: loginGuardado });
+            
             if (options.error) throw new Error(options.error);
 
             // 2. O telemóvel acorda e resolve o desafio matemático com a biometria
