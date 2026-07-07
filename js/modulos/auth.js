@@ -749,7 +749,7 @@ if (Notification.permission === 'granted') {
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     
-    excluirUsuario: (id) => { 
+ excluirUsuario: (id) => { 
         App.abrirModalConfirmacao(
             "Apagar Utilizador?", 
             "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
@@ -758,7 +758,13 @@ if (Notification.permission === 'granted') {
                 try {
                     const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
                     if(res && res.error) { App.showToast(res.error, "error"); }
-                    else { App.showToast("Utilizador excluído.", "success"); App.renderizarMinhaConta(); }
+                    else { 
+                        App.showToast("Utilizador excluído.", "success"); 
+                        App.renderizarMinhaConta(); 
+                        
+                        // 👁️ O GATILHO DE AUDITORIA AQUI:
+                        App.registrarLog('EXCLUSÃO DE UTILIZADOR', `O utilizador com o ID ${id} foi removido do sistema.`);
+                    }
                 } catch(e) { App.showToast("Erro ao excluir.", "error"); }
                 finally {
                     document.body.style.cursor = 'default';
@@ -766,7 +772,85 @@ if (Notification.permission === 'granted') {
                 }
             }
         );
-    }
+    },
+
+    // =========================================================
+    // 👁️ MÓDULO DE AUDITORIA (Logs de Ações Críticas)
+    // =========================================================
+
+    // 1. O GATILHO: Esta função envia a ação para o servidor em total silêncio
+    registrarLog: async (acao, detalhes) => {
+        try {
+            // Envia para o servidor sem parar ou bloquear a tela do utilizador
+            await App.api('/auditoria', 'POST', { acao, detalhes });
+        } catch (e) {
+            console.warn("Aviso: Falha ao registar auditoria.", e);
+        }
+    },
+
+    // 2. A TELA: Onde o Diretor vê o relatório de tudo o que aconteceu
+    renderizarAuditoria: async () => {
+        if (typeof App.setTitulo === 'function') App.setTitulo("Logs de Auditoria"); 
+        const div = document.getElementById('app-content'); 
+        
+        div.innerHTML = `<div style="text-align:center; padding:40px;"><span style="font-size:40px;">⏳</span><br>A carregar o histórico de segurança...</div>`;
+
+        try {
+            const logs = await App.api('/auditoria', 'GET');
+
+            if (!logs || logs.length === 0) {
+                div.innerHTML = `
+                    <div style="text-align:center; padding:40px; background:#fff; border-radius:12px;">
+                        <span style="font-size:40px; display:block; margin-bottom:15px;">🛡️</span>
+                        <h3 style="color:#2c3e50;">Ambiente Seguro</h3>
+                        <p style="color:#666;">Ainda não existem registos de atividades críticas na sua instituição.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = `
+            <div class="card" style="overflow-x:auto;">
+                <h3 style="margin-top:0; color:#2c3e50;">Histórico de Atividades</h3>
+                <p style="font-size:12px; color:#666; margin-bottom:20px;">Os últimos 100 eventos realizados por membros da equipa.</p>
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f9f9f9; border-bottom:2px solid #eee;">
+                            <th style="padding:12px 10px; color:#333;">Data / Hora</th>
+                            <th style="padding:12px 10px; color:#333;">Utilizador</th>
+                            <th style="padding:12px 10px; color:#333;">Ação Realizada</th>
+                            <th style="padding:12px 10px; color:#333;">Detalhes Adicionais</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            logs.forEach(log => {
+                const dataFormatada = new Date(log.data).toLocaleString('pt-PT');
+                html += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px 10px; color:#666; white-space:nowrap;">${dataFormatada}</td>
+                        <td style="padding:12px 10px;">
+                            <strong>${log.usuarioNome}</strong><br>
+                            <span style="font-size:10px; background:#eee; padding:2px 6px; border-radius:4px;">${log.usuarioTipo}</span>
+                        </td>
+                        <td style="padding:12px 10px;">
+                            <span style="background:#e8f4f8; color:#2980b9; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:11px; text-transform:uppercase;">
+                                ${log.acao}
+                            </span>
+                        </td>
+                        <td style="padding:12px 10px; color:#555; max-width: 300px; line-height:1.4;">${log.detalhes}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+            div.innerHTML = html;
+
+        } catch (error) {
+            div.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Erro ao carregar o relatório de auditoria. Tente novamente.</div>`;
+        }
+    },
+
 });
 
 // =========================================================
