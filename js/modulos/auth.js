@@ -2,6 +2,7 @@ import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
 
 window.App = window.App || {};
 const App = window.App;
+window.App = App;
 
 // =========================================================
 // MÓDULO AUTH - LOGIN, LOGOUT, SENHA, BIOMETRIA E BLOQUEIO
@@ -258,6 +259,10 @@ Object.assign(App, {
                     App.mostrarTelaBloqueioLogin(escola);
                 } else {
                     App.entrarNoSistema();
+                    // Liga as notificações silenciosamente se o utilizador já tiver dado permissão antes
+if (Notification.permission === 'granted') {
+    App.configurarNotificacoesPush();
+}
                     const hashSalvo = window.location.hash.replace('#', '');
                     if (hashSalvo && hashSalvo !== 'login') {
                         setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 100);
@@ -478,6 +483,56 @@ Object.assign(App, {
                     </div>
                 </div>`; 
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
+    },
+
+   // 📡 ATIVADOR DE NOTIFICAÇÕES PUSH NATIIVAS
+    configurarNotificacoesPush: async () => {
+        // 1. Verifica se o telemóvel ou navegador suporta esta tecnologia
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return console.warn('Este dispositivo não suporta Notificações Push.');
+        }
+
+        try {
+            // 2. Pede autorização nativa ao ecrã do telemóvel (Sim/Não)
+            const permissao = await Notification.requestPermission();
+            if (permissao !== 'granted') {
+                return App.showToast("Permissão de notificações negada pelo utilizador.", "warning");
+            }
+
+            // App.showToast("⌛ A registar o dispositivo na nuvem...", "info");
+
+            // 3. Vai ao servidor buscar a Chave Pública VAPID que guardámos no Render
+            const chaveRes = await App.api('/push/public-key', 'GET');
+            if (!chaveRes || !chaveRes.publicKey) throw new Error("Chave VAPID não encontrada.");
+
+            // 4. Acorda o Service Worker e pede à Google/Apple para criarem a subscrição
+            const registroSW = await navigator.serviceWorker.ready;
+            
+            // Converte a chave texto em binário (exigência dos navegadores)
+            const padding = '='.repeat((4 - chaveRes.publicKey.length % 4) % 4);
+            const base64 = (chaveRes.publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+
+            const subscricao = await registroSW.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: outputArray
+            });
+
+            // 5. Envia o "contacto" gerado para o MongoDB através da nossa API
+            const resultadoBack = await App.api('/push/subscribe', 'POST', subscricao);
+
+            if (resultadoBack && resultadoBack.success) {
+                App.showToast("🔔 Notificações ativadas com sucesso neste aparelho!", "success");
+                
+                // 🔥 UX BÓNUS: Faz um disparo de teste imediato para o utilizador ver a magia!
+                setTimeout(() => { App.api('/push/teste', 'POST'); }, 1500);
+            }
+        } catch (error) {
+            console.error("Erro ao ativar Push:", error);
+            App.showToast("Falha ao ligar notificações com o servidor.", "error");
+        }
     },
 
    desativarBiometria: async () => {

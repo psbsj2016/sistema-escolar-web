@@ -22,7 +22,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // 🚀 O ESCUDO ANTI-SEQUESTRO: Diz ao PWA para NÃO atirar estas páginas de volta para o login (index.html)
+        // 🔥 O TRUQUE DE MESTRE: Injeta as nossas notificações sem estragar as suas rotas!
+        importScripts: ['/push-sw.js'], 
+        
+        // 🚀 O ESCUDO ANTI-SEQUESTRO
         navigateFallbackDenylist: [
           /^\/api/,
           /hub-matriculas\.html/,
@@ -58,7 +61,7 @@ export default defineConfig({
         matricula: resolve(__dirname, 'matricula.html'),
         hub: resolve(__dirname, 'hub-matriculas.html'),
         online: resolve(__dirname, 'matricula-online.html'),
-        workspace: resolve(__dirname, 'workspace.html') // 🚀 O Workspace voltou para casa!
+        workspace: resolve(__dirname, 'workspace.html') 
       }
     }
   }

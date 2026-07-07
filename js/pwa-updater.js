@@ -102,3 +102,4 @@ function mostrarAlertaAtualizacaoGlobal() {
         }, 800);
     });
 }
+
