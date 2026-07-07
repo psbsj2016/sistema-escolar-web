@@ -481,7 +481,8 @@ Object.assign(App, {
         try {
             // Limpa o fantasma no servidor para permitir configurações limpas no futuro
             const loginGuardado = localStorage.getItem('escola_bio_id') || (App.usuario ? App.usuario.login : null);
-            if (loginGuardado) await App.api('/biometria/remover', 'POST', { login: loginGuardado });
+            // 🔥 CORREÇÃO 404: Agora aponta para a rota certa /auth/biometria/remover
+            if (loginGuardado) await App.api('/auth/biometria/remover', 'POST', { login: loginGuardado });
         } catch (e) { console.warn(e); }
         
         localStorage.removeItem('escola_bio_id');
