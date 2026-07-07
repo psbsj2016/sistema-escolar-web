@@ -37,27 +37,74 @@ window.LISTA_FUNCIONALIDADES = [
 Object.assign(App, {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     
+    // =========================================================
+    // 📶 MÓDULO OFFLINE (Fila de Sincronização) - AS FUNÇÕES QUE FALTAVAM!
+    // =========================================================
+
+    adicionarFilaOffline: (rota, metodo, payload, tipoAcao) => {
+        let fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
+        
+        fila.push({ 
+            rota: rota, 
+            metodo: metodo, 
+            payload: payload, 
+            tipoAcao: tipoAcao, 
+            timestamp: Date.now() 
+        });
+        
+        localStorage.setItem('escola_fila_offline', JSON.stringify(fila));
+        App.showToast(`📶 Salvo offline: ${tipoAcao}. Sincronizará automaticamente.`, 'info');
+    },
+
+    processarFilaOffline: async () => {
+        let fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
+        if (fila.length === 0) return; 
+
+        App.showToast(`🔄 A sincronizar ${fila.length} dados pendentes com o servidor...`, 'info');
+        let filaRestante = [];
+
+        for (let item of fila) {
+            try {
+                const res = await App.api(item.rota, item.metodo, item.payload);
+                if (res && res.success) {
+                    console.log(`✅ Sincronizado: ${item.tipoAcao}`);
+                } else {
+                    console.warn(`⚠️ Sincronizado com aviso: ${item.tipoAcao}`, res);
+                }
+            } catch (e) {
+                filaRestante.push(item);
+            }
+        }
+
+        localStorage.setItem('escola_fila_offline', JSON.stringify(filaRestante));
+        
+        if (filaRestante.length === 0) {
+            App.showToast('✨ Todas as ações offline foram sincronizadas!', 'success');
+        } else {
+            App.showToast(`⚠️ Ainda faltam sincronizar ${filaRestante.length} ações.`, 'warning');
+        }
+    },
+    // =========================================================
+
     sanitizeHTML: (html) => {
-    if (!html) return '';
-
-    if (typeof DOMPurify === 'undefined') {
-        console.warn('DOMPurify não carregado. Usando escapeHTML como fallback.');
-        return App.escapeHTML(html);
-    }
-
-    return DOMPurify.sanitize(html, {
-        USE_PROFILES: { html: true },
-        ALLOWED_TAGS: [
-            'p', 'br', 'strong', 'b', 'em', 'i', 'u',
-            'h1', 'h2', 'h3', 'h4',
-            'ul', 'ol', 'li',
-            'div', 'span',
-            'table', 'thead', 'tbody', 'tr', 'td', 'th',
-            'blockquote'
-        ],
-        ALLOWED_ATTR: ['style', 'class']
-    });
-},    
+        if (!html) return '';
+        if (typeof DOMPurify === 'undefined') {
+            console.warn('DOMPurify não carregado. Usando escapeHTML como fallback.');
+            return App.escapeHTML(html);
+        }
+        return DOMPurify.sanitize(html, {
+            USE_PROFILES: { html: true },
+            ALLOWED_TAGS: [
+                'p', 'br', 'strong', 'b', 'em', 'i', 'u',
+                'h1', 'h2', 'h3', 'h4',
+                'ul', 'ol', 'li',
+                'div', 'span',
+                'table', 'thead', 'tbody', 'tr', 'td', 'th',
+                'blockquote'
+            ],
+            ALLOWED_ATTR: ['style', 'class']
+        });
+    },    
 
     motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
@@ -74,24 +121,16 @@ Object.assign(App, {
 
     criarElemento: (tag, classes = [], atributos = {}, texto = '') => {
         const elemento = document.createElement(tag);
-        
-        // Adiciona classes
         if (classes.length > 0) elemento.classList.add(...classes);
-        
-        // Adiciona atributos (id, type, etc.) e Eventos (onclick)
         for (const chave in atributos) {
-            // Se o atributo for um evento (ex: onClick), adicionamos o Listener de forma moderna
             if (chave.startsWith('on') && typeof atributos[chave] === 'function') {
-                const nomeEvento = chave.substring(2).toLowerCase(); // transforma 'onClick' em 'click'
+                const nomeEvento = chave.substring(2).toLowerCase(); 
                 elemento.addEventListener(nomeEvento, atributos[chave]);
             } else {
                 elemento.setAttribute(chave, atributos[chave]);
             }
         }
-        
-        // Adiciona o texto de forma 100% segura (não precisa do escapeHTML)
         if (texto !== '') elemento.textContent = texto; 
-        
         return elemento;
     },
 
@@ -130,39 +169,32 @@ Object.assign(App, {
         });
     },
 
-    // 🚀 LÓGICA DE BLOQUEIO DESTRUTIVA GERAL (30 DIAS E TESTE)
     verificarBloqueioGeral: (escola) => {
         if (!escola) return false;
         const plano = escola.plano || 'Teste';
-        
         if (plano === 'Bloqueado') return true;
 
         const dataHoje = new Date();
 
-        // 🚀 MÁGICA DO BLOQUEIO: Se for Teste, tranca a porta aos 7 dias SEM EXCEÇÃO!
         if (plano === 'Teste') {
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
             const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
             return diffDays >= 7;
         }
 
-        // Respeita a data de validade imposta no sistema (Planos Pagos)
         if (escola.dataExpiracao) {
             const dataVenc = new Date(escola.dataExpiracao);
             return dataHoje >= dataVenc;
         } else {
-            // Fallback para escolas que ainda não tem a data registrada
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
             const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
-            
             if (plano !== 'Premium' && diffDays >= 30) return true; 
         }
 
         return false;
     },
 
-   
-verificarLimites: async (tipo) => {
+    verificarLimites: async (tipo) => {
         const plano = App.getPlanoAtual();
         if (plano === 'Premium' || plano === 'Teste') return true; 
         
@@ -203,23 +235,17 @@ verificarLimites: async (tipo) => {
         return true;
     },
 
-   // =========================================================
+    // =========================================================
     // 🌐 MOTOR DE COMUNICAÇÃO (API) COM GUARDA-COSTAS SILENCIOSO
     // =========================================================
     api: async (endpoint, method = 'GET', body = null, silencioso = false) => {
         const headers = { 'Content-Type': 'application/json' };
-        const options = {
-            method,
-            headers,
-            credentials: 'include',
-            cache: 'no-store'
-        }; 
+        const options = { method, headers, credentials: 'include', cache: 'no-store' }; 
 
         if (body) options.body = JSON.stringify(body);
         
         const endpointLimpo = endpoint.replace(/^\/api/, '');
         const caminhoFinal = endpointLimpo.startsWith('/') ? endpointLimpo : `/${endpointLimpo}`;
-        
         let urlFinal = `/api${caminhoFinal}`;
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
@@ -228,6 +254,29 @@ verificarLimites: async (tipo) => {
             }
         }
         
+        // =========================================================
+        // 🛡️ ESCUDO OFFLINE GLOBAL (Interceta todas as falhas de rede)
+        // =========================================================
+        if (!navigator.onLine) {
+            if (['POST', 'PUT', 'DELETE'].includes(method.toUpperCase())) {
+                let tipoAcao = "Ação de Sistema";
+                if (endpoint.includes('chamada')) tipoAcao = "Registo de Presença";
+                else if (endpoint.includes('avaliacoes') || endpoint.includes('notas')) tipoAcao = "Lançamento de Notas";
+                else if (endpoint.includes('alunos')) tipoAcao = "Registo de Aluno";
+                else if (endpoint.includes('mensalidades') || endpoint.includes('financeiro')) tipoAcao = "Registo Financeiro";
+
+                if (typeof App.adicionarFilaOffline === 'function') {
+                    App.adicionarFilaOffline(endpoint, method, body, tipoAcao);
+                }
+
+                return { success: true, offline: true, message: "Salvo no telemóvel aguardando internet." };
+            } else {
+                if (!silencioso) App.showToast("Sem conexão para carregar dados novos.", "warning");
+                return { error: "Sem internet.", offline: true };
+            }
+        }
+        // =========================================================
+
         try {
             const response = await fetch(urlFinal, options);
             
@@ -235,7 +284,6 @@ verificarLimites: async (tipo) => {
                 const errorData = await response.json().catch(() => ({}));
                 const mensagemErro = errorData.error || `Erro no servidor (${response.status})`;
                 
-                // 🛡️ Se o modo não for silencioso e o PWA estiver maximizado, mostra erro!
                 if (!silencioso && document.visibilityState === 'visible') {
                     App.showToast(mensagemErro, "error");
                 }
@@ -253,7 +301,6 @@ verificarLimites: async (tipo) => {
         } catch (error) { 
             console.error(`❌ Falha na API [${method} ${urlFinal}]:`, error.message);
             
-            // 🧠 A MÁGICA: Se o utilizador minimizou a app (WhatsApp), ou se for F5 (silencioso) bloqueamos o erro vermelho!
             if (document.visibilityState === 'hidden' || silencioso) {
                 return method === 'GET' ? [] : { error: 'Rejeitado silenciosamente em background' };
             }
@@ -330,11 +377,9 @@ validarCadastroInst: async () => {
         }
 
         // 👇 A MÁGICA DA NAVEGAÇÃO ENTRA AQUI 👇
-        // Se a chamada não veio do botão "Voltar" do navegador, adicionamos o link na barra de endereços
         if (!veioDoHistorico && tela !== 'login' && tela !== 'inicio') {
             window.history.pushState({ tela: tela }, '', `#${tela}`);
         } else if (!veioDoHistorico && tela === 'inicio') {
-            // Se for a tela inicial, limpamos o hash para ficar limpo: sistemaptt.com.br/
             window.history.pushState({ tela: 'inicio' }, '', window.location.pathname);
         }
 
@@ -369,18 +414,15 @@ validarCadastroInst: async () => {
         const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
         const hojeTime = new Date().getTime();
         
-        // 🚀 A MÁGICA: Regra ABSOLUTA para o Plano Teste (Ignora a data do servidor)
         if (planoAtual === 'Teste') {
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao).getTime() : hojeTime;
             const diffTime = Math.abs(hojeTime - dataCriacao);
             diasRestantes = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
         } 
-        // 📅 Para planos pagos, respeita a data de expiração oficial
         else if (escola.dataExpiracao) {
             const diffTime = new Date(escola.dataExpiracao).getTime() - hojeTime;
             diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         } 
-        // Fallback antigo
         else if (escola.dataCriacao) {
             const diffTime = Math.abs(hojeTime - new Date(escola.dataCriacao).getTime());
             diasRestantes = 30 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -467,7 +509,6 @@ validarCadastroInst: async () => {
         setTimeout(() => { window.open(linkCheckout, '_blank'); }, 1500);
     },
 
-    // 🔓 RENOVAÇÃO INSTANTÂNEA DE 30 DIAS DENTRO DO SISTEMA
     ativarNovoPlano: async (event) => {
         if (event) event.preventDefault(); 
 
@@ -485,7 +526,6 @@ validarCadastroInst: async () => {
             const res = await App.api('/escola/validar-pin', 'POST', { pin: pin });
             let novoPlano = res && res.success ? res.plano : null;
 
-            // Se falhar na API, verifica as chaves manuais (fallback)
             if (!novoPlano) {
                 if (pin.includes('PRE')) novoPlano = 'Premium';
                 else if (pin.includes('ESS')) novoPlano = 'Essencial';
@@ -497,10 +537,9 @@ validarCadastroInst: async () => {
                 }
             }
 
-            // 🚀 O SEGREDO: GRAVAR A NOVA DATA DE VALIDADE NO BANCO DE DADOS OFICIAL
             const escolaAtual = await App.api('/escola') || {};
             const novaDataExp = new Date();
-            novaDataExp.setDate(novaDataExp.getDate() + 30); // Soma +30 dias ao dia de hoje
+            novaDataExp.setDate(novaDataExp.getDate() + 30); 
             
             await App.api('/escola', 'PUT', { 
                 ...escolaAtual, 
@@ -509,7 +548,6 @@ validarCadastroInst: async () => {
                 dataExpiracao: novaDataExp.toISOString() 
             });
 
-            // Atualiza o Cache Local
             localStorage.setItem(App.getTenantKey('escola_plano'), novoPlano);
             let perfilCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
             perfilCache.plano = novoPlano;
@@ -546,18 +584,15 @@ validarCadastroInst: async () => {
         const btnConfirm = document.querySelector('.btn-confirm');
         if(btnConfirm) btnConfirm.style.display = 'none'; 
 
-        // 🧠 Guardamos o contexto na memória global para navegar entre Ativo/Arquivado
         App.contextoFrequencia = { idAluno, nomeAluno };
         await App.renderizarFrequenciaView('ativo');
     },
 
-    // 🚀 NOVA FUNÇÃO: O MOTOR DO RELÓGIO (Ativos vs Arquivados)
     renderizarFrequenciaView: async (modo, idPlanoAlvo = null) => {
         const { idAluno, nomeAluno } = App.contextoFrequencia;
         const content = document.getElementById('modal-form-content');
 
         try {
-            // 🚀 MAGIA DA PERFORMANCE: CACHE DE MEMÓRIA
             if (!App.contextoFrequencia.dadosCache) {
                 const [chamadasFetch, planejamentosFetch] = await Promise.all([App.api('/chamadas'), App.api('/planejamentos')]);
                 App.contextoFrequencia.dadosCache = { chamadas: chamadasFetch, planejamentos: planejamentosFetch };
@@ -571,15 +606,12 @@ validarCadastroInst: async () => {
             const planosAtivos = planosAluno.filter(p => p.status !== 'Arquivado');
             const planosArquivados = planosAluno.filter(p => p.status === 'Arquivado');
 
-             // --- 🪄 GESTÃO DO RODAPÉ FIXO MÁGICO ---
             const btnCancelFixo = document.querySelector('#modal-overlay .btn-cancel');
             if (btnCancelFixo) {
                 const rodape = btnCancelFixo.parentNode;
                 
-                // 1. Limpar botões injetados anteriormente
                 document.querySelectorAll('.btn-modal-dinamico').forEach(b => b.remove());
                 
-                // 2. Garantir que se fechar o modal, os botões extra desaparecem
                 if (!btnCancelFixo.dataset.limpezaAtiva) {
                     const onclickOriginal = btnCancelFixo.onclick;
                     btnCancelFixo.onclick = function(e) {
@@ -589,7 +621,6 @@ validarCadastroInst: async () => {
                     btnCancelFixo.dataset.limpezaAtiva = "true";
                 }
 
-                // 🖨️ INJETAR BOTÃO IMPRIMIR NA FRENTE DO CANCELAR
                 if (modo === 'ativo' || modo === 'ver_arquivado') {
                     const btnPrint = document.createElement('button');
                     btnPrint.className = 'btn-modal-dinamico';
@@ -601,7 +632,6 @@ validarCadastroInst: async () => {
                     rodape.insertBefore(btnPrint, btnCancelFixo);
                 }
 
-                // 3. Injetar o botão correto com Efeitos Hover (UX) e Loading (ANTES DO CANCELAR)
                 if (modo === 'ativo' && planosArquivados.length > 0) {
                     const btnArq = document.createElement('button');
                     btnArq.className = 'btn-modal-dinamico';
@@ -1048,20 +1078,16 @@ validarCadastroInst: async () => {
     },
 
     filtrarTabelaReativa: () => {
-        // 1. Procuramos a barra de pesquisa e o container onde a tabela vai nascer
         const campoBusca = document.querySelector('input[placeholder*="Pesquisar"], #busca-tabela');
-        const container = document.getElementById('container-tabela'); // 🔥 O VILÃO ESTAVA AQUI! Faltava definir isto.
+        const container = document.getElementById('container-tabela'); 
         
-        // 2. O ESCUDO: Se o campo ou o container não estiverem no ecrã, paramos aqui.
         if (!campoBusca || !container) return; 
 
-        // 3. Se a API devolveu um erro (ex: sessão expirada), mostramos o erro verdadeiro!
         if (App.listaCache && App.listaCache.error) {
             container.innerHTML = `<p style="text-align:center; padding:30px; color:#e74c3c;"><b>Erro de Servidor:</b> ${App.escapeHTML(App.listaCache.error)}</p>`;
             return;
         }
 
-        // 4. Se tudo estiver bem, desenhamos a tabela
         const termo = campoBusca.value.toLowerCase();
         
         if (!Array.isArray(App.listaCache)) { 
@@ -1090,7 +1116,6 @@ validarCadastroInst: async () => {
             btn: (icone, cor, acao, title) => `<button class="btn-edit" style="background:${cor}; border:none; color:white; padding:6px 10px; border-radius:4px; cursor:pointer;" onclick="${acao}" title="${title}">${icone}</button>` 
         };
 
-        // 🟢 Caixa Mestra (Para marcar/desmarcar todos)
         const chkMaster = `<th style="width:40px; text-align:center; padding:15px; background:#f8f9fa; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckCadastros(this)" style="cursor:pointer; transform:scale(1.2);"></th>`;
 
         let cabecalho = '';
@@ -1103,9 +1128,8 @@ validarCadastroInst: async () => {
         const corpo = dados.map(item => {
             let celulas = '';
             
-            // 🟢 Caixa Individual de cada registo
             const chkRow = `<td style="text-align:center; padding:15px; border-bottom:1px solid #eee;"><input type="checkbox" class="chk-cadastro" value="${item.id}" style="cursor:pointer; transform:scale(1.2);"></td>`;
-            celulas += chkRow; // Insere no início da linha
+            celulas += chkRow; 
 
             if (tipo === 'aluno') { 
                 const statusAluno = item.status || 'Ativo';
@@ -1634,145 +1658,6 @@ validarCadastroInst: async () => {
         input.type = input.type === 'password' ? 'text' : 'password'; 
     },
 
-    renderizarMinhaConta: async () => {
-        App.setTitulo("Gestão de Usuários"); const div = document.getElementById('app-content'); App.idEdicaoUsuario = null; 
-        const meuLogin = App.usuario ? App.usuario.login : ''; const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
-        
-        const campoSenha = (id, label) => `<div class="input-group" style="position:relative;"><label>${label}</label><input type="password" id="${id}" style="width:100%; padding-right:40px;"><span onclick="App.toggleSenhaVisibilidade('${id}')" style="position:absolute; right:12px; top:32px; cursor:pointer; font-size:16px; opacity:0.6; user-select:none;" title="Mostrar/Ocultar Senha">👁️</span></div>`;
-
-        try { 
-            const usuariosResponse = await App.api('/usuarios'); 
-            const todosUsers = Array.isArray(usuariosResponse) ? usuariosResponse : []; 
-            const listaUsers = todosUsers.filter(u => u.id === App.usuario.id || String(u.donoId) === String(App.usuario.id));
-
-            div.innerHTML = `
-                <div style="display:flex; gap:30px; flex-wrap:wrap;">
-                    <div class="card" style="flex:1; height:fit-content; min-width:300px;">
-                        <h3>Meus Dados de Acesso</h3>
-                        <p style="font-size:12px; color:#666; margin-bottom:15px;">A senha atual é sempre obrigatória para salvar as alterações.</p>
-                        <div class="input-group"><label>E-mail Dono da Conta</label><input type="email" id="user-novo-email" value="${App.escapeHTML(meuEmail)}" placeholder="Ex: gestor@escola.com" style="width:100%; border-left: 4px solid #f39c12;"></div>
-                        <div class="input-group"><label>Login de Acesso</label><input type="text" id="user-novo-login" value="${App.escapeHTML(meuLogin)}" style="width:100%; border-left: 4px solid #3498db;"></div>
-                        ${campoSenha('user-senha-atual', 'Senha Atual (Obrigatória)')}
-                        ${campoSenha('user-nova-senha', 'Nova Senha (Opcional)')}
-                        ${campoSenha('user-conf-senha', 'Confirmar Nova Senha')}
-                        
-                        <button class="btn-primary" style="width:100%; margin-top:10px; justify-content:center;" onclick="App.atualizarMeusDados()">ATUALIZAR DADOS</button>
-
-                        <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                            <h4 style="margin: 0 0 10px 0; color: #333;">🔒 Segurança Avançada</h4>
-                            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Use o sensor de rosto (FaceID) ou impressão digital para entrar.</p>
-                            <button class="btn-primary" style="background: #27ae60; width: 100%; justify-content:center;" onclick="App.configurarBiometria()">👆 Ativar Biometria</button>
-                        </div>
-                    </div>
-                    <div class="card" style="flex:2; min-width:300px;">
-                        <h3>Equipe e Acessos</h3>
-                        <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px; border:1px solid #eee;">
-                            <h4 id="titulo-form-user" style="margin:0 0 15px 0; color:#2c3e50;">Novo Usuário</h4>
-                            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:15px;">
-                                <div class="input-group"><label>Nome</label><input id="new-nome" placeholder="Ex: Maria"></div>
-                                <div class="input-group"><label>Login</label><input id="new-login" placeholder="Ex: maria"></div>
-                                <div class="input-group"><label>Senha</label><input id="new-senha" type="password" placeholder="******"></div>
-                                <div class="input-group"><label>Permissão</label><select id="new-tipo"><option value="Gestor">Gestor</option><option value="Secretaria">Secretaria</option><option value="Professor">Professor</option></select></div>
-                            </div>
-                            <div style="text-align:right; margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
-                                <button id="btn-cancel-user" class="btn-cancel" onclick="App.cancelarEdicaoUsuario()" style="display:none; margin-top:0;">✖️ CANCELAR</button>
-                                <button id="btn-save-user" class="btn-primary" style="width:auto; margin-top:0;" onclick="App.salvarNovoUsuario()">CRIAR USUÁRIO</button>
-                            </div>
-                        </div>
-                        <div class="table-responsive-wrapper">
-                            <table style="width:100%; text-align:left; border-collapse:collapse;">
-                                <thead><tr><th style="padding-bottom:10px;">Nome</th><th style="padding-bottom:10px;">Login</th><th style="padding-bottom:10px;">Tipo</th><th style="text-align:right;">Ações</th></tr></thead>
-                                <tbody>${listaUsers.map(u => `<tr><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.nome)} ${u.isDono ? '👑' : ''}</td><td style="padding:10px 0; border-top:1px solid #eee;">${App.escapeHTML(u.login)}</td><td style="padding:10px 0; border-top:1px solid #eee;"><span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:11px;">${App.escapeHTML(u.tipo)}</span></td><td style="text-align:right; border-top:1px solid #eee;"><button class="btn-edit" onclick="App.preencherEdicaoUsuario('${u.id}', '${App.escapeHTML(u.nome)}', '${App.escapeHTML(u.login)}', '${App.escapeHTML(u.tipo)}')">✏️</button>${!u.isDono ? `<button class="btn-del" onclick="App.excluirUsuario('${u.id}')">🗑️</button>` : ''}</td></tr>`).join('')}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>`; 
-        } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
-    },
-
-    atualizarMeusDados: async () => { 
-        const novoLogin = document.getElementById('user-novo-login').value.trim(); 
-        const novoEmail = document.getElementById('user-novo-email').value.trim(); 
-        const atual = document.getElementById('user-senha-atual').value; 
-        const nova = document.getElementById('user-nova-senha').value; 
-        const conf = document.getElementById('user-conf-senha').value; 
-
-        if (!novoLogin) return App.showToast("O login não pode ficar em branco.", "error"); 
-        if (!atual) return App.showToast("Digite sua senha atual para autorizar as alterações.", "error"); 
-        if (nova && nova !== conf) return App.showToast("A nova senha e a confirmação não conferem.", "error"); 
-        
-        const btn = document.querySelector('button[onclick="App.atualizarMeusDados()"]'); const textoOriginal = btn.innerText; btn.innerText = "Atualizando... ⏳"; btn.disabled = true;
-
-        try {
-            const payload = { novoLogin: novoLogin, novoEmail: novoEmail, senhaAtual: atual }; if (nova) payload.novaSenha = nova; 
-            const resposta = await App.api('/usuarios/atualizar-conta', 'PUT', payload);
-            if (resposta && resposta.success) { App.showToast("Dados atualizados com sucesso! Faça login novamente.", "success"); setTimeout(() => App.logout(), 2500); } 
-            else { App.showToast(resposta.error || "Erro ao atualizar os dados.", "error"); }
-        } catch (e) { App.showToast("Erro de conexão.", "error"); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
-    },
-
-    salvarNovoUsuario: async () => {
-        const nome = document.getElementById('new-nome').value; const login = document.getElementById('new-login').value; const senha = document.getElementById('new-senha').value; const tipo = document.getElementById('new-tipo').value;
-        if(!nome || !login) return App.showToast("Preencha nome e login.", "error"); 
-        if(!App.idEdicaoUsuario && !senha) return App.showToast("Digite uma senha.", "error");
-
-        const payload = { nome, login, tipo }; if(senha) payload.senha = senha;
-        
-        if (!App.idEdicaoUsuario) { 
-            const podeCadastrar = await App.verificarLimites('usuario');
-            if (!podeCadastrar) return; 
-            payload.donoId = App.usuario.id; 
-        }
-
-        const btn = document.getElementById('btn-save-user'); 
-        const txtOriginal = btn ? btn.innerText : 'CRIAR USUÁRIO';
-        if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; } 
-        document.body.style.cursor = 'wait';
-
-        try {
-            let res;
-            if(App.idEdicaoUsuario) { 
-                res = await App.api(`/usuarios/${App.idEdicaoUsuario}`, 'PUT', payload); 
-            } else { 
-                res = await App.api('/usuarios', 'POST', payload); 
-            }
-
-            if (res && res.error) {
-                App.showToast(res.error, "error");
-            } else {
-                App.showToast(App.idEdicaoUsuario ? "Atualizado com sucesso!" : "Criado com sucesso!", "success");
-                App.renderizarMinhaConta();
-            }
-        } catch(e) { 
-            App.showToast("Erro crítico ao salvar.", "error"); 
-        } finally { 
-            if(btn) { btn.innerText = txtOriginal; btn.disabled = false; } 
-            document.body.style.cursor = 'default'; 
-        }
-    },
-
-    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
-    cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
-    
-excluirUsuario: (id) => { 
-        App.abrirModalConfirmacao(
-            "Apagar Utilizador?", 
-            "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
-            async (modal) => {
-                document.body.style.cursor = 'wait';
-                try {
-                    const res = await App.api(`/usuarios/${id}`, 'DELETE'); 
-                    if(res && res.error) { App.showToast(res.error, "error"); }
-                    else { App.showToast("Utilizador excluído.", "success"); App.renderizarMinhaConta(); }
-                } catch(e) { App.showToast("Erro ao excluir.", "error"); }
-                finally {
-                    document.body.style.cursor = 'default';
-                    modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300);
-                }
-            }
-        );
-    },
-
     renderizarBackup: () => { 
         App.setTitulo("Backup de Dados"); 
         const div = document.getElementById('app-content');
@@ -1930,11 +1815,9 @@ excluirUsuario: (id) => {
     iniciarArraste: (e) => {
         App.dragState.isDragging = true;
         
-        // Pega a posição inicial do clique (rato ou dedo)
         App.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         App.dragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-        // Proteção: Garante que o objeto existe antes de ler a posição
         App.configTemp = App.configTemp || {}; 
         let pos = App.configTemp.imagemPosicao || '50% 50%';
         let parts = pos.split(' ');
@@ -1944,7 +1827,6 @@ excluirUsuario: (id) => {
         const el = document.getElementById('preview-header-img');
         if(el) el.style.cursor = 'grabbing';
 
-        // Escuta os movimentos em todo o documento para não perder o rato se sair da div
         document.addEventListener('mousemove', App.arrastarImagem);
         document.addEventListener('mouseup', App.pararArraste);
         document.addEventListener('touchmove', App.arrastarImagem, { passive: false });
@@ -1953,33 +1835,27 @@ excluirUsuario: (id) => {
 
     arrastarImagem: (e) => {
         if (!App.dragState.isDragging) return;
-        e.preventDefault(); // Evita que a página faça scroll no telemóvel enquanto arrasta
+        e.preventDefault(); 
 
         const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
 
-        // Calcula a distância que o rato percorreu
         const dx = clientX - App.dragState.startX;
         const dy = clientY - App.dragState.startY;
 
-        // Sensibilidade. Valores menores deixam o movimento mais suave (ideal entre 0.1 e 0.3)
         const sensibilidade = 0.2;
 
         let newX = App.dragState.bgX - (dx * sensibilidade);
         let newY = App.dragState.bgY - (dy * sensibilidade);
 
-        // Bloqueia entre 0% e 100% para a imagem não fugir da div
         newX = Math.max(0, Math.min(100, newX));
         newY = Math.max(0, Math.min(100, newY));
 
-        // Guarda a nova posição
         App.configTemp.imagemPosicao = `${newX.toFixed(2)}% ${newY.toFixed(2)}%`;
 
-        // Aplica o movimento na tela em tempo real
         const el = document.getElementById('preview-header-img');
         if(el) el.style.backgroundPosition = App.configTemp.imagemPosicao;
 
-        // Atualiza a origem para o próximo frame de movimento ser contínuo
         App.dragState.startX = clientX;
         App.dragState.startY = clientY;
         App.dragState.bgX = newX;
@@ -1992,7 +1868,6 @@ excluirUsuario: (id) => {
             const el = document.getElementById('preview-header-img');
             if(el) el.style.cursor = 'grab';
 
-            // Limpa a memória libertando os eventos
             document.removeEventListener('mousemove', App.arrastarImagem);
             document.removeEventListener('mouseup', App.pararArraste);
             document.removeEventListener('touchmove', App.arrastarImagem);
@@ -2000,25 +1875,23 @@ excluirUsuario: (id) => {
         }
     }
 
-}); // <--- O OBJETO APP FECHA CORRETAMENTE AQUI!
+}); // <--- O OBJETO APP FECHA AQUI!
 
 // =========================================================
 // EVENTOS DE ARRANQUE E PWA
 // =========================================================
 document.addEventListener('DOMContentLoaded', App.init);
+
 // =========================================================
 // MOTOR DE NAVEGAÇÃO (BOTÕES VOLTAR / AVANÇAR DO NAVEGADOR)
 // =========================================================
 window.addEventListener('popstate', (event) => {
     if (App.usuario) {
-        // Lê o que está na barra de endereços agora (ex: financeiro)
         const telaDestino = window.location.hash.replace('#', '');
         
         if (telaDestino) {
-            // Chama a tela e passa 'true' para não criar um loop infinito no histórico
             App.renderizarTela(telaDestino, true);
         } else {
-            // Se não houver hash, é porque voltou à tela inicial
             if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
         }
     }
@@ -2034,30 +1907,45 @@ document.addEventListener('click', (e) => {
     }
 });
 
-
 // =========================================================
-// 📡 DETEÇÃO DE LIGAÇÃO (ONLINE / OFFLINE)
+// 📡 DETEÇÃO DE LIGAÇÃO E MOTOR OFFLINE (ONLINE / OFFLINE)
 // =========================================================
 
-// Ouvinte que dispara quando o dispositivo PERDE a internet
 window.addEventListener('offline', () => {
     const banner = document.getElementById('offline-banner');
-    if (banner) banner.style.display = 'block'; // Mostra o banner vermelho
-    
-    // Como você já tem um sistema de Toast no seu app.js, vamos usá-lo também!
+    if (banner) {
+        banner.style.display = 'block';
+        banner.innerHTML = '⚠️ Está sem internet. O sistema guardará os seus dados no aparelho até voltar a ligar-se.';
+    }
     if (typeof App.showToast === 'function') {
         App.showToast("Sem ligação à Internet!", "error");
     }
 });
 
-// Ouvinte que dispara quando o dispositivo RECUPERA a internet
 window.addEventListener('online', () => {
     const banner = document.getElementById('offline-banner');
-    if (banner) banner.style.display = 'none'; // Esconde o banner vermelho
+    if (banner) banner.style.display = 'none';
     
     if (typeof App.showToast === 'function') {
         App.showToast("Ligação à Internet restaurada!", "success");
     }
+
+    // 🔥 O GATILHO QUE FALTAVA: Manda o sistema despejar a mochila no servidor!
+    setTimeout(() => {
+        if (typeof App.processarFilaOffline === 'function') {
+            App.processarFilaOffline();
+        }
+    }, 2000);
+});
+
+// BÓNUS: Quando a app for aberta (recarregada), verifica logo se há pendências na mochila
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (navigator.onLine && typeof App.processarFilaOffline === 'function') {
+            const fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
+            if (fila.length > 0) App.processarFilaOffline();
+        }
+    }, 3000); 
 });
 
 let deferredPrompt; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) { installBanner.style.display = 'block'; } });

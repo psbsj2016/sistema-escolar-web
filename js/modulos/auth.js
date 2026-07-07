@@ -851,65 +851,6 @@ if (Notification.permission === 'granted') {
         }
     },
 
-// =========================================================
-    // 📶 MÓDULO OFFLINE (Fila de Sincronização)
-    // =========================================================
-
-    // 1. Guarda as ações na memória do telemóvel quando não há internet
-    adicionarFilaOffline: (rota, metodo, payload, tipoAcao) => {
-        let fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
-        
-        // Guarda o pedido na mochila (fila)
-        fila.push({ 
-            rota: rota, 
-            metodo: metodo, 
-            payload: payload, 
-            tipoAcao: tipoAcao, 
-            timestamp: Date.now() 
-        });
-        
-        localStorage.setItem('escola_fila_offline', JSON.stringify(fila));
-        App.showToast(`📶 Salvo offline: ${tipoAcao}. Sincronizará automaticamente.`, 'info');
-    },
-
-    // 2. Tenta enviar tudo para o servidor quando a internet voltar
-    processarFilaOffline: async () => {
-        let fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
-        if (fila.length === 0) return; // Se a mochila está vazia, não faz nada
-
-        App.showToast(`🔄 A sincronizar ${fila.length} dados pendentes com o servidor...`, 'info');
-        let filaRestante = [];
-
-        // Vamos tentar enviar um por um
-        for (let item of fila) {
-            try {
-                // Tenta chamar a API real no servidor
-                const res = await App.api(item.rota, item.metodo, item.payload);
-                
-                // Se o servidor respondeu (mesmo que com erro de validação), tiramos da fila
-                // para não ficar preso para sempre.
-                if (res && res.success) {
-                    console.log(`✅ Sincronizado: ${item.tipoAcao}`);
-                } else {
-                    console.warn(`⚠️ Sincronizado com aviso: ${item.tipoAcao}`, res);
-                }
-            } catch (e) {
-                // Se caiu no CATCH, é porque a internet falhou a meio do envio!
-                // Guardamos de volta na mochila para tentar mais tarde.
-                filaRestante.push(item);
-            }
-        }
-
-        // Atualiza a mochila só com os que falharam
-        localStorage.setItem('escola_fila_offline', JSON.stringify(filaRestante));
-        
-        if (filaRestante.length === 0) {
-            App.showToast('✨ Todas as ações offline foram sincronizadas!', 'success');
-        } else {
-            App.showToast(`⚠️ Ainda faltam sincronizar ${filaRestante.length} ações.`, 'warning');
-        }
-    },
-
 });
 
 // =========================================================
@@ -960,43 +901,4 @@ document.addEventListener('visibilitychange', () => {
             }
         }
     }
-});
-
-// =========================================================
-// 🌍 SENSORES DE REDE (ONLINE / OFFLINE)
-// =========================================================
-
-window.addEventListener('online', () => {
-    // A Internet voltou!
-    const banner = document.getElementById('offline-banner');
-    if (banner) banner.style.display = 'none';
-    
-    // Mostra um aviso simpático
-    App.showToast("🌐 Conexão restaurada!", "success");
-    
-    // Manda o sistema despejar a mochila no servidor!
-    setTimeout(() => {
-        if (typeof App.processarFilaOffline === 'function') {
-            App.processarFilaOffline();
-        }
-    }, 2000); // Espera 2 segundos para o sinal estabilizar
-});
-
-window.addEventListener('offline', () => {
-    // A Internet caiu!
-    const banner = document.getElementById('offline-banner');
-    if (banner) {
-        banner.style.display = 'block';
-        banner.innerHTML = '⚠️ Está sem internet. O sistema guardará os seus dados no aparelho até voltar a ligar-se.';
-    }
-});
-
-// BÓNUS: Quando a app for aberta (recarregada), verifica logo se há pendências na mochila
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        if (navigator.onLine && typeof App.processarFilaOffline === 'function') {
-            const fila = JSON.parse(localStorage.getItem('escola_fila_offline')) || [];
-            if (fila.length > 0) App.processarFilaOffline();
-        }
-    }, 3000); // Espera a tela carregar para não travar o ecrã inicial
 });
