@@ -135,9 +135,15 @@ Object.assign(App, {
         const salvo = localStorage.getItem('usuario_logado'); 
         const bioId = localStorage.getItem('escola_bio_id');
 
+        // 🚀 O SEU PEDIDO: Se ativou biometria, BLOQUEIA a app e pede o dedo/rosto imediatamente!
+        if (bioId && window.PublicKeyCredential) {
+            document.getElementById('tela-login').style.display = 'none'; 
+            document.getElementById('tela-sistema').style.display = 'none';
+            App.exibirTelaTouchBiometria(); 
+            return; // 🛑 Para aqui a execução. Ninguém entra sem clicar na biometria!
+        }
+
         if (salvo) { 
-            // 🚀 MUDANÇA 1: Se já tem login salvo, entra DIRETO para o Dashboard!
-            // Removemos aquele "Ecrã Preto" que exigia o FaceID todas as vezes.
             App.usuario = JSON.parse(salvo); 
             if (typeof App.aplicarTemaSalvo === 'function') App.aplicarTemaSalvo();
 
@@ -162,7 +168,6 @@ Object.assign(App, {
                 if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
             }
 
-            // Validação silenciosa para garantir que o token ainda é válido
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); 
                 if (!escola || escola.error) {
@@ -183,17 +188,9 @@ Object.assign(App, {
             }, 1000); 
 
         } else { 
-            // 🚀 MUDANÇA 2: Se não está logado, vai para a tela de Login...
             document.documentElement.removeAttribute('style'); 
             document.getElementById('tela-login').style.display = 'flex'; 
             document.getElementById('tela-sistema').style.display = 'none'; 
-            
-            // ... e dispara a biometria AUTOMATICAMENTE após 1 segundo!
-            if (bioId && window.PublicKeyCredential) {
-                setTimeout(() => {
-                    App.entrarComBiometria(true); // 'true' diz ao sistema para fazer isto sozinho
-                }, 1000);
-            }
         }
         
         const dataEl = document.getElementById('data-hoje'); 
@@ -480,9 +477,15 @@ Object.assign(App, {
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
 
-    desativarBiometria: () => {
+   desativarBiometria: async () => {
+        try {
+            // Limpa o fantasma no servidor para permitir configurações limpas no futuro
+            const loginGuardado = localStorage.getItem('escola_bio_id') || (App.usuario ? App.usuario.login : null);
+            if (loginGuardado) await App.api('/biometria/remover', 'POST', { login: loginGuardado });
+        } catch (e) { console.warn(e); }
+        
         localStorage.removeItem('escola_bio_id');
-        App.showToast("Acesso biométrico removido deste aparelho.", "success");
+        App.showToast("Acesso biométrico desativado.", "success");
         if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
     },
 
