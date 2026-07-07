@@ -118,7 +118,7 @@ Object.assign(App, {
         }
     },
 
-   init: async () => {
+  init: async () => {
         localStorage.removeItem('escola_tema'); 
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
@@ -135,12 +135,15 @@ Object.assign(App, {
         const salvo = localStorage.getItem('usuario_logado'); 
         const bioId = localStorage.getItem('escola_bio_id');
 
-        // 🚀 O SEU PEDIDO: Se ativou biometria, BLOQUEIA a app e pede o dedo/rosto imediatamente!
+        // 🚀 MUDANÇA 1: Se tem biometria, tranca tudo e DISPARA O SENSOR SOZINHO!
         if (bioId && window.PublicKeyCredential) {
             document.getElementById('tela-login').style.display = 'none'; 
             document.getElementById('tela-sistema').style.display = 'none';
             App.exibirTelaTouchBiometria(); 
-            return; // 🛑 Para aqui a execução. Ninguém entra sem clicar na biometria!
+            
+            // Dispara o leitor nativo meio segundo após a tela carregar
+            setTimeout(() => { App.entrarComBiometria(true); }, 500);
+            return; // 🛑 Ninguém passa daqui sem a biometria
         }
 
         if (salvo) { 
@@ -725,5 +728,38 @@ document.addEventListener('DOMContentLoaded', () => {
         // Bónus UX: Preenche o campo de e-mail automaticamente
         const inputUser = document.getElementById('login-user');
         if(inputUser) inputUser.value = loginBiometrico;
+    }
+});
+
+// =========================================================
+// 🛡️ MOTOR DE BLOQUEIO POR INATIVIDADE (BACKGROUND)
+// =========================================================
+document.addEventListener('visibilitychange', () => {
+    const bioId = localStorage.getItem('escola_bio_id');
+    if (!bioId || !window.PublicKeyCredential) return; // Só afeta quem tem biometria ativada
+
+    if (document.visibilityState === 'hidden') {
+        // A app foi minimizada. Guardamos a hora exata em que isso aconteceu.
+        localStorage.setItem('app_locked_timestamp', Date.now());
+    } else if (document.visibilityState === 'visible') {
+        // A app voltou a ser aberta. Quanto tempo passou?
+        const lockedTime = localStorage.getItem('app_locked_timestamp');
+        if (lockedTime) {
+            const tempoFora = Date.now() - parseInt(lockedTime);
+            
+            // ⏳ TEMPO LIMITE DE ESPERA (1 Minuto = 60.000 ms)
+            // Se quiser que bloqueie em 5 minutos mude para: 5 * 60 * 1000
+            // Se quiser bloqueio imediato (saiu e voltou tranca logo), mude para: 0
+            const limiteBloqueio = 60 * 1000; 
+            
+            if (tempoFora > limiteBloqueio) {
+                // 🔒 Tranca o sistema ocultando o painel principal!
+                document.getElementById('tela-sistema').style.display = 'none';
+                App.exibirTelaTouchBiometria();
+                
+                // 🚀 Dispara a leitura da digital/rosto imediatamente
+                setTimeout(() => { App.entrarComBiometria(true); }, 500);
+            }
+        }
     }
 });
