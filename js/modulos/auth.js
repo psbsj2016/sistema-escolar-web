@@ -258,16 +258,14 @@ Object.assign(App, {
                 if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
                     App.mostrarTelaBloqueioLogin(escola);
                 } else {
-                    App.entrarNoSistema();
-                    // Liga as notificações silenciosamente se o utilizador já tiver dado permissão antes
-if (Notification.permission === 'granted') {
-    App.configurarNotificacoesPush();
-}
-                    const hashSalvo = window.location.hash.replace('#', '');
-                    if (hashSalvo && hashSalvo !== 'login') {
-                        setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 100);
+                    // Liga as notificações silenciosamente
+                    if (Notification.permission === 'granted') {
+                        App.configurarNotificacoesPush();
                     }
                     App.showToast('Bem-vindo ao sistema!', 'success');
+                    
+                    // Vai chamar a função abaixo que já sabe para onde encaminhar!
+                    App.entrarNoSistema();
                 }
             } else { 
                 App.showToast(res.error || "Login ou senha incorretos", "error"); 
@@ -292,8 +290,20 @@ if (Notification.permission === 'granted') {
         if (typeof App.carregarDadosEscola === 'function') await App.carregarDadosEscola(true);
         
         const telaSistema = document.getElementById('tela-sistema');
-        if (telaSistema && telaSistema.style.display !== 'none' && !window.location.hash) {
-            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+        if (telaSistema && telaSistema.style.display !== 'none') {
+            
+            // 🔥 A MÁGICA DO ROTEAMENTO ACONTECE AQUI
+            const hashSalvo = window.location.hash.replace('#', '');
+            
+            // Se a pessoa tiver um destino na URL (como o #financeiro da notificação)
+            if (hashSalvo && hashSalvo !== 'login') {
+                setTimeout(() => { 
+                    if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); 
+                }, 100);
+            } else {
+                // Se a URL estiver limpa, vai para a tela de Início normal
+                if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+            }
         }
     },
 
