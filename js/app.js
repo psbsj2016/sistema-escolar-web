@@ -359,14 +359,16 @@ validarCadastroInst: async () => {
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
 },
     
-    // Adicionamos o parâmetro 'veioDoHistorico'
+   // Adicionamos o parâmetro 'veioDoHistorico'
     renderizarTela: async (tela, veioDoHistorico = false) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
         const tipoUtil = App.usuario ? App.usuario.tipo : 'Gestor';
-        const bloqueadoProf = ['mensalidades', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'financeiro', 'dossie', 'documentos', 'ficha', 'conta'];
+        
+        // 🛡️ Corrigido o bloqueio para incluir também o sinónimo 'financeiro'
+        const bloqueadoProf = ['mensalidades', 'financeiro', 'inadimplencia', 'configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'documentos', 'ficha', 'conta'];
         const bloqueadoSecr = ['configuracoes', 'aparencia', 'backup', 'plano', 'dossie', 'conta'];
 
         if (tipoUtil === 'Professor' && bloqueadoProf.includes(tela)) {
@@ -385,12 +387,13 @@ validarCadastroInst: async () => {
 
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
 
+        // 🔥 A CORREÇÃO ESTÁ AQUI: Adicionado os sinónimos (||) para o Roteador não se perder!
         if (tela === 'chamada') { App.setTitulo("Chamada"); App.renderizarChamadaPro(); }
-        else if (tela === 'avaliacoes') { App.setTitulo("Notas"); App.renderizarAvaliacoesPro(); }
+        else if (tela === 'avaliacoes' || tela === 'notas') { App.setTitulo("Notas"); App.renderizarAvaliacoesPro(); }
         else if (tela === 'calendario') { App.setTitulo("Calendário"); App.renderizarCalendarioPro(); }
         else if (tela === 'planejamento') { App.setTitulo("Planejamento"); App.renderizarPlanejamentoPro(); }
         else if (tela === 'boletins') { App.setTitulo("Boletim"); App.renderizarBoletimVisual(); }
-        else if (tela === 'mensalidades') { App.setTitulo("Financeiro"); App.renderizarFinanceiroPro(); }
+        else if (tela === 'mensalidades' || tela === 'financeiro') { App.setTitulo("Financeiro"); App.renderizarFinanceiroPro(); }
         else if (tela === 'inadimplencia') { App.setTitulo("Inadimplência"); App.renderizarInadimplencia(); } 
         else if (tela === 'configuracoes') { App.setTitulo("Configurações"); App.renderizarConfiguracoes(); }
         else if (tela === 'aparencia') { App.renderizarConfiguracoesAparencia(); } 
@@ -1893,6 +1896,18 @@ window.addEventListener('popstate', (event) => {
             App.renderizarTela(telaDestino, true);
         } else {
             if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+        }
+    }
+});
+
+// =========================================================
+// OUVINTE DE MUDANÇA DE TELA EXTERNA (NOTIFICAÇÕES PUSH)
+// =========================================================
+window.addEventListener('hashchange', () => {
+    if (App.usuario) {
+        const telaDestino = window.location.hash.replace('#', '');
+        if (telaDestino) {
+            App.renderizarTela(telaDestino, true);
         }
     }
 });
