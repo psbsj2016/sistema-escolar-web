@@ -35,20 +35,34 @@ self.addEventListener('push', (event) => {
     );
 });
 
+// 🚀 O que acontece quando o utilizador CLICA na Notificação?
 self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
+    event.notification.close(); // Fecha o balão da notificação
 
-    const urlParaAbrir = event.notification.data?.url || '/';
+    // 🔥 A CORREÇÃO: Transforma o link relativo num link de internet completo!
+    // Pega o '/#financeiro' e transforma em 'https://sistemaptt.com.br/#financeiro'
+    const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin).href;
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            
+            // 1. Se a aplicação JÁ ESTIVER ABERTA em algum lugar (minimizada ou não)
             for (let client of windowClients) {
-                if (client.url === urlParaAbrir && 'focus' in client) {
-                    return client.focus();
+                // Se a janela pertencer ao nosso sistema
+                if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+                    client.focus(); // Traz a app para a frente do ecrã
+                    
+                    // E FORÇA a app a navegar para a tela que a notificação mandou!
+                    if (client.url !== targetUrl) {
+                        return client.navigate(targetUrl);
+                    }
+                    return;
                 }
             }
+            
+            // 2. Se a aplicação estiver TOTALMENTE FECHADA
             if (clients.openWindow) {
-                return clients.openWindow(urlParaAbrir);
+                return clients.openWindow(targetUrl);
             }
         })
     );
