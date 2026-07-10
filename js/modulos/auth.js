@@ -119,7 +119,7 @@ Object.assign(App, {
         }
     },
 
-  init: async () => {
+    init: async () => {
         localStorage.removeItem('escola_tema'); 
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
@@ -136,15 +136,14 @@ Object.assign(App, {
         const salvo = localStorage.getItem('usuario_logado'); 
         const bioId = localStorage.getItem('escola_bio_id');
 
-        // 🚀 MUDANÇA 1: Se tem biometria, tranca tudo e DISPARA O SENSOR SOZINHO!
+        // 🚀 MUDANÇA 1: Disparo Automático Instantâneo ao Abrir o App
         if (bioId && window.PublicKeyCredential) {
             document.getElementById('tela-login').style.display = 'none'; 
             document.getElementById('tela-sistema').style.display = 'none';
-            App.exibirTelaTouchBiometria(); 
             
-            // Dispara o leitor nativo meio segundo após a tela carregar
-            setTimeout(() => { App.entrarComBiometria(true); }, 500);
-            return; // 🛑 Ninguém passa daqui sem a biometria
+            // Removida a tela intermédia de Touch. Dispara direto o leitor!
+            setTimeout(() => { App.entrarComBiometria(true); }, 200);
+            return; 
         }
 
         if (salvo) { 
@@ -258,14 +257,15 @@ Object.assign(App, {
                 if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
                     App.mostrarTelaBloqueioLogin(escola);
                 } else {
-                    // Liga as notificações silenciosamente
+                    App.entrarNoSistema();
                     if (Notification.permission === 'granted') {
                         App.configurarNotificacoesPush();
                     }
+                    const hashSalvo = window.location.hash.replace('#', '');
+                    if (hashSalvo && hashSalvo !== 'login') {
+                        setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 100);
+                    }
                     App.showToast('Bem-vindo ao sistema!', 'success');
-                    
-                    // Vai chamar a função abaixo que já sabe para onde encaminhar!
-                    App.entrarNoSistema();
                 }
             } else { 
                 App.showToast(res.error || "Login ou senha incorretos", "error"); 
@@ -290,20 +290,8 @@ Object.assign(App, {
         if (typeof App.carregarDadosEscola === 'function') await App.carregarDadosEscola(true);
         
         const telaSistema = document.getElementById('tela-sistema');
-        if (telaSistema && telaSistema.style.display !== 'none') {
-            
-            // 🔥 A MÁGICA DO ROTEAMENTO ACONTECE AQUI
-            const hashSalvo = window.location.hash.replace('#', '');
-            
-            // Se a pessoa tiver um destino na URL (como o #financeiro da notificação)
-            if (hashSalvo && hashSalvo !== 'login') {
-                setTimeout(() => { 
-                    if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); 
-                }, 100);
-            } else {
-                // Se a URL estiver limpa, vai para a tela de Início normal
-                if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
-            }
+        if (telaSistema && telaSistema.style.display !== 'none' && !window.location.hash) {
+            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
         }
     },
 
@@ -497,28 +485,21 @@ Object.assign(App, {
 
    // 📡 ATIVADOR DE NOTIFICAÇÕES PUSH NATIIVAS
     configurarNotificacoesPush: async () => {
-        // 1. Verifica se o telemóvel ou navegador suporta esta tecnologia
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
             return console.warn('Este dispositivo não suporta Notificações Push.');
         }
 
         try {
-            // 2. Pede autorização nativa ao ecrã do telemóvel (Sim/Não)
             const permissao = await Notification.requestPermission();
             if (permissao !== 'granted') {
                 return App.showToast("Permissão de notificações negada pelo utilizador.", "warning");
             }
 
-            // App.showToast("⌛ A registar o dispositivo na nuvem...", "info");
-
-            // 3. Vai ao servidor buscar a Chave Pública VAPID que guardámos no Render
             const chaveRes = await App.api('/push/public-key', 'GET');
             if (!chaveRes || !chaveRes.publicKey) throw new Error("Chave VAPID não encontrada.");
 
-            // 4. Acorda o Service Worker e pede à Google/Apple para criarem a subscrição
             const registroSW = await navigator.serviceWorker.ready;
             
-            // Converte a chave texto em binário (exigência dos navegadores)
             const padding = '='.repeat((4 - chaveRes.publicKey.length % 4) % 4);
             const base64 = (chaveRes.publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
@@ -530,13 +511,10 @@ Object.assign(App, {
                 applicationServerKey: outputArray
             });
 
-            // 5. Envia o "contacto" gerado para o MongoDB através da nossa API
             const resultadoBack = await App.api('/push/subscribe', 'POST', subscricao);
 
             if (resultadoBack && resultadoBack.success) {
                 App.showToast("🔔 Notificações ativadas com sucesso neste aparelho!", "success");
-                
-                // 🔥 UX BÓNUS: Faz um disparo de teste imediato para o utilizador ver a magia!
                 setTimeout(() => { App.api('/push/teste', 'POST'); }, 1500);
             }
         } catch (error) {
@@ -547,9 +525,7 @@ Object.assign(App, {
 
    desativarBiometria: async () => {
         try {
-            // Limpa o fantasma no servidor para permitir configurações limpas no futuro
             const loginGuardado = localStorage.getItem('escola_bio_id') || (App.usuario ? App.usuario.login : null);
-            // 🔥 CORREÇÃO 404: Agora aponta para a rota certa /auth/biometria/remover
             if (loginGuardado) await App.api('/auth/biometria/remover', 'POST', { login: loginGuardado });
         } catch (e) { console.warn(e); }
         
@@ -558,18 +534,17 @@ Object.assign(App, {
         if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta();
     },
 
+    // 🚀 AQUI CONFIGURA A BIOMETRIA PELA PRIMEIRA VEZ
     configurarBiometria: async () => {
         try {
+            // Este overlay faz sentido manter porque é a hora de ENSINAR/CONFIGURAR o utilizador
             App.exibirOverlayBiometria("Configurar Acesso", "A aguardar a leitura do seu sensor...");
             
-            // 1. Pedimos ao servidor as opções criptográficas
             const options = await App.api('/auth/biometria/gerar-registo', 'POST', { login: App.usuario.login });
             if (options.error) throw new Error(options.error);
 
-            // 2. O telemóvel acorda o FaceID/TouchID nativo
             const respostaBio = await startRegistration(options);
 
-            // 3. Enviamos a resposta do telemóvel para o servidor validar
             const verificacao = await App.api('/auth/biometria/verificar-registo', 'POST', { 
                 login: App.usuario.login, 
                 respostaBio 
@@ -590,6 +565,7 @@ Object.assign(App, {
         }
     },
 
+    // O fallback que aparece caso o navegador exija um toque antes de liberar a biometria
     exibirTelaTouchBiometria: () => {
         let tela = document.getElementById('bio-touch-screen');
         if (!tela) {
@@ -599,7 +575,7 @@ Object.assign(App, {
             tela.innerHTML = `
                 <div style="font-size: 70px; margin-bottom: 20px; animation: pulse 2s infinite;">👆</div>
                 <h2 style="margin:0 0 10px 0; font-size:22px; text-align:center;">App Bloqueado</h2>
-                <p style="opacity:0.8; margin:0 0 40px 0; font-size:14px; text-align:center; padding: 0 20px;">Toque em qualquer lugar da tela<br>para usar o FaceID / Digital.</p>
+                <p style="opacity:0.8; margin:0 0 40px 0; font-size:14px; text-align:center; padding: 0 20px;">Toque na tela para usar o FaceID / Digital.</p>
                 <button style="padding:12px 25px; background:transparent; border:1px solid rgba(255,255,255,0.4); color:white; border-radius:8px; font-size:14px; z-index: 100000;" onclick="App.cancelarTouchBiometria(event)">Usar Senha Tradicional</button>
                 <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }</style>
             `;
@@ -609,7 +585,7 @@ Object.assign(App, {
         
         tela.onclick = (e) => {
             if(e.target.tagName !== 'BUTTON') {
-                App.entrarComBiometria();
+                App.entrarComBiometria(true); // tenta novamente, agora com o clique feito
             }
         };
     },
@@ -624,17 +600,18 @@ Object.assign(App, {
         document.getElementById('tela-sistema').style.display = 'none'; 
     },
 
+    // 🚀 AQUI É O MOTOR DE ENTRADA DIÁRIO DA BIOMETRIA (Sem telas de loading pretas)
     entrarComBiometria: async (isAuto = false) => {
         const loginGuardado = localStorage.getItem('escola_bio_id');
         if (!loginGuardado) return; 
 
         try {
-            // Só mostra o ecrã preto de "A aguardar leitura..." se clicou no botão manualmente
-            if (!isAuto) App.exibirOverlayBiometria("Autenticação", "A aguardar a leitura do sensor...");
+            // Removido App.exibirOverlayBiometria! A chamada vai direta para a API e pro leitor do telemóvel.
             
             const options = await App.api('/auth/biometria/gerar-login', 'POST', { login: loginGuardado });
             if (options.error) throw new Error(options.error);
 
+            // O navegador chama o leitor nativo na hora
             const respostaBio = await startAuthentication(options);
 
             const authResultado = await App.api('/auth/biometria/verificar-login', 'POST', { 
@@ -643,8 +620,7 @@ Object.assign(App, {
             });
 
             if (authResultado && authResultado.success) {
-                App.removerOverlayBiometria();
-                
+                // Remove qualquer tela de bloqueio (se existia)
                 const telaTouch = document.getElementById('bio-touch-screen');
                 if (telaTouch) telaTouch.style.display = 'none';
                 
@@ -657,20 +633,20 @@ Object.assign(App, {
                 throw new Error("Credenciais recusadas pelo servidor.");
             }
         } catch (e) { 
-            App.removerOverlayBiometria(); 
-            console.error(e);
+            console.error("Biometria bloqueada ou falhou:", e);
             
-            // Se falhou no modo automático, não mostra erro vermelho. Fica silencioso e o botão verde está lá como backup!
-            if (!isAuto) {
-                if (e.name === 'NotAllowedError') {
-                    App.showToast("Toque na tela ou no sensor para entrar com Biometria.", "info");
-                } else {
-                    App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
-                }
+            // 🛡️ PROTEÇÃO DO NAVEGADOR (User Gesture Requirement)
+            // Se a Apple ou Google não permitirem abrir o sensor porque o utilizador ainda não tocou no ecrã,
+            // atiramos o utilizador para a tela "👆 Toque para desbloquear", em vez de cancelar.
+            if (e.name === 'NotAllowedError' || e.message.includes('user activation')) {
+                App.exibirTelaTouchBiometria();
+            } else if (!isAuto) {
+                App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
             }
         }
     },
 
+    // Esta função foi mantida APENAS para a CONFIGURAÇÃO inicial (para o ecrã ficar bonito ao registar)
     exibirOverlayBiometria: (titulo, sub) => {
         let overlay = document.getElementById('bio-overlay-premium');
         if (!overlay) {
@@ -759,7 +735,7 @@ Object.assign(App, {
     preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
     cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
     
- excluirUsuario: (id) => { 
+excluirUsuario: (id) => { 
         App.abrirModalConfirmacao(
             "Apagar Utilizador?", 
             "Deseja remover o acesso deste membro da equipe? A ação não pode ser desfeita.", 
@@ -867,14 +843,13 @@ Object.assign(App, {
 // 👆 DETETOR AUTOMÁTICO DE BIOMETRIA NO LOGIN
 // =========================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Se o dispositivo já tiver gravado um acesso biométrico, mostramos o botão verde!
+    // Mantemos o botão visível caso o utilizador cancele a biometria automática e queira tentar outra vez manualmente
     const loginBiometrico = localStorage.getItem('escola_bio_id');
     const btnBio = document.getElementById('btn-biometria');
     
     if (loginBiometrico && btnBio) {
-        btnBio.style.display = 'flex'; // Faz a mágica de mostrar o botão
+        btnBio.style.display = 'flex'; 
         
-        // Bónus UX: Preenche o campo de e-mail automaticamente
         const inputUser = document.getElementById('login-user');
         if(inputUser) inputUser.value = loginBiometrico;
     }
@@ -888,26 +863,23 @@ document.addEventListener('visibilitychange', () => {
     if (!bioId || !window.PublicKeyCredential) return; // Só afeta quem tem biometria ativada
 
     if (document.visibilityState === 'hidden') {
-        // A app foi minimizada. Guardamos a hora exata em que isso aconteceu.
+        // A app foi minimizada
         localStorage.setItem('app_locked_timestamp', Date.now());
     } else if (document.visibilityState === 'visible') {
-        // A app voltou a ser aberta. Quanto tempo passou?
+        // A app voltou a ser aberta
         const lockedTime = localStorage.getItem('app_locked_timestamp');
         if (lockedTime) {
             const tempoFora = Date.now() - parseInt(lockedTime);
             
             // ⏳ TEMPO LIMITE DE ESPERA (1 Minuto = 60.000 ms)
-            // Se quiser que bloqueie em 5 minutos mude para: 5 * 60 * 1000
-            // Se quiser bloqueio imediato (saiu e voltou tranca logo), mude para: 0
             const limiteBloqueio = 60 * 1000; 
             
             if (tempoFora > limiteBloqueio) {
                 // 🔒 Tranca o sistema ocultando o painel principal!
                 document.getElementById('tela-sistema').style.display = 'none';
-                App.exibirTelaTouchBiometria();
                 
-                // 🚀 Dispara a leitura da digital/rosto imediatamente
-                setTimeout(() => { App.entrarComBiometria(true); }, 500);
+                // 🚀 MUDANÇA: Dispara direto o leitor nativo sem tela de toque prévia
+                setTimeout(() => { App.entrarComBiometria(true); }, 300);
             }
         }
     }
