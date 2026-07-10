@@ -565,27 +565,46 @@ Object.assign(App, {
         }
     },
 
-    // O fallback que aparece caso o navegador exija um toque antes de liberar a biometria
+   // O ecrã que recebe o primeiro toque obrigatório da Apple/Google
     exibirTelaTouchBiometria: () => {
         let tela = document.getElementById('bio-touch-screen');
         if (!tela) {
             tela = document.createElement('div');
             tela.id = 'bio-touch-screen';
-            tela.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:#2c3e50; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; cursor:pointer; color:white; transition: opacity 0.3s;';
+            // Visual Premium: Fundo com degradê moderno e elegante
+            tela.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99999; cursor:pointer; color:white; transition: opacity 0.3s;';
             tela.innerHTML = `
-                <div style="font-size: 70px; margin-bottom: 20px; animation: pulse 2s infinite;">👆</div>
-                <h2 style="margin:0 0 10px 0; font-size:22px; text-align:center;">App Bloqueado</h2>
-                <p style="opacity:0.8; margin:0 0 40px 0; font-size:14px; text-align:center; padding: 0 20px;">Toque na tela para usar o FaceID / Digital.</p>
-                <button style="padding:12px 25px; background:transparent; border:1px solid rgba(255,255,255,0.4); color:white; border-radius:8px; font-size:14px; z-index: 100000;" onclick="App.cancelarTouchBiometria(event)">Usar Senha Tradicional</button>
-                <style>@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }</style>
+                <div style="width: 90px; height: 90px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: pulseBio 2s infinite;">
+                    <span style="font-size: 45px;">🛡️</span>
+                </div>
+                <h2 id="bio-tela-titulo" style="margin:0 0 10px 0; font-size:24px; font-weight:700; letter-spacing: 1px;">Bem-vindo de volta!</h2>
+                <p id="bio-tela-sub" style="opacity:0.9; margin:0 0 40px 0; font-size:15px; text-align:center; padding: 0 20px; font-weight:300;">Toque em qualquer lugar da tela<br>para aceder com FaceID / Digital.</p>
+                
+                <button style="padding:10px 20px; background:rgba(0,0,0,0.2); border:none; color:rgba(255,255,255,0.7); border-radius:20px; font-size:12px; z-index: 100000; transition:0.2s;" onclick="App.cancelarTouchBiometria(event)">Aceder com Senha</button>
+                <style>
+                    @keyframes pulseBio { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.3); } 70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255,255,255,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+                </style>
             `;
             document.body.appendChild(tela);
         }
+        
+        // Garante que o texto volta ao normal todas as vezes que a tela abre
+        const titulo = document.getElementById('bio-tela-titulo');
+        const sub = document.getElementById('bio-tela-sub');
+        if(titulo) titulo.innerText = "Bem-vindo de volta!";
+        if(sub) sub.innerHTML = "Toque em qualquer lugar da tela<br>para aceder com FaceID / Digital.";
+        
         tela.style.display = 'flex';
         
+        // O TOQUE MÁGICO: Cumpre a regra de segurança e aciona o sensor!
         tela.onclick = (e) => {
             if(e.target.tagName !== 'BUTTON') {
-                App.entrarComBiometria(true); // tenta novamente, agora com o clique feito
+                // Dá feedback visual instantâneo ao utilizador
+                if(titulo) titulo.innerText = "A iniciar sensor...";
+                if(sub) sub.innerHTML = "Aguarde um momento.";
+                
+                // Dispara a leitura biométrica
+                App.entrarComBiometria(true);
             }
         };
     },
