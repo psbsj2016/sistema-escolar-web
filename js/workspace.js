@@ -217,7 +217,14 @@ Object.assign(Workspace, {
         btn.disabled = true;
 
         try {
-            const res = await Workspace.api('/auth/login', 'POST', { login: login, senha: pass, deviceId: 'ws_web' });
+            // 🔥 MUDANÇA AQUI: Adicionamos a flag { sistema: 'workspace' }
+            const res = await Workspace.api('/auth/login', 'POST', { 
+                login: login, 
+                senha: pass, 
+                deviceId: 'ws_web', 
+                sistema: 'workspace' 
+            });
+            
             if(res && res.success) {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(res.usuario));
                 Workspace.init(); 
