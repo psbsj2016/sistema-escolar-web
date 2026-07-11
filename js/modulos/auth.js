@@ -119,7 +119,7 @@ Object.assign(App, {
         }
     },
 
-    init: async () => {
+  init: async () => {
         localStorage.removeItem('escola_tema'); 
         localStorage.removeItem('escola_atalhos'); 
         localStorage.removeItem('escola_perfil');
@@ -136,13 +136,14 @@ Object.assign(App, {
         const salvo = localStorage.getItem('usuario_logado'); 
         const bioId = localStorage.getItem('escola_bio_id');
 
-        // 🚀 MUDANÇA 1: Disparo Automático Instantâneo ao Abrir o App
+        // 🚀 MUDANÇA: Disparo Agressivo "Zero Clicks"
         if (bioId && window.PublicKeyCredential) {
             document.getElementById('tela-login').style.display = 'none'; 
             document.getElementById('tela-sistema').style.display = 'none';
             
-            // Removida a tela intermédia de Touch. Dispara direto o leitor!
-            setTimeout(() => { App.entrarComBiometria(true); }, 200);
+            // Removemos o setTimeout. O sistema tenta acionar o leitor do telemóvel
+            // no exato milissegundo em que a DOM existe na memória.
+            App.entrarComBiometria(true);
             return; 
         }
 
