@@ -9,16 +9,13 @@ Workspace.Alertas = {
         console.log("🔔 Motor de Alertas: Persistência Individual em Tempo Real Ativada.");
         Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
-        
-        // Inicializa a interface (bolinha e gaveta)
         Workspace.Alertas.atualizarInterface();
         
-        // Espera o usuário carregar antes de iniciar o radar
         const aguardarUsuario = setInterval(() => {
             if (Workspace.usuario && Workspace.usuario.nome) {
                 clearInterval(aguardarUsuario);
                 Workspace.Alertas.buscarNotificacoes();
-                Workspace.Alertas.radar = setInterval(Workspace.Alertas.buscarNotificacoes, 10000); // Batimento a cada 10s
+                Workspace.Alertas.radar = setInterval(Workspace.Alertas.buscarNotificacoes, 10000); 
             }
         }, 1000);
     },
@@ -33,7 +30,6 @@ Workspace.Alertas = {
             .ws-noti-item.riscando { animation: fadeOutRight 0.3s forwards; pointer-events: none; }
             .ws-noti-close { background: transparent; border: none; color: #cbd5e1; cursor: pointer; font-size: 16px; padding: 2px 8px; margin-left: auto; transition: color 0.2s; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
             .ws-noti-close:hover { color: #e74c3c; background: #fdf2f2; }
-            
             @keyframes fadeOutRight { to { opacity: 0; transform: translateX(100%); } }
             @keyframes ringBell { 0% { transform: rotate(0); } 15% { transform: rotate(20deg); } 30% { transform: rotate(-20deg); } 45% { transform: rotate(15deg); } 60% { transform: rotate(-15deg); } 75% { transform: rotate(0); } }
             .bell-ringing i, .bell-ringing { animation: ringBell 0.6s ease-in-out; color: #3498db !important; }
@@ -53,21 +49,17 @@ Workspace.Alertas = {
             bell.appendChild(dropdown);
         }
 
-        // Abre e fecha a gaveta no sino fixo
         bell.addEventListener('click', (e) => {
             if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
                 const isOpen = dropdown.style.display === 'block';
                 dropdown.style.display = isOpen ? 'none' : 'block';
-                
                 const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                 if (perfilDropdown) perfilDropdown.style.display = 'none';
             }
         });
 
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#ws-bell')) {
-                dropdown.style.display = 'none';
-            }
+            if (!e.target.closest('#ws-bell')) dropdown.style.display = 'none';
         });
     },
 
@@ -79,12 +71,18 @@ Workspace.Alertas = {
             if (Array.isArray(data)) {
                 Workspace.Alertas.notificacoesAtuais = data;
                 
-                // Identifica se há notificações realmente novas
                 const idsAtuais = data.map(n => n.id);
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
-                    // Mostra o Toast Popup e toca o sino da barra superior
+                    
+                    // 🚀 O TÚNEL INVISÍVEL: Manda o Feed atualizar a publicação imediatamente em segundo plano
+                    novas.forEach(n => {
+                        if (n.origem === 'post' && window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
+                            Workspace.Feed.sincronizarPostSilencioso(n.origemId);
+                        }
+                    });
+
                     if (window.Toast && Toast.show) Toast.show(`🔔 Tem ${novas.length} nova(s) notificação(ões)!`, 'info');
                     
                     const bell = document.getElementById('ws-bell');
@@ -107,7 +105,6 @@ Workspace.Alertas = {
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
-        // Atualiza a bolinha vermelha no sino de topo fixo
         if (badge) {
             badge.innerText = qtd > 99 ? '99+' : qtd;
             badge.style.display = qtd > 0 ? 'flex' : 'none';
@@ -115,7 +112,6 @@ Workspace.Alertas = {
             else badge.style.animation = 'none';
         }
 
-        // Atualiza a gaveta de notificações
         if (dropdown) {
             if (qtd === 0) {
                 dropdown.innerHTML = `
@@ -143,7 +139,6 @@ Workspace.Alertas = {
                                     <div style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
                                 </div>
                             </div>
-                            <!-- O Botão de Riscar Individual -->
                             <button class="ws-noti-close" onclick="Workspace.Alertas.riscar('${n.id}', event)" title="Marcar como lida">✖</button>
                         </div>
                         `;
@@ -154,12 +149,10 @@ Workspace.Alertas = {
         }
     },
 
-    // 🚀 LER E IR: Navegação Inteligente + Marcar como Lida
     lerEIr: async (id, origem, origemId, destinoNome) => {
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
-        // 1. Marca na Base de Dados como LIDA instantaneamente
         try {
             await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
@@ -167,48 +160,43 @@ Workspace.Alertas = {
             Workspace.Alertas.atualizarInterface();
         } catch(e) {}
 
-        // 2. Navegação Dinâmica
-        if (window.Workspace && Workspace.voltarAoFeed) {
-            Workspace.voltarAoFeed();
-        } else {
+        if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
+        else {
             const modalChat = document.getElementById('ws-chat-modal');
             if (modalChat) modalChat.style.display = 'none';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         if (origem === 'post') {
-            // Caçador de Posts: Tenta encontrar o post mesmo se a página demorar a renderizar
+            // 🚀 Garante atualização em tempo real caso a pessoa clique rápido demais antes do túnel invisível acabar
+            if (window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
+                await Workspace.Feed.sincronizarPostSilencioso(origemId);
+            }
+
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
                 if (postElement) {
                     clearInterval(checkExist);
                     postElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     if (Workspace.Feed && Workspace.Feed.toggleComentarios) {
-                        if (postElement.style.display === 'none') {
-                            Workspace.Feed.toggleComentarios(origemId);
-                        }
+                        if (postElement.style.display === 'none') Workspace.Feed.toggleComentarios(origemId);
                     }
                 }
             }, 200);
             setTimeout(() => clearInterval(checkExist), 3000); 
         } 
-        else if (origem === 'chat') {
-            if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
-                Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
-            }
+        else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
+            Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
         } 
-        else if (origem === 'tarefa') {
-            if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
-                Workspace.Sidebar.abrirModalTarefa(origemId);
-            }
+        else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
+            Workspace.Sidebar.abrirModalTarefa(origemId);
         }
     },
 
-    // 🚀 RISCAR: Dispensar individualmente (Ação do X)
     riscar: async (id, event) => {
-        event.stopPropagation(); // Impede de abrir o post ao clicar no X
+        event.stopPropagation(); 
         const itemUI = document.getElementById(`notif-item-${id}`);
-        if(itemUI) itemUI.classList.add('riscando'); // Animação bonita de sair para a direita
+        if(itemUI) itemUI.classList.add('riscando'); 
 
         try {
             await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
@@ -216,7 +204,7 @@ Workspace.Alertas = {
                 Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
                 Workspace.Alertas.idsConhecidos.delete(id);
                 Workspace.Alertas.atualizarInterface(); 
-            }, 300); // Espera a animação terminar
+            }, 300); 
         } catch (e) {
             if(itemUI) itemUI.classList.remove('riscando');
         }
@@ -225,9 +213,7 @@ Workspace.Alertas = {
     tempoRelativo: (dataString) => {
         if (!dataString) return '';
         const dataPost = new Date(dataString);
-        const agora = new Date();
-        const diff = Math.floor((agora - dataPost) / 1000);
-
+        const diff = Math.floor((new Date() - dataPost) / 1000);
         if (diff < 60) return 'Agora mesmo';
         const m = Math.floor(diff / 60);
         if (m < 60) return `Há ${m} min`;
