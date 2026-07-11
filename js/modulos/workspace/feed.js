@@ -7,7 +7,6 @@ Workspace.Feed = {
     paginaAtual: 1,
     observer: null,
     videoObserver: null,
-    radarNovosPosts: null, 
     listenerFechamentoConfigurado: false,
     filtroAtivo: 'todos', 
 
@@ -17,6 +16,7 @@ Workspace.Feed = {
         Workspace.Feed.injetarModaisGlobais(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
+        Workspace.Feed.iniciarRelogioTempos(); // ⏰ Inicia o relógio que atualiza o "Agora mesmo"
         
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
             document.addEventListener('click', (e) => {
@@ -26,81 +26,88 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 O MOTOR DE SINCRONIZAÇÃO EM TEMPO REAL (DOM UPDATE)
+    // ⏰ O RELÓGIO SILENCIOSO: Atualiza os tempos "Há X min" a cada 60 segundos
+    iniciarRelogioTempos: () => {
+        setInterval(() => {
+            document.querySelectorAll('.ws-time-ago').forEach(el => {
+                const dataTime = el.getAttribute('data-time');
+                if (dataTime) {
+                    el.innerText = Workspace.Feed.calcularTempoRelativo(dataTime);
+                }
+            });
+        }, 60000); 
+    },
+
+    // 🚀 O MOTOR DE SINCRONIZAÇÃO EM TEMPO REAL (DOM UPDATE DIRETO)
     sincronizarPostSilencioso: async (postId) => {
         try {
             const postAtualizado = await Workspace.api(`/workspace/posts/${postId}`, 'GET');
             if (postAtualizado && !postAtualizado.error) {
-                Workspace.Feed.atualizarPostNoDOM(postAtualizado);
+                // Atualiza Caches em Memória
+                const indexCache = Workspace.Feed.postsCache.findIndex(p => p.id === postId);
+                if(indexCache !== -1) Workspace.Feed.postsCache[indexCache] = postAtualizado;
+
+                const indexTodos = Workspace.Feed.todosOsPosts.findIndex(p => p.id === postId);
+                if(indexTodos !== -1) Workspace.Feed.todosOsPosts[indexTodos] = postAtualizado;
+
+                const meuId = Workspace.usuario.id;
+
+                // 1. Atualiza Likes Visualmente
+                const btnLike = document.getElementById(`btn-like-${postId}`);
+                const countLike = document.getElementById(`count-like-${postId}`);
+                const likesArr = Array.isArray(postAtualizado.likes) ? postAtualizado.likes : [];
+                const euCurti = likesArr.includes(meuId);
+
+                if(countLike) countLike.innerText = likesArr.length;
+                if(btnLike) {
+                    btnLike.style.background = euCurti ? '#eafaf1' : '#f0f2f5';
+                    btnLike.style.color = euCurti ? '#27ae60' : '#555';
+                    btnLike.style.borderColor = euCurti ? '#27ae60' : 'transparent';
+                }
+
+                // 2. Atualiza Dislikes Visualmente
+                const btnDislike = document.getElementById(`btn-dislike-${postId}`);
+                const countDislike = document.getElementById(`count-dislike-${postId}`);
+                const dislikesArr = Array.isArray(postAtualizado.dislikes) ? postAtualizado.dislikes : [];
+                const euNaoCurti = dislikesArr.includes(meuId);
+
+                if(countDislike) countDislike.innerText = dislikesArr.length;
+                if(btnDislike) {
+                    btnDislike.style.background = euNaoCurti ? '#fdf2f2' : '#f0f2f5';
+                    btnDislike.style.color = euNaoCurti ? '#e74c3c' : '#555';
+                    btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
+                }
+
+                // 3. Atualiza Comentários Instantaneamente
+                const countComment = document.getElementById(`count-comment-${postId}`);
+                if(countComment) countComment.innerText = postAtualizado.comentarios ? postAtualizado.comentarios.length : 0;
+
+                const listaComentarios = document.getElementById(`lista-comentarios-${postId}`);
+                if(listaComentarios) {
+                    if(postAtualizado.comentarios && postAtualizado.comentarios.length > 0) {
+                        listaComentarios.innerHTML = postAtualizado.comentarios.map(c => Workspace.Feed.gerarHTMLComentario(c, postId)).join('');
+                    } else {
+                        listaComentarios.innerHTML = '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>';
+                    }
+                }
             }
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-    atualizarPostNoDOM: (postAtualizado) => {
-        // Atualiza Caches em Memória
-        const indexCache = Workspace.Feed.postsCache.findIndex(p => p.id === postAtualizado.id);
-        if(indexCache !== -1) Workspace.Feed.postsCache[indexCache] = postAtualizado;
-
-        const indexTodos = Workspace.Feed.todosOsPosts.findIndex(p => p.id === postAtualizado.id);
-        if(indexTodos !== -1) Workspace.Feed.todosOsPosts[indexTodos] = postAtualizado;
-
-        const meuId = Workspace.usuario.id;
-
-        // Atualiza UI de Likes Instantaneamente
-        const btnLike = document.getElementById(`btn-like-${postAtualizado.id}`);
-        const countLike = document.getElementById(`count-like-${postAtualizado.id}`);
-        const likesArr = Array.isArray(postAtualizado.likes) ? postAtualizado.likes : [];
-        const euCurti = likesArr.includes(meuId);
-
-        if(countLike) countLike.innerText = likesArr.length;
-        if(btnLike) {
-            btnLike.style.background = euCurti ? '#eafaf1' : '#f0f2f5';
-            btnLike.style.color = euCurti ? '#27ae60' : '#555';
-            btnLike.style.borderColor = euCurti ? '#27ae60' : 'transparent';
-        }
-
-        // Atualiza UI de Dislikes Instantaneamente
-        const btnDislike = document.getElementById(`btn-dislike-${postAtualizado.id}`);
-        const countDislike = document.getElementById(`count-dislike-${postAtualizado.id}`);
-        const dislikesArr = Array.isArray(postAtualizado.dislikes) ? postAtualizado.dislikes : [];
-        const euNaoCurti = dislikesArr.includes(meuId);
-
-        if(countDislike) countDislike.innerText = dislikesArr.length;
-        if(btnDislike) {
-            btnDislike.style.background = euNaoCurti ? '#fdf2f2' : '#f0f2f5';
-            btnDislike.style.color = euNaoCurti ? '#e74c3c' : '#555';
-            btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
-        }
-
-        // Atualiza UI de Comentários Instantaneamente
-        const countComment = document.getElementById(`count-comment-${postAtualizado.id}`);
-        if(countComment) countComment.innerText = postAtualizado.comentarios ? postAtualizado.comentarios.length : 0;
-
-        const listaComentarios = document.getElementById(`lista-comentarios-${postAtualizado.id}`);
-        if(listaComentarios) {
-            if(postAtualizado.comentarios && postAtualizado.comentarios.length > 0) {
-                listaComentarios.innerHTML = postAtualizado.comentarios.map(c => Workspace.Feed.gerarHTMLComentario(c, postAtualizado.id)).join('');
-            } else {
-                listaComentarios.innerHTML = '<div style="font-size:12px; color:#999; text-align:center;">Seja o primeiro a comentar!</div>';
-            }
-        }
-    },
-
-    // Extrator Limpo e Modular de Comentários
+    // Extrator Limpo e Modular de Comentários com Tag de Relógio
     gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
+        const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
         const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
         const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
         
         const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
         const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
-        
         const acoesInline = ehDonoComentario ? `
             <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
                 <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">Editar</span>
                 <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">Apagar</span>
-            </div>
-        ` : '';
+            </div>` : '';
         
         return `
         <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
@@ -108,7 +115,7 @@ Workspace.Feed = {
             <div style="flex:1; padding-right: 5px; min-width: 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                     <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
-                    <span style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
+                    <span class="ws-time-ago" ${tempoAttr} style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
                 </div>
                 <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
                 ${acoesInline}
@@ -138,24 +145,14 @@ Workspace.Feed = {
     confirmarAcao: (titulo, mensagem, onConfirm) => {
         const modal = document.getElementById('ws-confirm-modal');
         if(!modal) { if(confirm(mensagem)) onConfirm(); return; }
-
         document.getElementById('ws-confirm-title').innerText = titulo;
         document.getElementById('ws-confirm-message').innerText = mensagem;
-
         const btnOk = document.getElementById('ws-confirm-btn-ok');
         const btnCancel = document.getElementById('ws-confirm-btn-cancel');
 
         modal.style.display = 'flex';
-        requestAnimationFrame(() => {
-            modal.style.opacity = '1';
-            modal.children[0].style.transform = 'scale(1)';
-        });
-
-        const fechar = () => {
-            modal.style.opacity = '0';
-            modal.children[0].style.transform = 'scale(0.9)';
-            setTimeout(() => modal.style.display = 'none', 200);
-        };
+        requestAnimationFrame(() => { modal.style.opacity = '1'; modal.children[0].style.transform = 'scale(1)'; });
+        const fechar = () => { modal.style.opacity = '0'; modal.children[0].style.transform = 'scale(0.9)'; setTimeout(() => modal.style.display = 'none', 200); };
 
         btnCancel.onclick = fechar;
         btnOk.onclick = () => { fechar(); onConfirm(); };
@@ -316,7 +313,6 @@ Workspace.Feed = {
 
             Workspace.Feed.todosOsPosts = posts;
             Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
-            Workspace.Feed.iniciarRadarNovosPosts();
 
         } catch (error) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
@@ -388,21 +384,6 @@ Workspace.Feed = {
             Workspace.Feed.observer.disconnect();
         }
     },
-
-    iniciarRadarNovosPosts: () => {
-        if (Workspace.Feed.radarNovosPosts) clearInterval(Workspace.Feed.radarNovosPosts);
-        Workspace.Feed.radarNovosPosts = setInterval(async () => {
-            try {
-                const refId = Workspace.usuario.alunoRefId || '';
-                const postsAtuais = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
-                if (postsAtuais && Workspace.Feed.todosOsPosts.length > 0) {
-                    const ultimoPostIdConhecido = Workspace.Feed.todosOsPosts[0].id;
-                    const qtdNovos = postsAtuais.findIndex(p => p.id === ultimoPostIdConhecido);
-                    if (qtdNovos > 0) Workspace.Feed.mostrarPilulaNovosPosts(qtdNovos, postsAtuais);
-                }
-            } catch(e) {}
-        }, 20000); 
-    },
  
     iniciarMotorDeVideos: () => {
         document.querySelectorAll('.ws-feed-video').forEach(video => {
@@ -426,23 +407,31 @@ Workspace.Feed = {
         document.querySelectorAll('.ws-feed-video, .ws-video-embed').forEach(el => Workspace.Feed.videoObserver.observe(el));
     },
 
-    mostrarPilulaNovosPosts: (qtd, novosPostsData) => {
-        let pill = document.getElementById('ws-new-posts-pill');
-        if (!pill) {
-            pill = document.createElement('div');
-            pill.id = 'ws-new-posts-pill';
-            pill.className = 'new-posts-pill';
-            const container = document.getElementById('ws-posts-area');
-            container.parentNode.insertBefore(pill, container);
+    verificarNovoPost: async () => {
+        const refId = Workspace.usuario.alunoRefId || '';
+        const postsAtuais = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
+        if (postsAtuais && Workspace.Feed.todosOsPosts.length > 0) {
+            const ultimoPostIdConhecido = Workspace.Feed.todosOsPosts[0].id;
+            const qtdNovos = postsAtuais.findIndex(p => p.id === ultimoPostIdConhecido);
+            if (qtdNovos > 0) {
+                let pill = document.getElementById('ws-new-posts-pill');
+                if (!pill) {
+                    pill = document.createElement('div');
+                    pill.id = 'ws-new-posts-pill';
+                    pill.className = 'new-posts-pill';
+                    const container = document.getElementById('ws-posts-area');
+                    container.parentNode.insertBefore(pill, container);
+                }
+                pill.innerHTML = `⬆️ Ver ${qtdNovos} nova${qtdNovos > 1 ? 's' : ''} publicação${qtdNovos > 1 ? 'ões' : ''}`;
+                pill.classList.add('show');
+                pill.onclick = () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                    pill.classList.remove('show');
+                    Workspace.Feed.todosOsPosts = postsAtuais;
+                    Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
+                };
+            }
         }
-        pill.innerHTML = `⬆️ Ver ${qtd} nova${qtd > 1 ? 's' : ''} publicação${qtd > 1 ? 'ões' : ''}`;
-        pill.classList.add('show');
-        pill.onclick = () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
-            pill.classList.remove('show');
-            Workspace.Feed.todosOsPosts = novosPostsData;
-            Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
-        };
     },
 
     abrirImagemInteira: (url) => {
@@ -539,6 +528,7 @@ Workspace.Feed = {
             const res = await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
             
             if (res && res.success) {
+                // ⚡ Agora as reações atualizam o próprio ecrã instantaneamente
                 await Workspace.Feed.sincronizarPostSilencioso(postId);
             }
         } catch (e) { console.error("Erro ao reagir:", e); }
@@ -567,7 +557,7 @@ Workspace.Feed = {
             });
 
             if (res && res.success) {
-                // 🚀 TÚNEL INVISÍVEL: Sincroniza logo após comentar e foca o scroll
+                // ⚡ Atualiza o meu ecrã para o novo comentário surgir sem recarregar a página
                 await Workspace.Feed.sincronizarPostSilencioso(postId);
                 const lista = document.getElementById(`lista-comentarios-${postId}`);
                 if (lista) lista.scrollTop = lista.scrollHeight;
@@ -712,7 +702,8 @@ Workspace.Feed = {
         const meuId = Workspace.usuario.id;
         
         return posts.map(p => {
-            const tempoAmigavel = Workspace.Feed.calcularTempoRelativo(p.dataCriacao);
+            const tempoAmigavel = p.dataCriacao ? Workspace.Feed.calcularTempoRelativo(p.dataCriacao) : 'Agora mesmo';
+            const tempoAttr = p.dataCriacao ? `class="ws-time-ago" data-time="${p.dataCriacao}"` : '';
             const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
@@ -741,7 +732,7 @@ Workspace.Feed = {
                                     ${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    ${tempoAmigavel} ${destinoBadge}
+                                    <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge}
                                 </div>
                             </div>
                         </div>

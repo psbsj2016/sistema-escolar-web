@@ -1,12 +1,11 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Alertas = {
-    radar: null,
     notificacoesAtuais: [],
     idsConhecidos: new Set(),
 
     init: () => {
-        console.log("🔔 Motor de Alertas: Persistência Individual em Tempo Real Ativada.");
+        console.log("🔔 Motor de Alertas: Conexão em Tempo Real (SSE) Ativada.");
         Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
         Workspace.Alertas.atualizarInterface();
@@ -14,10 +13,41 @@ Workspace.Alertas = {
         const aguardarUsuario = setInterval(() => {
             if (Workspace.usuario && Workspace.usuario.nome) {
                 clearInterval(aguardarUsuario);
-                Workspace.Alertas.buscarNotificacoes();
-                Workspace.Alertas.radar = setInterval(Workspace.Alertas.buscarNotificacoes, 10000); 
+                Workspace.Alertas.buscarNotificacoes(); 
+                Workspace.Alertas.iniciarConexaoTempoReal(); // ⚡ Liga o Túnel Direto
             }
         }, 1000);
+    },
+
+    // 🚀 O RECEPTOR DO TÚNEL INVISÍVEL
+    iniciarConexaoTempoReal: () => {
+        const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+        const sse = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+
+        sse.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // 1. Reação ou Comentário: Manda o Feed atualizar o DOM sem pestanejar
+            if (data.type === 'POST_UPDATE') {
+                if (window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
+                    Workspace.Feed.sincronizarPostSilencioso(data.postId);
+                }
+            }
+            
+            // 2. Chegou uma Notificação para mim!
+            if (data.type === 'NOVA_NOTIFICACAO' && data.destinatarios.includes(Workspace.usuario.nome || Workspace.usuario.login)) {
+                Workspace.Alertas.buscarNotificacoes(); // Puxa e mostra na gaveta instantaneamente
+            }
+
+            // 3. Novo Post: Mostra a pílula azul para subir
+            if (data.type === 'NOVO_POST') {
+                if (Workspace.Feed && Workspace.Feed.verificarNovoPost) {
+                    Workspace.Feed.verificarNovoPost();
+                }
+            }
+        };
+
+        sse.onerror = () => { console.log("Reconectando túnel em tempo real..."); };
     },
 
     injetarCSS: () => {
@@ -40,7 +70,6 @@ Workspace.Alertas = {
     construirDropdown: () => {
         const bell = document.getElementById('ws-bell');
         if (!bell) return;
-
         let dropdown = document.getElementById('ws-noti-dropdown');
         if (!dropdown) {
             dropdown = document.createElement('div');
@@ -48,56 +77,34 @@ Workspace.Alertas = {
             dropdown.style.cssText = 'display:none; position:absolute; right:0; top:45px; width:320px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:9999; padding:15px; color:#333; max-height:450px; overflow-y:auto; cursor:default; border: 1px solid #eee;';
             bell.appendChild(dropdown);
         }
-
         bell.addEventListener('click', (e) => {
             if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
-                const isOpen = dropdown.style.display === 'block';
-                dropdown.style.display = isOpen ? 'none' : 'block';
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
                 const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                 if (perfilDropdown) perfilDropdown.style.display = 'none';
             }
         });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#ws-bell')) dropdown.style.display = 'none';
-        });
+        document.addEventListener('click', (e) => { if (!e.target.closest('#ws-bell')) dropdown.style.display = 'none'; });
     },
 
     buscarNotificacoes: async () => {
         if (!Workspace.usuario || !Workspace.usuario.nome) return;
-
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
             if (Array.isArray(data)) {
                 Workspace.Alertas.notificacoesAtuais = data;
-                
                 const idsAtuais = data.map(n => n.id);
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
-                    
-                    // 🚀 O TÚNEL INVISÍVEL: Manda o Feed atualizar a publicação imediatamente em segundo plano
-                    novas.forEach(n => {
-                        if (n.origem === 'post' && window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
-                            Workspace.Feed.sincronizarPostSilencioso(n.origemId);
-                        }
-                    });
-
                     if (window.Toast && Toast.show) Toast.show(`🔔 Tem ${novas.length} nova(s) notificação(ões)!`, 'info');
-                    
                     const bell = document.getElementById('ws-bell');
-                    if(bell) {
-                        bell.classList.add('bell-ringing');
-                        setTimeout(() => bell.classList.remove('bell-ringing'), 1000);
-                    }
+                    if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
                 }
-
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
                 Workspace.Alertas.atualizarInterface();
             }
-        } catch (e) {
-            console.error("Radar de Alertas em espera...");
-        }
+        } catch (e) {}
     },
 
     atualizarInterface: () => {
@@ -108,43 +115,32 @@ Workspace.Alertas = {
         if (badge) {
             badge.innerText = qtd > 99 ? '99+' : qtd;
             badge.style.display = qtd > 0 ? 'flex' : 'none';
-            if (qtd > 0) badge.style.animation = 'pulse 1s infinite';
-            else badge.style.animation = 'none';
+            if (qtd > 0) badge.style.animation = 'pulse 1s infinite'; else badge.style.animation = 'none';
         }
 
         if (dropdown) {
             if (qtd === 0) {
-                dropdown.innerHTML = `
-                    <div style="text-align:center; color:#94a3b8; padding:30px 0;">
-                        <div style="font-size:35px; margin-bottom:10px;">📭</div>
-                        <div style="font-weight:600; font-size:14px;">Tudo limpo!</div>
-                        <div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div>
-                    </div>`;
+                dropdown.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:30px 0;"><div style="font-size:35px; margin-bottom:10px;">📭</div><div style="font-weight:600; font-size:14px;">Tudo limpo!</div><div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
                 dropdown.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;">
-                        <span>Notificações (${qtd})</span>
-                    </div>
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;"><span>Notificações (${qtd})</span></div>
                     <div style="display:flex; flex-direction:column; gap:2px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
                         const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
-
                         return `
                         <div class="ws-noti-item" id="notif-item-${n.id}">
                             <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
                                 ${avatarSino}
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
-                                    <div style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
+                                    <div class="ws-time-ago" data-time="${n.data}" style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
                                 </div>
                             </div>
                             <button class="ws-noti-close" onclick="Workspace.Alertas.riscar('${n.id}', event)" title="Marcar como lida">✖</button>
-                        </div>
-                        `;
+                        </div>`;
                     }).join('')}
-                    </div>
-                `;
+                    </div>`;
             }
         }
     },
@@ -168,11 +164,6 @@ Workspace.Alertas = {
         }
 
         if (origem === 'post') {
-            // 🚀 Garante atualização em tempo real caso a pessoa clique rápido demais antes do túnel invisível acabar
-            if (window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
-                await Workspace.Feed.sincronizarPostSilencioso(origemId);
-            }
-
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
                 if (postElement) {
@@ -185,19 +176,14 @@ Workspace.Alertas = {
             }, 200);
             setTimeout(() => clearInterval(checkExist), 3000); 
         } 
-        else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
-            Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
-        } 
-        else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
-            Workspace.Sidebar.abrirModalTarefa(origemId);
-        }
+        else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
+        else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
     },
 
     riscar: async (id, event) => {
         event.stopPropagation(); 
         const itemUI = document.getElementById(`notif-item-${id}`);
         if(itemUI) itemUI.classList.add('riscando'); 
-
         try {
             await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
             setTimeout(() => {
@@ -205,9 +191,7 @@ Workspace.Alertas = {
                 Workspace.Alertas.idsConhecidos.delete(id);
                 Workspace.Alertas.atualizarInterface(); 
             }, 300); 
-        } catch (e) {
-            if(itemUI) itemUI.classList.remove('riscando');
-        }
+        } catch (e) { if(itemUI) itemUI.classList.remove('riscando'); }
     },
 
     tempoRelativo: (dataString) => {
