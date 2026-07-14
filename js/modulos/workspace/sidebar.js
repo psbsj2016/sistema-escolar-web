@@ -1,13 +1,18 @@
-// js/modulos/workspace/sidebar.js
 window.Workspace = window.Workspace || {};
 
 Workspace.Sidebar = {
     turmaIdAberta: null,
-    radarChat: null,
+    chatStream: null, // O nosso túnel de tempo real exclusivo do Chat
     tarefasCache: [],
+    mensagensRenderizadas: new Set(), // Evita mensagens duplicadas
+    
+    // Controlo de Digitação
+    isTyping: false,
+    typingTimer: null,
+    typingUiTimer: null,
 
     init: async () => {
-        console.log("📊 Motor do Menu Lateral iniciado.");
+        console.log("📊 Motor do Menu Lateral com Chat em Tempo Real iniciado.");
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
     },
@@ -104,61 +109,166 @@ Workspace.Sidebar = {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         document.getElementById('ws-chat-titulo').innerText = `Fórum: ${turmaNome}`;
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
+        
+        // Configura a UI de Digitação
+        if (!document.getElementById('ws-chat-typing-indicator')) {
+            const inputContainer = document.getElementById('ws-chat-input').closest('div[style*="padding: 10px"]');
+            inputContainer.insertAdjacentHTML('beforebegin', '<div id="ws-chat-typing-indicator" style="display:none; padding: 4px 20px 8px 20px; font-size: 11.5px; color: #128c7e; font-style: italic; font-weight: 600; background: #e5ddd5; transition: 0.3s; animation: pulse 1.5s infinite;"></div>');
+        }
+        
         document.getElementById('ws-chat-modal').style.display = 'flex';
-        document.getElementById('ws-chat-input').value = '';
-        setTimeout(() => document.getElementById('ws-chat-input').focus(), 100);
+        
+        const inputElement = document.getElementById('ws-chat-input');
+        inputElement.value = '';
+        setTimeout(() => inputElement.focus(), 100);
 
+        // Lógica para enviar status "Estou a escrever..."
+        inputElement.oninput = () => {
+            if (!Workspace.Sidebar.isTyping) {
+                Workspace.Sidebar.isTyping = true;
+                Workspace.Sidebar.enviarStatusDigitacao(true);
+            }
+            clearTimeout(Workspace.Sidebar.typingTimer);
+            Workspace.Sidebar.typingTimer = setTimeout(() => {
+                Workspace.Sidebar.isTyping = false;
+                Workspace.Sidebar.enviarStatusDigitacao(false);
+            }, 1500); // Se parar de escrever por 1.5s, avisa que parou
+        };
+
+        // Carrega o histórico completo
         Workspace.Sidebar.carregarMensagensChat();
-        if (Workspace.Sidebar.radarChat) clearInterval(Workspace.Sidebar.radarChat);
-        Workspace.Sidebar.radarChat = setInterval(Workspace.Sidebar.carregarMensagensChat, 5000); 
+
+        // ⚡ Inicia o Túnel de Tempo Real exclusivo para este chat
+        if (Workspace.Sidebar.chatStream) Workspace.Sidebar.chatStream.close();
+        
+        const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+        Workspace.Sidebar.chatStream = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+        
+        Workspace.Sidebar.chatStream.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // 📥 Caiu uma nova mensagem
+            if (data.type === 'NOVA_MENSAGEM' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                Workspace.Sidebar.injetarNovaMensagem(data.mensagem);
+                Workspace.Sidebar.ocultarDigitando(); // Limpa o "está a escrever" se a mensagem já chegou
+            }
+            
+            // ✍️ Alguém está a escrever
+            if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                if (data.autorNome !== meuNome) {
+                    Workspace.Sidebar.mostrarDigitando(data.autorNome, data.isTyping);
+                }
+            }
+        };
     },
 
     fecharChat: () => {
         document.getElementById('ws-chat-modal').style.display = 'none';
         Workspace.Sidebar.turmaIdAberta = null;
-        if (Workspace.Sidebar.radarChat) clearInterval(Workspace.Sidebar.radarChat);
+        
+        // Desliga o Túnel para não gastar internet e bateria em background
+        if (Workspace.Sidebar.chatStream) {
+            Workspace.Sidebar.chatStream.close();
+            Workspace.Sidebar.chatStream = null;
+        }
+        
+        Workspace.Sidebar.ocultarDigitando();
+    },
+
+    enviarStatusDigitacao: (status) => {
+        if (!Workspace.Sidebar.turmaIdAberta) return;
+        Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/digitando`, 'POST', {
+            autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+            isTyping: status
+        }).catch(()=>{}); // Erros aqui são ignorados silenciosamente
+    },
+
+    mostrarDigitando: (autorNome, isTyping) => {
+        const indicator = document.getElementById('ws-chat-typing-indicator');
+        if (!indicator) return;
+
+        if (isTyping) {
+            indicator.innerText = `${Workspace.Sidebar.escapeHTML(autorNome)} está a escrever...`;
+            indicator.style.display = 'block';
+            
+            // Proteção: Se a internet cair, o aviso desaparece sozinho após 3 segundos
+            clearTimeout(Workspace.Sidebar.typingUiTimer);
+            Workspace.Sidebar.typingUiTimer = setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+        } else {
+            indicator.style.display = 'none';
+        }
+    },
+
+    ocultarDigitando: () => {
+        const indicator = document.getElementById('ws-chat-typing-indicator');
+        if (indicator) indicator.style.display = 'none';
+    },
+
+    gerarHTMLMensagem: (m, meuNome) => {
+        const ehMinha = m.autorNome === meuNome;
+        const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
+        const corFundo = ehMinha ? '#dcf8c6' : '#ffffff';
+        const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
+
+        return `
+            <div id="msg-${m.id}" style="display: flex; gap: 10px; flex-direction: ${ehMinha ? 'row-reverse' : 'row'}; align-items: flex-end; margin-bottom: 12px; animation: fadeIn 0.3s ease;">
+                ${avatarChat}
+                <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; max-width: 75%;">
+                    ${!ehMinha ? `<span style="font-size: 11px; color: #666; margin-bottom: 2px; margin-left: 5px; font-weight: bold;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</span>` : ''}
+                    <div style="background: ${corFundo}; padding: 10px 15px; border-radius: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #333; line-height: 1.4; border-bottom-${ehMinha ? 'right' : 'left'}-radius: 4px;">
+                        ${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}
+                        <div style="font-size: 10px; color: #999; text-align: right; margin-top: 5px; margin-right: -5px;">${hora}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    injetarNovaMensagem: (m) => {
+        if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; // Blindagem contra duplicados
+        Workspace.Sidebar.mensagensRenderizadas.add(m.id);
+
+        const container = document.getElementById('ws-chat-mensagens');
+        const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+        
+        // Remove a mensagem de "Nenhuma mensagem neste fórum" se existir
+        if (container.innerHTML.includes('Nenhuma mensagem')) {
+            container.innerHTML = '';
+        }
+
+        container.insertAdjacentHTML('beforeend', Workspace.Sidebar.gerarHTMLMensagem(m, meuNome));
+        container.scrollTop = container.scrollHeight;
     },
 
     carregarMensagensChat: async () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         const container = document.getElementById('ws-chat-mensagens');
+        
         try {
             const mensagens = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'GET');
+            
             if (!mensagens || mensagens.length === 0) {
-                if(container.innerHTML.trim() === '' || container.innerHTML.includes('A carregar')) {
-                    container.innerHTML = `<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px;">Nenhuma mensagem neste fórum ainda.<br>Diga olá para a turma! 👋</div>`;
-                }
+                container.innerHTML = `<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px;">Nenhuma mensagem neste fórum ainda.<br>Diga olá para a turma! 👋</div>`;
                 return;
             }
 
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             let html = '';
+            
+            Workspace.Sidebar.mensagensRenderizadas.clear();
 
             mensagens.forEach(m => {
-                const ehMinha = m.autorNome === meuNome;
-                const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
-                const corFundo = ehMinha ? '#dcf8c6' : '#ffffff';
-                const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
-
-                html += `
-                    <div style="display: flex; gap: 10px; flex-direction: ${ehMinha ? 'row-reverse' : 'row'}; align-items: flex-end; margin-bottom: 12px;">
-                        ${avatarChat}
-                        <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; max-width: 75%;">
-                            ${!ehMinha ? `<span style="font-size: 11px; color: #666; margin-bottom: 2px; margin-left: 5px; font-weight: bold;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</span>` : ''}
-                            <div style="background: ${corFundo}; padding: 10px 15px; border-radius: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 14px; color: #333; line-height: 1.4; border-bottom-${ehMinha ? 'right' : 'left'}-radius: 4px;">
-                                ${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}
-                                <div style="font-size: 10px; color: #999; text-align: right; margin-top: 5px; margin-right: -5px;">${hora}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                Workspace.Sidebar.mensagensRenderizadas.add(m.id);
+                html += Workspace.Sidebar.gerarHTMLMensagem(m, meuNome);
             });
 
-            if (container.innerHTML !== html) {
-                container.innerHTML = html;
-                container.scrollTop = container.scrollHeight;
-            }
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+            
         } catch (e) { console.error("Erro ao carregar chat", e); }
     },
 
@@ -166,11 +276,27 @@ Workspace.Sidebar = {
         const input = document.getElementById('ws-chat-input');
         const texto = input.value.trim();
         const turmaId = Workspace.Sidebar.turmaIdAberta;
+        
         if (!texto || !turmaId) return;
+        
         input.value = ''; 
+        
+        // Limpa instantaneamente o status de digitação localmente e no servidor
+        Workspace.Sidebar.isTyping = false;
+        Workspace.Sidebar.enviarStatusDigitacao(false);
+        clearTimeout(Workspace.Sidebar.typingTimer);
+
         try {
-            await Workspace.api(`/workspace/chat/${turmaId}`, 'POST', { texto: texto, autorNome: Workspace.usuario.nome || Workspace.usuario.login });
-            await Workspace.Sidebar.carregarMensagensChat();
+            const res = await Workspace.api(`/workspace/chat/${turmaId}`, 'POST', { 
+                texto: texto, 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login 
+            });
+            
+            // Opcional de segurança: Injeta a mensagem instantaneamente para o remetente, 
+            // caso a rede demore a processar o evento do túnel SSE
+            if (res && res.success && res.mensagem) {
+                Workspace.Sidebar.injetarNovaMensagem(res.mensagem);
+            }
         } catch (e) { 
             Workspace.mostrarAviso("Erro ao enviar mensagem.", "error"); 
         }
@@ -501,7 +627,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // 🌟 NOVA FUNÇÃO: MODAL DE CONFIRMAÇÃO LÚDICO E PREMIUM
     mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
         const id = 'ws-custom-confirm-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -523,13 +648,11 @@ Workspace.Sidebar = {
         `;
         document.body.appendChild(overlay);
 
-        // Dispara a animação visual de entrada
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
             overlay.firstElementChild.style.transform = 'scale(1)';
         });
 
-        // Lógica de fecho com animação
         const fechar = () => {
             overlay.style.opacity = '0';
             overlay.firstElementChild.style.transform = 'scale(0.9)';
@@ -538,13 +661,12 @@ Workspace.Sidebar = {
 
         document.getElementById('ws-confirm-btn-nao').onclick = fechar;
         document.getElementById('ws-confirm-btn-sim').onclick = () => {
-            fechar(); // Fecha o modal e...
-            callbackSim(); // ...executa a remoção na BD
+            fechar(); 
+            callbackSim(); 
         };
     },
 
     apagarTarefa: (id) => {
-        // Dispara o novo Modal Premium em vez do Pop-up nativo feio!
         Workspace.Sidebar.mostrarConfirmacao(
             "Apagar Tarefa?",
             "Esta ação é irreversível. Todos os trabalhos entregues pelos alunos também serão destruídos. Tem a certeza?",
@@ -552,7 +674,6 @@ Workspace.Sidebar = {
                 try {
                     const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
                     if(res && res.success) {
-                        // Se deu certo, mostra o Toast verde por cima!
                         Workspace.mostrarAviso("Tarefa removida com sucesso!", "success");
                         Workspace.Sidebar.abrirPainelTarefasRecebidas(); 
                     } else {
