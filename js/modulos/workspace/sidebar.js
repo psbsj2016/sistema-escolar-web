@@ -2,17 +2,17 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Sidebar = {
     turmaIdAberta: null,
-    chatStream: null, // O nosso túnel de tempo real exclusivo do Chat
+    infoTurmaAberta: null, // 🖼️ Novo: Guarda a foto e nome do grupo atual
+    chatStream: null, 
     tarefasCache: [],
-    mensagensRenderizadas: new Set(), // Evita mensagens duplicadas
+    mensagensRenderizadas: new Set(), 
     
-    // Controlo de Digitação
     isTyping: false,
     typingTimer: null,
     typingUiTimer: null,
 
     init: async () => {
-        console.log("📊 Motor do Menu Lateral com Chat em Tempo Real iniciado.");
+        console.log("📊 Motor do Menu Lateral com Chat Avançado iniciado.");
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
     },
@@ -36,13 +36,9 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 🛡️ A BARREIRA DE ACESSO ÀS SALAS (FÓRUNS)
-    // ==========================================
     carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
-
         container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>';
 
         try {
@@ -56,7 +52,6 @@ Workspace.Sidebar = {
             if (Workspace.usuario.tipo === 'Aluno') {
                 let minhasTurmas = [];
                 const u = Workspace.usuario;
-                
                 if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
                 if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
                 if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
@@ -88,28 +83,198 @@ Workspace.Sidebar = {
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
+                
+                // 🖼️ NOVA FEATURE: Mostra a mini foto do grupo no menu lateral se existir
+                let avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
+                if(t.foto) {
+                    avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd;"><img src="${t.foto}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                }
+
                 html += `
                     <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="const menu = document.getElementById('ws-main-menu-dropdown'); if(menu) menu.style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
-                        <div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold;">#</div>
-                        <span style="font-size: 13px; color: #2c3e50; font-weight: 600;">${nomeTurma}</span>
+                        ${avatarMenu}
+                        <span style="font-size: 13px; color: #2c3e50; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${nomeTurma}</span>
                     </div>
                 `;
             });
             container.innerHTML = html;
-            
         } catch (e) {
             container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>';
         }
     },
 
     // ==========================================
-    // 💬 LÓGICA DO BATE-PAPO / FÓRUM DA TURMA
+    // 🖼️ GESTÃO DE IMAGEM DO GRUPO DE BATE-PAPO
+    // ==========================================
+    atualizarCabecalhoChat: (info) => {
+        const titulo = document.getElementById('ws-chat-titulo');
+        const avatar = document.getElementById('ws-chat-avatar-container');
+        
+        if(titulo) titulo.innerText = info.nome || 'Sala de Bate-Papo';
+        
+        if(info.foto) {
+            avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+            avatar.style.background = 'transparent';
+        } else {
+            avatar.innerHTML = '👥';
+            avatar.style.background = 'rgba(255,255,255,0.2)';
+        }
+    },
+
+    verFotoChat: () => {
+        const info = Workspace.Sidebar.infoTurmaAberta;
+        if(info && info.foto) {
+            // Reaproveita o abridor de imagens do Feed (Lightbox)
+            if(Workspace.Feed && Workspace.Feed.abrirImagemInteira) {
+                Workspace.Feed.abrirImagemInteira(info.foto);
+            }
+        } else {
+            Workspace.mostrarAviso("Este grupo de estudos ainda não possui uma foto de perfil.", "info");
+        }
+    },
+
+    abrirEdicaoChat: () => {
+        const info = Workspace.Sidebar.infoTurmaAberta || {};
+        const idModal = 'ws-modal-edit-chat';
+        if(document.getElementById(idModal)) document.getElementById(idModal).remove();
+
+        const modal = document.createElement('div');
+        modal.id = idModal;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.2s;";
+        
+        modal.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 400px; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative;">
+                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#333;">×</button>
+                <h3 style="margin: 0 0 15px 0; color: #2c3e50; text-align: center;">✏️ Configurações do Grupo</h3>
+                
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="width: 100px; height: 100px; background: #f0f2f5; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
+                        <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; display: ${info.foto ? 'block' : 'none'};">
+                        <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:40px; color:#aaa;">👥</div>
+                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); color:white; font-size:24px; opacity:0; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📷</div>
+                    </div>
+                    <input type="file" id="ws-chat-nova-foto" accept="image/*" style="display:none;" onchange="Workspace.Sidebar.previewFotoChat(event)">
+                    <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Toque no ícone para alterar a foto</div>
+                </div>
+
+                <label style="font-size: 12px; font-weight: bold; color: #555;">Nome da Turma / Grupo</label>
+                <input type="text" id="ws-chat-novo-nome" class="ws-post-input" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="padding: 12px; margin-bottom: 20px; font-weight: bold; color: #333;">
+
+                <div style="display:flex; gap:10px;">
+                    <button class="ws-btn" id="ws-btn-salvar-chat" style="background:#27ae60; flex:1; width:100%; font-size: 14px; padding: 12px;" onclick="Workspace.Sidebar.salvarEdicaoChat()">💾 Guardar Alterações</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+            modal.firstElementChild.style.transform = 'scale(1)';
+        });
+    },
+
+    previewFotoChat: (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.getElementById('ws-chat-foto-preview');
+            const icone = document.getElementById('ws-chat-icone-holder');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            if(icone) icone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    },
+
+    salvarEdicaoChat: async () => {
+        const fileInput = document.getElementById('ws-chat-nova-foto');
+        const nomeInput = document.getElementById('ws-chat-novo-nome');
+        const nome = nomeInput.value.trim();
+        const btn = document.getElementById('ws-btn-salvar-chat');
+        
+        if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
+        
+        btn.innerText = "⏳ A guardar na nuvem...";
+        btn.disabled = true;
+
+        try {
+            let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
+            
+            // Faz upload da nova foto para o Cloudinary (Nuvem)
+            if (fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('anexos', fileInput.files[0]);
+                const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+                const uploadData = await uploadRes.json();
+                if(uploadData.success && uploadData.anexos.length > 0) {
+                    fotoUrl = uploadData.anexos[0].url;
+                } else {
+                    throw new Error("Falha no upload da imagem.");
+                }
+            }
+
+            const res = await Workspace.api(`/workspace/chat/info/${Workspace.Sidebar.turmaIdAberta}`, 'PUT', {
+                nome: nome,
+                foto: fotoUrl
+            });
+
+            if(res && res.success) {
+                Workspace.mostrarAviso("Identidade do Grupo atualizada! ✨", "success");
+                
+                // Fecha o modal de edição
+                const modal = document.getElementById('ws-modal-edit-chat');
+                if(modal) {
+                    modal.style.opacity = '0';
+                    setTimeout(()=> modal.remove(), 200);
+                }
+                
+                // Atualiza localmente a Interface Visual imediatamente
+                Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
+                Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
+                
+                // Recarrega o menu lateral para atualizar a miniatura
+                Workspace.Sidebar.carregarTurmas();
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            Workspace.mostrarAviso("Erro ao atualizar a foto ou o nome.", "error");
+        } finally {
+            btn.innerText = "💾 Guardar Alterações";
+            btn.disabled = false;
+        }
+    },
+
+    // ==========================================
+    // 💬 LÓGICA DO BATE-PAPO
     // ==========================================
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
-        document.getElementById('ws-chat-titulo').innerText = `Fórum: ${turmaNome}`;
+        
+        // Coloca o cabeçalho em estado de carregamento
+        document.getElementById('ws-chat-titulo').innerText = 'A carregar grupo...';
+        document.getElementById('ws-chat-avatar-container').innerHTML = '👥';
+        document.getElementById('ws-chat-avatar-container').style.background = 'rgba(255,255,255,0.2)';
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
         
+        // Controla o acesso ao botão de Edição
+        const btnEdit = document.getElementById('ws-btn-editar-chat');
+        if(btnEdit) {
+            btnEdit.style.display = (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') ? 'block' : 'none';
+        }
+
+        // 🖼️ Bate na API para buscar a Foto e Nome do Grupo e injeta no HTML
+        Workspace.api(`/workspace/chat/info/${turmaId}`, 'GET').then(info => {
+            if(info) {
+                Workspace.Sidebar.infoTurmaAberta = info;
+                Workspace.Sidebar.atualizarCabecalhoChat(info);
+            }
+        }).catch(() => {
+            // Em caso de erro, apenas mostra o nome que veio do menu
+            document.getElementById('ws-chat-titulo').innerText = turmaNome;
+        });
+
         // Configura a UI de Digitação
         if (!document.getElementById('ws-chat-typing-indicator')) {
             const inputContainer = document.getElementById('ws-chat-input').closest('div[style*="padding: 10px"]');
@@ -122,7 +287,6 @@ Workspace.Sidebar = {
         inputElement.value = '';
         setTimeout(() => inputElement.focus(), 100);
 
-        // Lógica para enviar status "Estou a escrever..."
         inputElement.oninput = () => {
             if (!Workspace.Sidebar.isTyping) {
                 Workspace.Sidebar.isTyping = true;
@@ -132,10 +296,9 @@ Workspace.Sidebar = {
             Workspace.Sidebar.typingTimer = setTimeout(() => {
                 Workspace.Sidebar.isTyping = false;
                 Workspace.Sidebar.enviarStatusDigitacao(false);
-            }, 1500); // Se parar de escrever por 1.5s, avisa que parou
+            }, 1500); 
         };
 
-        // Carrega o histórico completo
         Workspace.Sidebar.carregarMensagensChat();
 
         // ⚡ Inicia o Túnel de Tempo Real exclusivo para este chat
@@ -150,7 +313,7 @@ Workspace.Sidebar = {
             // 📥 Caiu uma nova mensagem
             if (data.type === 'NOVA_MENSAGEM' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 Workspace.Sidebar.injetarNovaMensagem(data.mensagem);
-                Workspace.Sidebar.ocultarDigitando(); // Limpa o "está a escrever" se a mensagem já chegou
+                Workspace.Sidebar.ocultarDigitando();
             }
             
             // ✍️ Alguém está a escrever
@@ -160,14 +323,25 @@ Workspace.Sidebar = {
                     Workspace.Sidebar.mostrarDigitando(data.autorNome, data.isTyping);
                 }
             }
+
+            // 🖼️ A Fotografia ou Nome do Grupo Acabou de ser alterada pelo Professor!
+            if (data.type === 'SALA_UPDATE' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                Workspace.api(`/workspace/chat/info/${Workspace.Sidebar.turmaIdAberta}`, 'GET').then(info => {
+                    if(info) {
+                        Workspace.Sidebar.infoTurmaAberta = info;
+                        Workspace.Sidebar.atualizarCabecalhoChat(info);
+                        Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
+                    }
+                });
+            }
         };
     },
 
     fecharChat: () => {
         document.getElementById('ws-chat-modal').style.display = 'none';
         Workspace.Sidebar.turmaIdAberta = null;
+        Workspace.Sidebar.infoTurmaAberta = null;
         
-        // Desliga o Túnel para não gastar internet e bateria em background
         if (Workspace.Sidebar.chatStream) {
             Workspace.Sidebar.chatStream.close();
             Workspace.Sidebar.chatStream = null;
@@ -181,7 +355,7 @@ Workspace.Sidebar = {
         Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/digitando`, 'POST', {
             autorNome: Workspace.usuario.nome || Workspace.usuario.login,
             isTyping: status
-        }).catch(()=>{}); // Erros aqui são ignorados silenciosamente
+        }).catch(()=>{}); 
     },
 
     mostrarDigitando: (autorNome, isTyping) => {
@@ -192,7 +366,6 @@ Workspace.Sidebar = {
             indicator.innerText = `${Workspace.Sidebar.escapeHTML(autorNome)} está a escrever...`;
             indicator.style.display = 'block';
             
-            // Proteção: Se a internet cair, o aviso desaparece sozinho após 3 segundos
             clearTimeout(Workspace.Sidebar.typingUiTimer);
             Workspace.Sidebar.typingUiTimer = setTimeout(() => {
                 indicator.style.display = 'none';
@@ -229,13 +402,12 @@ Workspace.Sidebar = {
     },
 
     injetarNovaMensagem: (m) => {
-        if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; // Blindagem contra duplicados
+        if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
         Workspace.Sidebar.mensagensRenderizadas.add(m.id);
 
         const container = document.getElementById('ws-chat-mensagens');
         const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
         
-        // Remove a mensagem de "Nenhuma mensagem neste fórum" se existir
         if (container.innerHTML.includes('Nenhuma mensagem')) {
             container.innerHTML = '';
         }
@@ -280,8 +452,6 @@ Workspace.Sidebar = {
         if (!texto || !turmaId) return;
         
         input.value = ''; 
-        
-        // Limpa instantaneamente o status de digitação localmente e no servidor
         Workspace.Sidebar.isTyping = false;
         Workspace.Sidebar.enviarStatusDigitacao(false);
         clearTimeout(Workspace.Sidebar.typingTimer);
@@ -292,8 +462,6 @@ Workspace.Sidebar = {
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login 
             });
             
-            // Opcional de segurança: Injeta a mensagem instantaneamente para o remetente, 
-            // caso a rede demore a processar o evento do túnel SSE
             if (res && res.success && res.mensagem) {
                 Workspace.Sidebar.injetarNovaMensagem(res.mensagem);
             }
