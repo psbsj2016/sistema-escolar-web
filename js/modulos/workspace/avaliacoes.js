@@ -1,4 +1,3 @@
-// js/modulos/workspace/avaliacoes.js
 window.Workspace = window.Workspace || {};
 
 Workspace.Avaliacoes = {
@@ -37,7 +36,7 @@ Workspace.Avaliacoes = {
     momentoSaidaBlur: null,
 
     init: () => {
-        console.log("📝 Motor de Avaliações: Auditoria Extrema Ativada.");
+        console.log("📝 Motor de Avaliações com Integração de Videoconferência Ativado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
@@ -228,17 +227,16 @@ Workspace.Avaliacoes = {
 
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
+        const onlines = avalAtivas.filter(a => a.tipo === 'online'); // 🚀 NOVO FILTRO PARA ONLINE
 
         const entregasCount = {};
         Workspace.Avaliacoes.entregasFeitas.forEach(e => {
             entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
         });
 
+        // TABS DA ESCRITA
         const escPendentes = escritas.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const escConcluidas = escritas.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
-        const orPendentes = orais.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
-        const orConcluidas = orais.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
-
         const tEscPend = document.getElementById('tab-escrita-pendentes');
         const tEscConc = document.getElementById('tab-escrita-concluidas');
         if (tEscPend && tEscConc) {
@@ -249,18 +247,6 @@ Workspace.Avaliacoes = {
             tEscConc.innerText = `Concluídas (${escConcluidas.length})`;
             tEscConc.style.background = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? '#2c3e50' : 'transparent';
             tEscConc.style.color = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? 'white' : '#7f8c8d';
-        }
-
-        const tOrPend = document.getElementById('tab-oral-pendentes');
-        const tOrConc = document.getElementById('tab-oral-concluidas');
-        if (tOrPend && tOrConc) {
-            tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
-            tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
-            tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
-            
-            tOrConc.innerText = `Enviados (${orConcluidas.length})`;
-            tOrConc.style.background = Workspace.Avaliacoes.abaOral === 'concluidas' ? '#2c3e50' : 'transparent';
-            tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
         }
 
         const contEscritas = document.getElementById('ws-lista-provas-escritas');
@@ -290,6 +276,21 @@ Workspace.Avaliacoes = {
             }
         }
 
+        // TABS DO ORAL
+        const orPendentes = orais.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
+        const orConcluidas = orais.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
+        const tOrPend = document.getElementById('tab-oral-pendentes');
+        const tOrConc = document.getElementById('tab-oral-concluidas');
+        if (tOrPend && tOrConc) {
+            tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
+            tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
+            tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
+            
+            tOrConc.innerText = `Enviados (${orConcluidas.length})`;
+            tOrConc.style.background = Workspace.Avaliacoes.abaOral === 'concluidas' ? '#2c3e50' : 'transparent';
+            tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
+        }
+
         const contOrais = document.getElementById('ws-lista-provas-orais');
         if (contOrais) {
             const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
@@ -312,6 +313,29 @@ Workspace.Avaliacoes = {
                             ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>`
                             : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ouvir Gravação</button>`
                         }
+                    </div>
+                `}).join('');
+            }
+        }
+
+        // 🚀 RENDERIZAÇÃO DA SALA ONLINE (VIDEOCONFERÊNCIA)
+        const contOnline = document.getElementById('ws-lista-provas-online');
+        if (contOnline) {
+            if (onlines.length === 0) {
+                contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão de videoconferência agendada.</div>`;
+            } else {
+                contOnline.innerHTML = onlines.map(p => {
+                    const dataObj = new Date(p.dataAgendada);
+                    const dataFormatada = dataObj.toLocaleDateString('pt-BR');
+                    const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    
+                    return `
+                    <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
+                            <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span>
+                        </div>
+                        <a href="${p.linkSala}" target="_blank" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; text-decoration: none; color: white; display: inline-block;">Entrar na Sala</a>
                     </div>
                 `}).join('');
             }
@@ -341,7 +365,7 @@ Workspace.Avaliacoes = {
     },
 
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
-        Workspace.Avaliacoes.exameAtivo = exameId; // 🚀 CORREÇÃO AQUI (Tinha examenId)
+        Workspace.Avaliacoes.exameAtivo = exameId; 
         document.getElementById('ws-exame-titulo').innerText = titulo;
         document.body.style.overflow = 'hidden'; 
         
@@ -614,7 +638,7 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // 🎓 PAINEL DO PROFESSOR (COM ANALYTICS ATUALIZADO)
+    // 🎓 PAINEL DO PROFESSOR (COM SALAS ONLINE)
     // ==========================================
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
@@ -623,10 +647,13 @@ Workspace.Avaliacoes = {
             if (turmas && turmas.length > 0) {
                 const selEscrita = document.getElementById('ws-nova-prova-destino');
                 const selOral = document.getElementById('ws-nova-oral-destino');
+                const selOnline = document.getElementById('ws-nova-online-destino'); // Dropdown do Meet/Teams
                 let options = '<option value="global">🌍 Todas as Turmas</option>';
                 turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`);
+                
                 if(selEscrita) selEscrita.innerHTML = options;
                 if(selOral) selOral.innerHTML = options;
+                if(selOnline) selOnline.innerHTML = options;
             }
             Workspace.Avaliacoes.turmasCarregadas = true;
         } catch(e) {}
@@ -639,6 +666,7 @@ Workspace.Avaliacoes = {
         
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-nova-online').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'block';
@@ -657,6 +685,7 @@ Workspace.Avaliacoes = {
 
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-nova-online').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'block';
@@ -667,9 +696,29 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-nova-oral-destino').value = 'global';
     },
 
+    // 🚀 LÓGICA DE CRIAÇÃO DA SALA ONLINE
+    abrirNovaOnline: () => {
+        Workspace.Avaliacoes.carregarTurmasProf();
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
+        document.getElementById('ws-btn-salvar-online').innerText = "💻 Agendar Sessão Ao Vivo";
+
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
+        document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-recebidas').style.display = 'none';
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+        document.getElementById('ws-prof-nova-online').style.display = 'block';
+
+        document.getElementById('ws-nova-online-titulo').value = '';
+        document.getElementById('ws-nova-online-data').value = '';
+        document.getElementById('ws-nova-online-link').value = '';
+        document.getElementById('ws-nova-online-destino').value = 'global';
+    },
+
     voltarMenuProf: () => {
         document.getElementById('ws-prof-nova-escrita').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'none';
+        document.getElementById('ws-prof-nova-online').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
@@ -704,12 +753,15 @@ Workspace.Avaliacoes = {
         }
 
         container.innerHTML = avaliacoes.map(a => {
-            const icone = a.tipo === 'oral' ? '🎤' : '✍️';
+            let icone = '✍️';
+            if (a.tipo === 'oral') icone = '🎤';
+            if (a.tipo === 'online') icone = '💻'; // Adiciona ícone de videoconferência no gestor
+
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
 
             const temEntrega = Workspace.Avaliacoes.entregasEmCache.some(e => e.avaliacaoId === a.id);
-            const btnEditar = temEntrega
+            const btnEditar = (temEntrega && a.tipo !== 'online')
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
@@ -774,7 +826,7 @@ Workspace.Avaliacoes = {
             if(prova.questoes) {
                 prova.questoes.forEach(q => Workspace.Avaliacoes.adicionarQuestaoBuilder(q.tipo, q));
             }
-        } else {
+        } else if (prova.tipo === 'oral') {
             document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
             document.getElementById('ws-prof-nova-oral').style.display = 'block';
             
@@ -783,6 +835,15 @@ Workspace.Avaliacoes = {
             document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
+        } else if (prova.tipo === 'online') { // Edição de Sala Online
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-online').style.display = 'block';
+            
+            document.getElementById('ws-nova-online-titulo').value = prova.titulo;
+            document.getElementById('ws-nova-online-data').value = prova.dataAgendada || '';
+            document.getElementById('ws-nova-online-link').value = prova.linkSala || '';
+            document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
+            document.getElementById('ws-btn-salvar-online').innerText = "💾 Guardar Alterações";
         }
     },
 
@@ -1009,6 +1070,42 @@ Workspace.Avaliacoes = {
         }
     },
 
+    // 🚀 LÓGICA DE GRAVAÇÃO DA SALA ONLINE
+    salvarProvaOnline: async () => {
+        const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
+        const dataHora = document.getElementById('ws-nova-online-data').value;
+        const linkSala = document.getElementById('ws-nova-online-link').value.trim();
+        const selDestino = document.getElementById('ws-nova-online-destino');
+        const destino = selDestino.value;
+        const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
+
+        if(!titulo || !dataHora || !linkSala) return Workspace.mostrarAviso("Preencha o título, a data e o link da sala.", "warning");
+
+        const btn = event.target;
+        const txt = btn.innerText; btn.innerText = "⏳ A agendar..."; btn.disabled = true;
+
+        try {
+            const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
+            const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
+
+            const res = await Workspace.api(endpoint, metodo, {
+                titulo, tipo: 'online', dataAgendada: dataHora, linkSala, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+            });
+
+            if (res && res.success) {
+                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Sala Atualizada!" : "Sala Agendada com sucesso!", "success");
+                Workspace.Avaliacoes.voltarMenuProf();
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao guardar a sala.", "error");
+            }
+        } catch (e) { 
+            Workspace.mostrarAviso("Erro de ligação ao servidor.", "error"); 
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
+    },
+
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -1033,7 +1130,7 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                // 📊 O MOTOR DE ESTATÍSTICAS (ETAPA B RESTAURADA)
+                // 📊 O MOTOR DE ESTATÍSTICAS
                 let totalAlertas = 0;
                 const erroPorQuestao = {};
                 let somaAcertos = 0;
@@ -1119,7 +1216,6 @@ Workspace.Avaliacoes = {
                 <h3 style="font-size:15px; color:#2c3e50; margin:25px 0 15px 0; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:8px;">📥 Exames Recebidos para Avaliação</h3>
                 `;
 
-                // Renderiza a lista física de alunos abaixo das métricas
                 const htmlListaAlunos = resEntregas.entregas.map(e => {
                     const prova = provasMap[e.avaliacaoId];
                     const tituloProva = prova ? prova.titulo : 'Prova Excluída';
