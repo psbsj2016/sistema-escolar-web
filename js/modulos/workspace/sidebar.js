@@ -2,8 +2,8 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Sidebar = {
     turmaIdAberta: null,
-    infoTurmaAberta: null, // 🖼️ Guarda a foto e nome do grupo atual
-    fotoComprimida: null,  // 🚀 NOVO: Guarda a foto já reduzida e leve para envio rápido
+    infoTurmaAberta: null, 
+    fotoComprimida: null,  // 🚀 Guarda a foto minúscula e rápida em formato Blob
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
@@ -85,7 +85,6 @@ Workspace.Sidebar = {
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
                 
-                // 🖼️ NOVA FEATURE: Mostra a mini foto do grupo no menu lateral se existir
                 let avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
                 if(t.foto) {
                     avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd;"><img src="${t.foto}" style="width:100%; height:100%; object-fit:cover;"></div>`;
@@ -135,7 +134,7 @@ Workspace.Sidebar = {
 
     abrirEdicaoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta || {};
-        Workspace.Sidebar.fotoComprimida = null; // Limpa memórias anteriores
+        Workspace.Sidebar.fotoComprimida = null; // Limpa memórias antigas
         
         const idModal = 'ws-modal-edit-chat';
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
@@ -176,53 +175,45 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 O MOTOR DE COMPRESSÃO INSTANTÂNEA NO NAVEGADOR
+    // 🚀 O MOTOR DE COMPRESSÃO BLINDADO
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        // Limpa o ficheiro original do input para que o navegador não o envie por engano
-        e.target.value = '';
+        // Limite de segurança de 15MB. Como vamos comprimir, podemos aceitar ficheiros maiores!
+        if (file.size > 15 * 1024 * 1024) { 
+            Workspace.mostrarAviso("A fotografia é exageradamente pesada. Escolha uma imagem até 15MB.", "warning");
+            e.target.value = ''; 
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = (event) => {
             const imgOriginal = new Image();
-            imgOriginal.src = event.target.result;
-
             imgOriginal.onload = () => {
-                // 1. Cria uma tela de desenho (Canvas) na memória
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400; // Tamanho ideal e super leve para Avatares
+                const MAX_WIDTH = 400; // Tamanho ideal para um Avatar
                 const MAX_HEIGHT = 400;
                 let width = imgOriginal.width;
                 let height = imgOriginal.height;
 
-                // 2. Calcula as proporções perfeitas sem distorcer a imagem
                 if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                 } else {
-                    if (height > MAX_HEIGHT) {
-                        width *= MAX_HEIGHT / height;
-                        height = MAX_HEIGHT;
-                    }
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
                 }
 
                 canvas.width = width;
                 canvas.height = height;
 
-                // 3. Desenha a imagem gigante numa versão pequenina e leve
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(imgOriginal, 0, 0, width, height);
 
-                // 4. Converte o desenho para um ficheiro real JPEG com 80% de qualidade
                 canvas.toBlob((blob) => {
-                    // Guarda na memória a foto minúscula (pronta a enviar num piscar de olhos)
-                    Workspace.Sidebar.fotoComprimida = new File([blob], "avatar_turma_otimizado.jpg", { type: "image/jpeg" });
+                    // 🛡️ A grande diferença: guardamos o Blob diretamente.
+                    // Funciona a 100% no Safari, iPhone, Android e Windows!
+                    Workspace.Sidebar.fotoComprimida = blob;
 
-                    // 5. Atualiza o ecrã instantaneamente
                     const imgPreview = document.getElementById('ws-chat-foto-preview');
                     const icone = document.getElementById('ws-chat-icone-holder');
                     const avisoCompressao = document.getElementById('ws-alerta-compressao');
@@ -232,8 +223,11 @@ Workspace.Sidebar = {
                     if(icone) icone.style.display = 'none';
                     if(avisoCompressao) avisoCompressao.style.display = 'block';
 
-                }, 'image/jpeg', 0.8); // 0.8 é a compressão mágica (leve mas sem perder qualidade visual)
+                    // Limpa o input no momento certo e seguro
+                    e.target.value = ''; 
+                }, 'image/jpeg', 0.85); // 85% de qualidade para ficar nítido e super leve
             };
+            imgOriginal.src = event.target.result;
         };
         reader.readAsDataURL(file);
     },
@@ -244,18 +238,19 @@ Workspace.Sidebar = {
         const btn = document.getElementById('ws-btn-salvar-chat');
         
         if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
-
+        
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A guardar na nuvem (super rápido!)...";
+        btn.innerText = "⏳ A enviar para a nuvem...";
         btn.disabled = true;
 
         try {
             let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
             
-            // Faz upload DA FOTO LEVE (fotoComprimida) para a Nuvem
+            // 🚀 Envia a foto minúscula disfarçada de ficheiro real
             if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
-                formData.append('anexos', Workspace.Sidebar.fotoComprimida);
+                // O 3º argumento 'avatar_turma.jpg' é crucial. Diz ao Multer que isto é um ficheiro real!
+                formData.append('anexos', Workspace.Sidebar.fotoComprimida, 'avatar_turma.jpg');
                 
                 const uploadRes = await fetch('/api/workspace/upload', { 
                     method: 'POST', 
@@ -297,15 +292,16 @@ Workspace.Sidebar = {
             }
         } catch (e) {
             console.error("Erro no salvarEdicaoChat:", e);
-            Workspace.mostrarAviso("Erro ao atualizar a foto ou o nome.", "error");
+            Workspace.mostrarAviso("Erro ao atualizar! Tente novamente.", "error");
         } finally {
+            // Se falhar ou der sucesso, o botão volta ao normal!
             btn.innerText = textoOriginal;
             btn.disabled = false;
         }
     },
 
     // ==========================================
-    // 💬 LÓGICA DO BATE-PAPO
+    // 💬 LÓGICA DO BATE-PAPO E TEMPO REAL
     // ==========================================
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
@@ -379,7 +375,7 @@ Workspace.Sidebar = {
                     if(info) {
                         Workspace.Sidebar.infoTurmaAberta = info;
                         Workspace.Sidebar.atualizarCabecalhoChat(info);
-                        Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
+                        Workspace.Sidebar.carregarTurmas();
                     }
                 });
             }
