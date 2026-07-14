@@ -117,11 +117,12 @@ Workspace.Sidebar = {
         }
     },
 
+    // 🚀 LIGAÇÃO DIRETA AO NOVO VISUALIZADOR ESTILO WHATSAPP
     verFotoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta;
         if(info && info.foto) {
-            if(Workspace.Feed && Workspace.Feed.abrirImagemInteira) {
-                Workspace.Feed.abrirImagemInteira(info.foto);
+            if (Workspace.abrirVisualizadorImagem) {
+                Workspace.abrirVisualizadorImagem(info.foto, info.nome || "Foto do Grupo");
             }
         } else {
             Workspace.mostrarAviso("Este grupo de estudos ainda não possui uma foto de perfil.", "info");
@@ -171,7 +172,6 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA E COMPRIME ATÉ 100MB DE FORMA BLINDADA
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
@@ -182,12 +182,12 @@ Workspace.Sidebar = {
             return;
         }
 
-        const imgOriginal = new Image();
         const objectUrl = URL.createObjectURL(file);
+        const imgOriginal = new Image();
 
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 400; // Tamanho Quadrado Perfeito
+            const MAX_SIZE = 400; 
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
@@ -205,12 +205,10 @@ Workspace.Sidebar = {
             ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
 
             canvas.toBlob((blob) => {
-                // ✨ A MÁGICA: Limpamos a memória APENAS quando a imagem já foi perfeitamente pintada e guardada
                 URL.revokeObjectURL(objectUrl); 
 
-                // 🛡️ O ESCUDO: Se a imagem falhou e gerou um ficheiro vazio, abortamos para não quebrar o servidor!
                 if (!blob || blob.size < 100) {
-                    Workspace.mostrarAviso("Falha ao processar imagem. Tente escolher uma foto diferente.", "error");
+                    Workspace.mostrarAviso("Falha ao processar imagem. Escolha uma foto diferente.", "error");
                     e.target.value = '';
                     return;
                 }
@@ -227,7 +225,7 @@ Workspace.Sidebar = {
                 if(avisoCompressao) avisoCompressao.style.display = 'block';
 
                 e.target.value = ''; 
-            }, 'image/jpeg', 0.85); // 85% de qualidade para maior nitidez
+            }, 'image/jpeg', 0.85); 
         };
 
         imgOriginal.onerror = () => {
@@ -515,9 +513,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
-    // ==========================================
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
@@ -674,7 +669,7 @@ Workspace.Sidebar = {
                                         <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
-                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Trabalho</a>
+                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Trabalho</a>
                                 </div>
                             `;
                         });
