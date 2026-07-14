@@ -171,60 +171,64 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA EM QUADRADO E COMPRIME
+    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA E COMPRIME ATÉ 100MB
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        // Permite até 100MB e corta na hora.
+        // Permite até 100MB
         if (file.size > 100 * 1024 * 1024) { 
             Workspace.mostrarAviso("A fotografia ultrapassou o limite máximo de 100MB.", "warning");
             e.target.value = ''; 
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const imgOriginal = new Image();
-            imgOriginal.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_SIZE = 400; // Tamanho Quadrado Perfeito
-                canvas.width = MAX_SIZE;
-                canvas.height = MAX_SIZE;
+        const imgOriginal = new Image();
+        const objectUrl = URL.createObjectURL(file); // 🚀 Evita crash de memória no telemóvel
 
-                const ctx = canvas.getContext('2d');
+        imgOriginal.onload = () => {
+            URL.revokeObjectURL(objectUrl); // Liberta a RAM imediatamente!
+            
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 400; // Tamanho Quadrado Perfeito
+            canvas.width = MAX_SIZE;
+            canvas.height = MAX_SIZE;
+
+            const ctx = canvas.getContext('2d');
+            
+            let sourceX = 0, sourceY = 0, sourceSize = 0;
+            if (imgOriginal.width > imgOriginal.height) {
+                sourceSize = imgOriginal.height;
+                sourceX = (imgOriginal.width - sourceSize) / 2;
+            } else {
+                sourceSize = imgOriginal.width;
+                sourceY = (imgOriginal.height - sourceSize) / 2;
+            }
+
+            ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
+
+            canvas.toBlob((blob) => {
+                Workspace.Sidebar.fotoComprimida = blob;
+
+                const imgPreview = document.getElementById('ws-chat-foto-preview');
+                const icone = document.getElementById('ws-chat-icone-holder');
+                const avisoCompressao = document.getElementById('ws-alerta-compressao');
                 
-                // Lógica Inteligente para Centralizar e Cortar
-                let sourceX = 0, sourceY = 0, sourceSize = 0;
-                if (imgOriginal.width > imgOriginal.height) {
-                    sourceSize = imgOriginal.height;
-                    sourceX = (imgOriginal.width - sourceSize) / 2;
-                } else {
-                    sourceSize = imgOriginal.width;
-                    sourceY = (imgOriginal.height - sourceSize) / 2;
-                }
+                imgPreview.src = URL.createObjectURL(blob);
+                imgPreview.style.display = 'block';
+                if(icone) icone.style.display = 'none';
+                if(avisoCompressao) avisoCompressao.style.display = 'block';
 
-                ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
-
-                canvas.toBlob((blob) => {
-                    // Blob puro é imune a falhas em iPhones antigos!
-                    Workspace.Sidebar.fotoComprimida = blob;
-
-                    const imgPreview = document.getElementById('ws-chat-foto-preview');
-                    const icone = document.getElementById('ws-chat-icone-holder');
-                    const avisoCompressao = document.getElementById('ws-alerta-compressao');
-                    
-                    imgPreview.src = URL.createObjectURL(blob);
-                    imgPreview.style.display = 'block';
-                    if(icone) icone.style.display = 'none';
-                    if(avisoCompressao) avisoCompressao.style.display = 'block';
-
-                    e.target.value = ''; 
-                }, 'image/jpeg', 0.85); // 85% de qualidade para maior nitidez
-            };
-            imgOriginal.src = event.target.result;
+                e.target.value = ''; 
+            }, 'image/jpeg', 0.85); 
         };
-        reader.readAsDataURL(file);
+        
+        imgOriginal.onerror = () => {
+            Workspace.mostrarAviso("Ficheiro de imagem inválido.", "error");
+            e.target.value = '';
+        };
+
+        imgOriginal.src = objectUrl;
     },
 
     salvarEdicaoChat: async () => {

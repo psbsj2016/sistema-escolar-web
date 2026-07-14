@@ -296,9 +296,9 @@ Object.assign(Workspace, {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Limite gigante para rececionar a foto
+        // Limite gigante para rececionar a foto (100MB)
         if (file.size > 100 * 1024 * 1024) {
-            Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
+            Workspace.mostrarAviso("A fotografia ultrapassou o limite de 100MB.", "warning");
             event.target.value = '';
             return;
         }
@@ -306,82 +306,92 @@ Object.assign(Workspace, {
         const loader = document.getElementById('ws-avatar-loading');
         if(loader) loader.style.display = 'block';
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const imgOriginal = new Image();
-            imgOriginal.onload = () => {
-                const canvas = document.createElement('canvas');
-                const MAX_SIZE = 400; // Tamanho ideal e quadrado
-                canvas.width = MAX_SIZE;
-                canvas.height = MAX_SIZE;
+        // 🚀 TECNOLOGIA DE ALTA PERFORMANCE: URL Object impede que o telemóvel trave!
+        const imgOriginal = new Image();
+        const objectUrl = URL.createObjectURL(file);
 
-                const ctx = canvas.getContext('2d');
-                
-                // Lógica Inteligente para Centralizar e Cortar
-                let sourceX = 0, sourceY = 0, sourceSize = 0;
-                if (imgOriginal.width > imgOriginal.height) {
-                    sourceSize = imgOriginal.height;
-                    sourceX = (imgOriginal.width - sourceSize) / 2;
-                } else {
-                    sourceSize = imgOriginal.width;
-                    sourceY = (imgOriginal.height - sourceSize) / 2;
-                }
+        imgOriginal.onload = () => {
+            URL.revokeObjectURL(objectUrl); // Liberta a memória RAM instantaneamente!
+            
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 400; // Tamanho ideal e quadrado
+            canvas.width = MAX_SIZE;
+            canvas.height = MAX_SIZE;
 
-                ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
+            const ctx = canvas.getContext('2d');
+            
+            // Inteligência para Centralizar e Cortar o Quadrado Perfeito
+            let sourceX = 0, sourceY = 0, sourceSize = 0;
+            if (imgOriginal.width > imgOriginal.height) {
+                sourceSize = imgOriginal.height;
+                sourceX = (imgOriginal.width - sourceSize) / 2;
+            } else {
+                sourceSize = imgOriginal.width;
+                sourceY = (imgOriginal.height - sourceSize) / 2;
+            }
 
-                canvas.toBlob(async (blob) => {
-                    try {
-                        const formData = new FormData();
-                        // Blob puro engana qualquer navegador e evita o Erro 502
-                        formData.append('anexos', blob, 'avatar_usuario.jpg');
+            ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
 
-                        const uploadRes = await fetch('/api/workspace/upload', { 
-                            method: 'POST', credentials: 'include', body: formData 
-                        });
-                        const uploadData = await uploadRes.json();
-                        
-                        if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
-                            throw new Error("Falha no upload");
-                        }
+            canvas.toBlob(async (blob) => {
+                try {
+                    const formData = new FormData();
+                    // O 3º argumento ('avatar_usuario.jpg') dá o nome falso para o Cloudinary não dar erro
+                    formData.append('anexos', blob, 'avatar_usuario.jpg');
 
-                        const avatarFinal = uploadData.anexos[0].url;
-
-                        const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
-                            id: Workspace.usuario.id,
-                            alunoRefId: Workspace.usuario.alunoRefId || null,
-                            avatarUrl: avatarFinal
-                        });
-
-                        if (res && res.success) {
-                            Workspace.usuario.avatar = avatarFinal;
-                            localStorage.setItem('ws_user', JSON.stringify(Workspace.usuario));
-                            
-                            const img = document.getElementById('ws-perfil-img');
-                            const letras = document.getElementById('ws-perfil-letras');
-                            if(img) {
-                                img.src = avatarFinal;
-                                img.style.display = 'block';
-                            }
-                            if(letras) letras.style.display = 'none';
-
-                            Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
-                            
-                            // Atualiza tudo o que é visual no ecrã e nos menus
-                            Workspace.carregarMenuLateral();
-                            if(Workspace.Feed) Workspace.Feed.carregarPosts();
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        Workspace.mostrarAviso("Erro ao alterar foto.", "error");
-                    } finally {
-                        if(loader) loader.style.display = 'none';
-                        event.target.value = ''; // Limpa para permitir novo upload seguro
+                    const uploadRes = await fetch('/api/workspace/upload', { 
+                        method: 'POST', credentials: 'include', body: formData 
+                    });
+                    
+                    if (!uploadRes.ok) throw new Error("Falha no servidor (502).");
+                    
+                    const uploadData = await uploadRes.json();
+                    if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
+                        throw new Error("Falha no upload da nuvem");
                     }
-                }, 'image/jpeg', 0.85); 
-            };
-            imgOriginal.src = e.target.result;
+
+                    const avatarFinal = uploadData.anexos[0].url;
+
+                    const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
+                        id: Workspace.usuario.id,
+                        alunoRefId: Workspace.usuario.alunoRefId || null,
+                        avatarUrl: avatarFinal
+                    });
+
+                    if (res && res.success) {
+                        Workspace.usuario.avatar = avatarFinal;
+                        localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+                        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal; 
+                        
+                        const img = document.getElementById('ws-perfil-img');
+                        const letras = document.getElementById('ws-perfil-letras');
+                        if(img) {
+                            img.src = avatarFinal;
+                            img.style.display = 'block';
+                        }
+                        if(letras) letras.style.display = 'none';
+
+                        Workspace.mostrarAviso("Foto de perfil atualizada com sucesso!", "success");
+                        
+                        // Atualiza a foto dos Posts do feed em tempo real
+                        if(Workspace.Feed) Workspace.Feed.carregarPosts();
+                    }
+                } catch (err) {
+                    console.error(err);
+                    Workspace.mostrarAviso("Erro ao enviar a imagem. Tente novamente.", "error");
+                } finally {
+                    if(loader) loader.style.display = 'none';
+                    event.target.value = ''; // Limpa para permitir novo upload seguro
+                }
+            }, 'image/jpeg', 0.85); // Compressão inteligente de 85%
         };
-        reader.readAsDataURL(file);
+        
+        imgOriginal.onerror = () => {
+            Workspace.mostrarAviso("Ficheiro de imagem inválido ou corrompido.", "error");
+            if(loader) loader.style.display = 'none';
+            event.target.value = '';
+        };
+
+        imgOriginal.src = objectUrl;
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
