@@ -3,7 +3,7 @@ window.Workspace = window.Workspace || {};
 Workspace.Sidebar = {
     turmaIdAberta: null,
     infoTurmaAberta: null, 
-    fotoComprimida: null,  // Guarda a foto transformada em ficheiro (File)
+    fotoComprimida: null,  
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
@@ -84,7 +84,6 @@ Workspace.Sidebar = {
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
-                
                 let avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
                 if(t.foto) {
                     avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd;"><img src="${t.foto}" style="width:100%; height:100%; object-fit:cover;"></div>`;
@@ -153,7 +152,7 @@ Workspace.Sidebar = {
                     </div>
                     <input type="file" id="ws-chat-nova-foto" accept="image/*" style="display:none;" onchange="Workspace.Sidebar.previewFotoChat(event)">
                     <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Toque no ícone para alterar a foto</div>
-                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada para envio ultrarrápido! 🚀</div>
+                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada e centralizada para perfil! 🚀</div>
                 </div>
 
                 <label style="font-size: 12px; font-weight: bold; color: #555;">Nome da Turma / Grupo</label>
@@ -172,13 +171,14 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 MOTOR DE COMPRESSÃO REFEITO PARA CRIAR UM "FILE" NATIVO
+    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA EM QUADRADO E COMPRIME
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        if (file.size > 15 * 1024 * 1024) { 
-            Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 15MB.", "warning");
+        // Permite até 100MB e corta na hora.
+        if (file.size > 100 * 1024 * 1024) { 
+            Workspace.mostrarAviso("A fotografia ultrapassou o limite máximo de 100MB.", "warning");
             e.target.value = ''; 
             return;
         }
@@ -188,39 +188,39 @@ Workspace.Sidebar = {
             const imgOriginal = new Image();
             imgOriginal.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400; 
-                const MAX_HEIGHT = 400;
-                let width = imgOriginal.width;
-                let height = imgOriginal.height;
-
-                if (width > height) {
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                } else {
-                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
+                const MAX_SIZE = 400; // Tamanho Quadrado Perfeito
+                canvas.width = MAX_SIZE;
+                canvas.height = MAX_SIZE;
 
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(imgOriginal, 0, 0, width, height);
+                
+                // Lógica Inteligente para Centralizar e Cortar
+                let sourceX = 0, sourceY = 0, sourceSize = 0;
+                if (imgOriginal.width > imgOriginal.height) {
+                    sourceSize = imgOriginal.height;
+                    sourceX = (imgOriginal.width - sourceSize) / 2;
+                } else {
+                    sourceSize = imgOriginal.width;
+                    sourceY = (imgOriginal.height - sourceSize) / 2;
+                }
+
+                ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
 
                 canvas.toBlob((blob) => {
-                    // 🛡️ MÁGICA: Convertemos o Blob num autêntico objeto "File" idêntico ao upload do Perfil
-                    const arquivoFinal = new File([blob], "avatar_turma_otimizado.jpg", { type: "image/jpeg" });
-                    Workspace.Sidebar.fotoComprimida = arquivoFinal;
+                    // Blob puro é imune a falhas em iPhones antigos!
+                    Workspace.Sidebar.fotoComprimida = blob;
 
                     const imgPreview = document.getElementById('ws-chat-foto-preview');
                     const icone = document.getElementById('ws-chat-icone-holder');
                     const avisoCompressao = document.getElementById('ws-alerta-compressao');
                     
-                    imgPreview.src = URL.createObjectURL(arquivoFinal);
+                    imgPreview.src = URL.createObjectURL(blob);
                     imgPreview.style.display = 'block';
                     if(icone) icone.style.display = 'none';
                     if(avisoCompressao) avisoCompressao.style.display = 'block';
 
                     e.target.value = ''; 
-                }, 'image/jpeg', 0.85); 
+                }, 'image/jpeg', 0.85); // 85% de qualidade para maior nitidez
             };
             imgOriginal.src = event.target.result;
         };
@@ -241,10 +241,10 @@ Workspace.Sidebar = {
         try {
             let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
             
-            // Agora Workspace.Sidebar.fotoComprimida é um "File" real!
             if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
-                formData.append('anexos', Workspace.Sidebar.fotoComprimida); 
+                // O terceiro parâmetro (avatar_otimizado.jpg) diz ao servidor como ler o Blob!
+                formData.append('anexos', Workspace.Sidebar.fotoComprimida, 'avatar_otimizado.jpg'); 
                 
                 const uploadRes = await fetch('/api/workspace/upload', { 
                     method: 'POST', 
@@ -253,7 +253,6 @@ Workspace.Sidebar = {
                 });
                 
                 if (!uploadRes.ok) throw new Error("A ligação com a nuvem falhou.");
-                
                 const uploadData = await uploadRes.json();
                 
                 if(uploadData.success && uploadData.anexos && uploadData.anexos.length > 0) {
@@ -293,9 +292,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 💬 LÓGICA DO BATE-PAPO
-    // ==========================================
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         
@@ -508,9 +504,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
-    // ==========================================
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
@@ -1018,7 +1011,7 @@ Workspace.Sidebar = {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${ent.observacao ? `<span title="${Workspace.Sidebar.escapeHTML(ent.observacao)}" style="cursor:help; font-size:20px; color:#f1c40f;">💬</span>` : ''}
-                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
+                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
                         </div>
                     </div>
                 `;

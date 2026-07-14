@@ -291,48 +291,97 @@ Object.assign(Workspace, {
 
     abrirModalPerfil: () => Workspace.abrirPaginaPerfil(),
 
+   // 🚀 LÓGICA DE INTELIGÊNCIA E RECORTE: PERFIL DO UTILIZADOR
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) return Workspace.mostrarAviso("A imagem é muito pesada. Escolha uma foto até 5MB.", "warning");
-
-        const loading = document.getElementById('ws-avatar-loading');
-        loading.style.display = 'block';
-
-        try {
-            const formData = new FormData();
-            formData.append('anexos', file);
-
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no envio.");
-            const novaFotoUrl = uploadData.anexos[0].url;
-
-            const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', { 
-                id: Workspace.usuario.id,
-                alunoRefId: Workspace.usuario.alunoRefId,
-                avatarUrl: novaFotoUrl
-            });
-
-            if (res && res.success) {
-                Workspace.usuario.avatar = novaFotoUrl;
-                localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
-                Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = novaFotoUrl;
-
-                Workspace.abrirPaginaPerfil(); 
-                Workspace.mostrarAviso("Foto de perfil updated!", "success");
-                
-                if (Workspace.Feed) Workspace.Feed.carregarPosts();
-                if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) Workspace.Sidebar.carregarMensagensChat();
-            }
-        } catch (e) { 
-            Workspace.mostrarAviso("Falha ao guardar a foto. Tente novamente.", "error"); 
-        } finally { 
-            loading.style.display = 'none'; 
-            event.target.value = ''; 
+        // Limite gigante para rececionar a foto
+        if (file.size > 100 * 1024 * 1024) {
+            Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
+            event.target.value = '';
+            return;
         }
+
+        const loader = document.getElementById('ws-avatar-loading');
+        if(loader) loader.style.display = 'block';
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imgOriginal = new Image();
+            imgOriginal.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 400; // Tamanho ideal e quadrado
+                canvas.width = MAX_SIZE;
+                canvas.height = MAX_SIZE;
+
+                const ctx = canvas.getContext('2d');
+                
+                // Lógica Inteligente para Centralizar e Cortar
+                let sourceX = 0, sourceY = 0, sourceSize = 0;
+                if (imgOriginal.width > imgOriginal.height) {
+                    sourceSize = imgOriginal.height;
+                    sourceX = (imgOriginal.width - sourceSize) / 2;
+                } else {
+                    sourceSize = imgOriginal.width;
+                    sourceY = (imgOriginal.height - sourceSize) / 2;
+                }
+
+                ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
+
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const formData = new FormData();
+                        // Blob puro engana qualquer navegador e evita o Erro 502
+                        formData.append('anexos', blob, 'avatar_usuario.jpg');
+
+                        const uploadRes = await fetch('/api/workspace/upload', { 
+                            method: 'POST', credentials: 'include', body: formData 
+                        });
+                        const uploadData = await uploadRes.json();
+                        
+                        if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
+                            throw new Error("Falha no upload");
+                        }
+
+                        const avatarFinal = uploadData.anexos[0].url;
+
+                        const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
+                            id: Workspace.usuario.id,
+                            alunoRefId: Workspace.usuario.alunoRefId || null,
+                            avatarUrl: avatarFinal
+                        });
+
+                        if (res && res.success) {
+                            Workspace.usuario.avatar = avatarFinal;
+                            localStorage.setItem('ws_user', JSON.stringify(Workspace.usuario));
+                            
+                            const img = document.getElementById('ws-perfil-img');
+                            const letras = document.getElementById('ws-perfil-letras');
+                            if(img) {
+                                img.src = avatarFinal;
+                                img.style.display = 'block';
+                            }
+                            if(letras) letras.style.display = 'none';
+
+                            Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
+                            
+                            // Atualiza tudo o que é visual no ecrã e nos menus
+                            Workspace.carregarMenuLateral();
+                            if(Workspace.Feed) Workspace.Feed.carregarPosts();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Workspace.mostrarAviso("Erro ao alterar foto.", "error");
+                    } finally {
+                        if(loader) loader.style.display = 'none';
+                        event.target.value = ''; // Limpa para permitir novo upload seguro
+                    }
+                }, 'image/jpeg', 0.85); 
+            };
+            imgOriginal.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
