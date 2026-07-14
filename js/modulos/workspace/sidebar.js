@@ -124,7 +124,6 @@ Workspace.Sidebar = {
     verFotoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta;
         if(info && info.foto) {
-            // Reaproveita o abridor de imagens do Feed
             if(Workspace.Feed && Workspace.Feed.abrirImagemInteira) {
                 Workspace.Feed.abrirImagemInteira(info.foto);
             }
@@ -176,6 +175,16 @@ Workspace.Sidebar = {
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
+
+        // 🛡️ BLOQUEIO DE SEGURANÇA 1: Impede que ficheiros gigantes travem o sistema!
+        if (file.size > 5 * 1024 * 1024) { 
+            if(window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 5MB.", "warning");
+            }
+            e.target.value = ''; // Limpa a seleção para poder tentar de novo
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = document.getElementById('ws-chat-foto-preview');
@@ -195,22 +204,38 @@ Workspace.Sidebar = {
         
         if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
         
+        // 🛡️ BLOQUEIO DE SEGURANÇA 2: Garantia final antes do envio para a Nuvem
+        if (fileInput.files.length > 0 && fileInput.files[0].size > 5 * 1024 * 1024) {
+            return Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 5MB.", "warning");
+        }
+
+        const textoOriginal = btn.innerText;
         btn.innerText = "⏳ A guardar na nuvem...";
         btn.disabled = true;
 
         try {
-            let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
+            // Utilizamos uma estrutura mais robusta para versões antigas de navegadores
+            let fotoUrl = Workspace.Sidebar.infoTurmaAberta ? Workspace.Sidebar.infoTurmaAberta.foto : null;
             
             // Faz upload da nova foto para o Cloudinary (Nuvem)
             if (fileInput.files.length > 0) {
                 const formData = new FormData();
                 formData.append('anexos', fileInput.files[0]);
-                const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+                
+                const uploadRes = await fetch('/api/workspace/upload', { 
+                    method: 'POST', 
+                    credentials: 'include', 
+                    body: formData 
+                });
+                
+                if (!uploadRes.ok) throw new Error("A ligação com a nuvem falhou.");
+                
                 const uploadData = await uploadRes.json();
-                if(uploadData.success && uploadData.anexos.length > 0) {
+                
+                if(uploadData.success && uploadData.anexos && uploadData.anexos.length > 0) {
                     fotoUrl = uploadData.anexos[0].url;
                 } else {
-                    throw new Error("Falha no upload da imagem.");
+                    throw new Error("Não foi possível processar a imagem.");
                 }
             }
 
@@ -222,22 +247,26 @@ Workspace.Sidebar = {
             if(res && res.success) {
                 Workspace.mostrarAviso("Identidade do Grupo atualizada! ✨", "success");
                 
+                // Fecha o modal de edição suavemente
                 const modal = document.getElementById('ws-modal-edit-chat');
                 if(modal) {
                     modal.style.opacity = '0';
                     setTimeout(()=> modal.remove(), 200);
                 }
                 
+                // Atualiza localmente a Interface Visual imediatamente
                 Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
                 Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
                 Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
             } else {
-                throw new Error();
+                throw new Error("Ocorreu um erro na Base de Dados.");
             }
         } catch (e) {
-            Workspace.mostrarAviso("Erro ao atualizar a foto ou o nome.", "error");
+            console.error("Erro no salvarEdicaoChat:", e);
+            Workspace.mostrarAviso("Erro ao atualizar! Verifique a sua ligação ou escolha uma foto mais leve.", "error");
         } finally {
-            btn.innerText = "💾 Guardar Alterações";
+            // Garante que o botão destranca SEMPRE, aconteça o que acontecer!
+            btn.innerText = textoOriginal;
             btn.disabled = false;
         }
     },
@@ -462,8 +491,6 @@ Workspace.Sidebar = {
     // ==========================================
     // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
     // ==========================================
-    // (As funções de Tarefas permanecem as mesmas para garantir a estabilidade)
-    
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
