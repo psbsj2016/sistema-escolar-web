@@ -1,6 +1,10 @@
 import { CONFIG } from './config.js';
+
+// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL (Já gere os avisos PWA)
 import './pwa-updater.js';
+
 import './toast.js'; 
+
 import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
@@ -169,12 +173,18 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
+        // 🚀 AQUI ESTAVA O PROBLEMA! Faltava mapear o ecra da avaliação online.
         const ecras = {
-            'feed': 'ws-main-container', 'configuracoes': 'ws-config-container',
-            'tarefas_aluno': 'ws-tarefas-container', 'tarefas_prof': 'ws-tarefas-professor-container',
-            'perfil': 'ws-perfil-modal', 'avaliacoes_aluno': 'ws-avaliacoes-container',
-            'avaliacoes_prof': 'ws-avaliacoes-prof-container', 'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
-            'avaliacoes_oral': 'ws-avaliacoes-oral-container'
+            'feed': 'ws-main-container', 
+            'configuracoes': 'ws-config-container',
+            'tarefas_aluno': 'ws-tarefas-container', 
+            'tarefas_prof': 'ws-tarefas-professor-container',
+            'perfil': 'ws-perfil-modal', 
+            'avaliacoes_aluno': 'ws-avaliacoes-container',
+            'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
+            'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
+            'avaliacoes_oral': 'ws-avaliacoes-oral-container',
+            'avaliacoes_online': 'ws-avaliacoes-online-container' // ADICIONADO PARA CORRIGIR O GPS!
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';

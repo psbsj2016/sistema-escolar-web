@@ -227,7 +227,7 @@ Workspace.Avaliacoes = {
 
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
         const orais = avalAtivas.filter(a => a.tipo === 'oral');
-        const onlines = avalAtivas.filter(a => a.tipo === 'online'); // 🚀 NOVO FILTRO PARA ONLINE
+        const onlines = avalAtivas.filter(a => a.tipo === 'online'); 
 
         const entregasCount = {};
         Workspace.Avaliacoes.entregasFeitas.forEach(e => {
@@ -322,7 +322,7 @@ Workspace.Avaliacoes = {
         const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             if (onlines.length === 0) {
-                contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão de videoconferência agendada.</div>`;
+                contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão de videoconferência agendada para a sua turma.</div>`;
             } else {
                 contOnline.innerHTML = onlines.map(p => {
                     const dataObj = new Date(p.dataAgendada);
@@ -647,7 +647,7 @@ Workspace.Avaliacoes = {
             if (turmas && turmas.length > 0) {
                 const selEscrita = document.getElementById('ws-nova-prova-destino');
                 const selOral = document.getElementById('ws-nova-oral-destino');
-                const selOnline = document.getElementById('ws-nova-online-destino'); // Dropdown do Meet/Teams
+                const selOnline = document.getElementById('ws-nova-online-destino');
                 let options = '<option value="global">🌍 Todas as Turmas</option>';
                 turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`);
                 
@@ -755,7 +755,7 @@ Workspace.Avaliacoes = {
         container.innerHTML = avaliacoes.map(a => {
             let icone = '✍️';
             if (a.tipo === 'oral') icone = '🎤';
-            if (a.tipo === 'online') icone = '💻'; // Adiciona ícone de videoconferência no gestor
+            if (a.tipo === 'online') icone = '💻';
 
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
@@ -835,7 +835,7 @@ Workspace.Avaliacoes = {
             document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
-        } else if (prova.tipo === 'online') { // Edição de Sala Online
+        } else if (prova.tipo === 'online') { 
             document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
             document.getElementById('ws-prof-nova-online').style.display = 'block';
             
@@ -974,6 +974,7 @@ Workspace.Avaliacoes = {
         } catch(e) { Workspace.mostrarAviso("Erro ao ler a questão.", "error"); }
     },
 
+    // 🚀 O STATUS É AGORA 'ATIVA' POR DEFEITO!
     salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
@@ -1018,7 +1019,7 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), tentativas: parseInt(tentativas, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+                titulo, tipo: 'escrita', tempo: parseInt(tempo, 10), tentativas: parseInt(tentativas, 10), questoes: questaoData, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome, status: 'ativa'
             });
 
             if (res && res.success) {
@@ -1035,6 +1036,7 @@ Workspace.Avaliacoes = {
         }
     },
 
+    // 🚀 O STATUS É AGORA 'ATIVA' POR DEFEITO!
     salvarProvaOral: async () => {
         const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
         const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
@@ -1053,7 +1055,7 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'oral', tentativas: parseInt(tentativas, 10), instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+                titulo, tipo: 'oral', tentativas: parseInt(tentativas, 10), instrucoes, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome, status: 'ativa'
             });
 
             if (res && res.success) {
@@ -1070,7 +1072,7 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // 🚀 LÓGICA DE GRAVAÇÃO DA SALA ONLINE
+    // 🚀 LÓGICA DE GRAVAÇÃO DA SALA ONLINE (STATUS AGORA É 'ATIVA' POR DEFEITO)
     salvarProvaOnline: async () => {
         const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
         const dataHora = document.getElementById('ws-nova-online-data').value;
@@ -1089,7 +1091,7 @@ Workspace.Avaliacoes = {
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'online', dataAgendada: dataHora, linkSala, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome
+                titulo, tipo: 'online', dataAgendada: dataHora, linkSala, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome, status: 'ativa'
             });
 
             if (res && res.success) {
