@@ -229,7 +229,7 @@
             }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-CU8lahh0.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-BMh3i4p2.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-DsfEqi9Q.js">
   <link rel="modulepreload" crossorigin href="/assets/config-DJ1KJpAl.js">
   <link rel="stylesheet" crossorigin href="/assets/workspace-D7LMCEVW.css">
@@ -479,28 +479,16 @@
         </div>
     </section>
 
-   <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
+    <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3>
-            </div>
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3></div>
             <div style="padding: 30px 20px; text-align: center;">
-                
-                <!-- Estrutura Estilo WhatsApp: Clicar na foto = Ver. Clicar na câmara = Editar -->
-                <div style="position: relative; display: inline-block; margin: 0 auto;">
-                    <div style="cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
-                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                        <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
-                    </div>
-                    
-                    <!-- Ícone Flutuante de Upload -->
-                    <div style="position: absolute; bottom: 0; right: -5px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Alterar Foto">
-                        📷
-                    </div>
+                <div style="position: relative; display: inline-block; cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="document.getElementById('ws-avatar-overlay').style.opacity='1'" onmouseout="document.getElementById('ws-avatar-overlay').style.opacity='0'" ontouchstart="">
+                    <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
+                    <div id="ws-avatar-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: 0.2s;"><span style="font-size: 24px;">📷</span></div>
                 </div>
-
                 <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
-                
                 <h3 id="ws-perfil-modal-nome" style="margin: 15px 0 5px 0; color: #2c3e50; font-size: 20px;">Nome</h3>
                 <p id="ws-perfil-modal-login" style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: bold;">@login</p>
                 <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando a foto do perfil ⏳ ...</div>
