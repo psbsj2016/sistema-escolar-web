@@ -1,4 +1,3 @@
-// js/workspace.js
 import { CONFIG } from './config.js';
 
 // 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL (Já gere os avisos PWA)
@@ -78,7 +77,6 @@ Object.assign(Workspace, {
         
         Workspace.navegarPara('feed', true);
 
-        // 🚀 CADEADO REMOVIDO: A caixa de criar post agora aparece para TODOS os utilizadores
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) {
             boxCriarPost.style.display = 'block';
@@ -161,7 +159,6 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 🛡️ MOTOR DE NAVEGAÇÃO
         const ecras = {
             'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
@@ -174,7 +171,6 @@ Object.assign(Workspace, {
             'avaliacoes_oral': 'ws-avaliacoes-oral-container'
         };
 
-        // 🚀 Desvio Inteligente: Separa Alunos de Professores/Gestores
         if (tela === 'tarefas') {
             tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         }
@@ -217,7 +213,6 @@ Object.assign(Workspace, {
         btn.disabled = true;
 
         try {
-            // 🔥 MUDANÇA AQUI: Adicionamos a flag { sistema: 'workspace' }
             const res = await Workspace.api('/auth/login', 'POST', { 
                 login: login, 
                 senha: pass, 
@@ -291,14 +286,13 @@ Object.assign(Workspace, {
 
     abrirModalPerfil: () => Workspace.abrirPaginaPerfil(),
 
-   // 🚀 LÓGICA DE INTELIGÊNCIA E RECORTE: PERFIL DO UTILIZADOR
+    // 🚀 LÓGICA DE INTELIGÊNCIA E RECORTE: PERFIL DO UTILIZADOR
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Limite gigante para rececionar a foto (100MB)
         if (file.size > 100 * 1024 * 1024) {
-            Workspace.mostrarAviso("A fotografia ultrapassou o limite de 100MB.", "warning");
+            Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
             event.target.value = '';
             return;
         }
@@ -306,21 +300,17 @@ Object.assign(Workspace, {
         const loader = document.getElementById('ws-avatar-loading');
         if(loader) loader.style.display = 'block';
 
-        // 🚀 TECNOLOGIA DE ALTA PERFORMANCE: URL Object impede que o telemóvel trave!
         const imgOriginal = new Image();
         const objectUrl = URL.createObjectURL(file);
 
         imgOriginal.onload = () => {
-            URL.revokeObjectURL(objectUrl); // Liberta a memória RAM instantaneamente!
-            
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 400; // Tamanho ideal e quadrado
+            const MAX_SIZE = 400; 
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
             
-            // Inteligência para Centralizar e Cortar o Quadrado Perfeito
             let sourceX = 0, sourceY = 0, sourceSize = 0;
             if (imgOriginal.width > imgOriginal.height) {
                 sourceSize = imgOriginal.height;
@@ -333,20 +323,31 @@ Object.assign(Workspace, {
             ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
 
             canvas.toBlob(async (blob) => {
+                // ✨ Feito no momento seguro para não quebrar a ligação
+                URL.revokeObjectURL(objectUrl); 
+
+                // 🛡️ Bloqueia a "Foto Fantasma" de ir para o servidor e crashar o sistema
+                if (!blob || blob.size < 100) {
+                    Workspace.mostrarAviso("Erro ao processar a imagem. Escolha uma foto diferente.", "error");
+                    if(loader) loader.style.display = 'none';
+                    event.target.value = '';
+                    return;
+                }
+
                 try {
                     const formData = new FormData();
-                    // O 3º argumento ('avatar_usuario.jpg') dá o nome falso para o Cloudinary não dar erro
                     formData.append('anexos', blob, 'avatar_usuario.jpg');
 
                     const uploadRes = await fetch('/api/workspace/upload', { 
                         method: 'POST', credentials: 'include', body: formData 
                     });
                     
-                    if (!uploadRes.ok) throw new Error("Falha no servidor (502).");
+                    if (!uploadRes.ok) throw new Error("A ligação à nuvem falhou.");
                     
                     const uploadData = await uploadRes.json();
+                    
                     if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
-                        throw new Error("Falha no upload da nuvem");
+                        throw new Error("Falha no processamento da imagem.");
                     }
 
                     const avatarFinal = uploadData.anexos[0].url;
@@ -360,7 +361,7 @@ Object.assign(Workspace, {
                     if (res && res.success) {
                         Workspace.usuario.avatar = avatarFinal;
                         localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
-                        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal; 
+                        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal;
                         
                         const img = document.getElementById('ws-perfil-img');
                         const letras = document.getElementById('ws-perfil-letras');
@@ -370,23 +371,24 @@ Object.assign(Workspace, {
                         }
                         if(letras) letras.style.display = 'none';
 
-                        Workspace.mostrarAviso("Foto de perfil atualizada com sucesso!", "success");
+                        Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
                         
-                        // Atualiza a foto dos Posts do feed em tempo real
+                        if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
                         if(Workspace.Feed) Workspace.Feed.carregarPosts();
                     }
                 } catch (err) {
                     console.error(err);
-                    Workspace.mostrarAviso("Erro ao enviar a imagem. Tente novamente.", "error");
+                    Workspace.mostrarAviso("Erro ao alterar foto. Tente novamente.", "error");
                 } finally {
                     if(loader) loader.style.display = 'none';
-                    event.target.value = ''; // Limpa para permitir novo upload seguro
+                    event.target.value = ''; 
                 }
-            }, 'image/jpeg', 0.85); // Compressão inteligente de 85%
+            }, 'image/jpeg', 0.85); 
         };
         
         imgOriginal.onerror = () => {
-            Workspace.mostrarAviso("Ficheiro de imagem inválido ou corrompido.", "error");
+            Workspace.mostrarAviso("Ficheiro inválido ou corrompido.", "error");
+            URL.revokeObjectURL(objectUrl);
             if(loader) loader.style.display = 'none';
             event.target.value = '';
         };
@@ -422,7 +424,7 @@ Object.assign(Workspace, {
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { id: Workspace.usuario.id, senhaAtual, novaSenha });
             if (res && res.success) {
-                Workspace.mostrarAviso("Senha updated com sucesso! Por favor, entre novamente.", "success");
+                Workspace.mostrarAviso("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
                 document.getElementById('ws-senha-modal').style.display = 'none';
                 setTimeout(() => Workspace.logout(), 2500);
             } else {

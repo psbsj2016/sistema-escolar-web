@@ -171,12 +171,11 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA E COMPRIME ATÉ 100MB
+    // 🚀 LÓGICA DE INTELIGÊNCIA: CENTRALIZA, CORTA E COMPRIME ATÉ 100MB DE FORMA BLINDADA
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        // Permite até 100MB
         if (file.size > 100 * 1024 * 1024) { 
             Workspace.mostrarAviso("A fotografia ultrapassou o limite máximo de 100MB.", "warning");
             e.target.value = ''; 
@@ -184,11 +183,9 @@ Workspace.Sidebar = {
         }
 
         const imgOriginal = new Image();
-        const objectUrl = URL.createObjectURL(file); // 🚀 Evita crash de memória no telemóvel
+        const objectUrl = URL.createObjectURL(file);
 
         imgOriginal.onload = () => {
-            URL.revokeObjectURL(objectUrl); // Liberta a RAM imediatamente!
-            
             const canvas = document.createElement('canvas');
             const MAX_SIZE = 400; // Tamanho Quadrado Perfeito
             canvas.width = MAX_SIZE;
@@ -208,6 +205,16 @@ Workspace.Sidebar = {
             ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
 
             canvas.toBlob((blob) => {
+                // ✨ A MÁGICA: Limpamos a memória APENAS quando a imagem já foi perfeitamente pintada e guardada
+                URL.revokeObjectURL(objectUrl); 
+
+                // 🛡️ O ESCUDO: Se a imagem falhou e gerou um ficheiro vazio, abortamos para não quebrar o servidor!
+                if (!blob || blob.size < 100) {
+                    Workspace.mostrarAviso("Falha ao processar imagem. Tente escolher uma foto diferente.", "error");
+                    e.target.value = '';
+                    return;
+                }
+
                 Workspace.Sidebar.fotoComprimida = blob;
 
                 const imgPreview = document.getElementById('ws-chat-foto-preview');
@@ -220,11 +227,12 @@ Workspace.Sidebar = {
                 if(avisoCompressao) avisoCompressao.style.display = 'block';
 
                 e.target.value = ''; 
-            }, 'image/jpeg', 0.85); 
+            }, 'image/jpeg', 0.85); // 85% de qualidade para maior nitidez
         };
-        
+
         imgOriginal.onerror = () => {
             Workspace.mostrarAviso("Ficheiro de imagem inválido.", "error");
+            URL.revokeObjectURL(objectUrl);
             e.target.value = '';
         };
 
@@ -247,7 +255,6 @@ Workspace.Sidebar = {
             
             if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
-                // O terceiro parâmetro (avatar_otimizado.jpg) diz ao servidor como ler o Blob!
                 formData.append('anexos', Workspace.Sidebar.fotoComprimida, 'avatar_otimizado.jpg'); 
                 
                 const uploadRes = await fetch('/api/workspace/upload', { 
@@ -508,6 +515,9 @@ Workspace.Sidebar = {
         }
     },
 
+    // ==========================================
+    // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
+    // ==========================================
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
@@ -1015,7 +1025,7 @@ Workspace.Sidebar = {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${ent.observacao ? `<span title="${Workspace.Sidebar.escapeHTML(ent.observacao)}" style="cursor:help; font-size:20px; color:#f1c40f;">💬</span>` : ''}
-                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
+                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
                         </div>
                     </div>
                 `;
