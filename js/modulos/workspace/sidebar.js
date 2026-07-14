@@ -3,6 +3,7 @@ window.Workspace = window.Workspace || {};
 Workspace.Sidebar = {
     turmaIdAberta: null,
     infoTurmaAberta: null, // 🖼️ Guarda a foto e nome do grupo atual
+    fotoComprimida: null,  // 🚀 NOVO: Guarda a foto já reduzida e leve para envio rápido
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
@@ -134,6 +135,8 @@ Workspace.Sidebar = {
 
     abrirEdicaoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta || {};
+        Workspace.Sidebar.fotoComprimida = null; // Limpa memórias anteriores
+        
         const idModal = 'ws-modal-edit-chat';
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
@@ -154,6 +157,7 @@ Workspace.Sidebar = {
                     </div>
                     <input type="file" id="ws-chat-nova-foto" accept="image/*" style="display:none;" onchange="Workspace.Sidebar.previewFotoChat(event)">
                     <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Toque no ícone para alterar a foto</div>
+                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada para envio ultrarrápido! 🚀</div>
                 </div>
 
                 <label style="font-size: 12px; font-weight: bold; color: #555;">Nome da Turma / Grupo</label>
@@ -172,55 +176,86 @@ Workspace.Sidebar = {
         });
     },
 
+    // 🚀 O MOTOR DE COMPRESSÃO INSTANTÂNEA NO NAVEGADOR
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        // 🛡️ BLOQUEIO DE SEGURANÇA 1: Impede que ficheiros gigantes travem o sistema!
-        if (file.size > 5 * 1024 * 1024) { 
-            if(window.Workspace && Workspace.mostrarAviso) {
-                Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 5MB.", "warning");
-            }
-            e.target.value = ''; // Limpa a seleção para poder tentar de novo
-            return;
-        }
+        // Limpa o ficheiro original do input para que o navegador não o envie por engano
+        e.target.value = '';
 
         const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = document.getElementById('ws-chat-foto-preview');
-            const icone = document.getElementById('ws-chat-icone-holder');
-            img.src = e.target.result;
-            img.style.display = 'block';
-            if(icone) icone.style.display = 'none';
+        reader.onload = (event) => {
+            const imgOriginal = new Image();
+            imgOriginal.src = event.target.result;
+
+            imgOriginal.onload = () => {
+                // 1. Cria uma tela de desenho (Canvas) na memória
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 400; // Tamanho ideal e super leve para Avatares
+                const MAX_HEIGHT = 400;
+                let width = imgOriginal.width;
+                let height = imgOriginal.height;
+
+                // 2. Calcula as proporções perfeitas sem distorcer a imagem
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // 3. Desenha a imagem gigante numa versão pequenina e leve
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imgOriginal, 0, 0, width, height);
+
+                // 4. Converte o desenho para um ficheiro real JPEG com 80% de qualidade
+                canvas.toBlob((blob) => {
+                    // Guarda na memória a foto minúscula (pronta a enviar num piscar de olhos)
+                    Workspace.Sidebar.fotoComprimida = new File([blob], "avatar_turma_otimizado.jpg", { type: "image/jpeg" });
+
+                    // 5. Atualiza o ecrã instantaneamente
+                    const imgPreview = document.getElementById('ws-chat-foto-preview');
+                    const icone = document.getElementById('ws-chat-icone-holder');
+                    const avisoCompressao = document.getElementById('ws-alerta-compressao');
+                    
+                    imgPreview.src = URL.createObjectURL(blob);
+                    imgPreview.style.display = 'block';
+                    if(icone) icone.style.display = 'none';
+                    if(avisoCompressao) avisoCompressao.style.display = 'block';
+
+                }, 'image/jpeg', 0.8); // 0.8 é a compressão mágica (leve mas sem perder qualidade visual)
+            };
         };
         reader.readAsDataURL(file);
     },
 
     salvarEdicaoChat: async () => {
-        const fileInput = document.getElementById('ws-chat-nova-foto');
         const nomeInput = document.getElementById('ws-chat-novo-nome');
         const nome = nomeInput.value.trim();
         const btn = document.getElementById('ws-btn-salvar-chat');
         
         if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
-        
-        // 🛡️ BLOQUEIO DE SEGURANÇA 2: Garantia final antes do envio para a Nuvem
-        if (fileInput.files.length > 0 && fileInput.files[0].size > 5 * 1024 * 1024) {
-            return Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 5MB.", "warning");
-        }
 
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A guardar na nuvem...";
+        btn.innerText = "⏳ A guardar na nuvem (super rápido!)...";
         btn.disabled = true;
 
         try {
-            // Utilizamos uma estrutura mais robusta para versões antigas de navegadores
-            let fotoUrl = Workspace.Sidebar.infoTurmaAberta ? Workspace.Sidebar.infoTurmaAberta.foto : null;
+            let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
             
-            // Faz upload da nova foto para o Cloudinary (Nuvem)
-            if (fileInput.files.length > 0) {
+            // Faz upload DA FOTO LEVE (fotoComprimida) para a Nuvem
+            if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
-                formData.append('anexos', fileInput.files[0]);
+                formData.append('anexos', Workspace.Sidebar.fotoComprimida);
                 
                 const uploadRes = await fetch('/api/workspace/upload', { 
                     method: 'POST', 
@@ -234,6 +269,7 @@ Workspace.Sidebar = {
                 
                 if(uploadData.success && uploadData.anexos && uploadData.anexos.length > 0) {
                     fotoUrl = uploadData.anexos[0].url;
+                    Workspace.Sidebar.fotoComprimida = null; // Esvazia a memória
                 } else {
                     throw new Error("Não foi possível processar a imagem.");
                 }
@@ -247,14 +283,12 @@ Workspace.Sidebar = {
             if(res && res.success) {
                 Workspace.mostrarAviso("Identidade do Grupo atualizada! ✨", "success");
                 
-                // Fecha o modal de edição suavemente
                 const modal = document.getElementById('ws-modal-edit-chat');
                 if(modal) {
                     modal.style.opacity = '0';
                     setTimeout(()=> modal.remove(), 200);
                 }
                 
-                // Atualiza localmente a Interface Visual imediatamente
                 Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
                 Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
                 Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
@@ -263,9 +297,8 @@ Workspace.Sidebar = {
             }
         } catch (e) {
             console.error("Erro no salvarEdicaoChat:", e);
-            Workspace.mostrarAviso("Erro ao atualizar! Verifique a sua ligação ou escolha uma foto mais leve.", "error");
+            Workspace.mostrarAviso("Erro ao atualizar a foto ou o nome.", "error");
         } finally {
-            // Garante que o botão destranca SEMPRE, aconteça o que acontecer!
             btn.innerText = textoOriginal;
             btn.disabled = false;
         }
@@ -287,7 +320,6 @@ Workspace.Sidebar = {
             btnEdit.style.display = (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') ? 'block' : 'none';
         }
 
-        // 🖼️ Bate na API para buscar a Foto e Nome do Grupo e injeta no HTML
         Workspace.api(`/workspace/chat/info/${turmaId}`, 'GET').then(info => {
             if(info) {
                 Workspace.Sidebar.infoTurmaAberta = info;
@@ -342,7 +374,6 @@ Workspace.Sidebar = {
                 }
             }
 
-            // 🖼️ A Fotografia ou Nome do Grupo Acabou de ser alterada pelo Professor!
             if (data.type === 'SALA_UPDATE' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 Workspace.api(`/workspace/chat/info/${Workspace.Sidebar.turmaIdAberta}`, 'GET').then(info => {
                     if(info) {
