@@ -2,7 +2,7 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Sidebar = {
     turmaIdAberta: null,
-    infoTurmaAberta: null, // 🖼️ Novo: Guarda a foto e nome do grupo atual
+    infoTurmaAberta: null, // 🖼️ Guarda a foto e nome do grupo atual
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
@@ -124,7 +124,7 @@ Workspace.Sidebar = {
     verFotoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta;
         if(info && info.foto) {
-            // Reaproveita o abridor de imagens do Feed (Lightbox)
+            // Reaproveita o abridor de imagens do Feed
             if(Workspace.Feed && Workspace.Feed.abrirImagemInteira) {
                 Workspace.Feed.abrirImagemInteira(info.foto);
             }
@@ -222,19 +222,15 @@ Workspace.Sidebar = {
             if(res && res.success) {
                 Workspace.mostrarAviso("Identidade do Grupo atualizada! ✨", "success");
                 
-                // Fecha o modal de edição
                 const modal = document.getElementById('ws-modal-edit-chat');
                 if(modal) {
                     modal.style.opacity = '0';
                     setTimeout(()=> modal.remove(), 200);
                 }
                 
-                // Atualiza localmente a Interface Visual imediatamente
                 Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
                 Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
-                
-                // Recarrega o menu lateral para atualizar a miniatura
-                Workspace.Sidebar.carregarTurmas();
+                Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
             } else {
                 throw new Error();
             }
@@ -252,13 +248,11 @@ Workspace.Sidebar = {
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         
-        // Coloca o cabeçalho em estado de carregamento
         document.getElementById('ws-chat-titulo').innerText = 'A carregar grupo...';
         document.getElementById('ws-chat-avatar-container').innerHTML = '👥';
         document.getElementById('ws-chat-avatar-container').style.background = 'rgba(255,255,255,0.2)';
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
         
-        // Controla o acesso ao botão de Edição
         const btnEdit = document.getElementById('ws-btn-editar-chat');
         if(btnEdit) {
             btnEdit.style.display = (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') ? 'block' : 'none';
@@ -271,11 +265,9 @@ Workspace.Sidebar = {
                 Workspace.Sidebar.atualizarCabecalhoChat(info);
             }
         }).catch(() => {
-            // Em caso de erro, apenas mostra o nome que veio do menu
             document.getElementById('ws-chat-titulo').innerText = turmaNome;
         });
 
-        // Configura a UI de Digitação
         if (!document.getElementById('ws-chat-typing-indicator')) {
             const inputContainer = document.getElementById('ws-chat-input').closest('div[style*="padding: 10px"]');
             inputContainer.insertAdjacentHTML('beforebegin', '<div id="ws-chat-typing-indicator" style="display:none; padding: 4px 20px 8px 20px; font-size: 11.5px; color: #128c7e; font-style: italic; font-weight: 600; background: #e5ddd5; transition: 0.3s; animation: pulse 1.5s infinite;"></div>');
@@ -301,7 +293,6 @@ Workspace.Sidebar = {
 
         Workspace.Sidebar.carregarMensagensChat();
 
-        // ⚡ Inicia o Túnel de Tempo Real exclusivo para este chat
         if (Workspace.Sidebar.chatStream) Workspace.Sidebar.chatStream.close();
         
         const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
@@ -310,13 +301,11 @@ Workspace.Sidebar = {
         Workspace.Sidebar.chatStream.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
-            // 📥 Caiu uma nova mensagem
             if (data.type === 'NOVA_MENSAGEM' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 Workspace.Sidebar.injetarNovaMensagem(data.mensagem);
                 Workspace.Sidebar.ocultarDigitando();
             }
             
-            // ✍️ Alguém está a escrever
             if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 if (data.autorNome !== meuNome) {
@@ -471,8 +460,10 @@ Workspace.Sidebar = {
     },
 
     // ==========================================
-    // 📅 TAREFAS: LÓGICA DO ALUNO (LISTAR E ENTREGAR)
+    // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
     // ==========================================
+    // (As funções de Tarefas permanecem as mesmas para garantir a estabilidade)
+    
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
@@ -717,9 +708,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 👨‍🏫 PAINEL DO PROFESSOR (CRIAR, EDITAR E APAGAR)
-    // ==========================================
     voltarMenuTarefasProf: () => {
         document.getElementById('ws-prof-menu-tarefas').style.display = 'grid';
         document.getElementById('ws-prof-nova-tarefa').style.display = 'none';
