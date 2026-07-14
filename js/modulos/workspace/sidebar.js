@@ -3,7 +3,7 @@ window.Workspace = window.Workspace || {};
 Workspace.Sidebar = {
     turmaIdAberta: null,
     infoTurmaAberta: null, 
-    fotoComprimida: null,  // 🚀 Guarda a foto minúscula e rápida em formato Blob
+    fotoComprimida: null,  // Guarda a foto transformada em ficheiro (File)
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
@@ -103,9 +103,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // ==========================================
-    // 🖼️ GESTÃO DE IMAGEM DO GRUPO DE BATE-PAPO
-    // ==========================================
     atualizarCabecalhoChat: (info) => {
         const titulo = document.getElementById('ws-chat-titulo');
         const avatar = document.getElementById('ws-chat-avatar-container');
@@ -134,7 +131,7 @@ Workspace.Sidebar = {
 
     abrirEdicaoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta || {};
-        Workspace.Sidebar.fotoComprimida = null; // Limpa memórias antigas
+        Workspace.Sidebar.fotoComprimida = null; 
         
         const idModal = 'ws-modal-edit-chat';
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
@@ -175,14 +172,13 @@ Workspace.Sidebar = {
         });
     },
 
-    // 🚀 O MOTOR DE COMPRESSÃO BLINDADO
+    // 🚀 MOTOR DE COMPRESSÃO REFEITO PARA CRIAR UM "FILE" NATIVO
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
 
-        // Limite de segurança de 15MB. Como vamos comprimir, podemos aceitar ficheiros maiores!
         if (file.size > 15 * 1024 * 1024) { 
-            Workspace.mostrarAviso("A fotografia é exageradamente pesada. Escolha uma imagem até 15MB.", "warning");
+            Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma imagem até 15MB.", "warning");
             e.target.value = ''; 
             return;
         }
@@ -192,7 +188,7 @@ Workspace.Sidebar = {
             const imgOriginal = new Image();
             imgOriginal.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 400; // Tamanho ideal para um Avatar
+                const MAX_WIDTH = 400; 
                 const MAX_HEIGHT = 400;
                 let width = imgOriginal.width;
                 let height = imgOriginal.height;
@@ -210,22 +206,21 @@ Workspace.Sidebar = {
                 ctx.drawImage(imgOriginal, 0, 0, width, height);
 
                 canvas.toBlob((blob) => {
-                    // 🛡️ A grande diferença: guardamos o Blob diretamente.
-                    // Funciona a 100% no Safari, iPhone, Android e Windows!
-                    Workspace.Sidebar.fotoComprimida = blob;
+                    // 🛡️ MÁGICA: Convertemos o Blob num autêntico objeto "File" idêntico ao upload do Perfil
+                    const arquivoFinal = new File([blob], "avatar_turma_otimizado.jpg", { type: "image/jpeg" });
+                    Workspace.Sidebar.fotoComprimida = arquivoFinal;
 
                     const imgPreview = document.getElementById('ws-chat-foto-preview');
                     const icone = document.getElementById('ws-chat-icone-holder');
                     const avisoCompressao = document.getElementById('ws-alerta-compressao');
                     
-                    imgPreview.src = URL.createObjectURL(blob);
+                    imgPreview.src = URL.createObjectURL(arquivoFinal);
                     imgPreview.style.display = 'block';
                     if(icone) icone.style.display = 'none';
                     if(avisoCompressao) avisoCompressao.style.display = 'block';
 
-                    // Limpa o input no momento certo e seguro
                     e.target.value = ''; 
-                }, 'image/jpeg', 0.85); // 85% de qualidade para ficar nítido e super leve
+                }, 'image/jpeg', 0.85); 
             };
             imgOriginal.src = event.target.result;
         };
@@ -238,19 +233,18 @@ Workspace.Sidebar = {
         const btn = document.getElementById('ws-btn-salvar-chat');
         
         if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
-        
+
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A enviar para a nuvem...";
+        btn.innerText = "⏳ A guardar na nuvem...";
         btn.disabled = true;
 
         try {
             let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
             
-            // 🚀 Envia a foto minúscula disfarçada de ficheiro real
+            // Agora Workspace.Sidebar.fotoComprimida é um "File" real!
             if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
-                // O 3º argumento 'avatar_turma.jpg' é crucial. Diz ao Multer que isto é um ficheiro real!
-                formData.append('anexos', Workspace.Sidebar.fotoComprimida, 'avatar_turma.jpg');
+                formData.append('anexos', Workspace.Sidebar.fotoComprimida); 
                 
                 const uploadRes = await fetch('/api/workspace/upload', { 
                     method: 'POST', 
@@ -264,7 +258,7 @@ Workspace.Sidebar = {
                 
                 if(uploadData.success && uploadData.anexos && uploadData.anexos.length > 0) {
                     fotoUrl = uploadData.anexos[0].url;
-                    Workspace.Sidebar.fotoComprimida = null; // Esvazia a memória
+                    Workspace.Sidebar.fotoComprimida = null; 
                 } else {
                     throw new Error("Não foi possível processar a imagem.");
                 }
@@ -286,22 +280,21 @@ Workspace.Sidebar = {
                 
                 Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
                 Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
-                Workspace.Sidebar.carregarTurmas(); // Atualiza menu lateral em background
+                Workspace.Sidebar.carregarTurmas(); 
             } else {
                 throw new Error("Ocorreu um erro na Base de Dados.");
             }
         } catch (e) {
             console.error("Erro no salvarEdicaoChat:", e);
-            Workspace.mostrarAviso("Erro ao atualizar! Tente novamente.", "error");
+            Workspace.mostrarAviso("Erro ao atualizar a foto ou o nome.", "error");
         } finally {
-            // Se falhar ou der sucesso, o botão volta ao normal!
             btn.innerText = textoOriginal;
             btn.disabled = false;
         }
     },
 
     // ==========================================
-    // 💬 LÓGICA DO BATE-PAPO E TEMPO REAL
+    // 💬 LÓGICA DO BATE-PAPO
     // ==========================================
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
@@ -375,7 +368,7 @@ Workspace.Sidebar = {
                     if(info) {
                         Workspace.Sidebar.infoTurmaAberta = info;
                         Workspace.Sidebar.atualizarCabecalhoChat(info);
-                        Workspace.Sidebar.carregarTurmas();
+                        Workspace.Sidebar.carregarTurmas(); 
                     }
                 });
             }
@@ -1025,7 +1018,7 @@ Workspace.Sidebar = {
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             ${ent.observacao ? `<span title="${Workspace.Sidebar.escapeHTML(ent.observacao)}" style="cursor:help; font-size:20px; color:#f1c40f;">💬</span>` : ''}
-                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: bold; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
+                            <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 15px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s; box-shadow:0 2px 5px rgba(52, 152, 219, 0.3);" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo do Aluno</a>
                         </div>
                     </div>
                 `;
