@@ -1,3 +1,4 @@
+// js/modulos/workspace/alertas.js
 window.Workspace = window.Workspace || {};
 
 Workspace.Alertas = {
@@ -39,6 +40,37 @@ Workspace.Alertas = {
             if (data.type === 'NOVO_POST') {
                 if (Workspace.Feed && Workspace.Feed.verificarNovoPost) {
                     Workspace.Feed.verificarNovoPost();
+                }
+            }
+
+            // 🚀 AQUI ESTÁ A MÁGICA: Detetive de Novas Mensagens do Bate-papo
+            if (data.type === 'NOVA_MENSAGEM') {
+                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                
+                // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
+                if (data.mensagem && data.mensagem.autorNome !== meuNome) {
+                    
+                    // 2. Verifica se o bate-papo daquela turma JÁ ESTÁ ABERTO no ecrã neste momento
+                    const chatAberto = Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta === data.turmaId;
+                    
+                    // 3. Se NÃO estiver aberto, dispara o nosso alerta pulsante de 5 segundos!
+                    if (!chatAberto) {
+                        const nomeTurma = data.turmaNome || 'Fórum da Turma';
+                        // Recorta o texto caso a mensagem seja muito longa
+                        const textoCurto = data.mensagem.texto.length > 35 ? data.mensagem.texto.substring(0, 35) + '...' : data.mensagem.texto;
+                        
+                        Workspace.mostrarAviso(
+                            `<strong>${data.mensagem.autorNome}</strong> enviou uma mensagem em <em>${nomeTurma}</em>:<br>"${textoCurto}"`, 
+                            'chat', // O tipo que criámos no CSS (verde e pulsante)
+                            5000,   // Duração: 5 segundos
+                            () => {
+                                // 🖱️ O Atalho Direto: Ao clicar, abre logo a conversa!
+                                if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
+                                    Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
+                                }
+                            }
+                        );
+                    }
                 }
             }
         };
@@ -88,7 +120,6 @@ Workspace.Alertas = {
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
             if (Array.isArray(data)) {
-                // Preserva as notificações locais (como o alarme de 10 min) e junta com as que vieram da BD
                 const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
                 Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
                 
@@ -148,7 +179,6 @@ Workspace.Alertas = {
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
-        // 🛡️ Se for um alerta gerado no momento (ex: Salas 10 min), apaga localmente sem ir ao servidor
         if (String(id).startsWith('alerta_local_')) {
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
             Workspace.Alertas.idsConhecidos.delete(id);
@@ -169,7 +199,6 @@ Workspace.Alertas = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Encaminhamento
         if (origem === 'post') {
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
@@ -185,7 +214,6 @@ Workspace.Alertas = {
         } 
         else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
         else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
-        // 🚀 O Novo Encaminhamento para a Sala Online!
         else if (origem === 'online' && window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
     },
 
@@ -194,7 +222,6 @@ Workspace.Alertas = {
         const itemUI = document.getElementById(`notif-item-${id}`);
         if(itemUI) itemUI.classList.add('riscando'); 
         
-        // Se for alerta do telemóvel, descarta só da memória
         if (String(id).startsWith('alerta_local_')) {
             setTimeout(() => {
                 Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);

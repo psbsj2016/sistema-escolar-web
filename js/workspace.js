@@ -15,9 +15,10 @@ Object.assign(Workspace, {
     avatarsCache: {}, 
     deferredPrompt: null,
 
-    mostrarAviso: (mensagem, tipo = 'info', duracao = 3500) => {
+    // 🚀 ATUALIZADO: Agora repassa o callback do clique (onClickCallback) para o Toast
+    mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
         if (window.Toast && typeof window.Toast.show === 'function') {
-            window.Toast.show(mensagem, tipo, duracao);
+            window.Toast.show(mensagem, tipo, duracao, onClickCallback);
         } else {
             alert(mensagem); 
         }
@@ -120,14 +121,12 @@ Object.assign(Workspace, {
         });
     },
 
-    // 🚀 LÓGICA DE NAVEGAÇÃO INTELIGENTE (Aluno vs Professor)
     abrirEncontroOnline: (btn) => {
         if (Workspace.usuario.tipo === 'Aluno') {
             if(Workspace.Avaliacoes && Workspace.Avaliacoes.abrirSalasOnlineAluno) {
                 Workspace.Avaliacoes.abrirSalasOnlineAluno(btn);
             }
         } else {
-            // Professores e Gestores são redirecionados ao seu painel principal de avaliações
             Workspace.navegarPara('avaliacoes'); 
         }
     },
@@ -138,7 +137,6 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 🚀 O MAPA (GPS) COM A NOVA SALA DE AULA
         const ecras = {
             'feed': 'ws-main-container', 
             'configuracoes': 'ws-config-container',
