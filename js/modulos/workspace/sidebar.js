@@ -78,7 +78,7 @@ Workspace.Sidebar = {
             }
 
             if (turmas.length === 0) {
-                 container.innerHTML = '<div style="padding:10px; color:#7f8c8d; font-size:12px; text-align:center;">Ainda não está associado a nenhum fórum.</div>';
+                 container.innerHTML = '<div style="padding:10px; color:#7f8c8d; font-size:12px; text-align:center;">Ainda não está associado a nenhum bate-papo.</div>';
                  return;
             }
 
@@ -512,7 +512,7 @@ Workspace.Sidebar = {
             const mensagens = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'GET');
             
             if (!mensagens || mensagens.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px;">Nenhuma mensagem neste fórum ainda.<br>Diga olá para a turma! 👋</div>`;
+                container.innerHTML = `<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px;">Nenhuma mensagem neste bate-papo.<br>Diga olá para a turma! 👋</div>`;
                 return;
             }
 
