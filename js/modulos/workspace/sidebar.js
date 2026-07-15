@@ -14,7 +14,6 @@ Workspace.Sidebar = {
        💬 MÓDULO DE BATE-PAPO (CHAT)
        ========================================================================= */
 
-    // 1. Abre a Janela do Chat e carrega as permissões
     abrirChat: (turmaId, nomeTurma) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         
@@ -47,7 +46,6 @@ Workspace.Sidebar = {
         if (modalChat) modalChat.style.display = 'none';
     },
 
-    // 2. Comunicação com a API
     buscarMensagensChat: async (turmaId) => {
         try {
             const res = await Workspace.api(`/workspace/chat/${turmaId}`, 'GET');
@@ -61,7 +59,7 @@ Workspace.Sidebar = {
         }
     },
 
-    // 3. A Lógica de Desenho dos Balões (Esquerda / Direita)
+    // 🚀 AQUI ESTÁ A CORREÇÃO: A Lógica de Desenho das Fotos e Balões
     renderizarMensagensChat: (mensagens) => {
         const area = document.getElementById('ws-chat-mensagens');
         if (!area) return;
@@ -74,15 +72,24 @@ Workspace.Sidebar = {
         }
 
         area.innerHTML = mensagens.map(msg => {
-            // A MATEMÁTICA DO ALINHAMENTO: É meu ou é de outra pessoa?
+            // Verifica se a mensagem fui eu que enviei
             const isMinha = msg.autorNome === meuNome;
+            
+            // As classes CSS que empurram a linha para a direita ou esquerda
             const alinhamentoClasse = isMinha ? 'ws-linha-direita' : 'ws-linha-esquerda';
             const balaoClasse = isMinha ? 'ws-balao-direita' : 'ws-balao-esquerda';
             
             const dataObj = new Date(msg.data || Date.now());
             const hora = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
-            // Lógica de visualização do Ficheiro Anexo
+            // 📸 A FOTO DO UTILIZADOR: Chama a função global que desenha os Avatars
+            const avatarHtml = `
+                <div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">
+                    ${window.Workspace.renderizarAvatar(msg.autorNome, 30)}
+                </div>
+            `;
+            
+            // 📎 Processamento do Ficheiro Anexo
             let anexoHtml = '';
             if (msg.anexoUrl) {
                 if (msg.anexoTipo === 'image') {
@@ -101,23 +108,38 @@ Workspace.Sidebar = {
             const textoFormatado = msg.texto ? `<div style="margin-top: 2px;">${Workspace.escapeHTML(msg.texto)}</div>` : '';
             const nomeHtml = !isMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${msg.autorNome}</div>` : '';
 
-            // Desenha a linha com o balão no sítio certo
-            return `
-            <div class="ws-linha-chat ${alinhamentoClasse}">
-                <div class="ws-balao-chat ${balaoClasse}">
-                    ${nomeHtml}
-                    ${anexoHtml}
-                    ${textoFormatado}
-                    <div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div>
-                </div>
-            </div>`;
+            // 🧩 A MONTAGEM INTELIGENTE DO BLOCO
+            let layoutMsg = '';
+            
+            if (isMinha) {
+                // Se é minha: Balão Primeiro, Foto Depois (Direita)
+                layoutMsg = `
+                    <div class="ws-balao-chat ${balaoClasse}">
+                        ${anexoHtml}
+                        ${textoFormatado}
+                        <div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div>
+                    </div>
+                    ${avatarHtml}
+                `;
+            } else {
+                // Se é do outro: Foto Primeiro, Balão Depois (Esquerda)
+                layoutMsg = `
+                    ${avatarHtml}
+                    <div class="ws-balao-chat ${balaoClasse}">
+                        ${nomeHtml}
+                        ${anexoHtml}
+                        ${textoFormatado}
+                        <div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div>
+                    </div>
+                `;
+            }
+
+            return `<div class="ws-linha-chat ${alinhamentoClasse}">${layoutMsg}</div>`;
         }).join('');
         
-        // Mantém a rolagem sempre no fundo (mensagens mais recentes)
         area.scrollTop = area.scrollHeight;
     },
 
-    // 4. Enviar Mensagem de Texto
     enviarMensagemChat: async () => {
         const input = document.getElementById('ws-chat-input');
         const texto = input.value.trim();
@@ -144,7 +166,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // 5. Enviar Ficheiros Anexos 📎
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -161,7 +182,6 @@ Workspace.Sidebar = {
             const formData = new FormData();
             formData.append('anexos', file);
             
-            // Faz upload para a Nuvem
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
@@ -171,7 +191,6 @@ Workspace.Sidebar = {
             const tipoRaw = file.type.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
             
-            // Envia a referência do ficheiro para o chat
             const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'POST', {
                 texto: '', 
                 anexoUrl: anexoUrl,
@@ -192,7 +211,6 @@ Workspace.Sidebar = {
         }
     },
 
-    // 6. Apagar Todo o Histórico (Apenas Prof/Gestor)
     apagarTodoOChat: () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         
@@ -224,10 +242,7 @@ Workspace.Sidebar = {
         }
     },
 
-    // 7. Funcionalidades Extras de Interação (A Escrever, Fechar Menu, etc)
     notificarDigitando: () => {
-        // Dispara aviso para o backend que o utilizador está a digitar (implementação base)
-        // Se o backend enviar resposta, nós mostramos a div 'ws-chat-digitando' no Ecrã!
     },
 
     initExtraChatTriggers: () => {
@@ -264,7 +279,6 @@ Workspace.Sidebar = {
                 menu.innerHTML = '<div style="font-size:12px; color:#999; text-align:center;">Nenhuma turma encontrada.</div>';
             }
             
-            // Popula os seletores de tarefas do professor
             const selectTurma = document.getElementById('ws-nova-tarefa-turma');
             if(selectTurma && res) {
                 selectTurma.innerHTML = '<option value="">Selecione uma turma...</option>' + res.map(t => `<option value="${t.id}">${Workspace.escapeHTML(t.nome)}</option>`).join('');
