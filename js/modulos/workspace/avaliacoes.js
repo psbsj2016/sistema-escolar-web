@@ -371,7 +371,7 @@ Workspace.Avaliacoes = {
         const tOnPend = document.getElementById('tab-online-abertas');
         const tOnHist = document.getElementById('tab-online-historico');
         if (tOnPend && tOnHist) {
-            tOnPend.innerText = `Salas Abertas (${onPendentes.length})`;
+            tOnPend.innerText = `Links Liberados (${onPendentes.length})`;
             tOnPend.style.background = Workspace.Avaliacoes.abaOnline === 'abertas' ? '#2c3e50' : 'transparent';
             tOnPend.style.color = Workspace.Avaliacoes.abaOnline === 'abertas' ? 'white' : '#7f8c8d';
             tOnHist.innerText = `Histórico (${onHistorico.length})`;
@@ -399,7 +399,7 @@ Workspace.Avaliacoes = {
     },
 
     abrirSalasOnlineAluno: async (btn) => {
-        const txtOriginal = btn.innerText; btn.innerText = "A procurar salas... ⏳";
+        const txtOriginal = btn.innerText; btn.innerText = "Preparando o ambiente... ⏳";
         await Workspace.Avaliacoes.carregarLobbies(); 
         Workspace.navegarPara('avaliacoes_online'); btn.innerText = txtOriginal;
     },

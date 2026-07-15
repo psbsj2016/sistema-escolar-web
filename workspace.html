@@ -122,7 +122,7 @@
             <div id="ws-main-menu-dropdown" style="display: none; position: absolute; left: 10px; top: 55px; width: 280px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10000; overflow: hidden; color: #333; border: 1px solid #eee;">
                 <div style="padding: 10px; display: flex; flex-direction: column; gap: 5px;">
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaPerfil()" ontouchstart=""><span style="font-size: 18px;">🙍</span> Meu Perfil</button>
-                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span style="font-size: 18px;">🏫</span> Sala de Aula</button>
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span style="font-size: 18px;">🏫</span> Hub da Sala de Aula</button>
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuChat()" ontouchstart=""><span style="font-size: 18px;">💬</span> Bate-Papo</button>
                     <div id="ws-lista-turmas-menu" style="display: none; padding: 5px 10px 5px 30px; max-height: 200px; overflow-y: auto; background: #fafafa; border-radius: 8px; margin-bottom: 5px;"><div style="padding:10px; color:#999; font-size:12px; text-align:center;">Carregando o Bate-papo... ⏳</div></div>
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()" ontouchstart=""><span style="font-size: 18px;">⚙️</span> Configurações</button>
@@ -160,7 +160,7 @@
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
                         <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Sala de Aula Online</h4>
-                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Área de acesso ao link da aula do dia e histório de encontros online realizados.</p>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Área de acesso ao link da aula do dia e histórico de encontros online realizados.</p>
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.abrirEncontroOnline(this)">Abrir Área de Links</button>
                 </div>
@@ -185,7 +185,7 @@
     </section>
 
     <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub da Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>📝 Minhas Atividades e Treinos</span></h3>
             <div id="ws-lista-tarefas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;"></div>
@@ -193,9 +193,9 @@
     </section>
 
     <section id="ws-avaliacoes-container" style="display: none;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub Sala de Aula</button>
         <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>📑 Central de Avaliações Pedagógicas</span></h3>
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>📑 Central de Avaliações</span></h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
@@ -203,7 +203,7 @@
                         <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Escrita</h4>
                         <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Responda a dissertações e testes online. Digite textos, escolha alternativas corretas e selecione multiplas opções de resposta.</p>
                     </div>
-                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px;" onclick="Workspace.navegarPara('avaliacoes_escrita')">Aceder aos Exames</button>
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px;" onclick="Workspace.navegarPara('avaliacoes_escrita')">Acessar Provas</button>
                 </div>
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
@@ -218,7 +218,7 @@
     </section>
 
     <section id="ws-avaliacoes-escrita-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>↩</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>✍️ Meus Exames e Testes</span></h3>
             <div style="margin-top: 15px;">
@@ -232,7 +232,7 @@
     </section>
 
     <section id="ws-avaliacoes-oral-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>↩</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🎤 Estúdio de Testes Orais</span></h3>
             <div style="margin-top: 15px;">
@@ -247,7 +247,7 @@
 
     <!-- 💻 SALAS ONLINE DO ALUNO (COM ABAS DE HISTÓRICO) -->
     <section id="ws-avaliacoes-online-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>💻 Salas de Videoconferência</span></h3>
             <div style="margin-top: 15px;">
@@ -262,7 +262,7 @@
     </section>
 
     <section id="ws-tarefas-professor-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>Painel do Professor: Atividades e Treinos</span></h3>
             
@@ -280,7 +280,7 @@
             </div>
             
             <div id="ws-prof-nova-tarefa" style="display:none; margin-top: 15px;">
-                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()" ontouchstart=""><span>↩</span> Voltar ao Menu</button>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div><label style="font-size:12px; font-weight:bold; color:#555;">Título da Atividade *</label><input type="text" id="ws-nova-tarefa-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Redação sobre História"></div>
                     <div><label style="font-size:12px; font-weight:bold; color:#555;">Turma de Destino *</label><select id="ws-nova-tarefa-turma" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;"><option value="">A carregar turmas...</option></select></div>
@@ -294,14 +294,14 @@
             </div>
             
             <div id="ws-prof-lista-recebidas" style="display:none; margin-top: 15px;">
-                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
+                <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()" ontouchstart=""><span>↩</span> Voltar ao Menu</button>
                 <div id="ws-prof-tarefas-grid" style="display: flex; flex-direction: column; gap: 12px;"></div>
             </div>
         </div>
     </section>
 
     <section id="ws-avaliacoes-prof-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub Sala de Aula</button>
         <div class="ws-card">
             
             <h3 id="ws-titulo-painel-prof" style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
@@ -323,7 +323,7 @@
 
             <div id="ws-prof-submenu-criar" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 10px;">
                 <div style="grid-column: 1 / -1;">
-                    <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>⬅️</span> Voltar aos Botões Principais</button>
+                    <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>↩</span> Voltar aos Botões Principais</button>
                 </div>
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaEscrita()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">✍️</div>
@@ -337,7 +337,7 @@
 
             <div id="ws-prof-submenu-gestao" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 10px;">
                 <div style="grid-column: 1 / -1;">
-                    <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>⬅️</span> Voltar aos Botões Principais</button>
+                    <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>↩</span> Voltar aos Botões Principais</button>
                 </div>
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirGerenciador()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">⚙️</div>
