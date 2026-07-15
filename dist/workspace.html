@@ -356,7 +356,7 @@
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaOnline()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">💻</div>
                     <h4 style="margin: 0 0 5px 0; color: #333;">Nova Sessão Ao Vivo</h4>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Agendar salas Meet/Teams.</p>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Agendar encontro online.</p>
                 </div>
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirGerenciador()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">⚙️</div>
@@ -462,7 +462,7 @@
         <div class="ws-card" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
             <div style="background: #075e54; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2;">
                 <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="Workspace.Sidebar.verFotoChat()" title="Toque para ver a foto">
-                    <button onclick="event.stopPropagation(); Workspace.Sidebar.fecharChat()" style="background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; font-weight: bold;" ontouchstart="">⍇</button>
+                    <button onclick="event.stopPropagation(); Workspace.Sidebar.fecharChat()" style="background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; font-weight: bold;" ontouchstart="">↩</button>
                     <div id="ws-chat-avatar-container" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; font-size: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.3);">👥</div>
                     <div>
                         <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px; font-weight: 600;">Sala de Bate-Papo</h3>
@@ -485,6 +485,58 @@
                     <textarea id="ws-chat-input" placeholder="Mensagem" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 15px; background: transparent; min-width: 0; padding: 0; resize: none; overflow-y: auto; max-height: 100px;" rows="1" oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; Workspace.Sidebar.notificarDigitando();" onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); Workspace.Sidebar.enviarMensagemChat(); }"></textarea>
                 </div>
                 <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="width: 45px; height: 45px; border-radius: 50%; padding: 0; background: #128c7e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 0;" ontouchstart=""><span style="color: white; font-size: 18px; margin-left: -2px;">➤</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📝 MODAL DE DETALHES DA TAREFA (ALUNO E PROFESSOR) -->
+    <div id="ws-tarefa-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10002; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card ws-tarefa-modal-card" style="width: 95%; max-width: 800px; max-height: 90vh; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+            
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">📋 Detalhes da Atividade</h3>
+                <button onclick="document.getElementById('ws-tarefa-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+            </div>
+
+            <div class="ws-tarefa-grid" style="flex: 1; overflow-y: auto;">
+                <!-- COLUNA ESQUERDA: Instruções -->
+                <div class="ws-tarefa-col-esquerda">
+                    <input type="hidden" id="ws-tarefa-id">
+                    <h2 id="ws-tarefa-titulo" style="margin: 0 0 10px 0; color: #2c3e50;">Título da Tarefa</h2>
+                    <div id="ws-tarefa-data" style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-bottom: 20px;">📅 Prazo: </div>
+                    <div id="ws-tarefa-desc" style="font-size: 14px; color: #555; line-height: 1.6;"></div>
+                </div>
+
+                <!-- COLUNA DIREITA: Área de Ação (Aluno ou Professor) -->
+                <div class="ws-tarefa-col-direita">
+                    
+                    <!-- Visão do Aluno: Form para entregar -->
+                    <div id="ws-area-entrega" style="display: none;">
+                        <h4 style="margin: 0 0 15px 0; color: #3498db;">📤 Enviar o meu trabalho</h4>
+                        <label style="font-size: 12px; font-weight: bold; color: #555;">Anexar Ficheiro (PDF, Imagem, Word)</label>
+                        <input type="file" id="ws-tarefa-arquivo" class="ws-post-input" style="padding: 10px; margin-bottom: 15px; background: white;">
+                        
+                        <label style="font-size: 12px; font-weight: bold; color: #555;">Observações (Opcional)</label>
+                        <textarea id="ws-tarefa-obs" class="ws-post-input" rows="3" placeholder="Alguma mensagem para o professor?"></textarea>
+                        
+                        <button id="ws-btn-entregar" class="ws-btn" style="width: 100%; background: #27ae60; padding: 12px;" onclick="Workspace.Sidebar.enviarTarefa()">Enviar Trabalho</button>
+                    </div>
+
+                    <!-- Visão do Aluno: Já Entregue -->
+                    <div id="ws-area-entregue" style="display: none; text-align: center; padding: 20px 0;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">✅</div>
+                        <h4 style="margin: 0 0 5px 0; color: #27ae60;">Trabalho Entregue!</h4>
+                        <div id="ws-tarefa-data-entregue" style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;"></div>
+                        <a id="ws-tarefa-link-entregue" href="#" target="_blank" class="ws-btn" style="display: inline-block; background: #3498db; text-decoration: none; font-size: 12px;">Visualizar o meu envio</a>
+                    </div>
+
+                    <!-- Visão do Professor: Entregas Recebidas -->
+                    <div id="ws-area-professor" style="display: none;">
+                        <h4 style="margin: 0 0 15px 0; color: #8e44ad;">📥 Trabalhos Recebidos</h4>
+                        <div id="ws-lista-entregas" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
