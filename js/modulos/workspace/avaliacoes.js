@@ -215,14 +215,27 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
+        // 🛡️ LÓGICA BLINDADA: Filtro ultrasseguro para encontrar a turma do aluno (igual às tarefas)
+        let minhasTurmas = [];
+        const u = Workspace.usuario;
+        if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+        if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+        if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+        if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
         
+        // Remove nulos, passa a letras pequenas e corta os espaços (ex: "Turma A " vira "turma a")
+        const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
+
         const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.status !== 'ativa') return false;
-            if (a.destino === 'global') return true;
-            if (a.destino === myTurma) return true;
-            if (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === a.destino || t === a.destino)) return true;
-            return false;
+            
+            const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
+            if (destinoLimpo === 'global') return true;
+
+            const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
+
+            // Se o ID da turma da avaliação ou o Nome baterem com a lista segura do aluno, aprova!
+            return turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
         });
 
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
@@ -340,6 +353,17 @@ Workspace.Avaliacoes = {
                 `}).join('');
             }
         }
+    },
+
+    // 🚀 LÓGICA DE ABERTURA FORÇADA PARA ALUNOS
+    abrirSalasOnlineAluno: async (btn) => {
+        const txtOriginal = btn.innerText;
+        btn.innerText = "A procurar salas... ⏳";
+        
+        await Workspace.Avaliacoes.carregarLobbies(); 
+        Workspace.navegarPara('avaliacoes_online');   
+        
+        btn.innerText = txtOriginal;
     },
 
     iniciarExame: async (id) => {
@@ -696,7 +720,6 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-nova-oral-destino').value = 'global';
     },
 
-    // 🚀 LÓGICA DE CRIAÇÃO DA SALA ONLINE
     abrirNovaOnline: () => {
         Workspace.Avaliacoes.carregarTurmasProf();
         Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
@@ -847,9 +870,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // 🚀 ETAPA C: BANCO DE QUESTÕES (FRONTEND)
-    // ==========================================
     adicionarQuestaoBuilder: (tipo, questaoExistente = null) => {
         const area = document.getElementById('ws-builder-questoes');
         const qId = Date.now() + Math.floor(Math.random()*1000); 
@@ -857,7 +877,6 @@ Workspace.Avaliacoes = {
 
         let perguntaStr = questaoExistente ? questaoExistente.pergunta.replace(/^\d+\.\s*/, '') : '';
         
-        // 🚀 O BOTÃO DE GUARDAR NO BANCO
         const btnGuardarBanco = `<button onclick="Workspace.Avaliacoes.salvarQuestaoNoBanco(this, '${tipo}')" style="position:absolute; right:45px; top:10px; background:#f39c12; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#e67e22'" onmouseout="this.style.background='#f39c12'" title="Guardar no Banco de Questões">⭐ Guardar</button>`;
 
         if (tipo === 'escolha') {
@@ -974,7 +993,6 @@ Workspace.Avaliacoes = {
         } catch(e) { Workspace.mostrarAviso("Erro ao ler a questão.", "error"); }
     },
 
-    // 🚀 O STATUS É AGORA 'ATIVA' POR DEFEITO!
     salvarProvaEscrita: async () => {
         const titulo = document.getElementById('ws-nova-prova-titulo').value;
         const tempo = document.getElementById('ws-nova-prova-tempo').value;
@@ -1036,7 +1054,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // 🚀 O STATUS É AGORA 'ATIVA' POR DEFEITO!
     salvarProvaOral: async () => {
         const titulo = document.getElementById('ws-nova-oral-titulo').value.trim();
         const instrucoes = document.getElementById('ws-nova-oral-instrucoes').value.trim();
@@ -1072,7 +1089,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // 🚀 LÓGICA DE GRAVAÇÃO DA SALA ONLINE (STATUS AGORA É 'ATIVA' POR DEFEITO)
     salvarProvaOnline: async () => {
         const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
         const dataHora = document.getElementById('ws-nova-online-data').value;
@@ -1132,7 +1148,6 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                // 📊 O MOTOR DE ESTATÍSTICAS
                 let totalAlertas = 0;
                 const erroPorQuestao = {};
                 let somaAcertos = 0;
@@ -1334,17 +1349,5 @@ Workspace.Avaliacoes = {
             </div>
         `;
         document.body.appendChild(modal);
-    },
-      
-    // 🚀 LÓGICA DE ABERTURA FORÇADA PARA ALUNOS
-    abrirSalasOnlineAluno: async (btn) => {
-        const txtOriginal = btn.innerText;
-        btn.innerText = "A procurar salas... ⏳";
-        
-        await Workspace.Avaliacoes.carregarLobbies(); // Vai buscar os dados fresquinhos à BD
-        Workspace.navegarPara('avaliacoes_online');   // Muda a tela com GPS corrigido
-        
-        btn.innerText = txtOriginal;
     }
-
 };
