@@ -15,7 +15,6 @@ Object.assign(Workspace, {
     avatarsCache: {}, 
     deferredPrompt: null,
 
-    // 🚀 ATUALIZADO: Agora repassa o callback do clique (onClickCallback) para o Toast
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo, duracao, onClickCallback);
@@ -127,7 +126,8 @@ Object.assign(Workspace, {
                 Workspace.Avaliacoes.abrirSalasOnlineAluno(btn);
             }
         } else {
-            Workspace.navegarPara('avaliacoes'); 
+            // 🚀 Professores vão para o painel isolado de encontros online
+            Workspace.navegarPara('encontros_prof'); 
         }
     },
 
@@ -148,11 +148,20 @@ Object.assign(Workspace, {
             'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
             'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
             'avaliacoes_oral': 'ws-avaliacoes-oral-container',
-            'avaliacoes_online': 'ws-avaliacoes-online-container'
+            'avaliacoes_online': 'ws-avaliacoes-online-container',
+            'encontros_prof': 'ws-avaliacoes-prof-container' // Partilha o mesmo ecrã físico, mas altera o contexto!
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         if (tela === 'avaliacoes') tela = Workspace.usuario.tipo === 'Aluno' ? 'avaliacoes_aluno' : 'avaliacoes_prof';
+
+        // 🚀 O CAMALEÃO: Modifica o painel do professor conforme o clique no Hub
+        if (tela === 'encontros_prof') {
+            tela = 'avaliacoes_prof';
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('encontros');
+        } else if (tela === 'avaliacoes_prof') {
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('avaliacoes');
+        }
 
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);

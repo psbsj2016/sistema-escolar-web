@@ -11,6 +11,9 @@ Workspace.Avaliacoes = {
     avaliacaoEmEdicao: null,
     turmasCarregadas: false, 
     
+    // 🚀 NOVO: O Camaleão (Define o que o painel do professor exibe)
+    contextoAtual: 'avaliacoes',
+
     exameAtivo: null,
     tentativaAtivaId: null, 
     cronometroInterval: null,
@@ -26,16 +29,12 @@ Workspace.Avaliacoes = {
     segundosGravados: 0,
     
     radarInterval: null, 
-    
-    // 🛡️ SENSORES DE AUDITORIA EXTREMA
     monitorandoFraude: false,
     fugasCount: 0,
     tempoFora: 0,
     ultimoTick: null,
     heartbeatInterval: null,
     momentoSaidaBlur: null,
-    
-    // 🚀 NOVO: Memória Anti-Spam para os alertas de 10 minutos
     salasNotificadas: new Set(), 
 
     init: () => {
@@ -46,9 +45,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // 🛡️ O MOTOR ANTIFRAUDE (HEARTBEAT & EVENTOS)
-    // ==========================================
     iniciarSensorFraude: () => {
         Workspace.Avaliacoes.monitorandoFraude = true;
         Workspace.Avaliacoes.fugasCount = 0;
@@ -141,9 +137,6 @@ Workspace.Avaliacoes = {
         };
     },
 
-    // ==========================================
-    // ⏰ ALERTA INTELIGENTE (O Disparo dos 10 Minutos)
-    // ==========================================
     verificarSalasProximas: (avaliacoes) => {
         if (Workspace.usuario.tipo !== 'Aluno') return;
 
@@ -169,17 +162,13 @@ Workspace.Avaliacoes = {
                 const dataSala = new Date(a.dataAgendada);
                 const diffMinutos = (dataSala - agora) / (1000 * 60);
 
-                // Gatilho: Entre 0 a 10 Minutos restantes
                 if (diffMinutos > 0 && diffMinutos <= 10) {
                     if (!Workspace.Avaliacoes.salasNotificadas.has(a.id)) {
                         Workspace.Avaliacoes.salasNotificadas.add(a.id); 
-                        
                         const min = Math.ceil(diffMinutos);
                         
-                        // 1. O Alerta visual que dura 10 segundos EXATOS (10000ms)
                         Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em ${min} minutos!`, "warning", 10000);
                         
-                        // 2. A Injeção no Sininho de Notificações
                         if (Workspace.Alertas && Workspace.Alertas.notificacoesAtuais) {
                             const idLocal = 'alerta_local_' + a.id;
                             if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
@@ -192,7 +181,6 @@ Workspace.Avaliacoes = {
                                     origemId: a.id,
                                     destinoNome: a.destinoNome
                                 };
-                                // Coloca a notificação no topo da lista e avisa o Sininho
                                 Workspace.Alertas.notificacoesAtuais.unshift(novaNoti);
                                 Workspace.Alertas.idsConhecidos.add(novaNoti.id);
                                 Workspace.Alertas.atualizarInterface();
@@ -220,7 +208,6 @@ Workspace.Avaliacoes = {
                     const avaliacoesNovas = resAval.avaliacoes;
                     const idAtivo = Workspace.Avaliacoes.exameAtivo || Workspace.Avaliacoes.estudioAtivo;
                     
-                    // 🚀 DISPARO DO MOTOR DE ALERTAS TEMPORIZADOS
                     Workspace.Avaliacoes.verificarSalasProximas(avaliacoesNovas);
 
                     if (idAtivo) {
@@ -290,7 +277,6 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        // 🛡️ LÓGICA BLINDADA: Filtro ultrasseguro para encontrar a turma do aluno
         let minhasTurmas = [];
         const u = Workspace.usuario;
         if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
@@ -302,12 +288,9 @@ Workspace.Avaliacoes = {
 
         const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.status !== 'ativa') return false;
-            
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             if (destinoLimpo === 'global') return true;
-
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
-
             return turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
         });
 
@@ -320,7 +303,7 @@ Workspace.Avaliacoes = {
             entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
         });
 
-        // TABS DA ESCRITA
+        // ESCRITAS
         const escPendentes = escritas.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const escConcluidas = escritas.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
         const tEscPend = document.getElementById('tab-escrita-pendentes');
@@ -362,7 +345,7 @@ Workspace.Avaliacoes = {
             }
         }
 
-        // TABS DO ORAL
+        // ORAIS
         const orPendentes = orais.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const orConcluidas = orais.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
         const tOrPend = document.getElementById('tab-oral-pendentes');
@@ -404,7 +387,7 @@ Workspace.Avaliacoes = {
             }
         }
 
-        // RENDERIZAÇÃO DA SALA ONLINE (VIDEOCONFERÊNCIA)
+        // ONLINES
         const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             if (onlines.length === 0) {
@@ -431,10 +414,8 @@ Workspace.Avaliacoes = {
     abrirSalasOnlineAluno: async (btn) => {
         const txtOriginal = btn.innerText;
         btn.innerText = "A procurar salas... ⏳";
-        
         await Workspace.Avaliacoes.carregarLobbies(); 
         Workspace.navegarPara('avaliacoes_online');   
-        
         btn.innerText = txtOriginal;
     },
 
@@ -443,13 +424,11 @@ Workspace.Avaliacoes = {
         if(!examen) return;
 
         Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
-        
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
                 alunoId: Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login
             });
-            
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
                 Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo, examen.tempo, examen.questoes);
@@ -504,7 +483,6 @@ Workspace.Avaliacoes = {
             } else {
                 htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`;
             }
-
             html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
         });
         area.innerHTML = html;
@@ -561,9 +539,7 @@ Workspace.Avaliacoes = {
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
             Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
-            
             const relatorio = Workspace.Avaliacoes.pararSensorFraude();
-
             try {
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
                     respostas: Workspace.Avaliacoes.respostas, 
@@ -572,7 +548,6 @@ Workspace.Avaliacoes = {
                     relatorioFraude: relatorio,
                     entregaId: Workspace.Avaliacoes.tentativaAtivaId
                 });
-                
                 if(res && res.success) {
                     Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
                     localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
@@ -594,13 +569,10 @@ Workspace.Avaliacoes = {
         if(!teste) return;
         
         Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
-        
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
-                alunoId: Workspace.usuario.id,
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
             });
-            
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
                 Workspace.Avaliacoes.estudioAtivo = teste.id;
@@ -610,7 +582,6 @@ Workspace.Avaliacoes = {
                 document.getElementById('ws-audio-foco-tela').style.display = 'block';
                 document.getElementById('ws-audio-foco-tela').scrollTop = 0;
                 Workspace.Avaliacoes.resetarInterfaceDeAudio();
-                
                 Workspace.Avaliacoes.iniciarSensorFraude();
             } else {
                 Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
@@ -734,8 +705,60 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // 🎓 PAINEL DO PROFESSOR (COM SALAS ONLINE)
+    // 🎓 LÓGICA DE ORGANIZAÇÃO: O CAMALEÃO
     // ==========================================
+    setContextoProf: (contexto) => {
+        Workspace.Avaliacoes.contextoAtual = contexto;
+        
+        // Esconde todos os sub-paineis (Nova, Gerir, Recebidas)
+        const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container', 'ws-prof-submenu-criar', 'ws-prof-submenu-gestao'];
+        ocultar.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+
+        // Alterna entre o menu de Avaliações e de Encontros
+        const titulo = document.getElementById('ws-titulo-painel-prof');
+        const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
+        const menuEncontros = document.getElementById('ws-prof-menu-encontros');
+
+        if (contexto === 'encontros') {
+            if(titulo) titulo.innerHTML = '<span>💻 Painel do Professor: Encontros Online</span>';
+            if(menuAvaliacoes) menuAvaliacoes.style.display = 'none';
+            if(menuEncontros) menuEncontros.style.display = 'grid';
+        } else {
+            if(titulo) titulo.innerHTML = '<span>🎓 Painel do Professor: Avaliações</span>';
+            if(menuEncontros) menuEncontros.style.display = 'none';
+            if(menuAvaliacoes) menuAvaliacoes.style.display = 'grid';
+        }
+    },
+
+    mostrarSubmenuCriar: () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-submenu-criar').style.display = 'grid';
+    },
+
+    mostrarSubmenuGestao: () => {
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-submenu-gestao').style.display = 'grid';
+    },
+
+    voltarSubmenus: () => {
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
+        document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
+    },
+
+    voltarMenuProf: () => {
+        const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container'];
+        ocultar.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+        // Volta a pintar o menu correto consoante o contexto do professor
+        Workspace.Avaliacoes.setContextoProf(Workspace.Avaliacoes.contextoAtual);
+    },
+
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
         try {
@@ -760,11 +783,7 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
         document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
         
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'none';
-        document.getElementById('ws-prof-nova-online').style.display = 'none';
-        document.getElementById('ws-prof-recebidas').style.display = 'none';
-        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
         document.getElementById('ws-prof-nova-escrita').style.display = 'block';
         
         document.getElementById('ws-nova-prova-titulo').value = '';
@@ -779,11 +798,7 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
         document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
 
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
-        document.getElementById('ws-prof-nova-online').style.display = 'none';
-        document.getElementById('ws-prof-recebidas').style.display = 'none';
-        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
         document.getElementById('ws-prof-nova-oral').style.display = 'block';
 
         document.getElementById('ws-nova-oral-titulo').value = '';
@@ -797,11 +812,7 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
         document.getElementById('ws-btn-salvar-online').innerText = "💻 Agendar Sessão Ao Vivo";
 
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'none';
-        document.getElementById('ws-prof-recebidas').style.display = 'none';
-        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+        document.getElementById('ws-prof-menu-encontros').style.display = 'none';
         document.getElementById('ws-prof-nova-online').style.display = 'block';
 
         document.getElementById('ws-nova-online-titulo').value = '';
@@ -810,17 +821,10 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-    voltarMenuProf: () => {
-        document.getElementById('ws-prof-nova-escrita').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'none';
-        document.getElementById('ws-prof-nova-online').style.display = 'none';
-        document.getElementById('ws-prof-recebidas').style.display = 'none';
-        document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
-    },
-
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
+        document.getElementById('ws-prof-menu-encontros').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         
         const container = document.getElementById('ws-prof-gerir-lista');
@@ -840,10 +844,17 @@ Workspace.Avaliacoes = {
 
     renderizarListaGerenciador: () => {
         const container = document.getElementById('ws-prof-gerir-lista');
-        const avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
+        let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
+
+        // 🚀 O FILTRO MÁGICO
+        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
+            avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
+        } else {
+            avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
+        }
 
         if(avaliacoes.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não criou nenhuma avaliação.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem itens agendados nesta categoria.</div>';
             return;
         }
 
@@ -890,12 +901,12 @@ Workspace.Avaliacoes = {
     },
 
     excluirAvaliacao: (id) => {
-        Workspace.Avaliacoes.confirmarDialog("Excluir Definitivamente", "Deseja apagar esta avaliação para sempre?", "Sim, Apagar", "#e74c3c", async () => {
+        Workspace.Avaliacoes.confirmarDialog("Excluir Definitivamente", "Deseja apagar este item para sempre?", "Sim, Apagar", "#e74c3c", async () => {
             try {
                 await Workspace.api(`/workspace/avaliacoes/${id}`, 'DELETE');
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache = Workspace.Avaliacoes.avaliacoesGerenciadorCache.filter(x => x.id !== id);
                 Workspace.Avaliacoes.renderizarListaGerenciador();
-                Workspace.mostrarAviso("Avaliação apagada com sucesso!", "success");
+                Workspace.mostrarAviso("Apagado com sucesso!", "success");
             } catch(e) { Workspace.mostrarAviso("Erro ao apagar.", "error"); }
         });
     },
@@ -948,13 +959,11 @@ Workspace.Avaliacoes = {
         let html = '';
 
         let perguntaStr = questaoExistente ? questaoExistente.pergunta.replace(/^\d+\.\s*/, '') : '';
-        
         const btnGuardarBanco = `<button onclick="Workspace.Avaliacoes.salvarQuestaoNoBanco(this, '${tipo}')" style="position:absolute; right:45px; top:10px; background:#f39c12; color:white; border:none; border-radius:4px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#e67e22'" onmouseout="this.style.background='#f39c12'" title="Guardar no Banco de Questões">⭐ Guardar</button>`;
 
         if (tipo === 'escolha') {
             let ops = questaoExistente && questaoExistente.opcoes ? questaoExistente.opcoes : ['', '', '', ''];
             let rC = questaoExistente ? questaoExistente.respostaCorreta : ops[0];
-            
             html = `
             <div class="ws-card ws-questao-build" style="border: 2px solid #3498db; position: relative; padding: 15px; margin-bottom: 0;">
                 ${btnGuardarBanco}
@@ -1198,6 +1207,7 @@ Workspace.Avaliacoes = {
 
     abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
+        document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
         document.getElementById('ws-prof-recebidas').style.display = 'block';
         
@@ -1236,10 +1246,7 @@ Workspace.Avaliacoes = {
                             const chaveUnica = `${e.avaliacaoId}_${q.id}`;
                             if (!erroPorQuestao[chaveUnica]) {
                                 erroPorQuestao[chaveUnica] = { 
-                                    erros: 0, 
-                                    total: 0, 
-                                    pergunta: q.pergunta, 
-                                    tituloProva: prova.titulo 
+                                    erros: 0, total: 0, pergunta: q.pergunta, tituloProva: prova.titulo 
                                 };
                             }
                             erroPorQuestao[chaveUnica].total++;
