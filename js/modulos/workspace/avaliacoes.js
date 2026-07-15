@@ -34,6 +34,7 @@ Workspace.Avaliacoes = {
     ultimoTick: null,
     heartbeatInterval: null,
     momentoSaidaBlur: null,
+    salasNotificadas: new Set(), // 🚀 NOVO: Memória Anti-Spam para os alertas de 10 minutos
 
     init: () => {
         console.log("📝 Motor de Avaliações com Integração de Videoconferência Ativado.");
@@ -138,6 +139,52 @@ Workspace.Avaliacoes = {
         };
     },
 
+    // ==========================================
+    // ⏰ ALERTA INTELIGENTE (10 MINUTOS)
+    // ==========================================
+    verificarSalasProximas: (avaliacoes) => {
+        if (Workspace.usuario.tipo !== 'Aluno') return;
+
+        // 1. Filtrar as turmas do aluno de forma segura
+        let minhasTurmas = [];
+        const u = Workspace.usuario;
+        if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+        if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+        if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+        if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
+        
+        const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
+        const agora = new Date();
+
+        avaliacoes.forEach(a => {
+            // Ignora o que não for Sala Online ou não estiver ativa
+            if (a.tipo !== 'online' || a.status !== 'ativa' || !a.dataAgendada) return;
+
+            const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
+            const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
+
+            // 2. Verifica se a sala pertence a este aluno
+            const isParaMim = destinoLimpo === 'global' || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
+
+            if (isParaMim) {
+                const dataSala = new Date(a.dataAgendada);
+                // Calcula a diferença em minutos
+                const diffMinutos = (dataSala - agora) / (1000 * 60);
+
+                // 3. O Gatilho: Faltam 10 minutos ou menos?
+                if (diffMinutos > 0 && diffMinutos <= 10) {
+                    // Verifica se já não enviámos esta notificação
+                    if (!Workspace.Avaliacoes.salasNotificadas.has(a.id)) {
+                        Workspace.Avaliacoes.salasNotificadas.add(a.id); // Memoriza para não repetir
+                        
+                        const minutosArredondados = Math.ceil(diffMinutos);
+                        Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em cerca de ${minutosArredondados} minutos! Vá à Central de Avaliações.`, "info");
+                    }
+                }
+            }
+        });
+    },
+
     iniciarRadarAvaliacoes: () => {
         if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
         
@@ -148,6 +195,9 @@ Workspace.Avaliacoes = {
                     const avaliacoesNovas = resAval.avaliacoes;
                     const idAtivo = Workspace.Avaliacoes.exameAtivo || Workspace.Avaliacoes.estudioAtivo;
                     
+                    // 🚀 DISPARO DO MOTOR DE ALERTAS
+                    Workspace.Avaliacoes.verificarSalasProximas(avaliacoesNovas);
+
                     if (idAtivo) {
                         const provaAtualizada = avaliacoesNovas.find(a => a.id === idAtivo);
                         const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
@@ -215,7 +265,7 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
     renderizarLobbies: () => {
-        // 🛡️ LÓGICA BLINDADA: Filtro ultrasseguro para encontrar a turma do aluno (igual às tarefas)
+        // 🛡️ LÓGICA BLINDADA: Filtro ultrasseguro para encontrar a turma do aluno
         let minhasTurmas = [];
         const u = Workspace.usuario;
         if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
@@ -223,7 +273,6 @@ Workspace.Avaliacoes = {
         if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
         if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
         
-        // Remove nulos, passa a letras pequenas e corta os espaços (ex: "Turma A " vira "turma a")
         const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
 
         const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
@@ -234,7 +283,6 @@ Workspace.Avaliacoes = {
 
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
 
-            // Se o ID da turma da avaliação ou o Nome baterem com a lista segura do aluno, aprova!
             return turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
         });
 
@@ -331,7 +379,7 @@ Workspace.Avaliacoes = {
             }
         }
 
-        // 🚀 RENDERIZAÇÃO DA SALA ONLINE (VIDEOCONFERÊNCIA)
+        // RENDERIZAÇÃO DA SALA ONLINE (VIDEOCONFERÊNCIA)
         const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             if (onlines.length === 0) {
@@ -355,7 +403,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // 🚀 LÓGICA DE ABERTURA FORÇADA PARA ALUNOS
     abrirSalasOnlineAluno: async (btn) => {
         const txtOriginal = btn.innerText;
         btn.innerText = "A procurar salas... ⏳";
