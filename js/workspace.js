@@ -1,6 +1,4 @@
 import { CONFIG } from './config.js';
-
-// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL
 import './pwa-updater.js';
 import './toast.js'; 
 import './modulos/workspace/feed.js';
@@ -17,7 +15,6 @@ Object.assign(Workspace, {
     avatarsCache: {}, 
     deferredPrompt: null,
 
-    // 🚀 AQUI: O motor agora repassa o tempo que o módulo pedir (ex: 10000ms)
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500) => {
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo, duracao);
@@ -121,45 +118,18 @@ Object.assign(Workspace, {
             if (e.state && e.state.tela) Workspace.navegarPara(e.state.tela, false); 
             else Workspace.navegarPara('feed', false);
         });
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); 
-            Workspace.deferredPrompt = e; 
-            if (window.matchMedia('(display-mode: standalone)').matches) return;
-            Workspace.injetarPopUpInstalacao();
-        });
-
-        window.addEventListener('appinstalled', () => {
-            Workspace.deferredPrompt = null;
-            const banner = document.getElementById('ws-pwa-install-banner');
-            if (banner) banner.remove();
-            Workspace.mostrarAviso("Aplicação Workspace instalada com sucesso! 🎉", "success");
-        });
     },
 
-    injetarPopUpInstalacao: () => {
-        if (document.getElementById('ws-pwa-install-banner')) return;
-
-        const banner = document.createElement('div');
-        banner.id = 'ws-pwa-install-banner';
-        banner.style.cssText = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 30px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10009; font-family: sans-serif; font-size: 13px; font-weight: 600; width: max-content; max-width: 90vw; animation: fadeIn 0.4s ease;";
-        banner.innerHTML = `
-            <span>📱 Gostaria de instalar a App do Workspace no ecrã principal?</span>
-            <div style="display: flex; gap: 8px;">
-                <button id="ws-pwa-btn-instalar" style="background: #3498db; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Instalar</button>
-                <button id="ws-pwa-btn-fechar" style="background: transparent; color: #bbb; border: none; cursor: pointer; font-size: 16px; padding: 0 5px;">&times;</button>
-            </div>
-        `;
-        document.body.appendChild(banner);
-
-        document.getElementById('ws-pwa-btn-instalar').addEventListener('click', async () => {
-            if (!Workspace.deferredPrompt) return;
-            Workspace.deferredPrompt.prompt();
-            await Workspace.deferredPrompt.userChoice;
-            Workspace.deferredPrompt = null;
-            banner.remove();
-        });
-        document.getElementById('ws-pwa-btn-fechar').addEventListener('click', () => banner.remove());
+    // 🚀 LÓGICA DE NAVEGAÇÃO INTELIGENTE (Aluno vs Professor)
+    abrirEncontroOnline: (btn) => {
+        if (Workspace.usuario.tipo === 'Aluno') {
+            if(Workspace.Avaliacoes && Workspace.Avaliacoes.abrirSalasOnlineAluno) {
+                Workspace.Avaliacoes.abrirSalasOnlineAluno(btn);
+            }
+        } else {
+            // Professores e Gestores são redirecionados ao seu painel principal de avaliações
+            Workspace.navegarPara('avaliacoes'); 
+        }
     },
 
    navegarPara: (tela, registarNoHistorico = true) => {
@@ -168,9 +138,11 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
+        // 🚀 O MAPA (GPS) COM A NOVA SALA DE AULA
         const ecras = {
             'feed': 'ws-main-container', 
             'configuracoes': 'ws-config-container',
+            'sala_aula': 'ws-sala-aula-container',
             'tarefas_aluno': 'ws-tarefas-container', 
             'tarefas_prof': 'ws-tarefas-professor-container',
             'perfil': 'ws-perfil-modal', 

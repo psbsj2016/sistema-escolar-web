@@ -12,8 +12,8 @@
     
     <title>Workspace - Portal do Aluno</title>
     
-    <!-- 🚀 CACHE BUSTING V5: Obriga o telemóvel a carregar o design novo -->
-    <link rel="stylesheet" href="./css/site.css?v=5">
+    <!-- 🚀 CACHE BUSTING V6: Força o recarregamento do novo HUB Sala de Aula -->
+    <link rel="stylesheet" href="./css/site.css?v=6">
     
     <style>
         /* 🛡️ MATEMÁTICA DE CAIXA UNIVERSAL SIMÉTRICA */
@@ -71,7 +71,6 @@
             overflow: visible !important; 
         }
 
-        /* 🛡️ DEVOLVER O TAMANHO E DESTAQUE À CAIXA DE PUBLICAÇÃO */
         #ws-criar-post {
             padding: 20px !important; 
         }
@@ -148,7 +147,6 @@
             outline: none; 
         }
         
-        /* 🛡️ EFEITO MOLA PARA TODOS BOTÕES (FEEDBACK TÁTIL) */
         .ws-btn, #ws-btn-anexar { 
             transition: transform 0.1s ease-out, background 0.2s ease !important; 
         }
@@ -202,7 +200,6 @@
             .ws-video-container { height: 250px !important; }
         }
 
-        /* 🛡️ ESTRUTURA BLINDADA PARA AS TAREFAS */
         .ws-tarefa-grid {
             display: flex;
             flex-direction: column;
@@ -269,20 +266,17 @@
                         <span style="font-size: 18px;">🙍</span> Meu Perfil
                     </button>
                     
+                    <!-- 🚀 NOVO BOTÃO: O HUB DA SALA DE AULA NO MENU PRINCIPAL -->
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.navegarPara('sala_aula')" ontouchstart="">
+                        <span style="font-size: 18px;">🏫</span> Sala de Aula
+                    </button>
+                    
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuChat()" ontouchstart="">
                         <span style="font-size: 18px;">💬</span> Bate-Papo
                     </button>
                     <div id="ws-lista-turmas-menu" style="display: none; padding: 5px 10px 5px 30px; max-height: 200px; overflow-y: auto; background: #fafafa; border-radius: 8px; margin-bottom: 5px;">
                         <div style="padding:10px; color:#999; font-size:12px; text-align:center;">Carregando o Bate-papo... ⏳</div>
                     </div>
-
-                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaTarefas()" ontouchstart="">
-                        <span style="font-size: 18px;">🏋️</span> Treinos
-                    </button>
-
-                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaAvaliacoes()" ontouchstart="">
-                        <span style="font-size: 18px;">📑</span> Avaliações
-                    </button>
 
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()" ontouchstart="">
                         <span style="font-size: 18px;">⚙️</span> Configurações
@@ -325,19 +319,66 @@
         </section>
     </main>
 
-    <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+    <!-- 🚀 NOVO ECRÃ: O HUB DA SALA DE AULA -->
+    <section id="ws-sala-aula-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>📝 Minhas Atividades</span>
+                <span>🏫 Hub da Sala de Aula</span>
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+                
+                <!-- CARTÃO 1: ENCONTRO ONLINE -->
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Encontro Online</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente em direto para videoconferências e aulas ao vivo. Acesse as salas oficiais do Microsoft Teams ou Google Meet.</p>
+                    </div>
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.abrirEncontroOnline(this)">Aceder às Salas</button>
+                </div>
+
+                <!-- CARTÃO 2: ATIVIDADES E TREINOS -->
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">🏋️</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Atividades e Treinos</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Acesse redações, materiais de apoio e exercícios para treinar suas habilidades e entregar trabalhos ao professor.</p>
+                    </div>
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #3498db;" onclick="Workspace.navegarPara('tarefas')">Acessar Treinos</button>
+                </div>
+
+                <!-- CARTÃO 3: AVALIAÇÕES -->
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">📑</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliações</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Central de testes oficiais. Realize provas escritas de múltipla escolha e testes orais de conversação.</p>
+                    </div>
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #27ae60;" onclick="Workspace.navegarPara('avaliacoes')">Acessar Avaliações</button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 🏋️ TAREFAS ALUNO -->
+    <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📝 Minhas Atividades e Treinos</span>
             </h3>
             <div id="ws-lista-tarefas-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;"></div>
         </div>
     </section>
 
+    <!-- 📑 AVALIAÇÕES ALUNO (Agora só com Escrita e Oral) -->
     <section id="ws-avaliacoes-container" style="display: none;">
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>📝 Central de Avaliações Pedagógicas</span>
+                <span>📑 Central de Avaliações Pedagógicas</span>
             </h3>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
@@ -360,23 +401,13 @@
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #2c3e50;" onclick="Workspace.navegarPara('avaliacoes_oral')">Entrar no Estúdio</button>
                 </div>
 
-                <!-- CARTÃO DO ALUNO DESBLOQUEADO (COM LIGAÇÃO CORRIGIDA) -->
-                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
-                    <div>
-                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
-                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Online</h4>
-                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente em direto para videoconferências e provas ao vivo. Entre nas salas oficiais do Microsoft Teams ou Google Meet.</p>
-                    </div>
-                    <!-- 🚀 CORREÇÃO 1: Botão atualizado para forçar atualização em tempo real -->
-                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.Avaliacoes.abrirSalasOnlineAluno(this)">Ver Salas Agendadas</button>
-                </div>
-
             </div>
         </div>
     </section>
 
+    <!-- ✍️ AVALIAÇÕES ESCRITAS -->
     <section id="ws-avaliacoes-escrita-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Principal</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
                 <span>✍️ Meus Exames e Testes</span>
@@ -391,8 +422,9 @@
         </div>
     </section>
 
+    <!-- 🎤 AVALIAÇÕES ORAIS -->
     <section id="ws-avaliacoes-oral-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Principal</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
                 <span>🎤 Estúdio de Testes Orais</span>
@@ -407,11 +439,11 @@
         </div>
     </section>
 
-    <!-- NOVO ECRÃ: SALAS ONLINE DO ALUNO -->
+    <!-- 💻 SALAS ONLINE DO ALUNO -->
     <section id="ws-avaliacoes-online-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Principal</button>
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
                 <span>💻 Salas de Videoconferência</span>
             </h3>
             <div style="margin-top: 15px;">
@@ -420,10 +452,12 @@
         </div>
     </section>
 
+    <!-- 👨‍🏫 TAREFAS PROFESSOR -->
     <section id="ws-tarefas-professor-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>Painel do Professor: Atividades</span>
+                <span>Painel do Professor: Atividades e Treinos</span>
             </h3>
             <div id="ws-prof-menu-tarefas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelNovaTarefa()" ontouchstart="">
@@ -472,209 +506,12 @@
         </div>
     </section>
 
-    <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
-                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()" ontouchstart="">
-                    <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
-                    <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Atualize a sua credencial de acesso.</p>
-                </div>
-                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; opacity: 0.6; position: relative;">
-                    <span style="position: absolute; top: 10px; right: 10px; background: #e67e22; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: bold;">EM BREVE</span>
-                    <div style="font-size: 30px; margin-bottom: 10px;">💳</div>
-                    <h4 style="margin: 0 0 5px 0; color: #333;">Ativações</h4>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Gerencie os seus planos e assinaturas.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PERFIL ATUALIZADO COM O VISUALIZADOR ESTILO WHATSAPP E CÂMARA FLUTUANTE -->
-    <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
-        <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3>
-            </div>
-            <div style="padding: 30px 20px; text-align: center;">
-                
-                <div style="position: relative; display: inline-block; margin: 0 auto;">
-                    <div style="cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
-                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                        <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
-                    </div>
-                    
-                    <div style="position: absolute; bottom: 0; right: -5px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Alterar Foto">
-                        📷
-                    </div>
-                </div>
-
-                <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
-                
-                <h3 id="ws-perfil-modal-nome" style="margin: 15px 0 5px 0; color: #2c3e50; font-size: 20px;">Nome</h3>
-                <p id="ws-perfil-modal-login" style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: bold;">@login</p>
-                <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando a foto do perfil ⏳ ...</div>
-            </div>
-        </div>
-    </section>
-
-    <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="ws-card" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-           <div style="background: #075e54; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2;">
-                <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="Workspace.Sidebar.verFotoChat()" title="Toque para ver a foto">
-                    <button onclick="event.stopPropagation(); Workspace.Sidebar.fecharChat()" style="background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; font-weight: bold;" ontouchstart="">⬅</button>
-                    
-                    <div id="ws-chat-avatar-container" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; font-size: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.3);">👥</div>
-                    
-                    <div>
-                        <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px; font-weight: 600;">Sala de Bate-Papo</h3>
-                        <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">Você: <strong id="ws-chat-aluno-nome">...</strong></div>
-                    </div>
-                </div>
-                
-                <button id="ws-btn-editar-chat" style="display:none; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onclick="event.stopPropagation(); Workspace.Sidebar.abrirEdicaoChat()" onmouseover="this.style.background='rgba(255,255,255,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✏️ Editar</button>
-            </div>
-            <div id="ws-chat-mensagens" style="flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; background: #e5ddd5; display: flex; flex-direction: column; gap: 12px;"></div>
-            <div style="padding: 10px; background: #f0f2f5; display: flex; gap: 8px; align-items: center; flex-shrink: 0; width: 100%; box-sizing: border-box;">
-                <div style="flex: 1; display: flex; align-items: center; background: white; border-radius: 25px; padding: 0 15px; height: 45px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 0;">
-                    <input type="text" id="ws-chat-input" placeholder="Mensagem" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 15px; background: transparent; min-width: 0; padding: 0; height: 100%;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
-                </div>
-                <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="width: 45px; height: 45px; border-radius: 50%; padding: 0; background: #128c7e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" ontouchstart="">
-                    <span style="color: white; font-size: 18px; margin-left: -2px;">➤</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="ws-senha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
-            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 16px;">🔑 Alterar Senha</h3>
-                <button onclick="document.getElementById('ws-senha-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" ontouchstart="">✖</button>
-            </div>
-            <div style="padding: 20px;">
-                <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 20px;">Por questões de segurança, confirme a sua senha atual antes de escolher uma nova.</p>
-                <form onsubmit="event.preventDefault(); Workspace.salvarNovaSenha();" style="width: 100%;">
-                    <input type="text" autocomplete="username" value="user_oculto" style="display: none;">
-                    <input type="password" id="ws-senha-atual" placeholder="Senha Atual" autocomplete="current-password" class="ws-post-input" style="margin-bottom: 15px;">
-                    <input type="password" id="ws-nova-senha" placeholder="Nova Senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 10px;">
-                    <input type="password" id="ws-confirma-senha" placeholder="Confirmar Nova Senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 20px;">
-                    <button type="submit" class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 12px; font-size: 14px;" ontouchstart="">💾 Confirmar e Salvar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="ws-tarefa-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="ws-card ws-tarefa-modal-card" style="width: 95%; max-width: 450px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease; display: flex; flex-direction: column; max-height: 90vh;">
-            <div style="background: #3498db; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; z-index: 10;">
-                <h3 style="margin: 0; font-size: 16px;">📝 Detalhes da Atividade</h3>
-                <button onclick="document.getElementById('ws-tarefa-modal').style.display='none'" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'" ontouchstart="">✖</button>
-            </div>
-            <div class="ws-tarefa-grid">
-                <div class="ws-tarefa-col-esquerda">
-                    <h4 id="ws-tarefa-titulo" style="margin: 0 0 5px 0; color: #2c3e50; font-size: 18px;">Título</h4>
-                    <p id="ws-tarefa-data" style="margin: 0 0 15px 0; font-size: 12px; color: #e74c3c; font-weight: bold;">Prazo: ...</p>
-                    <div id="ws-tarefa-desc" style="font-size: 13px; color: #555; background: #fff; line-height: 1.6;"></div>
-                </div>
-                <div class="ws-tarefa-col-direita">
-                    <div id="ws-area-entrega">
-                        <label style="font-size: 13px; font-weight: bold; color: #2c3e50; display: block; margin-bottom: 10px;">A sua Resposta / Trabalho:</label>
-                        <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                            <label style="font-size: 11px; color: #7f8c8d; display: block; margin-bottom: 5px; text-transform: uppercase; font-weight: bold;">1. Anexar Ficheiro (PDF, Imagem, Power Point ou Word)</label>
-                            <input type="file" id="ws-tarefa-arquivo" style="width: 100%; font-size: 12px; cursor: pointer;">
-                        </div>
-                        <div style="background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                            <label style="font-size: 11px; color: #7f8c8d; display: block; margin-bottom: 5px; text-transform: uppercase; font-weight: bold;">2. Comentário (Opcional)</label>
-                            <textarea id="ws-tarefa-obs" class="ws-post-input" rows="3" placeholder="Mensagem para o professor..."></textarea>
-                        </div>
-                        <input type="hidden" id="ws-tarefa-id">
-                        <button class="ws-btn" id="ws-btn-entregar" style="width: 100%; background: #27ae60; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);" onclick="Workspace.Sidebar.enviarTarefa()" ontouchstart="">📤 Enviar Trabalho Definitivo</button>
-                    </div>
-                    <div id="ws-area-entregue" style="display: none; text-align: center; padding: 30px 20px; background: white; border: 2px solid #2ecc71; border-radius: 12px;">
-                        <div style="font-size: 45px; margin-bottom: 10px;">🎉</div>
-                        <h4 style="margin: 0 0 5px 0; color: #27ae60; font-size: 18px;">Atividade Entregue!</h4>
-                        <p style="margin: 0; font-size: 13px; color: #666;" id="ws-tarefa-data-entregue">Data: ...</p>
-                        <a id="ws-tarefa-link-entregue" href="#" target="_blank" style="display: inline-block; margin-top: 20px; background: #f0f2f5; border: 1px solid #ccc; padding: 10px 20px; border-radius: 8px; font-size: 13px; color: #333; font-weight: bold; text-decoration: none; transition: 0.2s;" onmouseover="this.style.background='#e2e6ea'" ontouchstart="">📄 Ver o material que enviei</a>
-                    </div>
-                    <div id="ws-area-professor" style="display: none;">
-                        <h4 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 15px; display: flex; align-items: center; gap: 8px;"><span>📥</span> Atividades Entregues</h4>
-                        <div id="ws-lista-entregas" style="display: flex; flex-direction: column; gap: 10px;"><p style="font-size: 12px; color: #999; text-align: center;">A carregar entregas... ⏳</p></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="ws-exame-foco-tela" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; max-width: 100%; height: 100vh; background: #f0f2f5; z-index: 100000; overflow-y: auto; padding-bottom: 90px; margin: 0;">
-        
-        <div style="background: white; border-bottom: 3px solid #3498db; padding: 15px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; flex-direction: column;">
-                <h2 id="ws-exame-titulo" style="margin: 0; color: #2c3e50; font-size: 18px;">Título da Avaliação</h2>
-                <span style="font-size: 12px; color: #7f8c8d; display: flex; align-items: center; gap: 5px;"><span style="color:#27ae60;">●</span> Rascunho salvo automaticamente</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="background: #fdf2f2; color: #e74c3c; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 15px; font-family: monospace; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);" id="ws-exame-cronometro">00:00:00</div>
-                <button class="ws-btn" style="background: #e74c3c; padding: 8px 15px; font-size: 13px;" onclick="Workspace.Avaliacoes.sairDoExame()" ontouchstart="">Desistir / Sair</button>
-            </div>
-        </div>
-
-        <div style="max-width: 1000px; width: 100%; margin: 30px auto; padding: 0 max(20px, env(safe-area-inset-right)); box-sizing: border-box;" id="ws-exame-questoes-area">
-            </div>
-
-        <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px max(20px, env(safe-area-inset-right)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: center; gap: 15px; z-index: 10; box-sizing: border-box;">
-            <button class="ws-btn" style="background: #95a5a6; width: 200px;" onclick="Workspace.Avaliacoes.guardarRascunhoManual()" ontouchstart="">💾 Salvar Rascunho</button>
-            <button class="ws-btn" style="background: #27ae60; width: 200px;" onclick="Workspace.Avaliacoes.finalizarExame()" ontouchstart="">📤 Enviar Avaliação</button>
-        </div>
-    </div>
-
-    <div id="ws-audio-foco-tela" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; max-width: 100%; height: 100vh; background: #2c3e50; z-index: 100000; overflow-y: auto; padding-bottom: 90px; margin: 0; color: white;">
-        
-        <div style="background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; flex-direction: column;">
-                <h2 id="ws-audio-titulo" style="margin: 0; font-size: 18px; color: #fff;">Teste Oral de Inglês</h2>
-                <span style="font-size: 12px; color: #bdc3c7; display: flex; align-items: center; gap: 5px;">🎙️ Estúdio de Gravação Seguro</span>
-            </div>
-            <button class="ws-btn" style="background: transparent; border: 1px solid #e74c3c; color: #e74c3c; padding: 6px 15px; font-size: 13px;" onclick="Workspace.Avaliacoes.sairDoEstudio()" ontouchstart="">Sair do Estúdio</button>
-        </div>
-
-        <div style="max-width: 800px; width: 100%; margin: 40px auto; padding: 0 max(20px, env(safe-area-inset-right)); box-sizing: border-box; text-align: center;">
-            
-            <div style="background: white; color: #2c3e50; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 40px; text-align: left; border-left: 5px solid #f39c12;">
-                <h4 style="margin: 0 0 10px 0; color: #f39c12; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Instruções do Tutor</h4>
-                <p id="ws-audio-pergunta" style="margin: 0; font-size: 16px; line-height: 1.6;">Por favor, leia o texto acima em voz alta e expresse a sua opinião sobre o tema.</p>
-            </div>
-
-            <div id="ws-area-gravacao">
-                <div style="width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; border: 2px dashed rgba(255,255,255,0.2); transition: 0.3s;" id="ws-mic-ring">
-                    <span style="font-size: 50px;" id="ws-mic-icon">🎤</span>
-                </div>
-                
-                <div id="ws-audio-cronometro" style="font-size: 45px; font-family: monospace; font-weight: bold; margin-bottom: 30px; color: #fff;">00:00</div>
-                
-                <button id="ws-btn-iniciar-gravacao" class="ws-btn" style="background: #e74c3c; width: 250px; padding: 15px; font-size: 16px; border-radius: 30px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);" onclick="Workspace.Avaliacoes.iniciarGravacao()" ontouchstart="">🔴 Iniciar Gravação</button>
-                
-                <button id="ws-btn-parar-gravacao" class="ws-btn" style="display: none; background: #fff; color: #e74c3c; width: 250px; padding: 15px; font-size: 16px; border-radius: 30px; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); font-weight: bold;" onclick="Workspace.Avaliacoes.pararGravacao()" ontouchstart="">⏹️ Parar Gravação</button>
-            </div>
-
-            <div id="ws-area-player" style="display: none; background: rgba(0,0,0,0.2); padding: 30px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                <h4 style="margin: 0 0 15px 0; color: #2ecc71;">Gravação Concluída!</h4>
-                <audio id="ws-audio-preview" controls style="width: 100%; max-width: 400px; margin-bottom: 25px; outline: none;"></audio>
-                
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button class="ws-btn" style="background: transparent; border: 2px solid #95a5a6; color: #fff; width: 200px; border-radius: 30px;" onclick="Workspace.Avaliacoes.descartarAudio()" ontouchstart="">🗑️ Gravar de Novo</button>
-                    <button class="ws-btn" style="background: #27ae60; width: 200px; border-radius: 30px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);" id="ws-btn-enviar-audio" onclick="Workspace.Avaliacoes.enviarAudio()" ontouchstart="">📤 Enviar Áudio</button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
+    <!-- 👨‍🏫 AVALIAÇÕES PROFESSOR -->
     <section id="ws-avaliacoes-prof-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
-                <span>🎓 Painel do Professor: Avaliações</span>
+                <span>🎓 Painel do Professor: Avaliações e Encontros</span>
             </h3>
             
             <div id="ws-prof-menu-avaliacoes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px;">
@@ -772,7 +609,6 @@
                 <button id="ws-btn-salvar-oral" class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaOral()" ontouchstart="">🎤 Publicar Teste Oral</button>
             </div>
             
-            <!-- FORMULÁRIO DE CRIAÇÃO DA SALA ONLINE -->
             <div id="ws-prof-nova-online" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar ao Menu</button>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
@@ -806,7 +642,99 @@
         </div>
     </section>
 
-    <!-- 🚀 CACHE BUSTING V5: Atualizado no fim do body -->
-    <script type="module" src="./js/workspace.js?v=5"></script>
+    <!-- ⚙️ CONFIGURAÇÕES E PERFIL -->
+    <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()" ontouchstart="">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Atualize a sua credencial de acesso.</p>
+                </div>
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; opacity: 0.6; position: relative;">
+                    <span style="position: absolute; top: 10px; right: 10px; background: #e67e22; color: white; font-size: 9px; padding: 3px 6px; border-radius: 4px; font-weight: bold;">EM BREVE</span>
+                    <div style="font-size: 30px; margin-bottom: 10px;">💳</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Ativações</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Gerencie os seus planos e assinaturas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
+        <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3>
+            </div>
+            <div style="padding: 30px 20px; text-align: center;">
+                
+                <div style="position: relative; display: inline-block; margin: 0 auto;">
+                    <div style="cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
+                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                        <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
+                    </div>
+                    
+                    <div style="position: absolute; bottom: 0; right: -5px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Alterar Foto">
+                        📷
+                    </div>
+                </div>
+
+                <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
+                
+                <h3 id="ws-perfil-modal-nome" style="margin: 15px 0 5px 0; color: #2c3e50; font-size: 20px;">Nome</h3>
+                <p id="ws-perfil-modal-login" style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: bold;">@login</p>
+                <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando a foto do perfil ⏳ ...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MOTOR DE CHAT E OUTROS MODAIS INVISÍVEIS AQUI... -->
+    <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 100%; max-width: 600px; display: flex; flex-direction: column; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+           <div style="background: #075e54; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2;">
+                <div style="display: flex; align-items: center; gap: 15px; cursor: pointer;" onclick="Workspace.Sidebar.verFotoChat()" title="Toque para ver a foto">
+                    <button onclick="event.stopPropagation(); Workspace.Sidebar.fecharChat()" style="background: transparent; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; font-weight: bold;" ontouchstart="">⬅</button>
+                    <div id="ws-chat-avatar-container" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; font-size: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.3);">👥</div>
+                    <div>
+                        <h3 id="ws-chat-titulo" style="margin: 0; font-size: 16px; font-weight: 600;">Sala de Bate-Papo</h3>
+                        <div style="font-size: 12px; opacity: 0.9; margin-top: 2px;">Você: <strong id="ws-chat-aluno-nome">...</strong></div>
+                    </div>
+                </div>
+                <button id="ws-btn-editar-chat" style="display:none; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onclick="event.stopPropagation(); Workspace.Sidebar.abrirEdicaoChat()" onmouseover="this.style.background='rgba(255,255,255,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✏️ Editar</button>
+            </div>
+            <div id="ws-chat-mensagens" style="flex: 1; padding: 20px; overflow-y: auto; overflow-x: hidden; background: #e5ddd5; display: flex; flex-direction: column; gap: 12px;"></div>
+            <div style="padding: 10px; background: #f0f2f5; display: flex; gap: 8px; align-items: center; flex-shrink: 0; width: 100%; box-sizing: border-box;">
+                <div style="flex: 1; display: flex; align-items: center; background: white; border-radius: 25px; padding: 0 15px; height: 45px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); min-width: 0;">
+                    <input type="text" id="ws-chat-input" placeholder="Mensagem" style="flex: 1; border: none; outline: none; font-family: inherit; font-size: 15px; background: transparent; min-width: 0; padding: 0; height: 100%;" onkeypress="if(event.key === 'Enter') Workspace.Sidebar.enviarMensagemChat()">
+                </div>
+                <button class="ws-btn" onclick="Workspace.Sidebar.enviarMensagemChat()" style="width: 45px; height: 45px; border-radius: 50%; padding: 0; background: #128c7e; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.1);" ontouchstart="">
+                    <span style="color: white; font-size: 18px; margin-left: -2px;">➤</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ws-senha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideIn 0.3s ease;">
+            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">🔑 Alterar Senha</h3>
+                <button onclick="document.getElementById('ws-senha-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" ontouchstart="">✖</button>
+            </div>
+            <div style="padding: 20px;">
+                <p style="font-size: 13px; color: #666; margin-top: 0; margin-bottom: 20px;">Por questões de segurança, confirme a sua senha atual antes de escolher uma nova.</p>
+                <form onsubmit="event.preventDefault(); Workspace.salvarNovaSenha();" style="width: 100%;">
+                    <input type="text" autocomplete="username" value="user_oculto" style="display: none;">
+                    <input type="password" id="ws-senha-atual" placeholder="Senha Atual" autocomplete="current-password" class="ws-post-input" style="margin-bottom: 15px;">
+                    <input type="password" id="ws-nova-senha" placeholder="Nova Senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 10px;">
+                    <input type="password" id="ws-confirma-senha" placeholder="Confirmar Nova Senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 20px;">
+                    <button type="submit" class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 12px; font-size: 14px;" ontouchstart="">💾 Confirmar e Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DO WORKSPACE (V6 CACHE BUSTING) -->
+    <script type="module" src="./js/workspace.js?v=6"></script>
 </body>
 </html>
