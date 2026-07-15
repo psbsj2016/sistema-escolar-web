@@ -34,7 +34,9 @@ Workspace.Avaliacoes = {
     ultimoTick: null,
     heartbeatInterval: null,
     momentoSaidaBlur: null,
-    salasNotificadas: new Set(), // 🚀 NOVO: Memória Anti-Spam para os alertas de 10 minutos
+    
+    // 🚀 NOVO: Memória Anti-Spam para os alertas de 10 minutos
+    salasNotificadas: new Set(), 
 
     init: () => {
         console.log("📝 Motor de Avaliações com Integração de Videoconferência Ativado.");
@@ -140,12 +142,11 @@ Workspace.Avaliacoes = {
     },
 
     // ==========================================
-    // ⏰ ALERTA INTELIGENTE (10 MINUTOS)
+    // ⏰ ALERTA INTELIGENTE (O Disparo dos 10 Minutos)
     // ==========================================
     verificarSalasProximas: (avaliacoes) => {
         if (Workspace.usuario.tipo !== 'Aluno') return;
 
-        // 1. Filtrar as turmas do aluno de forma segura
         let minhasTurmas = [];
         const u = Workspace.usuario;
         if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
@@ -157,28 +158,52 @@ Workspace.Avaliacoes = {
         const agora = new Date();
 
         avaliacoes.forEach(a => {
-            // Ignora o que não for Sala Online ou não estiver ativa
             if (a.tipo !== 'online' || a.status !== 'ativa' || !a.dataAgendada) return;
 
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
 
-            // 2. Verifica se a sala pertence a este aluno
             const isParaMim = destinoLimpo === 'global' || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
 
             if (isParaMim) {
                 const dataSala = new Date(a.dataAgendada);
-                // Calcula a diferença em minutos
                 const diffMinutos = (dataSala - agora) / (1000 * 60);
 
-                // 3. O Gatilho: Faltam 10 minutos ou menos?
+                // Gatilho: Entre 0 a 10 Minutos restantes
                 if (diffMinutos > 0 && diffMinutos <= 10) {
-                    // Verifica se já não enviámos esta notificação
                     if (!Workspace.Avaliacoes.salasNotificadas.has(a.id)) {
-                        Workspace.Avaliacoes.salasNotificadas.add(a.id); // Memoriza para não repetir
+                        Workspace.Avaliacoes.salasNotificadas.add(a.id); 
                         
-                        const minutosArredondados = Math.ceil(diffMinutos);
-                        Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em cerca de ${minutosArredondados} minutos! Vá à Central de Avaliações.`, "info");
+                        const min = Math.ceil(diffMinutos);
+                        
+                        // 1. O Alerta visual que dura 10 segundos EXATOS (10000ms)
+                        Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em ${min} minutos!`, "warning", 10000);
+                        
+                        // 2. A Injeção no Sininho de Notificações
+                        if (Workspace.Alertas && Workspace.Alertas.notificacoesAtuais) {
+                            const idLocal = 'alerta_local_' + a.id;
+                            if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
+                                const novaNoti = {
+                                    id: idLocal,
+                                    remetenteNome: 'Sistema Académico',
+                                    mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`,
+                                    data: new Date().toISOString(),
+                                    origem: 'online',
+                                    origemId: a.id,
+                                    destinoNome: a.destinoNome
+                                };
+                                // Coloca a notificação no topo da lista e avisa o Sininho
+                                Workspace.Alertas.notificacoesAtuais.unshift(novaNoti);
+                                Workspace.Alertas.idsConhecidos.add(novaNoti.id);
+                                Workspace.Alertas.atualizarInterface();
+                                
+                                const bell = document.getElementById('ws-bell');
+                                if(bell) { 
+                                    bell.classList.add('bell-ringing'); 
+                                    setTimeout(() => bell.classList.remove('bell-ringing'), 1000); 
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -195,7 +220,7 @@ Workspace.Avaliacoes = {
                     const avaliacoesNovas = resAval.avaliacoes;
                     const idAtivo = Workspace.Avaliacoes.exameAtivo || Workspace.Avaliacoes.estudioAtivo;
                     
-                    // 🚀 DISPARO DO MOTOR DE ALERTAS
+                    // 🚀 DISPARO DO MOTOR DE ALERTAS TEMPORIZADOS
                     Workspace.Avaliacoes.verificarSalasProximas(avaliacoesNovas);
 
                     if (idAtivo) {

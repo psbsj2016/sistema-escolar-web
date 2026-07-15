@@ -1,10 +1,8 @@
-// js/toast.js
-
 window.Toast = {
     init: () => {
         if (document.getElementById('ws-toast-container')) return;
         
-        // 🎨 1. Injeta o Design do Toast (Popup temporário)
+        // 🎨 1. Injeta o Design do Toast (Agora com duração dinâmica no CSS)
         const style = document.createElement('style');
         style.innerHTML = `
             #ws-toast-container { position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
@@ -12,7 +10,9 @@ window.Toast = {
             .ws-toast.hiding { animation: slideOutRight 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
             .ws-toast-icon { font-size: 22px; display: flex; align-items: center; justify-content: center; }
             .ws-toast-content { flex: 1; font-weight: 500; line-height: 1.4; }
-            .ws-toast-progress { position: absolute; bottom: 0; left: 0; height: 4px; animation: progressShrink 3.5s linear forwards; }
+            
+            /* Removemos o tempo fixo daqui para controlarmos via JavaScript */
+            .ws-toast-progress { position: absolute; bottom: 0; left: 0; height: 4px; animation: progressShrink linear forwards; }
             
             .ws-toast-success .ws-toast-progress { background: #27ae60; }
             .ws-toast-error .ws-toast-progress { background: #e74c3c; }
@@ -38,7 +38,8 @@ window.Toast = {
         document.body.appendChild(container);
     },
 
-    show: (mensagem, tipo = 'info') => {
+    // 🚀 NOVA ENTRADA: Aceita a duração em milissegundos
+    show: (mensagem, tipo = 'info', duracao = 3500) => {
         const container = document.getElementById('ws-toast-container');
         if (!container) Toast.init();
 
@@ -50,16 +51,17 @@ window.Toast = {
         if (tipo === 'error') icone = '❌';
         if (tipo === 'warning') icone = '⚠️';
 
+        // ⏱️ Aplica a duração diretamente na barra de progresso!
         toast.innerHTML = `
             <div class="ws-toast-icon">${icone}</div>
             <div class="ws-toast-content">${mensagem}</div>
-            <div class="ws-toast-progress"></div>
+            <div class="ws-toast-progress" style="animation-duration: ${duracao}ms;"></div>
         `;
 
         toast.onclick = () => Toast.remove(toast);
         document.getElementById('ws-toast-container').appendChild(toast);
 
-        setTimeout(() => { Toast.remove(toast); }, 3500);
+        setTimeout(() => { Toast.remove(toast); }, duracao);
     },
 
     remove: (toast) => {
@@ -69,5 +71,4 @@ window.Toast = {
     }
 };
 
-// Arranca o motor visual assim que o script carrega
 document.addEventListener('DOMContentLoaded', Toast.init);

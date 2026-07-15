@@ -14,12 +14,11 @@ Workspace.Alertas = {
             if (Workspace.usuario && Workspace.usuario.nome) {
                 clearInterval(aguardarUsuario);
                 Workspace.Alertas.buscarNotificacoes(); 
-                Workspace.Alertas.iniciarConexaoTempoReal(); // ⚡ Liga o Túnel Direto
+                Workspace.Alertas.iniciarConexaoTempoReal(); 
             }
         }, 1000);
     },
 
-    // 🚀 O RECEPTOR DO TÚNEL INVISÍVEL
     iniciarConexaoTempoReal: () => {
         const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
         const sse = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
@@ -27,19 +26,16 @@ Workspace.Alertas = {
         sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
-            // 1. Reação ou Comentário: Manda o Feed atualizar o DOM sem pestanejar
             if (data.type === 'POST_UPDATE') {
                 if (window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
                     Workspace.Feed.sincronizarPostSilencioso(data.postId);
                 }
             }
             
-            // 2. Chegou uma Notificação para mim!
             if (data.type === 'NOVA_NOTIFICACAO' && data.destinatarios.includes(Workspace.usuario.nome || Workspace.usuario.login)) {
-                Workspace.Alertas.buscarNotificacoes(); // Puxa e mostra na gaveta instantaneamente
+                Workspace.Alertas.buscarNotificacoes(); 
             }
 
-            // 3. Novo Post: Mostra a pílula azul para subir
             if (data.type === 'NOVO_POST') {
                 if (Workspace.Feed && Workspace.Feed.verificarNovoPost) {
                     Workspace.Feed.verificarNovoPost();
@@ -92,8 +88,11 @@ Workspace.Alertas = {
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
             if (Array.isArray(data)) {
-                Workspace.Alertas.notificacoesAtuais = data;
-                const idsAtuais = data.map(n => n.id);
+                // Preserva as notificações locais (como o alarme de 10 min) e junta com as que vieram da BD
+                const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
+                Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
+                
+                const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
@@ -149,12 +148,19 @@ Workspace.Alertas = {
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
-        try {
-            await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
+        // 🛡️ Se for um alerta gerado no momento (ex: Salas 10 min), apaga localmente sem ir ao servidor
+        if (String(id).startsWith('alerta_local_')) {
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
             Workspace.Alertas.idsConhecidos.delete(id);
             Workspace.Alertas.atualizarInterface();
-        } catch(e) {}
+        } else {
+            try {
+                await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
+                Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
+                Workspace.Alertas.idsConhecidos.delete(id);
+                Workspace.Alertas.atualizarInterface();
+            } catch(e) {}
+        }
 
         if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
         else {
@@ -163,6 +169,7 @@ Workspace.Alertas = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Encaminhamento
         if (origem === 'post') {
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
@@ -178,12 +185,25 @@ Workspace.Alertas = {
         } 
         else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
         else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
+        // 🚀 O Novo Encaminhamento para a Sala Online!
+        else if (origem === 'online' && window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
     },
 
     riscar: async (id, event) => {
         event.stopPropagation(); 
         const itemUI = document.getElementById(`notif-item-${id}`);
         if(itemUI) itemUI.classList.add('riscando'); 
+        
+        // Se for alerta do telemóvel, descarta só da memória
+        if (String(id).startsWith('alerta_local_')) {
+            setTimeout(() => {
+                Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
+                Workspace.Alertas.idsConhecidos.delete(id);
+                Workspace.Alertas.atualizarInterface(); 
+            }, 300);
+            return;
+        }
+
         try {
             await Workspace.api(`/workspace/notificacoes/${id}/ler`, 'PUT');
             setTimeout(() => {
