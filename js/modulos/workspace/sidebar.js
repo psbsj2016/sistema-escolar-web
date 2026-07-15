@@ -41,7 +41,7 @@ Workspace.Sidebar = {
     carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
-        container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">A carregar fóruns... ⏳</div>';
+        container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">Atualizando a lista... ⏳</div>';
 
         try {
             let turmas = await Workspace.api('/turmas', 'GET');
