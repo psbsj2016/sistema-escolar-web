@@ -1334,5 +1334,17 @@ Workspace.Avaliacoes = {
             </div>
         `;
         document.body.appendChild(modal);
+    },
+      
+    // 🚀 LÓGICA DE ABERTURA FORÇADA PARA ALUNOS
+    abrirSalasOnlineAluno: async (btn) => {
+        const txtOriginal = btn.innerText;
+        btn.innerText = "A procurar salas... ⏳";
+        
+        await Workspace.Avaliacoes.carregarLobbies(); // Vai buscar os dados fresquinhos à BD
+        Workspace.navegarPara('avaliacoes_online');   // Muda a tela com GPS corrigido
+        
+        btn.innerText = txtOriginal;
     }
+
 };

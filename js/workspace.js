@@ -1,10 +1,8 @@
 import { CONFIG } from './config.js';
 
-// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL (Já gere os avisos PWA)
+// 🌟 IMPORTA O MOTOR DE ATUALIZAÇÃO GLOBAL
 import './pwa-updater.js';
-
 import './toast.js'; 
-
 import './modulos/workspace/feed.js';
 import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
@@ -18,40 +16,6 @@ Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
     deferredPrompt: null,
-
-    // 🚀 O VISUALIZADOR ESTILO WHATSAPP (Não deixa as fotos ficarem gigantes)
-    abrirVisualizadorImagem: (url, titulo = 'Visualização') => {
-        const id = 'ws-whatsapp-viewer';
-        let viewer = document.getElementById(id);
-        if (viewer) viewer.remove();
-
-        viewer = document.createElement('div');
-        viewer.id = id;
-        // Fundo quase totalmente preto, por cima de tudo
-        viewer.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(5px);";
-
-        // object-fit: contain + max-width/height garante que a foto respeita a tela do telemóvel
-        viewer.innerHTML = `
-            <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); box-sizing: border-box;">
-                <span style="color: white; font-weight: 500; font-size: 16px; font-family: sans-serif;">${Workspace.escapeHTML(titulo)}</span>
-                <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200)" style="background: transparent; border: none; color: white; font-size: 35px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
-            </div>
-            <img src="${url}" style="max-width: 90vw; max-height: 80vh; object-fit: contain; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; transform: scale(0.9); transition: transform 0.2s ease;" id="ws-viewer-img">
-        `;
-
-        document.body.appendChild(viewer);
-        
-        // Animação suave de entrada
-        requestAnimationFrame(() => {
-            viewer.style.opacity = '1';
-            document.getElementById('ws-viewer-img').style.transform = 'scale(1)';
-        });
-    },
-
-    escapeHTML: (str) => {
-        if (!str) return '';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    },
 
     mostrarAviso: (mensagem, tipo = 'info') => {
         if (window.Toast && typeof window.Toast.show === 'function') {
@@ -83,8 +47,11 @@ Object.assign(Workspace, {
     gerarCorPorNome: (nome) => {
         const cores = ['#e74c3c', '#8e44ad', '#2980b9', '#27ae60', '#f39c12', '#d35400', '#c0392b', '#16a085', '#34495e', '#ff5252'];
         let hash = 0;
-        for (let i = 0; i < nome.length; i++) { hash = nome.charCodeAt(i) + ((hash << 5) - hash); }
-        return cores[Math.abs(hash) % cores.length];
+        for (let i = 0; i < nome.length; i++) {
+            hash = nome.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        hash = Math.abs(hash);
+        return cores[hash % cores.length];
     },
 
     init: async () => {
@@ -97,6 +64,7 @@ Object.assign(Workspace, {
         }
         
         Workspace.usuario = JSON.parse(cacheUser);
+        
         document.getElementById('ws-login-screen').style.display = 'none';
         document.getElementById('ws-navbar').style.display = 'flex';
         
@@ -126,45 +94,6 @@ Object.assign(Workspace, {
             if (e.state && e.state.tela) Workspace.navegarPara(e.state.tela, false); 
             else Workspace.navegarPara('feed', false);
         });
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); 
-            Workspace.deferredPrompt = e; 
-            if (window.matchMedia('(display-mode: standalone)').matches) return;
-            Workspace.injetarPopUpInstalacao();
-        });
-
-        window.addEventListener('appinstalled', () => {
-            Workspace.deferredPrompt = null;
-            const banner = document.getElementById('ws-pwa-install-banner');
-            if (banner) banner.remove();
-            Workspace.mostrarAviso("Aplicação Workspace instalada com sucesso! 🎉", "success");
-        });
-    },
-
-    injetarPopUpInstalacao: () => {
-        if (document.getElementById('ws-pwa-install-banner')) return;
-
-        const banner = document.createElement('div');
-        banner.id = 'ws-pwa-install-banner';
-        banner.style.cssText = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 30px; display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 10009; font-family: sans-serif; font-size: 13px; font-weight: 600; width: max-content; max-width: 90vw; animation: fadeIn 0.4s ease;";
-        banner.innerHTML = `
-            <span>📱 Gostaria de instalar a App do Workspace no ecrã principal?</span>
-            <div style="display: flex; gap: 8px;">
-                <button id="ws-pwa-btn-instalar" style="background: #3498db; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Instalar</button>
-                <button id="ws-pwa-btn-fechar" style="background: transparent; color: #bbb; border: none; cursor: pointer; font-size: 16px; padding: 0 5px;">&times;</button>
-            </div>
-        `;
-        document.body.appendChild(banner);
-
-        document.getElementById('ws-pwa-btn-instalar').addEventListener('click', async () => {
-            if (!Workspace.deferredPrompt) return;
-            Workspace.deferredPrompt.prompt();
-            await Workspace.deferredPrompt.userChoice;
-            Workspace.deferredPrompt = null;
-            banner.remove();
-        });
-        document.getElementById('ws-pwa-btn-fechar').addEventListener('click', () => banner.remove());
     },
 
    navegarPara: (tela, registarNoHistorico = true) => {
@@ -173,18 +102,18 @@ Object.assign(Workspace, {
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
-        // 🚀 AQUI ESTAVA O PROBLEMA! Faltava mapear o ecra da avaliação online.
+        // 🚀 AQUI ESTÁ O GPS CORRIGIDO COM A TELA "ONLINE"
         const ecras = {
-            'feed': 'ws-main-container', 
+            'feed': 'ws-main-container',
             'configuracoes': 'ws-config-container',
-            'tarefas_aluno': 'ws-tarefas-container', 
+            'tarefas_aluno': 'ws-tarefas-container',
             'tarefas_prof': 'ws-tarefas-professor-container',
-            'perfil': 'ws-perfil-modal', 
+            'perfil': 'ws-perfil-modal',
             'avaliacoes_aluno': 'ws-avaliacoes-container',
-            'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
+            'avaliacoes_prof': 'ws-avaliacoes-prof-container',
             'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
             'avaliacoes_oral': 'ws-avaliacoes-oral-container',
-            'avaliacoes_online': 'ws-avaliacoes-online-container' // ADICIONADO PARA CORRIGIR O GPS!
+            'avaliacoes_online': 'ws-avaliacoes-online-container' // A peça que faltava!
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
@@ -200,6 +129,7 @@ Object.assign(Workspace, {
             if (tela === 'feed') ecraAtivo.style.display = 'grid';
             else if (tela === 'perfil') ecraAtivo.style.display = 'flex';
             else ecraAtivo.style.display = 'block';
+            
             ecraAtivo.style.animation = 'fadeIn 0.3s ease-out';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -207,12 +137,15 @@ Object.assign(Workspace, {
         if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
 
-        if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
+        if (registarNoHistorico) {
+            history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
+        }
     },
 
     fazerLogin: async () => {
         const login = document.getElementById('ws-login-user').value.trim();
         const pass = document.getElementById('ws-login-pass').value.trim();
+        
         if(!login || !pass) return Workspace.mostrarAviso("Preencha utilizador e senha", "warning");
 
         const btn = document.querySelector('#ws-login-screen button');
@@ -223,9 +156,7 @@ Object.assign(Workspace, {
             if(res && res.success) {
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(res.usuario));
                 Workspace.init(); 
-            } else {
-                Workspace.mostrarAviso(res.error || "Login ou senha incorretos", "error");
-            }
+            } else Workspace.mostrarAviso(res.error || "Login incorreto", "error");
         } catch(e) { Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); } 
         finally { btn.innerText = txt; btn.disabled = false; }
     },
@@ -234,9 +165,8 @@ Object.assign(Workspace, {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
         
-        if (url) {
-            return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
-        } else {
+        if (url) return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
+        else {
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
             return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${letra}</div>`;
@@ -245,7 +175,8 @@ Object.assign(Workspace, {
 
     toggleMenuPrincipal: () => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
-        if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        if (!dropdown) return;
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     },
 
     toggleMenuChat: () => {
@@ -275,19 +206,11 @@ Object.assign(Workspace, {
             letrasEl.innerText = nome.charAt(0).toUpperCase();
             letrasEl.style.background = Workspace.gerarCorPorNome(nome);
         }
+
         Workspace.navegarPara('perfil');
     },
 
     abrirModalPerfil: () => Workspace.abrirPaginaPerfil(),
-
-    // Lida com o clique visual na própria foto
-    verMinhaFoto: () => {
-        if (Workspace.usuario && Workspace.usuario.avatar) {
-            Workspace.abrirVisualizadorImagem(Workspace.usuario.avatar, "Minha Foto de Perfil");
-        } else {
-            Workspace.mostrarAviso("Ainda não tem uma fotografia de perfil.", "info");
-        }
-    },
 
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
@@ -338,10 +261,9 @@ Object.assign(Workspace, {
                     formData.append('anexos', blob, 'avatar_usuario.jpg');
 
                     const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-                    if (!uploadRes.ok) throw new Error("A ligação à nuvem falhou.");
                     const uploadData = await uploadRes.json();
                     
-                    if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha.");
+                    if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload");
 
                     const avatarFinal = uploadData.anexos[0].url;
 
@@ -352,7 +274,6 @@ Object.assign(Workspace, {
                     if (res && res.success) {
                         Workspace.usuario.avatar = avatarFinal;
                         localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
-                        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal;
                         
                         const img = document.getElementById('ws-perfil-img');
                         const letras = document.getElementById('ws-perfil-letras');
@@ -365,7 +286,7 @@ Object.assign(Workspace, {
                     }
                 } catch (err) {
                     console.error(err);
-                    Workspace.mostrarAviso("Erro ao alterar foto. Tente novamente.", "error");
+                    Workspace.mostrarAviso("Erro ao alterar foto.", "error");
                 } finally {
                     if(loader) loader.style.display = 'none';
                     event.target.value = ''; 
@@ -374,7 +295,7 @@ Object.assign(Workspace, {
         };
         
         imgOriginal.onerror = () => {
-            Workspace.mostrarAviso("Ficheiro inválido.", "error");
+            Workspace.mostrarAviso("Ficheiro de imagem inválido ou corrompido.", "error");
             URL.revokeObjectURL(objectUrl);
             if(loader) loader.style.display = 'none';
             event.target.value = '';
@@ -415,13 +336,14 @@ Object.assign(Workspace, {
             } else {
                 Workspace.mostrarAviso(res.error || "Erro ao atualizar a senha.", "error");
             }
-        } catch (e) { Workspace.mostrarAviso("Erro de comunicação.", "error"); } 
+        } catch (e) { Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); } 
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
     logout: async (forcado = false) => {
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         localStorage.removeItem('ws_usuario_logado');
+        
         if(forcado) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';

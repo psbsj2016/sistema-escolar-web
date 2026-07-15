@@ -12,7 +12,8 @@
     
     <title>Workspace - Portal do Aluno</title>
     
-    <link rel="stylesheet" href="./css/site.css?v=2">
+    <!-- 🚀 CACHE BUSTING V5: Obriga o telemóvel a carregar o design novo -->
+    <link rel="stylesheet" href="./css/site.css?v=5">
     
     <style>
         /* 🛡️ MATEMÁTICA DE CAIXA UNIVERSAL SIMÉTRICA */
@@ -147,7 +148,7 @@
             outline: none; 
         }
         
-        /* 🛡️ EFEITO MOLA PARA TODOS OS BOTÕES (FEEDBACK TÁTIL) */
+        /* 🛡️ EFEITO MOLA PARA TODOS BOTÕES (FEEDBACK TÁTIL) */
         .ws-btn, #ws-btn-anexar { 
             transition: transform 0.1s ease-out, background 0.2s ease !important; 
         }
@@ -359,14 +360,15 @@
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #2c3e50;" onclick="Workspace.navegarPara('avaliacoes_oral')">Entrar no Estúdio</button>
                 </div>
 
-                <!-- CARTÃO DO ALUNO DESBLOQUEADO -->
+                <!-- CARTÃO DO ALUNO DESBLOQUEADO (COM LIGAÇÃO CORRIGIDA) -->
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
                         <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Online</h4>
                         <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente em direto para videoconferências e provas ao vivo. Entre nas salas oficiais do Microsoft Teams ou Google Meet.</p>
                     </div>
-                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.navegarPara('avaliacoes_online')">Ver Salas Agendadas</button>
+                    <!-- 🚀 CORREÇÃO 1: Botão atualizado para forçar atualização em tempo real -->
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.Avaliacoes.abrirSalasOnlineAluno(this)">Ver Salas Agendadas</button>
                 </div>
 
             </div>
@@ -409,7 +411,7 @@
     <section id="ws-avaliacoes-online-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Principal</button>
         <div class="ws-card">
-            <h3 style="margin:top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;">
                 <span>💻 Salas de Videoconferência</span>
             </h3>
             <div style="margin-top: 15px;">
@@ -687,7 +689,6 @@
                     <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Testes com gravação de áudio.</p>
                 </div>
                 
-                <!-- BOTÃO NOVO ONLINE COLOCADO CORRETAMENTE NA GRELHA -->
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaOnline()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">💻</div>
                     <h4 style="margin: 0 0 5px 0; color: #333;">Nova Sessão Ao Vivo</h4>
@@ -805,6 +806,7 @@
         </div>
     </section>
 
-    <script type="module" src="./js/workspace.js"></script>
+    <!-- 🚀 CACHE BUSTING V5: Atualizado no fim do body -->
+    <script type="module" src="./js/workspace.js?v=5"></script>
 </body>
 </html>
