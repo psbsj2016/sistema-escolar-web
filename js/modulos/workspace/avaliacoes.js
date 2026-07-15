@@ -8,10 +8,11 @@ Workspace.Avaliacoes = {
     provasEmCache: {},
     abaEscrita: 'pendentes',
     abaOral: 'pendentes',
+    // 🚀 NOVO: Estado da Aba Online
+    abaOnline: 'abertas',
     avaliacaoEmEdicao: null,
     turmasCarregadas: false, 
     
-    // 🚀 NOVO: O Camaleão (Define o que o painel do professor exibe)
     contextoAtual: 'avaliacoes',
 
     exameAtivo: null,
@@ -38,7 +39,7 @@ Workspace.Avaliacoes = {
     salasNotificadas: new Set(), 
 
     init: () => {
-        console.log("📝 Motor de Avaliações com Integração de Videoconferência Ativado.");
+        console.log("📝 Motor de Avaliações e Frequência Ativado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
@@ -275,6 +276,28 @@ Workspace.Avaliacoes = {
 
     mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+    
+    // 🚀 NOVO: Transição de Abas do Online
+    mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+
+    // 🚀 NOVO: O Registo de Presença no Background
+    registrarPresencaOnline: async (id, link) => {
+        window.open(link, '_blank');
+        
+        try {
+            const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
+                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+            
+            if (resInic && resInic.success) {
+                await Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', {
+                    respostas: {}, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                    relatorioFraude: { fugas: 0, tempoFora: 0 }, entregaId: resInic.entregaId
+                });
+                Workspace.Avaliacoes.carregarLobbies();
+            }
+        } catch(e) { console.log("Erro ao registar a presença silenciosa.", e); }
+    },
 
     renderizarLobbies: () => {
         let minhasTurmas = [];
@@ -387,24 +410,44 @@ Workspace.Avaliacoes = {
             }
         }
 
-        // ONLINES
+        // 🚀 ONLINES (O NOVO SISTEMA COM TABS E PRESENÇA)
+        const onPendentes = onlines.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
+        const onHistorico = onlines.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
+        
+        const tOnPend = document.getElementById('tab-online-abertas');
+        const tOnHist = document.getElementById('tab-online-historico');
+        if (tOnPend && tOnHist) {
+            tOnPend.innerText = `Salas Abertas (${onPendentes.length})`;
+            tOnPend.style.background = Workspace.Avaliacoes.abaOnline === 'abertas' ? '#2c3e50' : 'transparent';
+            tOnPend.style.color = Workspace.Avaliacoes.abaOnline === 'abertas' ? 'white' : '#7f8c8d';
+            
+            tOnHist.innerText = `Histórico (${onHistorico.length})`;
+            tOnHist.style.background = Workspace.Avaliacoes.abaOnline === 'historico' ? '#2c3e50' : 'transparent';
+            tOnHist.style.color = Workspace.Avaliacoes.abaOnline === 'historico' ? 'white' : '#7f8c8d';
+        }
+
         const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
-            if (onlines.length === 0) {
-                contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão de videoconferência agendada para a sua turma.</div>`;
+            const listaAtivaOnline = Workspace.Avaliacoes.abaOnline === 'abertas' ? onPendentes : onHistorico;
+            if (listaAtivaOnline.length === 0) {
+                contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
-                contOnline.innerHTML = onlines.map(p => {
+                contOnline.innerHTML = listaAtivaOnline.map(p => {
                     const dataObj = new Date(p.dataAgendada);
                     const dataFormatada = dataObj.toLocaleDateString('pt-BR');
                     const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
+                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas'
+                        ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${p.linkSala}')">Entrar na Sala</button>`
+                        : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
+
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
                             <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span>
                         </div>
-                        <a href="${p.linkSala}" target="_blank" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; text-decoration: none; color: white; display: inline-block;">Entrar na Sala</a>
+                        ${btnAcao}
                     </div>
                 `}).join('');
             }
@@ -704,20 +747,15 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // 🎓 LÓGICA DE ORGANIZAÇÃO: O CAMALEÃO
-    // ==========================================
     setContextoProf: (contexto) => {
         Workspace.Avaliacoes.contextoAtual = contexto;
         
-        // Esconde todos os sub-paineis (Nova, Gerir, Recebidas)
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container', 'ws-prof-submenu-criar', 'ws-prof-submenu-gestao'];
         ocultar.forEach(id => {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
         });
 
-        // Alterna entre o menu de Avaliações e de Encontros
         const titulo = document.getElementById('ws-titulo-painel-prof');
         const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
         const menuEncontros = document.getElementById('ws-prof-menu-encontros');
@@ -755,7 +793,6 @@ Workspace.Avaliacoes = {
             const el = document.getElementById(id);
             if(el) el.style.display = 'none';
         });
-        // Volta a pintar o menu correto consoante o contexto do professor
         Workspace.Avaliacoes.setContextoProf(Workspace.Avaliacoes.contextoAtual);
     },
 
@@ -846,7 +883,6 @@ Workspace.Avaliacoes = {
         const container = document.getElementById('ws-prof-gerir-lista');
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
 
-        // 🚀 O FILTRO MÁGICO
         if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
             avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
         } else {
@@ -871,6 +907,11 @@ Workspace.Avaliacoes = {
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
+            // 🚀 NOVO: O botão Mágico de Reativar Sala (apenas para online)
+            const btnReativar = a.tipo === 'online' 
+                ? `<button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${a.id}')">🔄 Reativar</button>`
+                : '';
+
             return `
             <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -883,11 +924,26 @@ Workspace.Avaliacoes = {
                 </div>
                 <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
                     ${btnEditar}
+                    ${btnReativar}
                     <button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.mudarStatusAvaliacao('${a.id}', '${a.status === 'ativa' ? 'inativa' : 'ativa'}')">${a.status === 'ativa' ? '⏸️ Ocultar' : '▶️ Publicar'}</button>
                     <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                 </div>
             </div>`;
         }).join('');
+    },
+
+    // 🚀 NOVO: Função para o Professor reativar a sala apagando as presenças
+    reativarSalaOnline: (id) => {
+        Workspace.Avaliacoes.confirmarDialog("Reativar Sessão", "Isto irá apagar o histórico de presença de todos os alunos e a sala voltará a ficar aberta para entrada de todos. Confirmar?", "Sim, Reativar", "#f39c12", async () => {
+            try {
+                // Requisição à Base de Dados para apagar as entregas (presenças) daquela sala
+                const res = await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
+                Workspace.mostrarAviso("A sala foi reativada para os alunos!", "success");
+                Workspace.Avaliacoes.abrirGerenciador();
+            } catch(e) { 
+                Workspace.mostrarAviso("Erro ao reativar. Certifique-se que o Backend suporta o DELETE /entregas.", "error"); 
+            }
+        });
     },
 
     mudarStatusAvaliacao: async (id, novoStatus) => {

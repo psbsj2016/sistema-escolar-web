@@ -11,8 +11,7 @@
     <link rel="apple-touch-icon" href="assets/icone.png">
     
     <title>Workspace - Portal do Aluno</title>
-    
-    <!-- 🚀 Importação limpa do CSS (O Vite tratará do cache) -->
+    
     
     <style>
         *, *::before, *::after { box-sizing: border-box !important; }
@@ -94,7 +93,7 @@
             .ws-tarefa-col-direita { overflow-y: auto; max-height: 75vh; border-top: none; border-left: 1px solid #eee; }
         }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-BQETQLcE.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-BXuuqb9f.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-DsfEqi9Q.js">
   <link rel="modulepreload" crossorigin href="/assets/site-uBRfFSGd.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D7LMCEVW.css">
@@ -188,7 +187,6 @@
         </div>
     </section>
 
-    <!-- 🏋️ TAREFAS ALUNO -->
     <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
@@ -197,7 +195,6 @@
         </div>
     </section>
 
-    <!-- 📑 AVALIAÇÕES ALUNO -->
     <section id="ws-avaliacoes-container" style="display: none;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
@@ -223,7 +220,6 @@
         </div>
     </section>
 
-    <!-- ✍️ AVALIAÇÕES ESCRITAS ALUNO -->
     <section id="ws-avaliacoes-escrita-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
@@ -238,7 +234,6 @@
         </div>
     </section>
 
-    <!-- 🎤 AVALIAÇÕES ORAIS ALUNO -->
     <section id="ws-avaliacoes-oral-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>⬅️</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
@@ -253,16 +248,22 @@
         </div>
     </section>
 
-    <!-- 💻 SALAS ONLINE DO ALUNO -->
+    <!-- 💻 SALAS ONLINE DO ALUNO (COM ABAS DE HISTÓRICO) -->
     <section id="ws-avaliacoes-online-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>💻 Salas de Videoconferência</span></h3>
-            <div style="margin-top: 15px;"><div id="ws-lista-provas-online"></div></div>
+            <div style="margin-top: 15px;">
+                <!-- 🚀 AS NOVAS ABAS DE PRESENÇA -->
+                <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+                    <button id="tab-online-abertas" class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOnline('abertas')" ontouchstart="">Salas Abertas</button>
+                    <button id="tab-online-historico" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOnline('historico')" ontouchstart="">Histórico</button>
+                </div>
+                <div id="ws-lista-provas-online"></div>
+            </div>
         </div>
     </section>
 
-    <!-- 👨‍🏫 TAREFAS PROFESSOR -->
     <section id="ws-tarefas-professor-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
@@ -302,7 +303,6 @@
         </div>
     </section>
 
-    <!-- 🚀 O NOVO PAINEL DO PROFESSOR (INTELIGENTE E SEPARADO) -->
     <section id="ws-avaliacoes-prof-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>⬅️</span> Voltar à Sala de Aula</button>
         <div class="ws-card">
@@ -311,7 +311,6 @@
                 <span>🎓 Painel do Professor</span>
             </h3>
             
-            <!-- MENU 1: AVALIAÇÕES (Oculto ou visível consoante o contexto) -->
             <div id="ws-prof-menu-avaliacoes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px;">
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.mostrarSubmenuCriar()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">✍️</div>
@@ -325,7 +324,6 @@
                 </div>
             </div>
 
-            <!-- SUBMENU 1A: CRIAR (Avaliações) -->
             <div id="ws-prof-submenu-criar" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 10px;">
                 <div style="grid-column: 1 / -1;">
                     <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>⬅️</span> Voltar aos Botões Principais</button>
@@ -340,7 +338,6 @@
                 </div>
             </div>
 
-            <!-- SUBMENU 1B: GESTÃO (Avaliações) -->
             <div id="ws-prof-submenu-gestao" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 10px;">
                 <div style="grid-column: 1 / -1;">
                     <button style="background:transparent; border:none; color:#3498db; cursor:pointer; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarSubmenus()" ontouchstart=""><span>⬅️</span> Voltar aos Botões Principais</button>
@@ -355,7 +352,6 @@
                 </div>
             </div>
 
-            <!-- MENU 2: ENCONTROS (Oculto ou visível consoante o contexto) -->
             <div id="ws-prof-menu-encontros" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px;">
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Avaliacoes.abrirNovaOnline()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">💻</div>
@@ -369,7 +365,6 @@
                 </div>
             </div>
             
-            <!-- MÓDULOS ESCONDIDOS DO PAINEL DO PROFESSOR (Que são partilhados) -->
             <div id="ws-prof-gerir-lista-container" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>⬅️</span> Voltar</button>
                 <div id="ws-prof-gerir-lista"><div style="text-align: center; padding: 40px; color: #999;">A carregar lista... ⏳</div></div>
