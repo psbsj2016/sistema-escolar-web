@@ -44,9 +44,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // ==========================================
-    // 🛡️ MOTOR ANTIFRAUDE E ALARMES DE SESSÃO
-    // ==========================================
     iniciarSensorFraude: () => {
         Workspace.Avaliacoes.monitorandoFraude = true;
         Workspace.Avaliacoes.fugasCount = 0;
@@ -246,9 +243,6 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
     },
 
-    // ==========================================
-    // 📑 INTERFACE DO ALUNO (PROVAS E SALAS ONLINE)
-    // ==========================================
     carregarLobbies: async () => {
         try {
             const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -410,7 +404,6 @@ Workspace.Avaliacoes = {
         Workspace.navegarPara('avaliacoes_online'); btn.innerText = txtOriginal;
     },
 
-    // (As funções de gravação e prova escrita permanecem intactas)
     iniciarExame: async (id) => {
         const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!examen) return;
@@ -507,9 +500,6 @@ Workspace.Avaliacoes = {
         });
     },
 
-    // ==========================================
-    // 🎓 PAINEL DE PROFESSOR E GESTOR
-    // ==========================================
     setContextoProf: (contexto) => {
         Workspace.Avaliacoes.contextoAtual = contexto;
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container', 'ws-prof-submenu-criar', 'ws-prof-submenu-gestao'];
@@ -600,7 +590,6 @@ Workspace.Avaliacoes = {
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
-            // 🚀 NOVO: O BOTÃO INTELIGENTE DE ACESSOS
             let btnReativar = '';
             if (a.tipo === 'online') {
                 const presencasCount = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id).length;
@@ -627,7 +616,7 @@ Workspace.Avaliacoes = {
         }).join('');
     },
 
-    // 🚀 NOVO: O MODAL INTELIGENTE DE RAIO-X DE PRESENÇAS
+    // 🚀 LÓGICA DE CRUZAMENTO DE DADOS CORRIGIDA
     abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
@@ -649,34 +638,42 @@ Workspace.Avaliacoes = {
                 </div>
 
                 <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados de turma... ⏳</div>
+                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados da turma... ⏳</div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
 
         try {
-            // 1. As Presenças
             const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
             let acessos = [];
             if(entregasRes && entregasRes.success) acessos = entregasRes.entregas.filter(e => e.avaliacaoId === avaliacaoId);
             else acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
 
-            // 2. Os Alunos da Turma
             let alunosLista = [];
             if (destinoId && destinoId !== 'global') {
-                const resAlunos = await Workspace.api(`/turmas/${destinoId}/alunos`, 'GET');
-                if (resAlunos && Array.isArray(resAlunos)) alunosLista = resAlunos;
-                else {
-                    const resAlunosFallback = await Workspace.api(`/usuarios?turmaId=${destinoId}&tipo=Aluno`, 'GET');
-                    if (resAlunosFallback && Array.isArray(resAlunosFallback)) alunosLista = resAlunosFallback;
+                try {
+                    let resAlunos = await Workspace.api('/alunos', 'GET');
+                    if (!resAlunos || resAlunos.error) {
+                        resAlunos = await Workspace.api('/usuarios?tipo=Aluno', 'GET');
+                    }
+
+                    if (resAlunos && Array.isArray(resAlunos)) {
+                        const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
+                        alunosLista = resAlunos.filter(aluno => {
+                            const turmaNomeAluno = aluno.turma ? String(aluno.turma).toLowerCase().trim() : '';
+                            const turmaIdAluno = aluno.turmaId ? String(aluno.turmaId).toLowerCase().trim() : '';
+                            return turmaNomeAluno === nomeTurmaProcurada || turmaIdAluno === String(destinoId).toLowerCase().trim();
+                        });
+                    }
+                } catch(e) {
+                    console.warn("Falha ao mapear alunos globais:", e);
                 }
             }
 
             const container = document.getElementById('ws-acessos-lista');
             let htmlLista = '';
 
-            // 3. A Matemática e o Desenho
             if (alunosLista.length > 0) {
                 htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} alunos já acederam.</div>`;
 
@@ -712,8 +709,7 @@ Workspace.Avaliacoes = {
                     }
                 });
             } else {
-                // FALLBACK: O destino é Global ou a API não filtrou bem a turma.
-                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total. Mostrando apenas presenças registadas.</div>`;
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total ou a sala é global. Mostrando apenas presenças registadas.</div>`;
                 
                 if(acessos.length === 0) {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
@@ -739,7 +735,6 @@ Workspace.Avaliacoes = {
         } catch(e) { document.getElementById('ws-acessos-lista').innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
     },
 
-    // 🚀 NOVO: Reativar de forma cirúrgica (um aluno apenas)
     reativarAcessoAluno: async (entregaId, avaliacaoId, destinoId) => {
         const btn = event.target;
         const originalTxt = btn.innerText;
@@ -758,7 +753,6 @@ Workspace.Avaliacoes = {
         }
     },
 
-    // Botão de Emergência: Limpar a sala inteira
     reativarSalaOnline: (id) => {
         Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
             try {
