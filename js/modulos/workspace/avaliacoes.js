@@ -8,11 +8,9 @@ Workspace.Avaliacoes = {
     provasEmCache: {},
     abaEscrita: 'pendentes',
     abaOral: 'pendentes',
-    // 🚀 NOVO: Estado da Aba Online
     abaOnline: 'abertas',
     avaliacaoEmEdicao: null,
     turmasCarregadas: false, 
-    
     contextoAtual: 'avaliacoes',
 
     exameAtivo: null,
@@ -39,13 +37,16 @@ Workspace.Avaliacoes = {
     salasNotificadas: new Set(), 
 
     init: () => {
-        console.log("📝 Motor de Avaliações e Frequência Ativado.");
+        console.log("📝 Motor de Avaliações e Frequência Inteligente Ativado.");
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
         }
     },
 
+    // ==========================================
+    // 🛡️ MOTOR ANTIFRAUDE E ALARMES DE SESSÃO
+    // ==========================================
     iniciarSensorFraude: () => {
         Workspace.Avaliacoes.monitorandoFraude = true;
         Workspace.Avaliacoes.fugasCount = 0;
@@ -68,7 +69,6 @@ Workspace.Avaliacoes = {
 
         window.addEventListener('blur', Workspace.Avaliacoes.registrarSaida);
         window.addEventListener('focus', Workspace.Avaliacoes.registrarVolta);
-        
         window.onbeforeunload = () => "Tem a certeza? Se sair perderá esta tentativa.";
     },
 
@@ -156,7 +156,6 @@ Workspace.Avaliacoes = {
 
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
-
             const isParaMim = destinoLimpo === 'global' || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
 
             if (isParaMim) {
@@ -167,30 +166,17 @@ Workspace.Avaliacoes = {
                     if (!Workspace.Avaliacoes.salasNotificadas.has(a.id)) {
                         Workspace.Avaliacoes.salasNotificadas.add(a.id); 
                         const min = Math.ceil(diffMinutos);
-                        
                         Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em ${min} minutos!`, "warning", 10000);
                         
                         if (Workspace.Alertas && Workspace.Alertas.notificacoesAtuais) {
                             const idLocal = 'alerta_local_' + a.id;
                             if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
-                                const novaNoti = {
-                                    id: idLocal,
-                                    remetenteNome: 'Sistema Académico',
-                                    mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`,
-                                    data: new Date().toISOString(),
-                                    origem: 'online',
-                                    origemId: a.id,
-                                    destinoNome: a.destinoNome
-                                };
+                                const novaNoti = { id: idLocal, remetenteNome: 'Sistema Académico', mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`, data: new Date().toISOString(), origem: 'online', origemId: a.id, destinoNome: a.destinoNome };
                                 Workspace.Alertas.notificacoesAtuais.unshift(novaNoti);
                                 Workspace.Alertas.idsConhecidos.add(novaNoti.id);
                                 Workspace.Alertas.atualizarInterface();
-                                
                                 const bell = document.getElementById('ws-bell');
-                                if(bell) { 
-                                    bell.classList.add('bell-ringing'); 
-                                    setTimeout(() => bell.classList.remove('bell-ringing'), 1000); 
-                                }
+                                if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
                             }
                         }
                     }
@@ -201,7 +187,6 @@ Workspace.Avaliacoes = {
 
     iniciarRadarAvaliacoes: () => {
         if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
-        
         Workspace.Avaliacoes.radarInterval = setInterval(async () => {
             try {
                 const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -218,8 +203,7 @@ Workspace.Avaliacoes = {
                         
                         if (!provaAtualizada || provaAtualizada.status !== 'ativa' || !isParaMim) {
                             Workspace.Avaliacoes.expulsarAluno("O professor encerrou ou ocultou esta avaliação. A sua sessão foi interrompida.");
-                        } 
-                        else {
+                        } else {
                             const provaVelha = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === idAtivo);
                             if (provaVelha && provaAtualizada.ultimaAtualizacao !== provaVelha.ultimaAtualizacao) {
                                 Workspace.Avaliacoes.expulsarAluno("O professor atualizou as perguntas ou instruções deste teste. Por favor, inicie-o novamente para ver as alterações.");
@@ -262,6 +246,9 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.confirmarDialog("Exame Interrompido 🚨", mensagem, "Entendido", "#e74c3c", () => {});
     },
 
+    // ==========================================
+    // 📑 INTERFACE DO ALUNO (PROVAS E SALAS ONLINE)
+    // ==========================================
     carregarLobbies: async () => {
         try {
             const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
@@ -276,24 +263,14 @@ Workspace.Avaliacoes = {
 
     mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
-    
-    // 🚀 NOVO: Transição de Abas do Online
     mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
-    // 🚀 NOVO: O Registo de Presença no Background
     registrarPresencaOnline: async (id, link) => {
         window.open(link, '_blank');
-        
         try {
-            const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
-                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
-            });
-            
+            const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (resInic && resInic.success) {
-                await Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', {
-                    respostas: {}, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    relatorioFraude: { fugas: 0, tempoFora: 0 }, entregaId: resInic.entregaId
-                });
+                await Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', { respostas: {}, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: { fugas: 0, tempoFora: 0 }, entregaId: resInic.entregaId });
                 Workspace.Avaliacoes.carregarLobbies();
             }
         } catch(e) { console.log("Erro ao registar a presença silenciosa.", e); }
@@ -322,9 +299,7 @@ Workspace.Avaliacoes = {
         const onlines = avalAtivas.filter(a => a.tipo === 'online'); 
 
         const entregasCount = {};
-        Workspace.Avaliacoes.entregasFeitas.forEach(e => {
-            entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1;
-        });
+        Workspace.Avaliacoes.entregasFeitas.forEach(e => { entregasCount[e.avaliacaoId] = (entregasCount[e.avaliacaoId] || 0) + 1; });
 
         // ESCRITAS
         const escPendentes = escritas.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
@@ -335,12 +310,10 @@ Workspace.Avaliacoes = {
             tEscPend.innerText = `Pendentes (${escPendentes.length})`;
             tEscPend.style.background = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? '#2c3e50' : 'transparent';
             tEscPend.style.color = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? 'white' : '#7f8c8d';
-            
             tEscConc.innerText = `Concluídas (${escConcluidas.length})`;
             tEscConc.style.background = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? '#2c3e50' : 'transparent';
             tEscConc.style.color = Workspace.Avaliacoes.abaEscrita === 'concluidas' ? 'white' : '#7f8c8d';
         }
-
         const contEscritas = document.getElementById('ws-lista-provas-escritas');
         if (contEscritas) {
             const listaAtiva = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? escPendentes : escConcluidas;
@@ -352,19 +325,14 @@ Workspace.Avaliacoes = {
                     const maxTentativas = p.tentativas || 1;
                     const textTentativa = Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
                     const ultimaEntrega = [...Workspace.Avaliacoes.entregasFeitas].reverse().find(e => e.avaliacaoId === p.id);
-
                     return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
                             <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Q. | 🔄 ${textTentativa}</span>
                         </div>
-                        ${Workspace.Avaliacoes.abaEscrita === 'pendentes' 
-                            ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>`
-                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ver Respostas</button>`
-                        }
-                    </div>
-                `}).join('');
+                        ${Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>` : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ver Respostas</button>`}
+                    </div>`}).join('');
             }
         }
 
@@ -377,12 +345,10 @@ Workspace.Avaliacoes = {
             tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
             tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
             tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
-            
             tOrConc.innerText = `Enviados (${orConcluidas.length})`;
             tOrConc.style.background = Workspace.Avaliacoes.abaOral === 'concluidas' ? '#2c3e50' : 'transparent';
             tOrConc.style.color = Workspace.Avaliacoes.abaOral === 'concluidas' ? 'white' : '#7f8c8d';
         }
-
         const contOrais = document.getElementById('ws-lista-provas-orais');
         if (contOrais) {
             const listaAtivaOral = Workspace.Avaliacoes.abaOral === 'pendentes' ? orPendentes : orConcluidas;
@@ -394,38 +360,30 @@ Workspace.Avaliacoes = {
                     const tentativaAtual = (entregasCount[p.id] || 0) + 1;
                     const maxTentativas = p.tentativas || 1;
                     const textTentativa = Workspace.Avaliacoes.abaOral === 'pendentes' ? `Tentativa ${tentativaAtual} de ${maxTentativas}` : `Esgotado (${maxTentativas})`;
-
                     return `
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
                             <span style="font-size: 11px; color: #7f8c8d;">🎤 Conversação | 🔄 ${textTentativa}</span>
                         </div>
-                        ${Workspace.Avaliacoes.abaOral === 'pendentes' 
-                            ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>`
-                            : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ouvir Gravação</button>`
-                        }
-                    </div>
-                `}).join('');
+                        ${Workspace.Avaliacoes.abaOral === 'pendentes' ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>` : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ouvir Gravação</button>`}
+                    </div>`}).join('');
             }
         }
 
-        // 🚀 ONLINES (O NOVO SISTEMA COM TABS E PRESENÇA)
+        // ONLINES
         const onPendentes = onlines.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const onHistorico = onlines.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
-        
         const tOnPend = document.getElementById('tab-online-abertas');
         const tOnHist = document.getElementById('tab-online-historico');
         if (tOnPend && tOnHist) {
             tOnPend.innerText = `Salas Abertas (${onPendentes.length})`;
             tOnPend.style.background = Workspace.Avaliacoes.abaOnline === 'abertas' ? '#2c3e50' : 'transparent';
             tOnPend.style.color = Workspace.Avaliacoes.abaOnline === 'abertas' ? 'white' : '#7f8c8d';
-            
             tOnHist.innerText = `Histórico (${onHistorico.length})`;
             tOnHist.style.background = Workspace.Avaliacoes.abaOnline === 'historico' ? '#2c3e50' : 'transparent';
             tOnHist.style.color = Workspace.Avaliacoes.abaOnline === 'historico' ? 'white' : '#7f8c8d';
         }
-
         const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             const listaAtivaOnline = Workspace.Avaliacoes.abaOnline === 'abertas' ? onPendentes : onHistorico;
@@ -436,330 +394,129 @@ Workspace.Avaliacoes = {
                     const dataObj = new Date(p.dataAgendada);
                     const dataFormatada = dataObj.toLocaleDateString('pt-BR');
                     const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                    
-                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas'
-                        ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${p.linkSala}')">Entrar na Sala</button>`
-                        : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
-
+                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${p.linkSala}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <div>
-                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span>
-                        </div>
+                        <div><h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4><span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span></div>
                         ${btnAcao}
-                    </div>
-                `}).join('');
+                    </div>`}).join('');
             }
         }
     },
 
     abrirSalasOnlineAluno: async (btn) => {
-        const txtOriginal = btn.innerText;
-        btn.innerText = "A procurar salas... ⏳";
+        const txtOriginal = btn.innerText; btn.innerText = "A procurar salas... ⏳";
         await Workspace.Avaliacoes.carregarLobbies(); 
-        Workspace.navegarPara('avaliacoes_online');   
-        btn.innerText = txtOriginal;
+        Workspace.navegarPara('avaliacoes_online'); btn.innerText = txtOriginal;
     },
 
+    // (As funções de gravação e prova escrita permanecem intactas)
     iniciarExame: async (id) => {
         const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!examen) return;
-
         Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
         try {
-            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
-                alunoId: Workspace.usuario.id,
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login
-            });
+            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
                 Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo, examen.tempo, examen.questoes);
-            } else {
-                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
-                Workspace.Avaliacoes.carregarLobbies(); 
-            }
+            } else { Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); Workspace.Avaliacoes.carregarLobbies(); }
         } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
     },
-
     entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
-        Workspace.Avaliacoes.exameAtivo = exameId; 
-        document.getElementById('ws-exame-titulo').innerText = titulo;
-        document.body.style.overflow = 'hidden'; 
-        
-        const tela = document.getElementById('ws-exame-foco-tela');
-        tela.style.display = 'block';
-        tela.scrollTop = 0;
-
+        Workspace.Avaliacoes.exameAtivo = exameId; document.getElementById('ws-exame-titulo').innerText = titulo; document.body.style.overflow = 'hidden'; 
+        const tela = document.getElementById('ws-exame-foco-tela'); tela.style.display = 'block'; tela.scrollTop = 0;
         const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
-        if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho);
-        else Workspace.Avaliacoes.respostas = {};
-
+        if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho); else Workspace.Avaliacoes.respostas = {};
         Workspace.Avaliacoes.renderizarQuestoes(questoes);
-        if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60);
-        else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
-        
+        if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60); else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
         Workspace.Avaliacoes.iniciarSensorFraude(); 
     },
-
     renderizarQuestoes: (questoes) => {
-        const area = document.getElementById('ws-exame-questoes-area');
-        let html = '';
+        const area = document.getElementById('ws-exame-questoes-area'); let html = '';
         questoes.forEach(q => {
-            let htmlResposta = '';
-            const respostaSalva = Workspace.Avaliacoes.respostas[q.id] || '';
-
+            let htmlResposta = ''; const respostaSalva = Workspace.Avaliacoes.respostas[q.id] || '';
             if (q.tipo === 'escolha') {
                 htmlResposta = `<div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">`;
                 q.opcoes.forEach((opcao) => {
                     const selecionado = respostaSalva === opcao;
-                    const corFundo = selecionado ? '#e8f4f8' : '#f9f9f9';
-                    const corBorda = selecionado ? '#3498db' : '#eee';
-                    htmlResposta += `
-                        <label style="background: ${corFundo}; border: 2px solid ${corBorda}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;">
-                            <input type="radio" name="questao_${q.id}" value="${opcao}" ${selecionado ? 'checked' : ''} onchange="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)" style="transform: scale(1.3); margin:0;">
-                            <span style="color: #2c3e50; font-weight: 500;">${opcao}</span>
-                        </label>
-                    `;
+                    htmlResposta += `<label style="background: ${selecionado ? '#e8f4f8' : '#f9f9f9'}; border: 2px solid ${selecionado ? '#3498db' : '#eee'}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;"><input type="radio" name="questao_${q.id}" value="${opcao}" ${selecionado ? 'checked' : ''} onchange="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)" style="transform: scale(1.3); margin:0;"><span style="color: #2c3e50; font-weight: 500;">${opcao}</span></label>`;
                 });
                 htmlResposta += `</div>`;
-            } else {
-                htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`;
-            }
+            } else { htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`; }
             html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
         });
         area.innerHTML = html;
     },
-
-    registarResposta: (questaoId, valor) => {
-        Workspace.Avaliacoes.respostas[questaoId] = valor;
-        localStorage.setItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`, JSON.stringify(Workspace.Avaliacoes.respostas));
-    },
-
-    guardarRascunhoManual: () => {
-        const btn = event.target;
-        const textoOriginal = btn.innerText;
-        btn.innerText = "✅ Guardado!";
-        setTimeout(() => btn.innerText = textoOriginal, 2000);
-    },
-
+    registarResposta: (questaoId, valor) => { Workspace.Avaliacoes.respostas[questaoId] = valor; localStorage.setItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`, JSON.stringify(Workspace.Avaliacoes.respostas)); },
+    guardarRascunhoManual: () => { const btn = event.target; const textoOriginal = btn.innerText; btn.innerText = "✅ Guardado!"; setTimeout(() => btn.innerText = textoOriginal, 2000); },
     iniciarCronometro: (totalSegundos) => {
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-        Workspace.Avaliacoes.segundosRestantes = totalSegundos;
-        const visor = document.getElementById('ws-exame-cronometro');
-
+        Workspace.Avaliacoes.segundosRestantes = totalSegundos; const visor = document.getElementById('ws-exame-cronometro');
         Workspace.Avaliacoes.cronometroInterval = setInterval(() => {
-            Workspace.Avaliacoes.segundosRestantes--;
-            const s = Workspace.Avaliacoes.segundosRestantes;
-            if (s <= 0) {
-                clearInterval(Workspace.Avaliacoes.cronometroInterval);
-                visor.innerText = "00:00:00";
-                Workspace.mostrarAviso("O tempo esgotou! Prova entregue automaticamente.", "warning");
-                Workspace.Avaliacoes.finalizarExame(true);
-                return;
-            }
-            const horas = Math.floor(s / 3600).toString().padStart(2, '0');
-            const minutos = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
-            const seg = (s % 60).toString().padStart(2, '0');
-            visor.innerText = `${horas}:${minutos}:${seg}`;
+            Workspace.Avaliacoes.segundosRestantes--; const s = Workspace.Avaliacoes.segundosRestantes;
+            if (s <= 0) { clearInterval(Workspace.Avaliacoes.cronometroInterval); visor.innerText = "00:00:00"; Workspace.mostrarAviso("O tempo esgotou! Prova entregue automaticamente.", "warning"); Workspace.Avaliacoes.finalizarExame(true); return; }
+            visor.innerText = `${Math.floor(s / 3600).toString().padStart(2, '0')}:${Math.floor((s % 3600) / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
         }, 1000);
     },
-
-    sairDoExame: () => {
-        Workspace.Avaliacoes.confirmarDialog(
-            "Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", 
-            () => {
-                document.body.style.overflow = ''; 
-                document.getElementById('ws-exame-foco-tela').style.display = 'none';
-                if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-                Workspace.Avaliacoes.pararSensorFraude(); 
-                Workspace.Avaliacoes.exameAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies(); 
-            }
-        );
-    },
-
+    sairDoExame: () => { Workspace.Avaliacoes.confirmarDialog("Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", () => { document.body.style.overflow = ''; document.getElementById('ws-exame-foco-tela').style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.pararSensorFraude(); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); }); },
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
-            Workspace.mostrarAviso("A entregar avaliação... ⏳", "info");
-            const relatorio = Workspace.Avaliacoes.pararSensorFraude();
+            Workspace.mostrarAviso("A entregar avaliação... ⏳", "info"); const relatorio = Workspace.Avaliacoes.pararSensorFraude();
             try {
-                const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', {
-                    respostas: Workspace.Avaliacoes.respostas, 
-                    alunoId: Workspace.usuario.id, 
-                    alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    relatorioFraude: relatorio,
-                    entregaId: Workspace.Avaliacoes.tentativaAtivaId
-                });
-                if(res && res.success) {
-                    Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success");
-                    localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`);
-                    document.body.style.overflow = ''; 
-                    document.getElementById('ws-exame-foco-tela').style.display = 'none';
-                    if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
-                    Workspace.Avaliacoes.exameAtivo = null;
-                    Workspace.Avaliacoes.carregarLobbies(); 
-                } else throw new Error();
+                const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', { respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
+                if(res && res.success) { Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success"); localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`); document.body.style.overflow = ''; document.getElementById('ws-exame-foco-tela').style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); } else throw new Error();
             } catch(e) { Workspace.mostrarAviso("Erro ao entregar a prova.", "error"); }
         };
-
-        if (forcar) processarEntrega();
-        else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
+        if (forcar) processarEntrega(); else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
-
     iniciarTesteOral: async (id) => {
-        const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
-        if(!teste) return;
-        
+        const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); if(!teste) return;
         Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
         try {
-            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', {
-                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login
-            });
-            if (res && res.success) {
-                Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
-                Workspace.Avaliacoes.estudioAtivo = teste.id;
-                document.getElementById('ws-audio-titulo').innerText = teste.titulo;
-                document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes;
-                document.body.style.overflow = 'hidden'; 
-                document.getElementById('ws-audio-foco-tela').style.display = 'block';
-                document.getElementById('ws-audio-foco-tela').scrollTop = 0;
-                Workspace.Avaliacoes.resetarInterfaceDeAudio();
-                Workspace.Avaliacoes.iniciarSensorFraude();
-            } else {
-                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error");
-                Workspace.Avaliacoes.carregarLobbies(); 
-            }
+            const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
+            if (res && res.success) { Workspace.Avaliacoes.tentativaAtivaId = res.entregaId; Workspace.Avaliacoes.estudioAtivo = teste.id; document.getElementById('ws-audio-titulo').innerText = teste.titulo; document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes; document.body.style.overflow = 'hidden'; document.getElementById('ws-audio-foco-tela').style.display = 'block'; document.getElementById('ws-audio-foco-tela').scrollTop = 0; Workspace.Avaliacoes.resetarInterfaceDeAudio(); Workspace.Avaliacoes.iniciarSensorFraude(); } else { Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); Workspace.Avaliacoes.carregarLobbies(); }
         } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
     },
-
-    resetarInterfaceDeAudio: () => {
-        document.getElementById('ws-area-gravacao').style.display = 'block';
-        document.getElementById('ws-area-player').style.display = 'none';
-        document.getElementById('ws-btn-iniciar-gravacao').style.display = 'inline-block';
-        document.getElementById('ws-btn-parar-gravacao').style.display = 'none';
-        document.getElementById('ws-audio-cronometro').innerText = '00:00';
-        document.getElementById('ws-audio-cronometro').style.color = '#fff';
-        document.getElementById('ws-mic-ring').style.borderColor = 'rgba(255,255,255,0.2)';
-        document.getElementById('ws-mic-ring').style.background = 'rgba(255,255,255,0.05)';
-        Workspace.Avaliacoes.audioBlob = null;
-        Workspace.Avaliacoes.audioChunks = [];
-    },
-
+    resetarInterfaceDeAudio: () => { document.getElementById('ws-area-gravacao').style.display = 'block'; document.getElementById('ws-area-player').style.display = 'none'; document.getElementById('ws-btn-iniciar-gravacao').style.display = 'inline-block'; document.getElementById('ws-btn-parar-gravacao').style.display = 'none'; document.getElementById('ws-audio-cronometro').innerText = '00:00'; document.getElementById('ws-audio-cronometro').style.color = '#fff'; document.getElementById('ws-mic-ring').style.borderColor = 'rgba(255,255,255,0.2)'; document.getElementById('ws-mic-ring').style.background = 'rgba(255,255,255,0.05)'; Workspace.Avaliacoes.audioBlob = null; Workspace.Avaliacoes.audioChunks = []; },
     iniciarGravacao: async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            Workspace.Avaliacoes.streamMicrofone = stream;
-            Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream);
-            Workspace.Avaliacoes.audioChunks = [];
-
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); Workspace.Avaliacoes.streamMicrofone = stream; Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream); Workspace.Avaliacoes.audioChunks = [];
             Workspace.Avaliacoes.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) Workspace.Avaliacoes.audioChunks.push(e.data); };
-            Workspace.Avaliacoes.mediaRecorder.onstop = () => {
-                Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' });
-                document.getElementById('ws-audio-preview').src = URL.createObjectURL(Workspace.Avaliacoes.audioBlob);
-                document.getElementById('ws-area-gravacao').style.display = 'none';
-                document.getElementById('ws-area-player').style.display = 'block';
-                Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop());
-            };
-            Workspace.Avaliacoes.mediaRecorder.start();
-
-            document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none';
-            document.getElementById('ws-btn-parar-gravacao').style.display = 'inline-block';
-            document.getElementById('ws-mic-ring').style.borderColor = '#e74c3c';
-            document.getElementById('ws-mic-ring').style.background = 'rgba(231, 76, 60, 0.2)';
-            document.getElementById('ws-audio-cronometro').style.color = '#e74c3c';
-
-            Workspace.Avaliacoes.segundosGravados = 0;
-            if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
-            
-            Workspace.Avaliacoes.gravacaoInterval = setInterval(() => {
-                Workspace.Avaliacoes.segundosGravados++;
-                const min = Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0');
-                const seg = (Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0');
-                document.getElementById('ws-audio-cronometro').innerText = `${min}:${seg}`;
-                if(Workspace.Avaliacoes.segundosGravados >= 600) {
-                    Workspace.Avaliacoes.pararGravacao();
-                    Workspace.mostrarAviso("Tempo máximo atingido.", "info");
-                }
-            }, 1000);
+            Workspace.Avaliacoes.mediaRecorder.onstop = () => { Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' }); document.getElementById('ws-audio-preview').src = URL.createObjectURL(Workspace.Avaliacoes.audioBlob); document.getElementById('ws-area-gravacao').style.display = 'none'; document.getElementById('ws-area-player').style.display = 'block'; Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop()); };
+            Workspace.Avaliacoes.mediaRecorder.start(); document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none'; document.getElementById('ws-btn-parar-gravacao').style.display = 'inline-block'; document.getElementById('ws-mic-ring').style.borderColor = '#e74c3c'; document.getElementById('ws-mic-ring').style.background = 'rgba(231, 76, 60, 0.2)'; document.getElementById('ws-audio-cronometro').style.color = '#e74c3c'; Workspace.Avaliacoes.segundosGravados = 0; if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+            Workspace.Avaliacoes.gravacaoInterval = setInterval(() => { Workspace.Avaliacoes.segundosGravados++; document.getElementById('ws-audio-cronometro').innerText = `${Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0')}:${(Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0')}`; if(Workspace.Avaliacoes.segundosGravados >= 600) { Workspace.Avaliacoes.pararGravacao(); Workspace.mostrarAviso("Tempo máximo atingido.", "info"); } }, 1000);
         } catch (err) { Workspace.mostrarAviso("Microfone bloqueado. Verifique as permissões.", "error"); }
     },
-
-    pararGravacao: () => {
-        if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
-            Workspace.Avaliacoes.mediaRecorder.stop();
-            if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
-        }
-    },
-
+    pararGravacao: () => { if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') { Workspace.Avaliacoes.mediaRecorder.stop(); if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval); } },
     descartarAudio: () => { Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); },
-
     enviarAudio: async () => {
-        if (!Workspace.Avaliacoes.audioBlob) return;
-        const btn = document.getElementById('ws-btn-enviar-audio');
-        btn.innerText = "A Enviar... ⏳"; btn.disabled = true;
-
-        const relatorio = Workspace.Avaliacoes.pararSensorFraude(); 
-
+        if (!Workspace.Avaliacoes.audioBlob) return; const btn = document.getElementById('ws-btn-enviar-audio'); btn.innerText = "A Enviar... ⏳"; btn.disabled = true; const relatorio = Workspace.Avaliacoes.pararSensorFraude(); 
         try {
-            const formData = new FormData();
-            formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' }));
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            
-            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload.");
-            const audioUrlFinal = uploadData.anexos[0].url;
-
-            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', {
-                audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId
-            });
-
-            if (res && res.success) {
-                Workspace.mostrarAviso("Áudio enviado com sucesso!", "success");
-                document.body.style.overflow = '';
-                document.getElementById('ws-audio-foco-tela').style.display = 'none';
-                Workspace.Avaliacoes.estudioAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies(); 
-            } else throw new Error("Erro no backend.");
-        } catch(e) { Workspace.mostrarAviso("Falha ao enviar o áudio.", "error"); } 
-        finally { btn.innerText = "📤 Enviar Áudio"; btn.disabled = false; }
+            const formData = new FormData(); formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' })); const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData }); const uploadData = await uploadRes.json();
+            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload."); const audioUrlFinal = uploadData.anexos[0].url;
+            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', { audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
+            if (res && res.success) { Workspace.mostrarAviso("Áudio enviado com sucesso!", "success"); document.body.style.overflow = ''; document.getElementById('ws-audio-foco-tela').style.display = 'none'; Workspace.Avaliacoes.estudioAtivo = null; Workspace.Avaliacoes.carregarLobbies(); } else throw new Error("Erro no backend.");
+        } catch(e) { Workspace.mostrarAviso("Falha ao enviar o áudio.", "error"); } finally { btn.innerText = "📤 Enviar Áudio"; btn.disabled = false; }
     },
-
     sairDoEstudio: () => {
         const mensagemSair = "⚠️ A sua tentativa já foi registada. Se sair, perderá a chance de avaliação. Deseja mesmo sair?";
-        if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
-            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
-                Workspace.Avaliacoes.pararGravacao();
-                Workspace.Avaliacoes.pararSensorFraude();
-                document.body.style.overflow = '';
-                document.getElementById('ws-audio-foco-tela').style.display = 'none';
-                Workspace.Avaliacoes.estudioAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies();
-            });
-        } else {
-            Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
-                Workspace.Avaliacoes.pararSensorFraude();
-                document.body.style.overflow = '';
-                document.getElementById('ws-audio-foco-tela').style.display = 'none';
-                Workspace.Avaliacoes.estudioAtivo = null;
-                Workspace.Avaliacoes.carregarLobbies();
-            });
-        }
+        Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
+            if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') Workspace.Avaliacoes.pararGravacao();
+            Workspace.Avaliacoes.pararSensorFraude(); document.body.style.overflow = ''; document.getElementById('ws-audio-foco-tela').style.display = 'none'; Workspace.Avaliacoes.estudioAtivo = null; Workspace.Avaliacoes.carregarLobbies();
+        });
     },
 
+    // ==========================================
+    // 🎓 PAINEL DE PROFESSOR E GESTOR
+    // ==========================================
     setContextoProf: (contexto) => {
         Workspace.Avaliacoes.contextoAtual = contexto;
-        
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container', 'ws-prof-submenu-criar', 'ws-prof-submenu-gestao'];
-        ocultar.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.style.display = 'none';
-        });
-
+        ocultar.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
         const titulo = document.getElementById('ws-titulo-painel-prof');
         const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
         const menuEncontros = document.getElementById('ws-prof-menu-encontros');
-
         if (contexto === 'encontros') {
             if(titulo) titulo.innerHTML = '<span>💻 Painel do Professor: Encontros Online</span>';
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'none';
@@ -770,107 +527,49 @@ Workspace.Avaliacoes = {
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'grid';
         }
     },
-
-    mostrarSubmenuCriar: () => {
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-submenu-criar').style.display = 'grid';
-    },
-
-    mostrarSubmenuGestao: () => {
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-submenu-gestao').style.display = 'grid';
-    },
-
-    voltarSubmenus: () => {
-        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
-        document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid';
-    },
-
+    mostrarSubmenuCriar: () => { document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-criar').style.display = 'grid'; },
+    mostrarSubmenuGestao: () => { document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'grid'; },
+    voltarSubmenus: () => { document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid'; },
     voltarMenuProf: () => {
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container'];
-        ocultar.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.style.display = 'none';
-        });
+        ocultar.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
         Workspace.Avaliacoes.setContextoProf(Workspace.Avaliacoes.contextoAtual);
     },
-
     carregarTurmasProf: async () => {
         if (Workspace.Avaliacoes.turmasCarregadas) return;
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
             if (turmas && turmas.length > 0) {
-                const selEscrita = document.getElementById('ws-nova-prova-destino');
-                const selOral = document.getElementById('ws-nova-oral-destino');
-                const selOnline = document.getElementById('ws-nova-online-destino');
+                const selEscrita = document.getElementById('ws-nova-prova-destino'); const selOral = document.getElementById('ws-nova-oral-destino'); const selOnline = document.getElementById('ws-nova-online-destino');
                 let options = '<option value="global">🌍 Todas as Turmas</option>';
                 turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`);
-                
-                if(selEscrita) selEscrita.innerHTML = options;
-                if(selOral) selOral.innerHTML = options;
-                if(selOnline) selOnline.innerHTML = options;
+                if(selEscrita) selEscrita.innerHTML = options; if(selOral) selOral.innerHTML = options; if(selOnline) selOnline.innerHTML = options;
             }
             Workspace.Avaliacoes.turmasCarregadas = true;
         } catch(e) {}
     },
-
     abrirNovaEscrita: () => {
-        Workspace.Avaliacoes.carregarTurmasProf();
-        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
-        document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
-        
-        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
-        document.getElementById('ws-prof-nova-escrita').style.display = 'block';
-        
-        document.getElementById('ws-nova-prova-titulo').value = '';
-        document.getElementById('ws-nova-prova-tempo').value = 60;
-        document.getElementById('ws-nova-prova-tentativas').value = 1;
-        document.getElementById('ws-nova-prova-destino').value = 'global';
-        document.getElementById('ws-builder-questoes').innerHTML = ''; 
+        Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-nova-escrita').style.display = 'block';
+        document.getElementById('ws-nova-prova-titulo').value = ''; document.getElementById('ws-nova-prova-tempo').value = 60; document.getElementById('ws-nova-prova-tentativas').value = 1; document.getElementById('ws-nova-prova-destino').value = 'global'; document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
-
     abrirNovaOral: () => {
-        Workspace.Avaliacoes.carregarTurmasProf();
-        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
-        document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
-
-        document.getElementById('ws-prof-submenu-criar').style.display = 'none';
-        document.getElementById('ws-prof-nova-oral').style.display = 'block';
-
-        document.getElementById('ws-nova-oral-titulo').value = '';
-        document.getElementById('ws-nova-oral-instrucoes').value = '';
-        document.getElementById('ws-nova-oral-tentativas').value = 1;
-        document.getElementById('ws-nova-oral-destino').value = 'global';
+        Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-nova-oral').style.display = 'block';
+        document.getElementById('ws-nova-oral-titulo').value = ''; document.getElementById('ws-nova-oral-instrucoes').value = ''; document.getElementById('ws-nova-oral-tentativas').value = 1; document.getElementById('ws-nova-oral-destino').value = 'global';
     },
-
     abrirNovaOnline: () => {
-        Workspace.Avaliacoes.carregarTurmasProf();
-        Workspace.Avaliacoes.avaliacaoEmEdicao = null; 
-        document.getElementById('ws-btn-salvar-online').innerText = "💻 Agendar Sessão Ao Vivo";
-
-        document.getElementById('ws-prof-menu-encontros').style.display = 'none';
-        document.getElementById('ws-prof-nova-online').style.display = 'block';
-
-        document.getElementById('ws-nova-online-titulo').value = '';
-        document.getElementById('ws-nova-online-data').value = '';
-        document.getElementById('ws-nova-online-link').value = '';
-        document.getElementById('ws-nova-online-destino').value = 'global';
+        Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-online').innerText = "💻 Agendar Sessão Ao Vivo";
+        document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-nova-online').style.display = 'block';
+        document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
     abrirGerenciador: async () => {
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
-        document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
-        document.getElementById('ws-prof-menu-encontros').style.display = 'none';
-        document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
-        
-        const container = document.getElementById('ws-prof-gerir-lista');
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar base de dados... ⏳</div>';
-
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
+        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar base de dados... ⏳</div>';
         try {
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
             const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET'); 
-
             if(res && res.success) {
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache = res.avaliacoes || [];
                 if(resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas || [];
@@ -883,11 +582,8 @@ Workspace.Avaliacoes = {
         const container = document.getElementById('ws-prof-gerir-lista');
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
 
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
-            avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
-        } else {
-            avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
-        }
+        if (Workspace.Avaliacoes.contextoAtual === 'encontros') avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
+        else avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
 
         if(avaliacoes.length === 0) {
             container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem itens agendados nesta categoria.</div>';
@@ -895,10 +591,7 @@ Workspace.Avaliacoes = {
         }
 
         container.innerHTML = avaliacoes.map(a => {
-            let icone = '✍️';
-            if (a.tipo === 'oral') icone = '🎤';
-            if (a.tipo === 'online') icone = '💻';
-
+            let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '💻';
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
 
@@ -907,10 +600,12 @@ Workspace.Avaliacoes = {
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
-            // 🚀 NOVO: O botão Mágico de Reativar Sala (apenas para online)
-            const btnReativar = a.tipo === 'online' 
-                ? `<button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${a.id}')">🔄 Reativar</button>`
-                : '';
+            // 🚀 NOVO: O BOTÃO INTELIGENTE DE ACESSOS
+            let btnReativar = '';
+            if (a.tipo === 'online') {
+                const presencasCount = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id).length;
+                btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px; transition:0.2s;" onmouseover="this.style.background='#fdf2e9'" onmouseout="this.style.background='#fdfdfd'" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Ver Acessos (${presencasCount})</button>`;
+            }
 
             return `
             <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
@@ -932,17 +627,147 @@ Workspace.Avaliacoes = {
         }).join('');
     },
 
-    // 🚀 NOVO: Função para o Professor reativar a sala apagando as presenças
-    reativarSalaOnline: (id) => {
-        Workspace.Avaliacoes.confirmarDialog("Reativar Sessão", "Isto irá apagar o histórico de presença de todos os alunos e a sala voltará a ficar aberta para entrada de todos. Confirmar?", "Sim, Reativar", "#f39c12", async () => {
-            try {
-                // Requisição à Base de Dados para apagar as entregas (presenças) daquela sala
-                const res = await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
-                Workspace.mostrarAviso("A sala foi reativada para os alunos!", "success");
-                Workspace.Avaliacoes.abrirGerenciador();
-            } catch(e) { 
-                Workspace.mostrarAviso("Erro ao reativar. Certifique-se que o Backend suporta o DELETE /entregas.", "error"); 
+    // 🚀 NOVO: O MODAL INTELIGENTE DE RAIO-X DE PRESENÇAS
+    abrirModalAcessos: async (avaliacaoId, destinoId) => {
+        const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
+        if(!prova) return;
+
+        const modalId = 'ws-modal-acessos-online';
+        if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+        modal.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
+                <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
+                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
+                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
+                
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                    <button class="ws-btn" style="background:#e74c3c; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">⚠️ Reativar para Todos</button>
+                </div>
+
+                <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
+                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados de turma... ⏳</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        try {
+            // 1. As Presenças
+            const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
+            let acessos = [];
+            if(entregasRes && entregasRes.success) acessos = entregasRes.entregas.filter(e => e.avaliacaoId === avaliacaoId);
+            else acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
+
+            // 2. Os Alunos da Turma
+            let alunosLista = [];
+            if (destinoId && destinoId !== 'global') {
+                const resAlunos = await Workspace.api(`/turmas/${destinoId}/alunos`, 'GET');
+                if (resAlunos && Array.isArray(resAlunos)) alunosLista = resAlunos;
+                else {
+                    const resAlunosFallback = await Workspace.api(`/usuarios?turmaId=${destinoId}&tipo=Aluno`, 'GET');
+                    if (resAlunosFallback && Array.isArray(resAlunosFallback)) alunosLista = resAlunosFallback;
+                }
             }
+
+            const container = document.getElementById('ws-acessos-lista');
+            let htmlLista = '';
+
+            // 3. A Matemática e o Desenho
+            if (alunosLista.length > 0) {
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} alunos já acederam.</div>`;
+
+                alunosLista.forEach(aluno => {
+                    const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
+                    const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
+                    
+                    if (acessoFeito) {
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
+                                    </div>
+                                </div>
+                                <button class="ws-btn" style="background:#f39c12; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acessoFeito.id}', '${avaliacaoId}', '${destinoId}')">🔄 Reativar</button>
+                            </div>
+                        `;
+                    } else {
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
+                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Link Ativado (Por aceder)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                // FALLBACK: O destino é Global ou a API não filtrou bem a turma.
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total. Mostrando apenas presenças registadas.</div>`;
+                
+                if(acessos.length === 0) {
+                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
+                } else {
+                    acessos.forEach(acesso => {
+                        const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
+                                    </div>
+                                </div>
+                                <button class="ws-btn" style="background:#f39c12; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acesso.id}', '${avaliacaoId}', '${destinoId}')">🔄 Reativar</button>
+                            </div>
+                        `;
+                    });
+                }
+            }
+            container.innerHTML = htmlLista;
+        } catch(e) { document.getElementById('ws-acessos-lista').innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
+    },
+
+    // 🚀 NOVO: Reativar de forma cirúrgica (um aluno apenas)
+    reativarAcessoAluno: async (entregaId, avaliacaoId, destinoId) => {
+        const btn = event.target;
+        const originalTxt = btn.innerText;
+        btn.innerText = "⏳";
+        btn.disabled = true;
+
+        try {
+            await Workspace.api(`/workspace/entregas/${entregaId}`, 'DELETE');
+            Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
+            Workspace.Avaliacoes.abrirGerenciador(); 
+            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
+        } catch(e) {
+            Workspace.mostrarAviso("Erro ao reativar aluno. Tente novamente.", "error");
+            btn.innerText = originalTxt;
+            btn.disabled = false;
+        }
+    },
+
+    // Botão de Emergência: Limpar a sala inteira
+    reativarSalaOnline: (id) => {
+        Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
+            try {
+                await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
+                Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
+                const modal = document.getElementById('ws-modal-acessos-online');
+                if (modal) modal.remove();
+                Workspace.Avaliacoes.abrirGerenciador();
+            } catch(e) { Workspace.mostrarAviso("Erro de comunicação ao limpar sala.", "error"); }
         });
     },
 
