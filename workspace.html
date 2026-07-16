@@ -139,13 +139,19 @@
 
     <main class="ws-container" id="ws-main-container" style="display: none;">
         <section class="ws-feed" id="ws-feed-container">
+           <!-- CARTÃO DE CRIAR PUBLICAÇÃO -->
             <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
-                <textarea class="ws-post-input" rows="3" placeholder="Compartilhe imagem, vídeo ou documento..."></textarea>
+                <textarea id="ws-post-texto" class="ws-post-input" rows="3" placeholder="Compartilhe imagem, vídeo ou documento..."></textarea>
+                
+                <!-- 🚀 O ELO PERDIDO: A "caixa" onde os ficheiros anexados vão aparecer antes de serem publicados -->
+                <div id="ws-post-anexos-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;"></div>
+                <div id="ws-post-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;"></div>
+                
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
                     <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
                         <button id="ws-btn-anexar" ontouchstart="" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Arquivo</button>
                     </div>
-                    <button class="ws-btn" ontouchstart="" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
+                    <button id="ws-btn-publicar" class="ws-btn" ontouchstart="" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
                 </div>
             </div>
             <div id="ws-posts-area"><div style="text-align: center; padding: 40px; color: #999;"></div></div>
