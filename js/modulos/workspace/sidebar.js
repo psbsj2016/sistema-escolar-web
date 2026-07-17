@@ -559,13 +559,14 @@ Workspace.Sidebar = {
         }
     },
 
-    // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎
+    // 🚀 LÓGICA DE ENVIO DE ANEXOS ATUALIZADA (Sincronizada com 10MB) 📎
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 50 * 1024 * 1024) {
-            Workspace.mostrarAviso("O ficheiro é demasiado grande (Máx: 50MB).", "warning");
+        // 🛡️ Ajustado para 10MB para coincidir com o limite do servidor
+        if (file.size > 10 * 1024 * 1024) {
+            Workspace.mostrarAviso("O ficheiro é demasiado grande (Máx: 10MB).", "warning");
             event.target.value = '';
             return;
         }
@@ -579,7 +580,12 @@ Workspace.Sidebar = {
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
-            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload.");
+            // 🔎 Se houver erro do servidor, mostramos a mensagem real enviada pelo back-end
+            if (!uploadRes.ok) {
+                throw new Error(uploadData.error || "Falha na comunicação com o servidor.");
+            }
+            
+            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no processamento da nuvem.");
             
             const anexoUrl = uploadData.anexos[0].url;
             const tipoRaw = file.type.split('/')[0];
@@ -594,12 +600,14 @@ Workspace.Sidebar = {
             });
 
             if (res && res.success) {
-                Workspace.Sidebar.buscarMensagensChat(Workspace.Sidebar.turmaIdAberta);
+                Workspace.Sidebar.carregarMensagensChat(); // Recarrega as mensagens para aparecer o anexo
             } else {
                 Workspace.mostrarAviso("Erro ao partilhar anexo no chat.", "error");
             }
         } catch (e) {
-            Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error");
+            // Agora vemos a mensagem real do servidor ou o erro do JS
+            console.error("Erro no envio:", e);
+            Workspace.mostrarAviso(e.message || "Falha de comunicação.", "error");
         } finally {
             event.target.value = ''; 
         }
