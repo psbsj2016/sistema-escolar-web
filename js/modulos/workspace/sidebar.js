@@ -103,16 +103,27 @@ Workspace.Sidebar = {
         }
     },
 
+   // ============================================================================
+    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (COM PROTEÇÃO ANTI-404)
+    // ============================================================================
     atualizarCabecalhoChat: (info) => {
         const titulo = document.getElementById('ws-chat-titulo');
         const avatar = document.getElementById('ws-chat-avatar-container');
         
+        // 1. Atualiza o título ou usa um padrão se estiver vazio
         if(titulo) titulo.innerText = info.nome || 'Sala de Bate-Papo';
         
-        if(info.foto) {
-            avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover;">`;
+        // 2. Validação estrita da URL da foto
+        // Só tenta carregar a imagem se existir e for um link válido da web (http ou https)
+        // Isso impede que nomes de ficheiros antigos e quebrados causem erros 404 no console
+        if(info.foto && (info.foto.startsWith('http') || info.foto.startsWith('https'))) {
+            
+            // Injetamos um evento 'onerror'. Se a imagem falhar ao carregar por qualquer motivo, 
+            // o navegador oculta a imagem quebrada e volta ao ícone 👥 automaticamente.
+            avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)';">`;
             avatar.style.background = 'transparent';
         } else {
+            // 3. Fallback (Plano B): Desenha o ícone padrão
             avatar.innerHTML = '👥';
             avatar.style.background = 'rgba(255,255,255,0.2)';
         }
