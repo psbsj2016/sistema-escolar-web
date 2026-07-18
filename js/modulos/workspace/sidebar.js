@@ -439,7 +439,7 @@ Workspace.Sidebar = {
         if (indicator) indicator.style.display = 'none';
     },
 
-    // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
+   // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
@@ -448,73 +448,35 @@ Workspace.Sidebar = {
         const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
 
-        const avatarHtml = `
-            <div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">
-                ${avatarChat}
-            </div>
-        `;
+        const avatarHtml = `<div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">${avatarChat}</div>`;
 
-        // 📎 Verifica e formata os anexos
+        // 📎 Verifica e desenha o Anexo (Imagem, Vídeo ou Documento)
         let anexoHtml = '';
         if (m.anexoUrl) {
             if (m.anexoTipo === 'image') {
-                // 🚀 CORREÇÃO 1: Removido o 'loading="lazy"' para impedir que o navegador esconda a imagem (Intervention bug).
-                // 🚀 CORREÇÃO 2: Atualizado o "onclick" para garantir que a imagem abre em ecrã inteiro corretamente usando o motor do Feed.
                 anexoHtml = `<img src="${m.anexoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);" onclick="if(window.Workspace && Workspace.Feed && Workspace.Feed.abrirImagemInteira) Workspace.Feed.abrirImagemInteira('${m.anexoUrl}')">`;
             } else if (m.anexoTipo === 'video') {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
+                // Desenha o botão de Ficheiros (PDF, Word, Excel, etc.) com o Nome Real
+                const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
                 anexoHtml = `
                 <a href="${m.anexoUrl}" target="_blank" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
                     <span style="font-size: 24px;">📄</span>
-                    <span style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Abrir Ficheiro</span>
+                    <span style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;" title="${nomeSeguro}">${nomeSeguro}</span>
                 </a>`;
             }
         }
 
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
-
         const balaoStyle = `display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1);`;
 
-        let layoutMsg = '';
-        if (ehMinha) {
-            layoutMsg = `
-                <div style="${balaoStyle}">
-                    ${anexoHtml}
-                    ${textoFormatado}
-                    <div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div>
-                </div>
-                ${avatarHtml}
-            `;
-        } else {
-            layoutMsg = `
-                ${avatarHtml}
-                <div style="${balaoStyle}">
-                    ${nomeHtml}
-                    ${anexoHtml}
-                    ${textoFormatado}
-                    <div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div>
-                </div>
-            `;
-        }
+        let layoutMsg = ehMinha ? 
+            `<div style="${balaoStyle}">${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>${avatarHtml}` : 
+            `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>`;
 
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
-    },
-
-    injetarNovaMensagem: (m) => {
-        if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
-        Workspace.Sidebar.mensagensRenderizadas.add(m.id);
-
-        const container = document.getElementById('ws-chat-mensagens');
-        const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-        
-        if (container.innerHTML.includes('Nenhuma mensagem')) {
-            container.innerHTML = '';
-        }
-
-        container.insertAdjacentHTML('beforeend', Workspace.Sidebar.gerarHTMLMensagem(m, meuNome));
-        container.scrollTop = container.scrollHeight;
     },
 
     carregarMensagensChat: async () => {
@@ -572,62 +534,53 @@ Workspace.Sidebar = {
         }
     },
 
-   // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA)
+   // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA COM O NOME REAL DO FICHEIRO)
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // 🛡️ Prevenção: Bloqueia ficheiros acima de 10MB diretamente no navegador
         if (file.size > 10 * 1024 * 1024) {
             Workspace.mostrarAviso("O ficheiro é demasiado grande (Máx: 10MB).", "warning");
             event.target.value = '';
             return;
         }
 
-        Workspace.mostrarAviso("A partilhar anexo na turma... ⏳", "info", 5000);
+        Workspace.mostrarAviso("A preparar o ficheiro e a enviar para a turma... ⏳", "info", 5000);
         
         try {
-            // 1. Prepara o pacote com o ficheiro físico
             const formData = new FormData();
             formData.append('anexos', file);
             
-            // 2. Envia para a nossa rota segura de memória temporária
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
             if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no processamento da nuvem.");
             
-            // 3. Extrai o link gerado pelo Cloudinary e o tipo de ficheiro
+            // Lemos as propriedades do ficheiro que subiu
             const anexoUrl = uploadData.anexos[0].url;
+            const anexoNome = file.name; // NOVIDADE: Pegamos o nome real do Word/PDF/Excel
             const tipoRaw = file.type.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
             
-            // 🩺 LOG DETETIVE: Confirma que o Cloudinary devolveu o link
-            console.log("🕵️‍♂️ DETETIVE: Imagem salva com sucesso! Link obtido:", anexoUrl);
-
-            // 4. Pede ao servidor do chat para guardar a mensagem com a imagem na Base de Dados
+            // Enviamos para o nosso backend (que agora já sabe gravar isto)
             const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'POST', {
                 texto: '', 
                 anexoUrl: anexoUrl,
                 anexoTipo: anexoTipo,
+                anexoNome: anexoNome, // Enviamos o nome
                 escolaId: Workspace.usuario.escolaId,
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
 
             if (res && res.success) {
-                // 🩺 LOG DETETIVE: Confirma que a base de dados aceitou o link
-                console.log("✅ DETETIVE: O servidor guardou o link na base de dados do chat!");
-                
-                // 🚀 CORREÇÃO: Chama a função certa para recarregar o ecrã com a nova imagem
                 Workspace.Sidebar.carregarMensagensChat(); 
             } else {
                 Workspace.mostrarAviso("Erro ao partilhar anexo no chat.", "error");
             }
         } catch (e) {
-            console.error("🚨 Erro no envio do anexo:", e);
+            console.error("🚨 Erro:", e);
             Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error");
         } finally {
-            // Limpa o selecionador de ficheiros para permitir novos envios
             event.target.value = ''; 
         }
     },
