@@ -255,9 +255,9 @@ Object.assign(Workspace, {
 
     verMinhaFoto: () => {
         if (Workspace.usuario && Workspace.usuario.avatar) {
-            Workspace.abrirVisualizadorImagem(Workspace.usuario.avatar, "Minha Foto de Perfil");
+            Workspace.abrirVisualizadorImagem(Workspace.usuario.avatar, "Minha foto de perfil");
         } else {
-            Workspace.mostrarAviso("Ainda não tem uma fotografia de perfil.", "info");
+            Workspace.mostrarAviso("Ainda não tem uma foto de perfil.", "info");
         }
     },
 

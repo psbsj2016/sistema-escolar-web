@@ -55,7 +55,7 @@ Workspace.Alertas = {
                     
                     // 3. Se NÃO estiver aberto, dispara o nosso alerta pulsante de 5 segundos!
                     if (!chatAberto) {
-                        const nomeTurma = data.turmaNome || 'Fórum da Turma';
+                        const nomeTurma = data.turmaNome || 'Bate-Papo da Turma';
                         // Recorta o texto caso a mensagem seja muito longa
                         const textoCurto = data.mensagem.texto.length > 35 ? data.mensagem.texto.substring(0, 35) + '...' : data.mensagem.texto;
                         
