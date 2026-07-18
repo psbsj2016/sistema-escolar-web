@@ -458,7 +458,9 @@ Workspace.Sidebar = {
         let anexoHtml = '';
         if (m.anexoUrl) {
             if (m.anexoTipo === 'image') {
-                anexoHtml = `<img src="${m.anexoUrl}" loading="lazy" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);" onclick="Workspace.abrirVisualizadorImagem('${m.anexoUrl}')">`;
+                // 🚀 CORREÇÃO 1: Removido o 'loading="lazy"' para impedir que o navegador esconda a imagem (Intervention bug).
+                // 🚀 CORREÇÃO 2: Atualizado o "onclick" para garantir que a imagem abre em ecrã inteiro corretamente usando o motor do Feed.
+                anexoHtml = `<img src="${m.anexoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);" onclick="if(window.Workspace && Workspace.Feed && Workspace.Feed.abrirImagemInteira) Workspace.Feed.abrirImagemInteira('${m.anexoUrl}')">`;
             } else if (m.anexoTipo === 'video') {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
