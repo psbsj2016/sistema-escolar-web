@@ -559,12 +559,12 @@ Workspace.Sidebar = {
         }
     },
 
-    // 🚀 LÓGICA DE ENVIO DE ANEXOS ATUALIZADA (Sincronizada com 10MB) 📎
+   // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA)
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // 🛡️ Ajustado para 10MB para coincidir com o limite do servidor
+        // 🛡️ Prevenção: Bloqueia ficheiros acima de 10MB diretamente no navegador
         if (file.size > 10 * 1024 * 1024) {
             Workspace.mostrarAviso("O ficheiro é demasiado grande (Máx: 10MB).", "warning");
             event.target.value = '';
@@ -574,23 +574,25 @@ Workspace.Sidebar = {
         Workspace.mostrarAviso("A partilhar anexo na turma... ⏳", "info", 5000);
         
         try {
+            // 1. Prepara o pacote com o ficheiro físico
             const formData = new FormData();
             formData.append('anexos', file);
             
+            // 2. Envia para a nossa rota segura de memória temporária
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
-            // 🔎 Se houver erro do servidor, mostramos a mensagem real enviada pelo back-end
-            if (!uploadRes.ok) {
-                throw new Error(uploadData.error || "Falha na comunicação com o servidor.");
-            }
-            
             if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no processamento da nuvem.");
             
+            // 3. Extrai o link gerado pelo Cloudinary e o tipo de ficheiro
             const anexoUrl = uploadData.anexos[0].url;
             const tipoRaw = file.type.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
             
+            // 🩺 LOG DETETIVE: Confirma que o Cloudinary devolveu o link
+            console.log("🕵️‍♂️ DETETIVE: Imagem salva com sucesso! Link obtido:", anexoUrl);
+
+            // 4. Pede ao servidor do chat para guardar a mensagem com a imagem na Base de Dados
             const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'POST', {
                 texto: '', 
                 anexoUrl: anexoUrl,
@@ -600,15 +602,19 @@ Workspace.Sidebar = {
             });
 
             if (res && res.success) {
-                Workspace.Sidebar.carregarMensagensChat(); // Recarrega as mensagens para aparecer o anexo
+                // 🩺 LOG DETETIVE: Confirma que a base de dados aceitou o link
+                console.log("✅ DETETIVE: O servidor guardou o link na base de dados do chat!");
+                
+                // 🚀 CORREÇÃO: Chama a função certa para recarregar o ecrã com a nova imagem
+                Workspace.Sidebar.carregarMensagensChat(); 
             } else {
                 Workspace.mostrarAviso("Erro ao partilhar anexo no chat.", "error");
             }
         } catch (e) {
-            // Agora vemos a mensagem real do servidor ou o erro do JS
-            console.error("Erro no envio:", e);
-            Workspace.mostrarAviso(e.message || "Falha de comunicação.", "error");
+            console.error("🚨 Erro no envio do anexo:", e);
+            Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error");
         } finally {
+            // Limpa o selecionador de ficheiros para permitir novos envios
             event.target.value = ''; 
         }
     },
