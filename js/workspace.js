@@ -59,16 +59,27 @@ Object.assign(Workspace, {
         
         try {
             const res = await fetch(`/api${endpoint}`, options);
+            
             if (res.status === 401 && endpoint !== '/auth/login') {
                 Workspace.mostrarAviso("A sua sessão expirou por segurança. Faça login novamente.", "warning");
                 Workspace.logout(true); 
                 return null;
             }
-            if (!res.ok) throw new Error('Falha na resposta do servidor');
-            return await res.json();
+            
+            // 🚀 A CORREÇÃO: Lê a mensagem do servidor, mesmo que o status seja Erro (ex: 400)
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                // Se o servidor mandou uma mensagem amigável no pacote 'error', devolvemos sem "desmaiar"
+                if (data && data.error) return data; 
+                throw new Error('Falha na resposta do servidor');
+            }
+            
+            return data;
         } catch (e) {
             console.error(`❌ Erro API Workspace [${endpoint}]:`, e);
-            return null;
+            // Retorna um objeto estruturado em vez de 'null' para impedir que o ecrã crashe
+            return { success: false, error: 'Falha de comunicação com o servidor.' };
         }
     },
 
@@ -367,11 +378,10 @@ Object.assign(Workspace, {
         document.getElementById('ws-confirma-senha').value = '';
     },
 
-   // ============================================================================
+  // ============================================================================
     // 🔑 MOTOR DE ALTERAÇÃO DE SENHA (FRONTEND)
     // ============================================================================
     salvarNovaSenha: async () => {
-        // 🚀 CORREÇÃO 1: Adicionado o .trim() para evitar que "espaços acidentais" bloqueiem a senha
         const senhaAtual = document.getElementById('ws-senha-atual').value.trim();
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
@@ -383,10 +393,9 @@ Object.assign(Workspace, {
         const txt = btn.innerText; btn.innerText = "A encriptar e a guardar... ⏳"; btn.disabled = true;
         
         try {
-            // 🚀 CORREÇÃO 2: Enviamos também o 'alunoRefId' para ajudar o servidor a encontrar alunos
             const res = await Workspace.api('/workspace/perfil', 'PUT', { 
                 id: Workspace.usuario.id, 
-                alunoRefId: Workspace.usuario.alunoRefId, // Identificador vital para alunos
+                alunoRefId: Workspace.usuario.alunoRefId, 
                 senhaAtual: senhaAtual, 
                 novaSenha: novaSenha 
             });
@@ -396,7 +405,8 @@ Object.assign(Workspace, {
                 document.getElementById('ws-senha-modal').style.display = 'none';
                 setTimeout(() => Workspace.logout(), 2500);
             } else {
-                Workspace.mostrarAviso(res.error || "Erro ao atualizar a senha.", "error");
+                // 🚀 PROTEÇÃO: Lê a mensagem amigável que o novo "mensageiro" transportou!
+                Workspace.mostrarAviso(res?.error || "Erro ao atualizar a senha.", "error");
             }
         } catch (e) { 
             Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error"); 
@@ -407,10 +417,19 @@ Object.assign(Workspace, {
     logout: async (forcado = false) => {
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         localStorage.removeItem('ws_usuario_logado');
+        
         if(forcado) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
+            
+            // 🚀 LIMPEZA VISUAL: Fecha as janelas flutuantes que possam ter ficado perdidas no ecrã!
+            const modais = ['ws-senha-modal', 'ws-perfil-modal', 'ws-chat-modal', 'ws-tarefa-modal'];
+            modais.forEach(id => {
+                const modal = document.getElementById(id);
+                if (modal) modal.style.display = 'none';
+            });
+
             Workspace.usuario = null;
         } else {
             window.location.reload(); 
