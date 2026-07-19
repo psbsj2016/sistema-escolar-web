@@ -367,8 +367,12 @@ Object.assign(Workspace, {
         document.getElementById('ws-confirma-senha').value = '';
     },
 
+   // ============================================================================
+    // 🔑 MOTOR DE ALTERAÇÃO DE SENHA (FRONTEND)
+    // ============================================================================
     salvarNovaSenha: async () => {
-        const senhaAtual = document.getElementById('ws-senha-atual').value;
+        // 🚀 CORREÇÃO 1: Adicionado o .trim() para evitar que "espaços acidentais" bloqueiem a senha
+        const senhaAtual = document.getElementById('ws-senha-atual').value.trim();
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
         
@@ -376,10 +380,17 @@ Object.assign(Workspace, {
         if (novaSenha !== confirmaSenha) return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
         
         const btn = document.getElementById('ws-btn-salvar-senha');
-        const txt = btn.innerText; btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "A encriptar e a guardar... ⏳"; btn.disabled = true;
         
         try {
-            const res = await Workspace.api('/workspace/perfil', 'PUT', { id: Workspace.usuario.id, senhaAtual, novaSenha });
+            // 🚀 CORREÇÃO 2: Enviamos também o 'alunoRefId' para ajudar o servidor a encontrar alunos
+            const res = await Workspace.api('/workspace/perfil', 'PUT', { 
+                id: Workspace.usuario.id, 
+                alunoRefId: Workspace.usuario.alunoRefId, // Identificador vital para alunos
+                senhaAtual: senhaAtual, 
+                novaSenha: novaSenha 
+            });
+            
             if (res && res.success) {
                 Workspace.mostrarAviso("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
                 document.getElementById('ws-senha-modal').style.display = 'none';
@@ -387,7 +398,9 @@ Object.assign(Workspace, {
             } else {
                 Workspace.mostrarAviso(res.error || "Erro ao atualizar a senha.", "error");
             }
-        } catch (e) { Workspace.mostrarAviso("Erro de comunicação.", "error"); } 
+        } catch (e) { 
+            Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error"); 
+        } 
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
