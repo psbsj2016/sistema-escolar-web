@@ -439,7 +439,7 @@ Workspace.Sidebar = {
         if (indicator) indicator.style.display = 'none';
     },
 
-   // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
+    // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
@@ -477,6 +477,21 @@ Workspace.Sidebar = {
             `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>`;
 
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
+    },
+
+    injetarNovaMensagem: (m) => {
+        if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
+        Workspace.Sidebar.mensagensRenderizadas.add(m.id);
+
+        const container = document.getElementById('ws-chat-mensagens');
+        const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+        
+        if (container.innerHTML.includes('Nenhuma mensagem')) {
+            container.innerHTML = '';
+        }
+
+        container.insertAdjacentHTML('beforeend', Workspace.Sidebar.gerarHTMLMensagem(m, meuNome));
+        container.scrollTop = container.scrollHeight;
     },
 
     carregarMensagensChat: async () => {
