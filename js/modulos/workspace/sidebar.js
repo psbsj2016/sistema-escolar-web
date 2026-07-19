@@ -459,11 +459,12 @@ Workspace.Sidebar = {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
                 const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
+                // 🚀 NOVIDADE: Agora, ao clicar no documento, chamamos a nossa janela mágica em vez de forçar o download!
                 anexoHtml = `
-                <a href="${m.anexoUrl}" target="_blank" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
+                <div onclick="Workspace.Sidebar.abrirVisualizadorDocumento('${m.anexoUrl}', '${nomeSeguro}')" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; cursor: pointer; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
                     <span style="font-size: 24px;">📄</span>
                     <span style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;" title="${nomeSeguro}">${nomeSeguro}</span>
-                </a>`;
+                </div>`;
             }
         }
 
@@ -476,6 +477,65 @@ Workspace.Sidebar = {
             `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>`;
 
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
+    },
+
+     // ============================================================================
+    // 📖 VISUALIZADOR UNIVERSAL DE DOCUMENTOS (MODAL)
+    // ============================================================================
+    abrirVisualizadorDocumento: (url, nome) => {
+        const idModal = 'ws-modal-visualizador-doc';
+        // Se a janela já existir, remove-a para criar uma nova limpa
+        if(document.getElementById(idModal)) document.getElementById(idModal).remove();
+
+        // 1. O Detetive: Descobrir de que tipo de ficheiro se trata
+        const urlLower = url.toLowerCase();
+        const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
+        const ehPDF = urlLower.endsWith('.pdf');
+
+        // 2. A Tradução: Se for da Microsoft, pedimos ao Google para traduzir para nós
+        let iframeSrc = url; 
+        if (ehOffice) {
+            // O "embedded=true" diz ao Google para mostrar o documento sem os menus do Google Drive
+            iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+        }
+
+        // 3. A Criação do Palco (Modal Flutuante Escuro)
+        const modal = document.createElement('div');
+        modal.id = idModal;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.3s ease-in-out;";
+        
+        // 4. O Ecrã: Cabeçalho com Nome e Botão de Fechar, e o Corpo com o Documento
+        modal.innerHTML = `
+            <div style="width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; box-sizing: border-box; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                <div style="font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 8px;">
+                    📄 ${nome}
+                </div>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <!-- Botão de Download Original como Plano B -->
+                    <a href="${url}" download="${nome}" target="_blank" style="color: white; text-decoration: none; font-size: 22px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Ficheiro Original">📥</a>
+                    <!-- Botão Fechar -->
+                    <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 300)" style="background:transparent; border:none; color:white; font-size:26px; cursor:pointer; font-weight:bold; padding:0; line-height:1; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" title="Fechar Visualizador">✖</button>
+                </div>
+            </div>
+            
+            <div style="flex: 1; width: 100%; max-width: 1200px; background: #f0f2f5; position: relative; display: flex; justify-content: center; align-items: center;">
+                ${ehOffice || ehPDF ? 
+                    `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; background:white;" frameborder="0" allowfullscreen></iframe>` : 
+                    `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555; text-align:center; padding: 20px;">
+                        <span style="font-size:60px; margin-bottom:15px;">📁</span>
+                        <p style="font-size: 16px; font-weight: bold; color: #2c3e50;">Pré-visualização indisponível para este formato.</p>
+                        <p style="font-size: 13px; margin-bottom: 20px;">Por favor, faça o download para aceder ao conteúdo.</p>
+                        <a href="${url}" download target="_blank" style="background:#3498db; color:white; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:bold; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Ficheiro Original</a>
+                    </div>`
+                }
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Dispara a animação suave de abertura
+        requestAnimationFrame(() => {
+            modal.style.opacity = '1';
+        });
     },
 
     // 🚀 RESTAURO: Injetar Nova Mensagem que foi apagada acidentalmente
