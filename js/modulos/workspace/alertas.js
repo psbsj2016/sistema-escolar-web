@@ -43,7 +43,7 @@ Workspace.Alertas = {
                 }
             }
 
-            // 🚀 AQUI ESTÁ A MÁGICA: Detetive de Novas Mensagens do Bate-papo
+            // 🚀 AQUI ESTÁ A MÁGICA: Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 
@@ -52,19 +52,56 @@ Workspace.Alertas = {
                     
                     // 2. Verifica se o bate-papo daquela turma JÁ ESTÁ ABERTO no ecrã neste momento
                     const chatAberto = Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta === data.turmaId;
+                    const modalChatVisivel = document.getElementById('ws-chat-modal') && document.getElementById('ws-chat-modal').style.display !== 'none';
                     
-                    // 3. Se NÃO estiver aberto, dispara o nosso alerta pulsante de 5 segundos!
-                    if (!chatAberto) {
-                        const nomeTurma = data.turmaNome || 'Bate-Papo da Turma';
-                        // Recorta o texto caso a mensagem seja muito longa
-                        const textoCurto = data.mensagem.texto.length > 35 ? data.mensagem.texto.substring(0, 35) + '...' : data.mensagem.texto;
+                    // 3. Se o aluno não estiver a olhar para o chat, disparamos a novidade!
+                    if (!(chatAberto && modalChatVisivel)) {
+                        const nomeTurma = data.turmaNome || 'Fórum da Turma';
+                        const textoCurto = data.mensagem.texto.length > 30 ? data.mensagem.texto.substring(0, 30) + '...' : data.mensagem.texto;
+                        
+                        // 🔔 A) REGISTO NO SININHO (Fica guardado até o aluno limpar)
+                        const idLocal = `alerta_local_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+                        const novaNotificacaoLocal = {
+                            id: idLocal,
+                            escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                            destinatarioNome: meuNome,
+                            remetenteNome: data.mensagem.autorNome,
+                            mensagem: `enviou uma mensagem lá no chat: "${textoCurto}"`,
+                            origem: 'chat',
+                            origemId: data.turmaId,
+                            destinoNome: nomeTurma,
+                            lida: false,
+                            data: new Date().toISOString()
+                        };
+
+                        // Adiciona no topo da lista do sininho e toca o alerta
+                        Workspace.Alertas.notificacoesAtuais.unshift(novaNotificacaoLocal);
+                        Workspace.Alertas.idsConhecidos.add(idLocal);
+                        const bell = document.getElementById('ws-bell');
+                        if (bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
+                        Workspace.Alertas.atualizarInterface();
+
+                        // 🏓 B) O BALÃO SALTITANTE (Ping-Pong Visual)
+                        // Criamos o HTML com a foto de perfil do autor da mensagem
+                        const avatarHtml = window.Workspace.renderizarAvatar(data.mensagem.autorNome, 44);
+                        const layoutDivertido = `
+                            <div style="display: flex; align-items: center; gap: 12px; margin-left: -5px; width: 100%;">
+                                <div style="flex-shrink: 0; border: 2px solid white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white;">
+                                    ${avatarHtml}
+                                </div>
+                                <div style="display: flex; flex-direction: column; line-height: 1.3;">
+                                    <span style="font-size: 14px; font-weight: bold; color: white;">${data.mensagem.autorNome}</span>
+                                    <span style="font-size: 12.5px; color: rgba(255,255,255,0.95);">disse lá no grupo: <i>"${textoCurto}"</i></span>
+                                </div>
+                            </div>
+                        `;
                         
                         Workspace.mostrarAviso(
-                            `<strong>${data.mensagem.autorNome}</strong> enviou uma mensagem em <em>${nomeTurma}</em>:<br>"${textoCurto}"`, 
-                            'chat', // O tipo que criámos no CSS (verde e pulsante)
-                            5000,   // Duração: 5 segundos
+                            layoutDivertido, 
+                            'pingpong', // O nosso novo CSS animado
+                            6000,       // Fica 6 segundos no ecrã a saltar
                             () => {
-                                // 🖱️ O Atalho Direto: Ao clicar, abre logo a conversa!
+                                // 🖱️ O Atalho Direto: Ao clicar no balão, abre a conversa (A notificação CONTINUA no sininho!)
                                 if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
                                     Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
                                 }
