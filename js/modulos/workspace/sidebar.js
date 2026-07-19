@@ -439,7 +439,7 @@ Workspace.Sidebar = {
         if (indicator) indicator.style.display = 'none';
     },
 
-    // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
+  // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
@@ -458,7 +458,6 @@ Workspace.Sidebar = {
             } else if (m.anexoTipo === 'video') {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
-                // Desenha o botão de Ficheiros (PDF, Word, Excel, etc.) com o Nome Real
                 const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
                 anexoHtml = `
                 <a href="${m.anexoUrl}" target="_blank" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
@@ -479,6 +478,7 @@ Workspace.Sidebar = {
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
     },
 
+    // 🚀 RESTAURO: Injetar Nova Mensagem que foi apagada acidentalmente
     injetarNovaMensagem: (m) => {
         if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
         Workspace.Sidebar.mensagensRenderizadas.add(m.id);
@@ -494,6 +494,7 @@ Workspace.Sidebar = {
         container.scrollTop = container.scrollHeight;
     },
 
+    // 🚀 RESTAURO: Carregar as Mensagens que foi apagada acidentalmente
     carregarMensagensChat: async () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         const container = document.getElementById('ws-chat-mensagens');
@@ -522,6 +523,7 @@ Workspace.Sidebar = {
         } catch (e) { console.error("Erro ao carregar chat", e); }
     },
 
+    // 🚀 RESTAURO: O envio de mensagens de texto que foi apagado acidentalmente
     enviarMensagemChat: async () => {
         const input = document.getElementById('ws-chat-input');
         const texto = input.value.trim();
@@ -549,7 +551,7 @@ Workspace.Sidebar = {
         }
     },
 
-   // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA COM O NOME REAL DO FICHEIRO)
+    // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA COM O NOME REAL DO FICHEIRO)
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
