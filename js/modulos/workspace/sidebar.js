@@ -480,45 +480,62 @@ Workspace.Sidebar = {
     },
 
      // ============================================================================
-    // 📖 VISUALIZADOR UNIVERSAL DE DOCUMENTOS (MODAL)
+    // 📖 VISUALIZADOR UNIVERSAL DE DOCUMENTOS (MODAL AVANÇADO)
     // ============================================================================
     abrirVisualizadorDocumento: (url, nome) => {
         const idModal = 'ws-modal-visualizador-doc';
-        // Se a janela já existir, remove-a para criar uma nova limpa
+        // Se a janela já existir, limpa-a para criar um ambiente novo
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
-        // 1. O Detetive: Descobrir de que tipo de ficheiro se trata
+        // 1. O Detetive de Ficheiros: Descobrir de que tipo de documento se trata
         const urlLower = url.toLowerCase();
-        const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
+        const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || 
+                         urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || 
+                         urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
         const ehPDF = urlLower.endsWith('.pdf');
 
-        // 2. A Tradução: Se for da Microsoft, pedimos ao Google para traduzir para nós
+        // 2. O Detetive de Dispositivo: Verifica se o aluno está num telemóvel/tablet
+        const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // 3. A Tradução Mágica (Escolha do melhor Visualizador)
         let iframeSrc = url; 
+        
         if (ehOffice) {
-            // O "embedded=true" diz ao Google para mostrar o documento sem os menus do Google Drive
-            iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            // 🚀 ESTRATÉGIA OFFICE: A Microsoft é perfeita para Word/Excel/PPT. 
+            // Mostra 1 página por defeito e funciona impecavelmente em telemóveis.
+            iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+        } else if (ehPDF) {
+            // 🚀 ESTRATÉGIA PDF:
+            if (isMobile) {
+                // Telemóveis (Android/iOS) não têm leitor nativo para mostrar no ecrã, então usamos o tradutor do Google.
+                iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            } else {
+                // Computadores abrem PDFs de forma perfeita nativamente. Usamos o link direto.
+                iframeSrc = url;
+            }
         }
 
-        // 3. A Criação do Palco (Modal Flutuante Escuro)
+        // 4. A Criação do Palco (Modal Flutuante Escuro)
         const modal = document.createElement('div');
         modal.id = idModal;
         modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.3s ease-in-out;";
         
-        // 4. O Ecrã: Cabeçalho com Nome e Botão de Fechar, e o Corpo com o Documento
+        // 5. O Ecrã: Cabeçalho com Nome e Botões, e o Corpo com o Documento
+        // NOTA: O div do corpo (flex: 1) tem agora -webkit-overflow-scrolling para funcionar nos iPhones.
         modal.innerHTML = `
             <div style="width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; box-sizing: border-box; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                 <div style="font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 8px;">
                     📄 ${nome}
                 </div>
                 <div style="display: flex; align-items: center; gap: 20px;">
-                    <!-- Botão de Download Original como Plano B -->
+                    <!-- Botão de Download Original -->
                     <a href="${url}" download="${nome}" target="_blank" style="color: white; text-decoration: none; font-size: 22px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Ficheiro Original">📥</a>
                     <!-- Botão Fechar -->
                     <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 300)" style="background:transparent; border:none; color:white; font-size:26px; cursor:pointer; font-weight:bold; padding:0; line-height:1; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" title="Fechar Visualizador">✖</button>
                 </div>
             </div>
             
-            <div style="flex: 1; width: 100%; max-width: 1200px; background: #f0f2f5; position: relative; display: flex; justify-content: center; align-items: center;">
+            <div style="flex: 1; width: 100%; max-width: 1200px; background: #f0f2f5; position: relative; display: flex; justify-content: center; align-items: center; -webkit-overflow-scrolling: touch; overflow: auto;">
                 ${ehOffice || ehPDF ? 
                     `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; background:white;" frameborder="0" allowfullscreen></iframe>` : 
                     `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555; text-align:center; padding: 20px;">
@@ -532,7 +549,7 @@ Workspace.Sidebar = {
         `;
         document.body.appendChild(modal);
 
-        // Dispara a animação suave de abertura
+        // Dispara a animação de abertura
         requestAnimationFrame(() => {
             modal.style.opacity = '1';
         });
