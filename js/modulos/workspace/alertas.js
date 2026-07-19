@@ -174,7 +174,7 @@ Workspace.Alertas = {
         } catch (e) {}
     },
 
-    atualizarInterface: () => {
+   atualizarInterface: () => {
         const badge = document.getElementById('ws-noti-count');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
@@ -190,7 +190,11 @@ Workspace.Alertas = {
                 dropdown.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:30px 0;"><div style="font-size:35px; margin-bottom:10px;">📭</div><div style="font-weight:600; font-size:14px;">Tudo limpo!</div><div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
                 dropdown.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between;"><span>Notificações (${qtd})</span></div>
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Notificações (${qtd})</span>
+                        <!-- 🚀 NOVO BOTÃO: Limpar Todas -->
+                        <button onclick="Workspace.Alertas.limparTodas()" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:12px; font-weight:600; padding:4px 8px; border-radius:4px; transition:0.2s;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'" title="Marcar todas como lidas">Excluir Todas</button>
+                    </div>
                     <div style="display:flex; flex-direction:column; gap:2px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
