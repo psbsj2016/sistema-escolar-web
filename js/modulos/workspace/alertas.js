@@ -43,7 +43,7 @@ Workspace.Alertas = {
                 }
             }
 
-            // 🚀 AQUI ESTÁ A MÁGICA: Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
+            // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 
@@ -82,7 +82,6 @@ Workspace.Alertas = {
                         Workspace.Alertas.atualizarInterface();
 
                         // 🏓 B) O BALÃO SALTITANTE (Ping-Pong Visual)
-                        // Criamos o HTML com a foto de perfil do autor da mensagem
                         const avatarHtml = window.Workspace.renderizarAvatar(data.mensagem.autorNome, 44);
                         const layoutDivertido = `
                             <div style="display: flex; align-items: center; gap: 12px; margin-left: -5px; width: 100%;">
@@ -101,7 +100,7 @@ Workspace.Alertas = {
                             'pingpong', // O nosso novo CSS animado
                             6000,       // Fica 6 segundos no ecrã a saltar
                             () => {
-                                // 🖱️ O Atalho Direto: Ao clicar no balão, abre a conversa (A notificação CONTINUA no sininho!)
+                                // 🖱️ O Atalho Direto
                                 if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
                                     Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
                                 }
@@ -139,7 +138,7 @@ Workspace.Alertas = {
         if (!dropdown) {
             dropdown = document.createElement('div');
             dropdown.id = 'ws-noti-dropdown';
-            dropdown.style.cssText = 'display:none; position:absolute; right:0; top:45px; width:320px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:9999; padding:15px; color:#333; max-height:450px; overflow-y:auto; cursor:default; border: 1px solid #eee;';
+            dropdown.style.cssText = 'display:none; position:absolute; right:0; top:45px; width:320px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:9999; padding:15px; color:#333; max-height:450px; overflow-y:auto; cursor:default; border: 1px solid #eee; overflow-x: hidden;';
             bell.appendChild(dropdown);
         }
         bell.addEventListener('click', (e) => {
@@ -174,7 +173,7 @@ Workspace.Alertas = {
         } catch (e) {}
     },
 
-   atualizarInterface: () => {
+    atualizarInterface: () => {
         const badge = document.getElementById('ws-noti-count');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
@@ -192,10 +191,10 @@ Workspace.Alertas = {
                 dropdown.innerHTML = `
                     <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center;">
                         <span>Notificações (${qtd})</span>
-                        <!-- 🚀 NOVO BOTÃO: Limpar Todas -->
+                        <!-- 🚀 BOTÃO DE EXCLUIR TODAS CORRIGIDO -->
                         <button onclick="Workspace.Alertas.limparTodas()" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:12px; font-weight:600; padding:4px 8px; border-radius:4px; transition:0.2s;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'" title="Marcar todas como lidas">Excluir Todas</button>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:2px;">
+                    <div id="ws-lista-notificacoes" style="display:flex; flex-direction:column; gap:2px; overflow-x:hidden;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
                         const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
@@ -214,6 +213,42 @@ Workspace.Alertas = {
                     </div>`;
             }
         }
+    },
+
+    // 🚀 A NOVA FUNÇÃO: Limpa todas com o Efeito Cascata!
+    limparTodas: () => {
+        if (!Workspace.usuario || !Workspace.usuario.nome) return;
+
+        // 1. Procura todas as notificações visíveis na lista
+        const itens = document.querySelectorAll('#ws-lista-notificacoes .ws-noti-item');
+        if (itens.length === 0) return;
+
+        // 2. Aplica a classe de animação "riscando" uma por uma, com atraso de 80ms (Efeito Cascata / Escada)
+        itens.forEach((item, index) => {
+            setTimeout(() => {
+                item.classList.add('riscando');
+            }, index * 80); 
+        });
+
+        // 3. Calcula o tempo exato para esperar a última animação terminar
+        // (Quantidade de itens * 80ms) + 300ms (tempo de duração da animação no CSS)
+        const tempoEspera = (itens.length * 80) + 300;
+
+        // 4. Só depois de todas saírem da tela é que limpamos a memória e o banco de dados
+        setTimeout(async () => {
+            // Esvazia as listas locais e atualiza o ecrã para a mensagem de "Tudo limpo!"
+            Workspace.Alertas.notificacoesAtuais = [];
+            Workspace.Alertas.idsConhecidos.clear();
+            Workspace.Alertas.atualizarInterface();
+
+            // Envia a ordem secreta para o servidor limpar de vez
+            try {
+                const nomeDono = encodeURIComponent(Workspace.usuario.nome);
+                await Workspace.api(`/workspace/notificacoes/usuario/${nomeDono}/ler-todas`, 'PUT');
+            } catch (e) {
+                console.error("Erro ao limpar notificações no servidor.");
+            }
+        }, tempoEspera);
     },
 
     lerEIr: async (id, origem, origemId, destinoNome) => {
