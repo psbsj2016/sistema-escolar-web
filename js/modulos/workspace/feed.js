@@ -94,30 +94,39 @@ Workspace.Feed = {
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-    // Extrator Limpo e Modular de Comentários com Tag de Relógio
-    gerarHTMLComentario: (c, postId) => {
+   gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
         const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
         const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
         
-        const clickAttr = ehDonoComentario ? `onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')" title="Toque para ver opções"` : '';
-        const hoverClass = ehDonoComentario ? 'ws-comentario-click' : '';
+        // 🚀 Lógica de Curtidas do Comentário
+        const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
+        const likesArr = Array.isArray(c.likes) ? c.likes : [];
+        const euCurtiCom = likesArr.includes(meuId);
+
         const acoesInline = ehDonoComentario ? `
-            <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s;">
+            <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s; border-top:1px dashed #eee; padding-top:6px;">
                 <span style="font-size:11px; color:#f39c12; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.editarComentarioInline('${postId}', '${c.id}')">Editar</span>
                 <span style="font-size:11px; color:#e74c3c; font-weight:bold; cursor:pointer;" onclick="event.stopPropagation(); Workspace.Feed.apagarComentario('${postId}', '${c.id}')">Apagar</span>
             </div>` : '';
         
         return `
-        <div id="comentario-${c.id}" ${clickAttr} class="${hoverClass}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
-            <div style="flex-shrink: 0;">${avatarComentario}</div>
+        <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+            <div style="flex-shrink: 0; cursor:pointer;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')">${avatarComentario}</div>
             <div style="flex:1; padding-right: 5px; min-width: 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <strong style="color: #2c3e50; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                    <strong style="color: #2c3e50; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
                     <span class="ws-time-ago" ${tempoAttr} style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
                 </div>
                 <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
+                
+                <div style="display:flex; gap:15px; margin-top:6px; align-items:center;">
+                    <span id="btn-like-com-${c.id}" onclick="Workspace.Feed.reagirComentario('${postId}', '${c.id}', 'like')" style="font-size:11px; cursor:pointer; font-weight:bold; color:${euCurtiCom ? '#27ae60' : '#95a5a6'}; transition:0.2s;" onmouseover="this.style.filter='brightness(0.8)'" onmouseout="this.style.filter='none'">
+                        👍 <span id="count-like-com-${c.id}">${likesArr.length > 0 ? likesArr.length : 'Curtir'}</span>
+                    </span>
+                    ${ehDonoComentario ? `<span style="font-size:11px; color:#95a5a6; cursor:pointer; font-weight:600;" onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')">⚙️ Opções</span>` : ''}
+                </div>
                 ${acoesInline}
             </div>
         </div>`;
@@ -521,17 +530,50 @@ Workspace.Feed = {
 
     limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "<").replace(/>/g, ">"); },
 
-    reagir: async (postId, tipo) => {
+   reagir: async (postId, tipo) => {
+        const meuId = Workspace.usuario.id;
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if (!post) return;
+
+        // 🚀 1. ATUALIZAÇÃO OTIMISTA (Muda a cor na hora!)
+        const likesArr = Array.isArray(post.likes) ? post.likes : [];
+        const dislikesArr = Array.isArray(post.dislikes) ? post.dislikes : [];
+        let euCurti = likesArr.includes(meuId);
+        let euNaoCurti = dislikesArr.includes(meuId);
+
+        if (tipo === 'like') {
+            if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; }
+            else { post.likes.push(meuId); euCurti = true; if (euNaoCurti) { post.dislikes = dislikesArr.filter(id => id !== meuId); euNaoCurti = false; } }
+        } else if (tipo === 'dislike') {
+            if (euNaoCurti) { post.dislikes = dislikesArr.filter(id => id !== meuId); euNaoCurti = false; }
+            else { post.dislikes.push(meuId); euNaoCurti = true; if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; } }
+        }
+
+        // 🎨 Aplica visualmente os botões no DOM sem atraso
+        const btnLike = document.getElementById(`btn-like-${postId}`);
+        const countLike = document.getElementById(`count-like-${postId}`);
+        if (countLike) countLike.innerText = post.likes.length;
+        if (btnLike) {
+            btnLike.style.background = euCurti ? '#eafaf1' : '#f0f2f5';
+            btnLike.style.color = euCurti ? '#27ae60' : '#555';
+            btnLike.style.borderColor = euCurti ? '#27ae60' : 'transparent';
+            btnLike.classList.remove('like-animated'); void btnLike.offsetWidth; btnLike.classList.add('like-animated');
+        }
+
+        const btnDislike = document.getElementById(`btn-dislike-${postId}`);
+        const countDislike = document.getElementById(`count-dislike-${postId}`);
+        if (countDislike) countDislike.innerText = post.dislikes.length;
+        if (btnDislike) {
+            btnDislike.style.background = euNaoCurti ? '#fdf2f2' : '#f0f2f5';
+            btnDislike.style.color = euNaoCurti ? '#e74c3c' : '#555';
+            btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
+        }
+
+        // ☁️ 2. Envia para a API em background (Silencioso)
         try {
-            const meuId = Workspace.usuario.id;
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            const res = await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
-            
-            if (res && res.success) {
-                // ⚡ Agora as reações atualizam o próprio ecrã instantaneamente
-                await Workspace.Feed.sincronizarPostSilencioso(postId);
-            }
-        } catch (e) { console.error("Erro ao reagir:", e); }
+            await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
+        } catch (e) { console.error("Erro ao reagir em background", e); }
     },
 
     toggleComentarios: (postId) => {
@@ -565,23 +607,22 @@ Workspace.Feed = {
         } catch (e) { console.error(e); }
     },
 
-    apagarPost: (postId) => {
+   apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
+            // 🚀 1. Remove do ecrã INSTANTANEAMENTE assim que clica em "Sim"
+            const el = document.getElementById(`post-${postId}`);
+            if (el) {
+                el.style.transform = 'scale(0.95)'; el.style.opacity = '0'; el.style.transition = 'all 0.2s ease';
+                setTimeout(() => el.remove(), 200);
+            }
+            Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => p.id !== postId);
+            Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => p.id !== postId);
+            if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada!", "success");
+
+            // ☁️ 2. Executa a eliminação real no servidor em background
             try {
-                const res = await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
-                if (res && res.success) {
-                    const el = document.getElementById(`post-${postId}`);
-                    if (el) {
-                        el.style.transform = 'scale(0.95)'; el.style.opacity = '0'; el.style.transition = 'all 0.3s ease';
-                        setTimeout(() => {
-                            el.remove();
-                            Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => p.id !== postId);
-                            Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => p.id !== postId);
-                        }, 300);
-                    }
-                    if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada com sucesso!", "success");
-                }
-            } catch (e) {}
+                await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
+            } catch (e) { console.error("Falha ao apagar na nuvem"); }
         });
     },
 
@@ -698,13 +739,14 @@ Workspace.Feed = {
         }).catch(err => {});
     },
 
-    gerarHTMLPosts: (posts) => {
+   gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
         return posts.map(p => {
             const tempoAmigavel = p.dataCriacao ? Workspace.Feed.calcularTempoRelativo(p.dataCriacao) : 'Agora mesmo';
             const tempoAttr = p.dataCriacao ? `class="ws-time-ago" data-time="${p.dataCriacao}"` : '';
-            const avatarPost = window.Workspace.renderizarAvatar(p.autorNome, 45);
+            // 🚀 Tornámos o avatar clicável
+            const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(p.autorNome, 45)}</div>`;
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
@@ -729,30 +771,14 @@ Workspace.Feed = {
                             <div style="flex-shrink:0;">${avatarPost}</div>
                             <div style="flex: 1; min-width: 0;">
                                 <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    ${Workspace.Feed.limparTexto(p.autorNome)} <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
+                                    <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">${Workspace.Feed.limparTexto(p.autorNome)}</span> 
+                                    <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge}
                                 </div>
                             </div>
                         </div>
-                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto; padding-right: 5px;">
-                            <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
-                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">🔗</span> Copiar Link
-                                </div>
-                                ${ehDonoOuGestor ? `
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">✏️</span> Editar
-                                </div>
-                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
-                                    <span style="font-size:16px;">🗑️</span> Apagar
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
                     
                     <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                         ${textoSeguro}
@@ -890,5 +916,58 @@ Workspace.Feed = {
                 }
             });
         }
+    },
+
+              // 🚀 NOVA FUNÇÃO: Abre a Foto e Nome do Autor do Post
+    abrirPerfilUsuario: (autorNome) => {
+        const id = 'ws-perfil-visitante-modal';
+        if(document.getElementById(id)) document.getElementById(id).remove();
+        const avatarHTML = window.Workspace.renderizarAvatar(autorNome, 100);
+        
+        const overlay = document.createElement('div');
+        overlay.id = id;
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(0,0,0,0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
+        overlay.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 340px; text-align: center; padding: 40px 20px; background: white; border-radius: 16px; position: relative; transform: scale(0.9); transition: transform 0.2s; margin:0;">
+                <span style="position:absolute; top:15px; right:20px; color:#aaa; font-size:26px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#aaa'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);">✖</span>
+                <div style="width:100px; height:100px; margin: 0 auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid #3498db; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px;">
+                    ${avatarHTML}
+                </div>
+                <h2 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 20px;">${autorNome}</h2>
+                <p style="margin: 0; color: #7f8c8d; font-size: 13px;">Membro da Plataforma</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[0].style.transform = 'scale(1)'; });
+        overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
+    },
+
+    // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Optimistic UI)
+    reagirComentario: async (postId, comentarioId, tipo) => {
+        const meuId = Workspace.usuario.id;
+        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        if (!post || !post.comentarios) return;
+        const c = post.comentarios.find(com => com.id === comentarioId);
+        if (!c) return;
+
+        // Atualiza a Memória
+        if (!Array.isArray(c.likes)) c.likes = [];
+        let euCurti = c.likes.includes(meuId);
+
+        if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; }
+        else { c.likes.push(meuId); euCurti = true; }
+
+        // Atualiza a Tela Instantaneamente
+        const countEl = document.getElementById(`count-like-com-${comentarioId}`);
+        const btnEl = document.getElementById(`btn-like-com-${comentarioId}`);
+        if (countEl) countEl.innerText = c.likes.length > 0 ? c.likes.length : 'Curtir';
+        if (btnEl) btnEl.style.color = euCurti ? '#27ae60' : '#95a5a6';
+
+        // Envia para API
+        try {
+            const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
+        } catch(e) {}
     }
+
 };
