@@ -108,8 +108,8 @@
             padding-top: 65px; /* 🚀 NOVO: Espaço para o feed não ficar escondido debaixo da barra fixa */
         }
 
-        /* Oculta o scroll lateral da página e ativa a película escura */
-        body.menu-left-open, body.menu-right-open { overflow: hidden !important; }
+    /* Oculta o scroll do feed quando um menu lateral OU o Bate-papo estiver aberto */
+        body.menu-left-open, body.menu-right-open, body.chat-open { overflow: hidden !important; }
         
         #ws-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
@@ -547,10 +547,22 @@
         </div>
     </section>
 
-    </div> <!-- FIM DO WRAPPER DE CORPO (CÁPSULA) -->
+     <!-- ⚙️ CONFIGURAÇÕES -->
+    <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
+                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()" ontouchstart="">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Atualize a sua senha de acesso.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-   <!-- 🚀 MODAL DE PERFIL RESTAURADO (Agora flutua no ecrã com fundo escuro) -->
-    <section id="ws-perfil-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100010; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <!-- 🚀 PERFIL RESTAURADO: De volta para dentro da cápsula e com layout normal de página -->
+    <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3></div>
             <div style="padding: 30px 20px; text-align: center;">
@@ -569,7 +581,9 @@
         </div>
     </section>
 
-   <!-- MOTOR DE CHAT E OUTROS MODAIS INVISÍVEIS -->
+    </div> <!-- FIM DO WRAPPER DE CORPO (CÁPSULA) -->
+
+       <!-- MOTOR DE CHAT E OUTROS MODAIS INVISÍVEIS -->
     <div id="ws-chat-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #e5ddd5; z-index: 100010; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; max-width: 100%; height: 100vh; margin: 0; display: flex; flex-direction: column; padding: 0; border-radius: 0; box-shadow: none; background: transparent;">
             <div style="background: #075e54; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.2); z-index: 2;">
@@ -672,26 +686,35 @@
         </div>
     </div>
 
-    <!-- 🚀 MOTOR DE SINCRONIZAÇÃO DAS GAVETAS LATERAIS (SIDEBARS) -->
+    <!-- 🚀 MOTOR DE SINCRONIZAÇÃO DAS GAVETAS LATERAIS E DO CHAT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const syncMenuClasses = () => {
                 const menuLeft = document.getElementById('ws-main-menu-dropdown');
                 const menuRight = document.getElementById('ws-noti-dropdown');
+                const chatModal = document.getElementById('ws-chat-modal');
+                
                 const isLeftOpen = menuLeft && menuLeft.style.display === 'block';
                 const isRightOpen = menuRight && menuRight.style.display === 'block';
+                const isChatOpen = chatModal && chatModal.style.display !== 'none';
                 
                 if (isLeftOpen) document.body.classList.add('menu-left-open');
                 else document.body.classList.remove('menu-left-open');
                 
                 if (isRightOpen) document.body.classList.add('menu-right-open');
                 else document.body.classList.remove('menu-right-open');
+
+                if (isChatOpen) document.body.classList.add('chat-open');
+                else document.body.classList.remove('chat-open');
             };
 
             const observer = new MutationObserver(syncMenuClasses);
 
             const menuLeft = document.getElementById('ws-main-menu-dropdown');
             if (menuLeft) observer.observe(menuLeft, { attributes: true, attributeFilter: ['style'] });
+
+            const chatModal = document.getElementById('ws-chat-modal');
+            if (chatModal) observer.observe(chatModal, { attributes: true, attributeFilter: ['style'] });
 
             const bodyObserver = new MutationObserver(() => {
                 const menuRight = document.getElementById('ws-noti-dropdown');
