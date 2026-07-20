@@ -19,11 +19,14 @@
        /* 🚀 TROCA DE HIDDEN POR CLIP: Mantém a página segura sem quebrar a barra fixa */
         html, body { 
             width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; 
-            /* 🚀 Oculta o scroll do feed nas raízes APENAS quando o Bate-papo estiver aberto. Menus laterais agora permitem rolagem normal! */
+            overflow-x: clip !important; background-color: #f0f2f5; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* 🚀 Oculta o scroll do feed APENAS quando o Bate-papo estiver aberto. Menus laterais rolam livremente! */
         html.chat-open, body.chat-open { overflow: hidden !important; }
         
-        .ws-navbar { 
-            background: #2c3e50; color: white; padding: 14px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); 
+        .ws-navbar {
+            background: #2c3e50; color: white; padding: 13px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); 
             display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; 
         }
         
@@ -75,7 +78,7 @@
         @media screen and (max-width: 900px) { 
             /* 🚀 TROCA DE HIDDEN POR CLIP para telemóveis */
             html, body { width: 100% !important; max-width: 100% !important; overflow-x: clip !important; }
-            .ws-navbar { padding: 11px max(15px, env(safe-area-inset-right)) 12px max(15px, env(safe-area-inset-left)) !important; padding-top: max(12px, env(safe-area-inset-top)) !important; }
+            .ws-navbar { padding: 10px max(15px, env(safe-area-inset-right)) 12px max(15px, env(safe-area-inset-left)) !important; padding-top: max(12px, env(safe-area-inset-top)) !important; }
             .ws-container, section[id$="-container"] { padding: 12px max(12px, env(safe-area-inset-right)) 20px max(12px, env(safe-area-inset-left)) !important; margin: 0 auto !important; width: 100% !important; max-width: 100% !important; } 
             .ws-card { padding: 14px !important; margin-bottom: 15px !important; border-radius: 12px !important; }
             .ws-menu-lateral { display: none !important; }
@@ -108,8 +111,6 @@
             padding-top: 65px; /* 🚀 NOVO: Espaço para o feed não ficar escondido debaixo da barra fixa */
         }
 
-    /* Oculta o scroll do feed quando um menu lateral OU o Bate-papo estiver aberto */
-        body.menu-left-open, body.menu-right-open, body.chat-open { overflow: hidden !important; }
         
         #ws-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
