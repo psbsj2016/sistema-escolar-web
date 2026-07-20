@@ -1,3 +1,4 @@
+// js/modulos/workspace/feed.js
 window.Workspace = window.Workspace || {};
 
 Workspace.Feed = {
@@ -16,7 +17,7 @@ Workspace.Feed = {
         Workspace.Feed.injetarModaisGlobais(); 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
-        Workspace.Feed.iniciarRelogioTempos(); // ⏰ Inicia o relógio que atualiza o "Agora mesmo"
+        Workspace.Feed.iniciarRelogioTempos(); 
         
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
             document.addEventListener('click', (e) => {
@@ -26,7 +27,6 @@ Workspace.Feed = {
         }
     },
 
-    // ⏰ O RELÓGIO SILENCIOSO: Atualiza os tempos "Há X min" a cada 60 segundos
     iniciarRelogioTempos: () => {
         setInterval(() => {
             document.querySelectorAll('.ws-time-ago').forEach(el => {
@@ -38,12 +38,10 @@ Workspace.Feed = {
         }, 60000); 
     },
 
-    // 🚀 O MOTOR DE SINCRONIZAÇÃO EM TEMPO REAL (DOM UPDATE DIRETO)
     sincronizarPostSilencioso: async (postId) => {
         try {
             const postAtualizado = await Workspace.api(`/workspace/posts/${postId}`, 'GET');
             if (postAtualizado && !postAtualizado.error) {
-                // Atualiza Caches em Memória
                 const indexCache = Workspace.Feed.postsCache.findIndex(p => p.id === postId);
                 if(indexCache !== -1) Workspace.Feed.postsCache[indexCache] = postAtualizado;
 
@@ -52,7 +50,6 @@ Workspace.Feed = {
 
                 const meuId = Workspace.usuario.id;
 
-                // 1. Atualiza Likes Visualmente
                 const btnLike = document.getElementById(`btn-like-${postId}`);
                 const countLike = document.getElementById(`count-like-${postId}`);
                 const likesArr = Array.isArray(postAtualizado.likes) ? postAtualizado.likes : [];
@@ -65,7 +62,6 @@ Workspace.Feed = {
                     btnLike.style.borderColor = euCurti ? '#27ae60' : 'transparent';
                 }
 
-                // 2. Atualiza Dislikes Visualmente
                 const btnDislike = document.getElementById(`btn-dislike-${postId}`);
                 const countDislike = document.getElementById(`count-dislike-${postId}`);
                 const dislikesArr = Array.isArray(postAtualizado.dislikes) ? postAtualizado.dislikes : [];
@@ -78,7 +74,6 @@ Workspace.Feed = {
                     btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
                 }
 
-                // 3. Atualiza Comentários Instantaneamente
                 const countComment = document.getElementById(`count-comment-${postId}`);
                 if(countComment) countComment.innerText = postAtualizado.comentarios ? postAtualizado.comentarios.length : 0;
 
@@ -94,13 +89,13 @@ Workspace.Feed = {
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-   gerarHTMLComentario: (c, postId) => {
+    // 🚀 HTML DO COMENTÁRIO: Agora com botão de "Curtir" e Avatar Clicável
+    gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
         const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
         const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
         
-        // 🚀 Lógica de Curtidas do Comentário
         const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
         const likesArr = Array.isArray(c.likes) ? c.likes : [];
         const euCurtiCom = likesArr.includes(meuId);
@@ -135,7 +130,7 @@ Workspace.Feed = {
     injetarModaisGlobais: () => {
         if (!document.getElementById('ws-confirm-modal')) {
             const modaisHTML = `
-                <div id="ws-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s;">
+                <div id="ws-confirm-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100025; align-items: center; justify-content: center; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.2s;">
                     <div class="ws-card" style="width: 90%; max-width: 340px; text-align: center; padding: 30px 20px; transform: scale(0.9); transition: transform 0.2s; margin: 0; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
                         <div style="font-size: 50px; margin-bottom: 10px; line-height: 1;">⚠️</div>
                         <h3 id="ws-confirm-title" style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">Atenção</h3>
@@ -528,14 +523,14 @@ Workspace.Feed = {
         return htmlFinal;
     },
 
-    limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "<").replace(/>/g, ">"); },
+    limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
 
-   reagir: async (postId, tipo) => {
+    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS
+    reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => p.id === postId);
         if (!post) return;
 
-        // 🚀 1. ATUALIZAÇÃO OTIMISTA (Muda a cor na hora!)
         const likesArr = Array.isArray(post.likes) ? post.likes : [];
         const dislikesArr = Array.isArray(post.dislikes) ? post.dislikes : [];
         let euCurti = likesArr.includes(meuId);
@@ -549,7 +544,6 @@ Workspace.Feed = {
             else { post.dislikes.push(meuId); euNaoCurti = true; if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; } }
         }
 
-        // 🎨 Aplica visualmente os botões no DOM sem atraso
         const btnLike = document.getElementById(`btn-like-${postId}`);
         const countLike = document.getElementById(`count-like-${postId}`);
         if (countLike) countLike.innerText = post.likes.length;
@@ -569,7 +563,6 @@ Workspace.Feed = {
             btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
         }
 
-        // ☁️ 2. Envia para a API em background (Silencioso)
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
@@ -599,7 +592,6 @@ Workspace.Feed = {
             });
 
             if (res && res.success) {
-                // ⚡ Atualiza o meu ecrã para o novo comentário surgir sem recarregar a página
                 await Workspace.Feed.sincronizarPostSilencioso(postId);
                 const lista = document.getElementById(`lista-comentarios-${postId}`);
                 if (lista) lista.scrollTop = lista.scrollHeight;
@@ -607,9 +599,9 @@ Workspace.Feed = {
         } catch (e) { console.error(e); }
     },
 
-   apagarPost: (postId) => {
+    // 🚀 REMOÇÃO INSTANTÂNEA DE POSTS
+    apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
-            // 🚀 1. Remove do ecrã INSTANTANEAMENTE assim que clica em "Sim"
             const el = document.getElementById(`post-${postId}`);
             if (el) {
                 el.style.transform = 'scale(0.95)'; el.style.opacity = '0'; el.style.transition = 'all 0.2s ease';
@@ -619,7 +611,6 @@ Workspace.Feed = {
             Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => p.id !== postId);
             if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada!", "success");
 
-            // ☁️ 2. Executa a eliminação real no servidor em background
             try {
                 await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
             } catch (e) { console.error("Falha ao apagar na nuvem"); }
@@ -739,13 +730,13 @@ Workspace.Feed = {
         }).catch(err => {});
     },
 
-   gerarHTMLPosts: (posts) => {
+    // 🚀 GERAÇÃO DOS POSTS COM AVATARES CLICÁVEIS
+    gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
         return posts.map(p => {
             const tempoAmigavel = p.dataCriacao ? Workspace.Feed.calcularTempoRelativo(p.dataCriacao) : 'Agora mesmo';
             const tempoAttr = p.dataCriacao ? `class="ws-time-ago" data-time="${p.dataCriacao}"` : '';
-            // 🚀 Tornámos o avatar clicável
             const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(p.autorNome, 45)}</div>`;
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
@@ -779,6 +770,23 @@ Workspace.Feed = {
                                 </div>
                             </div>
                         </div>
+                        <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto; padding-right: 5px;">
+                            <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
+                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">🔗</span> Copiar Link
+                                </div>
+                                ${ehDonoOuGestor ? `
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">✏️</span> Editar
+                                </div>
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#e74c3c; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.apagarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">🗑️</span> Apagar
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
                     
                     <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                         ${textoSeguro}
@@ -918,7 +926,7 @@ Workspace.Feed = {
         }
     },
 
-              // 🚀 NOVA FUNÇÃO: Abre a Foto e Nome do Autor do Post
+    // 🚀 NOVA FUNÇÃO: Abre a Foto e Nome do Autor do Post
     abrirPerfilUsuario: (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -969,5 +977,4 @@ Workspace.Feed = {
             await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
         } catch(e) {}
     }
-
 };
