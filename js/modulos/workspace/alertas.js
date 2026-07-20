@@ -134,21 +134,38 @@ Workspace.Alertas = {
     construirDropdown: () => {
         const bell = document.getElementById('ws-bell');
         if (!bell) return;
+        
         let dropdown = document.getElementById('ws-noti-dropdown');
         if (!dropdown) {
             dropdown = document.createElement('div');
             dropdown.id = 'ws-noti-dropdown';
-            dropdown.style.cssText = 'display:none; position:absolute; right:0; top:45px; width:320px; background:white; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); z-index:9999; padding:15px; color:#333; max-height:450px; overflow-y:auto; cursor:default; border: 1px solid #eee; overflow-x: hidden;';
-            bell.appendChild(dropdown);
+            
+            // 🚀 LIMPAMOS O CSS ANTIGO: 
+            // Deixamos apenas o display:none inicial para a lógica de abrir/fechar funcionar.
+            // O nosso novo CSS no index.html (Gaveta) fará todo o resto do design!
+            dropdown.style.cssText = 'display:none;'; 
+            
+            // 🚀 MUDANÇA ESTRUTURAL: 
+            // Em vez de prender o menu dentro do sininho, prendemos no 'body' 
+            // para ele poder ser uma gaveta lateral independente!
+            document.body.appendChild(dropdown);
         }
+        
         bell.addEventListener('click', (e) => {
             if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
+                // Alterna o estado. O nosso detetive (Observer) no HTML vai ver isto e deslizar a gaveta!
                 dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
                 const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                 if (perfilDropdown) perfilDropdown.style.display = 'none';
             }
         });
-        document.addEventListener('click', (e) => { if (!e.target.closest('#ws-bell')) dropdown.style.display = 'none'; });
+        
+        // Garante que clicar fora da gaveta também a fecha
+        document.addEventListener('click', (e) => { 
+            if (!e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
+                dropdown.style.display = 'none'; 
+            }
+        });
     },
 
     buscarNotificacoes: async () => {
@@ -173,7 +190,7 @@ Workspace.Alertas = {
         } catch (e) {}
     },
 
-    atualizarInterface: () => {
+   atualizarInterface: () => {
         const badge = document.getElementById('ws-noti-count');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
@@ -186,15 +203,21 @@ Workspace.Alertas = {
 
         if (dropdown) {
             if (qtd === 0) {
-                dropdown.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:30px 0;"><div style="font-size:35px; margin-bottom:10px;">📭</div><div style="font-weight:600; font-size:14px;">Tudo limpo!</div><div style="font-size:12px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
+                dropdown.innerHTML = `
+                    <div style="display:flex; justify-content:flex-end; padding-bottom:10px; border-bottom:1px solid #eee;">
+                        <button onclick="document.getElementById('ws-noti-dropdown').style.display='none'" style="background:#f0f2f5; border:none; color:#555; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" title="Fechar Painel">✖</button>
+                    </div>
+                    <div style="text-align:center; color:#94a3b8; padding:50px 0;"><div style="font-size:45px; margin-bottom:10px;">📭</div><div style="font-weight:600; font-size:16px;">Tudo limpo!</div><div style="font-size:13px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
                 dropdown.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center;">
-                        <span>Notificações (${qtd})</span>
-                        <!-- 🚀 BOTÃO DE EXCLUIR TODAS CORRIGIDO -->
-                        <button onclick="Workspace.Alertas.limparTodas()" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:12px; font-weight:600; padding:4px 8px; border-radius:4px; transition:0.2s;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'" title="Marcar todas como lidas">Excluir Todas</button>
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:15px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
+                        <span style="font-size: 16px;">🔔 Notificações (${qtd})</span>
+                        <div style="display:flex; gap: 10px; align-items: center;">
+                            <button onclick="Workspace.Alertas.limparTodas()" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; transition:0.2s;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'" title="Marcar todas como lidas">Excluir Todas</button>
+                            <button onclick="document.getElementById('ws-noti-dropdown').style.display='none'" style="background:#f0f2f5; border:none; color:#555; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" title="Fechar Painel">✖</button>
+                        </div>
                     </div>
-                    <div id="ws-lista-notificacoes" style="display:flex; flex-direction:column; gap:2px; overflow-x:hidden;">
+                    <div id="ws-lista-notificacoes" style="display:flex; flex-direction:column; gap:2px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
                         const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);

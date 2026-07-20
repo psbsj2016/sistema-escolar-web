@@ -95,9 +95,77 @@
             .ws-tarefa-col-esquerda { overflow-y: auto; max-height: 75vh; }
             .ws-tarefa-col-direita { overflow-y: auto; max-height: 75vh; border-top: none; border-left: 1px solid #eee; }
         }
+
+        /* ======================================================================== */
+        /* 🚀 DESIGN MODERNO: GAVETAS LATERAIS (SIDEBARS) E EFEITO PUSH NO FEED   */
+        /* ======================================================================== */
+        
+        /* 1. O Wrapper que envelopa o App para empurrá-lo de forma fluida */
+        #ws-body-wrapper {
+            position: relative; left: 0; width: 100%; min-height: 100vh;
+            transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), padding 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background-color: #f0f2f5;
+        }
+
+        /* Oculta o scroll lateral da página e ativa a película escura */
+        body.menu-left-open, body.menu-right-open { overflow: hidden !important; }
+        
+        #ws-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: rgba(0,0,0,0.5); z-index: 99998; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease; backdrop-filter: blur(2px);
+        }
+        body.menu-left-open #ws-overlay, body.menu-right-open #ws-overlay { opacity: 1; pointer-events: auto; }
+
+        /* 2. ESTILO MENU ESQUERDO (Hambúrguer) */
+        #ws-main-menu-dropdown {
+            position: fixed !important; top: 0 !important; left: 0 !important;
+            height: 100vh !important; width: 300px !important;
+            border-radius: 0 !important; border-right: 1px solid #eee !important;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.1) !important; z-index: 100000 !important;
+            margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column; 
+            background: #ffffff; transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            overflow-y: auto;
+        }
+        body.menu-left-open #ws-main-menu-dropdown { transform: translateX(0); }
+
+        /* 3. ESTILO MENU DIREITO (Sininho) */
+        #ws-noti-dropdown {
+            position: fixed !important; top: 0 !important; right: 0 !important;
+            height: 100vh !important; max-height: 100vh !important; width: 360px !important;
+            border-radius: 0 !important; border-left: 1px solid #eee !important;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.1) !important; z-index: 100000 !important;
+            margin: 0 !important; padding: 0 !important; display: flex !important; flex-direction: column; 
+            background: #ffffff !important; transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        }
+        body.menu-right-open #ws-noti-dropdown { transform: translateX(0); }
+        #ws-lista-notificacoes { flex: 1; overflow-y: auto; padding: 15px; } 
+
+        /* 4. RESPONSIVIDADE (Desktop vs Mobile) */
+        @media screen and (min-width: 901px) {
+            body.menu-left-open #ws-body-wrapper { padding-left: 300px; }
+            body.menu-right-open #ws-body-wrapper { padding-right: 360px; }
+            #ws-overlay { display: none !important; }
+        }
+        
+        @media screen and (max-width: 900px) {
+            body.menu-left-open #ws-body-wrapper { left: 300px; }
+            body.menu-right-open #ws-body-wrapper { left: -360px; }
+            #ws-main-menu-dropdown { width: 85vw !important; }
+            #ws-noti-dropdown { width: 90vw !important; }
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- 🚀 OVERLAY DE TELA ESCURA -->
+    <div id="ws-overlay"></div>
+
+    <!-- 🚀 CÁPSULA MÁGICA: Envolve o site para poder empurrá-lo -->
+    <div id="ws-body-wrapper">
 
     <div id="ws-login-screen" style="display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 20px;">
         <div class="ws-card" style="width: 100%; max-width: 400px; text-align: center; padding: 40px 30px;">
@@ -444,6 +512,8 @@
         </div>
     </section>
 
+    </div> <!-- FIM DO WRAPPER DE CORPO (CÁPSULA) -->
+
     <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">👤 Meu Perfil</h3></div>
@@ -565,6 +635,46 @@
             </div>
         </div>
     </div>
+
+    <!-- 🚀 MOTOR DE SINCRONIZAÇÃO DAS GAVETAS LATERAIS (SIDEBARS) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const syncMenuClasses = () => {
+                const menuLeft = document.getElementById('ws-main-menu-dropdown');
+                const menuRight = document.getElementById('ws-noti-dropdown');
+                const isLeftOpen = menuLeft && menuLeft.style.display === 'block';
+                const isRightOpen = menuRight && menuRight.style.display === 'block';
+                
+                if (isLeftOpen) document.body.classList.add('menu-left-open');
+                else document.body.classList.remove('menu-left-open');
+                
+                if (isRightOpen) document.body.classList.add('menu-right-open');
+                else document.body.classList.remove('menu-right-open');
+            };
+
+            const observer = new MutationObserver(syncMenuClasses);
+
+            const menuLeft = document.getElementById('ws-main-menu-dropdown');
+            if (menuLeft) observer.observe(menuLeft, { attributes: true, attributeFilter: ['style'] });
+
+            const bodyObserver = new MutationObserver(() => {
+                const menuRight = document.getElementById('ws-noti-dropdown');
+                if (menuRight && !menuRight.dataset.observado) {
+                    menuRight.dataset.observado = 'true';
+                    observer.observe(menuRight, { attributes: true, attributeFilter: ['style'] });
+                }
+            });
+            bodyObserver.observe(document.body, { childList: true, subtree: true });
+            
+            // Clicar no fundo escuro (Overlay) fecha os menus no telemóvel
+            document.getElementById('ws-overlay').addEventListener('click', () => {
+                if (menuLeft) menuLeft.style.display = 'none';
+                const menuRight = document.getElementById('ws-noti-dropdown');
+                if (menuRight) menuRight.style.display = 'none';
+                syncMenuClasses();
+            });
+        });
+    </script>
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
     <script type="module" src="./js/workspace.js"></script>
