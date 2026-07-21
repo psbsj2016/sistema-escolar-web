@@ -42,10 +42,11 @@ Workspace.Feed = {
         try {
             const postAtualizado = await Workspace.api(`/workspace/posts/${postId}`, 'GET');
             if (postAtualizado && !postAtualizado.error) {
-                const indexCache = Workspace.Feed.postsCache.findIndex(p => p.id === postId);
+                // 🚀 Correção de Segurança: Uso do String() para garantir a sincronia
+                const indexCache = Workspace.Feed.postsCache.findIndex(p => String(p.id) === String(postId));
                 if(indexCache !== -1) Workspace.Feed.postsCache[indexCache] = postAtualizado;
 
-                const indexTodos = Workspace.Feed.todosOsPosts.findIndex(p => p.id === postId);
+                const indexTodos = Workspace.Feed.todosOsPosts.findIndex(p => String(p.id) === String(postId));
                 if(indexTodos !== -1) Workspace.Feed.todosOsPosts[indexTodos] = postAtualizado;
 
                 const meuId = Workspace.usuario.id;
@@ -89,7 +90,6 @@ Workspace.Feed = {
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-    // 🚀 HTML DO COMENTÁRIO: Agora com botão de "Curtir" e Avatar Clicável
     gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
@@ -416,7 +416,7 @@ Workspace.Feed = {
         const postsAtuais = await Workspace.api(`/workspace/posts?alunoRefId=${refId}`, 'GET');
         if (postsAtuais && Workspace.Feed.todosOsPosts.length > 0) {
             const ultimoPostIdConhecido = Workspace.Feed.todosOsPosts[0].id;
-            const qtdNovos = postsAtuais.findIndex(p => p.id === ultimoPostIdConhecido);
+            const qtdNovos = postsAtuais.findIndex(p => String(p.id) === String(ultimoPostIdConhecido));
             if (qtdNovos > 0) {
                 let pill = document.getElementById('ws-new-posts-pill');
                 if (!pill) {
@@ -525,10 +525,10 @@ Workspace.Feed = {
 
     limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
 
-    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS
+    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS (Com String Seguro)
     reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if (!post) return;
 
         const likesArr = Array.isArray(post.likes) ? post.likes : [];
@@ -599,16 +599,25 @@ Workspace.Feed = {
         } catch (e) { console.error(e); }
     },
 
-    // 🚀 REMOÇÃO INSTANTÂNEA DE POSTS
+    // 🚀 REMOÇÃO INSTANTÂNEA E COLAPSO FÍSICO DO POST
     apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
             const el = document.getElementById(`post-${postId}`);
             if (el) {
-                el.style.transform = 'scale(0.95)'; el.style.opacity = '0'; el.style.transition = 'all 0.2s ease';
-                setTimeout(() => el.remove(), 200);
+                el.style.transition = 'all 0.3s ease';
+                el.style.transform = 'scale(0.8)';
+                el.style.opacity = '0';
+                el.style.height = '0px';
+                el.style.margin = '0px';
+                el.style.padding = '0px';
+                el.style.overflow = 'hidden';
+                setTimeout(() => el.remove(), 300);
             }
-            Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => p.id !== postId);
-            Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => p.id !== postId);
+            
+            // 🚀 Uso do String() para garantir a remoção absoluta da memória
+            Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== String(postId));
+            Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== String(postId));
+            
             if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada!", "success");
 
             try {
@@ -619,17 +628,33 @@ Workspace.Feed = {
 
     apagarComentario: (postId, comentarioId) => {
         Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja eliminar este comentário definitivamente?", async () => {
+            const el = document.getElementById(`comentario-${comentarioId}`);
+            if (el) {
+                el.style.transition = 'all 0.2s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.9)';
+                el.style.height = '0px';
+                el.style.margin = '0px';
+                el.style.padding = '0px';
+                el.style.overflow = 'hidden';
+                setTimeout(() => el.remove(), 200);
+            }
+
+            const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+            if (post && post.comentarios) {
+                post.comentarios = post.comentarios.filter(c => String(c.id) !== String(comentarioId));
+                const countComment = document.getElementById(`count-comment-${postId}`);
+                if(countComment) countComment.innerText = post.comentarios.length;
+            }
+
             try {
-                const res = await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-                if (res && res.success) {
-                    await Workspace.Feed.sincronizarPostSilencioso(postId);
-                }
+                await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
             } catch (e) {}
         });
     },
 
     editarPost: (postId) => {
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if(!post) return;
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(!containerText) return;
@@ -647,7 +672,7 @@ Workspace.Feed = {
     },
 
     cancelarEdicaoPost: (postId) => {
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if(!post) return;
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(containerText) {
@@ -667,7 +692,7 @@ Workspace.Feed = {
         try {
             const res = await Workspace.api(`/workspace/posts/${postId}`, 'PUT', { texto: novoTexto });
             if(res && res.success) {
-                const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+                const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
                 if(post) post.texto = novoTexto;
                 Workspace.Feed.cancelarEdicaoPost(postId);
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
@@ -678,9 +703,9 @@ Workspace.Feed = {
     },
 
     editarComentarioInline: (postId, comentarioId) => {
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if(!post || !post.comentarios) return;
-        const c = post.comentarios.find(com => com.id === comentarioId);
+        const c = post.comentarios.find(com => String(com.id) === String(comentarioId));
         if(!c) return;
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(!containerTexto) return;
@@ -699,9 +724,9 @@ Workspace.Feed = {
     },
 
     cancelarEdicaoComentario: (postId, comentarioId) => {
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if(!post || !post.comentarios) return;
-        const c = post.comentarios.find(com => com.id === comentarioId);
+        const c = post.comentarios.find(com => String(com.id) === String(comentarioId));
         if(!c) return;
         const containerTexto = document.getElementById(`texto-comentario-${comentarioId}`);
         if(containerTexto) containerTexto.innerHTML = Workspace.Feed.limparTexto(c.texto);
@@ -950,12 +975,12 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
-    // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Optimistic UI)
+    // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Optimistic UI com proteção String)
     reagirComentario: async (postId, comentarioId, tipo) => {
         const meuId = Workspace.usuario.id;
-        const post = Workspace.Feed.postsCache.find(p => p.id === postId);
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if (!post || !post.comentarios) return;
-        const c = post.comentarios.find(com => com.id === comentarioId);
+        const c = post.comentarios.find(com => String(com.id) === String(comentarioId));
         if (!c) return;
 
         // Atualiza a Memória
