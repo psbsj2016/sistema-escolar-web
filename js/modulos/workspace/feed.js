@@ -599,27 +599,22 @@ Workspace.Feed = {
         } catch (e) { console.error(e); }
     },
 
-    // 🚀 REMOÇÃO INSTANTÂNEA E COLAPSO FÍSICO DO POST
-    apagarPost: (postId) => {
+apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
+            
+            // 🚀 1. REMOÇÃO FULMINANTE: Some do ecrã e impede interações na hora!
             const el = document.getElementById(`post-${postId}`);
             if (el) {
-                el.style.transition = 'all 0.3s ease';
-                el.style.transform = 'scale(0.8)';
-                el.style.opacity = '0';
-                el.style.height = '0px';
-                el.style.margin = '0px';
-                el.style.padding = '0px';
-                el.style.overflow = 'hidden';
-                setTimeout(() => el.remove(), 300);
+                el.remove(); // Remove o HTML imediatamente, num piscar de olhos!
             }
             
-            // 🚀 Uso do String() para garantir a remoção absoluta da memória
+            // 🚀 2. LIMPEZA DE MEMÓRIA SEGURA: Usamos String() para garantir que os IDs combinam
             Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== String(postId));
             Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== String(postId));
             
             if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada!", "success");
 
+            // ☁️ 3. Ação invisível em background na API
             try {
                 await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
             } catch (e) { console.error("Falha ao apagar na nuvem"); }
