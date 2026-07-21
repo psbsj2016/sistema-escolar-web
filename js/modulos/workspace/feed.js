@@ -11,7 +11,7 @@ Workspace.Feed = {
     listenerFechamentoConfigurado: false,
     filtroAtivo: 'todos', 
 
-    init: async () => {
+  init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
@@ -19,12 +19,47 @@ Workspace.Feed = {
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
         
+        // 🚀 NOVA LINHA: Liga os ouvidos do Feed ao túnel SSE do servidor
+        Workspace.Feed.conectarTempoReal();
+        
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.ws-menu-ancora')) Workspace.Feed.fecharMenus();
             });
             Workspace.Feed.listenerFechamentoConfigurado = true;
         }
+    },
+
+    // 🚀 O VIGILANTE EM TEMPO REAL (SSE): Ouve os alertas do servidor
+    conectarTempoReal: () => {
+        const escolaId = Workspace.usuario ? Workspace.usuario.escolaId : 'DEFAULT';
+        
+        // Abre um recetor para ouvir o túnel de tempo real
+        const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+        
+        evtSource.onmessage = (event) => {
+            try {
+                const dados = JSON.parse(event.data);
+                
+                if (dados.type === 'POST_APAGADO') {
+                    // 💀 ALERTA RECEBIDO: Destruir o post no ecrã imediatamente!
+                    const idDoPost = String(dados.postId);
+                    const elementoHTML = document.getElementById(`post-${idDoPost}`);
+                    
+                    // Se o post estiver no ecrã deste utilizador, some de forma abrupta!
+                    if (elementoHTML) {
+                        elementoHTML.remove(); 
+                        console.log(`🚀 Post ${idDoPost} evaporado em tempo real!`);
+                    }
+                    
+                    // Limpa da memória local para garantir que não regressa
+                    Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== idDoPost);
+                    Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== idDoPost);
+                }
+            } catch (err) {
+                console.error("Erro ao processar evento de tempo real no Feed", err);
+            }
+        };
     },
 
     iniciarRelogioTempos: () => {
