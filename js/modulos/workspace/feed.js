@@ -491,14 +491,13 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
-// 📖 VISUALIZADOR DE DOCUMENTOS BLINDADO (COM FUGA GARANTIDA E ZOOM)
+// 📖 VISUALIZADOR DE DOCUMENTOS (QUALIDADE VETORIAL, PINÇA E ROTA DE FUGA)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
         const overlay = document.createElement('div');
         overlay.id = id;
-        // 🚀 Z-INDEX MÁXIMO: Garante que fica por cima de TUDO no seu site!
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; z-index:2147483647; opacity:0; transition: opacity 0.3s ease-in-out; display:flex; flex-direction:column; align-items:center; justify-content:center;";
         
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
@@ -510,46 +509,97 @@ Workspace.Feed = {
         if (ehOffice) iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`; 
         else if (ehPDF && isMobile) iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`;
         
-        // Vamos usar um nome seguro. Se a função limparTexto não existir, usamos o nome original.
         const nomeSeguro = (Workspace.Feed && Workspace.Feed.limparTexto) ? Workspace.Feed.limparTexto(nome) : nome;
 
         overlay.innerHTML = `
-            <!-- 1. FUNDO ESCURO CLICÁVEL (Ao clicar aqui, o visualizador fecha na hora) -->
+            <!-- 1. FUNDO ESCURO CLICÁVEL (Para fechar facilmente) -->
             <div onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); cursor:pointer;"></div>
 
-            <!-- 2. CABEÇALHO FLUTUANTE (À prova de falhas) -->
+            <!-- 2. CABEÇALHO FLUTUANTE BLINDADO -->
             <div style="position:absolute; top:0; left:0; width:100%; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:10; background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); pointer-events:none;">
                 
                 <div style="color:white; font-weight:bold; font-size:16px; pointer-events:auto; text-shadow:1px 1px 3px rgba(0,0,0,0.8);">
                     📄 ${nomeSeguro}
                 </div>
                 
-                <!-- PAINEL DE CONTROLOS (Zoom, Download e Fechar) -->
+                <!-- PAINEL DE CONTROLOS: Botões de Zoom no PC e Download -->
                 <div style="display:flex; gap:15px; align-items:center; pointer-events:auto; background:rgba(0,0,0,0.6); padding:8px 20px; border-radius:30px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
-                    <!-- Controlos de Zoom -->
-                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) - 0.25; if(z < 0.5) z = 0.5; w.style.transform = 'scale('+z+')'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Diminuir Zoom">🔍-</button>
-                    <span style="color:rgba(255,255,255,0.3);">|</span>
-                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) + 0.25; if(z > 3) z = 3; w.style.transform = 'scale('+z+')'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Aumentar Zoom">🔍+</button>
+                    
+                    <!-- Lupa - Zoom Out (Usa Largura/Altura para manter Qualidade MÁXIMA) -->
+                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) - 0.25; if(z < 1) z = 1; w.style.width = (z * 100) + '%'; w.style.height = (z * 100) + '%'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Diminuir Zoom">🔍-</button>
                     <span style="color:rgba(255,255,255,0.3);">|</span>
                     
-                    <!-- Botão de Download Original -->
+                    <!-- Lupa - Zoom In -->
+                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) + 0.25; if(z > 4) z = 4; w.style.width = (z * 100) + '%'; w.style.height = (z * 100) + '%'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Aumentar Zoom">🔍+</button>
+                    <span style="color:rgba(255,255,255,0.3);">|</span>
+                    
+                    <!-- Download -->
                     <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:20px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Original">📥</a>
                     
-                    <!-- Botão de FECHAR Gigante e Vermelho -->
+                    <!-- Fechar -->
                     <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="background:#e74c3c; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; width:32px; height:32px; border-radius:50%; margin-left:10px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(231,76,60,0.5); transition:0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" title="Sair do Visualizador">✕</button>
                 </div>
             </div>
 
-            <!-- 3. ÁREA DO DOCUMENTO (Que permite receber o Zoom) -->
-            <div style="position:relative; z-index:5; width:95vw; max-width:1200px; height:85vh; margin-top:60px; overflow:auto; border-radius:12px; background:transparent;">
-                <div id="ws-iframe-wrapper" data-zoom="1" style="width:100%; height:100%; background:white; transform-origin:top center; transition:transform 0.25s ease-out; border-radius:12px; box-shadow:0 15px 50px rgba(0,0,0,0.6); position:relative;">
-                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; font-weight:bold;">A carregar documento seguro... ⏳</div>' : ''}
+            <!-- 3. ÁREA DO DOCUMENTO COM SCROLL LIVRE -->
+            <div id="ws-doc-scroll-container" style="position:relative; z-index:5; width:95vw; max-width:1200px; height:85vh; margin-top:60px; overflow:auto; border-radius:12px; background:transparent;">
+                
+                <!-- 🚀 A CAIXA DO IFRAME: Em vez de usar scale, a largura e altura mudam fisicamente para forçar renderização nítida -->
+                <div id="ws-iframe-wrapper" data-zoom="1" style="width:100%; height:100%; background:white; border-radius:12px; box-shadow:0 15px 50px rgba(0,0,0,0.6); position:relative; transition: width 0.1s ease-out, height 0.1s ease-out;">
+                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; font-weight:bold;">A carregar documento... ⏳</div>' : ''}
                     <iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; position:relative; z-index:2; border-radius:12px; background:white;"></iframe>
                 </div>
             </div>
         `;
         
         document.body.appendChild(overlay);
+
+        // ========================================================================
+        // 🚀 O MOTOR DE PINÇA (Pinch-to-Zoom) NATIVO PARA MÓVEIS (SEM PERDA DE QUALIDADE)
+        // ========================================================================
+        const scrollContainer = document.getElementById('ws-doc-scroll-container');
+        const iframeWrapper = document.getElementById('ws-iframe-wrapper');
+        
+        let touchStartDist = 0;
+        let initialZ = 1;
+
+        if (scrollContainer && iframeWrapper) {
+            scrollContainer.addEventListener('touchstart', (e) => {
+                // Se detetar exatamente 2 dedos a tocar no ecrã
+                if (e.touches.length === 2) {
+                    // Calcula a distância inicial em pixels entre o dedo indicador e o polegar
+                    touchStartDist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX, 
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    initialZ = parseFloat(iframeWrapper.dataset.zoom || 1);
+                }
+            }, { passive: false });
+
+            scrollContainer.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2) {
+                    e.preventDefault(); // Impede o navegador de dar zoom na página inteira
+                    
+                    // Calcula a nova distância conforme o utilizador arrasta os dedos
+                    const dist = Math.hypot(
+                        e.touches[0].pageX - e.touches[1].pageX, 
+                        e.touches[0].pageY - e.touches[1].pageY
+                    );
+                    
+                    // Converte o movimento num fator de Zoom
+                    let newZ = initialZ * (dist / touchStartDist);
+                    
+                    if (newZ < 1) newZ = 1; // Nunca deixa ficar mais pequeno que o ecrã normal
+                    if (newZ > 4) newZ = 4; // Limita a um zoom máximo de 400%
+                    
+                    // Atualiza a largura/altura físicas do Iframe para manter o texto 100% nítido
+                    iframeWrapper.style.width = (newZ * 100) + '%';
+                    iframeWrapper.style.height = (newZ * 100) + '%';
+                    iframeWrapper.dataset.zoom = newZ;
+                }
+            }, { passive: false });
+        }
+
         requestAnimationFrame(() => overlay.style.opacity = '1');
     },
 
