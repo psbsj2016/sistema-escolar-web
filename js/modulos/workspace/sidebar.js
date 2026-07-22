@@ -171,14 +171,15 @@ Workspace.Sidebar = {
         }
     },
 
-    verFotoChat: () => {
+verFotoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta;
         if(info && info.foto) {
-            if(Workspace.Feed && Workspace.Feed.abrirImagemInteira) {
-                Workspace.Feed.abrirImagemInteira(info.foto);
+            // 🚀 Redireciona a visualização para a nossa nova janela interna elegante do chat!
+            if(Workspace.Sidebar.abrirVisualizadorInterno) {
+                Workspace.Sidebar.abrirVisualizadorInterno(info.foto, 'imagem', info.nome);
             }
         } else {
-            Workspace.mostrarAviso("Este grupo de estudos ainda não possui uma foto de perfil.", "info");
+            Workspace.mostrarAviso("Esta grupo ainda não possui uma foto de perfil.", "info");
         }
     },
 
@@ -189,13 +190,22 @@ Workspace.Sidebar = {
         const idModal = 'ws-modal-edit-chat';
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
+        // 🚀 O SEGREDO: Capturamos a janela de bate-papo para ser a nossa "âncora"
+        const chatBox = document.getElementById('ws-chat-modal');
+        if(!chatBox) return;
+
+        if (window.getComputedStyle(chatBox).position === 'static') {
+            chatBox.style.position = 'relative';
+        }
+
         const modal = document.createElement('div');
         modal.id = idModal;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.2s;";
+        // 🚀 position: absolute garante que ele fica preso DENTRO do Bate-papo e NUNCA por trás!
+        modal.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.2s; border-radius:inherit; overflow:hidden;";
         
         modal.innerHTML = `
-            <div class="ws-card" style="width: 90%; max-width: 400px; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative;">
-                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#333;">×</button>
+            <div class="ws-card" style="width: 90%; max-width: 400px; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#333; transition: 0.2s;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#eee'; this.style.color='#333'">×</button>
                 <h3 style="margin: 0 0 15px 0; color: #2c3e50; text-align: center;">✏️ Configurações do Grupo</h3>
                 
                 <div style="text-align: center; margin-bottom: 25px;">
@@ -206,18 +216,20 @@ Workspace.Sidebar = {
                     </div>
                     <input type="file" id="ws-chat-nova-foto" accept="image/*" style="display:none;" onchange="Workspace.Sidebar.previewFotoChat(event)">
                     <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Toque no ícone para alterar a foto</div>
-                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada e centralizada para perfil! 🚀</div>
+                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada para perfil! 🚀</div>
                 </div>
 
                 <label style="font-size: 12px; font-weight: bold; color: #555;">Nome da Turma / Grupo</label>
-                <input type="text" id="ws-chat-novo-nome" class="ws-post-input" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="padding: 12px; margin-bottom: 20px; font-weight: bold; color: #333;">
+                <input type="text" id="ws-chat-novo-nome" class="ws-post-input" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="padding: 12px; margin-bottom: 20px; font-weight: bold; color: #333; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px;">
 
                 <div style="display:flex; gap:10px;">
-                    <button class="ws-btn" id="ws-btn-salvar-chat" style="background:#27ae60; flex:1; width:100%; font-size: 14px; padding: 12px;" onclick="Workspace.Sidebar.salvarEdicaoChat()">💾 Guardar Alterações</button>
+                    <button class="ws-btn" id="ws-btn-salvar-chat" style="background:#27ae60; color:white; border:none; flex:1; width:100%; font-size: 14px; padding: 12px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#219653'" onmouseout="this.style.background='#27ae60'" onclick="Workspace.Sidebar.salvarEdicaoChat()">💾 Guardar Alterações</button>
                 </div>
             </div>
         `;
-        document.body.appendChild(modal);
+        
+        // 🚀 ANEXAMOS DIRETAMENTE NO BATE-PAPO
+        chatBox.appendChild(modal);
 
         requestAnimationFrame(() => {
             modal.style.opacity = '1';
@@ -1231,7 +1243,7 @@ Workspace.Sidebar = {
         }
     },
 
-    mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
+   mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
         const id = 'ws-custom-confirm-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
 
@@ -1250,7 +1262,17 @@ Workspace.Sidebar = {
                 </div>
             </div>
         `;
-        document.body.appendChild(overlay);
+
+        // 🚀 O SEGREDO DO CONFINAMENTO: Se o chat estiver aberto, prendemos a confirmação dentro dele!
+        const chatBox = document.getElementById('ws-chat-modal');
+        if (chatBox && chatBox.style.display !== 'none') {
+            overlay.style.position = 'absolute';
+            overlay.style.borderRadius = 'inherit';
+            chatBox.appendChild(overlay);
+        } else {
+            // Caso seja chamada a partir do Feed/Tarefas, mantém no ecrã total
+            document.body.appendChild(overlay);
+        }
 
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
