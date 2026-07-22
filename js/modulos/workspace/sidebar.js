@@ -717,7 +717,7 @@ Workspace.Sidebar = {
             return;
         }
 
-        Workspace.mostrarAviso("A preparar o ficheiro e a enviar para a turma... ⏳", "info", 5000);
+        Workspace.mostrarAviso("Carregando o arquivo... ⏳", "info", 5000);
         
         try {
             const formData = new FormData();
