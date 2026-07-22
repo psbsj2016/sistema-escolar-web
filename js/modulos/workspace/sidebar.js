@@ -737,25 +737,22 @@ Workspace.Sidebar = {
         }
     },
  
-    // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO)
-    apagarMensagemIndividual: (mensagemId) => {
-        Workspace.Sidebar.mostrarConfirmacao(
-            "Apagar Mensagem?", 
-            "Tem a certeza de que deseja eliminar esta mensagem para todos os membros do grupo?", 
-            async () => {
-                // 1. Apaga do próprio ecrã instantaneamente
-                const elMsg = document.getElementById(`msg-${mensagemId}`);
-                if (elMsg) elMsg.remove();
-                Workspace.Sidebar.mensagensRenderizadas.delete(mensagemId);
+  // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO E SEM CONFIRMAÇÃO)
+    apagarMensagemIndividual: async (mensagemId) => {
+        // 1. Esconde imediatamente o menu flutuante (para não ficar preso no ecrã)
+        document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
 
-                // 2. Avisa a nuvem (background)
-                try {
-                    await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
-                } catch(e) {
-                    console.error("Falha ao apagar mensagem na nuvem.");
-                }
-            }
-        );
+        // 2. Apaga do próprio ecrã instantaneamente, sem perguntar!
+        const elMsg = document.getElementById(`msg-${mensagemId}`);
+        if (elMsg) elMsg.remove();
+        Workspace.Sidebar.mensagensRenderizadas.delete(mensagemId);
+
+        // 3. Avisa a nuvem (background) de forma silenciosa
+        try {
+            await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
+        } catch(e) {
+            console.error("Falha ao apagar mensagem na nuvem.");
+        }
     },
 
     // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT)
