@@ -565,9 +565,11 @@
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">🙍 Meu Perfil</h3></div>
             <div style="padding: 30px 20px; text-align: center;">
-                <div style="position: relative; display: inline-block; margin: 0 auto;">
-                    <div style="cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
-                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+               <div style="position: relative; display: inline-block; margin: 0 auto;">
+                    <!-- 🚀 BLINDAGEM CSS: Fundo branco garantido e impedimento de esmagamento (flex-shrink: 0) -->
+                    <div style="cursor: pointer; border-radius: 50%; overflow: hidden; border: 3px solid #3498db; width: 100px; height: 100px; min-width: 100px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
+                        <!-- 🚀 ARMADURA DA IMAGEM: object-fit, object-position centralizado e aspect-ratio 1/1 -->
+                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; object-position: center; aspect-ratio: 1/1; display: none;">
                         <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
                     </div>
                     <div style="position: absolute; bottom: 0; right: -5px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Alterar Foto">📷</div>

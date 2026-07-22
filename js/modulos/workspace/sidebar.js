@@ -263,14 +263,10 @@ verFotoChat: () => {
         
         // 🚀 O SEGREDO VISUAL: Usamos flexbox, limites de altura (max-height: 90%) e scroll automático (overflow-y)
         modal.innerHTML = `
-            <div style="width: 90%; max-width: 380px; max-height: 90%; overflow-y: auto; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; scrollbar-width: none;">
-                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#f0f2f5; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#555; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#f0f2f5'; this.style.color='#555'">✕</button>
-                
-                <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center; font-size: 18px; width: 100%;">Configurações do Grupo</h3>
-                
-                <div style="text-align: center; margin-bottom: 20px; width: 100%;">
-                    <div style="width: 90px; height: 90px; background: #f0f2f5; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
-                        <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; display: ${info.foto ? 'block' : 'none'};">
+            <div style="text-align: center; margin-bottom: 20px; width: 100%;">
+                    <!-- 🚀 BLINDAGEM CSS: Preenchimento central e aspect ratio 1/1 para grupos -->
+                    <div style="width: 90px; height: 90px; min-width: 90px; flex-shrink: 0; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;" onclick="document.getElementById('ws-chat-nova-foto').click()">
+                        <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; object-position:center; aspect-ratio:1/1; display: ${info.foto ? 'block' : 'none'};">
                         <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:35px; color:#aaa;">👥</div>
                         <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); color:white; font-size:20px; opacity:0; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📷</div>
                     </div>
