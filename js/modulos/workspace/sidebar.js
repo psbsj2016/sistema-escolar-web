@@ -996,6 +996,10 @@ verFotoChat: () => {
         barra.style.display = 'flex';
     },
 
+    // ============================================================================
+    // 🚀 MOTORES DE DESTRUIÇÃO DE MENSAGENS (COM OTIMIZAÇÃO VISUAL FULMINANTE)
+    // ============================================================================
+    
     apagarMensagensEmMassa: async () => {
         const ids = Array.from(Workspace.Sidebar.mensagensSelecionadas);
         if (ids.length === 0) return;
@@ -1009,65 +1013,70 @@ verFotoChat: () => {
 
         Workspace.Sidebar.cancelarSelecao(); // Fecha a barra superior
 
+        // 🚀 O SEGREDO: Se a sala ficou vazia, limpa os separadores de data que sobraram!
+        const container = document.getElementById('ws-chat-mensagens');
+        if (container && container.querySelectorAll('div[id^="msg-"]').length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px; animation: fadeIn 0.4s;">A sala está limpa.<br>Diga olá para a turma! 👋</div>';
+            Workspace.Sidebar.ultimaDataRenderizada = null;
+        }
+
         // 2. Avisa a nuvem silenciosamente
         try {
-            await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagens/massa`, 'DELETE', { ids: ids });
+            // Removemos o 'await' para não congelar o ecrã caso a internet falhe
+            Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagens/massa`, 'DELETE', { ids: ids });
         } catch(e) {
             console.error("Falha ao apagar em massa.");
         }
     },
 
-  // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO E SEM CONFIRMAÇÃO)
     apagarMensagemIndividual: async (mensagemId) => {
-        // 1. Esconde imediatamente o menu flutuante (para não ficar preso no ecrã)
+        // 1. Esconde imediatamente o menu flutuante
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
 
-        // 2. Apaga do próprio ecrã instantaneamente, sem perguntar!
+        // 2. Apaga do próprio ecrã instantaneamente
         const elMsg = document.getElementById(`msg-${mensagemId}`);
         if (elMsg) elMsg.remove();
         Workspace.Sidebar.mensagensRenderizadas.delete(mensagemId);
 
         // 3. Avisa a nuvem (background) de forma silenciosa
         try {
-            await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
+            Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
         } catch(e) {
             console.error("Falha ao apagar mensagem na nuvem.");
         }
     },
 
-   // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT DE FORMA FULMINANTE)
     apagarTodoOChat: () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         
         Workspace.Sidebar.mostrarConfirmacao(
             "Apagar Todo o Chat?", 
             "Tem a certeza de que deseja eliminar DEFINITIVAMENTE todo o histórico de mensagens desta turma? Esta ação não tem retorno.", 
-            async () => {
+            () => { // 🚀 Removemos o "async" para que a destruição seja imediata e prioritária
                 
-                // 🚀 1. DESTRUIÇÃO VISUAL INSTANTÂNEA (Optimistic UI)
-                // Muda o ecrã antes mesmo de o servidor responder!
+                // 🚀 1. DESTRUIÇÃO ABSOLUTA NO ECRÃ (Sem Esperar)
                 const container = document.getElementById('ws-chat-mensagens');
                 if (container) {
                     container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px; animation: fadeIn 0.4s;">O histórico foi limpo.<br>Diga olá para a turma! 👋</div>';
                 }
                 
                 // 🚀 2. LIMPEZA TOTAL DA MEMÓRIA
-                // Esvazia os cofres para garantir que nada regressa como "fantasma"
                 Workspace.Sidebar.mensagensRenderizadas.clear();
                 Workspace.Sidebar.textosMensagens = {};
                 Workspace.Sidebar.ultimaDataRenderizada = null;
 
-                // 🚀 3. PEDIDO SILENCIOSO PARA A NUVEM (Em background)
-                try {
-                    const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/limpar`, 'DELETE');
-                    if (res && res.success) {
-                        Workspace.mostrarAviso("Histórico da turma apagado da base de dados.", "success");
-                    } else {
-                        Workspace.mostrarAviso("O chat foi limpo do ecrã, mas houve um atraso na nuvem.", "warning");
-                    }
-                } catch(e) {
-                    Workspace.mostrarAviso("Falha de comunicação silenciosa com o servidor.", "error");
-                }
+                // 🚀 3. PEDIDO SILENCIOSO PARA A NUVEM (Fire and Forget)
+                Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/limpar`, 'DELETE')
+                    .then(res => {
+                        if (res && res.success && window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("Histórico da turma apagado da base de dados.", "success");
+                        }
+                    })
+                    .catch(() => {
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("O chat foi limpo do ecrã, mas houve um atraso na nuvem.", "warning");
+                        }
+                    });
             }
         );
     },
