@@ -502,7 +502,7 @@ Workspace.Sidebar = {
         if (indicator) indicator.style.display = 'none';
     },
 
- // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
+// 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
@@ -516,17 +516,17 @@ Workspace.Sidebar = {
 
         const avatarHtml = `<div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">${avatarChat}</div>`;
 
-        // 📎 Verifica e desenha o Anexo
+        // 📎 Verifica e desenha o Anexo (AGORA COM VISUALIZADOR INTERNO)
         let anexoHtml = '';
         if (m.anexoUrl) {
             if (m.anexoTipo === 'image') {
-                anexoHtml = `<img src="${m.anexoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);" onclick="if(window.Workspace && Workspace.Feed && Workspace.Feed.abrirImagemInteira) Workspace.Feed.abrirImagemInteira('${m.anexoUrl}')">`;
+                anexoHtml = `<img src="${m.anexoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; object-fit: cover; border: 1px solid rgba(0,0,0,0.1);" onclick="Workspace.Sidebar.abrirVisualizadorInterno('${m.anexoUrl}', 'imagem', 'Imagem Partilhada')">`;
             } else if (m.anexoTipo === 'video') {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
                 const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
                 anexoHtml = `
-                <div onclick="Workspace.Sidebar.abrirVisualizadorDocumento('${m.anexoUrl}', '${nomeSeguro}')" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; cursor: pointer; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
+                <div onclick="Workspace.Sidebar.abrirVisualizadorInterno('${m.anexoUrl}', 'documento', '${nomeSeguro}')" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; cursor: pointer; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
                     <span style="font-size: 24px;">📄</span>
                     <span style="font-size: 13px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;" title="${nomeSeguro}">${nomeSeguro}</span>
                 </div>`;
@@ -536,7 +536,7 @@ Workspace.Sidebar = {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 O MENU FLUTUANTE INVISÍVEL (Agora com a opção "Selecionar")
+        // 🚀 O MENU FLUTUANTE INVISÍVEL
         const menuOpcoes = podeApagar ? `
             <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: absolute; top: 10px; ${ehMinha ? 'right: 100%; margin-right: 8px;' : 'left: 100%; margin-left: 8px;'} background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 4px; z-index: 100; border: 1px solid #eee; flex-direction: column; gap: 2px;">
                 <button onclick="event.stopPropagation(); Workspace.Sidebar.ativarModoSelecao('${m.id}')" style="background: transparent; border: none; color: #2980b9; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">☑️</span> Selecionar</button>
@@ -557,79 +557,75 @@ Workspace.Sidebar = {
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
     },
 
-     // ============================================================================
-    // 📖 VISUALIZADOR UNIVERSAL DE DOCUMENTOS (MODAL AVANÇADO)
     // ============================================================================
-    abrirVisualizadorDocumento: (url, nome) => {
-        const idModal = 'ws-modal-visualizador-doc';
-        // Se a janela já existir, limpa-a para criar um ambiente novo
+    // 📖 VISUALIZADOR IN-CHAT (ABRE PRESO DENTRO DO BATE-PAPO)
+    // ============================================================================
+    abrirVisualizadorInterno: (url, tipo, nome = 'Anexo') => {
+        const idModal = 'ws-chat-inner-viewer';
+        const chatBox = document.getElementById('ws-chat-modal');
+        if(!chatBox) return;
+
+        // Limpa o antigo se o utilizador clicar noutro documento rápido
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
-        // 1. O Detetive de Ficheiros: Descobrir de que tipo de documento se trata
-        const urlLower = url.toLowerCase();
-        const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || 
-                         urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || 
-                         urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
-        const ehPDF = urlLower.endsWith('.pdf');
+        // 🚀 O SEGREDO: Transforma a janela do chat numa "âncora" para o visualizador não escapar!
+        if (window.getComputedStyle(chatBox).position === 'static') {
+            chatBox.style.position = 'relative';
+        }
 
-        // 2. O Detetive de Dispositivo: Verifica se o aluno está num telemóvel/tablet
         const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        let contentHtml = '';
 
-        // 3. A Tradução Mágica (Escolha do melhor Visualizador)
-        let iframeSrc = url; 
-        
-        if (ehOffice) {
-            // 🚀 ESTRATÉGIA OFFICE: A Microsoft é perfeita para Word/Excel/PPT. 
-            // Mostra 1 página por defeito e funciona impecavelmente em telemóveis.
-            iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
-        } else if (ehPDF) {
-            // 🚀 ESTRATÉGIA PDF:
-            if (isMobile) {
-                // Telemóveis (Android/iOS) não têm leitor nativo para mostrar no ecrã, então usamos o tradutor do Google.
-                iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+        if (tipo === 'imagem') {
+            // Layout para Imagens
+            contentHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center; padding:15px; overflow:hidden;"><img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); transform:scale(0.95); transition:0.3s;" id="ws-inner-img"></div>`;
+        } else {
+            // Layout para Documentos (PDF, Word, Excel, etc.)
+            const urlLower = url.toLowerCase();
+            const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
+            const ehPDF = urlLower.endsWith('.pdf');
+
+            let iframeSrc = url; 
+            if (ehOffice) iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+            else if (ehPDF && isMobile) iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+
+            if (ehOffice || ehPDF) {
+                contentHtml = `<div style="flex:1; width:100%; background:#f0f2f5; -webkit-overflow-scrolling:touch; overflow:auto;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; background:white;"></iframe></div>`;
             } else {
-                // Computadores abrem PDFs de forma perfeita nativamente. Usamos o link direto.
-                iframeSrc = url;
+                contentHtml = `
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;">
+                    <span style="font-size:60px; margin-bottom:15px;">📁</span>
+                    <p style="font-size: 16px; font-weight: bold; color: white;">Pré-visualização indisponível.</p>
+                    <a href="${url}" download target="_blank" style="margin-top:15px; background:#3498db; color:white; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:bold;">📥 Baixar Ficheiro</a>
+                </div>`;
             }
         }
 
-        // 4. A Criação do Palco (Modal Flutuante Escuro)
-        const modal = document.createElement('div');
-        modal.id = idModal;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.3s ease-in-out;";
-        
-        // 5. O Ecrã: Cabeçalho com Nome e Botões, e o Corpo com o Documento
-        // NOTA: O div do corpo (flex: 1) tem agora -webkit-overflow-scrolling para funcionar nos iPhones.
-        modal.innerHTML = `
-            <div style="width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; box-sizing: border-box; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                <div style="font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; display: flex; align-items: center; gap: 8px;">
-                    📄 ${nome}
-                </div>
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <!-- Botão de Download Original -->
-                    <a href="${url}" download="${nome}" target="_blank" style="color: white; text-decoration: none; font-size: 22px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Ficheiro Original">📥</a>
-                    <!-- Botão Fechar -->
-                    <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 300)" style="background:transparent; border:none; color:white; font-size:26px; cursor:pointer; font-weight:bold; padding:0; line-height:1; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" title="Fechar Visualizador">✖</button>
-                </div>
-            </div>
-            
-            <div style="flex: 1; width: 100%; max-width: 1200px; background: #f0f2f5; position: relative; display: flex; justify-content: center; align-items: center; -webkit-overflow-scrolling: touch; overflow: auto;">
-                ${ehOffice || ehPDF ? 
-                    `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; background:white;" frameborder="0" allowfullscreen></iframe>` : 
-                    `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#555; text-align:center; padding: 20px;">
-                        <span style="font-size:60px; margin-bottom:15px;">📁</span>
-                        <p style="font-size: 16px; font-weight: bold; color: #2c3e50;">Pré-visualização indisponível para este formato.</p>
-                        <p style="font-size: 13px; margin-bottom: 20px;">Por favor, faça o download para aceder ao conteúdo.</p>
-                        <a href="${url}" download target="_blank" style="background:#3498db; color:white; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:bold; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Ficheiro Original</a>
-                    </div>`
-                }
-            </div>
-        `;
-        document.body.appendChild(modal);
+        const overlay = document.createElement('div');
+        overlay.id = idModal;
+        // position: absolute fá-lo preencher APENAS a caixa do Bate-papo!
+        overlay.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:100000; display:flex; flex-direction:column; border-radius:inherit; backdrop-filter:blur(5px); opacity:0; transition:0.3s ease-in-out; overflow:hidden;";
 
-        // Dispara a animação de abertura
+        overlay.innerHTML = `
+            <div style="width: 100%; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; flex-shrink: 0; z-index:10;">
+                <div style="font-weight: 600; font-size: 14px; color:white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">
+                    ${tipo === 'imagem' ? '🖼️' : '📄'} ${Workspace.Sidebar.escapeHTML(nome)}
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <a href="${url}" download target="_blank" style="color: white; text-decoration: none; font-size: 20px;" title="Baixar">📥</a>
+                    <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 300)" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer; font-weight:bold; padding:0; line-height:1;" title="Fechar">✖</button>
+                </div>
+            </div>
+            ${contentHtml}
+        `;
+
+        // Injentamos diretamente DENTRO da caixa de Bate-papo
+        chatBox.appendChild(overlay);
+
         requestAnimationFrame(() => {
-            modal.style.opacity = '1';
+            overlay.style.opacity = '1';
+            const img = document.getElementById('ws-inner-img');
+            if (img) img.style.transform = 'scale(1)';
         });
     },
 
