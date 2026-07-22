@@ -166,7 +166,7 @@
         }
 
     </style>
-  <script type="module" crossorigin src="/assets/workspace-Bm-Bhjc_.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-Cr6wQCpk.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-DsfEqi9Q.js">
   <link rel="modulepreload" crossorigin href="/assets/site-uBRfFSGd.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D7LMCEVW.css">
@@ -557,7 +557,7 @@
                             <h4 style="margin: 0; color: #3498db; font-size: 16px;">📅 Meu Calendário</h4>
                             <button onclick="Workspace.Bau.abrirAgendamento()" style="background: #e8f4f8; color: #3498db; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;" title="Configurar Agendamento">⚙️ Agendar</button>
                         </div>
-                        <div id="ws-bau-calendario-visual" style="text-align: center; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; color: #555;">
+                        <div id="ws-bau-calendario-visual" style="text-align: left; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; color: #555;">
                             A carregar calendário da nuvem... ⏳
                         </div>
                     </div>
@@ -566,7 +566,7 @@
                     <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h4 style="margin: 0; color: #27ae60; font-size: 16px;">📝 Anotações Livres</h4>
-                            <span id="ws-bau-status-salvamento" style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Sincronizado ☁️</span>
+                            <span id="ws-bau-status-salvamento" style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Sincronizado ☁️✅</span>
                         </div>
                         
                         <!-- Barra de Ferramentas -->
@@ -576,8 +576,8 @@
                             <button onclick="document.execCommand('underline', false, null)" style="text-decoration: underline; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">U</button>
                         </div>
                         
-                        <!-- Área de Edição (contenteditable) -->
-                        <div id="ws-bau-notas-editor" contenteditable="true" style="min-height: 150px; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; padding: 15px; font-size: 14px; outline: none; overflow-y: auto; color: #333;" oninput="Workspace.Bau.salvarNotasNaNuvem(this.innerHTML)">A carregar memórias...</div>
+                        <!-- Área de Edição -->
+                        <div id="ws-bau-notas-editor" contenteditable="true" style="min-height: 150px; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; padding: 15px; font-size: 14px; outline: none; overflow-y: auto; color: #333;" oninput="Workspace.Bau.salvarNotasNaNuvem(this.innerHTML)">A carregar memórias da nuvem...</div>
                     </div>
                 </div>
             </div>
