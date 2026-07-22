@@ -13,20 +13,26 @@ Workspace.Sidebar = {
     // ============================================================================
     pressTimer: null,
     
-    iniciarPressMensagem: (msgId) => {
-        Workspace.Sidebar.cancelarPressMensagem(); // Limpa se houver algum perdido
+  iniciarPressMensagem: (msgId) => {
+        Workspace.Sidebar.cancelarPressMensagem();
         Workspace.Sidebar.pressTimer = setTimeout(() => {
-            Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
-        }, 500); // 500 milissegundos é o tempo ideal do "Long Press"
+            // Se já estivermos em modo seleção, o toque longo apenas seleciona a mensagem
+            if (Workspace.Sidebar.modoSelecaoAtivo) Workspace.Sidebar.toggleSelecaoMensagem(msgId);
+            else Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
+        }, 500); 
     },
     
     cancelarPressMensagem: () => {
-        // Se o utilizador levantar o dedo ou mover o ecrã antes de 0.5s, cancela!
         if (Workspace.Sidebar.pressTimer) clearTimeout(Workspace.Sidebar.pressTimer);
     },
     
     cliqueMensagem: (event, msgId) => {
-        // O clique só é válido no PC (Rato) ou em ecrãs grandes.
+        // 🚀 INTERCETOR: Se o modo seleção estiver ligado, qualquer clique seleciona a mensagem!
+        if (Workspace.Sidebar.modoSelecaoAtivo) {
+            Workspace.Sidebar.toggleSelecaoMensagem(msgId);
+            return;
+        }
+        
         if (event.pointerType === "mouse" || window.innerWidth > 900) {
             Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
         }
@@ -422,6 +428,17 @@ Workspace.Sidebar = {
                 }
             }
 
+            // 🚀 O VIGILANTE: Destruição em massa no ecrã
+            else if (data.type === 'MSG_APAGADA_MASSA') {
+                if (data.mensagensIds && Array.isArray(data.mensagensIds)) {
+                    data.mensagensIds.forEach(idApagar => {
+                        const elMsg = document.getElementById(`msg-${idApagar}`);
+                        if (elMsg) elMsg.remove();
+                        Workspace.Sidebar.mensagensRenderizadas.delete(idApagar);
+                    });
+                }
+            }
+
             if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 if (data.autorNome !== meuNome) {
@@ -442,6 +459,7 @@ Workspace.Sidebar = {
     },
 
     fecharChat: () => {
+        Workspace.Sidebar.cancelarSelecao();
         document.getElementById('ws-chat-modal').style.display = 'none';
         Workspace.Sidebar.turmaIdAberta = null;
         Workspace.Sidebar.infoTurmaAberta = null;
@@ -518,10 +536,12 @@ Workspace.Sidebar = {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 O MENU FLUTUANTE INVISÍVEL (Surge ao lado do balão)
+        // 🚀 O MENU FLUTUANTE INVISÍVEL (Agora com a opção "Selecionar")
         const menuOpcoes = podeApagar ? `
-            <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: absolute; top: 10px; ${ehMinha ? 'right: 100%; margin-right: 8px;' : 'left: 100%; margin-left: 8px;'} background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 4px; z-index: 100; border: 1px solid #eee;">
-                <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
+            <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: absolute; top: 10px; ${ehMinha ? 'right: 100%; margin-right: 8px;' : 'left: 100%; margin-left: 8px;'} background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 4px; z-index: 100; border: 1px solid #eee; flex-direction: column; gap: 2px;">
+                <button onclick="event.stopPropagation(); Workspace.Sidebar.ativarModoSelecao('${m.id}')" style="background: transparent; border: none; color: #2980b9; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">☑️</span> Selecionar</button>
+                <div style="height: 1px; background: #eee; width: 100%;"></div>
+                <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
             </div>
         ` : '';
 
@@ -737,6 +757,103 @@ Workspace.Sidebar = {
         }
     },
  
+    // ============================================================================
+    // 🚀 MOTOR DE SELEÇÃO EM MASSA
+    // ============================================================================
+    modoSelecaoAtivo: false,
+    mensagensSelecionadas: new Set(),
+
+    ativarModoSelecao: (msgId) => {
+        Workspace.Sidebar.modoSelecaoAtivo = true;
+        // Esconde os menuzinhos flutuantes
+        document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
+        Workspace.Sidebar.toggleSelecaoMensagem(msgId);
+    },
+
+    toggleSelecaoMensagem: (msgId) => {
+        const elMsg = document.getElementById(`msg-${msgId}`);
+        if (!elMsg) return;
+
+        const balao = elMsg.querySelector('div[style*="max-width: 85%"]');
+
+        if (Workspace.Sidebar.mensagensSelecionadas.has(msgId)) {
+            // Retira do cesto e remove o destaque
+            Workspace.Sidebar.mensagensSelecionadas.delete(msgId);
+            if (balao) balao.style.outline = 'none';
+        } else {
+            // Põe no cesto e adiciona um destaque visual azul
+            Workspace.Sidebar.mensagensSelecionadas.add(msgId);
+            if (balao) balao.style.outline = '3px solid #3498db';
+        }
+
+        Workspace.Sidebar.renderizarBarraSelecao();
+    },
+
+    cancelarSelecao: () => {
+        Workspace.Sidebar.modoSelecaoAtivo = false;
+        // Remove os destaques visuais de todos os balões
+        Workspace.Sidebar.mensagensSelecionadas.forEach(msgId => {
+            const elMsg = document.getElementById(`msg-${msgId}`);
+            if (elMsg) {
+                const balao = elMsg.querySelector('div[style*="max-width: 85%"]');
+                if (balao) balao.style.outline = 'none';
+            }
+        });
+        Workspace.Sidebar.mensagensSelecionadas.clear();
+        
+        const barra = document.getElementById('ws-barra-selecao');
+        if (barra) barra.style.display = 'none';
+    },
+
+    renderizarBarraSelecao: () => {
+        let barra = document.getElementById('ws-barra-selecao');
+        if (!barra) {
+            barra = document.createElement('div');
+            barra.id = 'ws-barra-selecao';
+            barra.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; background: #2c3e50; color: white; padding: 15px 20px; display: none; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); box-sizing: border-box; transition: 0.3s;";
+            
+            const chatHeader = document.getElementById('ws-chat-modal').firstElementChild;
+            chatHeader.style.position = 'relative';
+            chatHeader.appendChild(barra);
+        }
+
+        const qtd = Workspace.Sidebar.mensagensSelecionadas.size;
+        if (qtd === 0) {
+            Workspace.Sidebar.cancelarSelecao();
+            return;
+        }
+
+        barra.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button onclick="Workspace.Sidebar.cancelarSelecao()" style="background: transparent; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0;">✖</button>
+                <span style="font-weight: bold; font-size: 16px;">${qtd} selecionada(s)</span>
+            </div>
+            <button onclick="Workspace.Sidebar.apagarMensagensEmMassa()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;"><span style="font-size: 16px;">🗑️</span> Apagar</button>
+        `;
+        barra.style.display = 'flex';
+    },
+
+    apagarMensagensEmMassa: async () => {
+        const ids = Array.from(Workspace.Sidebar.mensagensSelecionadas);
+        if (ids.length === 0) return;
+
+        // 1. Destruição visual no ecrã de quem clica (fulminante)
+        ids.forEach(msgId => {
+            const elMsg = document.getElementById(`msg-${msgId}`);
+            if (elMsg) elMsg.remove();
+            Workspace.Sidebar.mensagensRenderizadas.delete(msgId);
+        });
+
+        Workspace.Sidebar.cancelarSelecao(); // Fecha a barra superior
+
+        // 2. Avisa a nuvem silenciosamente
+        try {
+            await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagens/massa`, 'DELETE', { ids: ids });
+        } catch(e) {
+            console.error("Falha ao apagar em massa.");
+        }
+    },
+
   // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO E SEM CONFIRMAÇÃO)
     apagarMensagemIndividual: async (mensagemId) => {
         // 1. Esconde imediatamente o menu flutuante (para não ficar preso no ecrã)
