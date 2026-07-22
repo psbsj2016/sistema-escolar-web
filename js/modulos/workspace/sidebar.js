@@ -1035,7 +1035,7 @@ verFotoChat: () => {
         }
     },
 
-    // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT)
+   // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT DE FORMA FULMINANTE)
     apagarTodoOChat: () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         
@@ -1043,16 +1043,30 @@ verFotoChat: () => {
             "Apagar Todo o Chat?", 
             "Tem a certeza de que deseja eliminar DEFINITIVAMENTE todo o histórico de mensagens desta turma? Esta ação não tem retorno.", 
             async () => {
+                
+                // 🚀 1. DESTRUIÇÃO VISUAL INSTANTÂNEA (Optimistic UI)
+                // Muda o ecrã antes mesmo de o servidor responder!
+                const container = document.getElementById('ws-chat-mensagens');
+                if (container) {
+                    container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px; animation: fadeIn 0.4s;">O histórico foi limpo.<br>Diga olá para a turma! 👋</div>';
+                }
+                
+                // 🚀 2. LIMPEZA TOTAL DA MEMÓRIA
+                // Esvazia os cofres para garantir que nada regressa como "fantasma"
+                Workspace.Sidebar.mensagensRenderizadas.clear();
+                Workspace.Sidebar.textosMensagens = {};
+                Workspace.Sidebar.ultimaDataRenderizada = null;
+
+                // 🚀 3. PEDIDO SILENCIOSO PARA A NUVEM (Em background)
                 try {
                     const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/limpar`, 'DELETE');
                     if (res && res.success) {
-                        Workspace.mostrarAviso("Histórico da turma apagado com sucesso.", "success");
-                        document.getElementById('ws-chat-mensagens').innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px;">O histórico foi limpo.<br>Diga olá para a turma! 👋</div>';
+                        Workspace.mostrarAviso("Histórico da turma apagado da base de dados.", "success");
                     } else {
-                        Workspace.mostrarAviso("Não tem permissões ou erro ao apagar.", "error");
+                        Workspace.mostrarAviso("O chat foi limpo do ecrã, mas houve um atraso na nuvem.", "warning");
                     }
                 } catch(e) {
-                    Workspace.mostrarAviso("Falha de comunicação.", "error");
+                    Workspace.mostrarAviso("Falha de comunicação silenciosa com o servidor.", "error");
                 }
             }
         );
