@@ -4,11 +4,11 @@ window.Toast = {
     init: () => {
         if (document.getElementById('ws-toast-container')) return;
         
-        // 🎨 1. Injeta o Design do Toast (Agora com o efeito Ping-Pong)
+        // 🎨 1. Injeta o Design do Toast (Agora Flutuante e Amigável ao Toque no Mobile)
         const style = document.createElement('style');
         style.innerHTML = `
             #ws-toast-container { position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
-            .ws-toast { background: white; color: #2c3e50; min-width: 250px; max-width: 350px; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-family: 'Poppins', sans-serif; font-size: 14px; position: relative; overflow: hidden; transform: translateX(120%); animation: slideInRight 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; pointer-events: auto; cursor: pointer; border: 1px solid #eee; }
+            .ws-toast { background: white; color: #2c3e50; min-width: 250px; max-width: 350px; padding: 14px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; font-family: 'Poppins', sans-serif; font-size: 14px; position: relative; overflow: hidden; transform: translateX(120%); animation: slideInRight 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; pointer-events: auto; cursor: pointer; border: 1px solid #eee; }
             .ws-toast.hiding { animation: slideOutRight 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important; }
             .ws-toast-icon { font-size: 22px; display: flex; align-items: center; justify-content: center; }
             .ws-toast-content { flex: 1; font-weight: 500; line-height: 1.4; }
@@ -42,9 +42,15 @@ window.Toast = {
             @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
             @keyframes progressShrink { from { width: 100%; } to { width: 0%; } }
             
+            /* ===================================================================== */
+            /* 🚀 A MÁGICA MOBILE: CÁPSULA FLUTUANTE QUE LIBERTA O ECRÃ              */
+            /* ===================================================================== */
             @media screen and (max-width: 600px) {
-                #ws-toast-container { top: 10px; right: 10px; left: 10px; align-items: center; }
-                .ws-toast { width: 100%; max-width: 100%; animation: slideInDown 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+                /* O container cobre a largura mas é "invisível" aos toques (pointer-events: none) */
+                #ws-toast-container { top: 15px; left: 0; right: 0; width: 100%; align-items: center; pointer-events: none; }
+                
+                /* A notificação agora é uma "cápsula" centralizada que permite toques nas laterais */
+                .ws-toast { width: max-content; max-width: 90%; min-width: 250px; border-radius: 30px; animation: slideInDown 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; pointer-events: auto; }
                 .ws-toast.hiding { animation: slideOutUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important; }
                 .ws-toast-pingpong { animation: slideInDown 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards, pingPongBounce 2s infinite ease-in-out; }
                 
