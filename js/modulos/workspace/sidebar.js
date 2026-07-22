@@ -194,7 +194,7 @@ Workspace.Sidebar = {
     },
 
    // ============================================================================
-    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (COM PROTEÇÃO ANTI-404)
+    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (COM PROTEÇÃO ANTI-ESMAGAMENTO)
     // ============================================================================
     atualizarCabecalhoChat: (info) => {
         const titulo = document.getElementById('ws-chat-titulo');
@@ -203,19 +203,26 @@ Workspace.Sidebar = {
         // 1. Atualiza o título ou usa um padrão se estiver vazio
         if(titulo) titulo.innerText = info.nome || 'Sala de Bate-Papo';
         
-        // 2. Validação estrita da URL da foto
-        // Só tenta carregar a imagem se existir e for um link válido da web (http ou https)
-        // Isso impede que nomes de ficheiros antigos e quebrados causem erros 404 no console
-        if(info.foto && (info.foto.startsWith('http') || info.foto.startsWith('https'))) {
+        if (avatar) {
+            // 🚀 O SEGREDO DO CÍRCULO PERFEITO: Blindamos o recipiente contra esmagamentos do Flexbox na barra verde!
+            avatar.style.flexShrink = '0';
+            avatar.style.minWidth = '40px';
+            avatar.style.minHeight = '40px';
+            avatar.style.maxWidth = '40px';
+            avatar.style.maxHeight = '40px';
+            avatar.style.aspectRatio = '1/1';
             
-            // Injetamos um evento 'onerror'. Se a imagem falhar ao carregar por qualquer motivo, 
-            // o navegador oculta a imagem quebrada e volta ao ícone 👥 automaticamente.
-            avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)';">`;
-            avatar.style.background = 'transparent';
-        } else {
-            // 3. Fallback (Plano B): Desenha o ícone padrão
-            avatar.innerHTML = '👥';
-            avatar.style.background = 'rgba(255,255,255,0.2)';
+            // 2. Validação estrita da URL da foto
+            if(info.foto && (info.foto.startsWith('http') || info.foto.startsWith('https'))) {
+                
+                // 🚀 Aplicamos o object-position: center para garantir o alinhamento total
+                avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover; object-position:center; border-radius:50%;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)';">`;
+                avatar.style.background = 'transparent';
+            } else {
+                // 3. Fallback (Plano B): Desenha o ícone padrão
+                avatar.innerHTML = '👥';
+                avatar.style.background = 'rgba(255,255,255,0.2)';
+            }
         }
     },
 
