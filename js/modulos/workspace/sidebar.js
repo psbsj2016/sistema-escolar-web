@@ -179,9 +179,10 @@ Workspace.Sidebar = {
             let html = '';
             turmas.forEach(t => {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
-                let avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
+                let avatarMenu = `<div style="width: 30px; height: 30px; min-width: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
                 if(t.foto) {
-                    avatarMenu = `<div style="width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd;"><img src="${t.foto}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                    // 🚀 Aplicamos a mesma blindagem de fundo branco e centralização no menu lateral
+                    avatarMenu = `<div style="width: 30px; height: 30px; min-width: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd; background: #ffffff; display: flex; align-items: center; justify-content: center;"><img src="${t.foto}" style="width:100%; height:100%; object-fit:cover; object-position:center; background-color:#ffffff; display:block;"></div>`;
                 }
 
                 html += `
@@ -197,35 +198,44 @@ Workspace.Sidebar = {
         }
     },
 
-   // ============================================================================
-    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (COM PROTEÇÃO ANTI-ESMAGAMENTO)
+  // ============================================================================
+    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (BLINDAGEM: COR, CORTE E ESMAGAMENTO)
     // ============================================================================
     atualizarCabecalhoChat: (info) => {
         const titulo = document.getElementById('ws-chat-titulo');
         const avatar = document.getElementById('ws-chat-avatar-container');
         
-        // 1. Atualiza o título ou usa um padrão se estiver vazio
+        // 1. Atualiza o título do chat
         if(titulo) titulo.innerText = info.nome || 'Sala de Bate-Papo';
         
         if (avatar) {
-            // 🚀 O SEGREDO DO CÍRCULO PERFEITO: Blindamos o recipiente contra esmagamentos do Flexbox na barra verde!
+            // 🚀 ARMADURA CSS: Garante que o círculo nunca é esmagado (flex-shrink: 0) e mantém 40x40px
             avatar.style.flexShrink = '0';
+            avatar.style.width = '40px';
+            avatar.style.height = '40px';
             avatar.style.minWidth = '40px';
             avatar.style.minHeight = '40px';
-            avatar.style.maxWidth = '40px';
-            avatar.style.maxHeight = '40px';
-            avatar.style.aspectRatio = '1/1';
+            avatar.style.borderRadius = '50%';
+            avatar.style.overflow = 'hidden';
+            avatar.style.display = 'flex';
+            avatar.style.alignItems = 'center';
+            avatar.style.justifyContent = 'center';
             
-            // 2. Validação estrita da URL da foto
+            // 2. Verifica se a URL da foto existe e é válida
             if(info.foto && (info.foto.startsWith('http') || info.foto.startsWith('https'))) {
                 
-                // 🚀 Aplicamos o object-position: center para garantir o alinhamento total
-                avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover; object-position:center; border-radius:50%;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)';">`;
-                avatar.style.background = 'transparent';
+                // 🚀 SEGREDO 1 (Fundo Branco): 'background-color: #ffffff' impede que a barra verde vaze nos PNGs!
+                // 🚀 SEGREDO 2 (Centralização): 'object-fit: cover' e 'object-position: center' alinham tudo ao meio.
+                avatar.innerHTML = `<img src="${info.foto}" style="width:100%; height:100%; object-fit:cover; object-position:center; background-color:#ffffff; display:block;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)'; this.parentElement.style.border='1px solid rgba(255,255,255,0.3)';">`;
+                
+                // O recipiente exterior também ganha fundo branco para reforçar
+                avatar.style.background = '#ffffff';
+                avatar.style.border = '2px solid #ffffff';
             } else {
-                // 3. Fallback (Plano B): Desenha o ícone padrão
+                // 3. Fallback (Sem foto): Desenha o ícone padrão
                 avatar.innerHTML = '👥';
                 avatar.style.background = 'rgba(255,255,255,0.2)';
+                avatar.style.border = '1px solid rgba(255,255,255,0.3)';
             }
         }
     },
