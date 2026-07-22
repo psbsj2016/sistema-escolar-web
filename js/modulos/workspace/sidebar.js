@@ -285,6 +285,7 @@ verFotoChat: () => {
         });
     },
 
+   // 📸 MOTOR DE AVATARES EM ALTA RESOLUÇÃO (Corte Inteligente e Anti-Pixelização)
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
@@ -300,28 +301,36 @@ verFotoChat: () => {
 
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 400;
+            
+            // 🚀 1. DOBRO DA RESOLUÇÃO: Aumentamos de 400 para 800 para ecrãs HD/Retina
+            const MAX_SIZE = 800;
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
             
-            let sourceX = 0, sourceY = 0, sourceSize = 0;
-            if (imgOriginal.width > imgOriginal.height) {
-                sourceSize = imgOriginal.height;
-                sourceX = (imgOriginal.width - sourceSize) / 2;
-            } else {
-                sourceSize = imgOriginal.width;
-                sourceY = (imgOriginal.height - sourceSize) / 2;
-            }
+            // 🚀 2. ALTA DEFINIÇÃO: Ativa o suavizador gráfico do navegador
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
+            // 🚀 3. FUNDO BRANCO OBRIGATÓRIO: Previne "espaços vagos" ou falhas pretas em PNGs transparentes
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
+            
+            // 🚀 4. MATEMÁTICA DO CORTE CENTRAL PERFEITO (Smart Crop)
+            // Identifica se a foto é horizontal ou vertical e corta exatamente o centro quadrado
+            const menorLado = Math.min(imgOriginal.width, imgOriginal.height);
+            const sourceX = (imgOriginal.width - menorLado) / 2;
+            const sourceY = (imgOriginal.height - menorLado) / 2;
 
+            ctx.drawImage(imgOriginal, sourceX, sourceY, menorLado, menorLado, 0, 0, MAX_SIZE, MAX_SIZE);
+
+            // 🚀 5. COMPRESSÃO PREMIUM: Qualidade 0.92 (em vez de 0.85) para máxima nitidez
             canvas.toBlob((blob) => {
                 URL.revokeObjectURL(objectUrl); 
 
                 if (!blob || blob.size < 100) {
-                    Workspace.mostrarAviso("Falha ao processar imagem. Tente escolher uma foto diferente.", "error");
+                    Workspace.mostrarAviso("Falha ao processar a imagem. Tente escolher uma foto diferente.", "error");
                     e.target.value = '';
                     return;
                 }
@@ -338,7 +347,7 @@ verFotoChat: () => {
                 if(avisoCompressao) avisoCompressao.style.display = 'block';
 
                 e.target.value = ''; 
-            }, 'image/jpeg', 0.85); 
+            }, 'image/jpeg', 0.92); 
         };
 
         imgOriginal.onerror = () => {
