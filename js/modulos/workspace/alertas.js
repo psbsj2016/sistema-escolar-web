@@ -114,7 +114,7 @@ Workspace.Alertas = {
         sse.onerror = () => { console.log("Reconectando túnel em tempo real..."); };
     },
 
-    injetarCSS: () => {
+ injetarCSS: () => {
         if (document.getElementById('ws-alertas-css')) return;
         const style = document.createElement('style');
         style.id = 'ws-alertas-css';
@@ -127,6 +127,12 @@ Workspace.Alertas = {
             @keyframes fadeOutRight { to { opacity: 0; transform: translateX(100%); } }
             @keyframes ringBell { 0% { transform: rotate(0); } 15% { transform: rotate(20deg); } 30% { transform: rotate(-20deg); } 45% { transform: rotate(15deg); } 60% { transform: rotate(-15deg); } 75% { transform: rotate(0); } }
             .bell-ringing i, .bell-ringing { animation: ringBell 0.6s ease-in-out; color: #3498db !important; }
+            
+            /* 🚀 NOVO: Scroll customizado e elegante para a área de notificações (apenas visível no PC) */
+            .ws-scroll-suave::-webkit-scrollbar { width: 6px; }
+            .ws-scroll-suave::-webkit-scrollbar-track { background: transparent; }
+            .ws-scroll-suave::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+            .ws-scroll-suave::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         `;
         document.head.appendChild(style);
     },
@@ -217,7 +223,9 @@ Workspace.Alertas = {
                             <button onclick="document.getElementById('ws-noti-dropdown').style.display='none'" style="background:#f0f2f5; border:none; color:#555; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" title="Fechar Painel">✖</button>
                         </div>
                     </div>
-                    <div id="ws-lista-notificacoes" style="display:flex; flex-direction:column; gap:2px;">
+                    
+                    <!-- 🚀 MAGIA AQUI: Limite de altura (75vh), barra de rolagem suave (auto) e proteção mobile (contain) -->
+                    <div id="ws-lista-notificacoes" class="ws-scroll-suave" style="display:flex; flex-direction:column; gap:2px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
                         const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
