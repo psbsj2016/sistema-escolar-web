@@ -377,6 +377,15 @@ Workspace.Sidebar = {
                 Workspace.Sidebar.ocultarDigitando();
             }
             
+            // 🚀 O VIGILANTE SILENCIOSO DO CHAT: Destruição imediata e fulminante
+            if (data.type === 'MSG_APAGADA') {
+                const elMsg = document.getElementById(`msg-${data.mensagemId}`);
+                if (elMsg) {
+                    elMsg.remove();
+                    Workspace.Sidebar.mensagensRenderizadas.delete(data.mensagemId);
+                }
+            }
+
             if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 if (data.autorNome !== meuNome) {
@@ -439,7 +448,7 @@ Workspace.Sidebar = {
         if (indicator) indicator.style.display = 'none';
     },
 
-  // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
+ // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
@@ -447,6 +456,9 @@ Workspace.Sidebar = {
         const borderRadiusFix = ehMinha ? 'border-top-right-radius: 2px;' : 'border-top-left-radius: 2px;';
         const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
+        
+        // 🚀 O PODER DO GESTOR: Botão de Apagar Mensagem aparece se a mensagem for sua OU se for Professor/Gestor
+        const podeApagar = ehMinha || Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
 
         const avatarHtml = `<div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">${avatarChat}</div>`;
 
@@ -459,7 +471,6 @@ Workspace.Sidebar = {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
                 const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
-                // 🚀 NOVIDADE: Agora, ao clicar no documento, chamamos a nossa janela mágica em vez de forçar o download!
                 anexoHtml = `
                 <div onclick="Workspace.Sidebar.abrirVisualizadorDocumento('${m.anexoUrl}', '${nomeSeguro}')" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; cursor: pointer; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
                     <span style="font-size: 24px;">📄</span>
@@ -470,11 +481,15 @@ Workspace.Sidebar = {
 
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
+        
+        // 🚀 ADIÇÃO: O botão oculto de apagar, só aparece para quem tem o poder (podeApagar === true)
+        const botaoApagar = podeApagar ? `<div onclick="Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="font-size: 10px; cursor: pointer; margin-top: 4px; color: #e74c3c; font-weight: bold; text-align: right; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">🗑️ Apagar</div>` : '';
+
         const balaoStyle = `display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1);`;
 
         let layoutMsg = ehMinha ? 
-            `<div style="${balaoStyle}">${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>${avatarHtml}` : 
-            `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>`;
+            `<div style="${balaoStyle}">${anexoHtml}${textoFormatado}<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; margin-bottom: -4px;">${botaoApagar}<div style="font-size: 10px; opacity: 0.6; margin-left: auto;">${hora}</div></div></div>${avatarHtml}` : 
+            `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; margin-bottom: -4px;">${botaoApagar}<div style="font-size: 10px; opacity: 0.6; margin-left: auto;">${hora}</div></div></div>`;
 
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
     },
@@ -677,6 +692,27 @@ Workspace.Sidebar = {
         } finally {
             event.target.value = ''; 
         }
+    },
+ 
+    // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO)
+    apagarMensagemIndividual: (mensagemId) => {
+        Workspace.Sidebar.mostrarConfirmacao(
+            "Apagar Mensagem?", 
+            "Tem a certeza de que deseja eliminar esta mensagem para todos os membros do grupo?", 
+            async () => {
+                // 1. Apaga do próprio ecrã instantaneamente
+                const elMsg = document.getElementById(`msg-${mensagemId}`);
+                if (elMsg) elMsg.remove();
+                Workspace.Sidebar.mensagensRenderizadas.delete(mensagemId);
+
+                // 2. Avisa a nuvem (background)
+                try {
+                    await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
+                } catch(e) {
+                    console.error("Falha ao apagar mensagem na nuvem.");
+                }
+            }
+        );
     },
 
     // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT)
