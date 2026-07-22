@@ -360,7 +360,7 @@ Workspace.Feed = {
             Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
 
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro de ligação ao carregar o feed.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Houve um erro ao carregar o feed. Por favor, para atualizar, basta clicar em <strong>"Sair"</strong> no menu ☰ e entre novamente.</div>';
         }
     },
 

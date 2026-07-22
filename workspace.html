@@ -186,6 +186,7 @@
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span style="font-size: 18px;">🏫</span> Hub da Sala de Aula</button>
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.toggleMenuChat()" ontouchstart=""><span style="font-size: 18px;">💬</span> Bate-Papo</button>
                     <div id="ws-lista-turmas-menu" style="display: none; padding: 5px 10px 5px 30px; max-height: 200px; overflow-y: auto; background: #fafafa; border-radius: 8px; margin-bottom: 5px;"><div style="padding:10px; color:#999; font-size:12px; text-align:center;">Carregando o Bate-papo... ⏳</div></div>
+                    <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirPaginaBau()" ontouchstart=""><span style="font-size: 18px;">🧰</span> Baú das Memórias</button>
                     <button class="ws-btn" style="background: transparent; color: #333; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" onclick="Workspace.abrirConfiguracoes()" ontouchstart=""><span style="font-size: 18px;">⚙️</span> Configurações</button>
                     <div style="border-top: 1px solid #eee; margin: 5px 0;"></div>
                     <button class="ws-btn" style="background: transparent; color: #e74c3c; text-align: left; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'" onclick="Workspace.logout()" ontouchstart=""><span style="font-size: 18px;"></span> Sair</button>
@@ -529,6 +530,71 @@
                 <div id="ws-prof-recebidas-lista"><div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div></div>
             </div>
             
+        </div>
+    </section>
+
+    <!-- 🧰 BAÚ DAS MEMÓRIAS -->
+    <section id="ws-bau-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🧰 Baú das Memórias</span></h3>
+            
+            <!-- Abas de Navegação -->
+            <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 15px; margin-bottom: 20px;">
+                <button id="tab-bau-meu" class="ws-btn" style="background: #2c3e50; color: white; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('meu')" ontouchstart="">Meu Baú</button>
+                <button id="tab-bau-inst" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('inst')" ontouchstart="">Baú da Instituição</button>
+            </div>
+
+            <!-- CONTEÚDO: MEU BAÚ -->
+            <div id="ws-bau-meu-conteudo" style="display: block; animation: fadeIn 0.3s ease;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    
+                    <!-- Módulo: Calendário e Agendamento -->
+                    <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: #3498db; font-size: 16px;">📅 Meu Calendário</h4>
+                            <button onclick="Workspace.Bau.abrirAgendamento()" style="background: #e8f4f8; color: #3498db; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;" title="Configurar Agendamento">⚙️ Agendar</button>
+                        </div>
+                        <div id="ws-bau-calendario-visual" style="text-align: center; padding: 20px; background: white; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; color: #555;">
+                            A carregar calendário da nuvem... ⏳
+                        </div>
+                    </div>
+
+                    <!-- Módulo: Bloco de Notas Rico -->
+                    <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: #27ae60; font-size: 16px;">📝 Anotações Livres</h4>
+                            <span id="ws-bau-status-salvamento" style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Sincronizado ☁️</span>
+                        </div>
+                        
+                        <!-- Barra de Ferramentas -->
+                        <div style="display: flex; gap: 5px; background: #eee; padding: 5px; border-radius: 8px 8px 0 0; border: 1px solid #ccc; border-bottom: none;">
+                            <button onclick="document.execCommand('bold', false, null)" style="font-weight: bold; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">B</button>
+                            <button onclick="document.execCommand('italic', false, null)" style="font-style: italic; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">I</button>
+                            <button onclick="document.execCommand('underline', false, null)" style="text-decoration: underline; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">U</button>
+                        </div>
+                        
+                        <!-- Área de Edição (contenteditable) -->
+                        <div id="ws-bau-notas-editor" contenteditable="true" style="min-height: 150px; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; padding: 15px; font-size: 14px; outline: none; overflow-y: auto; color: #333;" oninput="Workspace.Bau.salvarNotasNaNuvem(this.innerHTML)">A carregar memórias...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTEÚDO: BAÚ DA INSTITUIÇÃO -->
+            <div id="ws-bau-inst-conteudo" style="display: none; animation: fadeIn 0.3s ease;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; background: #fafafa; opacity: 0.7;">
+                        <div style="font-size: 35px; margin-bottom: 10px;">📚</div>
+                        <h4 style="margin: 0 0 5px 0; color: #333;">Biblioteca</h4>
+                        <span style="font-size: 11px; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-weight: bold;">Em breve</span>
+                    </div>
+                    <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; background: #fafafa; opacity: 0.7;">
+                        <div style="font-size: 35px; margin-bottom: 10px;">📈</div>
+                        <h4 style="margin: 0 0 5px 0; color: #333;">Evolução</h4>
+                        <span style="font-size: 11px; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-weight: bold;">Em breve</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 

@@ -114,6 +114,7 @@ Object.assign(Workspace, {
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.Upload) Workspace.Upload.init();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
+        if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
 
@@ -150,6 +151,7 @@ Object.assign(Workspace, {
 
         const ecras = {
             'feed': 'ws-main-container', 
+            'bau': 'ws-bau-container',
             'configuracoes': 'ws-config-container',
             'sala_aula': 'ws-sala-aula-container',
             'tarefas_aluno': 'ws-tarefas-container', 
@@ -378,6 +380,7 @@ Object.assign(Workspace, {
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
+    abrirPaginaBau: () => Workspace.navegarPara('bau'),
     abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'),
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
@@ -445,7 +448,149 @@ Object.assign(Workspace, {
         } else {
             window.location.reload(); 
         }
+    },
+     
+    // ============================================================================
+    // 🧰 MOTOR DO BAÚ DAS MEMÓRIAS (Integração Cloud, Debounce e Alarme)
+    // ============================================================================
+    Bau: {
+        alarmesAtivos: [],
+        salvamentoTimer: null,
+
+        mudarAba: (aba) => {
+            const btnMeu = document.getElementById('tab-bau-meu');
+            const btnInst = document.getElementById('tab-bau-inst');
+            const contMeu = document.getElementById('ws-bau-meu-conteudo');
+            const contInst = document.getElementById('ws-bau-inst-conteudo');
+
+            if (aba === 'meu') {
+                btnMeu.style.background = '#2c3e50'; btnMeu.style.color = 'white';
+                btnInst.style.background = 'transparent'; btnInst.style.color = '#7f8c8d';
+                contMeu.style.display = 'block'; contInst.style.display = 'none';
+            } else {
+                btnInst.style.background = '#2c3e50'; btnInst.style.color = 'white';
+                btnMeu.style.background = 'transparent'; btnMeu.style.color = '#7f8c8d';
+                contInst.style.display = 'block'; contMeu.style.display = 'none';
+            }
+        },
+
+        // 🚀 SALVAMENTO INTELIGENTE (Técnica "Debounce")
+        salvarNotasNaNuvem: (htmlTexto) => {
+            const status = document.getElementById('ws-bau-status-salvamento');
+            if(status) status.innerText = 'A escrever... ✏️';
+
+            // Cancela o envio anterior se o utilizador continuar a escrever
+            clearTimeout(Workspace.Bau.salvamentoTimer);
+            
+            // Só envia para a nuvem 1.5 segundos após o utilizador PARAR de escrever
+            Workspace.Bau.salvamentoTimer = setTimeout(async () => {
+                if(status) status.innerText = 'A guardar na nuvem... ⏳';
+                try {
+                    const res = await Workspace.api('/workspace/bau/notas', 'PUT', {
+                        usuarioId: Workspace.usuario.id,
+                        texto: htmlTexto
+                    });
+                    if (res && res.success) {
+                        if(status) status.innerText = 'Sincronizado ☁️✅';
+                    }
+                } catch(e) {
+                    if(status) status.innerText = 'Falha ao sincronizar ❌';
+                }
+            }, 1500); 
+        },
+
+        carregarDadosDaNuvem: async () => {
+            try {
+                // 1. Puxa as Notas
+                const resNotas = await Workspace.api(`/workspace/bau/notas?usuarioId=${Workspace.usuario.id}`, 'GET');
+                const editor = document.getElementById('ws-bau-notas-editor');
+                if (editor) editor.innerHTML = (resNotas && resNotas.texto) ? resNotas.texto : 'Comece a escrever as suas memórias aqui...';
+
+                // 2. Puxa os Alarmes Agendados
+                const resAlarmes = await Workspace.api(`/workspace/bau/alarmes?usuarioId=${Workspace.usuario.id}`, 'GET');
+                if (resAlarmes && Array.isArray(resAlarmes.dados)) {
+                    Workspace.Bau.alarmesAtivos = resAlarmes.dados;
+                }
+                Workspace.Bau.atualizarCalendarioVisual();
+
+                // 3. Liga o radar de alarmes (verifica a cada 10 segundos)
+                setInterval(Workspace.Bau.verificarAlarme, 10000);
+            } catch(e) {
+                console.error("Erro ao carregar dados do Baú", e);
+                const editor = document.getElementById('ws-bau-notas-editor');
+                if(editor) editor.innerHTML = 'Falha ao ligar à nuvem. Tente mais tarde.';
+            }
+        },
+
+        abrirAgendamento: async () => {
+            const msg = prompt("Que memória ou evento deseja agendar? (Ex: Estudar Matemática)");
+            if (!msg) return;
+
+            const minutos = prompt("Daqui a quantos minutos deseja ser lembrado? (Ex: 1, 5, 10)");
+            if (!minutos || isNaN(minutos)) return;
+
+            const tempoDisparo = new Date().getTime() + (parseInt(minutos) * 60000);
+
+            try {
+                // Informa a Base de Dados
+                const res = await Workspace.api('/workspace/bau/alarmes', 'POST', {
+                    usuarioId: Workspace.usuario.id,
+                    mensagem: msg,
+                    tempoDisparo: tempoDisparo
+                });
+
+                if (res && res.success) {
+                    Workspace.Bau.alarmesAtivos.push({ id: res.id || Date.now(), mensagem: msg, tempoDisparo: tempoDisparo });
+                    Workspace.Bau.atualizarCalendarioVisual();
+                    Workspace.mostrarAviso("Lembrete agendado com sucesso na nuvem!", "success");
+                }
+            } catch(e) {
+                Workspace.mostrarAviso("Erro ao agendar lembrete na nuvem.", "error");
+            }
+        },
+
+        atualizarCalendarioVisual: () => {
+            const calVisual = document.getElementById('ws-bau-calendario-visual');
+            if (!calVisual) return;
+
+            if (Workspace.Bau.alarmesAtivos.length > 0) {
+                let html = '<div style="text-align: left;">';
+                Workspace.Bau.alarmesAtivos.forEach(alarme => {
+                    const data = new Date(alarme.tempoDisparo).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    html += `<div style="background: #eafaf1; border-left: 3px solid #27ae60; padding: 10px; margin-bottom: 8px; border-radius: 4px; font-size: 13px;">
+                                <strong style="color: #27ae60;">Hoje às ${data}</strong><br>${Workspace.escapeHTML(alarme.mensagem)}
+                             </div>`;
+                });
+                html += '</div>';
+                calVisual.innerHTML = html;
+            } else {
+                calVisual.innerHTML = "Nenhum evento pendente.";
+            }
+        },
+
+        verificarAlarme: () => {
+            const agora = new Date().getTime();
+            
+            Workspace.Bau.alarmesAtivos.forEach(async (alarme, index) => {
+                if (agora >= alarme.tempoDisparo) {
+                    // Dispara a Notificação Mágica!
+                    if (window.Workspace && Workspace.mostrarAviso) {
+                        Workspace.mostrarAviso(`📅 Lembrete do Baú: ${alarme.mensagem}`, 'pingpong', 10000);
+                    }
+                    
+                    // Remove da lista do navegador e atualiza o ecrã
+                    Workspace.Bau.alarmesAtivos.splice(index, 1);
+                    Workspace.Bau.atualizarCalendarioVisual();
+
+                    // Avisa a nuvem que já tocou para ela apagar da Base de Dados
+                    try {
+                        await Workspace.api(`/workspace/bau/alarmes/${alarme.id}`, 'DELETE');
+                    } catch(e) {}
+                }
+            });
+        }
     }
+
 });
 
 document.addEventListener('DOMContentLoaded', Workspace.init);
