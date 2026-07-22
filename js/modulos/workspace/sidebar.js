@@ -183,14 +183,13 @@ verFotoChat: () => {
         }
     },
 
-    abrirEdicaoChat: () => {
+   abrirEdicaoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta || {};
         Workspace.Sidebar.fotoComprimida = null; 
         
         const idModal = 'ws-modal-edit-chat';
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
-        // 🚀 O SEGREDO: Capturamos a janela de bate-papo para ser a nossa "âncora"
         const chatBox = document.getElementById('ws-chat-modal');
         if(!chatBox) return;
 
@@ -200,35 +199,36 @@ verFotoChat: () => {
 
         const modal = document.createElement('div');
         modal.id = idModal;
-        // 🚀 position: absolute garante que ele fica preso DENTRO do Bate-papo e NUNCA por trás!
+        // Fundo escuro confinado à janela do chat
         modal.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.2s; border-radius:inherit; overflow:hidden;";
         
+        // 🚀 O SEGREDO VISUAL: Usamos flexbox, limites de altura (max-height: 90%) e scroll automático (overflow-y)
         modal.innerHTML = `
-            <div class="ws-card" style="width: 90%; max-width: 400px; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#333; transition: 0.2s;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#eee'; this.style.color='#333'">×</button>
-                <h3 style="margin: 0 0 15px 0; color: #2c3e50; text-align: center;">✏️ Configurações do Grupo</h3>
+            <div style="width: 90%; max-width: 380px; max-height: 90%; overflow-y: auto; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; scrollbar-width: none;">
+                <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#f0f2f5; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#555; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#f0f2f5'; this.style.color='#555'">✕</button>
                 
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <div style="width: 100px; height: 100px; background: #f0f2f5; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
+                <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center; font-size: 18px; width: 100%;">✏️ Configurações do Grupo</h3>
+                
+                <div style="text-align: center; margin-bottom: 20px; width: 100%;">
+                    <div style="width: 90px; height: 90px; background: #f0f2f5; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
                         <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; display: ${info.foto ? 'block' : 'none'};">
-                        <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:40px; color:#aaa;">👥</div>
-                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); color:white; font-size:24px; opacity:0; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📷</div>
+                        <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:35px; color:#aaa;">👥</div>
+                        <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); color:white; font-size:20px; opacity:0; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📷</div>
                     </div>
                     <input type="file" id="ws-chat-nova-foto" accept="image/*" style="display:none;" onchange="Workspace.Sidebar.previewFotoChat(event)">
-                    <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Toque no ícone para alterar a foto</div>
-                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada para perfil! 🚀</div>
+                    <div style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Toque na foto para alterar</div>
+                    <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada! 🚀</div>
                 </div>
 
-                <label style="font-size: 12px; font-weight: bold; color: #555;">Nome da Turma / Grupo</label>
-                <input type="text" id="ws-chat-novo-nome" class="ws-post-input" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="padding: 12px; margin-bottom: 20px; font-weight: bold; color: #333; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px;">
-
-                <div style="display:flex; gap:10px;">
-                    <button class="ws-btn" id="ws-btn-salvar-chat" style="background:#27ae60; color:white; border:none; flex:1; width:100%; font-size: 14px; padding: 12px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#219653'" onmouseout="this.style.background='#27ae60'" onclick="Workspace.Sidebar.salvarEdicaoChat()">💾 Guardar Alterações</button>
+                <div style="width: 100%; text-align: left; margin-bottom: 20px;">
+                    <label style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">Nome da Turma / Grupo</label>
+                    <input type="text" id="ws-chat-novo-nome" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="width: 100%; padding: 12px; font-weight: bold; color: #333; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
                 </div>
+
+                <button id="ws-btn-salvar-chat" style="background:#27ae60; color:white; border:none; width:100%; font-size: 14px; padding: 12px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#219653'" onmouseout="this.style.background='#27ae60'" onclick="Workspace.Sidebar.salvarEdicaoChat()">Salvar Alterações</button>
             </div>
         `;
         
-        // 🚀 ANEXAMOS DIRETAMENTE NO BATE-PAPO
         chatBox.appendChild(modal);
 
         requestAnimationFrame(() => {
