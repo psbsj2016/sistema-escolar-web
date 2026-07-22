@@ -360,7 +360,7 @@ Workspace.Feed = {
             Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
 
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Houve um erro ao carregar o feed. Para atualizar, por favor, clicar em <strong>"Sair"</strong> no menu ☰ e entrar novamente.</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Por causa do longo tempo de inatividade,será necessário atualizar o feed. Por favor, clicar em <strong>"Sair"</strong> no menu ☰ e entrar novamente.</div>';
         }
     },
 
@@ -388,7 +388,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">A carregar mais... ⏳</div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>Atualizando o feed... ⏳</strong> Por favor, siga a instrução em vermelho </div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
