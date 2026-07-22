@@ -8,6 +8,10 @@ Workspace.Sidebar = {
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
     
+    // 🚀 NOVO: Cofre de textos para copiar e Calendário para organizar datas
+    textosMensagens: {}, 
+    ultimaDataRenderizada: null,
+    
    // ============================================================================
     // 🚀 MOTOR DE DETEÇÃO: PRESSÃO LONGA (MOBILE) E CLIQUE (PC) COM COORDENADAS
     // ============================================================================
@@ -534,11 +538,15 @@ verFotoChat: () => {
         };
     },
 
-    fecharChat: () => {
+   fecharChat: () => {
         Workspace.Sidebar.cancelarSelecao();
         document.getElementById('ws-chat-modal').style.display = 'none';
         Workspace.Sidebar.turmaIdAberta = null;
         Workspace.Sidebar.infoTurmaAberta = null;
+        
+        // 🚀 Limpeza de Memória Segura
+        Workspace.Sidebar.textosMensagens = {};
+        Workspace.Sidebar.ultimaDataRenderizada = null;
         
         if (Workspace.Sidebar.chatStream) {
             Workspace.Sidebar.chatStream.close();
@@ -578,8 +586,50 @@ verFotoChat: () => {
         if (indicator) indicator.style.display = 'none';
     },
 
+    // ============================================================================
+    // 📋 FERRAMENTAS DO BATE-PAPO: COPIAR E DIVISORES DE DATA
+    // ============================================================================
+    copiarTextoMensagem: (msgId) => {
+        const texto = Workspace.Sidebar.textosMensagens[msgId];
+        if (texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("Mensagem copiada! 📋", "success");
+                }
+            }).catch(() => Workspace.mostrarAviso("Erro ao copiar.", "error"));
+        }
+        // Esconde o menu após copiar
+        document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
+    },
+
+    gerarHTMLDataDivisor: (dataString) => {
+        const dataPost = new Date(dataString);
+        const hoje = new Date();
+        const ontem = new Date();
+        ontem.setDate(hoje.getDate() - 1);
+
+        let textoData = dataPost.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        
+        if (dataPost.toDateString() === hoje.toDateString()) {
+            textoData = 'Hoje';
+        } else if (dataPost.toDateString() === ontem.toDateString()) {
+            textoData = 'Ontem';
+        }
+
+        return `
+            <div style="display: flex; justify-content: center; margin: 20px 0 10px 0; width: 100%;">
+                <div style="background: rgba(0,0,0,0.06); color: #54656f; padding: 6px 14px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.02); pointer-events: none;">
+                    ${textoData}
+                </div>
+            </div>
+        `;
+    },
+
 // 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
+        // 🚀 GUARDA O TEXTO PURO NO COFRE PARA A FUNÇÃO DE COPIAR
+        if (m.texto) Workspace.Sidebar.textosMensagens[m.id] = m.texto;
+
         const ehMinha = m.autorNome === meuNome;
         const alinhamento = ehMinha ? 'flex-end' : 'flex-start';
         const backgroundBalao = ehMinha ? '#dcf8c6' : '#ffffff';
@@ -610,9 +660,10 @@ verFotoChat: () => {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 O MENU FLUTUANTE (Agora com position: fixed para abrir livremente onde o dedo toca!)
+        // 🚀 O MENU FLUTUANTE (Agora com a Opção COPIAR acima do Selecionar)
         const menuOpcoes = podeApagar ? `
             <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: fixed; background: white; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); padding: 4px; z-index: 100005; border: 1px solid #eee; flex-direction: column; gap: 2px; min-width: 140px;">
+                ${m.texto ? `<button onclick="event.stopPropagation(); Workspace.Sidebar.copiarTextoMensagem('${m.id}')" style="background: transparent; border: none; color: #2c3e50; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">📋</span> Copiar</button>` : ''}
                 <button onclick="event.stopPropagation(); Workspace.Sidebar.ativarModoSelecao('${m.id}')" style="background: transparent; border: none; color: #2980b9; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">☑️</span> Selecionar</button>
                 <div style="height: 1px; background: #eee; width: 100%;"></div>
                 <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
@@ -621,7 +672,6 @@ verFotoChat: () => {
 
         const balaoStyle = `position: relative; display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: ${podeApagar ? 'pointer' : 'default'}; -webkit-user-select: none; user-select: none;`;
         
-        // 🚀 O PASSE DE MAGIA: Adicionámos a variável 'event' para os sensores lerem o toque/rato
         const eventosInteracao = podeApagar ? `onclick="Workspace.Sidebar.cliqueMensagem(event, '${m.id}')" ontouchstart="Workspace.Sidebar.iniciarPressMensagem(event, '${m.id}')" ontouchend="Workspace.Sidebar.cancelarPressMensagem()" ontouchmove="Workspace.Sidebar.cancelarPressMensagem()" oncontextmenu="event.preventDefault(); Workspace.Sidebar.mostrarOpcoesMensagem('${m.id}', event.clientX, event.clientY); return false;"` : '';
 
         let layoutMsg = ehMinha ? 
@@ -703,7 +753,7 @@ verFotoChat: () => {
         });
     },
 
-    // 🚀 RESTAURO: Injetar Nova Mensagem que foi apagada acidentalmente
+  // 🚀 RESTAURO: Injetar Nova Mensagem com Validador de Datas
     injetarNovaMensagem: (m) => {
         if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
         Workspace.Sidebar.mensagensRenderizadas.add(m.id);
@@ -715,11 +765,19 @@ verFotoChat: () => {
             container.innerHTML = '';
         }
 
-        container.insertAdjacentHTML('beforeend', Workspace.Sidebar.gerarHTMLMensagem(m, meuNome));
+        // 🚀 VERIFICAÇÃO DO DIA (Para Inserir o Separador)
+        const dataStr = new Date(m.data).toLocaleDateString('pt-BR');
+        let divisorHtml = '';
+        if (Workspace.Sidebar.ultimaDataRenderizada !== dataStr) {
+            divisorHtml = Workspace.Sidebar.gerarHTMLDataDivisor(m.data);
+            Workspace.Sidebar.ultimaDataRenderizada = dataStr;
+        }
+
+        container.insertAdjacentHTML('beforeend', divisorHtml + Workspace.Sidebar.gerarHTMLMensagem(m, meuNome));
         container.scrollTop = container.scrollHeight;
     },
 
-    // 🚀 RESTAURO: Carregar as Mensagens que foi apagada acidentalmente
+    // 🚀 RESTAURO: Carregar as Mensagens organizando por dias
     carregarMensagensChat: async () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         const container = document.getElementById('ws-chat-mensagens');
@@ -735,10 +793,21 @@ verFotoChat: () => {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             let html = '';
             
+            // Limpa as memórias ao recarregar a sala
             Workspace.Sidebar.mensagensRenderizadas.clear();
+            Workspace.Sidebar.textosMensagens = {};
+            Workspace.Sidebar.ultimaDataRenderizada = null;
 
             mensagens.forEach(m => {
                 Workspace.Sidebar.mensagensRenderizadas.add(m.id);
+                
+                // 🚀 LÓGICA DO SEPARADOR DE DATA
+                const dataStr = new Date(m.data).toLocaleDateString('pt-BR');
+                if (Workspace.Sidebar.ultimaDataRenderizada !== dataStr) {
+                    html += Workspace.Sidebar.gerarHTMLDataDivisor(m.data);
+                    Workspace.Sidebar.ultimaDataRenderizada = dataStr;
+                }
+                
                 html += Workspace.Sidebar.gerarHTMLMensagem(m, meuNome);
             });
 
