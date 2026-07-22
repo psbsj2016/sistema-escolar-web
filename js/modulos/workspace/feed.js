@@ -491,17 +491,59 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
+ // 📖 VISUALIZADOR DE DOCUMENTOS IN-APP (PRESO AO SITE)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
+        
         const overlay = document.createElement('div');
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
-        let iframeSrc = url;
-        if (ehOffice) { const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url; iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`; }
-        overlay.innerHTML = `<div style="width: 95vw; display: flex; justify-content: flex-end; align-items: center; padding: 10px 0; margin-bottom: 5px;"><span style="color:white; font-size:45px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Documento">×</span></div><div style="width: 95vw; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">${ehOffice ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento com o Microsoft Office... ⏳</div>' : ''}<iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe></div>`;
+        
+        // 1. Normalização do link e verificação de tipo de ficheiro
+        const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+        const urlLower = absoluteUrl.toLowerCase();
+        const ehPDF = urlLower.endsWith('.pdf');
+        
+        // Deteta se o aluno está no telemóvel para forçar leitores compatíveis
+        const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        
+        // 2. O Tradutor Mágico de Visualização
+        let iframeSrc = absoluteUrl;
+        if (ehOffice) { 
+            // Usa a Microsoft para Word, Excel, PowerPoint
+            iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`; 
+        } else if (ehPDF) {
+            // Em telemóveis, o Chrome/Safari tenta baixar o PDF. Forçamos o leitor do Google Docs.
+            if (isMobile) {
+                iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`;
+            }
+        }
+        
+        // 3. Montagem do HTML com botão de Fechar e Download lado a lado
+        overlay.innerHTML = `
+            <div style="width: 95vw; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 5px;">
+                <div style="color:white; font-weight:bold; font-size:14px; display:flex; align-items:center; gap:8px;">
+                    📄 ${Workspace.Feed.limparTexto(nome)}
+                </div>
+                <div style="display:flex; gap: 20px; align-items:center;">
+                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:24px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Documento Original">📥</a>
+                    <button style="background:transparent; border:none; color:white; font-size:35px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1; padding:0;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">×</button>
+                </div>
+            </div>
+            <div style="width: 95vw; max-width: 1200px; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
+                ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar visualização de documento seguro... ⏳</div>' : ''}
+                <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
+            </div>
+        `;
+        
         document.body.appendChild(overlay);
-        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.querySelector('div:nth-child(2)').style.transform = 'scale(1)'; });
+        
+        // Animação suave na abertura
+        requestAnimationFrame(() => { 
+            overlay.style.opacity = '1'; 
+            overlay.querySelector('div:nth-child(2)').style.transform = 'scale(1)'; 
+        });
     },
 
     scrollCarrossel: (postId, total) => {
@@ -662,28 +704,26 @@ apagarPost: (postId) => {
         });
     },
 
-    // 🚀 REMOÇÃO FULMINANTE DE COMENTÁRIO
-    apagarComentario: (postId, comentarioId) => {
-        Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja eliminar este comentário definitivamente?", async () => {
-            // 1. Apaga do próprio ecrã instantaneamente
-            const elComentario = document.getElementById(`comentario-${comentarioId}`);
-            if (elComentario) elComentario.remove();
+   // 🚀 REMOÇÃO FULMINANTE DE COMENTÁRIO (SEM CONFIRMAÇÃO)
+    apagarComentario: async (postId, comentarioId) => {
+        // 1. Apaga do próprio ecrã instantaneamente, sem perguntar
+        const elComentario = document.getElementById(`comentario-${comentarioId}`);
+        if (elComentario) elComentario.remove();
 
-            // 2. Atualiza o contador de comentários na memória e no ecrã
-            const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
-            if (post && post.comentarios) {
-                post.comentarios = post.comentarios.filter(c => String(c.id) !== String(comentarioId));
-                const countComment = document.getElementById(`count-comment-${postId}`);
-                if (countComment) countComment.innerText = post.comentarios.length;
-            }
+        // 2. Atualiza o contador de comentários na memória e no ecrã
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+        if (post && post.comentarios) {
+            post.comentarios = post.comentarios.filter(c => String(c.id) !== String(comentarioId));
+            const countComment = document.getElementById(`count-comment-${postId}`);
+            if (countComment) countComment.innerText = post.comentarios.length;
+        }
 
-            // 3. Executa a eliminação na nuvem (background) e dispara o alerta SSE
-            try {
-                await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-            } catch (e) {
-                console.error("Erro ao apagar comentário na nuvem.", e);
-            }
-        });
+        // 3. Executa a eliminação na nuvem (background) silenciosamente
+        try {
+            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
+        } catch (e) {
+            console.error("Erro ao apagar comentário na nuvem.", e);
+        }
     },
 
     editarPost: (postId) => {
