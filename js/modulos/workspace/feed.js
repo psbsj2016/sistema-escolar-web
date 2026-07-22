@@ -128,7 +128,13 @@ Workspace.Feed = {
     gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
-        const ehDonoComentario = (c.autorNome === Workspace.usuario.nome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor');
+        // 🚀 PODER ABSOLUTO NOS COMENTÁRIOS: Permite apagar se for dono, Gestor ou Professor
+        const ehDonoComentario = (
+            c.autorNome === Workspace.usuario.nome || 
+            Workspace.usuario.login === c.autorNome || 
+            Workspace.usuario.tipo === 'Gestor' || 
+            Workspace.usuario.tipo === 'Professor'
+        );
         const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
         
         const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
@@ -656,30 +662,27 @@ apagarPost: (postId) => {
         });
     },
 
+    // 🚀 REMOÇÃO FULMINANTE DE COMENTÁRIO
     apagarComentario: (postId, comentarioId) => {
         Workspace.Feed.confirmarAcao("Apagar Comentário", "Deseja eliminar este comentário definitivamente?", async () => {
-            const el = document.getElementById(`comentario-${comentarioId}`);
-            if (el) {
-                el.style.transition = 'all 0.2s ease';
-                el.style.opacity = '0';
-                el.style.transform = 'scale(0.9)';
-                el.style.height = '0px';
-                el.style.margin = '0px';
-                el.style.padding = '0px';
-                el.style.overflow = 'hidden';
-                setTimeout(() => el.remove(), 200);
-            }
+            // 1. Apaga do próprio ecrã instantaneamente
+            const elComentario = document.getElementById(`comentario-${comentarioId}`);
+            if (elComentario) elComentario.remove();
 
+            // 2. Atualiza o contador de comentários na memória e no ecrã
             const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
             if (post && post.comentarios) {
                 post.comentarios = post.comentarios.filter(c => String(c.id) !== String(comentarioId));
                 const countComment = document.getElementById(`count-comment-${postId}`);
-                if(countComment) countComment.innerText = post.comentarios.length;
+                if (countComment) countComment.innerText = post.comentarios.length;
             }
 
+            // 3. Executa a eliminação na nuvem (background) e dispara o alerta SSE
             try {
                 await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-            } catch (e) {}
+            } catch (e) {
+                console.error("Erro ao apagar comentário na nuvem.", e);
+            }
         });
     },
 
@@ -795,7 +798,14 @@ apagarPost: (postId) => {
             const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(p.autorNome, 45)}</div>`;
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
-            const ehDonoOuGestor = (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome || Workspace.usuario.tipo === 'Gestor');
+            // 🚀 PODER ABSOLUTO: O botão apagar/editar aparece se for o dono, se for Gestor OU se for Professor!
+            const ehDonoOuGestor = (
+                Workspace.usuario.nome === p.autorNome || 
+                Workspace.usuario.login === p.autorNome || 
+                Workspace.usuario.tipo === 'Gestor' || 
+                Workspace.usuario.tipo === 'Professor'
+            );
+
             let destinoBadge = p.destino === 'global' 
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
