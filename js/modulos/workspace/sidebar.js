@@ -273,10 +273,10 @@ verFotoChat: () => {
         
         // 🚀 O SEGREDO VISUAL: Usamos flexbox, limites de altura (max-height: 90%) e scroll automático (overflow-y)
         modal.innerHTML = `
-            <div style="text-align: center; margin-bottom: 20px; width: 100%;">
-                    <!-- 🚀 BLINDAGEM CSS: Preenchimento central e aspect ratio 1/1 para grupos -->
-                    <div style="width: 90px; height: 90px; min-width: 90px; flex-shrink: 0; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;" onclick="document.getElementById('ws-chat-nova-foto').click()">
-                        <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; object-position:center; aspect-ratio:1/1; display: ${info.foto ? 'block' : 'none'};">
+          <div style="text-align: center; margin-bottom: 20px; width: 100%;">
+                    <!-- 🚀 RESTAURO: Estrutura original devolvida para a película escura assentar perfeitamente -->
+                    <div style="width: 90px; height: 90px; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
+                        <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100%; height:100%; object-fit:cover; object-position:center; display: ${info.foto ? 'block' : 'none'};">
                         <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:35px; color:#aaa;">👥</div>
                         <div style="position: absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); color:white; font-size:20px; opacity:0; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">📷</div>
                     </div>
