@@ -491,58 +491,74 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
- // 📖 VISUALIZADOR DE DOCUMENTOS IN-APP (PRESO AO SITE)
+ // 📖 VISUALIZADOR DE DOCUMENTOS IN-APP (COM ROTA DE FUGA, ZOOM E CLICK-OUTSIDE)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
         const overlay = document.createElement('div');
         overlay.id = id;
-        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out;";
+        // 🚀 1. O fundo agora tem cursor pointer para indicar que fecha se clicar fora
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10005; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease-in-out; cursor:pointer;";
         
-        // 1. Normalização do link e verificação de tipo de ficheiro
+        // 🚀 2. Sensor de Fecho: Fecha a janela se o utilizador clicar no fundo escuro
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                overlay.style.opacity = '0'; 
+                setTimeout(()=> overlay.remove(), 200);
+            }
+        };
+        
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
         const urlLower = absoluteUrl.toLowerCase();
         const ehPDF = urlLower.endsWith('.pdf');
-        
-        // Deteta se o aluno está no telemóvel para forçar leitores compatíveis
         const isMobile = window.innerWidth <= 900 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
         
-        // 2. O Tradutor Mágico de Visualização
         let iframeSrc = absoluteUrl;
         if (ehOffice) { 
-            // Usa a Microsoft para Word, Excel, PowerPoint
             iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absoluteUrl)}`; 
-        } else if (ehPDF) {
-            // Em telemóveis, o Chrome/Safari tenta baixar o PDF. Forçamos o leitor do Google Docs.
-            if (isMobile) {
-                iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`;
-            }
+        } else if (ehPDF && isMobile) {
+            iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(absoluteUrl)}&embedded=true`;
         }
         
-        // 3. Montagem do HTML com botão de Fechar e Download lado a lado
+        // 🚀 3. Montagem com Cabeçalho Flutuante Blindado e Lupa Mágica
         overlay.innerHTML = `
-            <div style="width: 95vw; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 5px;">
-                <div style="color:white; font-weight:bold; font-size:14px; display:flex; align-items:center; gap:8px;">
+            <!-- Cabeçalho Flutuante (z-index muito alto para nunca ficar preso) -->
+            <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); box-sizing: border-box; z-index: 10006; cursor: default;" onclick="event.stopPropagation()">
+                <div style="color:white; font-weight:bold; font-size:14px; display:flex; align-items:center; gap:8px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">
                     📄 ${Workspace.Feed.limparTexto(nome)}
                 </div>
-                <div style="display:flex; gap: 20px; align-items:center;">
-                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:24px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Documento Original">📥</a>
-                    <button style="background:transparent; border:none; color:white; font-size:35px; cursor:pointer; font-weight:bold; transition:0.2s; line-height: 1; padding:0;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='white'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar">×</button>
+                
+                <div style="display:flex; gap: 12px; align-items:center; background: rgba(0,0,0,0.5); padding: 6px 15px; border-radius: 20px;">
+                    <!-- 🚀 Lupa Mágica: Controlos de Zoom -->
+                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) - 0.25; if(z < 0.5) z = 0.5; w.style.transform = 'scale('+z+')'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Diminuir Zoom">🔍-</button>
+                    <span style="color:white; font-size:12px; opacity:0.3;">|</span>
+                    <button onclick="let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 1) + 0.25; if(z > 3) z = 3; w.style.transform = 'scale('+z+')'; w.dataset.zoom = z;" style="background:transparent; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Aumentar Zoom">🔍+</button>
+                    
+                    <span style="color:white; font-size:12px; opacity:0.3; margin: 0 5px;">|</span>
+                    
+                    <!-- Botão Download -->
+                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:18px; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Baixar Original">📥</a>
+                    
+                    <!-- 🚀 O Botão de Fuga: Destacado e à prova de falhas -->
+                    <button style="background:#e74c3c; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius: 50%; margin-left: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition:0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200);" title="Fechar Visualizador">✕</button>
                 </div>
             </div>
-            <div style="width: 95vw; max-width: 1200px; height: 90vh; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.2s ease-out; position: relative;">
-                ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar visualização de documento seguro... ⏳</div>' : ''}
-                <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white;"></iframe>
+
+            <!-- 🚀 A Janela do Documento (Permite scroll quando aumentamos o zoom) -->
+            <div style="width: 95vw; max-width: 1200px; height: 85vh; margin-top: 50px; background: transparent; overflow: auto; cursor: default; border-radius: 12px;" onclick="event.stopPropagation()">
+                <!-- O Wrapper que sofre o Efeito do Zoom (Transform) -->
+                <div id="ws-iframe-wrapper" data-zoom="1" style="width: 100%; height: 100%; background: #fff; border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.5); transform-origin: top center; transition: transform 0.25s ease-out; position: relative;">
+                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; z-index:1;">A carregar documento de forma segura... ⏳</div>' : ''}
+                    <iframe loading="lazy" src="${iframeSrc}" style="width: 100%; height: 100%; border: none; position:relative; z-index:2; background: white; border-radius: 12px;"></iframe>
+                </div>
             </div>
         `;
         
         document.body.appendChild(overlay);
         
-        // Animação suave na abertura
         requestAnimationFrame(() => { 
             overlay.style.opacity = '1'; 
-            overlay.querySelector('div:nth-child(2)').style.transform = 'scale(1)'; 
         });
     },
 
