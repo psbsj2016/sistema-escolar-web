@@ -8,6 +8,42 @@ Workspace.Sidebar = {
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
     
+    // ============================================================================
+    // 🚀 MOTOR DE DETEÇÃO: PRESSÃO LONGA (MOBILE) E CLIQUE (PC)
+    // ============================================================================
+    pressTimer: null,
+    
+    iniciarPressMensagem: (msgId) => {
+        Workspace.Sidebar.cancelarPressMensagem(); // Limpa se houver algum perdido
+        Workspace.Sidebar.pressTimer = setTimeout(() => {
+            Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
+        }, 500); // 500 milissegundos é o tempo ideal do "Long Press"
+    },
+    
+    cancelarPressMensagem: () => {
+        // Se o utilizador levantar o dedo ou mover o ecrã antes de 0.5s, cancela!
+        if (Workspace.Sidebar.pressTimer) clearTimeout(Workspace.Sidebar.pressTimer);
+    },
+    
+    cliqueMensagem: (event, msgId) => {
+        // O clique só é válido no PC (Rato) ou em ecrãs grandes.
+        if (event.pointerType === "mouse" || window.innerWidth > 900) {
+            Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
+        }
+    },
+    
+    mostrarOpcoesMensagem: (msgId) => {
+        // 1. Esconde qualquer outro menu que esteja aberto no chat
+        document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
+        
+        // 2. Mostra o menu deste balão específico
+        const menu = document.getElementById(`opcoes-msg-${msgId}`);
+        if (menu) menu.style.display = 'flex';
+        
+        // 3. Feedback Tátil: Faz o telemóvel vibrar suavemente ao abrir o menu!
+        if (navigator.vibrate) navigator.vibrate(50);
+    }, 
+    
     isTyping: false,
     typingTimer: null,
     typingUiTimer: null,
@@ -457,12 +493,12 @@ Workspace.Sidebar = {
         const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
         
-        // 🚀 O PODER DO GESTOR: Botão de Apagar Mensagem aparece se a mensagem for sua OU se for Professor/Gestor
+        // 🚀 O PODER TOTAL: Pode apagar se for dono, professor ou gestor
         const podeApagar = ehMinha || Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
 
         const avatarHtml = `<div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">${avatarChat}</div>`;
 
-        // 📎 Verifica e desenha o Anexo (Imagem, Vídeo ou Documento)
+        // 📎 Verifica e desenha o Anexo
         let anexoHtml = '';
         if (m.anexoUrl) {
             if (m.anexoTipo === 'image') {
@@ -482,14 +518,21 @@ Workspace.Sidebar = {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 ADIÇÃO: O botão oculto de apagar, só aparece para quem tem o poder (podeApagar === true)
-        const botaoApagar = podeApagar ? `<div onclick="Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="font-size: 10px; cursor: pointer; margin-top: 4px; color: #e74c3c; font-weight: bold; text-align: right; opacity: 0.6;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">🗑️ Apagar</div>` : '';
+        // 🚀 O MENU FLUTUANTE INVISÍVEL (Surge ao lado do balão)
+        const menuOpcoes = podeApagar ? `
+            <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: absolute; top: 10px; ${ehMinha ? 'right: 100%; margin-right: 8px;' : 'left: 100%; margin-left: 8px;'} background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 4px; z-index: 100; border: 1px solid #eee;">
+                <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
+            </div>
+        ` : '';
 
-        const balaoStyle = `display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1);`;
+        // O balão torna-se "Relativo" para segurar o menu e ganha os sensores de toque/clique!
+        const balaoStyle = `position: relative; display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: ${podeApagar ? 'pointer' : 'default'}; -webkit-user-select: none; user-select: none;`;
+        
+        const eventosInteracao = podeApagar ? `onclick="Workspace.Sidebar.cliqueMensagem(event, '${m.id}')" ontouchstart="Workspace.Sidebar.iniciarPressMensagem('${m.id}')" ontouchend="Workspace.Sidebar.cancelarPressMensagem()" ontouchmove="Workspace.Sidebar.cancelarPressMensagem()" oncontextmenu="event.preventDefault(); Workspace.Sidebar.mostrarOpcoesMensagem('${m.id}'); return false;"` : '';
 
         let layoutMsg = ehMinha ? 
-            `<div style="${balaoStyle}">${anexoHtml}${textoFormatado}<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; margin-bottom: -4px;">${botaoApagar}<div style="font-size: 10px; opacity: 0.6; margin-left: auto;">${hora}</div></div></div>${avatarHtml}` : 
-            `${avatarHtml}<div style="${balaoStyle}">${nomeHtml}${anexoHtml}${textoFormatado}<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px; margin-bottom: -4px;">${botaoApagar}<div style="font-size: 10px; opacity: 0.6; margin-left: auto;">${hora}</div></div></div>`;
+            `<div style="${balaoStyle}" ${eventosInteracao}>${menuOpcoes}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>${avatarHtml}` : 
+            `${avatarHtml}<div style="${balaoStyle}" ${eventosInteracao}>${menuOpcoes}${nomeHtml}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>`;
 
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
     },
@@ -740,12 +783,18 @@ Workspace.Sidebar = {
 
     initExtraChatTriggers: () => {
         document.addEventListener('click', (e) => {
+            // 1. Fecha o menu superior dos 3 pontinhos (Opções da Sala)
             const menuDropdown = document.getElementById('ws-chat-opcoes-dropdown');
             const menuButton = document.getElementById('ws-btn-opcoes-chat');
             if (menuDropdown && menuDropdown.style.display === 'flex') {
                 if (!menuDropdown.contains(e.target) && e.target !== menuButton) {
                     menuDropdown.style.display = 'none';
                 }
+            }
+            
+            // 2. 🚀 NOVA REGRA: Fecha os menus flutuantes das mensagens se o utilizador clicar/tocar noutro lado
+            if (!e.target.closest('.ws-msg-opcoes') && !e.target.closest('div[id^="msg-"]')) {
+                document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
             }
         });
     },
