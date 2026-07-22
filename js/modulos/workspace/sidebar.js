@@ -8,17 +8,22 @@ Workspace.Sidebar = {
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
     
-    // ============================================================================
-    // 🚀 MOTOR DE DETEÇÃO: PRESSÃO LONGA (MOBILE) E CLIQUE (PC)
+   // ============================================================================
+    // 🚀 MOTOR DE DETEÇÃO: PRESSÃO LONGA (MOBILE) E CLIQUE (PC) COM COORDENADAS
     // ============================================================================
     pressTimer: null,
     
-  iniciarPressMensagem: (msgId) => {
-        Workspace.Sidebar.cancelarPressMensagem();
+    iniciarPressMensagem: (event, msgId) => {
+        Workspace.Sidebar.cancelarPressMensagem(); 
+        
+        // Espia as coordenadas do dedo no ecrã do telemóvel
+        const touch = event.touches ? event.touches[0] : event;
+        const x = touch.clientX;
+        const y = touch.clientY;
+
         Workspace.Sidebar.pressTimer = setTimeout(() => {
-            // Se já estivermos em modo seleção, o toque longo apenas seleciona a mensagem
             if (Workspace.Sidebar.modoSelecaoAtivo) Workspace.Sidebar.toggleSelecaoMensagem(msgId);
-            else Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
+            else Workspace.Sidebar.mostrarOpcoesMensagem(msgId, x, y);
         }, 500); 
     },
     
@@ -27,27 +32,38 @@ Workspace.Sidebar = {
     },
     
     cliqueMensagem: (event, msgId) => {
-        // 🚀 INTERCETOR: Se o modo seleção estiver ligado, qualquer clique seleciona a mensagem!
         if (Workspace.Sidebar.modoSelecaoAtivo) {
             Workspace.Sidebar.toggleSelecaoMensagem(msgId);
             return;
         }
         
-        if (event.pointerType === "mouse" || window.innerWidth > 900) {
-            Workspace.Sidebar.mostrarOpcoesMensagem(msgId);
+        // Espia as coordenadas do Rato no PC
+        if (event.pointerType === "mouse" || window.innerWidth > 900 || event.type === 'contextmenu') {
+            Workspace.Sidebar.mostrarOpcoesMensagem(msgId, event.clientX, event.clientY);
         }
     },
     
-    mostrarOpcoesMensagem: (msgId) => {
-        // 1. Esconde qualquer outro menu que esteja aberto no chat
+    mostrarOpcoesMensagem: (msgId, x, y) => {
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
         
-        // 2. Mostra o menu deste balão específico
         const menu = document.getElementById(`opcoes-msg-${msgId}`);
-        if (menu) menu.style.display = 'flex';
+        if (menu) {
+            menu.style.display = 'flex';
+            
+            // 🚀 MATEMÁTICA INTELIGENTE: Impede que o menu fuja pela beira do ecrã!
+            const larguraMenu = 150; 
+            const alturaMenu = 100;
+            let posX = x;
+            let posY = y;
+            
+            if (x + larguraMenu > window.innerWidth) posX = window.innerWidth - larguraMenu - 15;
+            if (y + alturaMenu > window.innerHeight) posY = window.innerHeight - alturaMenu - 15;
+            
+            menu.style.left = `${posX}px`;
+            menu.style.top = `${posY}px`;
+        }
         
-        // 3. Feedback Tátil: Faz o telemóvel vibrar suavemente ao abrir o menu!
-        if (navigator.vibrate) navigator.vibrate(50);
+        if (navigator.vibrate) navigator.vibrate(50); // Feedback tátil (vibração)
     }, 
     
     isTyping: false,
@@ -77,6 +93,38 @@ Workspace.Sidebar = {
         } else {
             lista.style.display = 'none';
             if (icone) icone.innerText = '▼';
+        }
+    },
+
+    // ============================================================================
+    // 📥 MOTOR DE DOWNLOAD SEGURO (Ignora bloqueios de nova aba do Cloudinary)
+    // ============================================================================
+    forcarDownload: async (url, nomeArquivo) => {
+        Workspace.mostrarAviso("A preparar a transferência segura... ⏳", "info", 2000);
+        try {
+            // Vai buscar o ficheiro ao Cloudinary de forma invisível
+            const resposta = await fetch(url);
+            if (!resposta.ok) throw new Error("Falha na rede");
+            
+            // Transforma o ficheiro num objeto de memória local (Blob)
+            const blob = await resposta.blob();
+            const urlLocal = window.URL.createObjectURL(blob);
+            
+            // Cria um link fantasma, clica nele e destrói-o a seguir
+            const linkFantasma = document.createElement('a');
+            linkFantasma.style.display = 'none';
+            linkFantasma.href = urlLocal;
+            linkFantasma.download = nomeArquivo || 'documento_workspace';
+            document.body.appendChild(linkFantasma);
+            linkFantasma.click();
+            
+            // Limpa a memória
+            window.URL.revokeObjectURL(urlLocal);
+            document.body.removeChild(linkFantasma);
+        } catch (erro) {
+            console.error("Erro no download:", erro);
+            Workspace.mostrarAviso("O navegador bloqueou a transferência direta. A abrir separador...", "warning");
+            window.open(url, '_blank'); // Plano B de segurança
         }
     },
 
@@ -207,7 +255,7 @@ verFotoChat: () => {
             <div style="width: 90%; max-width: 380px; max-height: 90%; overflow-y: auto; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; scrollbar-width: none;">
                 <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#f0f2f5; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#555; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#f0f2f5'; this.style.color='#555'">✕</button>
                 
-                <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center; font-size: 18px; width: 100%;">✏️ Configurações do Grupo</h3>
+                <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center; font-size: 18px; width: 100%;">Configurações do Grupo</h3>
                 
                 <div style="text-align: center; margin-bottom: 20px; width: 100%;">
                     <div style="width: 90px; height: 90px; background: #f0f2f5; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('ws-chat-nova-foto').click()">
@@ -310,7 +358,7 @@ verFotoChat: () => {
         if(!nome) return Workspace.mostrarAviso("O nome do grupo é obrigatório.", "warning");
 
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A guardar na nuvem...";
+        btn.innerText = "Salvando...⏳";
         btn.disabled = true;
 
         try {
@@ -523,12 +571,10 @@ verFotoChat: () => {
         const hora = new Date(m.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const avatarChat = window.Workspace.renderizarAvatar(m.autorNome, 32);
         
-        // 🚀 O PODER TOTAL: Pode apagar se for dono, professor ou gestor
         const podeApagar = ehMinha || Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
 
         const avatarHtml = `<div style="margin: 0 8px; flex-shrink: 0; align-self: flex-end;">${avatarChat}</div>`;
 
-        // 📎 Verifica e desenha o Anexo (AGORA COM VISUALIZADOR INTERNO)
         let anexoHtml = '';
         if (m.anexoUrl) {
             if (m.anexoTipo === 'image') {
@@ -548,19 +594,19 @@ verFotoChat: () => {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 O MENU FLUTUANTE INVISÍVEL
+        // 🚀 O MENU FLUTUANTE (Agora com position: fixed para abrir livremente onde o dedo toca!)
         const menuOpcoes = podeApagar ? `
-            <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: absolute; top: 10px; ${ehMinha ? 'right: 100%; margin-right: 8px;' : 'left: 100%; margin-left: 8px;'} background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); padding: 4px; z-index: 100; border: 1px solid #eee; flex-direction: column; gap: 2px;">
-                <button onclick="event.stopPropagation(); Workspace.Sidebar.ativarModoSelecao('${m.id}')" style="background: transparent; border: none; color: #2980b9; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">☑️</span> Selecionar</button>
+            <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: fixed; background: white; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); padding: 4px; z-index: 100005; border: 1px solid #eee; flex-direction: column; gap: 2px; min-width: 140px;">
+                <button onclick="event.stopPropagation(); Workspace.Sidebar.ativarModoSelecao('${m.id}')" style="background: transparent; border: none; color: #2980b9; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">☑️</span> Selecionar</button>
                 <div style="height: 1px; background: #eee; width: 100%;"></div>
-                <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 8px 15px; white-space: nowrap; display: flex; align-items: center; gap: 6px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
+                <button onclick="event.stopPropagation(); Workspace.Sidebar.apagarMensagemIndividual('${m.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">🗑️</span> Apagar</button>
             </div>
         ` : '';
 
-        // O balão torna-se "Relativo" para segurar o menu e ganha os sensores de toque/clique!
         const balaoStyle = `position: relative; display: flex; flex-direction: column; max-width: 85%; width: fit-content; padding: 8px 12px; border-radius: 12px; ${borderRadiusFix} background: ${backgroundBalao}; color: #2c3e50; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: ${podeApagar ? 'pointer' : 'default'}; -webkit-user-select: none; user-select: none;`;
         
-        const eventosInteracao = podeApagar ? `onclick="Workspace.Sidebar.cliqueMensagem(event, '${m.id}')" ontouchstart="Workspace.Sidebar.iniciarPressMensagem('${m.id}')" ontouchend="Workspace.Sidebar.cancelarPressMensagem()" ontouchmove="Workspace.Sidebar.cancelarPressMensagem()" oncontextmenu="event.preventDefault(); Workspace.Sidebar.mostrarOpcoesMensagem('${m.id}'); return false;"` : '';
+        // 🚀 O PASSE DE MAGIA: Adicionámos a variável 'event' para os sensores lerem o toque/rato
+        const eventosInteracao = podeApagar ? `onclick="Workspace.Sidebar.cliqueMensagem(event, '${m.id}')" ontouchstart="Workspace.Sidebar.iniciarPressMensagem(event, '${m.id}')" ontouchend="Workspace.Sidebar.cancelarPressMensagem()" ontouchmove="Workspace.Sidebar.cancelarPressMensagem()" oncontextmenu="event.preventDefault(); Workspace.Sidebar.mostrarOpcoesMensagem('${m.id}', event.clientX, event.clientY); return false;"` : '';
 
         let layoutMsg = ehMinha ? 
             `<div style="${balaoStyle}" ${eventosInteracao}>${menuOpcoes}${anexoHtml}${textoFormatado}<div style="font-size: 10px; opacity: 0.6; text-align: right; margin-top: 4px; margin-bottom: -4px;">${hora}</div></div>${avatarHtml}` : 
@@ -624,7 +670,7 @@ verFotoChat: () => {
                     ${tipo === 'imagem' ? '🖼️' : '📄'} ${Workspace.Sidebar.escapeHTML(nome)}
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <a href="${url}" download target="_blank" style="color: white; text-decoration: none; font-size: 20px;" title="Baixar">📥</a>
+                    <button onclick="Workspace.Sidebar.forcarDownload('${url}', '${Workspace.Sidebar.escapeHTML(nome)}')" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer; font-weight:bold; padding:0; line-height:1; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'" title="Transferir para o aparelho">📥</button>
                     <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 300)" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer; font-weight:bold; padding:0; line-height:1;" title="Fechar">✖</button>
                 </div>
             </div>
