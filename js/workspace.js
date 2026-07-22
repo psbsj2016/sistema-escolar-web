@@ -214,16 +214,18 @@ Object.assign(Workspace, {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
+    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com CSS Inquebrável para proporções perfeitas)
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
         
         if (url) {
-            return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; object-fit:cover; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff;">`;
+            // 🚀 O SEGREDO DO CSS: 'aspect-ratio: 1/1', 'object-position: center' e 'flex-shrink: 0' impedem distorções e vazios!
+            return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
         } else {
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
-            return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${letra}</div>`;
+            return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
         }
     },
 
@@ -272,6 +274,7 @@ Object.assign(Workspace, {
         }
     },
 
+  // 📸 MOTOR DE AVATARES PESSOAIS EM ALTA RESOLUÇÃO (Smart Crop, Fundo Branco, High-Res)
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -290,22 +293,30 @@ Object.assign(Workspace, {
 
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 400; 
+            
+            // 🚀 1. DOBRO DA RESOLUÇÃO (Para ecrãs HD e Retina)
+            const MAX_SIZE = 800; 
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
-            let sourceX = 0, sourceY = 0, sourceSize = 0;
-            if (imgOriginal.width > imgOriginal.height) {
-                sourceSize = imgOriginal.height;
-                sourceX = (imgOriginal.width - sourceSize) / 2;
-            } else {
-                sourceSize = imgOriginal.width;
-                sourceY = (imgOriginal.height - sourceSize) / 2;
-            }
+            
+            // 🚀 2. SUAVIZAÇÃO GRÁFICA DE ELITE
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            ctx.drawImage(imgOriginal, sourceX, sourceY, sourceSize, sourceSize, 0, 0, MAX_SIZE, MAX_SIZE);
+            // 🚀 3. FUNDO BRANCO OBRIGATÓRIO (Impede que PNGs transparentes quebrem)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
+            
+            // 🚀 4. MATEMÁTICA DO CORTE CENTRAL (Smart Crop Perfeito)
+            const menorLado = Math.min(imgOriginal.width, imgOriginal.height);
+            const sourceX = (imgOriginal.width - menorLado) / 2;
+            const sourceY = (imgOriginal.height - menorLado) / 2;
 
+            ctx.drawImage(imgOriginal, sourceX, sourceY, menorLado, menorLado, 0, 0, MAX_SIZE, MAX_SIZE);
+
+            // 🚀 5. COMPRESSÃO PREMIUM (0.92 garante nitidez)
             canvas.toBlob(async (blob) => {
                 URL.revokeObjectURL(objectUrl); 
 
@@ -342,7 +353,7 @@ Object.assign(Workspace, {
                         if(img) { img.src = avatarFinal; img.style.display = 'block'; }
                         if(letras) letras.style.display = 'none';
 
-                        Workspace.mostrarAviso("Foto de perfil atualizada!", "success");
+                        Workspace.mostrarAviso("Foto de perfil atualizada com qualidade HD!", "success");
                         if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
                         if(Workspace.Feed) Workspace.Feed.carregarPosts();
                     }
@@ -353,7 +364,7 @@ Object.assign(Workspace, {
                     if(loader) loader.style.display = 'none';
                     event.target.value = ''; 
                 }
-            }, 'image/jpeg', 0.85); 
+            }, 'image/jpeg', 0.92); 
         };
         
         imgOriginal.onerror = () => {
