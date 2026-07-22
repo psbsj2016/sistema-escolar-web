@@ -166,7 +166,7 @@
         }
 
     </style>
-  <script type="module" crossorigin src="/assets/workspace-Cr6wQCpk.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-B7-R_U7i.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-DsfEqi9Q.js">
   <link rel="modulepreload" crossorigin href="/assets/site-uBRfFSGd.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D7LMCEVW.css">
@@ -543,41 +543,80 @@
             
             <!-- Abas de Navegação -->
             <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 15px; margin-bottom: 20px;">
-                <button id="tab-bau-meu" class="ws-btn" style="background: #2c3e50; color: white; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('meu')" ontouchstart="">Meu Baú</button>
-                <button id="tab-bau-inst" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('inst')" ontouchstart="">Baú da Instituição</button>
+                <button id="tab-bau-meu" class="ws-btn" style="background: #2c3e50; color: white; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('meu')">Meu Baú</button>
+                <button id="tab-bau-inst" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Bau.mudarAba('inst')">Baú da Instituição</button>
             </div>
 
             <!-- CONTEÚDO: MEU BAÚ -->
             <div id="ws-bau-meu-conteudo" style="display: block; animation: fadeIn 0.3s ease;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     
-                    <!-- Módulo: Calendário e Agendamento -->
+                    <!-- 📅 MÓDULO: CALENDÁRIO INTERATIVO -->
                     <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="margin: 0; color: #3498db; font-size: 16px;">📅 Meu Calendário</h4>
-                            <button onclick="Workspace.Bau.abrirAgendamento()" style="background: #e8f4f8; color: #3498db; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;" title="Configurar Agendamento">⚙️ Agendar</button>
+                        <h4 style="margin: 0 0 15px 0; color: #3498db; font-size: 16px;">📅 Agendamentos</h4>
+                        
+                        <!-- Cabeçalho do Calendário (Setas e Mês) -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                            <button onclick="Workspace.Bau.mudarMes(-1)" style="background: #f0f2f5; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #333; transition: 0.2s;" onmouseover="this.style.background='#e2e6ea'">❮</button>
+                            <span id="ws-bau-cal-mesano" style="font-weight: bold; color: #2c3e50; font-size: 14px; text-transform: uppercase;">Mês Ano</span>
+                            <button onclick="Workspace.Bau.mudarMes(1)" style="background: #f0f2f5; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; color: #333; transition: 0.2s;" onmouseover="this.style.background='#e2e6ea'">❯</button>
                         </div>
-                        <div id="ws-bau-calendario-visual" style="text-align: left; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; font-weight: bold; color: #555;">
-                            A carregar calendário da nuvem... ⏳
+                        
+                        <!-- Dias da Semana -->
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: bold; margin-bottom: 5px;">
+                            <div style="color: #e74c3c;">Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                        </div>
+                        
+                        <!-- Grelha de Dias (Preenchida pelo JS) -->
+                        <div id="ws-bau-cal-dias" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;"></div>
+
+                        <!-- Lista de Lembretes Abaixo do Calendário -->
+                        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                            <h5 style="margin: 0 0 10px 0; color: #555; font-size: 13px;">Próximos Lembretes</h5>
+                            <div id="ws-bau-calendario-visual" style="font-size: 12px; color: #7f8c8d;">A carregar nuvem... ⏳</div>
                         </div>
                     </div>
 
-                    <!-- Módulo: Bloco de Notas Rico -->
-                    <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="margin: 0; color: #27ae60; font-size: 16px;">📝 Anotações Livres</h4>
-                            <span id="ws-bau-status-salvamento" style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Sincronizado ☁️✅</span>
-                        </div>
+                    <!-- 📝 MÓDULO: CADERNO DE NOTAS -->
+                    <div style="background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 20px; position: relative;">
                         
-                        <!-- Barra de Ferramentas -->
-                        <div style="display: flex; gap: 5px; background: #eee; padding: 5px; border-radius: 8px 8px 0 0; border: 1px solid #ccc; border-bottom: none;">
-                            <button onclick="document.execCommand('bold', false, null)" style="font-weight: bold; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">B</button>
-                            <button onclick="document.execCommand('italic', false, null)" style="font-style: italic; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">I</button>
-                            <button onclick="document.execCommand('underline', false, null)" style="text-decoration: underline; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">U</button>
+                        <!-- TELA 1: LISTA DE NOTAS -->
+                        <div id="ws-bau-tela-lista" style="display: block;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h4 style="margin: 0; color: #27ae60; font-size: 16px;">📝 Meus Cadernos</h4>
+                                <button onclick="Workspace.Bau.novaNota()" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s;" onmouseover="this.style.background='#219653'">+ Nova Nota</button>
+                            </div>
+                            <div id="ws-bau-lista-notas" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
+                                <div style="text-align: center; color: #999; font-size: 13px; padding: 20px;">A procurar notas na nuvem... ⏳</div>
+                            </div>
                         </div>
-                        
-                        <!-- Área de Edição -->
-                        <div id="ws-bau-notas-editor" contenteditable="true" style="min-height: 150px; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; padding: 15px; font-size: 14px; outline: none; overflow-y: auto; color: #333;" oninput="Workspace.Bau.salvarNotasNaNuvem(this.innerHTML)">A carregar memórias da nuvem...</div>
+
+                        <!-- TELA 2: MODO LEITURA -->
+                        <div id="ws-bau-tela-leitura" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                                <button onclick="Workspace.Bau.voltarListaNotas()" style="background: transparent; color: #3498db; border: none; cursor: pointer; font-weight: bold; font-size: 13px;">❮ Voltar</button>
+                                <button onclick="Workspace.Bau.editarNotaAtual()" style="background: #f39c12; color: white; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;">✏️ Editar</button>
+                            </div>
+                            <h4 id="ws-bau-leitura-titulo" style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">Título da Nota</h4>
+                            <div id="ws-bau-leitura-texto" style="color: #444; font-size: 14px; line-height: 1.6; min-height: 200px; max-height: 300px; overflow-y: auto; background: white; padding: 15px; border-radius: 8px; border: 1px solid #eee;"></div>
+                        </div>
+
+                        <!-- TELA 3: MODO EDIÇÃO (Com Auto-Save) -->
+                        <div id="ws-bau-tela-edicao" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <button onclick="Workspace.Bau.fecharEdicao()" style="background: transparent; color: #e74c3c; border: none; cursor: pointer; font-weight: bold; font-size: 13px;">Cancelar</button>
+                                <span id="ws-bau-status-salvamento" style="font-size: 11px; color: #7f8c8d; font-weight: bold;"></span>
+                                <button onclick="Workspace.Bau.salvarESairNota()" style="background: #27ae60; color: white; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;">💾 Guardar e Sair</button>
+                            </div>
+                            <input type="text" id="ws-bau-edicao-titulo" placeholder="Título da Anotação" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px 8px 0 0; font-weight: bold; font-size: 15px; box-sizing: border-box; outline: none; border-bottom: none;" oninput="Workspace.Bau.autoSalvarNota()">
+                            <div style="display: flex; gap: 5px; background: #eee; padding: 5px; border-left: 1px solid #ccc; border-right: 1px solid #ccc;">
+                                <button onclick="document.execCommand('bold', false, null)" style="font-weight: bold; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">B</button>
+                                <button onclick="document.execCommand('italic', false, null)" style="font-style: italic; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">I</button>
+                                <button onclick="document.execCommand('underline', false, null)" style="text-decoration: underline; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px 10px;">U</button>
+                            </div>
+                            <div id="ws-bau-edicao-texto" contenteditable="true" style="min-height: 200px; max-height: 300px; background: white; border: 1px solid #ccc; border-radius: 0 0 8px 8px; padding: 15px; font-size: 14px; outline: none; overflow-y: auto; color: #333;" oninput="Workspace.Bau.autoSalvarNota()"></div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -600,6 +639,27 @@
 
         </div>
     </section>
+
+    <!-- ⏰ MODAL DE ESCOLHA DE HORA DO ALARME -->
+    <div id="ws-modal-alarme" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100010; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
+        <div class="ws-card" style="width: 90%; max-width: 320px; padding: 25px; text-align: center; animation: fadeIn 0.2s;">
+            <h3 style="margin: 0 0 5px 0; color: #2c3e50;">⏰ Agendar Lembrete</h3>
+            <p id="ws-modal-alarme-data" style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-bottom: 15px;"></p>
+            
+            <input type="hidden" id="ws-alarme-ano"><input type="hidden" id="ws-alarme-mes"><input type="hidden" id="ws-alarme-dia">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #555; display: block; text-align: left; margin-bottom: 5px;">Selecione a Hora exata:</label>
+            <input type="time" id="ws-alarme-hora" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 18px; margin-bottom: 15px; outline: none;">
+            
+            <label style="font-size: 12px; font-weight: bold; color: #555; display: block; text-align: left; margin-bottom: 5px;">Qual a mensagem do lembrete?</label>
+            <input type="text" id="ws-alarme-msg" placeholder="Ex: Estudar Matemática" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; margin-bottom: 20px; outline: none;">
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('ws-modal-alarme').style.display='none'" class="ws-btn" style="flex: 1; background: #95a5a6;">Cancelar</button>
+                <button onclick="Workspace.Bau.confirmarAgendamento()" class="ws-btn" style="flex: 1; background: #3498db;">Agendar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ⚙️ CONFIGURAÇÕES E PERFIL -->
     <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
