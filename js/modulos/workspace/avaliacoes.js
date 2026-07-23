@@ -260,13 +260,27 @@ Workspace.Avaliacoes = {
     mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
  registrarPresencaOnline: async (event, id, link) => {
-        // 🚀 ESCUDO: Evita que o clique vaze para a plataforma
+        // 🚀 ESCUDO DE CLIQUE: Impede que o sistema redirecione o aluno para o Feed
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
+
+        // 🚀 VERIFICAÇÃO DE SEGURANÇA (Garante que vai para o Zoom/Meet e não para o seu próprio site)
+        let linkSeguro = link || '';
+        if (linkSeguro && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
+            linkSeguro = 'https://' + linkSeguro;
+        }
         
-        window.open(link, '_blank');
+        // Abre a sala IMEDIATAMENTE noutra aba (evita bloqueadores de pop-ups)
+        if (linkSeguro) {
+            window.open(linkSeguro, '_blank', 'noopener,noreferrer');
+        } else {
+            Workspace.mostrarAviso("O professor não forneceu um link válido.", "warning");
+            return;
+        }
+
+        // Registo silencioso no servidor
         try {
             const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (resInic && resInic.success) {
@@ -384,47 +398,55 @@ Workspace.Avaliacoes = {
             tOnHist.style.background = Workspace.Avaliacoes.abaOnline === 'historico' ? '#2c3e50' : 'transparent';
             tOnHist.style.color = Workspace.Avaliacoes.abaOnline === 'historico' ? 'white' : '#7f8c8d';
         }
-    const contOnline = document.getElementById('ws-lista-provas-online');
+   const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             const listaAtivaOnline = Workspace.Avaliacoes.abaOnline === 'abertas' ? onPendentes : onHistorico;
             if (listaAtivaOnline.length === 0) {
                 contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
-                    // 🚀 1. TRATAMENTO SEGURO DA DATA (Impede o "Data Indefinida")
+                    // 🚀 1. MATEMÁTICA DA DATA 100% SEGURA
                     let dataFormatada = 'Data Indefinida';
                     let horaFormatada = '--:--';
 
                     if (p.dataAgendada) {
                         try {
-                            // Se a data vier do `<input type="datetime-local">`, vem assim: "2026-07-25T15:30"
-                            if (p.dataAgendada.includes('T')) {
+                            if (typeof p.dataAgendada === 'string' && p.dataAgendada.includes('T')) {
                                 const partes = p.dataAgendada.split('T');
-                                const dataPartes = partes[0].split('-'); // Ex: ["2026", "07", "25"]
-                                dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`; // Fica 25/07/2026
-                                horaFormatada = partes[1].substring(0, 5); // Fica 15:30
+                                const dataPartes = partes[0].split('-'); 
+                                // Validação extra: só formata se tiver ano, mês e dia
+                                if (dataPartes.length === 3) {
+                                    dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`; 
+                                    horaFormatada = partes[1].substring(0, 5); 
+                                }
                             } else {
-                                // Caso venha num formato normal
                                 const d = new Date(p.dataAgendada);
                                 if (!isNaN(d.getTime())) {
                                     dataFormatada = d.toLocaleDateString('pt-BR');
                                     horaFormatada = d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                                 }
                             }
-                        } catch(e) {}
+                        } catch(e) { console.error("Erro ao ler data:", e); }
                     }
 
-                    // 🚀 2. VERIFICAÇÃO DO HTTPS
-                    let linkSeguro = p.linkSala || '#';
-                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
-                        linkSeguro = 'https://' + linkSeguro;
-                    }
+                    // 🚀 2. EXIBIÇÃO DO PÚBLICO ALVO
+                    const publicoAlvo = p.destinoNome || 'Todas as Turmas';
 
-                    // Passamos a usar a função com "event" no onclick!
-                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
+                    // 🚀 3. BOTÃO TOTALMENTE BLINDADO (type="button")
+                    // Passamos p.linkSala sem mexer nele aqui, a função registrarPresencaOnline fará o tratamento
+                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' 
+                        ? `<button type="button" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; color: white; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${p.linkSala || ''}')">Entrar na Sala</button>` 
+                        : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
+                    
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                        <div><h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4><span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span></div>
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
+                            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                                <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span>
+                                <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #f0f2f5; padding: 3px 8px; border-radius: 12px;">👥 ${publicoAlvo}</span>
+                            </div>
+                        </div>
                         ${btnAcao}
                     </div>`}).join('');
             }
