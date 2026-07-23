@@ -378,17 +378,31 @@ Workspace.Avaliacoes = {
             tOnHist.style.background = Workspace.Avaliacoes.abaOnline === 'historico' ? '#2c3e50' : 'transparent';
             tOnHist.style.color = Workspace.Avaliacoes.abaOnline === 'historico' ? 'white' : '#7f8c8d';
         }
-        const contOnline = document.getElementById('ws-lista-provas-online');
+     const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             const listaAtivaOnline = Workspace.Avaliacoes.abaOnline === 'abertas' ? onPendentes : onHistorico;
             if (listaAtivaOnline.length === 0) {
                 contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
-                    const dataObj = new Date(p.dataAgendada);
-                    const dataFormatada = dataObj.toLocaleDateString('pt-BR');
-                    const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${p.linkSala}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
+                    // 1. Blindagem de Data e Hora
+                    let dataFormatada = 'Data Indefinida';
+                    let horaFormatada = '';
+                    if (p.dataAgendada) {
+                        const dataObj = new Date(p.dataAgendada);
+                        if (!isNaN(dataObj.getTime())) {
+                            dataFormatada = dataObj.toLocaleDateString('pt-BR');
+                            horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                        }
+                    }
+
+                    // 2. Tratamento do Link Externo
+                    let linkSeguro = p.linkSala || '#';
+                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
+                        linkSeguro = 'https://' + linkSeguro;
+                    }
+
+                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${linkSeguro}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                         <div><h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4><span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span></div>
@@ -508,7 +522,7 @@ Workspace.Avaliacoes = {
         const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
         const menuEncontros = document.getElementById('ws-prof-menu-encontros');
         if (contexto === 'encontros') {
-            if(titulo) titulo.innerHTML = '<span>💻 Painel do Professor: Encontros Online</span>';
+            if(titulo) titulo.innerHTML = '<span>🖥️ Painel do Professor: Encontros Online</span>';
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'none';
             if(menuEncontros) menuEncontros.style.display = 'grid';
         } else {
@@ -549,7 +563,7 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-nova-oral-titulo').value = ''; document.getElementById('ws-nova-oral-instrucoes').value = ''; document.getElementById('ws-nova-oral-tentativas').value = 1; document.getElementById('ws-nova-oral-destino').value = 'global';
     },
     abrirNovaOnline: () => {
-        Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-online').innerText = "💻 Agendar Sessão Ao Vivo";
+        Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-online').innerText = "🖥️ Agendar Sessão Ao Vivo";
         document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-nova-online').style.display = 'block';
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
@@ -581,7 +595,7 @@ Workspace.Avaliacoes = {
         }
 
         container.innerHTML = avaliacoes.map(a => {
-            let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '💻';
+            let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
 
@@ -616,7 +630,6 @@ Workspace.Avaliacoes = {
         }).join('');
     },
 
-    // 🚀 LÓGICA DE CRUZAMENTO DE DADOS CORRIGIDA
     abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
@@ -634,7 +647,8 @@ Workspace.Avaliacoes = {
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
                 <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <button class="ws-btn" style="background:#e74c3c; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">⚠️ Reativar para Todos</button>
+                    <!-- 3. Botão "Reativar para Todos" Azul -->
+                    <button class="ws-btn" style="background:#3498db; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
                 <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
@@ -695,13 +709,14 @@ Workspace.Avaliacoes = {
                             </div>
                         `;
                     } else {
+                        // 3. Etiqueta "Link Reativado" (Aguardando acesso)
                         htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
-                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Link Ativado (Por aceder)</div>
+                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando acesso)</div>
                                     </div>
                                 </div>
                             </div>
@@ -746,6 +761,8 @@ Workspace.Avaliacoes = {
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             Workspace.Avaliacoes.abrirGerenciador(); 
             setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
+            // 3. Atualizar lobbies em tempo real
+            Workspace.Avaliacoes.carregarLobbies();
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno. Tente novamente.", "error");
             btn.innerText = originalTxt;
@@ -761,6 +778,8 @@ Workspace.Avaliacoes = {
                 const modal = document.getElementById('ws-modal-acessos-online');
                 if (modal) modal.remove();
                 Workspace.Avaliacoes.abrirGerenciador();
+                // 3. Atualizar lobbies em tempo real
+                Workspace.Avaliacoes.carregarLobbies();
             } catch(e) { Workspace.mostrarAviso("Erro de comunicação ao limpar sala.", "error"); }
         });
     },
@@ -801,7 +820,7 @@ Workspace.Avaliacoes = {
             document.getElementById('ws-nova-prova-tempo').value = prova.tempo || 60;
             document.getElementById('ws-nova-prova-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-prova-destino').value = prova.destino || 'global';
-            document.getElementById('ws-btn-salvar-escrita').innerText = "💾 Guardar Alterações";
+            document.getElementById('ws-btn-salvar-escrita').innerText = "💾 Salvar Alterações";
             
             document.getElementById('ws-builder-questoes').innerHTML = '';
             if(prova.questoes) {
@@ -815,16 +834,32 @@ Workspace.Avaliacoes = {
             document.getElementById('ws-nova-oral-instrucoes').value = prova.instrucoes;
             document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
-            document.getElementById('ws-btn-salvar-oral').innerText = "💾 Guardar Alterações";
-        } else if (prova.tipo === 'online') { 
+            document.getElementById('ws-btn-salvar-oral').innerText = "💾 Salvar Alterações";
+       } else if (prova.tipo === 'online') { 
             document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
             document.getElementById('ws-prof-nova-online').style.display = 'block';
             
             document.getElementById('ws-nova-online-titulo').value = prova.titulo;
-            document.getElementById('ws-nova-online-data').value = prova.dataAgendada || '';
+            
+            // 4. Formatar a data para o input datetime-local
+            let dataFormatadaInput = '';
+            if (prova.dataAgendada) {
+                const dataObj = new Date(prova.dataAgendada);
+                if (!isNaN(dataObj.getTime())) {
+                    // O input datetime-local exige o formato YYYY-MM-DDThh:mm
+                    const ano = dataObj.getFullYear();
+                    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+                    const dia = String(dataObj.getDate()).padStart(2, '0');
+                    const horas = String(dataObj.getHours()).padStart(2, '0');
+                    const minutos = String(dataObj.getMinutes()).padStart(2, '0');
+                    dataFormatadaInput = `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+                }
+            }
+            
+            document.getElementById('ws-nova-online-data').value = dataFormatadaInput;
             document.getElementById('ws-nova-online-link').value = prova.linkSala || '';
             document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
-            document.getElementById('ws-btn-salvar-online').innerText = "💾 Guardar Alterações";
+            document.getElementById('ws-btn-salvar-online').innerText = "💾 Salvar Alterações";
         }
     },
 
