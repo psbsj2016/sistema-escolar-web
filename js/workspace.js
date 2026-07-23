@@ -647,14 +647,31 @@ Object.assign(Workspace, {
             }
         },
 
-        apagarNota: async (id) => {
-            if(confirm("Tem a certeza que deseja eliminar esta nota para sempre?")) {
-                try {
-                    await Workspace.api(`/workspace/bau/notas/${id}`, 'DELETE');
-                    Workspace.Bau.notasCache = Workspace.Bau.notasCache.filter(n => n.id !== id);
-                    Workspace.Bau.renderizarListaNotas();
-                } catch(e) {}
-            }
+      apagarNota: (id) => {
+            // 🚀 Aciona o modal de confirmação bonito para as Notas
+            Workspace.Sidebar.mostrarConfirmacao(
+                "Apagar Nota?",
+                "Tem a certeza de que deseja eliminar esta anotação para sempre? Esta ação não tem retorno.",
+                async () => {
+                    // 1. Remove da base de dados silenciosamente
+                    try {
+                        await Workspace.api(`/workspace/bau/notas/${id}`, 'DELETE');
+                        
+                        // 2. Remove da memória visual e atualiza a lista
+                        Workspace.Bau.notasCache = Workspace.Bau.notasCache.filter(n => n.id !== id);
+                        Workspace.Bau.renderizarListaNotas();
+                        
+                        // 3. Mostra a mensagem de sucesso no topo
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("Nota apagada com sucesso!", "success");
+                        }
+                    } catch(e) {
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("Erro ao apagar a nota na nuvem.", "error");
+                        }
+                    }
+                }
+            );
         },
 
         // ======================= SISTEMA DE CALENDÁRIO & ALARMES =======================
@@ -786,28 +803,21 @@ Object.assign(Workspace, {
             } else { calVisual.innerHTML = "Nenhum evento agendado neste mês."; }
         },
 
-        apagarAlarme: (id) => {
-            // 🚀 Aciona o modal de confirmação bonito e personalizado do seu sistema
+       apagarAlarme: (id) => {
+            // 🚀 Aciona o modal de confirmação bonito para os Lembretes
             Workspace.Sidebar.mostrarConfirmacao(
                 "Apagar Lembrete?",
                 "Tem a certeza de que deseja apagar definitivamente este lembrete do seu calendário?",
                 async () => {
-                    // Esta área só é executada se o utilizador clicar em "Sim, Apagar"
-                    
-                    // 1. Remove da memória local
                     Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
-                    
-                    // 2. Atualiza a parte visual (Calendário e Sininho)
                     Workspace.Bau.atualizarCalendarioVisual(); 
                     Workspace.Bau.atualizarSininhoMemorias(); 
-                    
-                    // 3. Avisa a nuvem (Base de Dados) para apagar em definitivo
                     try { 
                         await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE'); 
-                        Workspace.mostrarAviso("Lembrete removido com sucesso!", "success");
-                    } catch(e) {
-                        console.error("Erro ao apagar o alarme na nuvem.");
-                    }
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("Lembrete removido com sucesso!", "success");
+                        }
+                    } catch(e) {}
                 }
             );
         },
