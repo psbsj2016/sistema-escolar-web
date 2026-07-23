@@ -260,15 +260,13 @@ Workspace.Avaliacoes = {
     mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
  registrarPresencaOnline: async (event, id, link) => {
-        // 🚀 ESCUDO DE CLIQUE: Impede que o sistema ache que o aluno clicou noutra coisa e vá para o feed
+        // 🚀 ESCUDO: Evita que o clique vaze para a plataforma
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
         
-        // Abre a sala do Meet/Zoom noutra aba
         window.open(link, '_blank');
-        
         try {
             const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (resInic && resInic.success) {
@@ -393,33 +391,36 @@ Workspace.Avaliacoes = {
                 contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
-                    
-                    // 🚀 1. SUPER BLINDAGEM DA DATA (À prova de falhas em qualquer navegador)
+                    // 🚀 1. TRATAMENTO SEGURO DA DATA (Impede o "Data Indefinida")
                     let dataFormatada = 'Data Indefinida';
                     let horaFormatada = '--:--';
+
                     if (p.dataAgendada) {
                         try {
-                            const d = new Date(p.dataAgendada);
-                            if (!isNaN(d.getTime())) {
-                                dataFormatada = d.toLocaleDateString('pt-BR');
-                                horaFormatada = d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                            } else if (p.dataAgendada.includes('T')) {
-                                // Fallback manual: se o navegador não entender, cortamos o texto à mão!
+                            // Se a data vier do `<input type="datetime-local">`, vem assim: "2026-07-25T15:30"
+                            if (p.dataAgendada.includes('T')) {
                                 const partes = p.dataAgendada.split('T');
-                                const dataPartes = partes[0].split('-');
-                                dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
-                                horaFormatada = partes[1].substring(0, 5);
+                                const dataPartes = partes[0].split('-'); // Ex: ["2026", "07", "25"]
+                                dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`; // Fica 25/07/2026
+                                horaFormatada = partes[1].substring(0, 5); // Fica 15:30
+                            } else {
+                                // Caso venha num formato normal
+                                const d = new Date(p.dataAgendada);
+                                if (!isNaN(d.getTime())) {
+                                    dataFormatada = d.toLocaleDateString('pt-BR');
+                                    horaFormatada = d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                                }
                             }
                         } catch(e) {}
                     }
 
-                    // 🚀 2. FORÇAR O HTTPS PARA SALAS (Impede que abra no seu site)
+                    // 🚀 2. VERIFICAÇÃO DO HTTPS
                     let linkSeguro = p.linkSala || '#';
-                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http')) {
+                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
                         linkSeguro = 'https://' + linkSeguro;
                     }
 
-                    // Botão agora passa o evento "event" para a nossa função blindada
+                    // Passamos a usar a função com "event" no onclick!
                     const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
@@ -664,7 +665,8 @@ Workspace.Avaliacoes = {
                 <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
-                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                <<div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                    <!-- Botão "Reativar para Todos" Azul -->
                     <button class="ws-btn" style="background:#3498db; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
@@ -723,6 +725,7 @@ Workspace.Avaliacoes = {
                             </div>
                         `;
                     } else {
+                        // Etiqueta "Link Reativado" (Aguardando acesso)
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -772,14 +775,13 @@ Workspace.Avaliacoes = {
             await Workspace.api(`/workspace/entregas/${entregaId}`, 'DELETE');
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             
-            // 🚀 A MAGIA: Apagamos da memória local e forçamos as atualizações sem F5!
+            // 🚀 LIMPA A CACHE LOCAL E FORÇA A TELA A ATUALIZAR!
             Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
             Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
             
-            Workspace.Avaliacoes.carregarLobbies(); // Atualiza a aba do aluno
-            Workspace.Avaliacoes.abrirGerenciador(); // Atualiza a lista por trás
-            Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId); // Atualiza a janela aberta!
-            
+            Workspace.Avaliacoes.abrirGerenciador(); 
+            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
+            Workspace.Avaliacoes.carregarLobbies();
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno. Tente novamente.", "error");
             btn.innerText = originalTxt;
@@ -793,15 +795,15 @@ Workspace.Avaliacoes = {
                 await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
                 Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
                 
-                // 🚀 A MAGIA: Apagamos todas as presenças da memória desta avaliação!
+                // 🚀 LIMPA A CACHE LOCAL DE TODA A SALA!
                 Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
                 Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
 
                 const modal = document.getElementById('ws-modal-acessos-online');
                 if (modal) modal.remove();
                 
-                Workspace.Avaliacoes.carregarLobbies(); // Atualiza aluno
-                Workspace.Avaliacoes.abrirGerenciador(); // Atualiza prof
+                Workspace.Avaliacoes.abrirGerenciador();
+                Workspace.Avaliacoes.carregarLobbies();
             } catch(e) { Workspace.mostrarAviso("Erro de comunicação ao limpar sala.", "error"); }
         });
     },
