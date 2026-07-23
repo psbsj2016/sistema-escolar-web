@@ -428,7 +428,7 @@ Object.assign(Workspace, {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    logout: async (forcado = false) => {
+  logout: async (forcado = false) => {
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         localStorage.removeItem('ws_usuario_logado');
         
@@ -438,7 +438,7 @@ Object.assign(Workspace, {
             document.getElementById('ws-main-container').style.display = 'none';
             
             // 🚀 LIMPEZA VISUAL: Fecha as janelas flutuantes que possam ter ficado perdidas no ecrã!
-            const modais = ['ws-senha-modal', 'ws-perfil-modal', 'ws-chat-modal', 'ws-tarefa-modal'];
+            const modais = ['ws-senha-modal', 'ws-perfil-modal', 'ws-chat-modal', 'ws-tarefa-modal', 'ws-modal-alarme'];
             modais.forEach(id => {
                 const modal = document.getElementById(id);
                 if (modal) modal.style.display = 'none';
@@ -448,9 +448,9 @@ Object.assign(Workspace, {
         } else {
             window.location.reload(); 
         }
-    },
-     
-   // ============================================================================
+    }, // <--- 🚀 A VÍRGULA MÁGICA QUE FALTAVA ESTÁ AQUI!
+
+    // ============================================================================
     // 🧰 MOTOR DO BAÚ DAS MEMÓRIAS (Calendário, Notas Multi-Telas e Relógio Preciso)
     // ============================================================================
     Bau: {
@@ -642,6 +642,7 @@ Object.assign(Workspace, {
         mudarMes: (direcao) => {
             Workspace.Bau.calDataAtual.setMonth(Workspace.Bau.calDataAtual.getMonth() + direcao);
             Workspace.Bau.renderizarCalendario();
+            Workspace.Bau.atualizarCalendarioVisual(); // Atualiza a lista abaixo do calendário!
         },
 
         renderizarCalendario: () => {
@@ -655,21 +656,18 @@ Object.assign(Workspace, {
             const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             labelMesAno.innerText = `${nomesMeses[mes]} ${ano}`;
 
-            // Lógica do Calendário
             const primeiroDiaDaSemana = new Date(ano, mes, 1).getDay(); // 0 (Dom) a 6 (Sab)
             const diasNoMes = new Date(ano, mes + 1, 0).getDate();
             
             const hoje = new Date();
-            hoje.setHours(0,0,0,0); // Zera as horas para comparar apenas os dias
+            hoje.setHours(0,0,0,0); 
 
             let html = '';
             
-            // Quadradinhos vazios antes do dia 1
             for (let i = 0; i < primeiroDiaDaSemana; i++) {
                 html += `<div style="padding: 10px; background: transparent;"></div>`;
             }
 
-            // Preenche os dias do mês
             for (let dia = 1; dia <= diasNoMes; dia++) {
                 const dataDesteDia = new Date(ano, mes, dia);
                 const diaDaSemana = dataDesteDia.getDay();
@@ -743,7 +741,7 @@ Object.assign(Workspace, {
                 });
 
                 if (res && res.success) {
-                    Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: msg, tempoDisparo: tempoDisparo });
+                    Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: msg, tempoDisparo: tempoDisparo, disparado: false });
                     Workspace.Bau.atualizarCalendarioVisual();
                     document.getElementById('ws-modal-alarme').style.display = 'none';
                     Workspace.mostrarAviso("Lembrete agendado com sucesso e precisão!", "success");
@@ -757,51 +755,76 @@ Object.assign(Workspace, {
             const calVisual = document.getElementById('ws-bau-calendario-visual');
             if (!calVisual) return;
 
-            if (Workspace.Bau.alarmesAtivos.length > 0) {
+            // 🚀 FILTRO MÁGICO: Mostra apenas os lembretes do mês que está na tela!
+            const mesAtual = Workspace.Bau.calDataAtual.getMonth();
+            const anoAtual = Workspace.Bau.calDataAtual.getFullYear();
+
+            const alarmesDoMes = Workspace.Bau.alarmesAtivos.filter(a => {
+                const d = new Date(a.tempoDisparo);
+                return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+            });
+
+            if (alarmesDoMes.length > 0) {
                 let html = '<div style="display: flex; flex-direction: column; gap: 8px; text-align:left;">';
-                Workspace.Bau.alarmesAtivos.sort((a,b) => a.tempoDisparo - b.tempoDisparo).forEach(alarme => {
+                alarmesDoMes.sort((a,b) => a.tempoDisparo - b.tempoDisparo).forEach(alarme => {
                     const dataObj = new Date(alarme.tempoDisparo);
                     const dataFormat = dataObj.toLocaleDateString('pt-BR');
                     const horaFormat = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
+                    // 🚀 Se já disparou, fica cinzento. Se for futuro, fica verde.
+                    const statusColor = alarme.disparado ? '#95a5a6' : '#27ae60';
+                    const bgColor = alarme.disparado ? '#f0f2f5' : '#eafaf1';
+                    
                     html += `
-                        <div style="background: #eafaf1; border-left: 3px solid #27ae60; padding: 10px; border-radius: 4px; font-size: 13px;">
-                            <strong style="color: #27ae60;">${dataFormat} às ${horaFormat}</strong><br>${Workspace.escapeHTML(alarme.mensagem)}
+                        <div style="background: ${bgColor}; border-left: 3px solid ${statusColor}; padding: 10px; border-radius: 4px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="color: ${statusColor};">${dataFormat} às ${horaFormat}</strong><br>
+                                <span style="color: ${alarme.disparado ? '#7f8c8d' : '#333'}">${Workspace.escapeHTML(alarme.mensagem)}</span>
+                            </div>
+                            <!-- 🚀 NOVO: Botão Lixo para Apagar Manualmente -->
+                            <button onclick="Workspace.Bau.apagarAlarme('${alarme.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 16px; cursor: pointer; padding: 5px;" title="Remover Lembrete">🗑️</button>
                         </div>`;
                 });
                 html += '</div>';
                 calVisual.innerHTML = html;
             } else {
-                calVisual.innerHTML = "Nenhum evento agendado neste momento.";
+                calVisual.innerHTML = "Nenhum evento agendado neste mês.";
+            }
+        },
+
+        apagarAlarme: async (id) => {
+            if(confirm("Deseja apagar definitivamente este lembrete do seu calendário?")) {
+                Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
+                Workspace.Bau.atualizarCalendarioVisual(); // Limpa do ecrã
+                try {
+                    await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE');
+                } catch(e) {}
             }
         },
 
         verificarAlarme: () => {
-            // 🚀 VERIFICAÇÃO INSTANTÂNEA: Executada a cada 1 segundo para precisão absoluta!
             const agora = new Date().getTime();
             
-            // Verificamos os alarmes do fim para o início para podermos remover itens (splice) sem quebrar o array
-            for (let i = Workspace.Bau.alarmesAtivos.length - 1; i >= 0; i--) {
-                const alarme = Workspace.Bau.alarmesAtivos[i];
-                
-                // Se a hora exata chegou ou acabou de passar
-                if (agora >= alarme.tempoDisparo) {
-                    // Dispara a Notificação Mágica!
+            Workspace.Bau.alarmesAtivos.forEach(async (alarme) => {
+                // 🚀 Se a hora chegou e AINDA NÃO DISPAROU
+                if (!alarme.disparado && agora >= alarme.tempoDisparo) {
+                    
                     if (window.Workspace && Workspace.mostrarAviso) {
                         Workspace.mostrarAviso(`⏰ Lembrete do Baú: ${alarme.mensagem}`, 'pingpong', 12000);
                     }
                     
-                    // Apaga localmente
-                    Workspace.Bau.alarmesAtivos.splice(i, 1);
+                    // Marca localmente como disparado e atualiza as cores para cinzento
+                    alarme.disparado = true;
                     Workspace.Bau.atualizarCalendarioVisual();
 
-                    // Avisa a nuvem para limpar da DB
-                    Workspace.api(`/workspace/bau/alarmes/${alarme.id}`, 'DELETE').catch(()=>{});
+                    // Avisa a Base de Dados que este alarme já tocou (não é apagado, apenas atualizado!)
+                    try {
+                        await Workspace.api(`/workspace/bau/alarmes/${alarme.id}/disparado`, 'PUT');
+                    } catch(e) {}
                 }
-            }
+            });
         }
     }
-
 });
 
 document.addEventListener('DOMContentLoaded', Workspace.init);
