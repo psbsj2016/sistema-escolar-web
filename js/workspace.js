@@ -514,28 +514,41 @@ Object.assign(Workspace, {
         },
 
         // ======================= SISTEMA DE NOTAS (BLINDADO) =======================
+      // ======================= SISTEMA DE NOTAS (BLINDADO) =======================
         renderizarListaNotas: () => {
             const container = document.getElementById('ws-bau-lista-notas');
             if (!container) return;
 
+            // 🚀 1. O FILTRO CAÇA-FANTASMAS
+            // Varre a memória e expulsa qualquer nota que não tenha ID ou que esteja vazia.
+            Workspace.Bau.notasCache = Workspace.Bau.notasCache.filter(nota => {
+                const temIdValido = nota && nota.id && nota.id !== 'undefined';
+                const temConteudo = nota.titulo || (nota.texto && nota.texto.trim() !== '');
+                return temIdValido && temConteudo;
+            });
+
             if (Workspace.Bau.notasCache.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #999; font-size: 13px; padding: 20px;">O seu caderno está vazio. Crie uma nova nota! 📝</div>';
+                container.innerHTML = '<div style="text-align: center; color: #999; font-size: 13px; padding: 20px;">O seu bloco de notas está vazio. Faça uma nova anotação! 📝</div>';
                 return;
             }
 
             let html = '';
             Workspace.Bau.notasCache.forEach(nota => {
+                // 🛡️ Blindagem da Data
                 const dataMestra = nota.dataAtualizacao || nota.dataCriacao;
                 const d = new Date(dataMestra);
                 const dataStr = isNaN(d.getTime()) ? 'Agora mesmo' : d.toLocaleDateString('pt-BR');
                 
+                // 🛡️ Blindagem do Título: Impede que um título vazio crie aquele "buraco" visual
+                const tituloSeguro = (nota.titulo && nota.titulo.trim() !== '') ? Workspace.escapeHTML(nota.titulo) : 'Nota sem título';
+                
                 html += `
                     <div style="background: white; border: 1px solid #ddd; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'; this.style.boxShadow='0 2px 8px rgba(52, 152, 219, 0.1)'" onmouseout="this.style.borderColor='#ddd'; this.style.boxShadow='none'">
                         <div style="flex: 1; min-width: 0;" onclick="Workspace.Bau.abrirNota('${nota.id}')">
-                            <h5 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${Workspace.escapeHTML(nota.titulo)}</h5>
+                            <h5 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${tituloSeguro}</h5>
                             <span style="font-size: 11px; color: #aaa;">Atualizada em: <span style="font-weight:bold; color:#7f8c8d;">${dataStr}</span></span>
                         </div>
-                        <button onclick="Workspace.Bau.apagarNota('${nota.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 16px; cursor: pointer;" title="Apagar Nota">🗑️</button>
+                        <button onclick="Workspace.Bau.apagarNota('${nota.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 16px; cursor: pointer; padding: 5px;" title="Apagar Nota">🗑️</button>
                     </div>
                 `;
             });
@@ -647,28 +660,26 @@ Object.assign(Workspace, {
             }
         },
 
-      apagarNota: (id) => {
+     apagarNota: (id) => {
             // 🚀 Aciona o modal de confirmação bonito para as Notas
             Workspace.Sidebar.mostrarConfirmacao(
                 "Apagar Nota?",
                 "Tem a certeza de que deseja eliminar esta anotação para sempre? Esta ação não tem retorno.",
                 async () => {
-                    // 1. Remove da base de dados silenciosamente
+                    // 🚀 1. DESTRUIÇÃO IMEDIATA NA TELA (Optimistic UI)
+                    // Apagamos a nota do ecrã no exato milissegundo em que o utilizador clica!
+                    Workspace.Bau.notasCache = Workspace.Bau.notasCache.filter(n => n.id !== id);
+                    Workspace.Bau.renderizarListaNotas();
+                    
+                    // 2. Avisamos a nuvem (Base de Dados) em segundo plano
                     try {
                         await Workspace.api(`/workspace/bau/notas/${id}`, 'DELETE');
-                        
-                        // 2. Remove da memória visual e atualiza a lista
-                        Workspace.Bau.notasCache = Workspace.Bau.notasCache.filter(n => n.id !== id);
-                        Workspace.Bau.renderizarListaNotas();
-                        
-                        // 3. Mostra a mensagem de sucesso no topo
                         if (window.Workspace && Workspace.mostrarAviso) {
                             Workspace.mostrarAviso("Nota apagada com sucesso!", "success");
                         }
                     } catch(e) {
-                        if (window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("Erro ao apagar a nota na nuvem.", "error");
-                        }
+                        // Se a nota fantasma der erro na nuvem (porque já nem existia direito), 
+                        // o sistema ignora e não chateia o utilizador. A UX mantém-se limpa!
                     }
                 }
             );

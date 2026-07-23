@@ -1056,7 +1056,7 @@ Workspace.Avaliacoes = {
         if(!titulo || !dataHora || !linkSala) return Workspace.mostrarAviso("Preencha o título, a data e o link da sala.", "warning");
 
         const btn = event.target;
-        const txt = btn.innerText; btn.innerText = "⏳ A agendar..."; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "Agendando ⏳ ..."; btn.disabled = true;
 
         try {
             const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
