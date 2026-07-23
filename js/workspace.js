@@ -786,12 +786,30 @@ Object.assign(Workspace, {
             } else { calVisual.innerHTML = "Nenhum evento agendado neste mês."; }
         },
 
-        apagarAlarme: async (id) => {
-            if(confirm("Deseja apagar definitivamente este lembrete do calendário?")) {
-                Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
-                Workspace.Bau.atualizarCalendarioVisual(); 
-                try { await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE'); } catch(e) {}
-            }
+        apagarAlarme: (id) => {
+            // 🚀 Aciona o modal de confirmação bonito e personalizado do seu sistema
+            Workspace.Sidebar.mostrarConfirmacao(
+                "Apagar Lembrete?",
+                "Tem a certeza de que deseja apagar definitivamente este lembrete do seu calendário?",
+                async () => {
+                    // Esta área só é executada se o utilizador clicar em "Sim, Apagar"
+                    
+                    // 1. Remove da memória local
+                    Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
+                    
+                    // 2. Atualiza a parte visual (Calendário e Sininho)
+                    Workspace.Bau.atualizarCalendarioVisual(); 
+                    Workspace.Bau.atualizarSininhoMemorias(); 
+                    
+                    // 3. Avisa a nuvem (Base de Dados) para apagar em definitivo
+                    try { 
+                        await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE'); 
+                        Workspace.mostrarAviso("Lembrete removido com sucesso!", "success");
+                    } catch(e) {
+                        console.error("Erro ao apagar o alarme na nuvem.");
+                    }
+                }
+            );
         },
 
         // 🚀 O CORAÇÃO DO SISTEMA DE ALARMES
