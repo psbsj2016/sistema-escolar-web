@@ -259,8 +259,16 @@ Workspace.Avaliacoes = {
     mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
     mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
-    registrarPresencaOnline: async (id, link) => {
+ registrarPresencaOnline: async (event, id, link) => {
+        // 🚀 ESCUDO DE CLIQUE: Impede que o sistema ache que o aluno clicou noutra coisa e vá para o feed
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Abre a sala do Meet/Zoom noutra aba
         window.open(link, '_blank');
+        
         try {
             const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (resInic && resInic.success) {
@@ -378,31 +386,41 @@ Workspace.Avaliacoes = {
             tOnHist.style.background = Workspace.Avaliacoes.abaOnline === 'historico' ? '#2c3e50' : 'transparent';
             tOnHist.style.color = Workspace.Avaliacoes.abaOnline === 'historico' ? 'white' : '#7f8c8d';
         }
-     const contOnline = document.getElementById('ws-lista-provas-online');
+    const contOnline = document.getElementById('ws-lista-provas-online');
         if (contOnline) {
             const listaAtivaOnline = Workspace.Avaliacoes.abaOnline === 'abertas' ? onPendentes : onHistorico;
             if (listaAtivaOnline.length === 0) {
                 contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
-                    // 1. Blindagem de Data e Hora
+                    
+                    // 🚀 1. SUPER BLINDAGEM DA DATA (À prova de falhas em qualquer navegador)
                     let dataFormatada = 'Data Indefinida';
-                    let horaFormatada = '';
+                    let horaFormatada = '--:--';
                     if (p.dataAgendada) {
-                        const dataObj = new Date(p.dataAgendada);
-                        if (!isNaN(dataObj.getTime())) {
-                            dataFormatada = dataObj.toLocaleDateString('pt-BR');
-                            horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                        }
+                        try {
+                            const d = new Date(p.dataAgendada);
+                            if (!isNaN(d.getTime())) {
+                                dataFormatada = d.toLocaleDateString('pt-BR');
+                                horaFormatada = d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                            } else if (p.dataAgendada.includes('T')) {
+                                // Fallback manual: se o navegador não entender, cortamos o texto à mão!
+                                const partes = p.dataAgendada.split('T');
+                                const dataPartes = partes[0].split('-');
+                                dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+                                horaFormatada = partes[1].substring(0, 5);
+                            }
+                        } catch(e) {}
                     }
 
-                    // 2. Tratamento do Link Externo
+                    // 🚀 2. FORÇAR O HTTPS PARA SALAS (Impede que abra no seu site)
                     let linkSeguro = p.linkSala || '#';
-                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
+                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http')) {
                         linkSeguro = 'https://' + linkSeguro;
                     }
 
-                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline('${p.id}', '${linkSeguro}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
+                    // Botão agora passa o evento "event" para a nossa função blindada
+                    const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' ? `<button class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sala</button>` : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     return `
                     <div style="background: #fff; border: 1px solid #eee; border-left: 4px solid #8e44ad; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
                         <div><h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4><span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span></div>
@@ -647,7 +665,6 @@ Workspace.Avaliacoes = {
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
                 <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <!-- 3. Botão "Reativar para Todos" Azul -->
                     <button class="ws-btn" style="background:#3498db; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
@@ -659,18 +676,17 @@ Workspace.Avaliacoes = {
         document.body.appendChild(modal);
 
         try {
+            // Força a atualização do cache antes de construir o modal
             const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
-            let acessos = [];
-            if(entregasRes && entregasRes.success) acessos = entregasRes.entregas.filter(e => e.avaliacaoId === avaliacaoId);
-            else acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
+            if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
 
+            let acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
             let alunosLista = [];
+
             if (destinoId && destinoId !== 'global') {
                 try {
                     let resAlunos = await Workspace.api('/alunos', 'GET');
-                    if (!resAlunos || resAlunos.error) {
-                        resAlunos = await Workspace.api('/usuarios?tipo=Aluno', 'GET');
-                    }
+                    if (!resAlunos || resAlunos.error) resAlunos = await Workspace.api('/usuarios?tipo=Aluno', 'GET');
 
                     if (resAlunos && Array.isArray(resAlunos)) {
                         const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
@@ -680,9 +696,7 @@ Workspace.Avaliacoes = {
                             return turmaNomeAluno === nomeTurmaProcurada || turmaIdAluno === String(destinoId).toLowerCase().trim();
                         });
                     }
-                } catch(e) {
-                    console.warn("Falha ao mapear alunos globais:", e);
-                }
+                } catch(e) {}
             }
 
             const container = document.getElementById('ws-acessos-lista');
@@ -709,7 +723,6 @@ Workspace.Avaliacoes = {
                             </div>
                         `;
                     } else {
-                        // 3. Etiqueta "Link Reativado" (Aguardando acesso)
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -725,7 +738,6 @@ Workspace.Avaliacoes = {
                 });
             } else {
                 htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total ou a sala é global. Mostrando apenas presenças registadas.</div>`;
-                
                 if(acessos.length === 0) {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
                 } else {
@@ -759,10 +771,15 @@ Workspace.Avaliacoes = {
         try {
             await Workspace.api(`/workspace/entregas/${entregaId}`, 'DELETE');
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
-            Workspace.Avaliacoes.abrirGerenciador(); 
-            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
-            // 3. Atualizar lobbies em tempo real
-            Workspace.Avaliacoes.carregarLobbies();
+            
+            // 🚀 A MAGIA: Apagamos da memória local e forçamos as atualizações sem F5!
+            Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
+            Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
+            
+            Workspace.Avaliacoes.carregarLobbies(); // Atualiza a aba do aluno
+            Workspace.Avaliacoes.abrirGerenciador(); // Atualiza a lista por trás
+            Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId); // Atualiza a janela aberta!
+            
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno. Tente novamente.", "error");
             btn.innerText = originalTxt;
@@ -775,11 +792,16 @@ Workspace.Avaliacoes = {
             try {
                 await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
                 Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
+                
+                // 🚀 A MAGIA: Apagamos todas as presenças da memória desta avaliação!
+                Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
+                Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
+
                 const modal = document.getElementById('ws-modal-acessos-online');
                 if (modal) modal.remove();
-                Workspace.Avaliacoes.abrirGerenciador();
-                // 3. Atualizar lobbies em tempo real
-                Workspace.Avaliacoes.carregarLobbies();
+                
+                Workspace.Avaliacoes.carregarLobbies(); // Atualiza aluno
+                Workspace.Avaliacoes.abrirGerenciador(); // Atualiza prof
             } catch(e) { Workspace.mostrarAviso("Erro de comunicação ao limpar sala.", "error"); }
         });
     },
@@ -841,18 +863,18 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-online-titulo').value = prova.titulo;
             
-            // 4. Formatar a data para o input datetime-local
+            // 🚀 FORMATAÇÃO CIRÚRGICA DA DATA PARA O HTML (datetime-local exige: YYYY-MM-DDThh:mm)
             let dataFormatadaInput = '';
             if (prova.dataAgendada) {
-                const dataObj = new Date(prova.dataAgendada);
-                if (!isNaN(dataObj.getTime())) {
-                    // O input datetime-local exige o formato YYYY-MM-DDThh:mm
-                    const ano = dataObj.getFullYear();
-                    const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                    const dia = String(dataObj.getDate()).padStart(2, '0');
-                    const horas = String(dataObj.getHours()).padStart(2, '0');
-                    const minutos = String(dataObj.getMinutes()).padStart(2, '0');
-                    dataFormatadaInput = `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+                if (prova.dataAgendada.includes('T')) {
+                    // Apanha apenas os 16 primeiros caracteres exatos
+                    dataFormatadaInput = prova.dataAgendada.substring(0, 16);
+                } else {
+                    const dataObj = new Date(prova.dataAgendada);
+                    if (!isNaN(dataObj.getTime())) {
+                        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                        dataFormatadaInput = (new Date(dataObj - tzoffset)).toISOString().slice(0, 16);
+                    }
                 }
             }
             
