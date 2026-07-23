@@ -450,8 +450,8 @@ Object.assign(Workspace, {
         }
     }, // <--- 🚀 A VÍRGULA MÁGICA QUE FALTAVA ESTÁ AQUI!
 
-    // ============================================================================
-    // 🧰 MOTOR DO BAÚ DAS MEMÓRIAS (Calendário, Notas Multi-Telas e Relógio Preciso)
+   // ============================================================================
+    // 🧰 MOTOR DO BAÚ DAS MEMÓRIAS (Alarme Gigante, Sininho Inteligente e Notas Seguras)
     // ============================================================================
     Bau: {
         alarmesAtivos: [],
@@ -459,8 +459,10 @@ Object.assign(Workspace, {
         notaAbertaId: null,
         salvamentoTimer: null,
         radarDeAlarmes: null,
-        calDataAtual: new Date(), // Mês/Ano que está a ser visualizado no calendário
+        calDataAtual: new Date(), 
+        alarmeGiganteAtual: null,
 
+        // ======================= SISTEMA DE NAVEGAÇÃO =======================
         mudarAba: (aba) => {
             const btnMeu = document.getElementById('tab-bau-meu');
             const btnInst = document.getElementById('tab-bau-inst');
@@ -477,27 +479,47 @@ Object.assign(Workspace, {
             }
         },
 
+        irParaCalendarioDoBau: (tempoDisparo) => {
+            // Fecha os modais e sininhos abertos
+            document.getElementById('ws-modal-alarme-gigante').style.display = 'none';
+            document.getElementById('ws-sininho-memorias-lista').style.display = 'none';
+            
+            // Navega para o Baú
+            Workspace.navegarPara('bau');
+            Workspace.Bau.mudarAba('meu');
+
+            // Ajusta o mês do calendário para o mês do alarme
+            if (tempoDisparo) {
+                const dataAlarme = new Date(tempoDisparo);
+                Workspace.Bau.calDataAtual = new Date(dataAlarme.getFullYear(), dataAlarme.getMonth(), 1);
+                Workspace.Bau.renderizarCalendario();
+                Workspace.Bau.atualizarCalendarioVisual();
+            }
+            
+            // Faz um pequeno scroll animado para o calendário
+            const areaCalendario = document.getElementById('ws-bau-cal-mesano');
+            if(areaCalendario) areaCalendario.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
+
         carregarDadosDaNuvem: async () => {
             try {
-                // 1. Puxa Todas as Notas
                 const resNotas = await Workspace.api(`/workspace/bau/notas?usuarioId=${Workspace.usuario.id}`, 'GET');
                 if (resNotas && resNotas.dados) Workspace.Bau.notasCache = resNotas.dados;
                 Workspace.Bau.renderizarListaNotas();
 
-                // 2. Puxa Lembretes e Renderiza Calendário
                 const resAlarmes = await Workspace.api(`/workspace/bau/alarmes?usuarioId=${Workspace.usuario.id}`, 'GET');
                 if (resAlarmes && Array.isArray(resAlarmes.dados)) Workspace.Bau.alarmesAtivos = resAlarmes.dados;
                 
                 Workspace.Bau.renderizarCalendario();
                 Workspace.Bau.atualizarCalendarioVisual();
+                Workspace.Bau.atualizarSininhoMemorias();
 
-                // 3. 🚀 O RELÓGIO DE PRECISÃO SUÍÇA (Verifica a cada 1 segundo = 1000ms)
                 if(Workspace.Bau.radarDeAlarmes) clearInterval(Workspace.Bau.radarDeAlarmes);
                 Workspace.Bau.radarDeAlarmes = setInterval(Workspace.Bau.verificarAlarme, 1000);
             } catch(e) { console.error("Erro ao carregar dados do Baú", e); }
         },
 
-        // ======================= SISTEMA DE NOTAS =======================
+        // ======================= SISTEMA DE NOTAS (BLINDADO) =======================
         renderizarListaNotas: () => {
             const container = document.getElementById('ws-bau-lista-notas');
             if (!container) return;
@@ -509,12 +531,16 @@ Object.assign(Workspace, {
 
             let html = '';
             Workspace.Bau.notasCache.forEach(nota => {
-                const dataStr = new Date(nota.dataAtualizacao || nota.dataCriacao).toLocaleDateString('pt-BR');
+                // 🚀 BLINDAGEM DA DATA: Evita o erro "Invalid Date"
+                const dataMestra = nota.dataAtualizacao || nota.dataCriacao;
+                const d = new Date(dataMestra);
+                const dataStr = isNaN(d.getTime()) ? 'Agora mesmo' : d.toLocaleDateString('pt-BR');
+                
                 html += `
                     <div style="background: white; border: 1px solid #ddd; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'; this.style.boxShadow='0 2px 8px rgba(52, 152, 219, 0.1)'" onmouseout="this.style.borderColor='#ddd'; this.style.boxShadow='none'">
                         <div style="flex: 1; min-width: 0;" onclick="Workspace.Bau.abrirNota('${nota.id}')">
                             <h5 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${Workspace.escapeHTML(nota.titulo)}</h5>
-                            <span style="font-size: 11px; color: #aaa;">Atualizada em ${dataStr}</span>
+                            <span style="font-size: 11px; color: #aaa;">Atualizada em: <span style="font-weight:bold; color:#7f8c8d;">${dataStr}</span></span>
                         </div>
                         <button onclick="Workspace.Bau.apagarNota('${nota.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 16px; cursor: pointer;" title="Apagar Nota">🗑️</button>
                     </div>
@@ -566,10 +592,9 @@ Object.assign(Workspace, {
 
         fecharEdicao: () => {
             if(Workspace.Bau.notaAbertaId === 'nova') Workspace.Bau.voltarListaNotas();
-            else Workspace.Bau.abrirNota(Workspace.Bau.notaAbertaId); // Volta para leitura
+            else Workspace.Bau.abrirNota(Workspace.Bau.notaAbertaId);
         },
 
-        // AUTO-SAVE EM SEGUNDO PLANO (Debounce)
         autoSalvarNota: () => {
             const status = document.getElementById('ws-bau-status-salvamento');
             if(status) status.innerText = 'A escrever... ✏️';
@@ -580,23 +605,25 @@ Object.assign(Workspace, {
             }, 1500); 
         },
 
-        // BOTÃO GRAVAR E SAIR
         salvarESairNota: async () => {
-            clearTimeout(Workspace.Bau.salvamentoTimer); // Cancela o auto-save pendente
+            clearTimeout(Workspace.Bau.salvamentoTimer);
             const status = document.getElementById('ws-bau-status-salvamento');
             if(status) status.innerText = 'Guardando... ⏳';
             
             const sucesso = await Workspace.Bau.executarSalvamentoNuvem(true);
-            if (sucesso) Workspace.Bau.abrirNota(Workspace.Bau.notaAbertaId); // Vai para leitura
+            if (sucesso) {
+                // Ao gravar e sair de uma nota nova, recarrega a lista para mostrar
+                Workspace.Bau.renderizarListaNotas();
+                Workspace.Bau.abrirNota(Workspace.Bau.notaAbertaId);
+            }
         },
 
-        // O Motor Real de Gravação
         executarSalvamentoNuvem: async (mostrarAlerta) => {
-            const titulo = document.getElementById('ws-bau-edicao-titulo').value.trim();
+            const titulo = document.getElementById('ws-bau-edicao-titulo').value.trim() || 'Nota sem título';
             const texto = document.getElementById('ws-bau-edicao-texto').innerHTML;
             const status = document.getElementById('ws-bau-status-salvamento');
 
-            if (!titulo && !texto) return false;
+            if (!texto && Workspace.Bau.notaAbertaId === 'nova') return false;
 
             try {
                 let res;
@@ -604,7 +631,8 @@ Object.assign(Workspace, {
                     res = await Workspace.api('/workspace/bau/notas', 'POST', { usuarioId: Workspace.usuario.id, titulo, texto });
                     if(res && res.nota) {
                         Workspace.Bau.notaAbertaId = res.nota.id;
-                        Workspace.Bau.notasCache.unshift(res.nota);
+                        // 🚀 Injeta a nota nova diretamente no cache para prevenir erros de "Fantasma"
+                        Workspace.Bau.notasCache = [res.nota, ...Workspace.Bau.notasCache];
                     }
                 } else {
                     res = await Workspace.api(`/workspace/bau/notas/${Workspace.Bau.notaAbertaId}`, 'PUT', { titulo, texto });
@@ -620,7 +648,7 @@ Object.assign(Workspace, {
                 
                 if(status) status.innerText = 'Sincronizado ☁️✅';
                 if(mostrarAlerta && window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Nota guardada com sucesso!", "success");
-                Workspace.Bau.renderizarListaNotas();
+                Workspace.Bau.renderizarListaNotas(); // Atualiza a lista visual
                 return true;
             } catch(e) {
                 if(status) status.innerText = 'Falha ao sincronizar ❌';
@@ -638,11 +666,11 @@ Object.assign(Workspace, {
             }
         },
 
-        // ======================= SISTEMA DE CALENDÁRIO =======================
+        // ======================= SISTEMA DE CALENDÁRIO & ALARMES GIGANTES =======================
         mudarMes: (direcao) => {
             Workspace.Bau.calDataAtual.setMonth(Workspace.Bau.calDataAtual.getMonth() + direcao);
             Workspace.Bau.renderizarCalendario();
-            Workspace.Bau.atualizarCalendarioVisual(); // Atualiza a lista abaixo do calendário!
+            Workspace.Bau.atualizarCalendarioVisual(); 
         },
 
         renderizarCalendario: () => {
@@ -651,19 +679,18 @@ Object.assign(Workspace, {
             if(!gridDias || !labelMesAno) return;
 
             const ano = Workspace.Bau.calDataAtual.getFullYear();
-            const mes = Workspace.Bau.calDataAtual.getMonth(); // 0 a 11
+            const mes = Workspace.Bau.calDataAtual.getMonth(); 
             
             const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             labelMesAno.innerText = `${nomesMeses[mes]} ${ano}`;
 
-            const primeiroDiaDaSemana = new Date(ano, mes, 1).getDay(); // 0 (Dom) a 6 (Sab)
+            const primeiroDiaDaSemana = new Date(ano, mes, 1).getDay(); 
             const diasNoMes = new Date(ano, mes + 1, 0).getDate();
             
             const hoje = new Date();
             hoje.setHours(0,0,0,0); 
 
             let html = '';
-            
             for (let i = 0; i < primeiroDiaDaSemana; i++) {
                 html += `<div style="padding: 10px; background: transparent;"></div>`;
             }
@@ -682,33 +709,25 @@ Object.assign(Workspace, {
                 let clique = `onclick="Workspace.Bau.abrirModalAgendamento(${ano}, ${mes}, ${dia})"`;
 
                 if (ehPassado) {
-                    corTexto = '#ccc';
-                    cursor = 'cursor: not-allowed;';
-                    hover = ''; clique = '';
+                    corTexto = '#ccc'; cursor = 'cursor: not-allowed;'; hover = ''; clique = '';
                 }
-
                 const estiloBase = `padding: 10px 5px; background: ${ehHoje ? '#e8f4f8' : 'white'}; border-radius: 6px; border: 1px solid ${ehHoje ? '#3498db' : '#eee'}; color: ${corTexto}; font-weight: ${ehHoje ? 'bold' : 'normal'}; ${cursor} transition: 0.2s;`;
-
                 html += `<div style="${estiloBase}" ${hover} ${clique}>${dia}</div>`;
             }
-
             gridDias.innerHTML = html;
         },
 
         abrirModalAgendamento: (ano, mes, dia) => {
             const modal = document.getElementById('ws-modal-alarme');
             if(!modal) return;
-
             document.getElementById('ws-alarme-ano').value = ano;
             document.getElementById('ws-alarme-mes').value = mes;
             document.getElementById('ws-alarme-dia').value = dia;
 
             const dataFormatada = new Date(ano, mes, dia).toLocaleDateString('pt-BR');
             document.getElementById('ws-modal-alarme-data').innerText = `Agendando para: ${dataFormatada}`;
-            
             document.getElementById('ws-alarme-hora').value = '';
             document.getElementById('ws-alarme-msg').value = '';
-            
             modal.style.display = 'flex';
         },
 
@@ -716,46 +735,35 @@ Object.assign(Workspace, {
             const ano = document.getElementById('ws-alarme-ano').value;
             const mes = document.getElementById('ws-alarme-mes').value;
             const dia = document.getElementById('ws-alarme-dia').value;
-            
-            const horaStr = document.getElementById('ws-alarme-hora').value; // Formato "HH:MM"
+            const horaStr = document.getElementById('ws-alarme-hora').value; 
             const msg = document.getElementById('ws-alarme-msg').value.trim();
 
             if (!horaStr || !msg) return Workspace.mostrarAviso("Preencha a hora e a mensagem!", "warning");
-
             const [horas, minutos] = horaStr.split(':');
             
-            // 🚀 Cria a data e hora absolutas exatas para o disparo
             const dataDisparo = new Date(ano, mes, dia, parseInt(horas), parseInt(minutos), 0, 0);
             const tempoDisparo = dataDisparo.getTime();
 
-            // Verifica se a hora escolhida já não passou no dia de hoje
             if (tempoDisparo <= new Date().getTime()) {
                 return Workspace.mostrarAviso("O horário escolhido já passou. Escolha um horário futuro.", "warning");
             }
 
             try {
-                const res = await Workspace.api('/workspace/bau/alarmes', 'POST', {
-                    usuarioId: Workspace.usuario.id,
-                    mensagem: msg,
-                    tempoDisparo: tempoDisparo
-                });
-
+                const res = await Workspace.api('/workspace/bau/alarmes', 'POST', { usuarioId: Workspace.usuario.id, mensagem: msg, tempoDisparo: tempoDisparo });
                 if (res && res.success) {
-                    Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: msg, tempoDisparo: tempoDisparo, disparado: false });
+                    Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: msg, tempoDisparo: tempoDisparo, disparado: false, fechadoSininho: false });
                     Workspace.Bau.atualizarCalendarioVisual();
+                    Workspace.Bau.atualizarSininhoMemorias();
                     document.getElementById('ws-modal-alarme').style.display = 'none';
                     Workspace.mostrarAviso("Lembrete agendado com sucesso e precisão!", "success");
                 }
-            } catch(e) {
-                Workspace.mostrarAviso("Erro ao agendar lembrete na nuvem.", "error");
-            }
+            } catch(e) { Workspace.mostrarAviso("Erro ao agendar lembrete na nuvem.", "error"); }
         },
 
         atualizarCalendarioVisual: () => {
             const calVisual = document.getElementById('ws-bau-calendario-visual');
             if (!calVisual) return;
 
-            // 🚀 FILTRO MÁGICO: Mostra apenas os lembretes do mês que está na tela!
             const mesAtual = Workspace.Bau.calDataAtual.getMonth();
             const anoAtual = Workspace.Bau.calDataAtual.getFullYear();
 
@@ -771,58 +779,145 @@ Object.assign(Workspace, {
                     const dataFormat = dataObj.toLocaleDateString('pt-BR');
                     const horaFormat = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                     
-                    // 🚀 Se já disparou, fica cinzento. Se for futuro, fica verde.
                     const statusColor = alarme.disparado ? '#95a5a6' : '#27ae60';
                     const bgColor = alarme.disparado ? '#f0f2f5' : '#eafaf1';
                     
                     html += `
                         <div style="background: ${bgColor}; border-left: 3px solid ${statusColor}; padding: 10px; border-radius: 4px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
-                            <div>
+                            <div style="cursor: pointer;" onclick="Workspace.Bau.irParaCalendarioDoBau(${alarme.tempoDisparo})">
                                 <strong style="color: ${statusColor};">${dataFormat} às ${horaFormat}</strong><br>
-                                <span style="color: ${alarme.disparado ? '#7f8c8d' : '#333'}">${Workspace.escapeHTML(alarme.mensagem)}</span>
+                                <span style="color: ${alarme.disparado ? '#7f8c8d' : '#333'}; font-weight: 500;">${Workspace.escapeHTML(alarme.mensagem)}</span>
                             </div>
-                            <!-- 🚀 NOVO: Botão Lixo para Apagar Manualmente -->
                             <button onclick="Workspace.Bau.apagarAlarme('${alarme.id}')" style="background: transparent; border: none; color: #e74c3c; font-size: 16px; cursor: pointer; padding: 5px;" title="Remover Lembrete">🗑️</button>
                         </div>`;
                 });
                 html += '</div>';
                 calVisual.innerHTML = html;
-            } else {
-                calVisual.innerHTML = "Nenhum evento agendado neste mês.";
-            }
+            } else { calVisual.innerHTML = "Nenhum evento agendado neste mês."; }
         },
 
         apagarAlarme: async (id) => {
-            if(confirm("Deseja apagar definitivamente este lembrete do seu calendário?")) {
+            if(confirm("Deseja apagar definitivamente este lembrete do calendário?")) {
                 Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
-                Workspace.Bau.atualizarCalendarioVisual(); // Limpa do ecrã
-                try {
-                    await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE');
-                } catch(e) {}
+                Workspace.Bau.atualizarCalendarioVisual(); 
+                Workspace.Bau.atualizarSininhoMemorias(); // Limpa do sininho se estiver lá
+                try { await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE'); } catch(e) {}
             }
         },
 
+        // 🚀 O CORAÇÃO DO SISTEMA DE ALARMES
         verificarAlarme: () => {
             const agora = new Date().getTime();
+            let precisaAtualizarSininho = false;
             
             Workspace.Bau.alarmesAtivos.forEach(async (alarme) => {
-                // 🚀 Se a hora chegou e AINDA NÃO DISPAROU
+                // SE A HORA CHEGOU E AINDA NÃO DISPAROU!
                 if (!alarme.disparado && agora >= alarme.tempoDisparo) {
                     
-                    if (window.Workspace && Workspace.mostrarAviso) {
-                        Workspace.mostrarAviso(`⏰ Lembrete do Baú: ${alarme.mensagem}`, 'pingpong', 12000);
-                    }
+                    // 1. Acorda a Tela Gigante!
+                    Workspace.Bau.abrirAlarmeGigante(alarme);
                     
-                    // Marca localmente como disparado e atualiza as cores para cinzento
+                    // 2. Marca como disparado na memória do navegador
                     alarme.disparado = true;
+                    alarme.fechadoSininho = false; // Garante que vai para o sininho depois
                     Workspace.Bau.atualizarCalendarioVisual();
+                    precisaAtualizarSininho = true;
 
-                    // Avisa a Base de Dados que este alarme já tocou (não é apagado, apenas atualizado!)
-                    try {
-                        await Workspace.api(`/workspace/bau/alarmes/${alarme.id}/disparado`, 'PUT');
-                    } catch(e) {}
+                    // 3. Informa a Nuvem para pintar de cinzento permanentemente
+                    try { await Workspace.api(`/workspace/bau/alarmes/${alarme.id}/disparado`, 'PUT'); } catch(e) {}
                 }
             });
+
+            // Se o sininho estiver aberto, atualiza a matemática dos "Minutos passados" a cada segundo!
+            if (precisaAtualizarSininho || document.getElementById('ws-sininho-memorias-lista').style.display === 'flex') {
+                Workspace.Bau.atualizarSininhoMemorias();
+            }
+        },
+
+        // ======================= INTELIGÊNCIA DO MODAL GIGANTE =======================
+        abrirAlarmeGigante: (alarme) => {
+            Workspace.Bau.alarmeGiganteAtual = alarme;
+            const modal = document.getElementById('ws-modal-alarme-gigante');
+            
+            const dataObj = new Date(alarme.tempoDisparo);
+            const horaFormat = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            
+            document.getElementById('ws-alarme-gigante-msg').innerText = alarme.mensagem;
+            document.getElementById('ws-alarme-gigante-tempo').innerText = `Agendado para as ${horaFormat}`;
+            
+            modal.style.display = 'flex';
+            
+            if (navigator.vibrate) navigator.vibrate([500, 200, 500]); // Vibra o telemóvel!
+        },
+
+        fecharAlarmeGigante: () => {
+            document.getElementById('ws-modal-alarme-gigante').style.display = 'none';
+            Workspace.Bau.alarmeGiganteAtual = null;
+            Workspace.Bau.atualizarSininhoMemorias(); // Manda imediatamente para o sininho
+        },
+
+        // ======================= INTELIGÊNCIA DO SININHO FLUTUANTE =======================
+        toggleSininhoMemorias: () => {
+            const lista = document.getElementById('ws-sininho-memorias-lista');
+            if(lista) lista.style.display = lista.style.display === 'none' ? 'flex' : 'none';
+        },
+
+        fecharNotificacaoSininho: (id) => {
+            const alarme = Workspace.Bau.alarmesAtivos.find(a => a.id === id);
+            if(alarme) alarme.fechadoSininho = true;
+            Workspace.Bau.atualizarSininhoMemorias();
+        },
+
+        calcularTempoInteligente: (tempoDisparo) => {
+            const agora = new Date().getTime();
+            const diffMs = agora - tempoDisparo;
+            if (diffMs < 60000) return "Agora mesmo";
+            const minutos = Math.floor(diffMs / 60000);
+            if (minutos < 60) return `Há ${minutos} min`;
+            const horas = Math.floor(minutos / 60);
+            const minRestantes = minutos % 60;
+            return minRestantes > 0 ? `Há ${horas} h e ${minRestantes} min` : `Há ${horas} h`;
+        },
+
+        atualizarSininhoMemorias: () => {
+            const container = document.getElementById('ws-sininho-memorias-container');
+            const lista = document.getElementById('ws-sininho-memorias-lista');
+            const badge = document.getElementById('ws-sininho-memorias-badge');
+            if (!container || !lista || !badge) return;
+
+            // Filtra os que já dispararam, mas que o aluno ainda não fechou no sininho, E que não estão no modal gigante
+            const alarmesNoSininho = Workspace.Bau.alarmesAtivos.filter(a => a.disparado && !a.fechadoSininho && (!Workspace.Bau.alarmeGiganteAtual || Workspace.Bau.alarmeGiganteAtual.id !== a.id));
+            
+            if (alarmesNoSininho.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'flex';
+            badge.innerText = alarmesNoSininho.length;
+            
+            let html = '';
+            alarmesNoSininho.sort((a,b) => b.tempoDisparo - a.tempoDisparo).forEach(alarme => {
+                const dataObj = new Date(alarme.tempoDisparo);
+                const dataFormat = dataObj.toLocaleDateString('pt-BR');
+                const horaFormat = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                const tempoPassado = Workspace.Bau.calcularTempoInteligente(alarme.tempoDisparo);
+
+                html += `
+                    <div style="background: #fdfefe; border-left: 4px solid #f39c12; padding: 12px; border-radius: 8px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <div style="font-size: 11px; color: #7f8c8d; font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between;">
+                            <span>📅 ${dataFormat} às ${horaFormat}</span>
+                            <span style="color:#e74c3c; background: #fdf2f2; padding: 2px 6px; border-radius: 10px;">${tempoPassado}</span>
+                        </div>
+                        <div style="font-size: 15px; color: #2c3e50; font-weight: bold; margin-bottom: 12px;">${Workspace.escapeHTML(alarme.mensagem)}</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="Workspace.Bau.irParaCalendarioDoBau(${alarme.tempoDisparo})" style="background: #3498db; color: white; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; flex: 1; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">🧰 Ir para o Baú</button>
+                            <button onclick="Workspace.Bau.fecharNotificacaoSininho('${alarme.id}')" style="background: #ecf0f1; color: #7f8c8d; border: none; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='#dfe6e9'; this.style.color='#333'">Dispensar</button>
+                        </div>
+                    </div>
+                `;
+            });
+            lista.innerHTML = html;
         }
     }
 });

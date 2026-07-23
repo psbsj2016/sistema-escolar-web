@@ -661,21 +661,7 @@
         </div>
     </div>
 
-    <!-- ⚙️ CONFIGURAÇÕES E PERFIL -->
-    <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-        <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
-                <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()" ontouchstart="">
-                    <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
-                    <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Atualize a sua senha de acesso.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-     <!-- ⚙️ CONFIGURAÇÕES -->
+       <!-- ⚙️ CONFIGURAÇÕES -->
     <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
@@ -864,6 +850,29 @@
             });
         });
     </script>
+
+    <!-- 🚨 MODAL GIGANTE DE ALARME PULSANTE -->
+    <div id="ws-modal-alarme-gigante" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999999; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div style="background: linear-gradient(135deg, #e74c3c, #c0392b); padding: 40px; border-radius: 20px; text-align: center; color: white; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 90%; max-width: 450px; animation: pulsarGigante 1.2s infinite ease-in-out;">
+            <div style="font-size: 80px; margin-bottom: 10px; line-height: 1; text-shadow: 0 5px 15px rgba(0,0,0,0.3);">⏰</div>
+            <h2 style="margin: 0 0 10px 0; font-size: 28px; text-transform: uppercase; letter-spacing: 2px;">Hora do Lembrete!</h2>
+            <div id="ws-alarme-gigante-msg" style="font-size: 22px; font-weight: bold; margin-bottom: 20px; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);"></div>
+            <div id="ws-alarme-gigante-tempo" style="font-size: 16px; margin-bottom: 30px; opacity: 0.9; font-weight: 500;"></div>
+            <button onclick="Workspace.Bau.fecharAlarmeGigante()" style="background: white; color: #c0392b; border: none; padding: 15px 30px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">👀 Lembrete Visto</button>
+        </div>
+    </div>
+    <style>@keyframes pulsarGigante { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }</style>
+
+    <!-- 🔔 SININHO INTELIGENTE DE MEMÓRIAS (Flutuante) -->
+    <div id="ws-sininho-memorias-container" style="display: none; position: fixed; bottom: 30px; right: 30px; z-index: 999990; flex-direction: column; align-items: flex-end; gap: 15px;">
+        <div id="ws-sininho-memorias-lista" style="display: none; background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 320px; max-height: 400px; overflow-y: auto; padding: 12px; border: 1px solid #ddd; flex-direction: column; gap: 10px; animation: fadeIn 0.2s;">
+            <!-- Os alarmes pendentes entram aqui magicamente -->
+        </div>
+        <button onclick="Workspace.Bau.toggleSininhoMemorias()" style="background: #f39c12; color: white; border: none; width: 65px; height: 65px; border-radius: 50%; font-size: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(243, 156, 18, 0.5); display: flex; align-items: center; justify-content: center; position: relative; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            🔔
+            <span id="ws-sininho-memorias-badge" style="position: absolute; top: -2px; right: -2px; background: #e74c3c; color: white; border-radius: 50%; width: 26px; height: 26px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">1</span>
+        </button>
+    </div>
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
     <script type="module" src="./js/workspace.js"></script>
