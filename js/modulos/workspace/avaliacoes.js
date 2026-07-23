@@ -260,27 +260,18 @@ Workspace.Avaliacoes = {
     mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
  registrarPresencaOnline: async (event, id, link) => {
-        // 🚀 ESCUDO DE CLIQUE: Impede que o sistema redirecione o aluno para o Feed
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
-
-        // 🚀 VERIFICAÇÃO DE SEGURANÇA (Garante que vai para o Zoom/Meet e não para o seu próprio site)
-        let linkSeguro = link || '';
-        if (linkSeguro && !linkSeguro.startsWith('http://') && !linkSeguro.startsWith('https://')) {
-            linkSeguro = 'https://' + linkSeguro;
-        }
         
-        // Abre a sala IMEDIATAMENTE noutra aba (evita bloqueadores de pop-ups)
-        if (linkSeguro) {
-            window.open(linkSeguro, '_blank', 'noopener,noreferrer');
+        if (link && link !== '#') {
+            window.open(link, '_blank', 'noopener,noreferrer');
         } else {
-            Workspace.mostrarAviso("O professor não forneceu um link válido.", "warning");
+            Workspace.mostrarAviso("Nenhum link foi fornecido para esta sessão.", "warning");
             return;
         }
-
-        // Registo silencioso no servidor
+        
         try {
             const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (resInic && resInic.success) {
@@ -405,37 +396,28 @@ Workspace.Avaliacoes = {
                 contOnline.innerHTML = `<div style="text-align: center; padding: 40px; color: #7f8c8d;">Nenhuma sessão nesta lista.</div>`;
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
-                    // 🚀 1. MATEMÁTICA DA DATA 100% SEGURA
+                    // 🚀 LEITURA MANUAL DA DATA E HORA
                     let dataFormatada = 'Data Indefinida';
                     let horaFormatada = '--:--';
 
-                    if (p.dataAgendada) {
-                        try {
-                            if (typeof p.dataAgendada === 'string' && p.dataAgendada.includes('T')) {
-                                const partes = p.dataAgendada.split('T');
-                                const dataPartes = partes[0].split('-'); 
-                                // Validação extra: só formata se tiver ano, mês e dia
-                                if (dataPartes.length === 3) {
-                                    dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`; 
-                                    horaFormatada = partes[1].substring(0, 5); 
-                                }
-                            } else {
-                                const d = new Date(p.dataAgendada);
-                                if (!isNaN(d.getTime())) {
-                                    dataFormatada = d.toLocaleDateString('pt-BR');
-                                    horaFormatada = d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                                }
-                            }
-                        } catch(e) { console.error("Erro ao ler data:", e); }
+                    if (p.dataAgendada && p.dataAgendada.includes('T')) {
+                        const partes = p.dataAgendada.split('T');
+                        const dataPartes = partes[0].split('-');
+                        if (dataPartes.length === 3) {
+                            dataFormatada = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]}`;
+                            horaFormatada = partes[1].substring(0, 5);
+                        }
                     }
 
-                    // 🚀 2. EXIBIÇÃO DO PÚBLICO ALVO
-                    const publicoAlvo = p.destinoNome || 'Todas as Turmas';
+                    // 🚀 TRATAMENTO DO LINK SEGURO
+                    let linkSeguro = p.linkSala || '#';
+                    if (linkSeguro !== '#' && !linkSeguro.startsWith('http')) linkSeguro = 'https://' + linkSeguro;
+                    
+                    const publicoAlvo = p.destinoNome || 'Global';
 
-                    // 🚀 3. BOTÃO TOTALMENTE BLINDADO (type="button")
-                    // Passamos p.linkSala sem mexer nele aqui, a função registrarPresencaOnline fará o tratamento
+                    // 🚀 BOTÃO PROTEGIDO COM event.stopPropagation() E linkSeguro
                     const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' 
-                        ? `<button type="button" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; color: white; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${p.linkSala || ''}')">Entrar na Sala</button>` 
+                        ? `<button type="button" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; color: white; border: none; cursor: pointer;" onclick="event.stopPropagation(); Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sala</button>` 
                         : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     
                     return `
@@ -887,33 +869,14 @@ Workspace.Avaliacoes = {
             
             document.getElementById('ws-nova-online-titulo').value = prova.titulo || '';
             
-            // 🚀 RECUPERAÇÃO INTELIGENTE DE DATA (Testa dataAgendada, data ou dataAgendamento)
-            const rawData = prova.dataAgendada || prova.data || prova.dataAgendamento || '';
+            // 🚀 Formatação rigorosa para YYYY-MM-DDThh:mm
             let dataFormatadaInput = '';
-            
-            if (rawData) {
-                if (typeof rawData === 'string' && rawData.includes('T')) {
-                    dataFormatadaInput = rawData.substring(0, 16);
-                } else {
-                    try {
-                        const dataObj = new Date(rawData);
-                        if (!isNaN(dataObj.getTime())) {
-                            const ano = dataObj.getFullYear();
-                            const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                            const dia = String(dataObj.getDate()).padStart(2, '0');
-                            const horas = String(dataObj.getHours()).padStart(2, '0');
-                            const minutos = String(dataObj.getMinutes()).padStart(2, '0');
-                            dataFormatadaInput = `${ano}-${mes}-${dia}T${horas}:${minutos}`;
-                        }
-                    } catch(e) {}
-                }
+            if (prova.dataAgendada && prova.dataAgendada.includes('T')) {
+                dataFormatadaInput = prova.dataAgendada.substring(0, 16);
             }
             
-            // 🚀 RECUPERAÇÃO INTELIGENTE DE LINK (Testa linkSala ou link)
-            const linkRecuperado = prova.linkSala || prova.link || '';
-            
             document.getElementById('ws-nova-online-data').value = dataFormatadaInput;
-            document.getElementById('ws-nova-online-link').value = linkRecuperado;
+            document.getElementById('ws-nova-online-link').value = prova.linkSala || '';
             document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-online').innerText = "💾 Salvar Alterações";
         }
@@ -1136,7 +1099,7 @@ Workspace.Avaliacoes = {
         }
     },
 
-   salvarProvaOnline: async () => {
+  salvarProvaOnline: async () => {
         const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
         const dataHora = document.getElementById('ws-nova-online-data').value;
         const linkSala = document.getElementById('ws-nova-online-link').value.trim();
@@ -1150,26 +1113,29 @@ Workspace.Avaliacoes = {
         const txt = btn.innerText; btn.innerText = "Agendando ⏳ ..."; btn.disabled = true;
 
         try {
-            const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
-            const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
+            const isEdicao = Workspace.Avaliacoes.avaliacaoEmEdicao !== null;
+            const endpoint = isEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
+            const metodo = isEdicao ? 'PUT' : 'POST';
 
-            // 🚀 BLINDAGEM DE DADOS: Enviamos chaves duplas para garantir compatibilidade total com o backend
-            const res = await Workspace.api(endpoint, metodo, {
-                titulo, 
-                tipo: 'online', 
-                dataAgendada: dataHora, 
-                data: dataHora,              // Chave alternativa para a data
-                linkSala: linkSala, 
-                link: linkSala,              // Chave alternativa para o link
-                escolaId: Workspace.usuario.escolaId, 
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login, 
-                destino, 
-                destinoNome, 
-                status: 'ativa'
-            });
+            const payload = {
+                titulo, tipo: 'online', dataAgendada: dataHora, linkSala, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome, status: 'ativa'
+            };
+
+            const res = await Workspace.api(endpoint, metodo, payload);
 
             if (res && res.success) {
-                Workspace.mostrarAviso(Workspace.Avaliacoes.avaliacaoEmEdicao ? "Sala Atualizada!" : "Sala Agendada com sucesso!", "success");
+                // 🚀 O SEGREDO (DOUBLE-TAP SAVE): Forçamos um PUT imediatamente após o POST para injetar a data e o link que o servidor recusou!
+                if (!isEdicao) {
+                    const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+                    if (resAval && resAval.success) {
+                        const recemCriada = resAval.avaliacoes.find(a => a.tipo === 'online' && a.titulo === titulo);
+                        if (recemCriada) {
+                            await Workspace.api(`/workspace/avaliacoes/${recemCriada.id}`, 'PUT', { dataAgendada: dataHora, linkSala: linkSala });
+                        }
+                    }
+                }
+
+                Workspace.mostrarAviso(isEdicao ? "Sala Atualizada!" : "Sala Agendada com sucesso!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else {
                 Workspace.mostrarAviso(res.error || "Erro ao guardar a sala.", "error");
