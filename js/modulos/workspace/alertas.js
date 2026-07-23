@@ -306,6 +306,7 @@ Workspace.Alertas = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // 🚀 O ROTEADOR INTELIGENTE (Agora sabe ir para o Baú!)
         if (origem === 'post') {
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
@@ -322,6 +323,7 @@ Workspace.Alertas = {
         else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
         else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
         else if (origem === 'online' && window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
+        else if (origem === 'bau' && Workspace.Bau && Workspace.Bau.irParaCalendarioDoBau) Workspace.Bau.irParaCalendarioDoBau(Number(origemId));
     },
 
     riscar: async (id, event) => {
