@@ -881,29 +881,39 @@ Workspace.Avaliacoes = {
             document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Salvar Alterações";
-       } else if (prova.tipo === 'online') { 
+     } else if (prova.tipo === 'online') { 
             document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
             document.getElementById('ws-prof-nova-online').style.display = 'block';
             
-            document.getElementById('ws-nova-online-titulo').value = prova.titulo;
+            document.getElementById('ws-nova-online-titulo').value = prova.titulo || '';
             
-            // 🚀 FORMATAÇÃO CIRÚRGICA DA DATA PARA O HTML (datetime-local exige: YYYY-MM-DDThh:mm)
+            // 🚀 RECUPERAÇÃO INTELIGENTE DE DATA (Testa dataAgendada, data ou dataAgendamento)
+            const rawData = prova.dataAgendada || prova.data || prova.dataAgendamento || '';
             let dataFormatadaInput = '';
-            if (prova.dataAgendada) {
-                if (prova.dataAgendada.includes('T')) {
-                    // Apanha apenas os 16 primeiros caracteres exatos
-                    dataFormatadaInput = prova.dataAgendada.substring(0, 16);
+            
+            if (rawData) {
+                if (typeof rawData === 'string' && rawData.includes('T')) {
+                    dataFormatadaInput = rawData.substring(0, 16);
                 } else {
-                    const dataObj = new Date(prova.dataAgendada);
-                    if (!isNaN(dataObj.getTime())) {
-                        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-                        dataFormatadaInput = (new Date(dataObj - tzoffset)).toISOString().slice(0, 16);
-                    }
+                    try {
+                        const dataObj = new Date(rawData);
+                        if (!isNaN(dataObj.getTime())) {
+                            const ano = dataObj.getFullYear();
+                            const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+                            const dia = String(dataObj.getDate()).padStart(2, '0');
+                            const horas = String(dataObj.getHours()).padStart(2, '0');
+                            const minutos = String(dataObj.getMinutes()).padStart(2, '0');
+                            dataFormatadaInput = `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+                        }
+                    } catch(e) {}
                 }
             }
             
+            // 🚀 RECUPERAÇÃO INTELIGENTE DE LINK (Testa linkSala ou link)
+            const linkRecuperado = prova.linkSala || prova.link || '';
+            
             document.getElementById('ws-nova-online-data').value = dataFormatadaInput;
-            document.getElementById('ws-nova-online-link').value = prova.linkSala || '';
+            document.getElementById('ws-nova-online-link').value = linkRecuperado;
             document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-online').innerText = "💾 Salvar Alterações";
         }
@@ -1126,7 +1136,7 @@ Workspace.Avaliacoes = {
         }
     },
 
-    salvarProvaOnline: async () => {
+   salvarProvaOnline: async () => {
         const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
         const dataHora = document.getElementById('ws-nova-online-data').value;
         const linkSala = document.getElementById('ws-nova-online-link').value.trim();
@@ -1143,8 +1153,19 @@ Workspace.Avaliacoes = {
             const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
             const metodo = Workspace.Avaliacoes.avaliacaoEmEdicao ? 'PUT' : 'POST';
 
+            // 🚀 BLINDAGEM DE DADOS: Enviamos chaves duplas para garantir compatibilidade total com o backend
             const res = await Workspace.api(endpoint, metodo, {
-                titulo, tipo: 'online', dataAgendada: dataHora, linkSala, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, destino, destinoNome, status: 'ativa'
+                titulo, 
+                tipo: 'online', 
+                dataAgendada: dataHora, 
+                data: dataHora,              // Chave alternativa para a data
+                linkSala: linkSala, 
+                link: linkSala,              // Chave alternativa para o link
+                escolaId: Workspace.usuario.escolaId, 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login, 
+                destino, 
+                destinoNome, 
+                status: 'ativa'
             });
 
             if (res && res.success) {
