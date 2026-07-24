@@ -414,10 +414,16 @@ Workspace.Avaliacoes = {
         const onPendentes = onlines.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const onHistorico = onlines.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
         
-        // 🚀 INTELIGÊNCIA DO ALUNO: Se o professor reativou e o histórico esvaziou, o aluno salta para a aba "Links Liberados"!
-        if (Workspace.Avaliacoes.abaOnline === 'historico' && onHistorico.length === 0 && onPendentes.length > 0) {
-            Workspace.Avaliacoes.abaOnline = 'abertas';
+        // 🚀 INTELIGÊNCIA DO ALUNO (Salto Dinâmico)
+        // Guardamos o número de pendentes. Se AUMENTAR, significa que o professor acabou de reativar um link (ou criar sala).
+        // Se a aba do aluno for "Histórico", forçamos o ecrã a saltar imediatamente para os "Links Liberados" para ele ver!
+        Workspace.Avaliacoes.qtdPendentesAnterior = Workspace.Avaliacoes.qtdPendentesAnterior || 0;
+        
+        if (onPendentes.length > Workspace.Avaliacoes.qtdPendentesAnterior) {
+            Workspace.Avaliacoes.abaOnline = 'abertas'; 
         }
+        
+        Workspace.Avaliacoes.qtdPendentesAnterior = onPendentes.length; // Atualiza a memória
 
         const tOnPend = document.getElementById('tab-online-abertas');
         const tOnHist = document.getElementById('tab-online-historico');
@@ -605,7 +611,7 @@ Workspace.Avaliacoes = {
         if (forcar) processarEntrega(); else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
 
-    iniciarTesteOral: async (id) => {
+   iniciarTesteOral: async (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); 
         if(!teste) return;
         
@@ -625,11 +631,14 @@ Workspace.Avaliacoes = {
                 
                 document.body.style.overflow = 'hidden'; 
                 
+                // 🚀 BLINDAGEM MÁXIMA: Se não houver ecrã, acionamos o travão (return) e não crasha!
                 if (elTela) {
                     elTela.style.display = 'block'; 
                     elTela.scrollTop = 0; 
                 } else {
-                    console.warn("⚠️ Aviso: O elemento 'ws-audio-foco-tela' não existe no HTML.");
+                    console.error("🚨 Erro Crítico: O elemento 'ws-audio-foco-tela' não existe no HTML.");
+                    Workspace.mostrarAviso("A estrutura visual do estúdio está em falta na página.", "error");
+                    return; // 🛑 O TRAVÃO DE EMERGÊNCIA ESTÁ AQUI
                 }
 
                 Workspace.Avaliacoes.resetarInterfaceDeAudio(); 
@@ -927,7 +936,7 @@ Workspace.Avaliacoes = {
     },
 
    
-  abrirModalAcessos: async (avaliacaoId, destinoId) => {
+ abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
@@ -958,7 +967,6 @@ Workspace.Avaliacoes = {
             const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
             if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
 
-            // 🚀 O SEGREDO DO DINAMISMO: Ignora as entregas de quem já foi reativado localmente!
             const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
             const idsReativados = reativadosLista.map(r => r.id);
             
@@ -992,6 +1000,9 @@ Workspace.Avaliacoes = {
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
                     const foiReativado = idsReativados.includes(aluno.id);
                     
+                    // 🚀 O SEGREDO DO CLIQUE: Remove aspas do nome para o HTML do botão não quebrar!
+                    const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
+                    
                     if (acessoFeito) {
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
@@ -1002,7 +1013,7 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${aluno.nome}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
                             </div>
                         `;
                     } else if (foiReativado) {
@@ -1039,6 +1050,8 @@ Workspace.Avaliacoes = {
                 } else {
                     acessos.forEach(acesso => {
                         const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
+                        const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
+
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1048,7 +1061,7 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${acesso.alunoNome}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
                             </div>
                         `;
                     });
