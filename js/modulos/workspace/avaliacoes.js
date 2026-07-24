@@ -182,11 +182,12 @@ Workspace.Avaliacoes = {
         });
     },
 
-    iniciarRadarAvaliacoes: () => {
+   iniciarRadarAvaliacoes: () => {
         if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
         Workspace.Avaliacoes.radarInterval = setInterval(async () => {
             try {
-                const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
+                // 🚀 DESTRUIDOR DE CACHE: O timestamp ?_t= força o navegador a buscar os dados reais
+                const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
                 if (resAval && resAval.success) {
                     const avaliacoesNovas = resAval.avaliacoes;
                     const idAtivo = Workspace.Avaliacoes.exameAtivo || Workspace.Avaliacoes.estudioAtivo;
@@ -210,9 +211,27 @@ Workspace.Avaliacoes = {
 
                     const hashAntigo = JSON.stringify(Workspace.Avaliacoes.avaliacoesDisponiveis);
                     const hashNovo = JSON.stringify(avaliacoesNovas);
-                    if (hashAntigo !== hashNovo) {
+                    let precisaAtualizar = (hashAntigo !== hashNovo);
+
+                    if (precisaAtualizar) {
                         Workspace.Avaliacoes.avaliacoesDisponiveis = avaliacoesNovas;
-                        if (!idAtivo) Workspace.Avaliacoes.renderizarLobbies();
+                    }
+
+                    // 🚀 INTELIGÊNCIA MÁXIMA PARA O ALUNO: Agora o radar vigia os acessos/entregas também!
+                    if (Workspace.usuario.tipo === 'Aluno') {
+                        const resEntregas = await Workspace.api(`/workspace/avaliacoes/minhas-entregas/${Workspace.usuario.id}?_t=${Date.now()}`, 'GET');
+                        if (resEntregas && resEntregas.success) {
+                            const hashEntregasAntigo = JSON.stringify(Workspace.Avaliacoes.entregasFeitas);
+                            const hashEntregasNovo = JSON.stringify(resEntregas.entregas);
+                            if (hashEntregasAntigo !== hashEntregasNovo) {
+                                Workspace.Avaliacoes.entregasFeitas = resEntregas.entregas;
+                                precisaAtualizar = true; // Avisa o sistema que um professor acabou de reativar um acesso!
+                            }
+                        }
+                    }
+
+                    if (precisaAtualizar && !idAtivo) {
+                        Workspace.Avaliacoes.renderizarLobbies();
                     }
                 }
             } catch(e) {}
@@ -595,8 +614,9 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar base de dados... ⏳</div>';
         try {
-            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
-            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET'); 
+            // 🚀 DESTRUIDOR DE CACHE: Garante que as presenças atualizadas vêm limpas do servidor
+            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
+            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET'); 
             if(res && res.success) {
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache = res.avaliacoes || [];
                 if(resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas || [];
@@ -672,7 +692,7 @@ Workspace.Avaliacoes = {
     },
 
    
-    abrirModalAcessos: async (avaliacaoId, destinoId) => {
+   abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
@@ -689,6 +709,7 @@ Workspace.Avaliacoes = {
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
                 <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                    <!-- Botão "Reativar para Todos" Azul -->
                     <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
@@ -700,7 +721,8 @@ Workspace.Avaliacoes = {
         document.body.appendChild(modal);
 
         try {
-            const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
+            // 🚀 DESTRUIDOR DE CACHE: Esta era a barreira invisível! Adicionámos ?_t=Date.now()
+            const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
             if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
 
             let acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
