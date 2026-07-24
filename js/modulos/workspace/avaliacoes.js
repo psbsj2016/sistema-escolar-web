@@ -460,7 +460,7 @@ Workspace.Avaliacoes = {
         Workspace.navegarPara('avaliacoes_online'); btn.innerText = txtOriginal;
     },
 
-   iniciarExame: async (id) => {
+  iniciarExame: async (id) => {
         const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!examen) return;
         
@@ -470,7 +470,7 @@ Workspace.Avaliacoes = {
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
                 
-                // 🚀 BLINDAGEM DE DADOS: Se "questoes" vier vazio da BD, passa um Array vazio [] para não quebrar o forEach!
+                // 🚀 ESCUDO 1: Garante que as questões existem para não quebrar o ecrã
                 const questoesSeguras = examen.questoes || [];
                 Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo || 'Exame', examen.tempo, questoesSeguras);
             } else { 
@@ -478,9 +478,9 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.carregarLobbies(); 
             }
         } catch (e) { 
-            // 🚀 TIRAR A MÁSCARA: Imprime o erro real no console para sabermos a linha exata que falhou
-            console.error("🚨 Erro interno ao iniciar Exame Escrito:", e);
-            Workspace.mostrarAviso("Falha ao abrir a interface da prova. Atualize a página.", "error"); 
+            // 🚀 TIRAR A MÁSCARA: O erro real aparece no console do navegador
+            console.error("🚨 Erro Crítico ao iniciar Exame Escrito:", e);
+            Workspace.mostrarAviso("Falha ao abrir a interface da prova. Estrutura ausente.", "error"); 
         }
     },
 
@@ -488,7 +488,7 @@ Workspace.Avaliacoes = {
         try {
             Workspace.Avaliacoes.exameAtivo = exameId; 
             
-            // 🚀 BLINDAGEM DE INTERFACE: Verifica se os elementos existem antes de injetar texto
+            // 🚀 ESCUDOS DE INTERFACE
             const elTitulo = document.getElementById('ws-exame-titulo');
             if (elTitulo) elTitulo.innerText = titulo; 
             
@@ -499,13 +499,12 @@ Workspace.Avaliacoes = {
                 tela.style.display = 'block'; 
                 tela.scrollTop = 0;
             } else {
-                console.warn("Aviso: O elemento 'ws-exame-foco-tela' não existe no HTML.");
+                console.warn("⚠️ Aviso: O elemento 'ws-exame-foco-tela' não existe no HTML.");
             }
 
             const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
             if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho); else Workspace.Avaliacoes.respostas = {};
             
-            // A função renderizarQuestoes agora recebe sempre um Array (mesmo que vazio) graças à nossa blindagem
             Workspace.Avaliacoes.renderizarQuestoes(questoes);
             
             const elCronometro = document.getElementById('ws-exame-cronometro');
@@ -518,16 +517,16 @@ Workspace.Avaliacoes = {
             Workspace.Avaliacoes.iniciarSensorFraude(); 
         } catch (e) {
             console.error("🚨 Erro Crítico no Modo Foco:", e);
-            Workspace.mostrarAviso("Erro ao processar o ecrã do exame.", "error");
+            Workspace.mostrarAviso("Falha ao preparar o ambiente da prova.", "error");
         }
     },
+
     renderizarQuestoes: (questoes) => {
         const area = document.getElementById('ws-exame-questoes-area'); 
         
-        // 🚀 ESCUDO PROTETOR: Se a área de perguntas não existir no HTML, paramos aqui para não crashar!
+        // 🚀 ESCUDO VITAL: Se a área de perguntas não existir, aborta para não crashar
         if (!area) {
-            console.error("🚨 Erro Crítico de Interface: O elemento 'ws-exame-questoes-area' não foi encontrado no HTML da página. O exame não pode ser desenhado.");
-            Workspace.mostrarAviso("Falta a estrutura visual do exame na página.", "error");
+            console.error("🚨 Erro: O elemento 'ws-exame-questoes-area' não foi encontrado.");
             return;
         }
 
@@ -546,32 +545,46 @@ Workspace.Avaliacoes = {
             }
             html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
         });
-        
         area.innerHTML = html;
     },
+
     registarResposta: (questaoId, valor) => { Workspace.Avaliacoes.respostas[questaoId] = valor; localStorage.setItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`, JSON.stringify(Workspace.Avaliacoes.respostas)); },
+    
     guardarRascunhoManual: () => { const btn = event.target; const textoOriginal = btn.innerText; btn.innerText = "✅ Guardado!"; setTimeout(() => btn.innerText = textoOriginal, 2000); },
+    
     iniciarCronometro: (totalSegundos) => {
         if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval);
         Workspace.Avaliacoes.segundosRestantes = totalSegundos; const visor = document.getElementById('ws-exame-cronometro');
         Workspace.Avaliacoes.cronometroInterval = setInterval(() => {
             Workspace.Avaliacoes.segundosRestantes--; const s = Workspace.Avaliacoes.segundosRestantes;
-            if (s <= 0) { clearInterval(Workspace.Avaliacoes.cronometroInterval); visor.innerText = "00:00:00"; Workspace.mostrarAviso("O tempo esgotou! Prova entregue automaticamente.", "warning"); Workspace.Avaliacoes.finalizarExame(true); return; }
-            visor.innerText = `${Math.floor(s / 3600).toString().padStart(2, '0')}:${Math.floor((s % 3600) / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+            if (s <= 0) { clearInterval(Workspace.Avaliacoes.cronometroInterval); if(visor) visor.innerText = "00:00:00"; Workspace.mostrarAviso("O tempo esgotou! Prova entregue automaticamente.", "warning"); Workspace.Avaliacoes.finalizarExame(true); return; }
+            if(visor) visor.innerText = `${Math.floor(s / 3600).toString().padStart(2, '0')}:${Math.floor((s % 3600) / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
         }, 1000);
     },
-    sairDoExame: () => { Workspace.Avaliacoes.confirmarDialog("Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", () => { document.body.style.overflow = ''; document.getElementById('ws-exame-foco-tela').style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.pararSensorFraude(); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); }); },
+    
+    sairDoExame: () => { Workspace.Avaliacoes.confirmarDialog("Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", () => { document.body.style.overflow = ''; const tela = document.getElementById('ws-exame-foco-tela'); if(tela) tela.style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.pararSensorFraude(); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); }); },
+    
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
             Workspace.mostrarAviso("A entregar avaliação... ⏳", "info"); const relatorio = Workspace.Avaliacoes.pararSensorFraude();
             try {
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', { respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
-                if(res && res.success) { Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success"); localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`); document.body.style.overflow = ''; document.getElementById('ws-exame-foco-tela').style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); } else throw new Error();
+                if(res && res.success) { 
+                    Workspace.mostrarAviso("Avaliação entregue com sucesso! 🎉", "success"); 
+                    localStorage.removeItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`); 
+                    document.body.style.overflow = ''; 
+                    const tela = document.getElementById('ws-exame-foco-tela'); 
+                    if(tela) tela.style.display = 'none'; 
+                    if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); 
+                    Workspace.Avaliacoes.exameAtivo = null; 
+                    Workspace.Avaliacoes.carregarLobbies(); 
+                } else throw new Error();
             } catch(e) { Workspace.mostrarAviso("Erro ao entregar a prova.", "error"); }
         };
         if (forcar) processarEntrega(); else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
-   iniciarTesteOral: async (id) => {
+
+    iniciarTesteOral: async (id) => {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); 
         if(!teste) return;
         
@@ -582,7 +595,6 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId; 
                 Workspace.Avaliacoes.estudioAtivo = teste.id; 
                 
-                // 🚀 BLINDAGEM DE INTERFACE: Protege contra a falta de HTML
                 const elTitulo = document.getElementById('ws-audio-titulo');
                 const elPergunta = document.getElementById('ws-audio-pergunta');
                 const elTela = document.getElementById('ws-audio-foco-tela');
@@ -596,9 +608,7 @@ Workspace.Avaliacoes = {
                     elTela.style.display = 'block'; 
                     elTela.scrollTop = 0; 
                 } else {
-                    console.error("🚨 Erro Crítico: O elemento 'ws-audio-foco-tela' não existe no HTML.");
-                    Workspace.mostrarAviso("Falta a estrutura visual do estúdio na página.", "error");
-                    return; // Aborta para não quebrar o sistema
+                    console.warn("⚠️ Aviso: O elemento 'ws-audio-foco-tela' não existe no HTML.");
                 }
 
                 Workspace.Avaliacoes.resetarInterfaceDeAudio(); 
@@ -609,12 +619,11 @@ Workspace.Avaliacoes = {
             }
         } catch (e) { 
             console.error("🚨 Erro interno ao iniciar Estúdio de Áudio:", e);
-            Workspace.mostrarAviso("Falha ao abrir o estúdio. Atualize a página.", "error"); 
+            Workspace.mostrarAviso("Falha ao abrir o estúdio. Estrutura ausente.", "error"); 
         }
     },
 
     resetarInterfaceDeAudio: () => { 
-        // 🚀 ESCUDOS PROTETORES: Captura os elementos antes de alterar o style
         const areaGravacao = document.getElementById('ws-area-gravacao');
         const areaPlayer = document.getElementById('ws-area-player');
         const btnIniciar = document.getElementById('ws-btn-iniciar-gravacao');
@@ -639,22 +648,123 @@ Workspace.Avaliacoes = {
         Workspace.Avaliacoes.audioBlob = null; 
         Workspace.Avaliacoes.audioChunks = []; 
     },
-    pararGravacao: () => { if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') { Workspace.Avaliacoes.mediaRecorder.stop(); if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval); } },
-    descartarAudio: () => { Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); },
-    enviarAudio: async () => {
-        if (!Workspace.Avaliacoes.audioBlob) return; const btn = document.getElementById('ws-btn-enviar-audio'); btn.innerText = "A Enviar... ⏳"; btn.disabled = true; const relatorio = Workspace.Avaliacoes.pararSensorFraude(); 
+
+    // 🚀 RESTAURAÇÃO: A Função que tinha sumido foi trazida de volta e blindada!
+    iniciarGravacao: async () => {
         try {
-            const formData = new FormData(); formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' })); const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData }); const uploadData = await uploadRes.json();
-            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload."); const audioUrlFinal = uploadData.anexos[0].url;
-            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', { audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
-            if (res && res.success) { Workspace.mostrarAviso("Áudio enviado com sucesso!", "success"); document.body.style.overflow = ''; document.getElementById('ws-audio-foco-tela').style.display = 'none'; Workspace.Avaliacoes.estudioAtivo = null; Workspace.Avaliacoes.carregarLobbies(); } else throw new Error("Erro no backend.");
-        } catch(e) { Workspace.mostrarAviso("Falha ao enviar o áudio.", "error"); } finally { btn.innerText = "📤 Enviar Áudio"; btn.disabled = false; }
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+            Workspace.Avaliacoes.streamMicrofone = stream; 
+            Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream); 
+            Workspace.Avaliacoes.audioChunks = [];
+            
+            Workspace.Avaliacoes.mediaRecorder.ondataavailable = (e) => { 
+                if (e.data.size > 0) Workspace.Avaliacoes.audioChunks.push(e.data); 
+            };
+            
+            Workspace.Avaliacoes.mediaRecorder.onstop = () => { 
+                Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' }); 
+                
+                const preview = document.getElementById('ws-audio-preview');
+                if (preview) preview.src = URL.createObjectURL(Workspace.Avaliacoes.audioBlob); 
+                
+                const areaGravacao = document.getElementById('ws-area-gravacao');
+                const areaPlayer = document.getElementById('ws-area-player');
+                
+                if (areaGravacao) areaGravacao.style.display = 'none'; 
+                if (areaPlayer) areaPlayer.style.display = 'block'; 
+                
+                if (Workspace.Avaliacoes.streamMicrofone) {
+                    Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop()); 
+                }
+            };
+            
+            Workspace.Avaliacoes.mediaRecorder.start(); 
+            
+            const btnIniciar = document.getElementById('ws-btn-iniciar-gravacao');
+            const btnParar = document.getElementById('ws-btn-parar-gravacao');
+            const micRing = document.getElementById('ws-mic-ring');
+            const cronometro = document.getElementById('ws-audio-cronometro');
+
+            if (btnIniciar) btnIniciar.style.display = 'none'; 
+            if (btnParar) btnParar.style.display = 'inline-block'; 
+            if (micRing) {
+                micRing.style.borderColor = '#e74c3c'; 
+                micRing.style.background = 'rgba(231, 76, 60, 0.2)'; 
+            }
+            if (cronometro) cronometro.style.color = '#e74c3c'; 
+            
+            Workspace.Avaliacoes.segundosGravados = 0; 
+            if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
+            
+            Workspace.Avaliacoes.gravacaoInterval = setInterval(() => { 
+                Workspace.Avaliacoes.segundosGravados++; 
+                if (cronometro) {
+                    cronometro.innerText = `${Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0')}:${(Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0')}`; 
+                }
+                if(Workspace.Avaliacoes.segundosGravados >= 600) { 
+                    Workspace.Avaliacoes.pararGravacao(); 
+                    Workspace.mostrarAviso("Tempo máximo atingido.", "info"); 
+                } 
+            }, 1000);
+        } catch (err) { 
+            console.error("Erro no microfone:", err);
+            Workspace.mostrarAviso("Microfone bloqueado. Verifique as permissões.", "error"); 
+        }
     },
+
+    pararGravacao: () => { if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') { Workspace.Avaliacoes.mediaRecorder.stop(); if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval); } },
+    
+    descartarAudio: () => { Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); },
+    
+    enviarAudio: async () => {
+        if (!Workspace.Avaliacoes.audioBlob) return; 
+        const btn = document.getElementById('ws-btn-enviar-audio'); 
+        if(btn) { btn.innerText = "A Enviar... ⏳"; btn.disabled = true; }
+        
+        const relatorio = Workspace.Avaliacoes.pararSensorFraude(); 
+        try {
+            const formData = new FormData(); 
+            formData.append('anexos', new File([Workspace.Avaliacoes.audioBlob], `oral_${Date.now()}.webm`, { type: 'audio/webm' })); 
+            
+            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData }); 
+            const uploadData = await uploadRes.json();
+            
+            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no upload."); 
+            const audioUrlFinal = uploadData.anexos[0].url;
+            
+            const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.estudioAtivo}/entregar`, 'POST', { audioUrl: audioUrlFinal, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
+            
+            if (res && res.success) { 
+                Workspace.mostrarAviso("Áudio enviado com sucesso!", "success"); 
+                document.body.style.overflow = ''; 
+                const tela = document.getElementById('ws-audio-foco-tela');
+                if (tela) tela.style.display = 'none'; 
+                Workspace.Avaliacoes.estudioAtivo = null; 
+                Workspace.Avaliacoes.carregarLobbies(); 
+            } else {
+                throw new Error("Erro no backend.");
+            }
+        } catch(e) { 
+            Workspace.mostrarAviso("Falha ao enviar o áudio.", "error"); 
+        } finally { 
+            if(btn) { btn.innerText = "📤 Enviar Áudio"; btn.disabled = false; }
+        }
+    },
+
     sairDoEstudio: () => {
         const mensagemSair = "⚠️ A sua tentativa já foi registada. Se sair, perderá a chance de avaliação. Deseja mesmo sair?";
         Workspace.Avaliacoes.confirmarDialog("Sair do Estúdio", mensagemSair, "Sim, Desistir", "#e74c3c", () => {
-            if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') Workspace.Avaliacoes.pararGravacao();
-            Workspace.Avaliacoes.pararSensorFraude(); document.body.style.overflow = ''; document.getElementById('ws-audio-foco-tela').style.display = 'none'; Workspace.Avaliacoes.estudioAtivo = null; Workspace.Avaliacoes.carregarLobbies();
+            if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') {
+                Workspace.Avaliacoes.pararGravacao();
+            }
+            Workspace.Avaliacoes.pararSensorFraude(); 
+            document.body.style.overflow = ''; 
+            
+            const tela = document.getElementById('ws-audio-foco-tela');
+            if (tela) tela.style.display = 'none'; 
+            
+            Workspace.Avaliacoes.estudioAtivo = null; 
+            Workspace.Avaliacoes.carregarLobbies();
         });
     },
 
