@@ -802,6 +802,26 @@
         </div>
     </div>
 
+     <!-- TELA DE MODO FOCO DO EXAME ESCRITO (INVISÍVEL POR PADRÃO) -->
+<div id="ws-exame-foco-tela" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f0f2f5; z-index: 999999; overflow-y: auto;">
+    <div style="background: white; border-bottom: 2px solid #eee; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+        <h2 id="ws-exame-titulo" style="margin: 0; color: #2c3e50; font-size: 18px;">A Carregar Exame...</h2>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 18px; font-weight: bold; color: #e74c3c; background: #fdf2f2; padding: 8px 15px; border-radius: 20px;">
+                ⏱️ <span id="ws-exame-cronometro">00:00:00</span>
+            </div>
+            <button class="ws-btn" style="background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.finalizarExame(false)">Entregar Prova</button>
+            <button class="ws-btn" style="background: transparent; color: #e74c3c; border: 1px solid #e74c3c; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.sairDoExame()">Sair / Desistir</button>
+        </div>
+    </div>
+    
+    <div style="max-width: 800px; margin: 30px auto; padding: 0 20px;">
+        <div id="ws-exame-questoes-area">
+            <!-- O JavaScript vai injetar as perguntas aqui dentro -->
+        </div>
+    </div>
+</div>
+
     <!-- 🚀 MOTOR DE SINCRONIZAÇÃO DAS GAVETAS LATERAIS E DO CHAT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {

@@ -522,7 +522,16 @@ Workspace.Avaliacoes = {
         }
     },
     renderizarQuestoes: (questoes) => {
-        const area = document.getElementById('ws-exame-questoes-area'); let html = '';
+        const area = document.getElementById('ws-exame-questoes-area'); 
+        
+        // 🚀 ESCUDO PROTETOR: Se a área de perguntas não existir no HTML, paramos aqui para não crashar!
+        if (!area) {
+            console.error("🚨 Erro Crítico de Interface: O elemento 'ws-exame-questoes-area' não foi encontrado no HTML da página. O exame não pode ser desenhado.");
+            Workspace.mostrarAviso("Falta a estrutura visual do exame na página.", "error");
+            return;
+        }
+
+        let html = '';
         questoes.forEach(q => {
             let htmlResposta = ''; const respostaSalva = Workspace.Avaliacoes.respostas[q.id] || '';
             if (q.tipo === 'escolha') {
@@ -532,9 +541,12 @@ Workspace.Avaliacoes = {
                     htmlResposta += `<label style="background: ${selecionado ? '#e8f4f8' : '#f9f9f9'}; border: 2px solid ${selecionado ? '#3498db' : '#eee'}; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; font-size: 14px;"><input type="radio" name="questao_${q.id}" value="${opcao}" ${selecionado ? 'checked' : ''} onchange="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)" style="transform: scale(1.3); margin:0;"><span style="color: #2c3e50; font-weight: 500;">${opcao}</span></label>`;
                 });
                 htmlResposta += `</div>`;
-            } else { htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`; }
+            } else { 
+                htmlResposta = `<div style="margin-top: 15px;"><textarea rows="6" placeholder="Digite a resposta..." style="width: 100%; padding: 15px; border-radius: 8px; border: 2px solid #eee; font-family: inherit; font-size: 14px; outline: none; box-sizing: border-box; resize: vertical;" oninput="Workspace.Avaliacoes.registarResposta('${q.id}', this.value)">${respostaSalva}</textarea></div>`; 
+            }
             html += `<div class="ws-card" style="margin-bottom: 25px; border-left: 4px solid #3498db; box-shadow: 0 5px 20px rgba(0,0,0,0.04);"><h3 style="margin: 0; color: #2c3e50; font-size: 16px; line-height: 1.5;">${q.pergunta}</h3>${htmlResposta}</div>`;
         });
+        
         area.innerHTML = html;
     },
     registarResposta: (questaoId, valor) => { Workspace.Avaliacoes.respostas[questaoId] = valor; localStorage.setItem(`ws_exame_draft_${Workspace.Avaliacoes.exameAtivo}`, JSON.stringify(Workspace.Avaliacoes.respostas)); },
