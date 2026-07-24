@@ -582,7 +582,7 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId; 
                 Workspace.Avaliacoes.estudioAtivo = teste.id; 
                 
-                // 🚀 BLINDAGEM DE INTERFACE ÁUDIO: Evita quebra se o HTML estiver em falta
+                // 🚀 BLINDAGEM DE INTERFACE: Protege contra a falta de HTML
                 const elTitulo = document.getElementById('ws-audio-titulo');
                 const elPergunta = document.getElementById('ws-audio-pergunta');
                 const elTela = document.getElementById('ws-audio-foco-tela');
@@ -595,6 +595,10 @@ Workspace.Avaliacoes = {
                 if (elTela) {
                     elTela.style.display = 'block'; 
                     elTela.scrollTop = 0; 
+                } else {
+                    console.error("🚨 Erro Crítico: O elemento 'ws-audio-foco-tela' não existe no HTML.");
+                    Workspace.mostrarAviso("Falta a estrutura visual do estúdio na página.", "error");
+                    return; // Aborta para não quebrar o sistema
                 }
 
                 Workspace.Avaliacoes.resetarInterfaceDeAudio(); 
@@ -604,20 +608,36 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.carregarLobbies(); 
             }
         } catch (e) { 
-            // 🚀 TIRAR A MÁSCARA
             console.error("🚨 Erro interno ao iniciar Estúdio de Áudio:", e);
             Workspace.mostrarAviso("Falha ao abrir o estúdio. Atualize a página.", "error"); 
         }
     },
-    resetarInterfaceDeAudio: () => { document.getElementById('ws-area-gravacao').style.display = 'block'; document.getElementById('ws-area-player').style.display = 'none'; document.getElementById('ws-btn-iniciar-gravacao').style.display = 'inline-block'; document.getElementById('ws-btn-parar-gravacao').style.display = 'none'; document.getElementById('ws-audio-cronometro').innerText = '00:00'; document.getElementById('ws-audio-cronometro').style.color = '#fff'; document.getElementById('ws-mic-ring').style.borderColor = 'rgba(255,255,255,0.2)'; document.getElementById('ws-mic-ring').style.background = 'rgba(255,255,255,0.05)'; Workspace.Avaliacoes.audioBlob = null; Workspace.Avaliacoes.audioChunks = []; },
-    iniciarGravacao: async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); Workspace.Avaliacoes.streamMicrofone = stream; Workspace.Avaliacoes.mediaRecorder = new MediaRecorder(stream); Workspace.Avaliacoes.audioChunks = [];
-            Workspace.Avaliacoes.mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) Workspace.Avaliacoes.audioChunks.push(e.data); };
-            Workspace.Avaliacoes.mediaRecorder.onstop = () => { Workspace.Avaliacoes.audioBlob = new Blob(Workspace.Avaliacoes.audioChunks, { type: 'audio/webm' }); document.getElementById('ws-audio-preview').src = URL.createObjectURL(Workspace.Avaliacoes.audioBlob); document.getElementById('ws-area-gravacao').style.display = 'none'; document.getElementById('ws-area-player').style.display = 'block'; Workspace.Avaliacoes.streamMicrofone.getTracks().forEach(t => t.stop()); };
-            Workspace.Avaliacoes.mediaRecorder.start(); document.getElementById('ws-btn-iniciar-gravacao').style.display = 'none'; document.getElementById('ws-btn-parar-gravacao').style.display = 'inline-block'; document.getElementById('ws-mic-ring').style.borderColor = '#e74c3c'; document.getElementById('ws-mic-ring').style.background = 'rgba(231, 76, 60, 0.2)'; document.getElementById('ws-audio-cronometro').style.color = '#e74c3c'; Workspace.Avaliacoes.segundosGravados = 0; if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval);
-            Workspace.Avaliacoes.gravacaoInterval = setInterval(() => { Workspace.Avaliacoes.segundosGravados++; document.getElementById('ws-audio-cronometro').innerText = `${Math.floor(Workspace.Avaliacoes.segundosGravados / 60).toString().padStart(2, '0')}:${(Workspace.Avaliacoes.segundosGravados % 60).toString().padStart(2, '0')}`; if(Workspace.Avaliacoes.segundosGravados >= 600) { Workspace.Avaliacoes.pararGravacao(); Workspace.mostrarAviso("Tempo máximo atingido.", "info"); } }, 1000);
-        } catch (err) { Workspace.mostrarAviso("Microfone bloqueado. Verifique as permissões.", "error"); }
+
+    resetarInterfaceDeAudio: () => { 
+        // 🚀 ESCUDOS PROTETORES: Captura os elementos antes de alterar o style
+        const areaGravacao = document.getElementById('ws-area-gravacao');
+        const areaPlayer = document.getElementById('ws-area-player');
+        const btnIniciar = document.getElementById('ws-btn-iniciar-gravacao');
+        const btnParar = document.getElementById('ws-btn-parar-gravacao');
+        const cronometro = document.getElementById('ws-audio-cronometro');
+        const micRing = document.getElementById('ws-mic-ring');
+
+        if (areaGravacao) areaGravacao.style.display = 'block'; 
+        if (areaPlayer) areaPlayer.style.display = 'none'; 
+        if (btnIniciar) btnIniciar.style.display = 'inline-block'; 
+        if (btnParar) btnParar.style.display = 'none'; 
+        
+        if (cronometro) {
+            cronometro.innerText = '00:00'; 
+            cronometro.style.color = '#fff'; 
+        }
+        if (micRing) {
+            micRing.style.borderColor = 'rgba(255,255,255,0.2)'; 
+            micRing.style.background = 'rgba(255,255,255,0.05)'; 
+        }
+        
+        Workspace.Avaliacoes.audioBlob = null; 
+        Workspace.Avaliacoes.audioChunks = []; 
     },
     pararGravacao: () => { if (Workspace.Avaliacoes.mediaRecorder && Workspace.Avaliacoes.mediaRecorder.state === 'recording') { Workspace.Avaliacoes.mediaRecorder.stop(); if(Workspace.Avaliacoes.gravacaoInterval) clearInterval(Workspace.Avaliacoes.gravacaoInterval); } },
     descartarAudio: () => { Workspace.Avaliacoes.confirmarDialog("Apagar Áudio", "Deseja apagar esta gravação e começar de novo?", "Apagar e Regravar", "#e74c3c", Workspace.Avaliacoes.resetarInterfaceDeAudio); },

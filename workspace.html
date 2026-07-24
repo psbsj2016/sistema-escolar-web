@@ -822,6 +822,41 @@
     </div>
 </div>
 
+     <!-- TELA DO ESTÚDIO DE ÁUDIO (INVISÍVEL POR PADRÃO) -->
+<div id="ws-audio-foco-tela" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #2c3e50; z-index: 999999; overflow-y: auto;">
+    <div style="background: rgba(0,0,0,0.2); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
+        <h2 id="ws-audio-titulo" style="margin: 0; color: white; font-size: 18px;">Estúdio de Gravação</h2>
+        <button class="ws-btn" style="background: transparent; color: #e74c3c; border: 1px solid #e74c3c; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.sairDoEstudio()">Sair / Desistir</button>
+    </div>
+    
+    <div style="max-width: 600px; margin: 40px auto; padding: 0 20px; text-align: center; color: white;">
+        <div class="ws-card" style="background: rgba(255,255,255,0.1); border: none; padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+            <h3 style="color: #3498db; margin-top: 0;">Instruções do Professor:</h3>
+            <p id="ws-audio-pergunta" style="font-size: 16px; line-height: 1.6;"></p>
+        </div>
+
+        <div id="ws-area-gravacao">
+            <div id="ws-mic-ring" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; transition: 0.3s;">
+                <div style="font-size: 40px;">🎤</div>
+            </div>
+            <div id="ws-audio-cronometro" style="font-size: 28px; font-weight: bold; margin-bottom: 20px; font-family: monospace;">00:00</div>
+            
+            <button id="ws-btn-iniciar-gravacao" class="ws-btn" style="background: #e74c3c; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.iniciarGravacao()">🔴 Iniciar Gravação</button>
+            <button id="ws-btn-parar-gravacao" class="ws-btn" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; display: none;" onclick="Workspace.Avaliacoes.pararGravacao()">⏹️ Parar e Rever</button>
+        </div>
+
+        <div id="ws-area-player" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <audio id="ws-audio-preview" controls style="width: 100%; outline: none;"></audio>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="ws-btn" style="background: #7f8c8d; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.descartarAudio()">🗑️ Regravar</button>
+                <button id="ws-btn-enviar-audio" class="ws-btn" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.enviarAudio()">📤 Enviar Áudio</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- 🚀 MOTOR DE SINCRONIZAÇÃO DAS GAVETAS LATERAIS E DO CHAT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
