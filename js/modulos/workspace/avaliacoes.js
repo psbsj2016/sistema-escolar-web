@@ -460,26 +460,66 @@ Workspace.Avaliacoes = {
         Workspace.navegarPara('avaliacoes_online'); btn.innerText = txtOriginal;
     },
 
-    iniciarExame: async (id) => {
+   iniciarExame: async (id) => {
         const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!examen) return;
+        
         Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (res && res.success) {
                 Workspace.Avaliacoes.tentativaAtivaId = res.entregaId;
-                Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo, examen.tempo, examen.questoes);
-            } else { Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); Workspace.Avaliacoes.carregarLobbies(); }
-        } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
+                
+                // 🚀 BLINDAGEM DE DADOS: Se "questoes" vier vazio da BD, passa um Array vazio [] para não quebrar o forEach!
+                const questoesSeguras = examen.questoes || [];
+                Workspace.Avaliacoes.entrarModoFoco(examen.id, examen.titulo || 'Exame', examen.tempo, questoesSeguras);
+            } else { 
+                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); 
+                Workspace.Avaliacoes.carregarLobbies(); 
+            }
+        } catch (e) { 
+            // 🚀 TIRAR A MÁSCARA: Imprime o erro real no console para sabermos a linha exata que falhou
+            console.error("🚨 Erro interno ao iniciar Exame Escrito:", e);
+            Workspace.mostrarAviso("Falha ao abrir a interface da prova. Atualize a página.", "error"); 
+        }
     },
-    entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes) => {
-        Workspace.Avaliacoes.exameAtivo = exameId; document.getElementById('ws-exame-titulo').innerText = titulo; document.body.style.overflow = 'hidden'; 
-        const tela = document.getElementById('ws-exame-foco-tela'); tela.style.display = 'block'; tela.scrollTop = 0;
-        const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
-        if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho); else Workspace.Avaliacoes.respostas = {};
-        Workspace.Avaliacoes.renderizarQuestoes(questoes);
-        if(duracaoMinutos) Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60); else document.getElementById('ws-exame-cronometro').innerText = "LIVRE";
-        Workspace.Avaliacoes.iniciarSensorFraude(); 
+
+    entrarModoFoco: (exameId, titulo, duracaoMinutos, questoes = []) => {
+        try {
+            Workspace.Avaliacoes.exameAtivo = exameId; 
+            
+            // 🚀 BLINDAGEM DE INTERFACE: Verifica se os elementos existem antes de injetar texto
+            const elTitulo = document.getElementById('ws-exame-titulo');
+            if (elTitulo) elTitulo.innerText = titulo; 
+            
+            document.body.style.overflow = 'hidden'; 
+            
+            const tela = document.getElementById('ws-exame-foco-tela'); 
+            if (tela) {
+                tela.style.display = 'block'; 
+                tela.scrollTop = 0;
+            } else {
+                console.warn("Aviso: O elemento 'ws-exame-foco-tela' não existe no HTML.");
+            }
+
+            const rascunho = localStorage.getItem(`ws_exame_draft_${exameId}`);
+            if(rascunho) Workspace.Avaliacoes.respostas = JSON.parse(rascunho); else Workspace.Avaliacoes.respostas = {};
+            
+            // A função renderizarQuestoes agora recebe sempre um Array (mesmo que vazio) graças à nossa blindagem
+            Workspace.Avaliacoes.renderizarQuestoes(questoes);
+            
+            const elCronometro = document.getElementById('ws-exame-cronometro');
+            if(duracaoMinutos) {
+                Workspace.Avaliacoes.iniciarCronometro(duracaoMinutos * 60); 
+            } else if (elCronometro) {
+                elCronometro.innerText = "LIVRE";
+            }
+            
+            Workspace.Avaliacoes.iniciarSensorFraude(); 
+        } catch (e) {
+            console.error("🚨 Erro Crítico no Modo Foco:", e);
+            Workspace.mostrarAviso("Erro ao processar o ecrã do exame.", "error");
+        }
     },
     renderizarQuestoes: (questoes) => {
         const area = document.getElementById('ws-exame-questoes-area'); let html = '';
@@ -519,13 +559,43 @@ Workspace.Avaliacoes = {
         };
         if (forcar) processarEntrega(); else Workspace.Avaliacoes.confirmarDialog("Finalizar Avaliação", "Deseja entregar a prova definitivamente? Não poderá alterar as respostas depois.", "Entregar Agora", "#27ae60", processarEntrega);
     },
-    iniciarTesteOral: async (id) => {
-        const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); if(!teste) return;
+   iniciarTesteOral: async (id) => {
+        const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); 
+        if(!teste) return;
+        
         Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
-            if (res && res.success) { Workspace.Avaliacoes.tentativaAtivaId = res.entregaId; Workspace.Avaliacoes.estudioAtivo = teste.id; document.getElementById('ws-audio-titulo').innerText = teste.titulo; document.getElementById('ws-audio-pergunta').innerText = teste.instrucoes; document.body.style.overflow = 'hidden'; document.getElementById('ws-audio-foco-tela').style.display = 'block'; document.getElementById('ws-audio-foco-tela').scrollTop = 0; Workspace.Avaliacoes.resetarInterfaceDeAudio(); Workspace.Avaliacoes.iniciarSensorFraude(); } else { Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); Workspace.Avaliacoes.carregarLobbies(); }
-        } catch (e) { Workspace.mostrarAviso("Erro de conexão.", "error"); }
+            if (res && res.success) { 
+                Workspace.Avaliacoes.tentativaAtivaId = res.entregaId; 
+                Workspace.Avaliacoes.estudioAtivo = teste.id; 
+                
+                // 🚀 BLINDAGEM DE INTERFACE ÁUDIO: Evita quebra se o HTML estiver em falta
+                const elTitulo = document.getElementById('ws-audio-titulo');
+                const elPergunta = document.getElementById('ws-audio-pergunta');
+                const elTela = document.getElementById('ws-audio-foco-tela');
+
+                if (elTitulo) elTitulo.innerText = teste.titulo || 'Teste Oral'; 
+                if (elPergunta) elPergunta.innerText = teste.instrucoes || 'Leia as instruções e grave.'; 
+                
+                document.body.style.overflow = 'hidden'; 
+                
+                if (elTela) {
+                    elTela.style.display = 'block'; 
+                    elTela.scrollTop = 0; 
+                }
+
+                Workspace.Avaliacoes.resetarInterfaceDeAudio(); 
+                Workspace.Avaliacoes.iniciarSensorFraude(); 
+            } else { 
+                Workspace.mostrarAviso(res.error || "Limite de tentativas esgotado.", "error"); 
+                Workspace.Avaliacoes.carregarLobbies(); 
+            }
+        } catch (e) { 
+            // 🚀 TIRAR A MÁSCARA
+            console.error("🚨 Erro interno ao iniciar Estúdio de Áudio:", e);
+            Workspace.mostrarAviso("Falha ao abrir o estúdio. Atualize a página.", "error"); 
+        }
     },
     resetarInterfaceDeAudio: () => { document.getElementById('ws-area-gravacao').style.display = 'block'; document.getElementById('ws-area-player').style.display = 'none'; document.getElementById('ws-btn-iniciar-gravacao').style.display = 'inline-block'; document.getElementById('ws-btn-parar-gravacao').style.display = 'none'; document.getElementById('ws-audio-cronometro').innerText = '00:00'; document.getElementById('ws-audio-cronometro').style.color = '#fff'; document.getElementById('ws-mic-ring').style.borderColor = 'rgba(255,255,255,0.2)'; document.getElementById('ws-mic-ring').style.background = 'rgba(255,255,255,0.05)'; Workspace.Avaliacoes.audioBlob = null; Workspace.Avaliacoes.audioChunks = []; },
     iniciarGravacao: async () => {
