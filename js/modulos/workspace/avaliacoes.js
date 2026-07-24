@@ -196,8 +196,23 @@ Workspace.Avaliacoes = {
 
                     if (idAtivo) {
                         const provaAtualizada = avaliacoesNovas.find(a => a.id === idAtivo);
-                        const myTurma = Workspace.usuario.turmaId || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]);
-                        const isParaMim = provaAtualizada && (provaAtualizada.destino === 'global' || provaAtualizada.destino === myTurma || (Workspace.usuario.turmas && Workspace.usuario.turmas.some(t => t.id === provaAtualizada.destino || t === provaAtualizada.destino)));
+                        
+                        // 🚀 LÓGICA BLINDADA DE TURMAS (Igual à do Lobby para o radar não se confundir)
+                        let isParaMim = false;
+                        if (provaAtualizada) {
+                            let minhasTurmas = [];
+                            const u = Workspace.usuario;
+                            if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+                            if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+                            if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+                            if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
+                            
+                            const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
+                            const destinoLimpo = provaAtualizada.destino ? String(provaAtualizada.destino).toLowerCase().trim() : 'global';
+                            const destinoNomeLimpo = provaAtualizada.destinoNome ? String(provaAtualizada.destinoNome).toLowerCase().trim() : '';
+                            
+                            isParaMim = (destinoLimpo === 'global') || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
+                        }
                         
                         if (!provaAtualizada || provaAtualizada.status !== 'ativa' || !isParaMim) {
                             Workspace.Avaliacoes.expulsarAluno("O professor encerrou ou ocultou esta avaliação. A sua sessão foi interrompida.");
