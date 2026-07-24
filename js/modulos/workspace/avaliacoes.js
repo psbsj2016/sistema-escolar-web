@@ -413,6 +413,12 @@ Workspace.Avaliacoes = {
         // ONLINES
         const onPendentes = onlines.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
         const onHistorico = onlines.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
+        
+        // 🚀 INTELIGÊNCIA DO ALUNO: Se o professor reativou e o histórico esvaziou, o aluno salta para a aba "Links Liberados"!
+        if (Workspace.Avaliacoes.abaOnline === 'historico' && onHistorico.length === 0 && onPendentes.length > 0) {
+            Workspace.Avaliacoes.abaOnline = 'abertas';
+        }
+
         const tOnPend = document.getElementById('tab-online-abertas');
         const tOnHist = document.getElementById('tab-online-historico');
         if (tOnPend && tOnHist) {
@@ -900,26 +906,28 @@ Workspace.Avaliacoes = {
         }).join('');
     },
 
-    // 🧠 MEMÓRIA INTELIGENTE DE REATIVAÇÕES
+  // 🧠 MEMÓRIA INTELIGENTE DE REATIVAÇÕES
     getReativados: (avaliacaoId) => {
         try { return JSON.parse(localStorage.getItem(`ws_reativados_${avaliacaoId}`)) || []; }
         catch(e) { return []; }
     },
-    marcarReativado: (avaliacaoId, alunoId) => {
+    marcarReativado: (avaliacaoId, alunoId, alunoNome) => {
         const lista = Workspace.Avaliacoes.getReativados(avaliacaoId);
-        if (!lista.includes(alunoId)) {
-            lista.push(alunoId);
+        if (!lista.some(r => r.id === alunoId)) {
+            lista.push({ id: alunoId, nome: alunoNome || 'Aluno' });
             localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
         }
     },
-    marcarVariosReativados: (avaliacaoId, alunosIds) => {
+    marcarVariosReativados: (avaliacaoId, alunosArray) => {
         const lista = Workspace.Avaliacoes.getReativados(avaliacaoId);
-        alunosIds.forEach(id => { if (!lista.includes(id)) lista.push(id); });
+        alunosArray.forEach(aluno => { 
+            if (!lista.some(r => r.id === aluno.id)) lista.push({ id: aluno.id, nome: aluno.nome || 'Aluno' }); 
+        });
         localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
     },
 
    
-   abrirModalAcessos: async (avaliacaoId, destinoId) => {
+  abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
@@ -936,23 +944,25 @@ Workspace.Avaliacoes = {
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
                 <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <!-- Botão "Reativar para Todos" Azul -->
                     <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
                 <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados da turma... ⏳</div>
+                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados... ⏳</div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
 
         try {
-            // 🚀 DESTRUIDOR DE CACHE: Esta era a barreira invisível! Adicionámos ?_t=Date.now()
             const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
             if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
 
-            let acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId);
+            // 🚀 O SEGREDO DO DINAMISMO: Ignora as entregas de quem já foi reativado localmente!
+            const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+            const idsReativados = reativadosLista.map(r => r.id);
+            
+            let acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId && !idsReativados.includes(e.alunoId));
             let alunosLista = [];
 
             if (destinoId && destinoId !== 'global') {
@@ -973,25 +983,16 @@ Workspace.Avaliacoes = {
 
             const container = document.getElementById('ws-acessos-lista');
             let htmlLista = '';
-            
-            // Vai buscar a memória de quem já foi reativado nesta sala
-            const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
 
             if (alunosLista.length > 0) {
-                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} alunos já acederam.</div>`;
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos usados.</div>`;
 
                 alunosLista.forEach(aluno => {
                     const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
-                    const foiReativado = reativadosLista.includes(aluno.id);
+                    const foiReativado = idsReativados.includes(aluno.id);
                     
                     if (acessoFeito) {
-                        // Se voltar a aceder, o sistema limpa-o da memória de reativados para manter a lógica limpa
-                        if (foiReativado) {
-                            const novaLista = reativadosLista.filter(id => id !== aluno.id);
-                            localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(novaLista));
-                        }
-                        
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1001,11 +1002,10 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${aluno.nome}')">🔄 Reativar</button>
                             </div>
                         `;
                     } else if (foiReativado) {
-                        // 🔵 Etiqueta Link Reativado
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1018,7 +1018,6 @@ Workspace.Avaliacoes = {
                             </div>
                         `;
                     } else {
-                        // 🟢 Etiqueta Acesso Ativo (Nunca clicou)
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1033,8 +1032,9 @@ Workspace.Avaliacoes = {
                     }
                 });
             } else {
-                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total. Mostrando apenas presenças registadas.</div>`;
-                if(acessos.length === 0) {
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Mostrando apenas presenças e reativações (Turma Global).</div>`;
+                
+                if(acessos.length === 0 && reativadosLista.length === 0) {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
                 } else {
                     acessos.forEach(acesso => {
@@ -1048,7 +1048,22 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${acesso.alunoNome}')">🔄 Reativar</button>
+                            </div>
+                        `;
+                    });
+                    
+                    reativadosLista.forEach(reativado => {
+                        const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
+                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando acesso)</div>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     });
@@ -1058,45 +1073,41 @@ Workspace.Avaliacoes = {
         } catch(e) { document.getElementById('ws-acessos-lista').innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
     },
 
-   reativarAcessoAluno: async (entregaId, avaliacaoId, destinoId, alunoId) => {
-        const btn = event.target;
-        const originalTxt = btn.innerText;
-        btn.innerText = "⏳";
-        btn.disabled = true;
+   reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId, alunoNome) => {
+        // 🚀 O botão já não crasha! Agora recebe o "event" e impede erros
+        const btn = event ? event.target : null;
+        const originalTxt = btn ? btn.innerText : "🔄 Reativar";
+        if(btn) { btn.innerText = "⏳"; btn.disabled = true; }
 
         try {
             await Workspace.api(`/workspace/entregas/${entregaId}`, 'DELETE');
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             
-            // 🧠 Marca este aluno como reativado na memória do professor
-            if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId);
+            if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId, alunoNome);
             
             Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
             Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
             
-            // Recarrega as listas no mesmo milissegundo para mudar as etiquetas para Azul 🔵
             Workspace.Avaliacoes.abrirGerenciador(); 
-            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
+            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 200); 
             Workspace.Avaliacoes.carregarLobbies();
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno.", "error");
-            btn.innerText = originalTxt;
-            btn.disabled = false;
+            if(btn) { btn.innerText = originalTxt; btn.disabled = false; }
         }
     },
 
     reativarSalaOnline: (id) => {
         Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
             try {
-                // 🧠 Antes de apagar as presenças, descobrimos quem estava na sala e guardamos na nossa memória
+                // Guarda os dados dos alunos antes de limpar para a etiqueta 🔵
                 const alunosAfetados = Workspace.Avaliacoes.entregasEmCache
                                         .filter(e => e.avaliacaoId === id)
-                                        .map(e => e.alunoId);
+                                        .map(e => ({ id: e.alunoId, nome: e.alunoNome }));
 
                 await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
                 Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
                 
-                // Marca todos os afetados como 🔵 Reativados
                 if (alunosAfetados.length > 0) {
                     Workspace.Avaliacoes.marcarVariosReativados(id, alunosAfetados);
                 }
@@ -1110,11 +1121,8 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.abrirGerenciador();
                 Workspace.Avaliacoes.carregarLobbies();
                 
-                // Reabre o modal de acessos para mostrar os resultados imediatamente
                 const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
-                if (prova) {
-                    setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino), 500);
-                }
+                if (prova) setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino), 200);
             } catch(e) { Workspace.mostrarAviso("Erro ao limpar sala.", "error"); }
         });
     },
