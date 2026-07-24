@@ -437,7 +437,7 @@ Workspace.Avaliacoes = {
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
                     // 🚀 LEITURA MANUAL DA DATA E HORA
-                    let dataFormatada = 'Carregando date e horário';
+                    let dataFormatada = 'Carregando a data e o horário... ⏳';
                     let horaFormatada = '';
 
                     if (p.dataAgendada && p.dataAgendada.includes('T')) {
