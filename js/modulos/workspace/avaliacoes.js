@@ -437,7 +437,7 @@ Workspace.Avaliacoes = {
             } else {
                 contOnline.innerHTML = listaAtivaOnline.map(p => {
                     // 🚀 LEITURA MANUAL DA DATA E HORA
-                    let dataFormatada = '';
+                    let dataFormatada = 'Carregando date e horário';
                     let horaFormatada = '';
 
                     if (p.dataAgendada && p.dataAgendada.includes('T')) {
@@ -465,7 +465,7 @@ Workspace.Avaliacoes = {
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
                             <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
-                                <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada} às ${horaFormatada}</span>
+                                <span style="font-size: 12px; color: #8e44ad; font-weight: bold;">📅 ${dataFormatada}  ${horaFormatada}</span>
                                 <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #f0f2f5; padding: 3px 8px; border-radius: 12px;">👥 ${publicoAlvo}</span>
                             </div>
                         </div>
