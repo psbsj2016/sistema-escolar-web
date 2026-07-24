@@ -653,6 +653,25 @@ Workspace.Avaliacoes = {
         }).join('');
     },
 
+    // 🧠 MEMÓRIA INTELIGENTE DE REATIVAÇÕES
+    getReativados: (avaliacaoId) => {
+        try { return JSON.parse(localStorage.getItem(`ws_reativados_${avaliacaoId}`)) || []; }
+        catch(e) { return []; }
+    },
+    marcarReativado: (avaliacaoId, alunoId) => {
+        const lista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+        if (!lista.includes(alunoId)) {
+            lista.push(alunoId);
+            localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
+        }
+    },
+    marcarVariosReativados: (avaliacaoId, alunosIds) => {
+        const lista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+        alunosIds.forEach(id => { if (!lista.includes(id)) lista.push(id); });
+        localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
+    },
+
+   
     abrirModalAcessos: async (avaliacaoId, destinoId) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
@@ -665,13 +684,12 @@ Workspace.Avaliacoes = {
         modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
         modal.innerHTML = `
             <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
-                <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
+                <button type="button" onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                 <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
                 <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
                 
-                <<div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <!-- Botão "Reativar para Todos" Azul -->
-                    <button class="ws-btn" style="background:#3498db; font-size:12px; padding:8px 15px; border-radius:20px;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                    <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                 </div>
 
                 <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
@@ -682,7 +700,6 @@ Workspace.Avaliacoes = {
         document.body.appendChild(modal);
 
         try {
-            // Força a atualização do cache antes de construir o modal
             const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
             if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
 
@@ -707,6 +724,9 @@ Workspace.Avaliacoes = {
 
             const container = document.getElementById('ws-acessos-lista');
             let htmlLista = '';
+            
+            // Vai buscar a memória de quem já foi reativado nesta sala
+            const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
 
             if (alunosLista.length > 0) {
                 htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} alunos já acederam.</div>`;
@@ -714,8 +734,15 @@ Workspace.Avaliacoes = {
                 alunosLista.forEach(aluno => {
                     const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
+                    const foiReativado = reativadosLista.includes(aluno.id);
                     
                     if (acessoFeito) {
+                        // Se voltar a aceder, o sistema limpa-o da memória de reativados para manter a lógica limpa
+                        if (foiReativado) {
+                            const novaLista = reativadosLista.filter(id => id !== aluno.id);
+                            localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(novaLista));
+                        }
+                        
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -725,11 +752,11 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button class="ws-btn" style="background:#f39c12; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acessoFeito.id}', '${avaliacaoId}', '${destinoId}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}')">🔄 Reativar</button>
                             </div>
                         `;
-                    } else {
-                        // Etiqueta "Link Reativado" (Aguardando acesso)
+                    } else if (foiReativado) {
+                        // 🔵 Etiqueta Link Reativado
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -741,10 +768,23 @@ Workspace.Avaliacoes = {
                                 </div>
                             </div>
                         `;
+                    } else {
+                        // 🟢 Etiqueta Acesso Ativo (Nunca clicou)
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
+                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Acesso Ativo (Aguardando acesso)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     }
                 });
             } else {
-                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total ou a sala é global. Mostrando apenas presenças registadas.</div>`;
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Não foi possível listar a turma total. Mostrando apenas presenças registadas.</div>`;
                 if(acessos.length === 0) {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
                 } else {
@@ -759,7 +799,7 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button class="ws-btn" style="background:#f39c12; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acesso.id}', '${avaliacaoId}', '${destinoId}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno('${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}')">🔄 Reativar</button>
                             </div>
                         `;
                     });
@@ -769,7 +809,7 @@ Workspace.Avaliacoes = {
         } catch(e) { document.getElementById('ws-acessos-lista').innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
     },
 
-    reativarAcessoAluno: async (entregaId, avaliacaoId, destinoId) => {
+   reativarAcessoAluno: async (entregaId, avaliacaoId, destinoId, alunoId) => {
         const btn = event.target;
         const originalTxt = btn.innerText;
         btn.innerText = "⏳";
@@ -779,15 +819,18 @@ Workspace.Avaliacoes = {
             await Workspace.api(`/workspace/entregas/${entregaId}`, 'DELETE');
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             
-            // 🚀 LIMPA A CACHE LOCAL E FORÇA A TELA A ATUALIZAR!
+            // 🧠 Marca este aluno como reativado na memória do professor
+            if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId);
+            
             Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
             Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
             
+            // Recarrega as listas no mesmo milissegundo para mudar as etiquetas para Azul 🔵
             Workspace.Avaliacoes.abrirGerenciador(); 
             setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 500); 
             Workspace.Avaliacoes.carregarLobbies();
         } catch(e) {
-            Workspace.mostrarAviso("Erro ao reativar aluno. Tente novamente.", "error");
+            Workspace.mostrarAviso("Erro ao reativar aluno.", "error");
             btn.innerText = originalTxt;
             btn.disabled = false;
         }
@@ -796,10 +839,19 @@ Workspace.Avaliacoes = {
     reativarSalaOnline: (id) => {
         Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
             try {
+                // 🧠 Antes de apagar as presenças, descobrimos quem estava na sala e guardamos na nossa memória
+                const alunosAfetados = Workspace.Avaliacoes.entregasEmCache
+                                        .filter(e => e.avaliacaoId === id)
+                                        .map(e => e.alunoId);
+
                 await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
                 Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
                 
-                // 🚀 LIMPA A CACHE LOCAL DE TODA A SALA!
+                // Marca todos os afetados como 🔵 Reativados
+                if (alunosAfetados.length > 0) {
+                    Workspace.Avaliacoes.marcarVariosReativados(id, alunosAfetados);
+                }
+                
                 Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
                 Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
 
@@ -808,7 +860,13 @@ Workspace.Avaliacoes = {
                 
                 Workspace.Avaliacoes.abrirGerenciador();
                 Workspace.Avaliacoes.carregarLobbies();
-            } catch(e) { Workspace.mostrarAviso("Erro de comunicação ao limpar sala.", "error"); }
+                
+                // Reabre o modal de acessos para mostrar os resultados imediatamente
+                const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
+                if (prova) {
+                    setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino), 500);
+                }
+            } catch(e) { Workspace.mostrarAviso("Erro ao limpar sala.", "error"); }
         });
     },
 
