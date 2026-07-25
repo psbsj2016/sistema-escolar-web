@@ -316,21 +316,12 @@ Workspace.Feed = {
         return texto;
     },
 
-    carregarPosts: async () => {
+  carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        if (!document.getElementById('ws-feed-filter-bar')) {
-            const filterBarHTML = `
-                <div id="ws-feed-filter-bar" style="scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;">
-                    <button class="ws-filter-chip active" id="filter-todos" onclick="Workspace.Feed.filtrarFeed('todos')">📋 Tudo</button>
-                    <button class="ws-filter-chip" id="filter-imagens" onclick="Workspace.Feed.filtrarFeed('imagens')">🖼️ Imagens</button>
-                    <button class="ws-filter-chip" id="filter-videos" onclick="Workspace.Feed.filtrarFeed('videos')">🎥 Vídeos</button>
-                    <button class="ws-filter-chip" id="filter-docs" onclick="Workspace.Feed.filtrarFeed('docs')">📕 Documentos</button>
-                </div>
-            `;
-            container.parentNode.insertBefore(Workspace.Feed.htmlParaElemento(filterBarHTML), container);
-        }
+        // 🚀 O MOTOR NOVO: Removemos a injeção forçada de HTML antigo aqui! 
+        // O HTML agora é gerido a 100% pelo workspace.html.
 
         if(Workspace.Feed.todosOsPosts.length === 0) {
             container.innerHTML = Array(3).fill(`
@@ -364,19 +355,27 @@ Workspace.Feed = {
         }
     },
 
-    filtrarFeed: (tipoFiltro) => {
+   filtrarFeed: (tipoFiltro) => {
         Workspace.Feed.filtroAtivo = tipoFiltro;
         Workspace.Feed.paginaAtual = 1;
         Workspace.Feed.postsCache = [];
         
-        document.querySelectorAll('.ws-filter-chip').forEach(btn => btn.classList.remove('active'));
-        const btnAtivo = document.getElementById(`filter-${tipoFiltro}`);
-        if(btnAtivo) btnAtivo.classList.add('active');
-
+        // 🚀 LIGAÇÃO COM O NOVO HTML: Atualiza o lado visual de forma segura
+        // Nota: O clique do utilizador já o faz instantaneamente no HTML, mas garantimos a integridade aqui
+        document.querySelectorAll('.ws-filtro-btn').forEach(btn => btn.classList.remove('ativo'));
+        
         let listaFiltrada = Workspace.Feed.todosOsPosts;
-        if (tipoFiltro === 'imagens') listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
-        else if (tipoFiltro === 'videos') listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => (p.anexos && p.anexos.some(a => a.tipo.includes('video'))) || (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be') || p.texto && p.texto.includes('tiktok.com') || p.texto && p.texto.includes('instagram.com/reel')));
-        else if (tipoFiltro === 'docs') listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
+        
+        // As regras de filtragem baseadas nas palavras que definimos ('imagem', 'video', 'documento')
+        if (tipoFiltro === 'imagem') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
+        } 
+        else if (tipoFiltro === 'video') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => (p.anexos && p.anexos.some(a => a.tipo.includes('video'))) || (p.texto && p.texto.includes('youtube.com') || p.texto && p.texto.includes('youtu.be') || p.texto && p.texto.includes('tiktok.com') || p.texto && p.texto.includes('instagram.com/reel')));
+        } 
+        else if (tipoFiltro === 'documento') {
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
+        }
 
         const container = document.getElementById('ws-posts-area');
         if (container) container.innerHTML = ''; 
