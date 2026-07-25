@@ -252,17 +252,17 @@ Workspace.Materiais = {
         }
     },
 
-    abrirVisualizador: (url, tipo, titulo) => {
+  abrirVisualizador: (url, tipo, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
         tipo = tipo.toLowerCase();
         let conteudoHTML = '';
         
-        if (tipo.includes('pdf')) {
-            conteudoHTML = `<iframe src="${url}" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
-        } 
-        else if (tipo.includes('video') || tipo.includes('mp4')) {
+        // 🚀 A INTELIGÊNCIA: Verifica se é um telemóvel ou tablet
+        const isMobile = window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        
+        if (tipo.includes('video') || tipo.includes('mp4')) {
             conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${url}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
         } 
         else if (tipo.includes('audio')) {
@@ -271,16 +271,26 @@ Workspace.Materiais = {
         else if (tipo.includes('image')) {
             conteudoHTML = `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
         } 
-        else if (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc')) {
+        // 🚀 O MOTOR GOOGLE DOCS: Ativado para arquivos Office E para PDFs quando visto no telemóvel!
+        else if (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc') || (tipo.includes('pdf') && isMobile)) {
             const urlCodificada = encodeURIComponent(url);
-            conteudoHTML = `<iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
+            // 🛡️ ARMADURA iOS: A div com '-webkit-overflow-scrolling' resolve os bugs de scroll no iPhone
+            conteudoHTML = `
+                <div style="width: 100%; height: 100%; -webkit-overflow-scrolling: touch; overflow-y: scroll; background: white; border-radius: 8px;">
+                    <iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; display: block;"></iframe>
+                </div>
+            `;
+        } 
+        // 🚀 SE FOR PDF NO COMPUTADOR: Usa o leitor nativo que é mais rápido
+        else if (tipo.includes('pdf') && !isMobile) {
+            conteudoHTML = `<iframe src="${url}" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
         } 
         else {
             conteudoHTML = `
                 <div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: auto;">
                     <div style="font-size:50px; margin-bottom: 20px;">📎</div>
                     <h3 style="color:#2c3e50; margin-bottom: 10px;">Formato Não Reconhecido</h3>
-                    <p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu computador.</p>
+                    <p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu dispositivo.</p>
                     <a href="${url.replace('/upload/', '/upload/fl_attachment/')}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a>
                 </div>
             `;
@@ -292,17 +302,18 @@ Workspace.Materiais = {
         
         modal.innerHTML = `
             <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
-                <span style="color: white; font-weight: bold; font-size: 18px;">📚 ${titulo}</span>
-                <button id="ws-fechar-visualizador" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5);" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
+                <!-- 🚀 PROTEÇÃO DE TEXTO: Evita que títulos compridos partam o design em ecrãs pequenos -->
+                <span style="color: white; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">📚 ${titulo}</span>
+                <button id="ws-fechar-visualizador" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5); flex-shrink: 0;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
             </div>
-            <div style="width: 95vw; height: 88vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 40px; pointer-events: none;">
+            <div style="width: 95vw; height: 85vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 50px; pointer-events: none;">
                 <div style="width: 100%; height: 100%; pointer-events: auto;">
                     ${conteudoHTML}
                 </div>
             </div>
         `;
         
-        // 🚀 O CLIQUE DE FUGA: Fecha se clicar no fundo preto!
+        // O CLIQUE DE FUGA
         modal.addEventListener('click', (e) => {
             if (e.target === modal || e.target.id === 'ws-fechar-visualizador') {
                 modal.remove();
