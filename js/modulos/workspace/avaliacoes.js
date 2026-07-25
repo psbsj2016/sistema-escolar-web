@@ -232,7 +232,7 @@ Workspace.Avaliacoes = {
                         Workspace.Avaliacoes.avaliacoesDisponiveis = avaliacoesNovas;
                     }
 
-                   // 🚀 INTELIGÊNCIA MÁXIMA PARA ALUNO E PROFESSOR: Radar vigia os acessos/entregas!
+                   // 🚀 INTELIGÊNCIA MÁXIMA: O Radar agora trabalha para o Aluno E para o Professor!
                     if (Workspace.usuario.tipo === 'Aluno') {
                         const resEntregas = await Workspace.api(`/workspace/avaliacoes/minhas-entregas/${Workspace.usuario.id}?_t=${Date.now()}`, 'GET');
                         if (resEntregas && resEntregas.success) {
@@ -244,18 +244,24 @@ Workspace.Avaliacoes = {
                             }
                         }
                     } else {
-                        // 🚀 O NOVO RADAR DO PROFESSOR: Vigia as presenças globais em tempo real!
+                        // 🚀 O NOVO SENSOR DO PROFESSOR: Verifica se o painel de Gestão está aberto na tela
                         const painelAberto = document.getElementById('ws-prof-gerir-lista-container');
                         if (painelAberto && painelAberto.style.display !== 'none') {
+                            
+                            // Vai à nuvem perguntar silenciosamente se houve novos cliques de alunos
                             const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
                             if (resEntregas && resEntregas.success) {
-                                const hashEntregasAntigo = JSON.stringify(Workspace.Avaliacoes.entregasEmCache);
-                                const hashEntregasNovo = JSON.stringify(resEntregas.entregas);
-                                if (hashEntregasAntigo !== hashEntregasNovo) {
+                                
+                                // Compara se a quantidade/IDs de acessos mudou em relação ao que está na tela
+                                const hashAntigo = JSON.stringify(Workspace.Avaliacoes.entregasEmCache);
+                                const hashNovo = JSON.stringify(resEntregas.entregas);
+                                
+                                if (hashAntigo !== hashNovo) {
+                                    // Se alguém entrou, atualiza a memória e muda a cor da Sala e os Números na hora!
                                     Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
-                                    precisaAtualizar = true;
+                                    Workspace.Avaliacoes.renderizarListaGerenciador(); 
                                     
-                                    // Se a tela de Gestão de Acessos (Modal) estiver aberta, atualiza-a de fininho!
+                                    // Se a janelinha preta de "Acessos" estiver aberta por cima, atualiza-a também sem piscar!
                                     if (Workspace.Avaliacoes.modalAcessosAberto) {
                                         Workspace.Avaliacoes.abrirModalAcessos(Workspace.Avaliacoes.modalAcessosAberto.avaliacaoId, Workspace.Avaliacoes.modalAcessosAberto.destinoId, true);
                                     }
@@ -264,13 +270,8 @@ Workspace.Avaliacoes = {
                         }
                     }
 
-                    if (precisaAtualizar) {
-                        if (!idAtivo) Workspace.Avaliacoes.renderizarLobbies();
-                        
-                        // 🚀 PROFESSOR: Atualiza as cores, os botões e os números no mesmo milissegundo!
-                        if (Workspace.usuario.tipo !== 'Aluno') {
-                            Workspace.Avaliacoes.renderizarListaGerenciador();
-                        }
+                    if (precisaAtualizar && !idAtivo && Workspace.usuario.tipo === 'Aluno') {
+                        Workspace.Avaliacoes.renderizarLobbies();
                     }
                 }
             } catch(e) {}
@@ -1044,16 +1045,17 @@ Workspace.Avaliacoes = {
 
    
 abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
-        // Regista o modal como aberto para o Radar do Professor conseguir alimentá-lo
+        // 🚀 Regista na memória que esta janela está aberta, para o Radar saber que tem de a alimentar!
         Workspace.Avaliacoes.modalAcessosAberto = { avaliacaoId, destinoId };
 
-        const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
+        // Aceita a prova quer venha da cache do Gestor, quer venha das provas ativas
+        const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId) || Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
         const modalId = 'ws-modal-acessos-online';
         let container = document.getElementById('ws-acessos-lista');
 
-        // 🚀 O SEGREDO SILENCIOSO: Só desenha a janela se ela não existir ou se não for silencioso!
+        // 🚀 O TRUQUE DE MESTRE: Só desenha o HTML base se a janela ainda NÃO existir na tela!
         if (!isSilent || !document.getElementById(modalId)) {
             if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
@@ -1064,14 +1066,14 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                     <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
-                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
+                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${Workspace.escapeHTML(prova.titulo)}</span>
                     
                     <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
                         <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
                     </div>
 
                     <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                        <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados... ⏳</div>
+                        <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados em tempo real... ⏳</div>
                     </div>
                 </div>
             `;
@@ -1080,9 +1082,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
 
         try {
-            // Se for silencioso (clique do botão), usamos a memória rápida instantânea! Se não, vamos à DB.
+            // Se for uma atualização invisível (Silent), usamos a memória instantânea. Se não, perguntamos à API.
             let acessosSource = Workspace.Avaliacoes.entregasEmCache;
-            
             if (!isSilent) {
                 const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
                 if(entregasRes && entregasRes.success) {
@@ -1116,7 +1117,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             let htmlLista = '';
 
             if (alunosLista.length > 0) {
-                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos usados.</div>`;
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo em Tempo Real: ${acessos.length} de ${alunosLista.length} acessos consumidos.</div>`;
 
                 alunosLista.forEach(aluno => {
                     const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
@@ -1203,18 +1204,18 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     });
                 }
             }
-            container.innerHTML = htmlLista;
+            // Substitui APENAS o conteúdo da lista, sem fechar a janela preta principal!
+            if(container) container.innerHTML = htmlLista;
         } catch(e) { if (container) container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
     },
 
-   reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId, alunoNome) => {
+  reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId, alunoNome) => {
         const btn = event ? event.target : null;
         const originalTxt = btn ? btn.innerText : "🔄 Reativar";
         if(btn) { btn.innerText = "⏳"; btn.disabled = true; }
 
         try {
             await Workspace.api(`/workspace/avaliacoes/entregas/${entregaId}`, 'DELETE');
-            Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             
             if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId, alunoNome);
             
@@ -1222,9 +1223,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
             Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
             
-            // 🚀 O NOVO SEGREDO: Atualiza tudo de forma invisível sem reiniciar o ecrã completo!
+            // 🚀 O COMANDO DE MAGIA (SILENT UPDATE): 
+            // 1. Redesenha a lista por trás (A etiqueta fica Verde/Online e os números atualizam)
             Workspace.Avaliacoes.renderizarListaGerenciador(); 
+            // 2. Atualiza a janela preta sem a fechar (O Aluno fica Azul)
             Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId, true); 
+            
+            Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno.", "error");
             if(btn) { btn.innerText = originalTxt; btn.disabled = false; }
@@ -1248,7 +1253,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
                 Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
 
-                // 🚀 O NOVO SEGREDO: Atualiza por trás sem "piscar" e sem fechar nada
+                // 🚀 O COMANDO DE MAGIA (SILENT UPDATE) para o clique em massa
                 Workspace.Avaliacoes.renderizarListaGerenciador();
                 
                 const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
