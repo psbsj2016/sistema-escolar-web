@@ -1012,8 +1012,7 @@ apagarPost: (postId) => {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (!boxCriarPost) return;
 
-        // 🚀 O FIM DO ATRASO: Já não injetamos o select com innerHTML!
-        // Apenas carregamos as turmas da API e juntamos à lista que já nasceu na página
+        // 🚀 O MOTOR INTELIGENTE DE DESTINOS
         const selDestino = document.getElementById('ws-post-destino');
         
         // Só carrega as turmas se a lista só tiver 1 elemento (o "Geral" padrão)
@@ -1021,11 +1020,35 @@ apagarPost: (postId) => {
             try {
                 const turmas = await Workspace.api('/turmas', 'GET');
                 if (turmas && turmas.length > 0) {
-                    turmas.forEach(t => {
-                        selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
-                    });
+                    const tipoUsuario = Workspace.usuario.tipo;
+                    
+                    if (tipoUsuario === 'Professor' || tipoUsuario === 'Gestor') {
+                        // 🔓 PASSE LIVRE: Professores e Gestores veem tudo
+                        turmas.forEach(t => {
+                            selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
+                        });
+                    } else {
+                        // 🔒 ACESSO RESTRITO: Aluno só vê a sua própria turma
+                        const u = Workspace.usuario;
+                        let minhasTurmas = [];
+                        if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+                        if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+                        if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+                        
+                        const turmasStr = minhasTurmas.map(t => String(t.id || t).toLowerCase().trim());
+                        
+                        turmas.forEach(t => {
+                            const idTurma = String(t.id).toLowerCase().trim();
+                            const nomeTurma = String(t.nome).toLowerCase().trim();
+                            
+                            // Se a turma for a do aluno, adiciona à lista
+                            if (turmasStr.includes(idTurma) || turmasStr.includes(nomeTurma)) {
+                                selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
+                            }
+                        });
+                    }
                 }
-            } catch(e) {}
+            } catch(e) { console.error("Erro ao carregar turmas no feed", e); }
         }
 
         const btnPublicar = boxCriarPost.querySelector('#ws-btn-publicar');
