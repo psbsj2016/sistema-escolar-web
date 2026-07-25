@@ -279,12 +279,12 @@ Object.assign(Workspace, {
         }
     },
 
-    // 📸 MOTOR DE AVATARES INTELIGENTE (Mantém proporção e foca no centro)
+   // 📸 MOTOR DE AVATARES INTELIGENTE (Smart Cover Crop Perfeito)
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Limite de 100MB de segurança
+        // Limite de segurança
         if (file.size > 100 * 1024 * 1024) {
             Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
             event.target.value = '';
@@ -300,40 +300,37 @@ Object.assign(Workspace, {
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
             
-            // 🚀 1. MATEMÁTICA PROPORCIONAL: Evita barras brancas!
-            const MAX_SIZE = 800; 
-            let width = imgOriginal.naturalWidth;
-            let height = imgOriginal.naturalHeight;
-
-            // Se a imagem for maior que 800px, encolhemos mantendo a escala perfeita
-            if (width > MAX_SIZE || height > MAX_SIZE) {
-                if (width > height) {
-                    height = Math.round((height * MAX_SIZE) / width);
-                    width = MAX_SIZE;
-                } else {
-                    width = Math.round((width * MAX_SIZE) / height);
-                    height = MAX_SIZE;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
+            // 🚀 1. A TELA DE PINTURA (Um quadrado perfeito de 800x800)
+            const MAX_SIZE = 800;
+            canvas.width = MAX_SIZE;
+            canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
             
-            // 🚀 2. SUAVIZAÇÃO GRÁFICA DE ELITE
+            // 🚀 2. A MATEMÁTICA DO CORTE PERFEITO (Preenche todo o espaço)
+            // Descobre o nível de zoom necessário para que não sobre nenhum espaço branco
+            const scale = Math.max(MAX_SIZE / imgOriginal.width, MAX_SIZE / imgOriginal.height);
+            
+            // Calcula o tamanho real que a imagem vai ocupar com o zoom
+            const drawWidth = imgOriginal.width * scale;
+            const drawHeight = imgOriginal.height * scale;
+            
+            // Centraliza a imagem perfeitamente no meio do quadrado
+            const dx = (MAX_SIZE - drawWidth) / 2;
+            const dy = (MAX_SIZE - drawHeight) / 2;
+
+            // 🚀 3. PINTURA DE ALTA QUALIDADE
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            // Fundo branco preventivo para PNGs com transparência
+            // Pinta o fundo de branco (apenas como garantia de segurança)
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
             
-            // 🚀 3. DESENHO COMPLETO: A imagem é desenhada na totalidade, sem cortes manuais.
-            // O corte circular e centrado será feito de forma perfeita pelo CSS!
-            ctx.drawImage(imgOriginal, 0, 0, width, height);
+            // Desenha a imagem cortada e centrada!
+            ctx.drawImage(imgOriginal, dx, dy, drawWidth, drawHeight);
 
-            // Compressão Premium (0.92)
+            // 🚀 4. GUARDA E ENVIA PARA A NUVEM
             canvas.toBlob(async (blob) => {
                 URL.revokeObjectURL(objectUrl); 
 
@@ -368,14 +365,14 @@ Object.assign(Workspace, {
                         const img = document.getElementById('ws-perfil-img');
                         const letras = document.getElementById('ws-perfil-letras');
                         
-                        // Atualiza a foto imediatamente na tela
+                        // Atualiza a foto na tela instantaneamente
                         if(img) { 
                             img.src = avatarFinal; 
                             img.style.display = 'block'; 
                         }
                         if(letras) letras.style.display = 'none';
 
-                        Workspace.mostrarAviso("Foto de perfil atualizada com sucesso!", "success");
+                        Workspace.mostrarAviso("Foto de perfil atualizada com qualidade HD!", "success");
                         if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
                         if(Workspace.Feed) Workspace.Feed.carregarPosts();
                     }
