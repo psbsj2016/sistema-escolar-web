@@ -864,19 +864,63 @@ Workspace.Avaliacoes = {
         } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
     },
 
-    renderizarListaGerenciador: () => {
+   renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
+        
+        // 🚀 LÓGICA DE MANUTENÇÃO DE PESQUISA: Mantém o termo se a função for chamada sem argumentos (ex: ao apagar um item)
+        if (termoBusca === null) {
+            const inputAtual = document.getElementById('ws-busca-avaliacoes');
+            termoBusca = inputAtual ? inputAtual.value : '';
+        }
+
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
 
         if (Workspace.Avaliacoes.contextoAtual === 'encontros') avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
         else avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
 
+        // 🚀 O SEGREDO DA PESQUISA: Filtra os resultados em tempo real!
+        if (termoBusca.trim() !== '') {
+            const termo = termoBusca.toLowerCase().trim();
+            avaliacoes = avaliacoes.filter(a => {
+                const titulo = (a.titulo || '').toLowerCase();
+                const destino = (a.destinoNome || '').toLowerCase();
+                
+                let dataAgendada = '';
+                if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                    const partes = a.dataAgendada.split('T')[0].split('-');
+                    if(partes.length === 3) dataAgendada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+                const dataCriacao = new Date(a.dataCriacao).toLocaleDateString('pt-BR').toLowerCase();
+
+                // Verifica se o texto digitado existe no título, turma, data agendada ou data de criação
+                return titulo.includes(termo) || destino.includes(termo) || dataAgendada.includes(termo) || dataCriacao.includes(termo);
+            });
+        }
+
+        // 🚀 BARRA DE FERRAMENTAS INTELIGENTE COM CHECKBOX "TODOS"
+        const topBar = `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
+                    <label for="ws-check-todos" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
+                </div>
+                <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
+                <div style="flex: 1; min-width: 200px; position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título, turma ou data..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
+                </div>
+                <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">
+                    🗑️ Apagar Selecionados
+                </button>
+            </div>
+        `;
+
         if(avaliacoes.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem itens agendados nesta categoria.</div>';
+            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta pesquisa/categoria.</div>';
             return;
         }
 
-        container.innerHTML = avaliacoes.map(a => {
+        const htmlLista = avaliacoes.map(a => {
             let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
             const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
             const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
@@ -892,14 +936,26 @@ Workspace.Avaliacoes = {
                 btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px; transition:0.2s;" onmouseover="this.style.background='#fdf2e9'" onmouseout="this.style.background='#fdfdfd'" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Ver Acessos (${presencasCount})</button>`;
             }
 
+            // Exibe a data de forma clara na lista
+            let dataApresentada = '';
+            if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                const partes = a.dataAgendada.split('T')[0].split('-');
+                if(partes.length === 3) dataApresentada = `Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
             return `
-            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
-                        <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
-                        <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
-                        <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada a: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <!-- 🚀 A CHECKBOX INDIVIDUAL -->
+                        <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; margin-top: 5px;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
+                            <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                            <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
+                            <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada a: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
+                            ${dataApresentada ? `<div style="font-size: 11px; color: #e67e22; font-weight:bold; margin-top: 5px;">📅 ${dataApresentada}</div>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
@@ -910,6 +966,17 @@ Workspace.Avaliacoes = {
                 </div>
             </div>`;
         }).join('');
+
+        container.innerHTML = topBar + htmlLista;
+        
+        // 🚀 O TRUQUE DE UX: Repõe o foco no input sem interromper a digitação do professor
+        const inputNovo = document.getElementById('ws-busca-avaliacoes');
+        if (inputNovo && termoBusca !== '') {
+            inputNovo.focus();
+            const val = inputNovo.value;
+            inputNovo.value = '';
+            inputNovo.value = val;
+        }
     },
 
   // 🧠 MEMÓRIA INTELIGENTE DE REATIVAÇÕES
@@ -1134,6 +1201,40 @@ Workspace.Avaliacoes = {
                 Workspace.mostrarAviso("Apagado com sucesso!", "success");
             } catch(e) { Workspace.mostrarAviso("Erro ao apagar.", "error"); }
         });
+    },
+
+    // 🚀 LÓGICA DE ELIMINAÇÃO EM MASSA (PROMISE.ALL)
+    excluirAvaliacoesSelecionadas: () => {
+        const checkboxes = document.querySelectorAll('.ws-check-avaliacao:checked');
+        const idsSelecionados = Array.from(checkboxes).map(cb => cb.value);
+
+        if (idsSelecionados.length === 0) {
+            return Workspace.mostrarAviso("Selecione pelo menos um item usando as caixas à esquerda.", "warning");
+        }
+
+        Workspace.Avaliacoes.confirmarDialog(
+            "Apagar Múltiplos", 
+            `Deseja apagar definitivamente os ${idsSelecionados.length} itens selecionados? Esta ação é irreversível.`, 
+            "Sim, Apagar Todos", 
+            "#e74c3c", 
+            async () => {
+                Workspace.mostrarAviso("A apagar ficheiros... ⏳", "info");
+                try {
+                    // Executa todas as deleções em paralelo para não bloquear o servidor!
+                    const promessas = idsSelecionados.map(id => Workspace.api(`/workspace/avaliacoes/${id}`, 'DELETE'));
+                    await Promise.all(promessas);
+
+                    // Limpa a cache local removendo todos os IDs selecionados
+                    Workspace.Avaliacoes.avaliacoesGerenciadorCache = Workspace.Avaliacoes.avaliacoesGerenciadorCache.filter(x => !idsSelecionados.includes(x.id));
+                    
+                    // Atualiza o ecrã (a função vai manter a barra de pesquisa como estava)
+                    Workspace.Avaliacoes.renderizarListaGerenciador();
+                    Workspace.mostrarAviso(`${idsSelecionados.length} itens apagados com sucesso!`, "success");
+                } catch(e) { 
+                    Workspace.mostrarAviso("Ocorreu um erro ao apagar alguns itens.", "error"); 
+                }
+            }
+        );
     },
 
     editarAvaliacao: async (id) => {
