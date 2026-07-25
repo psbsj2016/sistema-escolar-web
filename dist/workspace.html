@@ -391,10 +391,13 @@
         </section>
     </main>
 
+    <!-- 🏫 HUB DA SALA DE AULA -->
     <section id="ws-sala-aula-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <div class="ws-card">
             <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🏫 Hub da Sala de Aula</span></h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
+                
+                <!-- 1. Sala de Aula Online -->
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">💻</div>
@@ -403,6 +406,18 @@
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #8e44ad;" onclick="Workspace.abrirEncontroOnline(this)">Abrir Área de Links</button>
                 </div>
+
+                <!-- 🚀 2. NOVO: Materiais das Aulas -->
+                <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+                    <div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">📚</div>
+                        <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Materiais das Aulas</h4>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Acesse PDFs, slides, áudios e vídeos disponibilizados pelos professores para o seu estudo.</p>
+                    </div>
+                    <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #f39c12;" onclick="Workspace.abrirPaginaMateriais()">Abrir Estante Virtual</button>
+                </div>
+
+                <!-- 3. Exercícios -->
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">🏋️</div>
@@ -411,6 +426,8 @@
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #3498db;" onclick="Workspace.navegarPara('tarefas')">Abrir Área de Exercícios</button>
                 </div>
+
+                <!-- 4. Central de Avaliações -->
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">📑</div>
@@ -419,10 +436,10 @@
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #27ae60;" onclick="Workspace.navegarPara('avaliacoes')">Abrir Área de Avaliações</button>
                 </div>
+                
             </div>
         </div>
     </section>
-
     <section id="ws-tarefas-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub da Sala de Aula</button>
         <div class="ws-card">
