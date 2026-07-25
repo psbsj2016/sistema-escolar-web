@@ -279,12 +279,12 @@ Object.assign(Workspace, {
         }
     },
 
-   // 📸 MOTOR DE AVATARES INTELIGENTE (Smart Cover Crop Perfeito)
+   // 📸 MOTOR DE AVATARES INTELIGENTE (Foco no rosto e 100% de preenchimento)
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Limite de segurança
+        // Limite de segurança de 100MB
         if (file.size > 100 * 1024 * 1024) {
             Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
             event.target.value = '';
@@ -300,35 +300,42 @@ Object.assign(Workspace, {
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
             
-            // 🚀 1. A TELA DE PINTURA (Um quadrado perfeito de 800x800)
+            // 🚀 1. A TELA DE PINTURA (Um quadrado obrigatório de 800x800 para a nuvem)
             const MAX_SIZE = 800;
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
             
-            // 🚀 2. A MATEMÁTICA DO CORTE PERFEITO (Preenche todo o espaço)
-            // Descobre o nível de zoom necessário para que não sobre nenhum espaço branco
-            const scale = Math.max(MAX_SIZE / imgOriginal.width, MAX_SIZE / imgOriginal.height);
-            
-            // Calcula o tamanho real que a imagem vai ocupar com o zoom
-            const drawWidth = imgOriginal.width * scale;
-            const drawHeight = imgOriginal.height * scale;
-            
-            // Centraliza a imagem perfeitamente no meio do quadrado
-            const dx = (MAX_SIZE - drawWidth) / 2;
-            const dy = (MAX_SIZE - drawHeight) / 2;
+            // 🚀 2. A INTELIGÊNCIA MATEMÁTICA (Enquadramento do Rosto)
+            let sWidth = imgOriginal.width;
+            let sHeight = imgOriginal.height;
+            let sx = 0;
+            let sy = 0;
+
+            if (imgOriginal.width > imgOriginal.height) {
+                // ➡️ Foto na Horizontal (Paisagem): Corta as laterais, foca no meio exato
+                sWidth = imgOriginal.height; // Limita a largura à altura (faz um quadrado)
+                sx = (imgOriginal.width - sWidth) / 2; // Centraliza no eixo X
+            } else {
+                // ⬇️ Foto na Vertical (Selfie/Retrato): Corta em cima e em baixo
+                sHeight = imgOriginal.width; // Limita a altura à largura (faz um quadrado)
+                
+                // O SEGREDO DO ROSTO: Em vez de cortar no meio exato (0.5), 
+                // cortamos nos 25% superiores (0.25). É aqui que o rosto fica naturalmente!
+                sy = (imgOriginal.height - sHeight) * 0.25; 
+            }
 
             // 🚀 3. PINTURA DE ALTA QUALIDADE
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            // Pinta o fundo de branco (apenas como garantia de segurança)
+            // Pinta o fundo de branco preventivamente
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
-            
-            // Desenha a imagem cortada e centrada!
-            ctx.drawImage(imgOriginal, dx, dy, drawWidth, drawHeight);
+
+            // Extrai APENAS o quadrado focado no rosto e estica-o para ocupar os 800x800 totais
+            ctx.drawImage(imgOriginal, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
 
             // 🚀 4. GUARDA E ENVIA PARA A NUVEM
             canvas.toBlob(async (blob) => {
@@ -372,7 +379,7 @@ Object.assign(Workspace, {
                         }
                         if(letras) letras.style.display = 'none';
 
-                        Workspace.mostrarAviso("Foto de perfil atualizada com qualidade HD!", "success");
+                        Workspace.mostrarAviso("Foto de perfil atualizada com enquadramento perfeito!", "success");
                         if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
                         if(Workspace.Feed) Workspace.Feed.carregarPosts();
                     }
