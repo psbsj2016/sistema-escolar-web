@@ -329,6 +329,50 @@
         </div>
     </section>
 
+    <!-- 📚 TELA DE MATERIAIS DAS AULAS -->
+<div id="ws-materiais-container" style="display: none; padding: 20px; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.3s ease-out;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+        <h2 style="color: #2c3e50; margin: 0; display: flex; align-items: center; gap: 10px;">
+            📚 Materiais das Aulas
+        </h2>
+    </div>
+
+    <!-- Área do Professor (Upload e Gestão) -->
+    <div id="ws-materiais-prof-area" style="display: none;">
+        <div class="ws-card" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            <h4 style="margin: 0 0 15px 0; color: #34495e;">📤 Enviar Novo Material</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <input type="text" id="ws-mat-titulo" placeholder="Título do Material (Ex: Slides Biologia)" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
+                <select id="ws-mat-destino" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
+                    <option value="global">🌍 Todas as Turmas</option>
+                    <!-- As turmas vão ser carregadas aqui pelo JS -->
+                </select>
+            </div>
+            <textarea id="ws-mat-desc" placeholder="Breve descrição do que os alunos vão encontrar neste ficheiro..." rows="2" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; margin-bottom: 15px; box-sizing: border-box;"></textarea>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <input type="file" id="ws-mat-ficheiro" accept=".pdf,.ppt,.pptx,.doc,.docx,.mp4,.mp3,.wav" style="flex: 1; padding: 10px; background: white; border: 1px dashed #cbd5e1; border-radius: 6px;">
+                <button class="ws-btn" id="ws-btn-enviar-mat" style="background: #27ae60; color: white; padding: 10px 25px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s;" onclick="Workspace.Materiais.enviarMaterial()">Upload para a Nuvem ☁️</button>
+            </div>
+        </div>
+        
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">📋 Materiais Partilhados</h3>
+        <div id="ws-materiais-lista-prof">
+            <!-- Lista do professor aparecerá aqui -->
+        </div>
+    </div>
+
+    <!-- Área do Aluno (Estante Virtual) -->
+    <div id="ws-materiais-aluno-area" style="display: none;">
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="ws-busca-mat-aluno" placeholder="🔍 Pesquisar material..." style="width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; box-sizing: border-box;" onkeyup="Workspace.Materiais.renderizarAluno(this.value)">
+        </div>
+        <div id="ws-materiais-grid-aluno" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            <!-- Grelha de materiais do aluno aparecerá aqui -->
+        </div>
+    </div>
+</div>
+
     <section id="ws-avaliacoes-escrita-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>↩</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
@@ -533,49 +577,6 @@
         </div>
     </section>
 
-      <!-- 📚 TELA DE MATERIAIS DAS AULAS -->
-<div id="ws-materiais-container" style="display: none; padding: 20px; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.3s ease-out;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
-        <h2 style="color: #2c3e50; margin: 0; display: flex; align-items: center; gap: 10px;">
-            📚 Materiais das Aulas
-        </h2>
-    </div>
-
-    <!-- Área do Professor (Upload e Gestão) -->
-    <div id="ws-materiais-prof-area" style="display: none;">
-        <div class="ws-card" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
-            <h4 style="margin: 0 0 15px 0; color: #34495e;">📤 Enviar Novo Material</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                <input type="text" id="ws-mat-titulo" placeholder="Título do Material (Ex: Slides Biologia)" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
-                <select id="ws-mat-destino" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;">
-                    <option value="global">🌍 Todas as Turmas</option>
-                    <!-- As turmas vão ser carregadas aqui pelo JS -->
-                </select>
-            </div>
-            <textarea id="ws-mat-desc" placeholder="Breve descrição do que os alunos vão encontrar neste ficheiro..." rows="2" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; margin-bottom: 15px; box-sizing: border-box;"></textarea>
-            
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <input type="file" id="ws-mat-ficheiro" accept=".pdf,.ppt,.pptx,.doc,.docx,.mp4,.mp3,.wav" style="flex: 1; padding: 10px; background: white; border: 1px dashed #cbd5e1; border-radius: 6px;">
-                <button class="ws-btn" id="ws-btn-enviar-mat" style="background: #27ae60; color: white; padding: 10px 25px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s;" onclick="Workspace.Materiais.enviarMaterial()">Upload para a Nuvem ☁️</button>
-            </div>
-        </div>
-        
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">📋 Materiais Partilhados</h3>
-        <div id="ws-materiais-lista-prof">
-            <!-- Lista do professor aparecerá aqui -->
-        </div>
-    </div>
-
-    <!-- Área do Aluno (Estante Virtual) -->
-    <div id="ws-materiais-aluno-area" style="display: none;">
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="ws-busca-mat-aluno" placeholder="🔍 Pesquisar material..." style="width: 100%; max-width: 400px; padding: 12px 20px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; box-sizing: border-box;" onkeyup="Workspace.Materiais.renderizarAluno(this.value)">
-        </div>
-        <div id="ws-materiais-grid-aluno" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-            <!-- Grelha de materiais do aluno aparecerá aqui -->
-        </div>
-    </div>
-</div>
 
    <!-- 🧰 BAÚ DAS MEMÓRIAS -->
     <section id="ws-bau-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
