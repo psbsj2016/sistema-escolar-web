@@ -1008,36 +1008,30 @@ apagarPost: (postId) => {
         return template.content.firstChild;
     },
 
-    configurarEventosCriacao: async () => {
+   configurarEventosCriacao: async () => {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (!boxCriarPost) return;
 
-        if (!document.getElementById('ws-post-destino')) {
-            const areaBotoes = document.getElementById('ws-action-flex-wrapper');
-            if (areaBotoes) {
-                const htmlSelect = `
-                    <select id="ws-post-destino" style="padding:6px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px; outline:none; background:#f4f6f7; cursor:pointer; max-width: 120px; font-weight: 600; font-family: inherit; flex-shrink: 1; min-width: 0;">
-                        <option value="global">🌍 Geral</option>
-                    </select>
-                `;
-                areaBotoes.insertAdjacentHTML('afterbegin', htmlSelect);
-
-                try {
-                    const turmas = await Workspace.api('/turmas', 'GET');
-                    if (turmas && turmas.length > 0) {
-                        const sel = document.getElementById('ws-post-destino');
-                        turmas.forEach(t => {
-                            sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
-                        });
-                    }
-                } catch(e) {}
-            }
+        // 🚀 O FIM DO ATRASO: Já não injetamos o select com innerHTML!
+        // Apenas carregamos as turmas da API e juntamos à lista que já nasceu na página
+        const selDestino = document.getElementById('ws-post-destino');
+        
+        // Só carrega as turmas se a lista só tiver 1 elemento (o "Geral" padrão)
+        if (selDestino && selDestino.options.length === 1) { 
+            try {
+                const turmas = await Workspace.api('/turmas', 'GET');
+                if (turmas && turmas.length > 0) {
+                    turmas.forEach(t => {
+                        selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
+                    });
+                }
+            } catch(e) {}
         }
 
-        const btnPublicar = boxCriarPost.querySelector('.ws-btn');
+        const btnPublicar = boxCriarPost.querySelector('#ws-btn-publicar');
         const inputTexto = boxCriarPost.querySelector('textarea');
 
-        if (btnPublicar && inputTexto) {
+               if (btnPublicar && inputTexto) {
             const rascunhoGuardado = localStorage.getItem('ws_draft_post');
             if (rascunhoGuardado) inputTexto.value = rascunhoGuardado;
 
