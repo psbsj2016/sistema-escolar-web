@@ -316,12 +316,11 @@ Workspace.Feed = {
         return texto;
     },
 
-  carregarPosts: async () => {
+ carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // 🚀 O MOTOR NOVO: Removemos a injeção forçada de HTML antigo aqui! 
-        // O HTML agora é gerido a 100% pelo workspace.html.
+        // 🚀 DUPLICAÇÃO RESOLVIDA: O HTML já tem a barra de design novo, não precisamos injetar nada aqui!
 
         if(Workspace.Feed.todosOsPosts.length === 0) {
             container.innerHTML = Array(3).fill(`
@@ -360,13 +359,14 @@ Workspace.Feed = {
         Workspace.Feed.paginaAtual = 1;
         Workspace.Feed.postsCache = [];
         
-        // 🚀 LIGAÇÃO COM O NOVO HTML: Atualiza o lado visual de forma segura
-        // Nota: O clique do utilizador já o faz instantaneamente no HTML, mas garantimos a integridade aqui
+        // 🚀 O LADO VISUAL: Tira o azul de todos e coloca apenas no que foi clicado usando o ID!
         document.querySelectorAll('.ws-filtro-btn').forEach(btn => btn.classList.remove('ativo'));
-        
+        const btnAtivo = document.getElementById(`filtro-${tipoFiltro}`);
+        if(btnAtivo) btnAtivo.classList.add('ativo');
+
+        // 🚀 O LADO LÓGICO: Filtra os posts em memória muito rapidamente
         let listaFiltrada = Workspace.Feed.todosOsPosts;
         
-        // As regras de filtragem baseadas nas palavras que definimos ('imagem', 'video', 'documento')
         if (tipoFiltro === 'imagem') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
         } 
@@ -387,7 +387,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>Atualizando o feed... ⏳ Por favor, siga a instrução em vermelho.</strong></div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>A organizar o feed... ⏳</strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
