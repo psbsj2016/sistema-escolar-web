@@ -5,6 +5,17 @@ Workspace.Materiais = {
     
     init: async () => {
         console.log("📚 Módulo de Materiais das Aulas Iniciado.");
+        
+        // 🚀 O AUTO-LIMPADOR: Garante que o visualizador feche se o utilizador navegar para fora!
+        if (!Workspace.Materiais.limpadorAtivo && typeof Workspace.navegarPara === 'function') {
+            const navegacaoOriginal = Workspace.navegarPara;
+            Workspace.navegarPara = (tela, historico) => {
+                const modalVis = document.getElementById('ws-modal-visualizador-material');
+                if (modalVis) modalVis.remove(); // Destrói o visualizador "zombie"
+                navegacaoOriginal(tela, historico); // Continua a viagem normalmente
+            };
+            Workspace.Materiais.limpadorAtivo = true;
+        }
     },
 
     abrirPainel: async () => {
@@ -116,7 +127,6 @@ Workspace.Materiais = {
         }
     },
 
-    // 🚀 5. GESTÃO DO PROFESSOR (COM PESQUISA)
     renderizarProf: (termoBusca = '') => {
         const container = document.getElementById('ws-materiais-lista-prof');
         if (!container) return;
@@ -162,12 +172,10 @@ Workspace.Materiais = {
         container.innerHTML = html;
     },
 
-    // 🚀 1. O GUARDA-COSTAS DO ALUNO (FILTRO SUPREMO)
     renderizarAluno: (termoBusca = '') => {
         const container = document.getElementById('ws-materiais-grid-aluno');
         if (!container) return;
 
-        // Filtro Primário (Segurança Frontend)
         let materiaisPermitidos = Workspace.Materiais.listaMateriais.filter(m => {
             if (m.destino === 'global') return true;
             
@@ -184,7 +192,6 @@ Workspace.Materiais = {
             return turmasStr.includes(destId) || turmasStr.includes(destNome);
         });
 
-        // Filtro de Pesquisa
         if (termoBusca.trim() !== '') {
             const termo = termoBusca.toLowerCase().trim();
             materiaisPermitidos = materiaisPermitidos.filter(m => 
@@ -231,7 +238,7 @@ Workspace.Materiais = {
 
     apagarMaterial: (id) => {
         if (Workspace.Avaliacoes && Workspace.Avaliacoes.confirmarDialog) {
-            Workspace.Avaliacoes.confirmarDialog("Apagar Material?", "Tem a certeza que deseja remover este material? Ele desaparecerá das estantes dos alunos.", "Sim, Apagar", "#e74c3c", async () => {
+            Workspace.Avaliacoes.confirmarDialog("Apagar Material?", "Tem a certeza que deseja remover este material?", "Sim, Apagar", "#e74c3c", async () => {
                 Workspace.mostrarAviso("A apagar...", "info");
                 try {
                     const res = await Workspace.api(`/workspace/materiais/${id}`, 'DELETE');
@@ -240,12 +247,11 @@ Workspace.Materiais = {
                         Workspace.Materiais.renderizarProf();
                         Workspace.mostrarAviso("Material apagado com sucesso!", "success");
                     }
-                } catch(e) { Workspace.mostrarAviso("Erro ao apagar material da Base de Dados.", "error"); }
+                } catch(e) { Workspace.mostrarAviso("Erro ao apagar material.", "error"); }
             });
         }
     },
 
-    // 🚀 2 & 4. VISUALIZADOR GIGANTE (MANTENDO A TELA DE FUNDO) E LEITOR DO OFFICE
     abrirVisualizador: (url, tipo, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -265,7 +271,6 @@ Workspace.Materiais = {
         else if (tipo.includes('image')) {
             conteudoHTML = `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
         } 
-        // 🚀 4. A MAGIA DO GOOGLE DOCS VIEWER PARA ABRIR POWERPOINT E WORD
         else if (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc')) {
             const urlCodificada = encodeURIComponent(url);
             conteudoHTML = `<iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
@@ -283,18 +288,27 @@ Workspace.Materiais = {
 
         const modal = document.createElement('div');
         modal.id = modalId;
-        // 🚀 2. TAMANHO GIGANTE (95% da tela)
         modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation: fadeIn 0.2s;";
+        
         modal.innerHTML = `
             <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
                 <span style="color: white; font-weight: bold; font-size: 18px;">📚 ${titulo}</span>
-                <!-- FECHAR SEM RECARREGAR A TELA -->
-                <button onclick="document.getElementById('${modalId}').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5);" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
+                <button id="ws-fechar-visualizador" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5);" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
             </div>
-            <div style="width: 95vw; height: 88vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 40px;">
-                ${conteudoHTML}
+            <div style="width: 95vw; height: 88vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 40px; pointer-events: none;">
+                <div style="width: 100%; height: 100%; pointer-events: auto;">
+                    ${conteudoHTML}
+                </div>
             </div>
         `;
+        
+        // 🚀 O CLIQUE DE FUGA: Fecha se clicar no fundo preto!
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.id === 'ws-fechar-visualizador') {
+                modal.remove();
+            }
+        });
+
         document.body.appendChild(modal);
     },
 
