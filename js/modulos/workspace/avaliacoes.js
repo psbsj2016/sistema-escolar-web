@@ -920,19 +920,38 @@ Workspace.Avaliacoes = {
             return;
         }
 
-        const htmlLista = avaliacoes.map(a => {
+       const htmlLista = avaliacoes.map(a => {
             let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
-            const corStatus = a.status === 'ativa' ? '#27ae60' : '#95a5a6';
-            const textoStatus = a.status === 'ativa' ? 'Online' : 'Oculta';
+            
+            // 🚀 INTELIGÊNCIA DE STATUS: Verifica as presenças antes de desenhar a etiqueta
+            const presencasCount = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id).length;
+            const temEntrega = presencasCount > 0;
 
-            const temEntrega = Workspace.Avaliacoes.entregasEmCache.some(e => e.avaliacaoId === a.id);
+            let corStatus = '#95a5a6'; // Cinza por defeito (Oculta)
+            let textoStatus = 'Oculta';
+
+            // Lógica do Semáforo Dinâmico
+            if (a.status === 'ativa') {
+                if (a.tipo === 'online') {
+                    if (temEntrega) {
+                        corStatus = '#e74c3c'; // Vermelho: O link já foi consumido (foi para o histórico)
+                        textoStatus = 'Acesso Offline';
+                    } else {
+                        corStatus = '#27ae60'; // Verde: O link está fresco e pronto a usar
+                        textoStatus = 'Acesso Online';
+                    }
+                } else {
+                    corStatus = '#27ae60';
+                    textoStatus = 'Online';
+                }
+            }
+
             const btnEditar = (temEntrega && a.tipo !== 'online')
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
             let btnReativar = '';
             if (a.tipo === 'online') {
-                const presencasCount = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id).length;
                 btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px; transition:0.2s;" onmouseover="this.style.background='#fdf2e9'" onmouseout="this.style.background='#fdfdfd'" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Ver Acessos (${presencasCount})</button>`;
             }
 
