@@ -6,6 +6,7 @@ import './modulos/workspace/upload.js';
 import './modulos/workspace/alertas.js'; 
 import './modulos/workspace/sidebar.js';
 import './modulos/workspace/avaliacoes.js';
+import './modulos/workspace/materiais.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -117,6 +118,7 @@ Object.assign(Workspace, {
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
+        if (Workspace.Materiais) Workspace.Materiais.init();
 
         document.addEventListener('click', (e) => {
             const menuContainer = document.getElementById('ws-menu-left-container');
@@ -162,7 +164,8 @@ Object.assign(Workspace, {
             'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
             'avaliacoes_oral': 'ws-avaliacoes-oral-container',
             'avaliacoes_online': 'ws-avaliacoes-online-container',
-            'encontros_prof': 'ws-avaliacoes-prof-container' // Partilha o mesmo ecrã físico, mas altera o contexto!
+            'encontros_prof': 'ws-avaliacoes-prof-container', 
+            'materiais': 'ws-materiais-container'
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
@@ -382,6 +385,10 @@ Object.assign(Workspace, {
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
     abrirPaginaBau: () => Workspace.navegarPara('bau'),
     abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'),
+    abrirPaginaMateriais: () => {
+        if (Workspace.Materiais) Workspace.Materiais.abrirPainel();
+        else Workspace.navegarPara('materiais');
+    },
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 
