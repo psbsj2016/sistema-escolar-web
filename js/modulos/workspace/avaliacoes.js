@@ -1629,7 +1629,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-    abrirRecebidas: async () => {
+   abrirRecebidas: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -1639,128 +1639,231 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div>';
 
         try {
-            const resProvas = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
-            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas`, 'GET');
+            // Usamos destruidores de cache para os dados virem sempre frescos
+            const resProvas = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
+            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
 
             if (resEntregas && resEntregas.success && resProvas && resProvas.success) {
                 const provasMap = {};
                 resProvas.avaliacoes.forEach(p => provasMap[p.id] = p);
 
-                if (resEntregas.entregas.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Nenhuma prova entregue ainda.</div>';
-                    return;
-                }
-
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                let totalAlertas = 0;
-                const erroPorQuestao = {};
-                let somaAcertos = 0;
-                let totalRespostasMultipla = 0;
+                // Passamos o controlo visual para a nova função de renderização!
+                Workspace.Avaliacoes.renderizarListaRecebidas();
+            } else {
+                throw new Error("Dados incompletos");
+            }
+        } catch (err) { 
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar o dashboard de analytics.</div>'; 
+        }
+    },
 
-                resEntregas.entregas.forEach(e => {
-                    if (e.relatorioFraude && e.relatorioFraude.fugas > 0) totalAlertas++;
-                    
-                    const prova = provasMap[e.avaliacaoId];
-                    if (!prova || !prova.questoes || !e.respostas) return;
-                    
-                    prova.questoes.forEach(q => {
-                        if (q.tipo === 'escolha') {
-                            const chaveUnica = `${e.avaliacaoId}_${q.id}`;
-                            if (!erroPorQuestao[chaveUnica]) {
-                                erroPorQuestao[chaveUnica] = { 
-                                    erros: 0, total: 0, pergunta: q.pergunta, tituloProva: prova.titulo 
-                                };
-                            }
-                            erroPorQuestao[chaveUnica].total++;
-                            const respAluno = e.respostas[q.id];
-                            if (respAluno !== q.respostaCorreta) {
-                                erroPorQuestao[chaveUnica].erros++;
-                            }
-                            somaAcertos += (respAluno === q.respostaCorreta ? 1 : 0);
-                            totalRespostasMultipla++;
-                        }
-                    });
-                });
+    renderizarListaRecebidas: (termoBusca = null) => {
+        const container = document.getElementById('ws-prof-recebidas-lista');
+        
+        if (termoBusca === null) {
+            const inputAtual = document.getElementById('ws-busca-recebidas');
+            termoBusca = inputAtual ? inputAtual.value : '';
+        }
 
-                let piorQuestao = null;
-                let maiorTaxaErro = 0;
+        // 🚀 FILTRO 1: Remove "online". Ficam estritamente provas escritas e orais!
+        const entregasValidas = Workspace.Avaliacoes.entregasEmCache.filter(e => {
+            const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+            return prova && prova.tipo !== 'online';
+        });
 
-                Object.keys(erroPorQuestao).forEach(chave => {
-                    const item = erroPorQuestao[chave];
-                    const taxa = item.erros / item.total;
-                    if (taxa > maiorTaxaErro && item.erros > 0) {
-                        maiorTaxaErro = taxa;
-                        piorQuestao = item;
+        // ==========================================
+        // 📊 DASHBOARD ANALYTICS (Baseado nas provas válidas)
+        // ==========================================
+        let totalAlertas = 0;
+        const erroPorQuestao = {};
+        let somaAcertos = 0;
+        let totalRespostasMultipla = 0;
+
+        entregasValidas.forEach(e => {
+            if (e.relatorioFraude && e.relatorioFraude.fugas > 0) totalAlertas++;
+            
+            const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+            if (!prova || !prova.questoes || !e.respostas) return;
+            
+            prova.questoes.forEach(q => {
+                if (q.tipo === 'escolha') {
+                    const chaveUnica = `${e.avaliacaoId}_${q.id}`;
+                    if (!erroPorQuestao[chaveUnica]) {
+                        erroPorQuestao[chaveUnica] = { erros: 0, total: 0, pergunta: q.pergunta, tituloProva: prova.titulo };
                     }
-                });
-
-                const mediaAcertosTurma = totalRespostasMultipla > 0 ? Math.round((somaAcertos / totalRespostasMultipla) * 100) : null;
-                const taxaErroFormatada = Math.round(maiorTaxaErro * 100);
-
-                let htmlAnalytics = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
-                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">📊 Desempenho nas Objetivas</div>
-                        <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">${mediaAcertosTurma !== null ? mediaAcertosTurma + '%' : '---'}</div>
-                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Média global de acerto da escola</div>
-                    </div>
-                `;
-
-                if (piorQuestao) {
-                    htmlAnalytics += `
-                    <div style="background: #fdf2f2; border: 1px solid #fadbd8; border-radius: 12px; padding: 15px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
-                        <div style="font-size: 11px; font-weight: bold; color: #c0392b; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
-                        <div style="font-size: 13px; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="${piorQuestao.pergunta}">${piorQuestao.pergunta}</div>
-                        <div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-top: 4px;">Falha de ${taxaErroFormatada}% em: ${piorQuestao.tituloProva}</div>
-                    </div>
-                    `;
-                } else {
-                    htmlAnalytics += `
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #95a5a6; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
-                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
-                        <div style="font-size: 14px; font-weight: bold; color: #7f8c8d; margin-top: 5px;">Sem anomalias detetadas</div>
-                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Nenhuma questão crítica alarmante</div>
-                    </div>
-                    `;
+                    erroPorQuestao[chaveUnica].total++;
+                    const respAluno = e.respostas[q.id];
+                    if (respAluno !== q.respostaCorreta) { erroPorQuestao[chaveUnica].erros++; }
+                    somaAcertos += (respAluno === q.respostaCorreta ? 1 : 0);
+                    totalRespostasMultipla++;
                 }
+            });
+        });
 
-                htmlAnalytics += `
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #f39c12; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
-                        <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🛡️ Alertas de Fraude</div>
-                        <div style="font-size: 24px; font-weight: bold; color: #d35400;">${totalAlertas}</div>
-                        <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Ausências de ecrã registadas</div>
-                    </div>
+        let piorQuestao = null;
+        let maiorTaxaErro = 0;
+        Object.keys(erroPorQuestao).forEach(chave => {
+            const item = erroPorQuestao[chave];
+            const taxa = item.erros / item.total;
+            if (taxa > maiorTaxaErro && item.erros > 0) {
+                maiorTaxaErro = taxa;
+                piorQuestao = item;
+            }
+        });
+
+        const mediaAcertosTurma = totalRespostasMultipla > 0 ? Math.round((somaAcertos / totalRespostasMultipla) * 100) : null;
+        const taxaErroFormatada = Math.round(maiorTaxaErro * 100);
+
+        let htmlAnalytics = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">📊 Desempenho nas Objetivas</div>
+                <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">${mediaAcertosTurma !== null ? mediaAcertosTurma + '%' : '---'}</div>
+                <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Média global de acerto da escola</div>
+            </div>
+        `;
+
+        if (piorQuestao) {
+            htmlAnalytics += `
+            <div style="background: #fdf2f2; border: 1px solid #fadbd8; border-radius: 12px; padding: 15px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                <div style="font-size: 11px; font-weight: bold; color: #c0392b; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
+                <div style="font-size: 13px; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="${piorQuestao.pergunta}">${piorQuestao.pergunta}</div>
+                <div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-top: 4px;">Falha de ${taxaErroFormatada}% em: ${piorQuestao.tituloProva}</div>
+            </div>
+            `;
+        } else {
+            htmlAnalytics += `
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #95a5a6; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
+                <div style="font-size: 14px; font-weight: bold; color: #7f8c8d; margin-top: 5px;">Sem anomalias detetadas</div>
+                <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Nenhuma questão crítica alarmante</div>
+            </div>
+            `;
+        }
+
+        htmlAnalytics += `
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; border-left: 4px solid #f39c12; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
+                <div style="font-size: 11px; font-weight: bold; color: #7f8c8d; text-transform: uppercase; margin-bottom: 5px;">🛡️ Alertas de Fraude</div>
+                <div style="font-size: 24px; font-weight: bold; color: #d35400;">${totalAlertas}</div>
+                <div style="font-size: 11px; color: #95a5a6; margin-top: 2px;">Ausências de ecrã registadas</div>
+            </div>
+        </div>
+        `;
+
+        // 🚀 FILTRO 2: Barra de Pesquisa
+        let entregasFiltradas = entregasValidas;
+        if (termoBusca.trim() !== '') {
+            const termo = termoBusca.toLowerCase().trim();
+            entregasFiltradas = entregasFiltradas.filter(e => {
+                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+                const tituloProva = prova ? prova.titulo.toLowerCase() : '';
+                const alunoNome = (e.alunoNome || '').toLowerCase();
+                const dataFormatada = new Date(e.dataEntrega).toLocaleDateString('pt-BR');
+                return tituloProva.includes(termo) || alunoNome.includes(termo) || dataFormatada.includes(termo);
+            });
+        }
+
+        // 🚀 BARRA DE FERRAMENTAS COM CHECKBOX "TODOS"
+        const topBar = `
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="ws-check-todos-recebidas" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-entrega'); cbs.forEach(cb => cb.checked = this.checked);">
+                    <label for="ws-check-todos-recebidas" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
                 </div>
-                <h3 style="font-size:15px; color:#2c3e50; margin:25px 0 15px 0; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:8px;">📥 Exames Recebidos para Avaliação</h3>
-                `;
+                <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
+                <div style="flex: 1; min-width: 200px; position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+                    <input type="text" id="ws-busca-recebidas" placeholder="Pesquisar por aluno, prova ou data..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="Workspace.Avaliacoes.renderizarListaRecebidas(this.value)">
+                </div>
+                <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" onclick="Workspace.Avaliacoes.excluirEntregasSelecionadas()">
+                    🗑️ Apagar Selecionados
+                </button>
+            </div>
+        `;
 
-                const htmlListaAlunos = resEntregas.entregas.map(e => {
-                    const prova = provasMap[e.avaliacaoId];
-                    const tituloProva = prova ? prova.titulo : 'Prova Excluída';
-                    const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
-                    const dataObj = new Date(e.dataEntrega);
-                    const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                    
-                    const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
-                        ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
-                        : '';
+        if (entregasValidas.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem provas recebidas.</div>';
+            return;
+        }
 
-                    return `
-                        <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+        const tituloLista = `<h3 style="font-size:15px; color:#2c3e50; margin:25px 0 15px 0; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:8px;">📥 Exames Recebidos para Avaliação</h3>`;
+
+        const htmlListaAlunos = entregasFiltradas.length === 0 
+            ? '<div style="text-align: center; padding: 40px; color: #999;">Nenhum exame encontrado nesta pesquisa.</div>'
+            : entregasFiltradas.map(e => {
+                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+                const tituloProva = prova ? prova.titulo : 'Prova Excluída';
+                const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
+                const dataObj = new Date(e.dataEntrega);
+                const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                
+                const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
+                    ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
+                    : '';
+
+                return `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="checkbox" class="ws-check-entrega" value="${e.id}" style="transform: scale(1.3); cursor: pointer;">
                             <div>
                                 <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
                                 <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
                             </div>
-                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
                         </div>
-                    `;
-                }).join('');
+                        <div style="display: flex; gap: 8px;">
+                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
+                            <button class="ws-btn" style="background: #fdf2f2; color: #e74c3c; padding: 8px 15px; font-size: 12px; border-radius: 20px; border: 1px solid #fadbd8;" title="Apagar Exame" onclick="Workspace.Avaliacoes.excluirEntregaIndividual('${e.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-                container.innerHTML = htmlAnalytics + htmlListaAlunos;
-            }
-        } catch (err) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar o dashboard de analytics.</div>'; }
+        container.innerHTML = htmlAnalytics + topBar + tituloLista + htmlListaAlunos;
+
+        // Repor o foco no input sem perder o que o professor escreveu
+        const inputNovo = document.getElementById('ws-busca-recebidas');
+        if (inputNovo && termoBusca !== '') {
+            inputNovo.focus();
+            const val = inputNovo.value;
+            inputNovo.value = '';
+            inputNovo.value = val;
+        }
+    },
+
+    excluirEntregaIndividual: (id) => {
+        Workspace.Avaliacoes.confirmarDialog("Apagar Prova?", "Deseja apagar definitivamente esta prova? O aluno perderá a nota/correção associada.", "Sim, Apagar", "#e74c3c", async () => {
+            try {
+                // A mesma rota usada para reativar online funciona aqui para apagar a entrega permanentemente!
+                await Workspace.api(`/workspace/avaliacoes/entregas/${id}`, 'DELETE');
+                Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== id);
+                Workspace.Avaliacoes.renderizarListaRecebidas();
+                Workspace.mostrarAviso("Prova apagada com sucesso!", "success");
+            } catch(e) { Workspace.mostrarAviso("Erro ao apagar a prova.", "error"); }
+        });
+    },
+
+    excluirEntregasSelecionadas: () => {
+        const checkboxes = document.querySelectorAll('.ws-check-entrega:checked');
+        const idsSelecionados = Array.from(checkboxes).map(cb => cb.value);
+
+        if (idsSelecionados.length === 0) return Workspace.mostrarAviso("Selecione pelo menos uma prova usando as caixas à esquerda.", "warning");
+
+        Workspace.Avaliacoes.confirmarDialog("Apagar Múltiplas Provas", `Deseja apagar as ${idsSelecionados.length} provas selecionadas? A ação é irreversível.`, "Sim, Apagar Todas", "#e74c3c", async () => {
+            Workspace.mostrarAviso("A apagar provas... ⏳", "info");
+            try {
+                // Execução paralela (metralhadora de eliminação)
+                const promessas = idsSelecionados.map(id => Workspace.api(`/workspace/avaliacoes/entregas/${id}`, 'DELETE'));
+                await Promise.all(promessas);
+                
+                // Limpeza visual imediata
+                Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => !idsSelecionados.includes(e.id));
+                Workspace.Avaliacoes.renderizarListaRecebidas();
+                Workspace.mostrarAviso(`${idsSelecionados.length} provas apagadas com sucesso!`, "success");
+            } catch(e) { Workspace.mostrarAviso("Ocorreu um erro ao apagar algumas provas.", "error"); }
+        });
     },
 
     verMinhaCorrecao: (entregaId, avaliacaoId) => {
