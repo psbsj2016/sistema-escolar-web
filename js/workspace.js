@@ -279,11 +279,12 @@ Object.assign(Workspace, {
         }
     },
 
-  // 📸 MOTOR DE AVATARES PESSOAIS EM ALTA RESOLUÇÃO (Smart Crop, Fundo Branco, High-Res)
+    // 📸 MOTOR DE AVATARES INTELIGENTE (Mantém proporção e foca no centro)
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
+        // Limite de 100MB de segurança
         if (file.size > 100 * 1024 * 1024) {
             Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
             event.target.value = '';
@@ -299,10 +300,24 @@ Object.assign(Workspace, {
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
             
-            // 🚀 1. DOBRO DA RESOLUÇÃO (Para ecrãs HD e Retina)
+            // 🚀 1. MATEMÁTICA PROPORCIONAL: Evita barras brancas!
             const MAX_SIZE = 800; 
-            canvas.width = MAX_SIZE;
-            canvas.height = MAX_SIZE;
+            let width = imgOriginal.naturalWidth;
+            let height = imgOriginal.naturalHeight;
+
+            // Se a imagem for maior que 800px, encolhemos mantendo a escala perfeita
+            if (width > MAX_SIZE || height > MAX_SIZE) {
+                if (width > height) {
+                    height = Math.round((height * MAX_SIZE) / width);
+                    width = MAX_SIZE;
+                } else {
+                    width = Math.round((width * MAX_SIZE) / height);
+                    height = MAX_SIZE;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
 
             const ctx = canvas.getContext('2d');
             
@@ -310,18 +325,15 @@ Object.assign(Workspace, {
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            // 🚀 3. FUNDO BRANCO OBRIGATÓRIO (Impede que PNGs transparentes quebrem)
+            // Fundo branco preventivo para PNGs com transparência
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
+            ctx.fillRect(0, 0, width, height);
             
-            // 🚀 4. MATEMÁTICA DO CORTE CENTRAL (Smart Crop Perfeito)
-            const menorLado = Math.min(imgOriginal.width, imgOriginal.height);
-            const sourceX = (imgOriginal.width - menorLado) / 2;
-            const sourceY = (imgOriginal.height - menorLado) / 2;
+            // 🚀 3. DESENHO COMPLETO: A imagem é desenhada na totalidade, sem cortes manuais.
+            // O corte circular e centrado será feito de forma perfeita pelo CSS!
+            ctx.drawImage(imgOriginal, 0, 0, width, height);
 
-            ctx.drawImage(imgOriginal, sourceX, sourceY, menorLado, menorLado, 0, 0, MAX_SIZE, MAX_SIZE);
-
-            // 🚀 5. COMPRESSÃO PREMIUM (0.92 garante nitidez)
+            // Compressão Premium (0.92)
             canvas.toBlob(async (blob) => {
                 URL.revokeObjectURL(objectUrl); 
 
@@ -355,10 +367,15 @@ Object.assign(Workspace, {
                         
                         const img = document.getElementById('ws-perfil-img');
                         const letras = document.getElementById('ws-perfil-letras');
-                        if(img) { img.src = avatarFinal; img.style.display = 'block'; }
+                        
+                        // Atualiza a foto imediatamente na tela
+                        if(img) { 
+                            img.src = avatarFinal; 
+                            img.style.display = 'block'; 
+                        }
                         if(letras) letras.style.display = 'none';
 
-                        Workspace.mostrarAviso("Foto de perfil atualizada com qualidade HD!", "success");
+                        Workspace.mostrarAviso("Foto de perfil atualizada com sucesso!", "success");
                         if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
                         if(Workspace.Feed) Workspace.Feed.carregarPosts();
                     }
