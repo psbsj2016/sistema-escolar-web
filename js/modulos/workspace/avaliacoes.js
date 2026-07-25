@@ -232,7 +232,7 @@ Workspace.Avaliacoes = {
                         Workspace.Avaliacoes.avaliacoesDisponiveis = avaliacoesNovas;
                     }
 
-                    // 🚀 INTELIGÊNCIA MÁXIMA PARA O ALUNO: Agora o radar vigia os acessos/entregas também!
+                   // 🚀 INTELIGÊNCIA MÁXIMA PARA ALUNO E PROFESSOR: Radar vigia os acessos/entregas!
                     if (Workspace.usuario.tipo === 'Aluno') {
                         const resEntregas = await Workspace.api(`/workspace/avaliacoes/minhas-entregas/${Workspace.usuario.id}?_t=${Date.now()}`, 'GET');
                         if (resEntregas && resEntregas.success) {
@@ -240,13 +240,37 @@ Workspace.Avaliacoes = {
                             const hashEntregasNovo = JSON.stringify(resEntregas.entregas);
                             if (hashEntregasAntigo !== hashEntregasNovo) {
                                 Workspace.Avaliacoes.entregasFeitas = resEntregas.entregas;
-                                precisaAtualizar = true; // Avisa o sistema que um professor acabou de reativar um acesso!
+                                precisaAtualizar = true; 
+                            }
+                        }
+                    } else {
+                        // 🚀 O NOVO RADAR DO PROFESSOR: Vigia as presenças globais em tempo real!
+                        const painelAberto = document.getElementById('ws-prof-gerir-lista-container');
+                        if (painelAberto && painelAberto.style.display !== 'none') {
+                            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
+                            if (resEntregas && resEntregas.success) {
+                                const hashEntregasAntigo = JSON.stringify(Workspace.Avaliacoes.entregasEmCache);
+                                const hashEntregasNovo = JSON.stringify(resEntregas.entregas);
+                                if (hashEntregasAntigo !== hashEntregasNovo) {
+                                    Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
+                                    precisaAtualizar = true;
+                                    
+                                    // Se a tela de Gestão de Acessos (Modal) estiver aberta, atualiza-a de fininho!
+                                    if (Workspace.Avaliacoes.modalAcessosAberto) {
+                                        Workspace.Avaliacoes.abrirModalAcessos(Workspace.Avaliacoes.modalAcessosAberto.avaliacaoId, Workspace.Avaliacoes.modalAcessosAberto.destinoId, true);
+                                    }
+                                }
                             }
                         }
                     }
 
-                    if (precisaAtualizar && !idAtivo) {
-                        Workspace.Avaliacoes.renderizarLobbies();
+                    if (precisaAtualizar) {
+                        if (!idAtivo) Workspace.Avaliacoes.renderizarLobbies();
+                        
+                        // 🚀 PROFESSOR: Atualiza as cores, os botões e os números no mesmo milissegundo!
+                        if (Workspace.usuario.tipo !== 'Aluno') {
+                            Workspace.Avaliacoes.renderizarListaGerenciador();
+                        }
                     }
                 }
             } catch(e) {}
@@ -1019,41 +1043,58 @@ Workspace.Avaliacoes = {
     },
 
    
- abrirModalAcessos: async (avaliacaoId, destinoId) => {
+abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
+        // Regista o modal como aberto para o Radar do Professor conseguir alimentá-lo
+        Workspace.Avaliacoes.modalAcessosAberto = { avaliacaoId, destinoId };
+
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
         const modalId = 'ws-modal-acessos-online';
-        if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+        let container = document.getElementById('ws-acessos-lista');
 
-        const modal = document.createElement('div');
-        modal.id = modalId;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
-        modal.innerHTML = `
-            <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
-                <button type="button" onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
-                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
-                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
-                
-                <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                    <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
-                </div>
+        // 🚀 O SEGREDO SILENCIOSO: Só desenha a janela se ela não existir ou se não for silencioso!
+        if (!isSilent || !document.getElementById(modalId)) {
+            if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
-                <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                    <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados... ⏳</div>
+            const modal = document.createElement('div');
+            modal.id = modalId;
+            modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+            modal.innerHTML = `
+                <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
+                    <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
+                    <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
+                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${prova.titulo}</span>
+                    
+                    <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
+                        <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
+                    </div>
+
+                    <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
+                        <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados... ⏳</div>
+                    </div>
                 </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
+            `;
+            document.body.appendChild(modal);
+            container = document.getElementById('ws-acessos-lista');
+        }
 
         try {
-            const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
-            if(entregasRes && entregasRes.success) Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
-
-            // 🚀 O SEGREDO DO DINAMISMO: Oculta quem foi reativado localmente
-            const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+            // Se for silencioso (clique do botão), usamos a memória rápida instantânea! Se não, vamos à DB.
+            let acessosSource = Workspace.Avaliacoes.entregasEmCache;
             
-            let acessos = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === avaliacaoId && !reativadosLista.includes(e.alunoId));
+            if (!isSilent) {
+                const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
+                if(entregasRes && entregasRes.success) {
+                    Workspace.Avaliacoes.entregasEmCache = entregasRes.entregas;
+                    acessosSource = entregasRes.entregas;
+                }
+            }
+
+            const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+            const idsReativados = reativadosLista.map(r => r.id);
+            
+            let acessos = acessosSource.filter(e => e.avaliacaoId === avaliacaoId && !idsReativados.includes(e.alunoId));
             let alunosLista = [];
 
             if (destinoId && destinoId !== 'global') {
@@ -1072,7 +1113,6 @@ Workspace.Avaliacoes = {
                 } catch(e) {}
             }
 
-            const container = document.getElementById('ws-acessos-lista');
             let htmlLista = '';
 
             if (alunosLista.length > 0) {
@@ -1081,7 +1121,8 @@ Workspace.Avaliacoes = {
                 alunosLista.forEach(aluno => {
                     const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
-                    const foiReativado = reativadosLista.includes(aluno.id);
+                    const foiReativado = idsReativados.includes(aluno.id);
+                    const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
                     
                     if (acessoFeito) {
                         htmlLista += `
@@ -1093,7 +1134,7 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
                             </div>
                         `;
                     } else if (foiReativado) {
@@ -1130,6 +1171,8 @@ Workspace.Avaliacoes = {
                 } else {
                     acessos.forEach(acesso => {
                         const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
+                        const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
+
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -1139,46 +1182,62 @@ Workspace.Avaliacoes = {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
+                            </div>
+                        `;
+                    });
+                    
+                    reativadosLista.forEach(reativado => {
+                        const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
+                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando acesso)</div>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     });
                 }
             }
             container.innerHTML = htmlLista;
-        } catch(e) { document.getElementById('ws-acessos-lista').innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
+        } catch(e) { if (container) container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
     },
 
-    reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId) => {
-        // 🚀 Agora recebe "event" com segurança total
+   reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId, alunoNome) => {
         const btn = event ? event.target : null;
+        const originalTxt = btn ? btn.innerText : "🔄 Reativar";
         if(btn) { btn.innerText = "⏳"; btn.disabled = true; }
 
         try {
-            // 🚀 Aponta para a nova rota correta no Backend
             await Workspace.api(`/workspace/avaliacoes/entregas/${entregaId}`, 'DELETE');
             Workspace.mostrarAviso("Acesso reativado para este aluno!", "success");
             
-            if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId);
+            if (alunoId) Workspace.Avaliacoes.marcarReativado(avaliacaoId, alunoId, alunoNome);
             
+            // Apaga da memória instantaneamente
             Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
             Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
             
-            Workspace.Avaliacoes.abrirGerenciador(); 
-            setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId), 200); 
-            Workspace.Avaliacoes.carregarLobbies();
+            // 🚀 O NOVO SEGREDO: Atualiza tudo de forma invisível sem reiniciar o ecrã completo!
+            Workspace.Avaliacoes.renderizarListaGerenciador(); 
+            Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId, true); 
         } catch(e) {
             Workspace.mostrarAviso("Erro ao reativar aluno.", "error");
-            if(btn) { btn.innerText = "🔄 Reativar"; btn.disabled = false; }
+            if(btn) { btn.innerText = originalTxt; btn.disabled = false; }
         }
     },
 
     reativarSalaOnline: (id) => {
         Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
             try {
-                const alunosAfetados = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === id).map(e => e.alunoId);
+                const alunosAfetados = Workspace.Avaliacoes.entregasEmCache
+                                        .filter(e => e.avaliacaoId === id)
+                                        .map(e => ({ id: e.alunoId, nome: e.alunoNome }));
 
-                // 🚀 Aponta para a nova rota correta no Backend
                 await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
                 Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
                 
@@ -1189,14 +1248,13 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
                 Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
 
-                const modal = document.getElementById('ws-modal-acessos-online');
-                if (modal) modal.remove();
-                
-                Workspace.Avaliacoes.abrirGerenciador();
-                Workspace.Avaliacoes.carregarLobbies();
+                // 🚀 O NOVO SEGREDO: Atualiza por trás sem "piscar" e sem fechar nada
+                Workspace.Avaliacoes.renderizarListaGerenciador();
                 
                 const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
-                if (prova) setTimeout(() => Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino), 200);
+                if (prova) {
+                    Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino, true);
+                }
             } catch(e) { Workspace.mostrarAviso("Erro ao limpar sala.", "error"); }
         });
     },
