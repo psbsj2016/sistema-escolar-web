@@ -27,7 +27,7 @@
         html.chat-open, body.chat-open { overflow: hidden !important; }
         
         .ws-navbar {
-            background: #2c3e50; color: white; padding: 11px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); 
+            background: #1d4ed8; color: white; padding: 11px max(20px, env(safe-area-inset-right)) 15px max(20px, env(safe-area-inset-left)); 
             display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; 
         }
         
@@ -372,19 +372,34 @@
 
     <main class="ws-container" id="ws-main-container" style="display: none;">
         <section class="ws-feed" id="ws-feed-container">
-           <!-- CARTÃO DE CRIAR PUBLICAÇÃO -->
-            <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 4px solid #27ae60;">
-                <textarea id="ws-post-texto" class="ws-post-input" rows="3" placeholder="Compartilhe imagem, vídeo ou documento..."></textarea>
+          <!-- CARTÃO DE CRIAR PUBLICAÇÃO (DESIGN NOVO E MODERNO) -->
+            <div class="ws-card" id="ws-criar-post" style="display: none; border-top: 5px solid #2563eb; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); margin-bottom: 30px;">
                 
-                <!-- 🚀 O ELO PERDIDO: A "caixa" onde os ficheiros anexados vão aparecer antes de serem publicados -->
+                <!-- 1. Área de Texto Envolvida com Borda Tracejada -->
+                <div style="position: relative; border: 2px dashed #bfdbfe; border-radius: 16px; background: #f8fafc; padding: 5px; margin-bottom: 20px; transition: 0.3s;" onmouseover="this.style.borderColor='#60a5fa'" onmouseout="this.style.borderColor='#bfdbfe'">
+                    <textarea id="ws-post-texto" class="ws-post-input" rows="3" placeholder="Compartilhe imagem, vídeo ou documento..." style="border: none; background: transparent; box-shadow: none; margin: 0; resize: none; padding: 15px; font-size: 15px; color: #334155; width: 100%; outline: none;"></textarea>
+                </div>
+                
+                <!-- 2. Gavetas Ocultas para Preview de Anexos (MANTIDOS OS IDs ORIGINAIS) -->
                 <div id="ws-post-anexos-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;"></div>
                 <div id="ws-post-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;"></div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 8px; width: 100%;">
-                    <div style="display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
-                        <button id="ws-btn-anexar" ontouchstart="" style="background: #f0f2f5; color:#555; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight:600; font-size: 12px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">📎 Anexar Arquivo</button>
+                <!-- 3. Botões de Ação Repaginados -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%;">
+                    
+                    <div style="display: flex; gap: 10px; align-items: center; flex: 1;" id="ws-action-flex-wrapper">
+                        <!-- Botão Anexar Arquivo (Estilo Claro) -->
+                        <button id="ws-btn-anexar" ontouchstart="" style="background: #eff6ff; color: #2563eb; border: none; padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                            Anexar Arquivo
+                        </button>
                     </div>
-                    <button id="ws-btn-publicar" class="ws-btn" ontouchstart="" style="padding: 8px 16px; font-size: 13px; flex-shrink: 0; border-radius: 6px;">Publicar</button>
+
+                    <!-- Botão Publicar (Estilo Sólido) -->
+                    <button id="ws-btn-publicar" class="ws-btn" ontouchstart="" style="background: #2563eb; color: white; border: none; padding: 12px 25px; font-size: 14px; font-weight: 600; border-radius: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 15px rgba(37, 99, 235, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 10px rgba(37, 99, 235, 0.2)';">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                        Publicar
+                    </button>
                 </div>
             </div>
             <div id="ws-posts-area"><div style="text-align: center; padding: 40px; color: #999;"></div></div>
