@@ -38,10 +38,8 @@ Workspace.Materiais = {
         } catch(e) { console.log("Erro ao carregar turmas", e); }
     },
 
-    // 🚀 LIGAÇÃO À BASE DE DADOS: Pede os materiais relevantes
     carregarMateriais: async () => {
         try {
-            // Se for aluno, o servidor já vai filtrar para trazer só o material da turma dele
             const endpoint = Workspace.usuario.tipo === 'Aluno' 
                 ? `/workspace/materiais?escolaId=${Workspace.usuario.escolaId}&alunoRefId=${Workspace.usuario.id}`
                 : `/workspace/materiais?escolaId=${Workspace.usuario.escolaId}`;
@@ -55,7 +53,6 @@ Workspace.Materiais = {
         }
     },
 
-    // 🚀 O MOTOR DE UPLOAD (Professor envia PDF, Vídeo, etc.)
     enviarMaterial: async () => {
         const titulo = document.getElementById('ws-mat-titulo').value.trim();
         const desc = document.getElementById('ws-mat-desc').value.trim();
@@ -75,20 +72,16 @@ Workspace.Materiais = {
         btn.disabled = true;
 
         try {
-            // 1. Fazer Upload Físico usando a Rota Segura que criámos no Cloudinary
             const formData = new FormData();
             formData.append('anexos', file);
             
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) {
-                throw new Error("Falha no upload do ficheiro.");
-            }
+            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload.");
             
             const urlFicheiro = uploadData.anexos[0].url;
             
-            // 2. Guardar Meta-dados na Base de Dados (Nome, Data, Turma)
             const payload = {
                 id: 'mat_' + Date.now(),
                 titulo,
@@ -96,7 +89,7 @@ Workspace.Materiais = {
                 destino,
                 destinoNome,
                 url: urlFicheiro,
-                tipoFicheiro: file.type || 'desconhecido',
+                tipoFicheiro: file.type || file.name.split('.').pop() || 'desconhecido',
                 nomeOriginal: file.name,
                 escolaId: Workspace.usuario.escolaId,
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login,
@@ -107,13 +100,9 @@ Workspace.Materiais = {
             
             if (res && res.success) {
                 Workspace.mostrarAviso("Material publicado com sucesso! 🎉", "success");
-                
-                // Limpar formulário
                 document.getElementById('ws-mat-titulo').value = '';
                 document.getElementById('ws-mat-desc').value = '';
                 document.getElementById('ws-mat-ficheiro').value = '';
-                
-                // Adiciona na memória visual e redesenha a tela sem recarregar!
                 Workspace.Materiais.listaMateriais.unshift(payload);
                 Workspace.Materiais.renderizarProf();
             } else {
@@ -127,18 +116,29 @@ Workspace.Materiais = {
         }
     },
 
-    renderizarProf: () => {
+    // 🚀 5. GESTÃO DO PROFESSOR (COM PESQUISA)
+    renderizarProf: (termoBusca = '') => {
         const container = document.getElementById('ws-materiais-lista-prof');
         if (!container) return;
 
-        if (Workspace.Materiais.listaMateriais.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 30px; color: #7f8c8d; background: #f8fafc; border-radius: 8px;">Ainda não partilhou materiais com as suas turmas.</div>';
+        let filtrados = Workspace.Materiais.listaMateriais;
+        
+        if (termoBusca.trim() !== '') {
+            const termo = termoBusca.toLowerCase().trim();
+            filtrados = filtrados.filter(m => 
+                (m.titulo || '').toLowerCase().includes(termo) || 
+                (m.destinoNome || '').toLowerCase().includes(termo)
+            );
+        }
+
+        if (filtrados.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 30px; color: #7f8c8d; background: #f8fafc; border-radius: 8px;">Nenhum material encontrado.</div>';
             return;
         }
 
         let html = '';
-        Workspace.Materiais.listaMateriais.forEach(mat => {
-            const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro);
+        filtrados.forEach(mat => {
+            const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro || mat.nomeOriginal);
             const dataFormatada = new Date(mat.dataCriacao).toLocaleDateString('pt-BR');
             
             html += `
@@ -153,7 +153,7 @@ Workspace.Materiais = {
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <a href="${mat.url}" target="_blank" class="ws-btn" style="background: #f0f2f5; color: #3498db; text-decoration: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;">👁️ Abrir</a>
+                    <button class="ws-btn" style="background: #f0f2f5; color: #3498db; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="Workspace.Materiais.abrirVisualizador('${mat.url}', '${mat.tipoFicheiro}', '${Workspace.escapeHTML(mat.titulo)}')">👁️ Abrir</button>
                     <button class="ws-btn" style="background: #fdf2f2; color: #e74c3c; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="Workspace.Materiais.apagarMaterial('${mat.id}')">🗑️ Apagar</button>
                 </div>
             </div>
@@ -162,32 +162,47 @@ Workspace.Materiais = {
         container.innerHTML = html;
     },
 
-    // 🚀 A ESTANTE DO ALUNO (Com Pesquisa)
+    // 🚀 1. O GUARDA-COSTAS DO ALUNO (FILTRO SUPREMO)
     renderizarAluno: (termoBusca = '') => {
         const container = document.getElementById('ws-materiais-grid-aluno');
         if (!container) return;
 
-        let filtrados = Workspace.Materiais.listaMateriais;
-        
+        // Filtro Primário (Segurança Frontend)
+        let materiaisPermitidos = Workspace.Materiais.listaMateriais.filter(m => {
+            if (m.destino === 'global') return true;
+            
+            const u = Workspace.usuario;
+            let minhasTurmas = [];
+            if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
+            if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
+            if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
+            
+            const turmasStr = minhasTurmas.map(t => String(t.id || t).toLowerCase().trim());
+            const destId = String(m.destino).toLowerCase().trim();
+            const destNome = String(m.destinoNome || '').toLowerCase().trim();
+            
+            return turmasStr.includes(destId) || turmasStr.includes(destNome);
+        });
+
+        // Filtro de Pesquisa
         if (termoBusca.trim() !== '') {
             const termo = termoBusca.toLowerCase().trim();
-            filtrados = filtrados.filter(m => 
+            materiaisPermitidos = materiaisPermitidos.filter(m => 
                 (m.titulo || '').toLowerCase().includes(termo) || 
                 (m.descricao || '').toLowerCase().includes(termo)
             );
         }
 
-        if (filtrados.length === 0) {
-            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #7f8c8d; background: #f8fafc; border-radius: 8px;">Nenhum material encontrado.</div>';
+        if (materiaisPermitidos.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #7f8c8d; background: #f8fafc; border-radius: 8px;">Nenhum material disponível para a sua turma.</div>';
             return;
         }
 
         let html = '';
-        filtrados.forEach(mat => {
-            const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro);
+        materiaisPermitidos.forEach(mat => {
+            const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro || mat.nomeOriginal);
             const dataFormatada = new Date(mat.dataCriacao).toLocaleDateString('pt-BR');
             
-            // 🚀 O TRUQUE DE DOWNLOAD: Força o Cloudinary a descarregar o ficheiro ignorando a vontade do navegador!
             let linkDownload = mat.url;
             if (linkDownload.includes('/upload/')) {
                 linkDownload = linkDownload.replace('/upload/', '/upload/fl_attachment/');
@@ -198,16 +213,12 @@ Workspace.Materiais = {
                 <div style="font-size: 40px; margin-bottom: 15px; text-align: center;">${icone}</div>
                 <h4 style="margin: 0 0 10px 0; color: #2c3e50; text-align: center; font-size: 16px;">${Workspace.escapeHTML(mat.titulo)}</h4>
                 <p style="font-size: 12px; color: #7f8c8d; text-align: center; margin: 0 0 15px 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${Workspace.escapeHTML(mat.descricao || 'Sem descrição detalhada.')}</p>
-                
-                <div style="font-size: 11px; color: #95a5a6; text-align: center; margin-bottom: 15px;">
-                    Partilhado a ${dataFormatada}
-                </div>
+                <div style="font-size: 11px; color: #95a5a6; text-align: center; margin-bottom: 15px;">Partilhado a ${dataFormatada}</div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <button class="ws-btn" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;" onclick="Workspace.Materiais.abrirVisualizador('${mat.url}', '${mat.tipoFicheiro}', '${Workspace.escapeHTML(mat.titulo)}')">
                         👁️ Visualizar Aqui
                     </button>
-                    <!-- BOTÃO DE DOWNLOAD GARANTIDO -->
                     <a href="${linkDownload}" download class="ws-btn" style="background: #f0f2f5; color: #2c3e50; text-decoration: none; padding: 10px; border-radius: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px;">
                         📥 Fazer Download
                     </a>
@@ -219,7 +230,6 @@ Workspace.Materiais = {
     },
 
     apagarMaterial: (id) => {
-        // Usamos o sistema de diálogo fiável
         if (Workspace.Avaliacoes && Workspace.Avaliacoes.confirmarDialog) {
             Workspace.Avaliacoes.confirmarDialog("Apagar Material?", "Tem a certeza que deseja remover este material? Ele desaparecerá das estantes dos alunos.", "Sim, Apagar", "#e74c3c", async () => {
                 Workspace.mostrarAviso("A apagar...", "info");
@@ -235,43 +245,53 @@ Workspace.Materiais = {
         }
     },
 
-    // 🚀 O VISUALIZADOR ELEGANTE EMBUTIDO (Suporta PDF, Vídeo, Áudio e Imagem)
+    // 🚀 2 & 4. VISUALIZADOR GIGANTE (MANTENDO A TELA DE FUNDO) E LEITOR DO OFFICE
     abrirVisualizador: (url, tipo, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
+        tipo = tipo.toLowerCase();
         let conteudoHTML = '';
         
-        // Identificação automática de tipos
         if (tipo.includes('pdf')) {
             conteudoHTML = `<iframe src="${url}" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
-        } else if (tipo.includes('video') || tipo.includes('mp4')) {
-            conteudoHTML = `<video controls autoplay style="max-width: 100%; max-height: 100%; border-radius: 8px;"><source src="${url}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
-        } else if (tipo.includes('audio')) {
-            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center;"><div style="font-size:50px; margin-bottom: 20px;">🎧</div><audio controls autoplay style="width: 100%;"><source src="${url}" type="${tipo}">Seu navegador não suporta áudios.</audio></div>`;
-        } else if (tipo.includes('image')) {
+        } 
+        else if (tipo.includes('video') || tipo.includes('mp4')) {
+            conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${url}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
+        } 
+        else if (tipo.includes('audio')) {
+            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; width: 100%; max-width: 500px;"><div style="font-size:50px; margin-bottom: 20px;">🎧</div><audio controls autoplay style="width: 100%;"><source src="${url}" type="${tipo}"></audio></div>`;
+        } 
+        else if (tipo.includes('image')) {
             conteudoHTML = `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
-        } else {
-            // Documentos que o navegador não renderiza nativamente (Word, Excel, PowerPoint)
+        } 
+        // 🚀 4. A MAGIA DO GOOGLE DOCS VIEWER PARA ABRIR POWERPOINT E WORD
+        else if (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc')) {
+            const urlCodificada = encodeURIComponent(url);
+            conteudoHTML = `<iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
+        } 
+        else {
             conteudoHTML = `
                 <div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: auto;">
                     <div style="font-size:50px; margin-bottom: 20px;">📎</div>
-                    <h3 style="color:#2c3e50; margin-bottom: 10px;">Ficheiro Indisponível para Pré-visualização</h3>
-                    <p style="color:#7f8c8d; margin-bottom: 25px;">Documentos Word, PowerPoint ou Excel exigem download para serem abertos na sua máquina.</p>
-                    <a href="${url.replace('/upload/', '/upload/fl_attachment/')}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px; font-weight:bold;">📥 Fazer Download Agora</a>
+                    <h3 style="color:#2c3e50; margin-bottom: 10px;">Formato Não Reconhecido</h3>
+                    <p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu computador.</p>
+                    <a href="${url.replace('/upload/', '/upload/fl_attachment/')}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a>
                 </div>
             `;
         }
 
         const modal = document.createElement('div');
         modal.id = modalId;
+        // 🚀 2. TAMANHO GIGANTE (95% da tela)
         modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation: fadeIn 0.2s;";
         modal.innerHTML = `
-            <div style="width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
-                <span style="color: white; font-weight: bold; font-size: 16px;">📚 ${titulo}</span>
-                <button onclick="document.getElementById('${modalId}').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.4)'">×</button>
+            <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
+                <span style="color: white; font-weight: bold; font-size: 18px;">📚 ${titulo}</span>
+                <!-- FECHAR SEM RECARREGAR A TELA -->
+                <button onclick="document.getElementById('${modalId}').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5);" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
             </div>
-            <div style="width: 90%; height: 80%; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 40px;">
+            <div style="width: 95vw; height: 88vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 40px;">
                 ${conteudoHTML}
             </div>
         `;
@@ -280,13 +300,14 @@ Workspace.Materiais = {
 
     obterIconePorTipo: (tipo) => {
         if (!tipo) return '📎';
+        tipo = tipo.toLowerCase();
         if (tipo.includes('pdf')) return '📕';
-        if (tipo.includes('word') || tipo.includes('document')) return '📘';
-        if (tipo.includes('presentation') || tipo.includes('powerpoint')) return '📙';
+        if (tipo.includes('word') || tipo.includes('document') || tipo.includes('doc')) return '📘';
+        if (tipo.includes('presentation') || tipo.includes('powerpoint') || tipo.includes('ppt')) return '📙';
         if (tipo.includes('video') || tipo.includes('mp4')) return '🎬';
         if (tipo.includes('audio')) return '🎧';
         if (tipo.includes('image')) return '🖼️';
-        if (tipo.includes('spreadsheet') || tipo.includes('excel')) return '📗';
+        if (tipo.includes('spreadsheet') || tipo.includes('excel') || tipo.includes('xls')) return '📗';
         return '📎';
     }
 };
