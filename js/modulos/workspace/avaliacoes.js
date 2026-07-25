@@ -948,21 +948,30 @@ Workspace.Avaliacoes = {
        const htmlLista = avaliacoes.map(a => {
             let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
             
-            // 🚀 INTELIGÊNCIA DE STATUS: Verifica as presenças antes de desenhar a etiqueta
-            const presencasCount = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id).length;
+            // 🚀 INTELIGÊNCIA: Verifica quem acedeu e limpa a falsa memória se voltaram a entrar
+            const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
+            const reativadosCache = Workspace.Avaliacoes.getReativados(a.id);
+            
+            presencasReais.forEach(p => {
+                if (reativadosCache.some(r => r.id === p.alunoId)) {
+                    Workspace.Avaliacoes.removerReativado(a.id, p.alunoId);
+                }
+            });
+
+            const presencasCount = presencasReais.length;
             const temEntrega = presencasCount > 0;
 
-            let corStatus = '#95a5a6'; // Cinza por defeito (Oculta)
+            let corStatus = '#95a5a6'; // Cinza (Oculta)
             let textoStatus = 'Oculta';
 
-            // Lógica do Semáforo Dinâmico
+            // Semáforo Inteligente e Fiel à Nuvem
             if (a.status === 'ativa') {
                 if (a.tipo === 'online') {
                     if (temEntrega) {
-                        corStatus = '#e74c3c'; // Vermelho: O link já foi consumido (foi para o histórico)
+                        corStatus = '#e74c3c'; // Consumido
                         textoStatus = 'Acesso Offline';
                     } else {
-                        corStatus = '#27ae60'; // Verde: O link está fresco e pronto a usar
+                        corStatus = '#27ae60'; // Livre
                         textoStatus = 'Acesso Online';
                     }
                 } else {
@@ -971,6 +980,7 @@ Workspace.Avaliacoes = {
                 }
             }
 
+            
             const btnEditar = (temEntrega && a.tipo !== 'online')
                 ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
                 : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
@@ -1042,6 +1052,15 @@ Workspace.Avaliacoes = {
         });
         localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
     },
+    // 🚀 O AUTO-CORRETOR: Apaga o aluno da memória de "reativados" se ele usar a sala outra vez!
+    removerReativado: (avaliacaoId, alunoId) => {
+        let lista = Workspace.Avaliacoes.getReativados(avaliacaoId);
+        const tamanhoAntes = lista.length;
+        lista = lista.filter(r => r.id !== alunoId);
+        if (lista.length !== tamanhoAntes) {
+            localStorage.setItem(`ws_reativados_${avaliacaoId}`, JSON.stringify(lista));
+        }
+    },
 
    
 abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
@@ -1081,9 +1100,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             container = document.getElementById('ws-acessos-lista');
         }
 
-        try {
-            // Se for uma atualização invisível (Silent), usamos a memória instantânea. Se não, perguntamos à API.
+       try {
             let acessosSource = Workspace.Avaliacoes.entregasEmCache;
+            
             if (!isSilent) {
                 const entregasRes = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
                 if(entregasRes && entregasRes.success) {
@@ -1092,10 +1111,20 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 }
             }
 
+            // 🚀 O SEGREDO DO BUG RESOLVIDO: Limpa a etiqueta de Reativado mal o aluno volte a entrar!
+            let acessos = acessosSource.filter(e => e.avaliacaoId === avaliacaoId);
+            const reativadosAntigos = Workspace.Avaliacoes.getReativados(avaliacaoId);
+            
+            acessos.forEach(acesso => {
+                if (reativadosAntigos.some(r => r.id === acesso.alunoId)) {
+                    Workspace.Avaliacoes.removerReativado(avaliacaoId, acesso.alunoId);
+                }
+            });
+
+            // Vai buscar a lista atualizada e livre de falsos reativados
             const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
             const idsReativados = reativadosLista.map(r => r.id);
             
-            let acessos = acessosSource.filter(e => e.avaliacaoId === avaliacaoId && !idsReativados.includes(e.alunoId));
             let alunosLista = [];
 
             if (destinoId && destinoId !== 'global') {
