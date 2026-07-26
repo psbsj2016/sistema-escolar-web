@@ -680,7 +680,7 @@ Workspace.Feed = {
 
     limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
 
-    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS (Com String Seguro)
+    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS (Com correção de Remoção)
     reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
@@ -691,14 +691,33 @@ Workspace.Feed = {
         let euCurti = likesArr.includes(meuId);
         let euNaoCurti = dislikesArr.includes(meuId);
 
+        let tipoParaEnviar = tipo; // 🚀 A MÁGICA: Variável que avisa o Servidor da nossa verdadeira intenção
+
         if (tipo === 'like') {
-            if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; }
-            else { post.likes.push(meuId); euCurti = true; if (euNaoCurti) { post.dislikes = dislikesArr.filter(id => id !== meuId); euNaoCurti = false; } }
+            if (euCurti) { 
+                post.likes = likesArr.filter(id => id !== meuId); 
+                euCurti = false; 
+                tipoParaEnviar = 'remove'; // Como já tinha curtido, a intenção é remover!
+            }
+            else { 
+                post.likes.push(meuId); 
+                euCurti = true; 
+                if (euNaoCurti) { post.dislikes = dislikesArr.filter(id => id !== meuId); euNaoCurti = false; } 
+            }
         } else if (tipo === 'dislike') {
-            if (euNaoCurti) { post.dislikes = dislikesArr.filter(id => id !== meuId); euNaoCurti = false; }
-            else { post.dislikes.push(meuId); euNaoCurti = true; if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; } }
+            if (euNaoCurti) { 
+                post.dislikes = dislikesArr.filter(id => id !== meuId); 
+                euNaoCurti = false; 
+                tipoParaEnviar = 'remove'; // Como já tinha não-curtido, a intenção é remover!
+            }
+            else { 
+                post.dislikes.push(meuId); 
+                euNaoCurti = true; 
+                if (euCurti) { post.likes = likesArr.filter(id => id !== meuId); euCurti = false; } 
+            }
         }
 
+        // Atualização visual na tela
         const btnLike = document.getElementById(`btn-like-${postId}`);
         const countLike = document.getElementById(`count-like-${postId}`);
         if (countLike) countLike.innerText = post.likes.length;
@@ -718,9 +737,11 @@ Workspace.Feed = {
             btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
         }
 
+        // Envio para o Servidor em background
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
+            // 🚀 Enviamos o tipoParaEnviar (que pode ser 'like', 'dislike' ou 'remove')
+            await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch (e) { console.error("Erro ao reagir em background", e); }
     },
 
@@ -754,35 +775,24 @@ Workspace.Feed = {
         } catch (e) { console.error(e); }
     },
 
-apagarPost: (postId) => {
+    apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
-            
-            // 🚀 1. REMOÇÃO FULMINANTE: Some do ecrã e impede interações na hora!
             const el = document.getElementById(`post-${postId}`);
-            if (el) {
-                el.remove(); // Remove o HTML imediatamente, num piscar de olhos!
-            }
+            if (el) el.remove(); 
             
-            // 🚀 2. LIMPEZA DE MEMÓRIA SEGURA: Usamos String() para garantir que os IDs combinam
             Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== String(postId));
             Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== String(postId));
             
             if(window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação eliminada!", "success");
 
-            // ☁️ 3. Ação invisível em background na API
-            try {
-                await Workspace.api(`/workspace/posts/${postId}`, 'DELETE');
-            } catch (e) { console.error("Falha ao apagar na nuvem"); }
+            try { await Workspace.api(`/workspace/posts/${postId}`, 'DELETE'); } catch (e) { }
         });
     },
 
-   // 🚀 REMOÇÃO FULMINANTE DE COMENTÁRIO (SEM CONFIRMAÇÃO)
     apagarComentario: async (postId, comentarioId) => {
-        // 1. Apaga do próprio ecrã instantaneamente, sem perguntar
         const elComentario = document.getElementById(`comentario-${comentarioId}`);
         if (elComentario) elComentario.remove();
 
-        // 2. Atualiza o contador de comentários na memória e no ecrã
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
         if (post && post.comentarios) {
             post.comentarios = post.comentarios.filter(c => String(c.id) !== String(comentarioId));
@@ -790,12 +800,7 @@ apagarPost: (postId) => {
             if (countComment) countComment.innerText = post.comentarios.length;
         }
 
-        // 3. Executa a eliminação na nuvem (background) silenciosamente
-        try {
-            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE');
-        } catch (e) {
-            console.error("Erro ao apagar comentário na nuvem.", e);
-        }
+        try { await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}`, 'DELETE'); } catch (e) {}
     },
 
     editarPost: (postId) => {
@@ -1144,7 +1149,7 @@ apagarPost: (postId) => {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
-    // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Optimistic UI com proteção String)
+   // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Com a mesma correção de Remoção)
     reagirComentario: async (postId, comentarioId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
@@ -1152,23 +1157,30 @@ apagarPost: (postId) => {
         const c = post.comentarios.find(com => String(com.id) === String(comentarioId));
         if (!c) return;
 
-        // Atualiza a Memória
         if (!Array.isArray(c.likes)) c.likes = [];
         let euCurti = c.likes.includes(meuId);
 
-        if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; }
-        else { c.likes.push(meuId); euCurti = true; }
+        let tipoParaEnviar = tipo; // 🚀 A MÁGICA REPETE-SE AQUI!
 
-        // Atualiza a Tela Instantaneamente
+        if (euCurti) { 
+            c.likes = c.likes.filter(id => id !== meuId); 
+            euCurti = false; 
+            tipoParaEnviar = 'remove'; // A intenção é desfazer a curtida no comentário
+        }
+        else { 
+            c.likes.push(meuId); 
+            euCurti = true; 
+        }
+
         const countEl = document.getElementById(`count-like-com-${comentarioId}`);
         const btnEl = document.getElementById(`btn-like-com-${comentarioId}`);
         if (countEl) countEl.innerText = c.likes.length > 0 ? c.likes.length : 'Curtir';
         if (btnEl) btnEl.style.color = euCurti ? '#27ae60' : '#95a5a6';
 
-        // Envia para API
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipo, userId: meuId, autorNome: meuNome });
+            // 🚀 Envia 'remove' para o backend se estiver a desfazer!
+            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch(e) {}
     }
 };
