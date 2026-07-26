@@ -14,7 +14,9 @@
     <title>WorkSpace</title>
     
     <link rel="stylesheet" href="./css/site.css">
-    
+    <!-- 🚀 CSS da Ferramenta de Corte Profissional (Estilo WhatsApp) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">    
+
     <style>
         *, *::before, *::after { box-sizing: border-box !important; }
 
@@ -1228,6 +1230,25 @@
         </div>
     </div>
     <style>@keyframes pulsarGigante { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }</style>
+
+     <!-- ✂️ ESTÚDIO INTERATIVO DE CORTE DE FOTO -->
+    <div id="ws-modal-corte-foto" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 999999; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px);">
+        <h3 style="color: white; margin: 0 0 15px 0; font-weight: 500;">Arraste para ajustar o corte</h3>
+        
+        <!-- A área onde a imagem vai aparecer para ser cortada -->
+        <div style="width: 90%; max-width: 500px; height: 50vh; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <img id="ws-imagem-para-cortar" style="display: block; max-width: 100%;">
+        </div>
+        
+        <!-- Botões de Ação -->
+        <div style="display: flex; gap: 15px; margin-top: 25px; width: 90%; max-width: 500px;">
+            <button class="ws-btn" onclick="Workspace.fecharModalCorte()" style="flex: 1; background: #334155; padding: 14px; border-radius: 30px; font-size: 15px;">❌ Cancelar</button>
+            <button id="ws-btn-confirmar-corte" class="ws-btn" onclick="Workspace.confirmarCorteAvatar()" style="flex: 2; background: #27ae60; padding: 14px; border-radius: 30px; font-size: 15px; font-weight: bold; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);">✅ Cortar e Guardar</button>
+        </div>
+    </div>
+
+    <!-- 🚀 Motor do Cropper.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
     <script type="module" src="./js/workspace.js"></script>

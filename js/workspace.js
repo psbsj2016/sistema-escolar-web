@@ -280,127 +280,140 @@ Object.assign(Workspace, {
     },
 
    // 📸 MOTOR DE AVATARES INTELIGENTE (Foco no rosto e 100% de preenchimento)
+    // 📸 1. ABRIR O ESTÚDIO DE CORTE (Quando seleciona a foto)
     uploadAvatar: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
-        // Limite de segurança de 100MB
+        // Limite de segurança
         if (file.size > 100 * 1024 * 1024) {
-            Workspace.mostrarAviso("A fotografia é maior que 100MB. Escolha uma mais leve.", "warning");
+            Workspace.mostrarAviso("A fotografia é muito pesada. Escolha uma até 100MB.", "warning");
             event.target.value = '';
             return;
         }
 
-        const loader = document.getElementById('ws-avatar-loading');
-        if(loader) loader.style.display = 'block';
-
         const objectUrl = URL.createObjectURL(file);
-        const imgOriginal = new Image();
+        const imgElement = document.getElementById('ws-imagem-para-cortar');
+        const modal = document.getElementById('ws-modal-corte-foto');
 
-        imgOriginal.onload = () => {
-            const canvas = document.createElement('canvas');
-            
-            // 🚀 1. A TELA DE PINTURA (Um quadrado obrigatório de 800x800 para a nuvem)
-            const MAX_SIZE = 800;
-            canvas.width = MAX_SIZE;
-            canvas.height = MAX_SIZE;
+        if (!imgElement || !modal) return;
 
-            const ctx = canvas.getContext('2d');
-            
-            // 🚀 2. A INTELIGÊNCIA MATEMÁTICA (Enquadramento do Rosto)
-            let sWidth = imgOriginal.width;
-            let sHeight = imgOriginal.height;
-            let sx = 0;
-            let sy = 0;
+        // Mostra o estúdio
+        modal.style.display = 'flex';
+        imgElement.src = objectUrl;
 
-            if (imgOriginal.width > imgOriginal.height) {
-                // ➡️ Foto na Horizontal (Paisagem): Corta as laterais, foca no meio exato
-                sWidth = imgOriginal.height; // Limita a largura à altura (faz um quadrado)
-                sx = (imgOriginal.width - sWidth) / 2; // Centraliza no eixo X
-            } else {
-                // ⬇️ Foto na Vertical (Selfie/Retrato): Corta em cima e em baixo
-                sHeight = imgOriginal.width; // Limita a altura à largura (faz um quadrado)
-                
-                // O SEGREDO DO ROSTO: Em vez de cortar no meio exato (0.5), 
-                // cortamos nos 25% superiores (0.25). É aqui que o rosto fica naturalmente!
-                sy = (imgOriginal.height - sHeight) * 0.25; 
-            }
+        // Se já existia um corte anterior, limpamos a memória
+        if (Workspace.cropperInstance) {
+            Workspace.cropperInstance.destroy();
+        }
 
-            // 🚀 3. PINTURA DE ALTA QUALIDADE
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+        // 🚀 INICIA A MAGIA DO CROPPER (Modo Quadrado Obrigatório)
+        Workspace.cropperInstance = new Cropper(imgElement, {
+            aspectRatio: 1, // 1:1 Força a criar um quadrado perfeito!
+            viewMode: 1, // Impede que o corte saia fora da foto
+            dragMode: 'move', // Permite arrastar a imagem livremente
+            autoCropArea: 0.9, // A grelha ocupa 90% da tela inicial
+            restore: false,
+            guides: true, // Mostra as linhas guias de terços
+            center: true,
+            highlight: false,
+            cropBoxMovable: false, // Fixa a grelha no centro...
+            cropBoxResizable: false, // ... e o utilizador arrasta a foto por trás dela (Igual ao WhatsApp!)
+            toggleDragModeOnDblclick: false,
+        });
 
-            // Pinta o fundo de branco preventivamente
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
+        event.target.value = ''; // Limpa o botão de upload para permitir re-escolher a mesma foto se cancelar
+    },
 
-            // Extrai APENAS o quadrado focado no rosto e estica-o para ocupar os 800x800 totais
-            ctx.drawImage(imgOriginal, sx, sy, sWidth, sHeight, 0, 0, MAX_SIZE, MAX_SIZE);
-
-            // 🚀 4. GUARDA E ENVIA PARA A NUVEM
-            canvas.toBlob(async (blob) => {
-                URL.revokeObjectURL(objectUrl); 
-
-                if (!blob || blob.size < 100) {
-                    Workspace.mostrarAviso("Erro ao processar a imagem.", "error");
-                    if(loader) loader.style.display = 'none';
-                    event.target.value = '';
-                    return;
-                }
-
-                try {
-                    const formData = new FormData();
-                    formData.append('anexos', blob, 'avatar_usuario.jpg');
-
-                    const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-                    if (!uploadRes.ok) throw new Error("A ligação à nuvem falhou.");
-                    const uploadData = await uploadRes.json();
-                    
-                    if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha.");
-
-                    const avatarFinal = uploadData.anexos[0].url;
-
-                    const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
-                        id: Workspace.usuario.id, alunoRefId: Workspace.usuario.alunoRefId || null, avatarUrl: avatarFinal
-                    });
-
-                    if (res && res.success) {
-                        Workspace.usuario.avatar = avatarFinal;
-                        localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
-                        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal;
-                        
-                        const img = document.getElementById('ws-perfil-img');
-                        const letras = document.getElementById('ws-perfil-letras');
-                        
-                        // Atualiza a foto na tela instantaneamente
-                        if(img) { 
-                            img.src = avatarFinal; 
-                            img.style.display = 'block'; 
-                        }
-                        if(letras) letras.style.display = 'none';
-
-                        Workspace.mostrarAviso("Foto de perfil atualizada com enquadramento perfeito!", "success");
-                        if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
-                        if(Workspace.Feed) Workspace.Feed.carregarPosts();
-                    }
-                } catch (err) {
-                    console.error(err);
-                    Workspace.mostrarAviso("Erro ao alterar foto. Tente novamente.", "error");
-                } finally {
-                    if(loader) loader.style.display = 'none';
-                    event.target.value = ''; 
-                }
-            }, 'image/jpeg', 0.92); 
-        };
+    // ❌ 2. CANCELAR O CORTE
+    fecharModalCorte: () => {
+        const modal = document.getElementById('ws-modal-corte-foto');
+        if (modal) modal.style.display = 'none';
         
-        imgOriginal.onerror = () => {
-            Workspace.mostrarAviso("Ficheiro inválido.", "error");
-            URL.revokeObjectURL(objectUrl);
-            if(loader) loader.style.display = 'none';
-            event.target.value = '';
-        };
+        // Destrói a ferramenta para poupar memória
+        if (Workspace.cropperInstance) {
+            Workspace.cropperInstance.destroy();
+            Workspace.cropperInstance = null;
+        }
+    },
 
-        imgOriginal.src = objectUrl;
+    // ✅ 3. CONFIRMAR, CORTAR E GUARDAR NA NUVEM
+    confirmarCorteAvatar: async () => {
+        if (!Workspace.cropperInstance) return;
+
+        const btn = document.getElementById('ws-btn-confirmar-corte');
+        const textoOriginal = btn.innerText;
+        btn.innerText = "⏳ A processar...";
+        btn.disabled = true;
+
+        const loader = document.getElementById('ws-avatar-loading');
+        if (loader) loader.style.display = 'block';
+
+        // 🚀 O CORTE EXATO: O Cropper retira apenas a parte que o utilizador escolheu
+        const canvas = Workspace.cropperInstance.getCroppedCanvas({
+            width: 800,
+            height: 800,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+
+        if (!canvas) {
+            Workspace.mostrarAviso("Não foi possível cortar a imagem.", "error");
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
+            return;
+        }
+
+        // Converte o resultado para ficheiro
+        canvas.toBlob(async (blob) => {
+            try {
+                const formData = new FormData();
+                formData.append('anexos', blob, 'avatar_usuario.jpg');
+
+                const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
+                if (!uploadRes.ok) throw new Error("Falha ao comunicar com o servidor.");
+                const uploadData = await uploadRes.json();
+                
+                if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("A nuvem rejeitou o envio.");
+
+                const avatarFinal = uploadData.anexos[0].url;
+
+                // Atualiza a foto na Base de Dados
+                const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
+                    id: Workspace.usuario.id, alunoRefId: Workspace.usuario.alunoRefId || null, avatarUrl: avatarFinal
+                });
+
+                if (res && res.success) {
+                    Workspace.usuario.avatar = avatarFinal;
+                    localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+                    Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal;
+                    
+                    const img = document.getElementById('ws-perfil-img');
+                    const letras = document.getElementById('ws-perfil-letras');
+                    
+                    // Aplica a nova foto perfeitamente cortada no ecrã!
+                    if(img) { 
+                        img.src = avatarFinal; 
+                        img.style.display = 'block'; 
+                    }
+                    if(letras) letras.style.display = 'none';
+
+                    Workspace.mostrarAviso("Foto de perfil linda e guardada com sucesso!", "success");
+                    if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
+                    if(Workspace.Feed) Workspace.Feed.carregarPosts();
+                    
+                    // Fecha o estúdio interativo
+                    Workspace.fecharModalCorte();
+                }
+            } catch (err) {
+                console.error(err);
+                Workspace.mostrarAviso("Ocorreu um erro ao guardar. Tente de novo.", "error");
+            } finally {
+                if (loader) loader.style.display = 'none';
+                btn.innerText = textoOriginal;
+                btn.disabled = false;
+            }
+        }, 'image/jpeg', 0.92); // Qualidade JPG de 92%
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
