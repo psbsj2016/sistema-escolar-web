@@ -220,7 +220,7 @@ Workspace.Materiais = {
                 <div style="font-size: 40px; margin-bottom: 15px; text-align: center;">${icone}</div>
                 <h4 style="margin: 0 0 10px 0; color: #2c3e50; text-align: center; font-size: 16px;">${Workspace.escapeHTML(mat.titulo)}</h4>
                 <p style="font-size: 12px; color: #7f8c8d; text-align: center; margin: 0 0 15px 0; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${Workspace.escapeHTML(mat.descricao || 'Sem descrição detalhada.')}</p>
-                <div style="font-size: 11px; color: #95a5a6; text-align: center; margin-bottom: 15px;">Partilhado a ${dataFormatada}</div>
+                <div style="font-size: 11px; color: #95a5a6; text-align: center; margin-bottom: 15px;">Compartilhado em ${dataFormatada}</div>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <button class="ws-btn" style="background: #3498db; color: white; border: none; padding: 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;" onclick="Workspace.Materiais.abrirVisualizador('${mat.url}', '${mat.tipoFicheiro}', '${Workspace.escapeHTML(mat.titulo)}')">

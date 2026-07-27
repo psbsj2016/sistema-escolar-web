@@ -437,7 +437,7 @@
                     
                     /* 🚀 Regra para Telemóveis: Tudo mais pequeno para caber no ecrã! */
                     @media (max-width: 600px) {
-                        .ws-filtro-btn { padding: 6px 12px; font-size: 11px; gap: 4px; }
+                        .ws-filtro-btn { padding: 6px 12px; font-size: 11px; gap: 3px; }
                         .ws-filtro-btn svg { width: 14px; height: 14px; }
                     }
                 </style>
@@ -693,7 +693,7 @@
             <div id="ws-prof-menu-tarefas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelNovaTarefa()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">📤</div>
-                    <h4 style="margin: 0 0 5px 0; color: #333;">Enviar Nova Atividade</h4>
+                    <h4 style="margin: 0 0 5px 0; color: #333;">Enviar Novo Exercício</h4>
                     <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Crie e envie exercícios para as turmas.</p>
                 </div>
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelTarefasRecebidas()" ontouchstart="">
@@ -714,7 +714,7 @@
                     <div><label style="font-size:12px; font-weight:bold; color:#555;">Material de Apoio (Opcional)</label><input type="file" id="ws-nova-tarefa-arquivo" class="ws-post-input" style="padding:9px; margin-bottom:0; background:white; cursor:pointer;"></div>
                 </div>
                 <div style="margin-bottom:15px;"><label style="font-size:12px; font-weight:bold; color:#555;">Instruções da Atividade</label><textarea id="ws-nova-tarefa-desc" class="ws-post-input" rows="4" placeholder="Descreva passo a passo o que os alunos devem fazer..."></textarea></div>
-                <button class="ws-btn" id="ws-btn-salvar-tarefa" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Sidebar.salvarNovaTarefa()" ontouchstart="">🚀 Publicar Atividade para a Turma</button>
+                <button class="ws-btn" id="ws-btn-salvar-tarefa" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Sidebar.salvarNovaTarefa()" ontouchstart="">🚀 Publicar Exercício para a Turma</button>
             </div>
             
             <div id="ws-prof-lista-recebidas" style="display:none; margin-top: 15px;">
@@ -809,7 +809,7 @@
                         <button class="ws-btn" style="background: #f39c12; flex: 1; min-width: 140px;" onclick="Workspace.Avaliacoes.abrirModalBancoQuestoes()" ontouchstart="">⭐ Importar do Banco</button>
                     </div>
                 </div>
-                <button id="ws-btn-salvar-escrita" class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaEscrita()" ontouchstart="">🚀 Publicar Exame</button>
+                <button id="ws-btn-salvar-escrita" class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaEscrita()" ontouchstart="">🚀 Publicar Avaliação Escrita</button>
             </div>
 
             <div id="ws-prof-nova-oral" style="display:none; margin-top: 15px;">
@@ -823,7 +823,7 @@
                     <label style="font-size:12px; font-weight:bold; color:#555;">Instruções para o Aluno (O que deve falar) *</label>
                     <textarea id="ws-nova-oral-instrucoes" class="ws-post-input" rows="4" placeholder="Ex: Leia o texto XYZ..."></textarea>
                 </div>
-                <button id="ws-btn-salvar-oral" class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaOral()" ontouchstart="">🎤 Publicar Teste Oral</button>
+                <button id="ws-btn-salvar-oral" class="ws-btn" style="width:100%; background:#27ae60; font-size:15px; padding:12px;" onclick="Workspace.Avaliacoes.salvarProvaOral()" ontouchstart="">🚀 Publicar Avaliação Oral</button>
             </div>
             
             <div id="ws-prof-nova-online" style="display:none; margin-top: 15px;">

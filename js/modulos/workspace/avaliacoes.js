@@ -1555,7 +1555,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         const btn = event.target;
         const txt = btn.innerText;
-        btn.innerText = "⏳ A gravar..."; btn.disabled = true;
+        btn.innerText = "⏳ Gravando..."; btn.disabled = true;
 
         try {
             const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';
@@ -1590,7 +1590,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if(!titulo || !instrucoes) return Workspace.mostrarAviso("Preencha título e instruções.", "warning");
 
         const btn = event.target;
-        const txt = btn.innerText; btn.innerText = "⏳ A gravar..."; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "⏳ Publicando..."; btn.disabled = true;
 
         try {
             const endpoint = Workspace.Avaliacoes.avaliacaoEmEdicao ? `/workspace/avaliacoes/${Workspace.Avaliacoes.avaliacaoEmEdicao}` : '/workspace/avaliacoes';

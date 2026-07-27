@@ -114,7 +114,7 @@ Workspace.Alertas = {
         sse.onerror = () => { console.log("Reconectando túnel em tempo real..."); };
     },
 
- injetarCSS: () => {
+injetarCSS: () => {
         if (document.getElementById('ws-alertas-css')) return;
         const style = document.createElement('style');
         style.id = 'ws-alertas-css';
@@ -128,11 +128,34 @@ Workspace.Alertas = {
             @keyframes ringBell { 0% { transform: rotate(0); } 15% { transform: rotate(20deg); } 30% { transform: rotate(-20deg); } 45% { transform: rotate(15deg); } 60% { transform: rotate(-15deg); } 75% { transform: rotate(0); } }
             .bell-ringing i, .bell-ringing { animation: ringBell 0.6s ease-in-out; color: #3498db !important; }
             
-            /* 🚀 NOVO: Scroll customizado e elegante para a área de notificações (apenas visível no PC) */
             .ws-scroll-suave::-webkit-scrollbar { width: 6px; }
             .ws-scroll-suave::-webkit-scrollbar-track { background: transparent; }
             .ws-scroll-suave::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
             .ws-scroll-suave::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+            /* 🚀 NOVO DESIGN: BOLHA VERMELHA NUMERADA ESTILO MOBILE */
+            #ws-noti-count {
+                position: absolute !important;
+                top: -6px !important;
+                right: -6px !important;
+                background: #e74c3c !important;
+                color: white !important;
+                font-family: 'Poppins', sans-serif !important;
+                font-size: 11px !important;
+                font-weight: 800 !important;
+                min-width: 18px !important;
+                height: 18px !important;
+                padding: 0 4px !important;
+                border-radius: 50px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4) !important;
+                border: 2px solid white !important;
+                z-index: 10 !important;
+                line-height: 1 !important;
+                box-sizing: border-box !important;
+            }
         `;
         document.head.appendChild(style);
     },
