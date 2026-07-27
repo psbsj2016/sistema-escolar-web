@@ -174,7 +174,7 @@ Workspace.Alertas = {
         });
     },
 
-    buscarNotificacoes: async () => {
+   buscarNotificacoes: async () => {
         if (!Workspace.usuario || !Workspace.usuario.nome) return;
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
@@ -186,7 +186,33 @@ Workspace.Alertas = {
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
-                    if (window.Toast && Toast.show) Toast.show(`🔔 Tem ${novas.length} nova(s) notificação(ões)!`, 'info');
+                    
+                    // 🚀 A MAGIA DO TOAST: Passa por cada novidade e mostra o balão animado com os dados reais!
+                    novas.forEach((novaNoti, index) => {
+                        setTimeout(() => {
+                            const avatarHtml = window.Workspace.renderizarAvatar(novaNoti.remetenteNome, 44);
+                            const layoutDivertido = `
+                                <div style="display: flex; align-items: center; gap: 12px; margin-left: -5px; width: 100%;">
+                                    <div style="flex-shrink: 0; border: 2px solid white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; line-height: 1.3;">
+                                        <span style="font-size: 14px; font-weight: bold; color: white;">${novaNoti.remetenteNome}</span>
+                                        <span style="font-size: 12.5px; color: rgba(255,255,255,0.95);">${novaNoti.mensagem}</span>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Dispara a cápsula flutuante
+                            if (window.Toast && Toast.show) {
+                                Toast.show(layoutDivertido, 'pingpong', 6000, () => {
+                                    // Se o utilizador clicar na notificação flutuante, vai direto ao destino!
+                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
+                                });
+                            }
+                        }, index * 800); // Intervalo de 800ms para que os alertas não se atropelem se chegarem vários
+                    });
+
                     const bell = document.getElementById('ws-bell');
                     if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
                 }
@@ -283,9 +309,11 @@ Workspace.Alertas = {
     },
 
     lerEIr: async (id, origem, origemId, destinoNome) => {
+        // Fecha a gaveta do sininho imediatamente
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
+        // Marca como lida na memória e na nuvem
         if (String(id).startsWith('alerta_local_')) {
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
             Workspace.Alertas.idsConhecidos.delete(id);
@@ -299,15 +327,14 @@ Workspace.Alertas = {
             } catch(e) {}
         }
 
-        if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
-        else {
-            const modalChat = document.getElementById('ws-chat-modal');
-            if (modalChat) modalChat.style.display = 'none';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        // Esconde o chat se estiver aberto
+        const modalChat = document.getElementById('ws-chat-modal');
+        if (modalChat) modalChat.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // 🚀 O ROTEADOR INTELIGENTE (Agora sabe ir para o Baú!)
+        // 🚀 O ROTEADOR INTELIGENTE (O "Teletransporte" para qualquer área do Hub)
         if (origem === 'post') {
+            if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
             const checkExist = setInterval(() => {
                 const postElement = document.getElementById(`box-comentarios-${origemId}`);
                 if (postElement) {
@@ -320,10 +347,36 @@ Workspace.Alertas = {
             }, 200);
             setTimeout(() => clearInterval(checkExist), 3000); 
         } 
-        else if (origem === 'chat' && Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
-        else if (origem === 'tarefa' && Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
-        else if (origem === 'online' && window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
-        else if (origem === 'bau' && Workspace.Bau && Workspace.Bau.irParaCalendarioDoBau) Workspace.Bau.irParaCalendarioDoBau(Number(origemId));
+        else if (origem === 'chat') {
+            if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
+            if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
+        }
+        else if (origem === 'tarefa' || origem === 'exercicio') {
+            // Abre primeiro a página de Exercícios e depois invoca o modal específico
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
+            setTimeout(() => {
+                if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
+            }, 500); 
+        }
+        else if (origem === 'material') {
+            // Abre o Hub e invoca a página de Materiais
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('sala_aula');
+            setTimeout(() => {
+                 if (window.Workspace && Workspace.abrirPaginaMateriais) Workspace.abrirPaginaMateriais();
+            }, 300);
+        }
+        else if (origem === 'avaliacao_escrita') {
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_escrita');
+        }
+        else if (origem === 'avaliacao_oral') {
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_oral');
+        }
+        else if (origem === 'online') {
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
+        }
+        else if (origem === 'bau') {
+            if (Workspace.Bau && Workspace.Bau.irParaCalendarioDoBau) Workspace.Bau.irParaCalendarioDoBau(Number(origemId));
+        }
     },
 
     riscar: async (id, event) => {
