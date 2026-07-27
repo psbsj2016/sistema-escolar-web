@@ -86,12 +86,12 @@ Workspace.Sidebar = {
     },
 
     // ============================================================================
-    // 📡 MOTOR DE PRESENÇA (HEARTBEAT EM TEMPO REAL)
+    // 📡 MOTOR DE PRESENÇA INTELIGENTE (HEARTBEAT + SAÍDA INSTANTÂNEA)
     // ============================================================================
     iniciarHeartbeatOnline: () => {
         const enviarPing = async () => {
             try {
-                if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
+                if (window.Workspace && Workspace.usuario && Workspace.usuario.id && document.visibilityState === 'visible') {
                     await fetch('/api/workspace/monitoramento/ping', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -100,13 +100,28 @@ Workspace.Sidebar = {
                     });
                 }
             } catch (e) {
-                // Silencioso para não afetar a experiência do aluno
+                // Silencioso
             }
         };
 
-        // Envia o primeiro ping logo ao entrar e depois repete a cada 30 segundos
+        // Envia o primeiro ping logo ao entrar e repete a cada 30 segundos
         enviarPing();
-        setInterval(enviarPing, 30000);
+        const intervaloPing = setInterval(enviarPing, 30000);
+
+        // 🚀 GATILHO DE SAÍDA INSTANTÂNEA: Se fechar a aba ou sair do site
+        window.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
+                    navigator.sendBeacon('/api/workspace/monitoramento/offline', JSON.stringify({ usuarioId: Workspace.usuario.id }));
+                }
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
+                navigator.sendBeacon('/api/workspace/monitoramento/offline', JSON.stringify({ usuarioId: Workspace.usuario.id }));
+            }
+        });
     },
 
     injetarCSSModais: () => {
