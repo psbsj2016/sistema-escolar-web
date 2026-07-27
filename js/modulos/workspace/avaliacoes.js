@@ -406,7 +406,7 @@ Workspace.Avaliacoes = {
         const tOrPend = document.getElementById('tab-oral-pendentes');
         const tOrConc = document.getElementById('tab-oral-concluidas');
         if (tOrPend && tOrConc) {
-            tOrPend.innerText = `Para Gravar (${orPendentes.length})`;
+            tOrPend.innerText = `Aguardando Gravação (${orPendentes.length})`;
             tOrPend.style.background = Workspace.Avaliacoes.abaOral === 'pendentes' ? '#2c3e50' : 'transparent';
             tOrPend.style.color = Workspace.Avaliacoes.abaOral === 'pendentes' ? 'white' : '#7f8c8d';
             tOrConc.innerText = `Enviados (${orConcluidas.length})`;
