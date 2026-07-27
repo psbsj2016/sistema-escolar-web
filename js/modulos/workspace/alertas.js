@@ -263,7 +263,7 @@ injetarCSS: () => {
                                     subtitulo: ehProfessor ? "Trabalho Entregue 📥" : "Novo Exercício 📝",
                                     mensagemCorpo: ehProfessor 
                                         ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` 
-                                        : `Há um novo exercício disponível para si: <strong>"${titulo}"</strong>. Boa sorte!`
+                                        : `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.!`
                                 }, 'tarefa');
                             }
                             
