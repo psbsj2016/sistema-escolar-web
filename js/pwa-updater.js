@@ -80,8 +80,8 @@ function mostrarAlertaAtualizacaoGlobal() {
     
     aviso.innerHTML = `
         <div style="flex: 1;">
-            <strong style="display: block; font-size: 18px; margin-bottom: 5px;">🚀 Atualização Disponível</strong>
-            <span style="font-size: 12px; color: #bdc3c7;">Uma nova versão melhorada do site está diponível. Para atualizar, basta clicar no botão.</span>
+            <strong style="display: block; font-size: 20px; margin-bottom: 5px;">🚀 Atualização Disponível</strong>
+            <span style="font-size: 12px; color: #bdc3c7;">Foram feitos alguns ajustes no site para que sua experiência aqui seja ainda melhor. Para atualizar, basta clicar no botão verde.</span>
         </div>
         <button id="btn-atualizar-global" style="background: #27ae60; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);">
             Atualizar Agora
