@@ -1295,7 +1295,7 @@ verFotoChat: () => {
         }
     },
 
-    enviarTarefa: async () => {
+   enviarTarefa: async () => {
         const eventoId = document.getElementById('ws-tarefa-id').value;
         const fileInput = document.getElementById('ws-tarefa-arquivo');
         const obs = document.getElementById('ws-tarefa-obs').value.trim();
@@ -1323,8 +1323,14 @@ verFotoChat: () => {
             const arquivoFinalUrl = uploadData.anexos[0].url;
             btn.innerText = "📝 Registrando a entrega...";
 
+            // 🚀 GATILHO CORRIGIDO: Busca os dados da tarefa em memória para enviar ao Professor corretamente
+            const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
+
             const payload = {
                 eventoId: eventoId,
+                eventoTitulo: evento ? (evento.titulo || evento.nome) : 'uma tarefa',
+                turmaNome: evento ? (evento.turmaNome || 'a sua turma') : 'a sua turma',
+                escolaId: Workspace.usuario.escolaId, // 🚀 Essencial para o Servidor encontrar os Professores!
                 alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
                 arquivoUrl: arquivoFinalUrl,
@@ -1399,11 +1405,20 @@ verFotoChat: () => {
             }
 
             const payload = {
-                tipo: 'Tarefa', titulo: titulo, turma: turmaId, turmaNome: turmaNome,
-                data: data, descricao: desc, anexoUrl: anexoUrl, autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                tipo: 'Tarefa', 
+                titulo: titulo, 
+                turma: turmaId, 
+                turmaNome: turmaNome,
+                data: data, 
+                descricao: desc, 
+                anexoUrl: anexoUrl, 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                escolaId: Workspace.usuario.escolaId // 🚀 GATILHO CORRIGIDO: Agora enviamos a Escola para o Servidor!
             };
 
-            const res = await Workspace.api('/eventos', 'POST', payload);
+            // 🚀 ROTA CORRIGIDA: Aponta para a nova rota artilhada (/workspace/eventos)
+            const res = await Workspace.api('/workspace/eventos', 'POST', payload);
+            
             if(res && !res.error) {
                 Workspace.mostrarAviso("Atividade publicada com sucesso nas agendas dos alunos!", "success");
                 document.getElementById('ws-nova-tarefa-titulo').value = '';

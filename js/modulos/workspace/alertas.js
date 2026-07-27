@@ -246,10 +246,15 @@ injetarCSS: () => {
                             
                             // 3. EXERCÍCIOS / TAREFAS
                             else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
+                                // 🚀 DISTINÇÃO INTELIGENTE: Verifica quem está a olhar para o ecrã
+                                const ehProfessor = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
+                                
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
-                                    subtitulo: "Novo Exercício",
-                                    mensagemCorpo: `Há um novo acesso no link: <strong>"${titulo}"</strong>. Boa aula!`
+                                    subtitulo: ehProfessor ? "Trabalho Entregue 📥" : "Novo Exercício 📝",
+                                    mensagemCorpo: ehProfessor 
+                                        ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` 
+                                        : `Há um novo exercício disponível para si: <strong>"${titulo}"</strong>. Boa sorte!`
                                 }, 'tarefa');
                             }
                             
