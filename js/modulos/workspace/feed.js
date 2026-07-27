@@ -387,7 +387,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>A organizar o feed... ⏳</strong></div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>Atualizando o feed... ⏳ Por favor, siga a instrução do texto em vermelho.</strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },

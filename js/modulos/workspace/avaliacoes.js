@@ -513,7 +513,7 @@ Workspace.Avaliacoes = {
         const examen = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id);
         if(!examen) return;
         
-        Workspace.mostrarAviso("A preparar ambiente seguro... ⏳", "info");
+        Workspace.mostrarAviso("Preparando um ambiente seguro... ⏳", "info");
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (res && res.success) {
@@ -615,7 +615,7 @@ Workspace.Avaliacoes = {
     
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
-            Workspace.mostrarAviso("A entregar avaliação... ⏳", "info"); const relatorio = Workspace.Avaliacoes.pararSensorFraude();
+            Workspace.mostrarAviso("Entregando avaliação... ⏳", "info"); const relatorio = Workspace.Avaliacoes.pararSensorFraude();
             try {
                 const res = await Workspace.api(`/workspace/avaliacoes/${Workspace.Avaliacoes.exameAtivo}/entregar`, 'POST', { respostas: Workspace.Avaliacoes.respostas, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: relatorio, entregaId: Workspace.Avaliacoes.tentativaAtivaId });
                 if(res && res.success) { 
@@ -637,7 +637,7 @@ Workspace.Avaliacoes = {
         const teste = Workspace.Avaliacoes.avaliacoesDisponiveis.find(a => a.id === id); 
         if(!teste) return;
         
-        Workspace.mostrarAviso("A preparar estúdio... ⏳", "info");
+        Workspace.mostrarAviso("Preparando estúdio... ⏳", "info");
         try {
             const res = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
             if (res && res.success) { 
@@ -876,7 +876,7 @@ Workspace.Avaliacoes = {
 
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
-        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando base de dados... ⏳</div>';
+        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel... ⏳</div>';
         try {
             // 🚀 DESTRUIDOR DE CACHE: Garante que as presenças atualizadas vêm limpas do servidor
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
@@ -1329,7 +1329,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             "Sim, Apagar Todos", 
             "#e74c3c", 
             async () => {
-                Workspace.mostrarAviso("A apagar ficheiros... ⏳", "info");
+                Workspace.mostrarAviso("Apagando sessões selecionadas... ⏳", "info");
                 try {
                     // Executa todas as deleções em paralelo para não bloquear o servidor!
                     const promessas = idsSelecionados.map(id => Workspace.api(`/workspace/avaliacoes/${id}`, 'DELETE'));
@@ -1886,7 +1886,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if (idsSelecionados.length === 0) return Workspace.mostrarAviso("Selecione pelo menos uma prova usando as caixas à esquerda.", "warning");
 
         Workspace.Avaliacoes.confirmarDialog("Apagar Múltiplas Provas", `Deseja apagar as ${idsSelecionados.length} provas selecionadas? A ação é irreversível.`, "Sim, Apagar Todas", "#e74c3c", async () => {
-            Workspace.mostrarAviso("A apagar provas... ⏳", "info");
+            Workspace.mostrarAviso("Apagando provas... ⏳", "info");
             try {
                 // Execução paralela (metralhadora de eliminação)
                 const promessas = idsSelecionados.map(id => Workspace.api(`/workspace/avaliacoes/entregas/${id}`, 'DELETE'));

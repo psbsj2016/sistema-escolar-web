@@ -104,7 +104,7 @@ Workspace.Sidebar = {
     // 📥 MOTOR DE DOWNLOAD SEGURO (Ignora bloqueios de nova aba do Cloudinary)
     // ============================================================================
     forcarDownload: async (url, nomeArquivo) => {
-        Workspace.mostrarAviso("A preparar a transferência segura... ⏳", "info", 2000);
+        Workspace.mostrarAviso("Preparando a transferência segura... ⏳", "info", 2000);
         try {
             // Vai buscar o ficheiro ao Cloudinary de forma invisível
             const resposta = await fetch(url);
@@ -1538,7 +1538,7 @@ verFotoChat: () => {
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
         const container = document.getElementById('ws-prof-tarefas-grid');
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Procurando exercícios criados ⏳... </div>';
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Atualizando lista de exercícios criados ⏳... </div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');

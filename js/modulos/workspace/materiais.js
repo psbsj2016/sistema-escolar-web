@@ -239,7 +239,7 @@ Workspace.Materiais = {
     apagarMaterial: (id) => {
         if (Workspace.Avaliacoes && Workspace.Avaliacoes.confirmarDialog) {
             Workspace.Avaliacoes.confirmarDialog("Apagar Material?", "Tem a certeza que deseja remover este material?", "Sim, Apagar", "#e74c3c", async () => {
-                Workspace.mostrarAviso("A apagar...", "info");
+                Workspace.mostrarAviso("Apagando...", "info");
                 try {
                     const res = await Workspace.api(`/workspace/materiais/${id}`, 'DELETE');
                     if (res && res.success) {

@@ -220,7 +220,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Central de Avaliações",
-                                    mensagemCorpo: `Atenção! A avaliação <strong>"${titulo}"</strong> foi liberada. Aceda à Central de Avaliações para não perder o prazo!`
+                                    mensagemCorpo: `Atenção! A avaliação <strong>"${titulo}"</strong> foi liberada. Acesse a Central de Avaliações para não perder o prazo!`
                                 }, 'avaliacao');
                             }
                             
@@ -249,7 +249,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Novo Exercício",
-                                    mensagemCorpo: `Há um novo exercício disponível para si: <strong>"${titulo}"</strong>. Boa sorte!`
+                                    mensagemCorpo: `Há um novo acesso no link: <strong>"${titulo}"</strong>. Boa aula!`
                                 }, 'tarefa');
                             }
                             
@@ -258,7 +258,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Estante Virtual",
-                                    mensagemCorpo: `Há um novo material na estante aguardando por si: <strong>"${titulo}"</strong>.`
+                                    mensagemCorpo: `Há um novo material na estante aguardando você: <strong>"${titulo}"</strong>.`
                                 }, 'material');
                             }
                             
