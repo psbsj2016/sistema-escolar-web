@@ -1103,7 +1103,7 @@ verFotoChat: () => {
     // ==========================================
     // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
     // ==========================================
-    carregarTarefas: async () => {
+   carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
         container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">Atualizando Painel de Exercícios ⏳... </div>';
@@ -1145,7 +1145,13 @@ verFotoChat: () => {
 
             let html = '';
             tarefas.forEach(t => {
-                const dataObj = new Date(t.data);
+                // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO
+                const dataLimpa = t.data ? t.data.split('T')[0] : '';
+                const partes = dataLimpa.split('-');
+                const dataFormatada = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
+                
+                // Forçamos o meio-dia (T12:00:00) para que o JS nunca recue para o dia anterior nos cálculos!
+                const dataObj = new Date(dataLimpa + 'T12:00:00');
                 const hoje = new Date();
                 hoje.setHours(0,0,0,0);
                 
@@ -1153,7 +1159,6 @@ verFotoChat: () => {
                 const corEstado = passou ? '#e74c3c' : '#27ae60';
                 const fundoEstado = passou ? '#fdf2f2' : '#eafaf1';
                 const textoEstado = passou ? 'Prazo Terminado' : 'No Prazo';
-                const dataFormatada = dataObj.toLocaleDateString('pt-BR');
 
                 html += `
                     <div style="background: white; border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02);" onmouseover="this.style.boxShadow='0 10px 25px rgba(0,0,0,0.1)'; this.style.transform='translateY(-3px)'" onmouseout="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)'">
@@ -1194,7 +1199,12 @@ verFotoChat: () => {
 
         document.getElementById('ws-tarefa-id').value = evento.id;
         document.getElementById('ws-tarefa-titulo').innerText = evento.titulo || evento.nome || evento.tipo;
-        const dataFormatada = new Date(evento.data).toLocaleDateString('pt-BR');
+        
+        // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO NO MODAL
+        const dataLimpa = evento.data ? evento.data.split('T')[0] : '';
+        const partes = dataLimpa.split('-');
+        const dataFormatada = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
+        
         document.getElementById('ws-tarefa-data').innerText = `📅 Prazo Limite: ${dataFormatada}`;
         
         let htmlAnexo = '';
@@ -1548,7 +1558,7 @@ verFotoChat: () => {
         }
     },
 
-    abrirPainelTarefasRecebidas: async () => {
+   abrirPainelTarefasRecebidas: async () => {
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
@@ -1569,7 +1579,11 @@ verFotoChat: () => {
 
             let html = '';
             tarefas.forEach(t => {
-                const dataF = new Date(t.data).toLocaleDateString('pt-BR');
+                // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO NO PAINEL DO PROFESSOR
+                const dataLimpa = t.data ? t.data.split('T')[0] : '';
+                const partes = dataLimpa.split('-');
+                const dataF = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
+                
                 html += `
                     <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                         <div style="background: #f8f9fa; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
