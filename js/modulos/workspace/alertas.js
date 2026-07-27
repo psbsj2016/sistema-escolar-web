@@ -232,10 +232,19 @@ injetarCSS: () => {
                                     mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme foi criado no seu Baú para não se esquecer!</i>`
                                 }, 'online');
 
-                                // 🚀 AUTOMATIZAÇÃO DO BAÚ: Cria o alarme silenciosamente
+                                // 🚀 AUTOMATIZAÇÃO DO BAÚ (Sincronizado com a data real do Portal)
                                 try {
-                                    const tempoLembrete = new Date();
-                                    tempoLembrete.setHours(tempoLembrete.getHours() + 24); // Define alarme para 24h por padrão (o aluno pode editar depois)
+                                    let tempoLembrete;
+                                    
+                                    // Se o servidor enviou a data exata da aula, usamos essa!
+                                    if (novaNoti.dataEvento) {
+                                        tempoLembrete = new Date(novaNoti.dataEvento);
+                                    } else {
+                                        // Fallback de segurança caso a data venha vazia
+                                        tempoLembrete = new Date();
+                                        tempoLembrete.setHours(tempoLembrete.getHours() + 24);
+                                    }
+
                                     await Workspace.api('/workspace/bau/alarmes', 'POST', {
                                         usuarioId: Workspace.usuario.id,
                                         mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
