@@ -3,24 +3,58 @@ window.App = window.App || {};
 const App = window.App;
 
 Object.assign(App, {
-    renderizarWorkspaceAdmin: async () => {
+    // =========================================================
+    // 🎓 1. HUB CENTRAL DO WORKSPACE (MENU DE 2 BOTÕES)
+    // =========================================================
+    renderizarWorkspaceAdmin: () => {
         App.setTitulo("Gestão do Workspace");
+        const div = document.getElementById('app-content');
+        
+        div.innerHTML = `
+            <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 25px; text-align: center;">Escolha a área que deseja aceder para administrar o ambiente virtual dos alunos.</p>
+            
+            <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content: center;">
+                <!-- BOTÃO 1: ACESSOS -->
+                <div class="card" style="flex:1; min-width:280px; max-width: 450px; text-align:center; cursor:pointer; transition:all 0.3s ease; border:2px solid transparent; padding: 40px 20px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" 
+                     onmouseover="this.style.borderColor='#3498db'; this.style.transform='translateY(-5px)';" 
+                     onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';" 
+                     onclick="App.renderizarWorkspaceAcessos()">
+                    <div style="font-size:55px; margin-bottom:15px;">🔐</div>
+                    <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size: 20px;">Gerir Acessos</h3>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Criar ou revogar logins e senhas para a entrada dos alunos no Workspace.</p>
+                </div>
+
+                <!-- BOTÃO 2: MONITORAMENTO -->
+                <div class="card" style="flex:1; min-width:280px; max-width: 450px; text-align:center; cursor:pointer; transition:all 0.3s ease; border:2px solid transparent; padding: 40px 20px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" 
+                     onmouseover="this.style.borderColor='#27ae60'; this.style.transform='translateY(-5px)';" 
+                     onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';" 
+                     onclick="App.renderizarWorkspaceMonitoramento()">
+                    <div style="font-size:55px; margin-bottom:15px;">📡</div>
+                    <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size: 20px;">Monitoramento Online</h3>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Acompanhe em tempo real quem está a navegar no Workspace e os últimos acessos.</p>
+                </div>
+            </div>
+        `;
+    },
+
+    // =========================================================
+    // 🔐 2. TELA DE GESTÃO DE ACESSOS (SISTEMA ORIGINAL)
+    // =========================================================
+    renderizarWorkspaceAcessos: async () => {
+        App.setTitulo("Acessos ao Portal");
         const div = document.getElementById('app-content');
         div.innerHTML = '<p style="text-align:center; padding:40px; color:#666;">A carregar lista de alunos e acessos... ⏳</p>';
 
         try {
-            // Vai buscar todos os alunos e utilizadores
             const alunosRes = await App.api('/alunos');
             const usuariosRes = await App.api('/usuarios');
             
-            // 🛡️ Proteção extra: Garante que são listas mesmo se não houver cadastros
             const alunos = Array.isArray(alunosRes) ? alunosRes : [];
             const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
 
             const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
             const usuariosAlunos = usuarios.filter(u => u.tipo === 'Aluno' || u.alunoRefId);
 
-            // Guarda em memória para a pesquisa rápida funcionar
             App.workspaceCache = { alunos: alunosAtivos, usuarios: usuariosAlunos };
 
             const barraBusca = `
@@ -32,6 +66,9 @@ Object.assign(App, {
                 </div>`;
 
             div.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <button class="btn-cancel" style="padding: 8px 15px; font-weight: bold;" onclick="App.renderizarWorkspaceAdmin()">⬅️ Voltar ao Hub</button>
+                </div>
                 <div style="text-align:center; margin-bottom:20px;">
                     <div class="card" style="padding:20px;">
                         <h3 style="margin:0 0 10px 0; color:#2c3e50;">Acessos ao Portal do Aluno</h3>
@@ -84,7 +121,6 @@ Object.assign(App, {
                 ? `<span style="background:#eafaf1; color:#27ae60; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #2ecc71;">✅ ${App.escapeHTML(conta.login)}</span>` 
                 : `<span style="background:#fdf2f2; color:#e74c3c; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #e74c3c;">❌ Sem Acesso</span>`;
             
-            // Corrige problemas com aspas nos nomes (Ex: D'Artagnan)
             const nomeSeguro = App.escapeHTML(aluno.nome).replace(/'/g, "\\'");
 
             const btnHtml = conta
@@ -161,7 +197,7 @@ Object.assign(App, {
             } else {
                 App.showToast("✅ Acesso criado com sucesso!", "success");
                 document.getElementById('modal-acesso-ws').style.display = 'none';
-                App.renderizarWorkspaceAdmin(); 
+                App.renderizarWorkspaceAcessos(); // 🚀 CORRIGIDO: Volta para a lista de acessos e não para o Hub
             }
         } catch (e) { App.showToast("Erro de ligação.", "error"); } 
         finally { btn.innerHTML = originalText; btn.disabled = false; }
@@ -176,10 +212,126 @@ Object.assign(App, {
                 try {
                     await App.api(`/usuarios/${usuarioId}`, 'DELETE');
                     App.showToast("Acesso revogado.", "success");
-                    App.renderizarWorkspaceAdmin();
+                    App.renderizarWorkspaceAcessos(); // 🚀 CORRIGIDO: Volta para a lista de acessos e não para o Hub
                 } catch(e) { App.showToast("Erro ao revogar.", "error"); } 
                 finally { document.body.style.cursor = 'default'; modal.style.opacity = '0'; setTimeout(() => modal.style.display='none', 300); }
             }
         );
+    },
+
+    // =========================================================
+    // 📡 3. TELA DE MONITORAMENTO EM TEMPO REAL
+    // =========================================================
+    radarMonitoramentoInterval: null,
+
+    renderizarWorkspaceMonitoramento: async () => {
+        App.setTitulo("Monitoramento Online");
+        const div = document.getElementById('app-content');
+        
+        // Injeta CSS para a bolinha a piscar (se não existir)
+        if (!document.getElementById('ws-pulse-css')) {
+            const style = document.createElement('style');
+            style.id = 'ws-pulse-css';
+            style.innerHTML = `@keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(39, 174, 96, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); } }`;
+            document.head.appendChild(style);
+        }
+
+        div.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <button class="btn-cancel" style="padding: 8px 15px; font-weight: bold;" onclick="App.renderizarWorkspaceAdmin()">⬅️ Voltar ao Hub</button>
+            </div>
+            <div class="card" style="padding: 0; overflow: hidden; border: 1px solid #eee;">
+                <div style="background: #f8f9fa; padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0; color:#2c3e50; font-size: 18px;">📡 Atividade dos Alunos no Workspace</h3>
+                    <div style="font-size: 12px; color: #7f8c8d; display: flex; align-items: center; gap: 6px; font-weight:bold;">
+                        <div style="width:8px; height:8px; background:#27ae60; border-radius:50%; animation: pulseDot 2s infinite;"></div>
+                        Radar Ativado
+                    </div>
+                </div>
+                <div id="lista-monitoramento" style="padding: 0;">
+                    <p style="text-align:center; padding: 40px; color:#999; font-size: 14px;">A estabelecer conexão com os servidores... ⏳</p>
+                </div>
+            </div>
+        `;
+
+        // Busca dados pela 1ª vez
+        await App.atualizarDadosRadar();
+
+        // Limpa lixo de memória
+        if (App.radarMonitoramentoInterval) clearInterval(App.radarMonitoramentoInterval);
+
+        // Dispara o Radar a cada 10 segundos
+        App.radarMonitoramentoInterval = setInterval(() => {
+            const telaAtual = document.getElementById('titulo-pagina')?.innerText;
+            // Se o Professor sair da tela, desliga o radar para poupar internet
+            if (telaAtual !== "Monitoramento Online") {
+                clearInterval(App.radarMonitoramentoInterval);
+                return;
+            }
+            App.atualizarDadosRadar(true); 
+        }, 10000);
+    },
+
+    atualizarDadosRadar: async (silencioso = false) => {
+        try {
+            // Nota para o Backend: Rota a ser criada na nossa próxima etapa!
+            const dados = await App.api('/workspace/monitoramento/status', 'GET', null, silencioso);
+            
+            const container = document.getElementById('lista-monitoramento');
+            if (!container) return;
+
+            if (!dados || dados.error || dados.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno registado ou histórico de navegação encontrado.</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; text-align:left;">';
+            html += '<thead><tr style="background: #fff; border-bottom: 2px solid #eee; color:#64748b; font-size: 13px; text-transform: uppercase;">';
+            html += '<th style="padding:15px 20px;">Identificação do Aluno</th>';
+            html += '<th style="padding:15px 20px; text-align:center;">Status Atual</th>';
+            html += '<th style="padding:15px 20px; text-align:right;">Última Interação Registada</th>';
+            html += '</tr></thead><tbody>';
+
+            // Os online aparecem no topo
+            dados.sort((a, b) => (b.isOnline === a.isOnline) ? 0 : b.isOnline ? 1 : -1);
+
+            dados.forEach(aluno => {
+                const isOnline = aluno.isOnline; 
+                const corBola = isOnline ? '#27ae60' : '#e74c3c';
+                const txtStatus = isOnline ? 'Online Agora' : 'Offline';
+                const fundoStatus = isOnline ? '#eafaf1' : '#fdedec';
+                const animacao = isOnline ? 'animation: pulseDot 2s infinite;' : '';
+                
+                const dataAcesso = aluno.ultimoAcesso 
+                    ? new Date(aluno.ultimoAcesso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
+                    : 'Nunca acessou';
+
+                html += `
+                    <tr style="border-bottom:1px solid #f0f2f5; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:15px 20px; font-weight:bold; color:#1e293b; font-size: 14px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width:35px; height:35px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">👤</div>
+                                ${App.escapeHTML(aluno.nome || aluno.login)}
+                            </div>
+                        </td>
+                        <td style="padding:15px 20px; text-align:center;">
+                            <div style="background:${fundoStatus}; color:${corBola}; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:bold; display:inline-flex; align-items:center; gap:6px; border: 1px solid ${corBola}40;">
+                                <div style="width:8px; height:8px; background:${corBola}; border-radius:50%; ${animacao}"></div>
+                                ${txtStatus}
+                            </div>
+                        </td>
+                        <td style="padding:15px 20px; text-align:right; color:#64748b; font-size:13px; font-weight: 500;">
+                            ${dataAcesso}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+
+        } catch (e) {
+            // Falha invisível (para não perturbar a UX)
+        }
     }
 });
