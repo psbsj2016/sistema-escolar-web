@@ -76,9 +76,82 @@ Workspace.Sidebar = {
 
     init: async () => {
         console.log("📊 Motor do Menu Lateral com Chat Avançado iniciado.");
+        Workspace.Sidebar.injetarCSSModais(); // 🚀 A NOVA BLINDAGEM VISUAL AQUI!
         Workspace.Sidebar.initExtraChatTriggers();
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
+    },
+
+    injetarCSSModais: () => {
+        if (document.getElementById('ws-modais-css')) return;
+        const style = document.createElement('style');
+        style.id = 'ws-modais-css';
+        style.innerHTML = `
+            /* 🚀 BLINDAGEM DO MODAL DE DETALHES DO EXERCÍCIO */
+            #ws-tarefa-modal {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: rgba(0,0,0,0.85) !important; /* Fundo escuro confinado */
+                z-index: 999999 !important; /* Fica acima da barra superior do WorkSpace */
+                display: none; /* Mantém oculto por defeito */
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px !important;
+                box-sizing: border-box !important;
+                backdrop-filter: blur(4px) !important;
+            }
+            
+            /* 🚀 O Cartão Branco Interno (Tamanho Fixo e Rolagem Suave) */
+            #ws-tarefa-modal > div {
+                position: relative !important;
+                background: #ffffff !important;
+                width: 100% !important;
+                max-width: 650px !important;
+                max-height: 90vh !important; /* Limite crítico: 90% da tela */
+                overflow-y: auto !important; /* Rolagem interna inteligente */
+                border-radius: 16px !important;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important;
+                padding: 30px !important;
+                box-sizing: border-box !important;
+                margin: 0 auto !important;
+            }
+
+            /* 🚀 O Botão de Fechar (X) Protegido e Absoluto */
+            #ws-tarefa-modal button[onclick*="none"] {
+                position: absolute !important;
+                top: 15px !important;
+                right: 15px !important;
+                background: #f0f2f5 !important;
+                color: #555 !important;
+                border: none !important;
+                border-radius: 50% !important;
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 16px !important;
+                font-weight: bold !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 1000000 !important;
+                transition: 0.2s !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            }
+            
+            #ws-tarefa-modal button[onclick*="none"]:hover {
+                background: #e74c3c !important;
+                color: white !important;
+            }
+            
+            /* Estilização suave da barra de rolagem do modal */
+            #ws-tarefa-modal > div::-webkit-scrollbar { width: 6px; }
+            #ws-tarefa-modal > div::-webkit-scrollbar-track { background: transparent; }
+            #ws-tarefa-modal > div::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        `;
+        document.head.appendChild(style);
     },
 
     escapeHTML: (str) => {
