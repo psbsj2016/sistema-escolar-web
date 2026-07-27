@@ -552,15 +552,15 @@
                     <div>
                         <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">✍️</div>
                         <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Escrita</h4>
-                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Responda a dissertações e testes online. Digite textos, escolha alternativas corretas e selecione multiplas opções de resposta.</p>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Responda com atençãos às questões de multipla escolha e elaboração de textos.</p>
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px;" onclick="Workspace.navegarPara('avaliacoes_escrita')">Acessar Provas</button>
                 </div>
                 <div style="border: 1px solid #e1e4e8; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
                     <div>
-                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">🎤</div>
+                        <div style="font-size: 35px; margin-bottom: 10px; line-height: 1;">🎙️</div>
                         <h4 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px; font-weight: 600;">Avaliação Oral (Áudios)</h4>
-                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Ambiente de fala e conversação. Grave e submeta arquivos de áudio completos para análise de pronúncia e avaliação do tutor.</p>
+                        <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f8c8d; line-height: 1.5;">Grave áudio(s) e submeta-o(s) ao professor para análise de sua habilidade de fala.</p>
                     </div>
                     <button class="ws-btn" ontouchstart="" style="width: 100%; font-size: 13px; padding: 10px; background: #2c3e50;" onclick="Workspace.navegarPara('avaliacoes_oral')">Entrar no Estúdio</button>
                 </div>
@@ -615,13 +615,13 @@
                 <div class="ws-mat-action-row">
                     <!-- 🚀 4. PERMISSÃO PARA ARQUIVOS DO OFFICE (Mantida) -->
                     <input type="file" id="ws-mat-ficheiro" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mp3,.wav" style="flex: 1; width: 100%; padding: 10px; background: #f1f5f9; border: 2px dashed #94a3b8; border-radius: 10px; box-sizing: border-box; font-size: 13px; color: #475569; cursor: pointer;">
-                    <button class="ws-btn" id="ws-btn-enviar-mat" style="background: #2563eb; color: white; padding: 14px 25px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';" onclick="Workspace.Materiais.enviarMaterial()">Upload para a Nuvem ☁️</button>
+                    <button class="ws-btn" id="ws-btn-enviar-mat" style="background: #2563eb; color: white; padding: 14px 25px; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';" onclick="Workspace.Materiais.enviarMaterial()">Salvar e Enviar</button>
                 </div>
             </div>
             
             <!-- 🚀 5. BARRA DE PESQUISA DO PROFESSOR (Mantida e Modernizada) -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h3 style="color: #1e293b; margin: 0; font-size: 16px;">📋 Materiais Partilhados</h3>
+                <h3 style="color: #1e293b; margin: 0; font-size: 16px;">📋 Materiais Compartilhados</h3>
                 <input type="text" id="ws-busca-mat-prof" placeholder="🔍 Pesquisar material..." style="flex: 1; min-width: 200px; max-width: 300px; padding: 12px 15px; border-radius: 50px; border: 1px solid #e2e8f0; outline: none; box-sizing: border-box; font-family: inherit; font-size: 13px; background: white;" onkeyup="Workspace.Materiais.renderizarProf(this.value)">
             </div>
             
@@ -658,10 +658,10 @@
     <section id="ws-avaliacoes-oral-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('avaliacoes')" ontouchstart=""><span>↩</span> Voltar ao Menu Anterior</button>
         <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🎤 Estúdio de Testes Orais</span></h3>
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🔊 Estúdio de Avaliação Oral</span></h3>
             <div style="margin-top: 15px;">
                 <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
-                    <button id="tab-oral-pendentes" class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOral('pendentes')" ontouchstart="">Para Gravar</button>
+                    <button id="tab-oral-pendentes" class="ws-btn" style="background: #2c3e50; color: white; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOral('pendentes')" ontouchstart="">Aguardando Gravação</button>
                     <button id="tab-oral-concluidas" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 6px 15px; font-size: 13px; border-radius: 20px;" onclick="Workspace.Avaliacoes.mudarAbaOral('concluidas')" ontouchstart="">Enviados</button>
                 </div>
                 <div id="ws-lista-provas-orais"></div>
@@ -673,7 +673,7 @@
     <section id="ws-avaliacoes-online-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
         <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.navegarPara('sala_aula')" ontouchstart=""><span>↩</span> Voltar ao Hub da Sala de Aula</button>
         <div class="ws-card">
-            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>💻 Salas de Acessos</span></h3>
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>💻 Sala de Acessos</span></h3>
             <div style="margin-top: 15px;">
                 <!-- 🚀 AS NOVAS ABAS DE PRESENÇA -->
                 <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
@@ -694,7 +694,7 @@
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelNovaTarefa()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">📤</div>
                     <h4 style="margin: 0 0 5px 0; color: #333;">Enviar Nova Atividade</h4>
-                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Crie e envie atividades para as turmas.</p>
+                    <p style="margin: 0; font-size: 12px; color: #7f8c8d;">Crie e envie exercícios para as turmas.</p>
                 </div>
                 <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'; this.style.background='white';" onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';" onclick="Workspace.Sidebar.abrirPainelTarefasRecebidas()" ontouchstart="">
                     <div style="font-size: 35px; margin-bottom: 10px;">📥</div>
@@ -707,7 +707,7 @@
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Sidebar.voltarMenuTarefasProf()" ontouchstart=""><span>↩</span> Voltar ao Menu</button>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div><label style="font-size:12px; font-weight:bold; color:#555;">Título da Atividade *</label><input type="text" id="ws-nova-tarefa-titulo" class="ws-post-input" style="padding:12px; margin-bottom:0;" placeholder="Ex: Redação sobre História"></div>
-                    <div><label style="font-size:12px; font-weight:bold; color:#555;">Turma de Destino *</label><select id="ws-nova-tarefa-turma" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;"><option value="">A carregar turmas...</option></select></div>
+                    <div><label style="font-size:12px; font-weight:bold; color:#555;">Turma de Destino *</label><select id="ws-nova-tarefa-turma" class="ws-post-input" style="padding:12px; margin-bottom:0; cursor:pointer;"><option value="">Carregando turmas...</option></select></div>
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:15px;">
                     <div><label style="font-size:12px; font-weight:bold; color:#555;">Prazo Limite de Entrega *</label><input type="date" id="ws-nova-tarefa-data" class="ws-post-input" style="padding:12px; margin-bottom:0;"></div>
@@ -788,7 +788,7 @@
             
             <div id="ws-prof-gerir-lista-container" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>↩</span> Voltar</button>
-                <div id="ws-prof-gerir-lista"><div style="text-align: center; padding: 40px; color: #999;">A carregar lista... ⏳</div></div>
+                <div id="ws-prof-gerir-lista"><div style="text-align: center; padding: 40px; color: #999;">Carregando lista... ⏳</div></div>
             </div>
 
             <div id="ws-prof-nova-escrita" style="display:none; margin-top: 15px;">
@@ -839,7 +839,7 @@
 
             <div id="ws-prof-recebidas" style="display:none; margin-top: 15px;">
                 <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px;" onclick="Workspace.Avaliacoes.voltarMenuProf()" ontouchstart=""><span>↩</span> Voltar ao Menu</button>
-                <div id="ws-prof-recebidas-lista"><div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div></div>
+                <div id="ws-prof-recebidas-lista"><div style="text-align: center; padding: 40px; color: #999;">Carregando provas recebidas... ⏳</div></div>
             </div>
             
         </div>
@@ -883,7 +883,7 @@
                         <!-- Lista de Lembretes Abaixo do Calendário -->
                         <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
                             <h5 style="margin: 0 0 10px 0; color: #555; font-size: 13px;">Próximos Lembretes</h5>
-                            <div id="ws-bau-calendario-visual" style="font-size: 12px; color: #7f8c8d;">A carregar nuvem... ⏳</div>
+                            <div id="ws-bau-calendario-visual" style="font-size: 12px; color: #7f8c8d;">Carregando... ⏳</div>
                         </div>
                     </div>
 
@@ -1053,7 +1053,7 @@
         <div class="ws-card ws-tarefa-modal-card" style="width: 95%; max-width: 800px; max-height: 90vh; padding: 0; overflow: hidden; display: flex; flex-direction: column;">
             
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; font-size: 16px;">📋 Detalhes da Atividade</h3>
+                <h3 style="margin: 0; font-size: 16px;">📋 Detalhes do Exercício</h3>
                 <button onclick="document.getElementById('ws-tarefa-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
             </div>
 
@@ -1122,7 +1122,7 @@
      <!-- TELA DE MODO FOCO DO EXAME ESCRITO (INVISÍVEL POR PADRÃO) -->
 <div id="ws-exame-foco-tela" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #f0f2f5; z-index: 999999; overflow-y: auto;">
     <div style="background: white; border-bottom: 2px solid #eee; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;">
-        <h2 id="ws-exame-titulo" style="margin: 0; color: #2c3e50; font-size: 18px;">A Carregar Exame...</h2>
+        <h2 id="ws-exame-titulo" style="margin: 0; color: #2c3e50; font-size: 18px;">Carregando Exame...</h2>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div style="font-size: 18px; font-weight: bold; color: #e74c3c; background: #fdf2f2; padding: 8px 15px; border-radius: 20px;">
                 ⏱️ <span id="ws-exame-cronometro">00:00:00</span>
@@ -1154,12 +1154,12 @@
 
         <div id="ws-area-gravacao">
             <div id="ws-mic-ring" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; transition: 0.3s;">
-                <div style="font-size: 40px;">🎤</div>
+                <div style="font-size: 40px;">🎙️</div>
             </div>
             <div id="ws-audio-cronometro" style="font-size: 28px; font-weight: bold; margin-bottom: 20px; font-family: monospace;">00:00</div>
             
-            <button id="ws-btn-iniciar-gravacao" class="ws-btn" style="background: #e74c3c; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.iniciarGravacao()">🔴 Iniciar Gravação</button>
-            <button id="ws-btn-parar-gravacao" class="ws-btn" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; display: none;" onclick="Workspace.Avaliacoes.pararGravacao()">⏹️ Parar e Rever</button>
+            <button id="ws-btn-iniciar-gravacao" class="ws-btn" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.iniciarGravacao()">▶ Iniciar Gravação</button>
+            <button id="ws-btn-parar-gravacao" class="ws-btn" style="background: #e74c3c; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; display: none;" onclick="Workspace.Avaliacoes.pararGravacao()">⏹️ Parar Gravação</button>
         </div>
 
         <div id="ws-area-player" style="display: none;">

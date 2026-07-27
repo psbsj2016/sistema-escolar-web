@@ -393,7 +393,7 @@ Workspace.Avaliacoes = {
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Q. | 🔄 ${textTentativa}</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">⏱️ ${p.tempo ? p.tempo + ' min' : 'Livre'} | 📝 ${p.questoes ? p.questoes.length : 0} Questões | 🔄 ${textTentativa}</span>
                         </div>
                         ${Workspace.Avaliacoes.abaEscrita === 'pendentes' ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarExame('${p.id}')">Iniciar Exame</button>` : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ver Respostas</button>`}
                     </div>`}).join('');
@@ -428,7 +428,7 @@ Workspace.Avaliacoes = {
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${p.titulo}</h4>
-                            <span style="font-size: 11px; color: #7f8c8d;">🎤 Conversação | 🔄 ${textTentativa}</span>
+                            <span style="font-size: 11px; color: #7f8c8d;">🔊 Áudio | 🔄 ${textTentativa}</span>
                         </div>
                         ${Workspace.Avaliacoes.abaOral === 'pendentes' ? `<button class="ws-btn" style="background: #3498db; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.iniciarTesteOral('${p.id}')">Ir ao Estúdio</button>` : `<button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verMinhaCorrecao('${ultimaEntrega?.id}', '${p.id}')">Ouvir Gravação</button>`}
                     </div>`}).join('');
@@ -450,7 +450,7 @@ Workspace.Avaliacoes = {
         const tOnPend = document.getElementById('tab-online-abertas');
         const tOnHist = document.getElementById('tab-online-historico');
         if (tOnPend && tOnHist) {
-            tOnPend.innerText = `Links Liberados (${onPendentes.length})`;
+            tOnPend.innerText = `Links Ativos (${onPendentes.length})`;
             tOnPend.style.background = Workspace.Avaliacoes.abaOnline === 'abertas' ? '#2c3e50' : 'transparent';
             tOnPend.style.color = Workspace.Avaliacoes.abaOnline === 'abertas' ? 'white' : '#7f8c8d';
             tOnHist.innerText = `Histórico (${onHistorico.length})`;
@@ -611,7 +611,7 @@ Workspace.Avaliacoes = {
         }, 1000);
     },
     
-    sairDoExame: () => { Workspace.Avaliacoes.confirmarDialog("Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, Desistir", "#e74c3c", () => { document.body.style.overflow = ''; const tela = document.getElementById('ws-exame-foco-tela'); if(tela) tela.style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.pararSensorFraude(); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); }); },
+    sairDoExame: () => { Workspace.Avaliacoes.confirmarDialog("Abandonar Prova?", "⚠️ A sua tentativa já foi registada no servidor. Se desistir ou sair da página, perderá esta chance de avaliação! Deseja mesmo sair?", "Sim, desistir", "#e74c3c", () => { document.body.style.overflow = ''; const tela = document.getElementById('ws-exame-foco-tela'); if(tela) tela.style.display = 'none'; if(Workspace.Avaliacoes.cronometroInterval) clearInterval(Workspace.Avaliacoes.cronometroInterval); Workspace.Avaliacoes.pararSensorFraude(); Workspace.Avaliacoes.exameAtivo = null; Workspace.Avaliacoes.carregarLobbies(); }); },
     
     finalizarExame: (forcar = false) => {
         const processarEntrega = async () => {
@@ -876,7 +876,7 @@ Workspace.Avaliacoes = {
 
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
-        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar base de dados... ⏳</div>';
+        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando base de dados... ⏳</div>';
         try {
             // 🚀 DESTRUIDOR DE CACHE: Garante que as presenças atualizadas vêm limpas do servidor
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
@@ -1482,7 +1482,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     <button onclick="document.getElementById('${modalId}').remove()" style="background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                 </div>
                 <div id="ws-banco-lista" style="padding: 20px; overflow-y: auto; flex: 1; background: #fff;">
-                    <div style="text-align: center; padding: 40px; color: #999;">A carregar o seu cofre de perguntas... ⏳</div>
+                    <div style="text-align: center; padding: 40px; color: #999;">Carregando o seu cofre de perguntas... ⏳</div>
                 </div>
             </div>
         `;
@@ -1670,7 +1670,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         document.getElementById('ws-prof-recebidas').style.display = 'block';
         
         const container = document.getElementById('ws-prof-recebidas-lista');
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">A carregar provas recebidas da API... ⏳</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando provas recebidas... ⏳</div>';
 
         try {
             // Usamos destruidores de cache para os dados virem sempre frescos

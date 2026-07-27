@@ -20,7 +20,7 @@ Workspace.Materiais = {
 
     abrirPainel: async () => {
         Workspace.navegarPara('materiais');
-        Workspace.mostrarAviso("A carregar estante de materiais... ⏳", "info", 1500);
+        Workspace.mostrarAviso("Carregando estante de materiais... ⏳", "info", 1500);
         
         await Workspace.Materiais.carregarMateriais();
         
@@ -79,7 +79,7 @@ Workspace.Materiais = {
         const btn = document.getElementById('ws-btn-enviar-mat');
         const txtOriginal = btn.innerText;
         
-        btn.innerText = "A Enviar para a Nuvem... ⏳";
+        btn.innerText = "Despachando para a turma... ⏳";
         btn.disabled = true;
 
         try {
@@ -158,7 +158,7 @@ Workspace.Materiais = {
                     <div>
                         <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${Workspace.escapeHTML(mat.titulo)}</h4>
                         <div style="font-size: 11px; color: #7f8c8d;">
-                            📅 Publicado a: ${dataFormatada} | 👥 ${Workspace.escapeHTML(mat.destinoNome)}
+                            📅 Publicado em: ${dataFormatada} | 👥 ${Workspace.escapeHTML(mat.destinoNome)}
                         </div>
                     </div>
                 </div>

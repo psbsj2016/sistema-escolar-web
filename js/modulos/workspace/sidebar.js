@@ -135,7 +135,7 @@ Workspace.Sidebar = {
     carregarTurmas: async () => {
         const container = document.getElementById('ws-lista-turmas-menu');
         if (!container) return;
-        container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">Atualizando a lista... ⏳</div>';
+        container.innerHTML = '<div style="padding:10px; color:#999; font-size:12px; text-align:center;">Carregando...⏳ Aguarde!</div>';
 
         try {
             let turmas = await Workspace.api('/turmas', 'GET');
@@ -461,7 +461,7 @@ verFotoChat: () => {
     abrirChat: (turmaId, turmaNome) => {
         Workspace.Sidebar.turmaIdAberta = turmaId;
         
-        document.getElementById('ws-chat-titulo').innerText = 'A carregar grupo...';
+        document.getElementById('ws-chat-titulo').innerText = 'Carregando grupo...';
         document.getElementById('ws-chat-avatar-container').innerHTML = '👥';
         document.getElementById('ws-chat-avatar-container').style.background = 'rgba(255,255,255,0.2)';
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
@@ -1106,7 +1106,7 @@ verFotoChat: () => {
     carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
-        container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">Atualizando Painel de Atividades ⏳... </div>';
+        container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">Atualizando Painel de Exercícios ⏳... </div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');
@@ -1184,7 +1184,7 @@ verFotoChat: () => {
             });
             container.innerHTML = html;
         } catch (e) {
-            container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color:#e74c3c; font-size:14px; text-align:center;">Erro ao carregar atividades.</div>';
+            container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color:#e74c3c; font-size:14px; text-align:center;">Erro ao carregar exercícios.</div>';
         }
     },
 
@@ -1358,7 +1358,7 @@ verFotoChat: () => {
         document.getElementById('ws-prof-nova-tarefa').style.display = 'block';
 
         const sel = document.getElementById('ws-nova-tarefa-turma');
-        sel.innerHTML = '<option value="">A carregar turmas...</option>';
+        sel.innerHTML = '<option value="">Carregando turmas...</option>';
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
             sel.innerHTML = '<option value="global">🌍 Todas as Turmas (Público Geral)</option>';
@@ -1538,7 +1538,7 @@ verFotoChat: () => {
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
         const container = document.getElementById('ws-prof-tarefas-grid');
-        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Procurando atividades criadas ⏳... </div>';
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#999;">Procurando exercícios criados ⏳... </div>';
 
         try {
             const eventos = await Workspace.api('/eventos', 'GET');

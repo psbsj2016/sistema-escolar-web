@@ -541,7 +541,7 @@ Workspace.Feed = {
                     <!-- 🚀 O VIDRO TÁTIL: Só entra em cena nos telemóveis para ler os dedos -->
                     ${isMobile ? '<div id="ws-touch-glass" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; background:transparent;"></div>' : ''}
                     
-                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; font-weight:bold;">A carregar documento... ⏳</div>' : ''}
+                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; font-weight:bold;">Carregando documento... ⏳</div>' : ''}
                     
                     <!-- Iframe sem roubar toques no telemóvel -->
                     <iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; position:relative; z-index:2; border-radius:12px; background:white; ${isMobile ? 'pointer-events:none;' : ''}"></iframe>
