@@ -197,7 +197,7 @@ injetarCSS: () => {
         });
     },
 
-   buscarNotificacoes: async () => {
+  buscarNotificacoes: async () => {
         if (!Workspace.usuario || !Workspace.usuario.nome) return;
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
@@ -210,50 +210,90 @@ injetarCSS: () => {
 
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
                     
-                    // 🚀 A MAGIA DO TOAST: Passa por cada novidade e mostra o balão animado com os dados reais!
                     novas.forEach((novaNoti, index) => {
-                        setTimeout(() => {
-                            const avatarHtml = window.Workspace.renderizarAvatar(novaNoti.remetenteNome, 44);
-                            const layoutDivertido = `
-                                <div style="display: flex; align-items: center; gap: 12px; margin-left: -5px; width: 100%;">
-                                    <div style="flex-shrink: 0; border: 2px solid white; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.2); background: white; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px;">
-                                        ${avatarHtml}
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; line-height: 1.3;">
-                                        <span style="font-size: 14px; font-weight: bold; color: white;">${novaNoti.remetenteNome}</span>
-                                        <span style="font-size: 12.5px; color: rgba(255,255,255,0.95);">${novaNoti.mensagem}</span>
-                                    </div>
-                                </div>
-                            `;
+                        setTimeout(async () => { // Usamos async para o alarme do Baú
                             
-                            // Dispara a cápsula flutuante
-                            if (window.Toast && Toast.show) {
-                                Toast.show(layoutDivertido, 'pingpong', 6000, () => {
-                                    // Se o utilizador clicar na notificação flutuante, vai direto ao destino!
-                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
-                                });
-                            }
-                        }, index * 800); // Intervalo de 800ms para que os alertas não se atropelem se chegarem vários
-                    });
+                            const titulo = novaNoti.mensagem.split('"')[1] || 'Atividade'; // Extrai o nome da atividade que vem entre aspas
 
-                    const bell = document.getElementById('ws-bell');
-                    if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
+                            // 1. AVALIAÇÕES (ESCRITA E ORAL)
+                            if (novaNoti.origem === 'avaliacao_escrita' || novaNoti.origem === 'avaliacao_oral') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Central de Avaliações",
+                                    mensagemCorpo: `Atenção! A avaliação <strong>"${titulo}"</strong> foi liberada. Aceda à Central de Avaliações para não perder o prazo!`
+                                }, 'avaliacao');
+                            }
+                            
+                            // 2. AULAS ONLINE / SESSÕES AO VIVO
+                            else if (novaNoti.origem === 'online') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Sala de Aula Online",
+                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme foi criado no seu Baú para não se esquecer!</i>`
+                                }, 'online');
+
+                                // 🚀 AUTOMATIZAÇÃO DO BAÚ: Cria o alarme silenciosamente
+                                try {
+                                    const tempoLembrete = new Date();
+                                    tempoLembrete.setHours(tempoLembrete.getHours() + 24); // Define alarme para 24h por padrão (o aluno pode editar depois)
+                                    await Workspace.api('/workspace/bau/alarmes', 'POST', {
+                                        usuarioId: Workspace.usuario.id,
+                                        mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
+                                        tempoDisparo: tempoLembrete.toISOString()
+                                    });
+                                } catch (e) { console.error("Erro ao criar alarme automático", e); }
+                            }
+                            
+                            // 3. EXERCÍCIOS / TAREFAS
+                            else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Novo Exercício",
+                                    mensagemCorpo: `Há um novo exercício disponível para si: <strong>"${titulo}"</strong>. Boa sorte!`
+                                }, 'tarefa');
+                            }
+                            
+                            // 4. MATERIAIS
+                            else if (novaNoti.origem === 'material') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Estante Virtual",
+                                    mensagemCorpo: `Há um novo material na estante aguardando por si: <strong>"${titulo}"</strong>.`
+                                }, 'material');
+                            }
+                            
+                            // 5. POSTS OU CHAT (Avisos de Ping-Pong normais)
+                            else {
+                                if (window.Toast && Toast.show) Toast.show(`🔔 ${novaNoti.remetenteNome} ${novaNoti.mensagem}`, 'info');
+                                const bell = document.getElementById('ws-bell');
+                                if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
+                            }
+
+                        }, index * 1000); // 1 segundo de intervalo entre cada cartão
+                    });
                 }
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
-                Workspace.Alertas.atualizarInterface();
+                // Não atualizamos o sininho AQUI! O sininho só atualiza quando o aluno clica em OK e a foto aterra nele!
+                if (novas.length === 0) Workspace.Alertas.atualizarInterface();
             }
         } catch (e) {}
     },
 
-   atualizarInterface: () => {
+  atualizarInterface: () => {
         const badge = document.getElementById('ws-noti-count');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
         if (badge) {
             badge.innerText = qtd > 99 ? '99+' : qtd;
-            badge.style.display = qtd > 0 ? 'flex' : 'none';
-            if (qtd > 0) badge.style.animation = 'pulse 1s infinite'; else badge.style.animation = 'none';
+            // 🚀 CORREÇÃO DO BUG DO ZERO: Força a remoção do display pelo JavaScript!
+            if (qtd > 0) {
+                badge.style.setProperty('display', 'flex', 'important');
+                badge.style.animation = 'pulse 1s infinite';
+            } else {
+                badge.style.setProperty('display', 'none', 'important');
+                badge.style.animation = 'none';
+            }
         }
 
         if (dropdown) {
@@ -262,8 +302,9 @@ injetarCSS: () => {
                     <div style="display:flex; justify-content:flex-end; padding-bottom:10px; border-bottom:1px solid #eee;">
                         <button onclick="document.getElementById('ws-noti-dropdown').style.display='none'" style="background:#f0f2f5; border:none; color:#555; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" title="Fechar Painel">✖</button>
                     </div>
-                    <div style="text-align:center; color:#94a3b8; padding:50px 0;"><div style="font-size:45px; margin-bottom:10px;">🔔</div><div style="font-weight:600; font-size:16px;">Parabéns! 👏</div><div style="font-size:13px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
+                    <div style="text-align:center; color:#94a3b8; padding:50px 0;"><div style="font-size:45px; margin-bottom:10px;">📭</div><div style="font-weight:600; font-size:16px;">Tudo limpo!</div><div style="font-size:13px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
+                // ... (O resto da renderização da lista mantém-se inalterado)
                 dropdown.innerHTML = `
                     <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:15px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
                         <span style="font-size: 16px;">🔔 Notificações (${qtd})</span>
@@ -273,7 +314,6 @@ injetarCSS: () => {
                         </div>
                     </div>
                     
-                    <!-- 🚀 MAGIA AQUI: Limite de altura (75vh), barra de rolagem suave (auto) e proteção mobile (contain) -->
                     <div id="ws-lista-notificacoes" class="ws-scroll-suave" style="display:flex; flex-direction:column; gap:2px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
