@@ -80,6 +80,33 @@ Workspace.Sidebar = {
         Workspace.Sidebar.initExtraChatTriggers();
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
+        
+        // 🚀 O NOVO GATILHO: Inicia o radar de presença do aluno
+        Workspace.Sidebar.iniciarHeartbeatOnline();
+    },
+
+    // ============================================================================
+    // 📡 MOTOR DE PRESENÇA (HEARTBEAT EM TEMPO REAL)
+    // ============================================================================
+    iniciarHeartbeatOnline: () => {
+        const enviarPing = async () => {
+            try {
+                if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
+                    await fetch('/api/workspace/monitoramento/ping', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ usuarioId: Workspace.usuario.id })
+                    });
+                }
+            } catch (e) {
+                // Silencioso para não afetar a experiência do aluno
+            }
+        };
+
+        // Envia o primeiro ping logo ao entrar e depois repete a cada 30 segundos
+        enviarPing();
+        setInterval(enviarPing, 30000);
     },
 
     injetarCSSModais: () => {
