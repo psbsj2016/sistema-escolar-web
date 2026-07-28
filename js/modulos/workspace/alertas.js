@@ -276,6 +276,21 @@ injetarCSS: () => {
                                 });
                             }
                             
+                                              // 2.5 EDIÇÃO DE AULAS ONLINE (Apenas informa, NÃO duplica o alarme!)
+                            else if (novaNoti.origem === 'online_edit') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Sessão Online Atualizada ⚠️",
+                                    mensagemCorpo: `O(a) professor(a) <strong>alterou a data, hora ou link</strong> da sessão: "${titulo}".<br>🗓️ <i>O lembrete no seu Baú já foi atualizado automaticamente!</i>`
+                                }, 'online', async () => {
+                                    // 🚀 MÁGICA: Não cria um alarme novo. Apenas manda o calendário redesenhar-se
+                                    // para mostrar a nova data caso o aluno esteja com o Baú aberto!
+                                    if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
+                                        Workspace.Bau.carregarDadosDaNuvem();
+                                    }
+                                });
+                            }
+
                             // 3. EXERCÍCIOS / TAREFAS
                             else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
                                 // 🚀 DISTINÇÃO INTELIGENTE: Verifica quem está a olhar para o ecrã
@@ -471,7 +486,7 @@ injetarCSS: () => {
         else if (origem === 'avaliacao_oral') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_oral');
         }
-        else if (origem === 'online') {
+        else if (origem === 'online' || origem === 'online_edit') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
         }
         else if (origem === 'bau') {
