@@ -861,15 +861,21 @@ Object.assign(Workspace, {
                 "Apagar Lembrete?",
                 "Tem a certeza de que deseja apagar definitivamente este lembrete do seu calendário?",
                 async () => {
+                    // 1. Apaga do ecrã na mesma hora (Optimistic UI)
                     Workspace.Bau.alarmesAtivos = Workspace.Bau.alarmesAtivos.filter(a => a.id !== id);
                     Workspace.Bau.atualizarCalendarioVisual(); 
-                    Workspace.Bau.atualizarSininhoMemorias(); 
+                    
+                    // 🚀 A CORREÇÃO: Removemos a chamada à função fantasma que quebrava o JavaScript!
+                    
+                    // 2. Avisa a Nuvem (Base de Dados) para apagar definitivamente
                     try { 
                         await Workspace.api(`/workspace/bau/alarmes/${id}`, 'DELETE'); 
                         if (window.Workspace && Workspace.mostrarAviso) {
                             Workspace.mostrarAviso("Lembrete removido com sucesso!", "success");
                         }
-                    } catch(e) {}
+                    } catch(e) {
+                        console.error("Erro ao tentar apagar o alarme na nuvem", e);
+                    }
                 }
             );
         },
