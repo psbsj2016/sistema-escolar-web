@@ -253,17 +253,58 @@ Object.assign(Workspace, {
         if(!login || !pass) return Workspace.mostrarAviso("Preencha utilizador e senha", "warning");
 
         const btn = document.querySelector('#ws-login-screen button');
-        const txt = btn.innerText; btn.innerText = "Logando... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "A entrar... ⏳"; btn.disabled = true;
 
         try {
             const res = await Workspace.api('/auth/login', 'POST', { login, senha: pass, deviceId: 'ws_web', sistema: 'workspace' });
             if(res && res.success) {
+                // Guarda os dados na memória imediatamente
+                Workspace.usuario = res.usuario; 
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(res.usuario));
-                Workspace.init(); 
+
+                // ====================================================================
+                // 🚀 VERIFICAÇÃO DO "TAPETE VERMELHO" (Experiência de Primeiro Acesso)
+                // ====================================================================
+                const userId = res.usuario.id;
+                const jaAcessou = localStorage.getItem('ws_primeiro_acesso_concluido_' + userId);
+
+                if (!jaAcessou) {
+                    // 1. Marca na memória que já recebeu as boas-vindas
+                    localStorage.setItem('ws_primeiro_acesso_concluido_' + userId, 'true');
+
+                    // 2. Esconde o login frio e rígido
+                    document.getElementById('ws-login-screen').style.display = 'none';
+
+                    // 3. Prepara a magia: Coloca o primeiro nome do utilizador no ecrã
+                    const telaBoasVindas = document.getElementById('ws-boas-vindas-screen');
+                    const nomeTexto = document.getElementById('ws-boas-vindas-nome');
+                    const primeiroNome = (res.usuario.nome || res.usuario.login).split(' ')[0];
+                    
+                    nomeTexto.innerText = `Bem-vindo(a), ${primeiroNome}!`;
+                    
+                    // 4. Inicia a animação cinematográfica
+                    telaBoasVindas.style.display = 'flex';
+
+                    // 5. Após 4 segundos de brilho, dissipa-se suavemente e arranca o sistema!
+                    setTimeout(() => {
+                        telaBoasVindas.style.opacity = '0';
+                        telaBoasVindas.style.transition = 'opacity 0.6s ease';
+                        setTimeout(() => {
+                            telaBoasVindas.style.display = 'none';
+                            Workspace.init(); 
+                        }, 600);
+                    }, 4000);
+
+                } else {
+                    // Se for um aluno regular, entra rápido e sem distrações!
+                    Workspace.init(); 
+                }
             } else {
                 Workspace.mostrarAviso(res.error || "Login ou senha incorretos", "error");
             }
-        } catch(e) { Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); } 
+        } catch(e) { 
+            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
+        } 
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
