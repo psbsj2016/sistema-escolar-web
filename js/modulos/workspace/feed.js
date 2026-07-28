@@ -291,27 +291,41 @@ Workspace.Feed = {
         let texto = Workspace.Feed.limparTexto(textoOriginal).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
         const embeds = [];
         
-        texto = texto.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g, (match, id) => {
+        // 1. 🚀 YOUTUBE (NORMAIS + SHORTS)
+        // Adicionada a palavra 'shorts/' à regra para capturar os vídeos curtos do YouTube
+        texto = texto.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
             return ''; 
         });
 
-        texto = texto.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)/g, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><blockquote class="tiktok-embed" cite="${match}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
+        // 2. 🚀 TIKTOK
+        texto = texto.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
+            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
             return '';
         });
 
-        texto = texto.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/g, (match, id) => {
+        // 3. 🚀 INSTAGRAM (POSTS + REELS) - Mágica Anti-Lixo!
+        // O `(?:\S+)?` no final "engole" parâmetros como `?utm_source=ig_web_copy_link`, para que não fiquem sujos na tela.
+        texto = texto.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.instagram.com/p/${id}/embed" width="400" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></iframe></div>`);
             return '';
         });
 
-        texto = texto.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)/g, (match, type, id) => {
-            embeds.push(`<div style="margin-top: 15px; width: 100%;"><iframe src="https://open.spotify.com/embed/$${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
+        // 4. 🚀 NOVO: FACEBOOK VIDEOS
+        texto = texto.replace(/https?:\/\/(?:www\.)?facebook\.com\/(?:watch\/\?v=|video\.php\?v=|.*\/videos\/)(\d+)(?:\S+)?/ig, (match, id) => {
+            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(match.split('?')[0])}&show_text=false" width="500" height="280" style="border:none; overflow:hidden; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe></div>`);
             return '';
         });
 
+        // 5. 🚀 SPOTIFY
+        texto = texto.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
+            embeds.push(`<div style="margin-top: 15px; width: 100%;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
+            return '';
+        });
+
+        // 6. Links Normais (Apenas converte o que sobrar)
         texto = texto.replace(/(https?:\/\/[^\s<]+)/g, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
+        
         if (embeds.length > 0) texto += embeds.join('');
         return texto;
     },
