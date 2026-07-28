@@ -126,6 +126,7 @@ Object.assign(Workspace, {
         Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
 
         if (Workspace.Feed) await Workspace.Feed.init();
+        if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
@@ -253,7 +254,7 @@ Object.assign(Workspace, {
         if(!login || !pass) return Workspace.mostrarAviso("Preencha utilizador e senha", "warning");
 
         const btn = document.querySelector('#ws-login-screen button');
-        const txt = btn.innerText; btn.innerText = "A entrar... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "Entrando... ⏳"; btn.disabled = true;
 
         try {
             const res = await Workspace.api('/auth/login', 'POST', { login, senha: pass, deviceId: 'ws_web', sistema: 'workspace' });
@@ -1027,7 +1028,150 @@ Object.assign(Workspace, {
             }
             Workspace.Bau.alarmeGiganteAtual = null;
         }
+    },
+ 
+             // ============================================================================
+    // 🚀 MOTOR DE COMANDO UNIVERSAL (SPOTLIGHT / CTRL + K)
+    // ============================================================================
+    ComandoMágico: {
+        aberto: false,
+        indiceFocado: 0,
+        atalhos: [
+            { id: 'feed', titulo: 'Página Inicial (Feed)', icone: '🏠', tela: 'feed' },
+            { id: 'perfil', titulo: 'Meu Perfil', icone: '🙍', tela: 'perfil' },
+            { id: 'sala_aula', titulo: 'Hub da Sala de Aula', icone: '🏫', tela: 'sala_aula' },
+            { id: 'tarefas', titulo: 'Exercícios e Tarefas', icone: '🏋️', tela: 'tarefas' },
+            { id: 'avaliacoes', titulo: 'Central de Avaliações', icone: '📑', tela: 'avaliacoes' },
+            { id: 'materiais', titulo: 'Estante de Materiais', icone: '📚', tela: 'materiais' },
+            { id: 'bau', titulo: 'Baú das Memórias (Lembretes)', icone: '🧰', tela: 'bau' },
+            { id: 'configuracoes', titulo: 'Configurações e Senha', icone: '⚙️', tela: 'configuracoes' }
+        ],
+
+        init: () => {
+            // Escuta o teclado do utilizador de forma invisível
+            document.addEventListener('keydown', (e) => {
+                // Se pressionar Ctrl + K (ou Cmd + K no Mac)
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault(); 
+                    Workspace.ComandoMágico.abrir();
+                }
+                // Se pressionar ESC e estiver aberto
+                if (e.key === 'Escape' && Workspace.ComandoMágico.aberto) {
+                    Workspace.ComandoMágico.fechar();
+                }
+            });
+
+            // Configura a caixa de pesquisa
+            const input = document.getElementById('ws-spotlight-input');
+            if (input) {
+                input.addEventListener('input', (e) => Workspace.ComandoMágico.filtrar(e.target.value));
+                input.addEventListener('keydown', Workspace.ComandoMágico.navegarTeclado);
+            }
+
+            // Fecha ao clicar fora da caixa
+            const overlay = document.getElementById('ws-spotlight-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) Workspace.ComandoMágico.fechar();
+                });
+            }
+        },
+
+        abrir: () => {
+            const overlay = document.getElementById('ws-spotlight-overlay');
+            const box = document.getElementById('ws-spotlight-box');
+            const input = document.getElementById('ws-spotlight-input');
+            
+            if (!overlay || !box || !input) return;
+
+            Workspace.ComandoMágico.aberto = true;
+            input.value = '';
+            Workspace.ComandoMágico.filtrar(''); // Mostra tudo inicialmente
+            
+            overlay.style.display = 'flex';
+            // Magia CSS para animação suave
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+                box.style.transform = 'scale(1)';
+            });
+            
+            setTimeout(() => input.focus(), 100);
+        },
+
+        fechar: () => {
+            const overlay = document.getElementById('ws-spotlight-overlay');
+            const box = document.getElementById('ws-spotlight-box');
+            if (!overlay || !box) return;
+
+            Workspace.ComandoMágico.aberto = false;
+            overlay.style.opacity = '0';
+            box.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => { overlay.style.display = 'none'; }, 200);
+        },
+
+        filtrar: (termo) => {
+            const container = document.getElementById('ws-spotlight-resultados');
+            if (!container) return;
+
+            termo = termo.toLowerCase().trim();
+            const resultados = Workspace.ComandoMágico.atalhos.filter(a => a.titulo.toLowerCase().includes(termo));
+            
+            Workspace.ComandoMágico.indiceFocado = 0; // Volta o foco para o primeiro
+
+            if (resultados.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #94a3b8; font-size: 13px;">Nenhum destino encontrado.</div>';
+                return;
+            }
+
+            container.innerHTML = resultados.map((item, index) => `
+                <div class="ws-spotlight-item ${index === 0 ? 'active' : ''}" data-tela="${item.tela}" onclick="Workspace.ComandoMágico.viajarPara('${item.tela}')" onmouseover="Workspace.ComandoMágico.focarManual(${index})">
+                    <div class="icone">${item.icone}</div>
+                    <div>${item.titulo}</div>
+                </div>
+            `).join('');
+        },
+
+        navegarTeclado: (e) => {
+            const itens = document.querySelectorAll('.ws-spotlight-item');
+            if (itens.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                Workspace.ComandoMágico.indiceFocado = (Workspace.ComandoMágico.indiceFocado + 1) % itens.length;
+                Workspace.ComandoMágico.atualizarFocoVisial(itens);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                Workspace.ComandoMágico.indiceFocado = (Workspace.ComandoMágico.indiceFocado - 1 + itens.length) % itens.length;
+                Workspace.ComandoMágico.atualizarFocoVisial(itens);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const telaDestino = itens[Workspace.ComandoMágico.indiceFocado].getAttribute('data-tela');
+                Workspace.ComandoMágico.viajarPara(telaDestino);
+            }
+        },
+
+        focarManual: (index) => {
+            Workspace.ComandoMágico.indiceFocado = index;
+            const itens = document.querySelectorAll('.ws-spotlight-item');
+            Workspace.ComandoMágico.atualizarFocoVisial(itens);
+        },
+
+        atualizarFocoVisial: (itens) => {
+            itens.forEach(i => i.classList.remove('active'));
+            if (itens[Workspace.ComandoMágico.indiceFocado]) {
+                const ativo = itens[Workspace.ComandoMágico.indiceFocado];
+                ativo.classList.add('active');
+                ativo.scrollIntoView({ block: 'nearest' });
+            }
+        },
+
+        viajarPara: (tela) => {
+            Workspace.ComandoMágico.fechar();
+            Workspace.navegarPara(tela);
+        }
     }
+
 });
 
 document.addEventListener('DOMContentLoaded', Workspace.init);
