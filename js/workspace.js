@@ -191,13 +191,41 @@ Object.assign(Workspace, {
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         if (tela === 'avaliacoes') tela = Workspace.usuario.tipo === 'Aluno' ? 'avaliacoes_aluno' : 'avaliacoes_prof';
 
-        // 🚀 O CAMALEÃO: Modifica o painel do professor conforme o clique no Hub
+        // 🚀 O CAMALEÃO
         if (tela === 'encontros_prof') {
             tela = 'avaliacoes_prof';
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('encontros');
         } else if (tela === 'avaliacoes_prof') {
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('avaliacoes');
         }
+
+        // ====================================================================
+        // 🚀 A MAGIA DO PERFIL: Sempre que abrir o perfil, preenche os dados primeiro!
+        // ====================================================================
+        if (tela === 'perfil' && Workspace.usuario) {
+            const nome = Workspace.usuario.nome || Workspace.usuario.login;
+            const elNome = document.getElementById('ws-perfil-modal-nome');
+            const elLogin = document.getElementById('ws-perfil-modal-login');
+            
+            if (elNome) elNome.innerText = nome;
+            if (elLogin) elLogin.innerText = `@${Workspace.usuario.login}`;
+
+            const imgEl = document.getElementById('ws-perfil-img');
+            const letrasEl = document.getElementById('ws-perfil-letras');
+
+            if (Workspace.usuario.avatar) {
+                if (imgEl) { imgEl.src = Workspace.usuario.avatar; imgEl.style.display = 'block'; }
+                if (letrasEl) letrasEl.style.display = 'none';
+            } else {
+                if (imgEl) imgEl.style.display = 'none';
+                if (letrasEl) {
+                    letrasEl.style.display = 'flex';
+                    letrasEl.innerText = nome.charAt(0).toUpperCase();
+                    letrasEl.style.background = Workspace.gerarCorPorNome(nome);
+                }
+            }
+        }
+        // ====================================================================
 
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
@@ -269,23 +297,7 @@ Object.assign(Workspace, {
     },
 
     abrirPaginaPerfil: () => {
-        const nome = Workspace.usuario.nome || Workspace.usuario.login;
-        document.getElementById('ws-perfil-modal-nome').innerText = nome;
-        document.getElementById('ws-perfil-modal-login').innerText = `@${Workspace.usuario.login}`;
-
-        const imgEl = document.getElementById('ws-perfil-img');
-        const letrasEl = document.getElementById('ws-perfil-letras');
-
-        if (Workspace.usuario.avatar) {
-            imgEl.src = Workspace.usuario.avatar;
-            imgEl.style.display = 'block';
-            letrasEl.style.display = 'none';
-        } else {
-            imgEl.style.display = 'none';
-            letrasEl.style.display = 'flex';
-            letrasEl.innerText = nome.charAt(0).toUpperCase();
-            letrasEl.style.background = Workspace.gerarCorPorNome(nome);
-        }
+        // Como o 'navegarPara' agora é super inteligente, só precisamos dar-lhe a ordem de viagem!
         Workspace.navegarPara('perfil');
     },
 
