@@ -104,7 +104,20 @@ Object.assign(Workspace, {
         document.getElementById('ws-login-screen').style.display = 'none';
         document.getElementById('ws-navbar').style.display = 'flex';
         
-        Workspace.navegarPara('feed', true);
+        // ====================================================================
+        // 🚀 O SEGREDO DO REFRESH INTELIGENTE: Memória de Navegação
+        // ====================================================================
+        let telaDestino = 'feed'; // O destino padrão de segurança
+        
+        // Verifica se existe alguma "certeza" (hash) na barra de endereços (Ex: #tarefas-aluno)
+        if (window.location.hash) {
+            // Tira o '#' e troca o traço '-' por sublinhado '_' para o sistema entender
+            telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
+        }
+        
+        // Navega para a tela exata onde o utilizador estava!
+        Workspace.navegarPara(telaDestino, true);
+        // ====================================================================
 
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) boxCriarPost.style.display = 'block';
@@ -129,8 +142,15 @@ Object.assign(Workspace, {
         });
 
         window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.tela) Workspace.navegarPara(e.state.tela, false); 
-            else Workspace.navegarPara('feed', false);
+            // Também blindamos o botão "Voltar" do navegador para respeitar a Hash!
+            if (e.state && e.state.tela) {
+                Workspace.navegarPara(e.state.tela, false); 
+            } else if (window.location.hash) {
+                const telaHash = window.location.hash.replace('#', '').replace(/-/g, '_');
+                Workspace.navegarPara(telaHash, false);
+            } else {
+                Workspace.navegarPara('feed', false);
+            }
         });
     },
 
