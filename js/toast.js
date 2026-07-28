@@ -133,7 +133,7 @@ window.Toast = {
 
         const btn = toast.querySelector('.toast-btn');
         btn.onclick = async () => {
-            btn.innerText = "A guardar... ⏳";
+            btn.innerText = "Agendando... ⏳";
             
             // 🚀 A MÁGICA: Se houver uma ação enviada pelo Alertas.js, executa-a AGORA!
             if (onConfirmAction) {

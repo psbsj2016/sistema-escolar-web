@@ -43,6 +43,13 @@ Workspace.Alertas = {
                 }
             }
 
+            // 🚀 A NOVA MAGIA: Atualiza o Baú automaticamente se o professor alterar uma data!
+            if (data.type === 'BAU_UPDATE') {
+                if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
+                    Workspace.Bau.carregarDadosDaNuvem();
+                }
+            }
+
             // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
