@@ -242,34 +242,40 @@ injetarCSS: () => {
                                     try {
                                         let tempoLembrete;
                                         
-                                        // Usa a data exata blindada do Servidor
-                                        if (novaNoti.dataEvento) {
-                                            tempoLembrete = new Date(novaNoti.dataEvento);
+                                        // 🚀 O SEGREDO DO FUSO HORÁRIO (FRONTEND): Desmontamos a data à mão!
+                                        if (novaNoti.dataEvento && novaNoti.dataEvento.includes('T')) {
+                                            const partes = novaNoti.dataEvento.split('T');
+                                            const dataPartes = partes[0].split('-');
+                                            const horaPartes = partes[1].split(':');
+                                            
+                                            tempoLembrete = new Date(
+                                                parseInt(dataPartes[0], 10),      // Ano
+                                                parseInt(dataPartes[1], 10) - 1,  // Mês (Janeiro começa no 0)
+                                                parseInt(dataPartes[2], 10),      // Dia
+                                                parseInt(horaPartes[0], 10),      // 🚀 A HORA EXATA DO PROFESSOR!
+                                                parseInt(horaPartes[1], 10)       // O Minuto Exato
+                                            );
                                         } else {
                                             tempoLembrete = new Date();
                                             tempoLembrete.setHours(tempoLembrete.getHours() + 24);
                                         }
 
-                                        // 🚀 O GRANDE SEGREDO DO BAÚ: Ele espera a data em Milissegundos (número) e não em texto!
                                         const tempoDisparoMs = tempoLembrete.getTime();
 
                                         const res = await Workspace.api('/workspace/bau/alarmes', 'POST', {
                                             usuarioId: Workspace.usuario.id,
                                             mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
                                             tempoDisparo: tempoDisparoMs
-                                        });
+                                        }); // 🚀 <-- ERA AQUI QUE FALTAVA O FECHO '});' !
                                         
                                         // 🚀 UX EXTRA: Atualiza visualmente na mesma hora sem recarregar a página!
                                         if (res && res.success && window.Workspace && Workspace.Bau) {
-                                            // Injeta o novo alarme diretamente na memória viva do Baú
                                             Workspace.Bau.alarmesAtivos.push({
                                                 id: res.id,
                                                 mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
                                                 tempoDisparo: tempoDisparoMs,
                                                 disparado: false
                                             });
-                                            
-                                            // Manda o calendário redesenhar-se magicamente no ecrã!
                                             Workspace.Bau.atualizarCalendarioVisual();
                                         }
                                     } catch (e) { console.error("Erro ao criar alarme automático", e); }
