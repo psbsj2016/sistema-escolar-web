@@ -229,28 +229,32 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sala de Aula Online",
-                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme foi criado no seu Baú para não se esquecer!</i>`
-                                }, 'online');
+                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado no seu Baú ao confirmar!</i>`
+                                }, 'online', async () => {
+                                    // 🚀 A MÁGICA ACONTECE AQUI! (Só após o aluno clicar em "Ciente")
+                                    try {
+                                        let tempoLembrete;
+                                        
+                                        // Usa a data exata blindada do Servidor
+                                        if (novaNoti.dataEvento) {
+                                            tempoLembrete = new Date(novaNoti.dataEvento);
+                                        } else {
+                                            tempoLembrete = new Date();
+                                            tempoLembrete.setHours(tempoLembrete.getHours() + 24);
+                                        }
 
-                                // 🚀 AUTOMATIZAÇÃO DO BAÚ (Sincronizado com a data real do Portal)
-                                try {
-                                    let tempoLembrete;
-                                    
-                                    // Se o servidor enviou a data exata da aula, usamos essa!
-                                    if (novaNoti.dataEvento) {
-                                        tempoLembrete = new Date(novaNoti.dataEvento);
-                                    } else {
-                                        // Fallback de segurança caso a data venha vazia
-                                        tempoLembrete = new Date();
-                                        tempoLembrete.setHours(tempoLembrete.getHours() + 24);
-                                    }
-
-                                    await Workspace.api('/workspace/bau/alarmes', 'POST', {
-                                        usuarioId: Workspace.usuario.id,
-                                        mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
-                                        tempoDisparo: tempoLembrete.toISOString()
-                                    });
-                                } catch (e) { console.error("Erro ao criar alarme automático", e); }
+                                        await Workspace.api('/workspace/bau/alarmes', 'POST', {
+                                            usuarioId: Workspace.usuario.id,
+                                            mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
+                                            tempoDisparo: tempoLembrete.toISOString()
+                                        });
+                                        
+                                        // 🚀 UX EXTRA: Se a tela do Baú estiver aberta, a tabela de alarmes atualiza na hora, como magia!
+                                        if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarAlarmes) {
+                                            Workspace.Bau.carregarAlarmes();
+                                        }
+                                    } catch (e) { console.error("Erro ao criar alarme automático", e); }
+                                });
                             }
                             
                             // 3. EXERCÍCIOS / TAREFAS

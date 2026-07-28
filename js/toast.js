@@ -105,7 +105,8 @@ window.Toast = {
     },
 
     // 🚀 O MOTOR DE CARTÕES INTERATIVOS (Aulas, Avaliações, Exercícios)
-    showInterativo: (dados, tipoTema) => {
+    // Agora aceita uma "Ação" mágica que ocorre APÓS o clique no botão!
+    showInterativo: (dados, tipoTema, onConfirmAction = null) => {
         const container = document.getElementById('ws-toast-container');
         if (!container) Toast.init();
 
@@ -131,8 +132,14 @@ window.Toast = {
         `;
 
         const btn = toast.querySelector('.toast-btn');
-        btn.onclick = () => {
-            btn.innerText = "A guardar...";
+        btn.onclick = async () => {
+            btn.innerText = "A guardar... ⏳";
+            
+            // 🚀 A MÁGICA: Se houver uma ação enviada pelo Alertas.js, executa-a AGORA!
+            if (onConfirmAction) {
+                try { await onConfirmAction(); } catch(e) { console.error(e); }
+            }
+
             Toast.voarParaSininho(toast, () => {
                 if (window.Workspace && Workspace.Alertas) Workspace.Alertas.atualizarInterface();
             });
