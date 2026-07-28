@@ -243,15 +243,27 @@ injetarCSS: () => {
                                             tempoLembrete.setHours(tempoLembrete.getHours() + 24);
                                         }
 
-                                        await Workspace.api('/workspace/bau/alarmes', 'POST', {
+                                        // 🚀 O GRANDE SEGREDO DO BAÚ: Ele espera a data em Milissegundos (número) e não em texto!
+                                        const tempoDisparoMs = tempoLembrete.getTime();
+
+                                        const res = await Workspace.api('/workspace/bau/alarmes', 'POST', {
                                             usuarioId: Workspace.usuario.id,
                                             mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
-                                            tempoDisparo: tempoLembrete.toISOString()
+                                            tempoDisparo: tempoDisparoMs
                                         });
                                         
-                                        // 🚀 UX EXTRA: Se a tela do Baú estiver aberta, a tabela de alarmes atualiza na hora, como magia!
-                                        if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarAlarmes) {
-                                            Workspace.Bau.carregarAlarmes();
+                                        // 🚀 UX EXTRA: Atualiza visualmente na mesma hora sem recarregar a página!
+                                        if (res && res.success && window.Workspace && Workspace.Bau) {
+                                            // Injeta o novo alarme diretamente na memória viva do Baú
+                                            Workspace.Bau.alarmesAtivos.push({
+                                                id: res.id,
+                                                mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
+                                                tempoDisparo: tempoDisparoMs,
+                                                disparado: false
+                                            });
+                                            
+                                            // Manda o calendário redesenhar-se magicamente no ecrã!
+                                            Workspace.Bau.atualizarCalendarioVisual();
                                         }
                                     } catch (e) { console.error("Erro ao criar alarme automático", e); }
                                 });
