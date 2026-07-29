@@ -505,14 +505,15 @@ Workspace.Feed = {
     },
 
 // 📖 VISUALIZADOR DE DOCUMENTOS PRO (ALTA RESOLUÇÃO + MOTOR DE PINÇA E ARRASTO)
+    // 📖 VISUALIZADOR DE DOCUMENTOS PRO (100% Responsivo e Blindado para Telemóvel)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
         const overlay = document.createElement('div');
         overlay.id = id;
-        // Z-Index alto e proteção visual
-        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; z-index:2147483647; opacity:0; transition: opacity 0.3s; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+        // Usa height: 100dvh para respeitar exatamente a altura real da tela do telemóvel
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:2147483647; opacity:0; transition: opacity 0.3s; display:flex; flex-direction:column; background:rgba(0,0,0,0.92); backdrop-filter:blur(5px);";
         
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
         const ehPDF = absoluteUrl.toLowerCase().endsWith('.pdf');
@@ -524,73 +525,68 @@ Workspace.Feed = {
         
         const nomeSeguro = (Workspace.Feed && Workspace.Feed.limparTexto) ? Workspace.Feed.limparTexto(nome) : nome;
 
-        // 🚀 Comandos dos Botões: Agora alteram Width/Height para manter a resolução Perfeita!
         const cmdZoomOut = "let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 100) - 25; if(z < 100) z = 100; w.style.width = z + '%'; w.style.height = z + '%'; w.dataset.zoom = z;";
         const cmdZoomIn = "let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 100) + 25; if(z > 400) z = 400; w.style.width = z + '%'; w.style.height = z + '%'; w.dataset.zoom = z;";
 
         overlay.innerHTML = `
-            <!-- FUNDO ESCURO (Fecha se clicar) -->
-            <div onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); cursor:pointer;"></div>
-
-            <!-- CABEÇALHO COM AVISO INTELIGENTE -->
-            <div style="position:absolute; top:0; left:0; width:100%; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:10; background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); pointer-events:none;">
-                <div style="display: flex; flex-direction: column; max-width: 60%; pointer-events:auto;">
-                    <span style="color:white; font-weight:bold; font-size:16px; text-shadow:1px 1px 3px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📄 ${nomeSeguro}</span>
-                    <span style="color:#f1c40f; font-size:11.5px; text-shadow:1px 1px 2px rgba(0,0,0,0.8); margin-top: 4px;">⚠️ Se der erro de tamanho, use o botão 📥 para baixar.</span>
+            <!-- CABEÇALHO SEGURO E FLEXÍVEL (Nunca corta botões) -->
+            <div style="width: 100%; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; flex-shrink: 0; z-index: 10;">
+                <div style="display: flex; flex-direction: column; max-width: 55%; overflow: hidden;">
+                    <span style="color:white; font-weight:bold; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📄 ${nomeSeguro}</span>
+                    <span style="color:#f1c40f; font-size:10px; margin-top: 2px;">⚠️ Se der erro, use o botão 📥.</span>
                 </div>
                 
-                <div style="display:flex; gap:15px; align-items:center; pointer-events:auto; background:rgba(0,0,0,0.6); padding:8px 20px; border-radius:30px;">
-                    <button onclick="${cmdZoomOut}" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'">🔍-</button>
+                <div style="display:flex; gap:10px; align-items:center; background:rgba(255,255,255,0.1); padding:6px 12px; border-radius:20px;">
+                    <button onclick="${cmdZoomOut}" style="background:transparent; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold;">🔍-</button>
                     <span style="color:rgba(255,255,255,0.3);">|</span>
-                    <button onclick="${cmdZoomIn}" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'">🔍+</button>
+                    <button onclick="${cmdZoomIn}" style="background:transparent; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold;">🔍+</button>
                     <span style="color:rgba(255,255,255,0.3);">|</span>
-                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:20px;" title="Fazer Download">📥</a>
-                    <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="background:#e74c3c; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; width:32px; height:32px; border-radius:50%; margin-left:10px; display:flex; align-items:center; justify-content:center;">✕</button>
+                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:18px;" title="Fazer Download">📥</a>
+                    <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="background:#e74c3c; border:none; color:white; font-size:16px; cursor:pointer; font-weight:bold; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;" title="Fechar">✕</button>
                 </div>
             </div>
 
-            <!-- ÁREA DE VISUALIZAÇÃO -->
-            <div id="ws-doc-scroll-container" style="position:relative; z-index:5; width:95vw; max-width:1200px; height:85vh; margin-top:60px; overflow:auto; border-radius:12px; background:transparent;">
-                
-                <!-- O Wrapper que muda de Tamanho -->
-                <div id="ws-iframe-wrapper" data-zoom="100" style="width:100%; height:100%; background:white; position:relative; border-radius:12px; transition: width 0.15s ease-out, height 0.15s ease-out;">
-                    
-                    <!-- 🚀 O VIDRO TÁTIL: Só entra em cena nos telemóveis para ler os dedos -->
+            <!-- ÁREA DE VISUALIZAÇÃO ADAPTADA AO ESPAÇO RESTANTE -->
+            <div id="ws-doc-scroll-container" style="flex: 1; width: 100%; overflow: auto; position: relative; display: flex; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;">
+                <div id="ws-iframe-wrapper" data-zoom="100" style="width:100%; height:100%; background:white; position:relative; border-radius:8px; overflow:hidden; transition: width 0.15s ease-out, height 0.15s ease-out;">
                     ${isMobile ? '<div id="ws-touch-glass" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; background:transparent;"></div>' : ''}
-                    
-                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:14px; font-weight:bold;">Carregando documento... ⏳</div>' : ''}
-                    
-                    <!-- Iframe sem roubar toques no telemóvel -->
-                    <iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; position:relative; z-index:2; border-radius:12px; background:white; ${isMobile ? 'pointer-events:none;' : ''}"></iframe>
+                    ${ehOffice || ehPDF ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#999; font-size:13px; font-weight:bold;">Carregando documento... ⏳</div>' : ''}
+                    <iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; position:relative; z-index:2; background:white; ${isMobile ? 'pointer-events:none;' : ''}"></iframe>
                 </div>
             </div>
         `;
         
         document.body.appendChild(overlay);
 
-        // ========================================================================
-        // 🚀 O CÉREBRO TÁTIL (Lê Arrastos e Movimento de Pinça no Telemóvel)
-        // ========================================================================
+        // O CLIQUE DE FUGA NO FUNDO (Fecha se o utilizador tocar fora do documento, caso precise de sair)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 300);
+            }
+        });
+
+        // Motor tátil para telemóveis
         if (isMobile) {
             const glass = document.getElementById('ws-touch-glass');
             const scrollContainer = document.getElementById('ws-doc-scroll-container');
             const wrapper = document.getElementById('ws-iframe-wrapper');
 
             if (glass && scrollContainer && wrapper) {
-                let mode = 'none'; // 'pan' (arrastar) ou 'zoom' (pinça)
+                let mode = 'none';
                 let startX = 0, startY = 0;
                 let startScrollLeft = 0, startScrollTop = 0;
                 let startDist = 0, startZoom = 100;
 
                 glass.addEventListener('touchstart', (e) => {
                     e.preventDefault(); 
-                    if (e.touches.length === 1) { // Um dedo = Rolar/Arrastar
+                    if (e.touches.length === 1) {
                         mode = 'pan';
                         startX = e.touches[0].pageX;
                         startY = e.touches[0].pageY;
                         startScrollLeft = scrollContainer.scrollLeft;
                         startScrollTop = scrollContainer.scrollTop;
-                    } else if (e.touches.length === 2) { // Dois dedos = Zoom
+                    } else if (e.touches.length === 2) {
                         mode = 'zoom';
                         startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
                         startZoom = parseFloat(wrapper.dataset.zoom || 100);
@@ -607,11 +603,8 @@ Workspace.Feed = {
                     } else if (mode === 'zoom' && e.touches.length === 2) {
                         const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
                         let newZoom = startZoom * (currentDist / startDist);
-                        
-                        // Limites do Zoom
                         if (newZoom < 100) newZoom = 100;
                         if (newZoom > 400) newZoom = 400;
-
                         wrapper.style.width = newZoom + '%';
                         wrapper.style.height = newZoom + '%';
                         wrapper.dataset.zoom = newZoom;
@@ -621,7 +614,6 @@ Workspace.Feed = {
                 glass.addEventListener('touchend', (e) => {
                     if (e.touches.length === 0) mode = 'none';
                     else if (e.touches.length === 1) {
-                        // Se levantar 1 dedo mas o outro continuar no ecrã, volta ao modo arrastar
                         mode = 'pan';
                         startX = e.touches[0].pageX;
                         startY = e.touches[0].pageY;
