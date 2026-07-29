@@ -238,28 +238,42 @@ Workspace.Materiais = {
         // 🚀 A INTELIGÊNCIA: Verifica se é um telemóvel ou tablet
         const isMobile = window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         
+        // 🚀 GARANTIA ABSOLUTA: Os visualizadores externos precisam de links completos (https://...)
+        const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+        const urlCodificada = encodeURIComponent(absoluteUrl);
+
+        // Separamos as identidades para rotear para o leitor correto
+        const ehOffice = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc');
+        const ehPDF = tipo.includes('pdf');
+
         if (tipo.includes('video') || tipo.includes('mp4')) {
-            conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${url}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
+            conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${absoluteUrl}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
         } 
         else if (tipo.includes('audio')) {
-            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; width: 100%; max-width: 500px;"><div style="font-size:50px; margin-bottom: 20px;">🎧</div><audio controls autoplay style="width: 100%;"><source src="${url}" type="${tipo}"></audio></div>`;
+            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; width: 100%; max-width: 500px;"><div style="font-size:50px; margin-bottom: 20px;">🎧</div><audio controls autoplay style="width: 100%;"><source src="${absoluteUrl}" type="${tipo}"></audio></div>`;
         } 
         else if (tipo.includes('image')) {
-            conteudoHTML = `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
+            conteudoHTML = `<img src="${absoluteUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
         } 
-        // 🚀 O MOTOR GOOGLE DOCS: Ativado para arquivos Office E para PDFs quando visto no telemóvel!
-        else if (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc') || (tipo.includes('pdf') && isMobile)) {
-            const urlCodificada = encodeURIComponent(url);
-            // 🛡️ ARMADURA iOS: A div com '-webkit-overflow-scrolling' resolve os bugs de scroll no iPhone
+        // 🚀 O NOVO MOTOR OFFICE: A Microsoft é infalível a abrir os seus próprios documentos (PPT, DOC, XLS)
+        else if (ehOffice) {
+            conteudoHTML = `
+                <div style="width: 100%; height: 100%; -webkit-overflow-scrolling: touch; overflow-y: scroll; background: white; border-radius: 8px;">
+                    <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}" width="100%" height="100%" style="border: none; display: block;"></iframe>
+                </div>
+            `;
+        } 
+        // 🚀 MOTOR GOOGLE DOCS: Apenas para PDFs no telemóvel (porque navegadores móveis não abrem PDF nativamente)
+        else if (ehPDF && isMobile) {
             conteudoHTML = `
                 <div style="width: 100%; height: 100%; -webkit-overflow-scrolling: touch; overflow-y: scroll; background: white; border-radius: 8px;">
                     <iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; display: block;"></iframe>
                 </div>
             `;
         } 
-        // 🚀 SE FOR PDF NO COMPUTADOR: Usa o leitor nativo que é mais rápido
-        else if (tipo.includes('pdf') && !isMobile) {
-            conteudoHTML = `<iframe src="${url}" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
+        // 🚀 SE FOR PDF NO COMPUTADOR: Usa o leitor nativo do navegador que é ultra-rápido
+        else if (ehPDF && !isMobile) {
+            conteudoHTML = `<iframe src="${absoluteUrl}" width="100%" height="100%" style="border: none; border-radius: 8px; background: white;"></iframe>`;
         } 
         else {
             conteudoHTML = `
@@ -267,7 +281,7 @@ Workspace.Materiais = {
                     <div style="font-size:50px; margin-bottom: 20px;">📎</div>
                     <h3 style="color:#2c3e50; margin-bottom: 10px;">Formato Não Reconhecido</h3>
                     <p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu dispositivo.</p>
-                    <a href="${url.replace('/upload/', '/upload/fl_attachment/')}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a>
+                    <a href="${absoluteUrl.replace('/upload/', '/upload/fl_attachment/')}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a>
                 </div>
             `;
         }
@@ -278,7 +292,6 @@ Workspace.Materiais = {
         
         modal.innerHTML = `
             <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
-                <!-- 🚀 PROTEÇÃO DE TEXTO: Evita que títulos compridos partam o design em ecrãs pequenos -->
                 <span style="color: white; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">📚 ${titulo}</span>
                 <button id="ws-fechar-visualizador" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5); flex-shrink: 0;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
             </div>
@@ -289,7 +302,6 @@ Workspace.Materiais = {
             </div>
         `;
         
-        // O CLIQUE DE FUGA
         modal.addEventListener('click', (e) => {
             if (e.target === modal || e.target.id === 'ws-fechar-visualizador') {
                 modal.remove();
