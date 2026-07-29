@@ -149,31 +149,57 @@ Workspace.Avaliacoes = {
         const agora = new Date();
 
         avaliacoes.forEach(a => {
+            // Se não for sessão online, não estiver ativa ou não tiver data, o sistema ignora
             if (a.tipo !== 'online' || a.status !== 'ativa' || !a.dataAgendada) return;
 
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
-            const isParaMim = destinoLimpo === 'global' || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
+            
+            // ========================================================================
+            // 🚀 A NOVA LÓGICA VIP: Verifica se o aluno logado foi convidado!
+            // ========================================================================
+            let souConvidado = false;
+            if (a.convidados && Array.isArray(a.convidados)) {
+                // O método .some() varre a lista e retorna "true" se encontrar um ID igual
+                souConvidado = a.convidados.some(c => String(c.id) === String(Workspace.usuario.id));
+            }
+
+            // O Aluno recebe o aviso se for da Turma (isParaMim base) OU se for convidado VIP (souConvidado)
+            const isParaMim = destinoLimpo === 'global' || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo)) || souConvidado;
 
             if (isParaMim) {
                 const dataSala = new Date(a.dataAgendada);
                 const diffMinutos = (dataSala - agora) / (1000 * 60);
 
+                // O alerta soa quando faltam entre 10 minutos e 0 minutos
                 if (diffMinutos > 0 && diffMinutos <= 10) {
                     if (!Workspace.Avaliacoes.salasNotificadas.has(a.id)) {
                         Workspace.Avaliacoes.salasNotificadas.add(a.id); 
                         const min = Math.ceil(diffMinutos);
                         Workspace.mostrarAviso(`⏰ PREPARE-SE: A sessão ao vivo "${a.titulo}" começará em ${min} minutos!`, "warning", 10000);
                         
+                        // Também cria uma notificação na aba do sininho para o aluno não esquecer
                         if (Workspace.Alertas && Workspace.Alertas.notificacoesAtuais) {
                             const idLocal = 'alerta_local_' + a.id;
                             if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
-                                const novaNoti = { id: idLocal, remetenteNome: 'Sistema Académico', mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`, data: new Date().toISOString(), origem: 'online', origemId: a.id, destinoNome: a.destinoNome };
+                                const novaNoti = { 
+                                    id: idLocal, 
+                                    remetenteNome: 'Sistema Académico', 
+                                    mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`, 
+                                    data: new Date().toISOString(), 
+                                    origem: 'online', 
+                                    origemId: a.id, 
+                                    destinoNome: a.destinoNome 
+                                };
                                 Workspace.Alertas.notificacoesAtuais.unshift(novaNoti);
                                 Workspace.Alertas.idsConhecidos.add(novaNoti.id);
                                 Workspace.Alertas.atualizarInterface();
+                                
                                 const bell = document.getElementById('ws-bell');
-                                if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
+                                if(bell) { 
+                                    bell.classList.add('bell-ringing'); 
+                                    setTimeout(() => bell.classList.remove('bell-ringing'), 1000); 
+                                }
                             }
                         }
                     }
@@ -353,7 +379,12 @@ Workspace.Avaliacoes = {
         const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.status !== 'ativa') return false;
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
-            if (destinoLimpo === 'global') return true;
+            
+            // 🚀 O SEGREDO VIP: Verifica se o aluno é convidado especial da sessão!
+            const souConvidado = a.convidados && a.convidados.some(c => String(c.id) === String(Workspace.usuario.id));
+            
+            if (destinoLimpo === 'global' || souConvidado) return true;
+            
             const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
             return turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
         });
@@ -876,9 +907,14 @@ Workspace.Avaliacoes = {
 
     abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
-        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel... ⏳</div>';
+        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel Inteligente... ⏳</div>';
         try {
-            // 🚀 DESTRUIDOR DE CACHE: Garante que as presenças atualizadas vêm limpas do servidor
+            // 🚀 A INJEÇÃO DE INTELIGÊNCIA: Carrega os alunos em background para cálculo do Semáforo
+            if (!Workspace.Avaliacoes.todosAlunosCache) {
+                const resAlunos = await Workspace.api('/alunos', 'GET');
+                if (resAlunos && !resAlunos.error) Workspace.Avaliacoes.todosAlunosCache = resAlunos;
+            }
+
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
             const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET'); 
             if(res && res.success) {
@@ -891,8 +927,6 @@ Workspace.Avaliacoes = {
 
    renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
-        
-        // 🚀 LÓGICA DE MANUTENÇÃO DE PESQUISA: Mantém o termo se a função for chamada sem argumentos (ex: ao apagar um item)
         if (termoBusca === null) {
             const inputAtual = document.getElementById('ws-busca-avaliacoes');
             termoBusca = inputAtual ? inputAtual.value : '';
@@ -900,30 +934,42 @@ Workspace.Avaliacoes = {
 
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
 
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
-        else avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
+        // 🚀 O SISTEMA DE ARQUIVAMENTO (Para não poluir o painel)
+        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
+            const abaAtual = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
+            if (abaAtual === 'ativas') {
+                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status !== 'arquivada');
+            } else {
+                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status === 'arquivada');
+            }
+        } else {
+            avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
+        }
 
-        // 🚀 O SEGREDO DA PESQUISA: Filtra os resultados em tempo real!
         if (termoBusca.trim() !== '') {
             const termo = termoBusca.toLowerCase().trim();
             avaliacoes = avaliacoes.filter(a => {
                 const titulo = (a.titulo || '').toLowerCase();
                 const destino = (a.destinoNome || '').toLowerCase();
-                
-                let dataAgendada = '';
-                if (a.dataAgendada && a.dataAgendada.includes('T')) {
-                    const partes = a.dataAgendada.split('T')[0].split('-');
-                    if(partes.length === 3) dataAgendada = `${partes[2]}/${partes[1]}/${partes[0]}`;
-                }
-                const dataCriacao = new Date(a.dataCriacao).toLocaleDateString('pt-BR').toLowerCase();
-
-                // Verifica se o texto digitado existe no título, turma, data agendada ou data de criação
-                return titulo.includes(termo) || destino.includes(termo) || dataAgendada.includes(termo) || dataCriacao.includes(termo);
+                return titulo.includes(termo) || destino.includes(termo);
             });
         }
 
-        // 🚀 BARRA DE FERRAMENTAS INTELIGENTE COM CHECKBOX "TODOS"
+        // As Abas do Arquivo
+        let abasHtml = '';
+        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
+            const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
+            abasHtml = `
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button class="ws-btn" style="background: ${abaAtiva === 'ativas' ? '#2c3e50' : '#f0f2f5'}; color: ${abaAtiva === 'ativas' ? 'white' : '#555'}; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;" onclick="Workspace.Avaliacoes.mudarAbaEncontros('ativas')">Sessões Ativas</button>
+                    <button class="ws-btn" style="background: ${abaAtiva === 'arquivadas' ? '#2c3e50' : '#f0f2f5'}; color: ${abaAtiva === 'arquivadas' ? 'white' : '#555'}; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;" onclick="Workspace.Avaliacoes.mudarAbaEncontros('arquivadas')">📂 Arquivadas</button>
+                </div>
+            `;
+        }
+
+        // 🚀 A NOVA BARRA DE FERRAMENTAS EM MASSA
         const topBar = `
+            ${abasHtml}
             <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
@@ -932,104 +978,111 @@ Workspace.Avaliacoes = {
                 <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
                 <div style="flex: 1; min-width: 200px; position: relative;">
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título, turma ou data..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
+                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
                 </div>
-                <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">
-                    🗑️ Apagar Selecionados
-                </button>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
+                    <button class="ws-btn" style="background: #f39c12; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.ocultarAvaliacoesSelecionadas()">⏸️ Ocultar</button>
+                    <button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>
+                </div>
             </div>
         `;
 
-        if(avaliacoes.length === 0) {
-            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta pesquisa/categoria.</div>';
+        if (avaliacoes.length === 0) {
+            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta categoria.</div>';
             return;
         }
 
-       const htmlLista = avaliacoes.map(a => {
+        const htmlLista = avaliacoes.map(a => {
             let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
             
-            // 🚀 INTELIGÊNCIA: Verifica quem acedeu e limpa a falsa memória se voltaram a entrar
+            // 🚀 O MOTOR DE CÁLCULO EXATO
+            let totalAlunos = 0;
+            if (Workspace.Avaliacoes.todosAlunosCache) {
+                const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
+                    const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
+                    const destId = String(a.destino).toLowerCase().trim();
+                    const destNome = String(a.destinoNome || '').toLowerCase().trim();
+                    return a.destino === 'global' || turmasStr.includes(destId) || turmasStr.includes(destNome);
+                });
+                totalAlunos = alunosDaTurma.length;
+                // Soma os convidados que não eram da turma originalmente
+                const convidados = a.convidados || [];
+                convidados.forEach(c => { if (!alunosDaTurma.some(al => al.id === c.id)) totalAlunos++; });
+            }
+
             const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
-            const reativadosCache = Workspace.Avaliacoes.getReativados(a.id);
-            
-            presencasReais.forEach(p => {
-                if (reativadosCache.some(r => r.id === p.alunoId)) {
-                    Workspace.Avaliacoes.removerReativado(a.id, p.alunoId);
-                }
-            });
-
             const presencasCount = presencasReais.length;
-            const temEntrega = presencasCount > 0;
+            const faltam = totalAlunos - presencasCount;
 
-            let corStatus = '#95a5a6'; // Cinza (Oculta)
+            let corStatus = '#95a5a6';
             let textoStatus = 'Oculta';
 
-            // Semáforo Inteligente e Fiel à Nuvem
-            if (a.status === 'ativa') {
+            if (a.status === 'ativa' || a.status === 'arquivada') {
                 if (a.tipo === 'online') {
-                    if (temEntrega) {
-                        corStatus = '#e74c3c'; // Consumido
-                        textoStatus = 'Acesso Offline';
+                    if (totalAlunos === 0) {
+                        textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db';
+                    } else if (presencasCount === 0) {
+                        textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60';
+                    } else if (presencasCount >= totalAlunos) {
+                        textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c';
                     } else {
-                        corStatus = '#27ae60'; // Livre
-                        textoStatus = 'Acesso Online';
+                        textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12';
                     }
                 } else {
-                    corStatus = '#27ae60';
-                    textoStatus = 'Online';
+                    corStatus = '#27ae60'; textoStatus = 'Online';
                 }
             }
 
-            
-            const btnEditar = (temEntrega && a.tipo !== 'online')
-                ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
-                : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
-
-            let btnReativar = '';
-            if (a.tipo === 'online') {
-                btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px; transition:0.2s;" onmouseover="this.style.background='#fdf2e9'" onmouseout="this.style.background='#fdfdfd'" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Ver Acessos (${presencasCount})</button>`;
-            }
-
-            // Exibe a data de forma clara na lista
+            // Exibe a data de forma clara
+            const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
             let dataApresentada = '';
             if (a.dataAgendada && a.dataAgendada.includes('T')) {
                 const partes = a.dataAgendada.split('T')[0].split('-');
-                if(partes.length === 3) dataApresentada = `Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+                if(partes.length === 3) dataApresentada = `📅 Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+
+            // 🚀 O NOVO LAYOUT DO CARTÃO: Limpo e Hierarquizado
+            let btnEntrarSala = '';
+            if (a.tipo === 'online' && a.linkSala) {
+                let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
+                btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; flex: 1; font-size: 12px; padding: 8px; border-radius: 6px; text-align: center; font-weight: bold;">🚀 Entrar na Sala</a>`;
+            }
+
+            let btnGestao = '';
+            if (a.tipo === 'online') {
+                btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; flex: 1; font-size: 12px; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
             }
 
             return `
             <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                        <!-- 🚀 A CHECKBOX INDIVIDUAL -->
-                        <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; margin-top: 5px;">
-                        <div>
-                            <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
-                            <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
-                            <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
-                            <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada em: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
-                            ${dataApresentada ? `<div style="font-size: 11px; color: #e67e22; font-weight:bold; margin-top: 5px;">📅 ${dataApresentada}</div>` : ''}
+                <div style="display: flex; gap: 12px; align-items: flex-start;">
+                    <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; margin-top: 5px;">
+                    <div style="flex: 1; min-width: 0;">
+                        <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">${icone} ${a.titulo}</h4>
+                        <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 8px; font-weight: bold;">Criada em: ${dataCriacaoFmt} ${dataApresentada ? `| ${dataApresentada}` : ''}</div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="font-size: 11px; color: #8e44ad; font-weight:bold; background: #f4e8f8; padding: 3px 8px; border-radius: 6px;">👥 ${a.destinoNome || 'Global'}</span>
+                            <span style="font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
                         </div>
                     </div>
                 </div>
-                <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
-                    ${btnEditar}
-                    ${btnReativar}
-                    <button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.mudarStatusAvaliacao('${a.id}', '${a.status === 'ativa' ? 'inativa' : 'ativa'}')">${a.status === 'ativa' ? '⏸️ Ocultar' : '▶️ Publicar'}</button>
-                    <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
+                
+                <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
+                    ${btnEntrarSala}
+                    ${btnGestao}
+                    ${a.tipo !== 'online' ? `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:8px; border-radius: 6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>` : ''}
+                    <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:8px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                 </div>
             </div>`;
         }).join('');
 
         container.innerHTML = topBar + htmlLista;
         
-        // 🚀 O TRUQUE DE UX: Repõe o foco no input sem interromper a digitação do professor
         const inputNovo = document.getElementById('ws-busca-avaliacoes');
         if (inputNovo && termoBusca !== '') {
             inputNovo.focus();
-            const val = inputNovo.value;
-            inputNovo.value = '';
-            inputNovo.value = val;
+            const val = inputNovo.value; inputNovo.value = ''; inputNovo.value = val;
         }
     },
 
@@ -1064,31 +1117,39 @@ Workspace.Avaliacoes = {
 
    
 abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
-        // 🚀 Regista na memória que esta janela está aberta, para o Radar saber que tem de a alimentar!
         Workspace.Avaliacoes.modalAcessosAberto = { avaliacaoId, destinoId };
 
-        // Aceita a prova quer venha da cache do Gestor, quer venha das provas ativas
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId) || Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
         const modalId = 'ws-modal-acessos-online';
         let container = document.getElementById('ws-acessos-lista');
 
-        // 🚀 O TRUQUE DE MESTRE: Só desenha o HTML base se a janela ainda NÃO existir na tela!
         if (!isSilent || !document.getElementById(modalId)) {
             if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
             const modal = document.createElement('div');
             modal.id = modalId;
             modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+            
+            // 🚀 O NOVO CABEÇALHO DO MODAL COM O BOTÃO ADICIONAR ALUNO
             modal.innerHTML = `
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                     <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
                     <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${Workspace.escapeHTML(prova.titulo)}</span>
                     
-                    <div style="display:flex; justify-content:flex-end; margin-bottom: 15px;">
-                        <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
+                            <button type="button" class="ws-btn" style="background:#27ae60; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.togglePesquisaConvidado('${avaliacaoId}')">➕ Adicionar Aluno</button>
+                            <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
+                        </div>
+                    </div>
+
+                    <!-- CAIXA DE PESQUISA (Escondida por Padrão) -->
+                    <div id="ws-busca-convidado-container-${avaliacaoId}" style="display:none; margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <input type="text" id="ws-input-convidado-${avaliacaoId}" placeholder="Pesquisar nome do aluno em toda a escola..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;" onkeyup="Workspace.Avaliacoes.buscarConvidado('${avaliacaoId}', this.value)">
+                        <div id="ws-lista-convidados-${avaliacaoId}" style="max-height: 150px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
                     </div>
 
                     <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
@@ -1111,7 +1172,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 }
             }
 
-            // 🚀 O SEGREDO DO BUG RESOLVIDO: Limpa a etiqueta de Reativado mal o aluno volte a entrar!
             let acessos = acessosSource.filter(e => e.avaliacaoId === avaliacaoId);
             const reativadosAntigos = Workspace.Avaliacoes.getReativados(avaliacaoId);
             
@@ -1121,47 +1181,53 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 }
             });
 
-            // Vai buscar a lista atualizada e livre de falsos reativados
             const reativadosLista = Workspace.Avaliacoes.getReativados(avaliacaoId);
             const idsReativados = reativadosLista.map(r => r.id);
             
             let alunosLista = [];
 
-            if (destinoId && destinoId !== 'global') {
-                try {
-                    let resAlunos = await Workspace.api('/alunos', 'GET');
-                    if (!resAlunos || resAlunos.error) resAlunos = await Workspace.api('/usuarios?tipo=Aluno', 'GET');
-
-                    if (resAlunos && Array.isArray(resAlunos)) {
-                        const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
-                        alunosLista = resAlunos.filter(aluno => {
-                            const turmaNomeAluno = aluno.turma ? String(aluno.turma).toLowerCase().trim() : '';
-                            const turmaIdAluno = aluno.turmaId ? String(aluno.turmaId).toLowerCase().trim() : '';
-                            return turmaNomeAluno === nomeTurmaProcurada || turmaIdAluno === String(destinoId).toLowerCase().trim();
-                        });
-                    }
-                } catch(e) {}
+            // 🚀 A JUNÇÃO: Junta os alunos da turma COM os convidados VIP!
+            if (Workspace.Avaliacoes.todosAlunosCache) {
+                const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
+                alunosLista = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
+                    const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
+                    const idProcurado = String(destinoId).toLowerCase().trim();
+                    const ehDaTurma = destinoId === 'global' || turmasStr.includes(idProcurado) || turmasStr.includes(nomeTurmaProcurada);
+                    const ehConvidado = prova.convidados && prova.convidados.some(c => c.id === aluno.id);
+                    return ehDaTurma || ehConvidado;
+                });
             }
 
             let htmlLista = '';
 
             if (alunosLista.length > 0) {
-                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo em Tempo Real: ${acessos.length} de ${alunosLista.length} acessos consumidos.</div>`;
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos consumidos.</div>`;
+
+                // Ordena os alunos por nome
+                alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
                 alunosLista.forEach(aluno => {
                     const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
                     const foiReativado = idsReativados.includes(aluno.id);
                     const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
+                    const badgeConvidado = (prova.convidados && prova.convidados.some(c => c.id === aluno.id)) ? `<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 5px; border-radius: 4px; margin-left: 5px;">Convidado</span>` : '';
                     
                     if (acessoFeito) {
+                        // 🚀 FORMATAR HORA EXATA DO CLIQUE
+                        let horaFormatada = '';
+                        if (acessoFeito.dataEntrega) {
+                            const d = new Date(acessoFeito.dataEntrega);
+                            horaFormatada = `às ${d.getHours().toString().padStart(2, '0')}h${d.getMinutes().toString().padStart(2, '0')}`;
+                        }
+
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
-                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
                                     </div>
                                 </div>
                                 <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
@@ -1173,8 +1239,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
-                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando acesso)</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando)</div>
                                     </div>
                                 </div>
                             </div>
@@ -1185,8 +1251,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</div>
-                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Acesso Ativo (Aguardando acesso)</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Acesso Ativo (Aguardando)</div>
                                     </div>
                                 </div>
                             </div>
@@ -1194,48 +1260,92 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     }
                 });
             } else {
-                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Mostrando apenas presenças e reativações (Turma Global).</div>`;
-                
-                if(acessos.length === 0 && reativadosLista.length === 0) {
-                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
-                } else {
-                    acessos.forEach(acesso => {
-                        const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
-                        const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
-
-                        htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    ${avatar}
-                                    <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
-                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
-                                    </div>
-                                </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
-                            </div>
-                        `;
-                    });
-                    
-                    reativadosLista.forEach(reativado => {
-                        const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
-                        htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    ${avatar}
-                                    <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
-                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando acesso)</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
+                htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Nenhum aluno associado a esta sala.</div>`;
             }
-            // Substitui APENAS o conteúdo da lista, sem fechar a janela preta principal!
             if(container) container.innerHTML = htmlLista;
         } catch(e) { if (container) container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
+    },
+
+  // 🚀 LÓGICA DO CONVIDADO VIP
+    togglePesquisaConvidado: (avaliacaoId) => {
+        const box = document.getElementById(`ws-busca-convidado-container-${avaliacaoId}`);
+        if (box) {
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+            if (box.style.display === 'block') document.getElementById(`ws-input-convidado-${avaliacaoId}`).focus();
+        }
+    },
+
+    buscarConvidado: (avaliacaoId, termo) => {
+        const container = document.getElementById(`ws-lista-convidados-${avaliacaoId}`);
+        if (!termo || termo.trim().length < 2) { container.innerHTML = ''; return; }
+        
+        termo = termo.toLowerCase().trim();
+        const resultados = (Workspace.Avaliacoes.todosAlunosCache || []).filter(a => (a.nome || '').toLowerCase().includes(termo)).slice(0, 10);
+
+        if (resultados.length === 0) { container.innerHTML = '<div style="font-size:12px; color:#999; padding:5px;">Nenhum aluno encontrado.</div>'; return; }
+
+        container.innerHTML = resultados.map(aluno => {
+            const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
+            return `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:6px; border:1px solid #eee;">
+                <span style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</span>
+                <button class="ws-btn" style="background:#8e44ad; font-size:11px; padding:4px 10px; border-radius:15px; border:none; color:white; cursor:pointer;" onclick="Workspace.Avaliacoes.adicionarConvidadoSessao('${avaliacaoId}', '${aluno.id}', '${nomeSeguro}')">Adicionar</button>
+            </div>`;
+        }).join('');
+    },
+
+    adicionarConvidadoSessao: async (avaliacaoId, alunoId, alunoNome) => {
+        Workspace.mostrarAviso(`Adicionando ${alunoNome} à sessão... ⏳`, "info");
+        try {
+            const res = await Workspace.api(`/workspace/avaliacoes/${avaliacaoId}/convidados`, 'POST', { alunoId, alunoNome });
+            if (res && res.success) {
+                // Atualiza a memória local
+                const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId);
+                if (prova) {
+                    if (!prova.convidados) prova.convidados = [];
+                    prova.convidados.push({ id: alunoId, nome: alunoNome });
+                }
+                Workspace.mostrarAviso(`${alunoNome} adicionado com sucesso! 🎉`, "success");
+                // Recarrega o modal instantaneamente para o aluno aparecer na lista verde
+                Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, prova.destino, true);
+                // Limpa a barra de pesquisa
+                document.getElementById(`ws-input-convidado-${avaliacaoId}`).value = '';
+                document.getElementById(`ws-lista-convidados-${avaliacaoId}`).innerHTML = '';
+            }
+        } catch(e) { Workspace.mostrarAviso("Erro ao adicionar convidado.", "error"); }
+    },
+
+    // 🚀 AÇÕES EM MASSA (OCULTAR E ARQUIVAR)
+    ocultarAvaliacoesSelecionadas: () => {
+        const checkboxes = document.querySelectorAll('.ws-check-avaliacao:checked');
+        const ids = Array.from(checkboxes).map(cb => cb.value);
+        if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
+
+        Workspace.Avaliacoes.confirmarDialog("Ocultar Múltiplos", `Deseja ocultar os ${ids.length} itens selecionados?`, "Sim, Ocultar", "#f39c12", async () => {
+            Workspace.mostrarAviso("Ocultando sessões... ⏳", "info");
+            try {
+                await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'inativa' })));
+                Workspace.Avaliacoes.avaliacoesGerenciadorCache.forEach(a => { if(ids.includes(a.id)) a.status = 'inativa'; });
+                Workspace.Avaliacoes.renderizarListaGerenciador();
+                Workspace.mostrarAviso(`${ids.length} itens ocultados com sucesso!`, "success");
+            } catch(e) { Workspace.mostrarAviso("Erro ao ocultar itens.", "error"); }
+        });
+    },
+
+    arquivarAvaliacoesSelecionadas: () => {
+        const checkboxes = document.querySelectorAll('.ws-check-avaliacao:checked');
+        const ids = Array.from(checkboxes).map(cb => cb.value);
+        if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
+
+        Workspace.Avaliacoes.confirmarDialog("Arquivar Múltiplos", `Deseja arquivar os ${ids.length} itens selecionados?`, "Sim, Arquivar", "#7f8c8d", async () => {
+            Workspace.mostrarAviso("Arquivando sessões... ⏳", "info");
+            try {
+                await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'arquivada' })));
+                Workspace.Avaliacoes.avaliacoesGerenciadorCache.forEach(a => { if(ids.includes(a.id)) a.status = 'arquivada'; });
+                Workspace.Avaliacoes.renderizarListaGerenciador();
+                Workspace.mostrarAviso(`${ids.length} itens arquivados com sucesso!`, "success");
+            } catch(e) { Workspace.mostrarAviso("Erro ao arquivar itens.", "error"); }
+        });
     },
 
   reativarAcessoAluno: async (event, entregaId, avaliacaoId, destinoId, alunoId, alunoNome) => {
