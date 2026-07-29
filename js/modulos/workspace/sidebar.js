@@ -1653,7 +1653,7 @@ verFotoChat: () => {
     salvarEdicaoTarefa: async (id) => {
         const novoTexto = document.getElementById('ws-edit-desc-input').value;
         const btn = event.target;
-        btn.innerText = "⏳ A guardar...";
+        btn.innerText = "⏳ Guardando...";
         btn.disabled = true;
 
         try {

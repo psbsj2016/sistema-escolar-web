@@ -1007,7 +1007,7 @@ Workspace.Avaliacoes = {
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
                             <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
                             <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
-                            <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada a: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
+                            <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada em: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
                             ${dataApresentada ? `<div style="font-size: 11px; color: #e67e22; font-weight:bold; margin-top: 5px;">📅 ${dataApresentada}</div>` : ''}
                         </div>
                     </div>

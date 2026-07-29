@@ -507,7 +507,7 @@ Object.assign(Workspace, {
         document.getElementById('ws-confirma-senha').value = '';
     },
 
-  // ============================================================================
+   // ============================================================================
     // 🔑 MOTOR DE ALTERAÇÃO DE SENHA (FRONTEND)
     // ============================================================================
     salvarNovaSenha: async () => {
@@ -519,7 +519,7 @@ Object.assign(Workspace, {
         if (novaSenha !== confirmaSenha) return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
         
         const btn = document.getElementById('ws-btn-salvar-senha');
-        const txt = btn.innerText; btn.innerText = "A encriptar e a guardar... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; btn.innerText = "Fazendo criptografia e salvando... ⏳"; btn.disabled = true;
         
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { 
@@ -718,7 +718,7 @@ Object.assign(Workspace, {
 
         autoSalvarNota: () => {
             const status = document.getElementById('ws-bau-status-salvamento');
-            if(status) status.innerText = 'A escrever... ✏️';
+            if(status) status.innerText = 'Digitando... ⌨️';
 
             clearTimeout(Workspace.Bau.salvamentoTimer);
             Workspace.Bau.salvamentoTimer = setTimeout(async () => {
@@ -1030,7 +1030,64 @@ Object.assign(Workspace, {
         }
     },
  
-             // ============================================================================
+    // ============================================================================
+    // 🚀 MOTOR DA BIBLIOTECA INTELIGENTE
+    // ============================================================================
+    Biblioteca: {
+        pesquisar: async () => {
+            const input = document.getElementById('ws-busca-biblioteca');
+            const termo = input.value.trim();
+            const grid = document.getElementById('ws-biblioteca-grid');
+            
+            if (!termo) {
+                if (Workspace.mostrarAviso) Workspace.mostrarAviso("Digite o título ou autor que deseja procurar.", "warning");
+                return;
+            }
+
+            // Animação de Carregamento bonita
+            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: #f39c12; font-weight: bold;"><div style="font-size: 30px; margin-bottom: 10px; animation: piscarSuave 1s infinite;">📡</div>Mergulhando na base de dados e na internet... ⏳</div>';
+
+            try {
+                // Chama o nosso Cérebro no servidor
+                const res = await Workspace.api(`/workspace/biblioteca/pesquisar?termo=${encodeURIComponent(termo)}`, 'GET');
+                
+                if (res && res.success && res.livros.length > 0) {
+                    // Pinta os livros no ecrã!
+                    grid.innerHTML = res.livros.map((livro, index) => `
+                        <div class="ws-card" style="padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: 0.3s; cursor: pointer; animation: fadeUpIn 0.4s ease forwards ${index * 0.05}s; opacity: 0; transform: translateY(20px);" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'" onclick="Workspace.Biblioteca.abrirLivro('${livro.urlLeitura}', '${Workspace.Feed.limparTexto(livro.titulo)}', ${livro.linkExterno})">
+                            <img src="${livro.capa}" alt="Capa" style="width: 130px; height: 190px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 14px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3;">${livro.titulo}</h4>
+                            <span style="font-size: 11px; color: #7f8c8d; margin-bottom: 10px; font-weight: 500;">${livro.autor}</span>
+                            ${livro.linkExterno 
+                                ? '<span style="font-size: 10px; background: #e0f2fe; color: #2563eb; padding: 4px 10px; border-radius: 12px; font-weight: bold; width: 100%;">🌐 Ler na Web</span>' 
+                                : '<span style="font-size: 10px; background: #dcf8c6; color: #27ae60; padding: 4px 10px; border-radius: 12px; font-weight: bold; width: 100%;">📚 PDF Local</span>'}
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #e74c3c; background: #fdf2f2; border-radius: 12px;"><div style="font-size: 40px; margin-bottom: 10px;">📭</div>Nenhum livro encontrado. Tente um título diferente ou em outro idioma!</div>';
+                }
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #e74c3c; font-weight: bold;">Falha de comunicação com a Grande Biblioteca. Tente novamente!</div>';
+            }
+        },
+
+        abrirLivro: (url, titulo, externo) => {
+            if (externo) {
+                // Se veio da Open Library, abre numa nova aba no leitor fantástico deles
+                window.open(url, '_blank');
+            } else {
+                // Se for um PDF nosso, usa o super leitor que já criámos no Feed!
+                if (Workspace.Feed && Workspace.Feed.abrirDocumento) {
+                    Workspace.Feed.abrirDocumento(url, titulo, false);
+                } else {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+    },  
+
+    // ============================================================================
     // 🚀 MOTOR DE COMANDO UNIVERSAL (SPOTLIGHT / CTRL + K)
     // ============================================================================
     ComandoMágico: {
