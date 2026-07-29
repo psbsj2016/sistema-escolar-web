@@ -532,16 +532,19 @@ Workspace.Feed = {
             <!-- FUNDO ESCURO (Fecha se clicar) -->
             <div onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); cursor:pointer;"></div>
 
-            <!-- CABEÇALHO FLUTUANTE -->
+            <!-- CABEÇALHO COM AVISO INTELIGENTE -->
             <div style="position:absolute; top:0; left:0; width:100%; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; z-index:10; background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); pointer-events:none;">
-                <div style="color:white; font-weight:bold; font-size:16px; pointer-events:auto; text-shadow:1px 1px 3px rgba(0,0,0,0.8);">📄 ${nomeSeguro}</div>
+                <div style="display: flex; flex-direction: column; max-width: 60%; pointer-events:auto;">
+                    <span style="color:white; font-weight:bold; font-size:16px; text-shadow:1px 1px 3px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📄 ${nomeSeguro}</span>
+                    <span style="color:#f1c40f; font-size:11.5px; text-shadow:1px 1px 2px rgba(0,0,0,0.8); margin-top: 4px;">⚠️ Se der erro de tamanho, use o botão 📥 para baixar.</span>
+                </div>
                 
                 <div style="display:flex; gap:15px; align-items:center; pointer-events:auto; background:rgba(0,0,0,0.6); padding:8px 20px; border-radius:30px;">
                     <button onclick="${cmdZoomOut}" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'">🔍-</button>
                     <span style="color:rgba(255,255,255,0.3);">|</span>
                     <button onclick="${cmdZoomIn}" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='white'">🔍+</button>
                     <span style="color:rgba(255,255,255,0.3);">|</span>
-                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:20px;">📥</a>
+                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:20px;" title="Fazer Download">📥</a>
                     <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="background:#e74c3c; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; width:32px; height:32px; border-radius:50%; margin-left:10px; display:flex; align-items:center; justify-content:center;">✕</button>
                 </div>
             </div>
@@ -684,7 +687,11 @@ Workspace.Feed = {
                 const nomeMinusculo = (anexo.nome || '').toLowerCase();
                 const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
-                htmlFinal += `<div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${anexo.nome}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'"><span style="font-size:24px; flex-shrink: 0;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span><span style="color:#3498db; font-size:12px; font-weight:bold; flex-shrink: 0;">Ler Documento ↗</span></div>`;
+                
+                // 🚀 A VACINA: Substitui aspas simples!
+                const nomeSeguro = (anexo.nome || 'Documento').replace(/'/g, "\\'"); 
+                
+                htmlFinal += `<div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'"><span style="font-size:24px; flex-shrink: 0;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span><span style="color:#3498db; font-size:12px; font-weight:bold; flex-shrink: 0;">Ler Documento ↗</span></div>`;
             });
             htmlFinal += '</div>';
         }

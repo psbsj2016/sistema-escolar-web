@@ -787,7 +787,7 @@ verFotoChat: () => {
             } else if (m.anexoTipo === 'video') {
                 anexoHtml = `<video src="${m.anexoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,0.1);"></video>`;
             } else {
-                const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome) : 'Documento Anexado';
+                const nomeSeguro = m.anexoNome ? Workspace.Sidebar.escapeHTML(m.anexoNome).replace(/'/g, "\\'") : 'Documento Anexado';
                 anexoHtml = `
                 <div onclick="Workspace.Sidebar.abrirVisualizadorInterno('${m.anexoUrl}', 'documento', '${nomeSeguro}')" style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; cursor: pointer; color: inherit; margin-bottom: 5px; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.05)'">
                     <span style="font-size: 24px;">📄</span>
