@@ -989,50 +989,22 @@ verFotoChat: () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 10 * 1024 * 1024) {
-            Workspace.mostrarAviso("O ficheiro é demasiado grande (Máx: 10MB).", "warning");
-            event.target.value = '';
-            return;
-        }
-
-        Workspace.mostrarAviso("Carregando o arquivo... ⏳", "info", 5000);
-        
+        Workspace.mostrarAviso("A carregar anexo para a conversa... ⏳", "info", 5000);
         try {
-            const formData = new FormData();
-            formData.append('anexos', file);
-            
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            
-            if (!uploadData.success || !uploadData.anexos) throw new Error("Falha no processamento da nuvem.");
-            
-            // Lemos as propriedades do ficheiro que subiu
-            const anexoUrl = uploadData.anexos[0].url;
-            const anexoNome = file.name; // NOVIDADE: Pegamos o nome real do Word/PDF/Excel
-            const tipoRaw = file.type.split('/')[0];
+            // 🚀 USA A VIA VERDE DIRETA PARA A CLOUDFLARE
+            const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
+            const tipoRaw = dadosUpload.tipo.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
             
-            // Enviamos para o nosso backend (que agora já sabe gravar isto)
             const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'POST', {
-                texto: '', 
-                anexoUrl: anexoUrl,
-                anexoTipo: anexoTipo,
-                anexoNome: anexoNome, // Enviamos o nome
-                escolaId: Workspace.usuario.escolaId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                texto: '', anexoUrl: dadosUpload.url, anexoTipo: anexoTipo, anexoNome: dadosUpload.nome,
+                escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
             });
 
-            if (res && res.success) {
-                Workspace.Sidebar.carregarMensagensChat(); 
-            } else {
-                Workspace.mostrarAviso("Erro ao partilhar anexo no chat.", "error");
-            }
-        } catch (e) {
-            console.error("🚨 Erro:", e);
-            Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error");
-        } finally {
-            event.target.value = ''; 
-        }
+            if (res && res.success) Workspace.Sidebar.carregarMensagensChat();
+            else throw new Error();
+        } catch (e) { Workspace.mostrarAviso("Falha no envio do anexo.", "error"); } 
+        finally { event.target.value = ''; }
     },
  
     // ============================================================================
@@ -1425,57 +1397,33 @@ verFotoChat: () => {
         const fileInput = document.getElementById('ws-tarefa-arquivo');
         const obs = document.getElementById('ws-tarefa-obs').value.trim();
 
-        if (!fileInput.files || fileInput.files.length === 0) {
-            Workspace.mostrarAviso("Selecione um material (PDF, Imagem, Power Point ou Word) para enviar o seu trabalho.", "warning");
-            return;
-        }
-
+        if (!fileInput.files || fileInput.files.length === 0) return Workspace.mostrarAviso("Selecione um material para enviar.", "warning");
         const file = fileInput.files[0];
-        if (file.size > 10 * 1024 * 1024) return Workspace.mostrarAviso("O documento é muito pesado. Tente um documento até 10MB.", "warning");
 
         const btn = document.getElementById('ws-btn-entregar');
-        const txtOriginal = btn.innerText;
-        btn.innerText = "🔄 Enviando, aguarde...";
-        btn.disabled = true;
+        const txtOriginal = btn.innerText; btn.innerText = "🔄 A enviar trabalho gigante...⏳"; btn.disabled = true;
 
         try {
-            const formData = new FormData();
-            formData.append('anexos', file);
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload do documento.");
-
-            const arquivoFinalUrl = uploadData.anexos[0].url;
+            // 🚀 USA A VIA VERDE
+            const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
             btn.innerText = "📝 Registrando a entrega...";
 
-            // 🚀 GATILHO CORRIGIDO: Busca os dados da tarefa em memória para enviar ao Professor corretamente
             const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
-
             const payload = {
-                eventoId: eventoId,
-                eventoTitulo: evento ? (evento.titulo || evento.nome) : 'uma tarefa',
+                eventoId: eventoId, eventoTitulo: evento ? (evento.titulo || evento.nome) : 'uma tarefa',
                 turmaNome: evento ? (evento.turmaNome || 'a sua turma') : 'a sua turma',
-                escolaId: Workspace.usuario.escolaId, // 🚀 Essencial para o Servidor encontrar os Professores!
-                alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
+                escolaId: Workspace.usuario.escolaId, alunoId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                arquivoUrl: arquivoFinalUrl,
-                arquivoNome: file.name,
-                observacao: obs
+                arquivoUrl: dadosUpload.url, arquivoNome: dadosUpload.nome, observacao: obs
             };
 
             const entregaRes = await Workspace.api('/workspace/entregas', 'POST', payload);
-
             if (entregaRes && entregaRes.success) {
                 Workspace.mostrarAviso("Trabalho entregue com sucesso!", "success");
                 Workspace.Sidebar.abrirModalTarefa(eventoId);
-            } else throw new Error(entregaRes.error || "Erro ao gravar entrega.");
-        } catch (e) {
-            console.error(e);
-            Workspace.mostrarAviso("Erro ao enviar trabalho. Tente novamente.", "error");
-        } finally {
-            btn.innerText = txtOriginal;
-            btn.disabled = false;
-        }
+            } else throw new Error();
+        } catch (e) { Workspace.mostrarAviso("Erro ao enviar trabalho.", "error"); } 
+        finally { btn.innerText = txtOriginal; btn.disabled = false; }
     },
 
     voltarMenuTarefasProf: () => {

@@ -1059,7 +1059,7 @@ Object.assign(Workspace, {
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 14px; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3;">${livro.titulo}</h4>
                             <span style="font-size: 11px; color: #7f8c8d; margin-bottom: 10px; font-weight: 500;">${livro.autor}</span>
                             ${livro.linkExterno 
-                                ? '<span style="font-size: 10px; background: #e0f2fe; color: #2563eb; padding: 4px 10px; border-radius: 12px; font-weight: bold; width: 100%;">🌐 Ler na Web</span>' 
+                                ? '<span style="font-size: 10px; background: #e0f2fe; color: #2563eb; padding: 4px 10px; border-radius: 12px; font-weight: bold; width: 100%;">🌐 Ler/Ouvir</span>' 
                                 : '<span style="font-size: 10px; background: #dcf8c6; color: #27ae60; padding: 4px 10px; border-radius: 12px; font-weight: bold; width: 100%;">📚 PDF Local</span>'}
                         </div>
                     `).join('');

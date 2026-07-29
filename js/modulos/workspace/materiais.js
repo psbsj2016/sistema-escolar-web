@@ -64,7 +64,7 @@ Workspace.Materiais = {
         }
     },
 
-    enviarMaterial: async () => {
+   enviarMaterial: async () => {
         const titulo = document.getElementById('ws-mat-titulo').value.trim();
         const desc = document.getElementById('ws-mat-desc').value.trim();
         const selectDestino = document.getElementById('ws-mat-destino');
@@ -78,53 +78,29 @@ Workspace.Materiais = {
         const file = inputFicheiro.files[0];
         const btn = document.getElementById('ws-btn-enviar-mat');
         const txtOriginal = btn.innerText;
-        
-        btn.innerText = "Despachando para a turma... ⏳";
-        btn.disabled = true;
+        btn.innerText = "Enviando arquivo gigante... ⏳"; btn.disabled = true;
 
         try {
-            const formData = new FormData();
-            formData.append('anexos', file);
-            
-            const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
-            const uploadData = await uploadRes.json();
-            
-            if (!uploadData.success || !uploadData.anexos || uploadData.anexos.length === 0) throw new Error("Falha no upload.");
-            
-            const urlFicheiro = uploadData.anexos[0].url;
+            // 🚀 A NOVA LIGAÇÃO À VIA VERDE!
+            const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
+            const urlFicheiro = dadosUpload.url;
             
             const payload = {
-                id: 'mat_' + Date.now(),
-                titulo,
-                descricao: desc,
-                destino,
-                destinoNome,
-                url: urlFicheiro,
+                id: 'mat_' + Date.now(), titulo, descricao: desc, destino, destinoNome, url: urlFicheiro,
                 tipoFicheiro: file.type || file.name.split('.').pop() || 'desconhecido',
-                nomeOriginal: file.name,
-                escolaId: Workspace.usuario.escolaId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
-                dataCriacao: new Date().toISOString()
+                nomeOriginal: file.name, escolaId: Workspace.usuario.escolaId,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login, dataCriacao: new Date().toISOString()
             };
 
             const res = await Workspace.api('/workspace/materiais', 'POST', payload);
-            
             if (res && res.success) {
                 Workspace.mostrarAviso("Material publicado com sucesso! 🎉", "success");
-                document.getElementById('ws-mat-titulo').value = '';
-                document.getElementById('ws-mat-desc').value = '';
-                document.getElementById('ws-mat-ficheiro').value = '';
-                Workspace.Materiais.listaMateriais.unshift(payload);
-                Workspace.Materiais.renderizarProf();
-            } else {
-                Workspace.mostrarAviso(res.error || "Erro ao guardar material.", "error");
-            }
+                document.getElementById('ws-mat-titulo').value = ''; document.getElementById('ws-mat-desc').value = ''; document.getElementById('ws-mat-ficheiro').value = '';
+                Workspace.Materiais.listaMateriais.unshift(payload); Workspace.Materiais.renderizarProf();
+            } else throw new Error();
         } catch (e) {
             Workspace.mostrarAviso("Erro na transferência do ficheiro.", "error");
-        } finally {
-            btn.innerText = txtOriginal;
-            btn.disabled = false;
-        }
+        } finally { btn.innerText = txtOriginal; btn.disabled = false; }
     },
 
     renderizarProf: (termoBusca = '') => {

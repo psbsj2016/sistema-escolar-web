@@ -1098,20 +1098,12 @@ Workspace.Feed = {
                 novoBtn.innerText = "Publicando... ⏳";
                 novoBtn.disabled = true;
 
-                try {
+               try {
                     let urlsFinais = [];
 
                     if (anexosLocais.length > 0) {
-                        const formData = new FormData();
-                        anexosLocais.forEach(file => formData.append('anexos', file));
-
-                        const uploadRes = await fetch('/api/workspace/upload', {
-                            method: 'POST', credentials: 'include', body: formData 
-                        });
-
-                        const uploadData = await uploadRes.json();
-                        if (uploadData.success) urlsFinais = uploadData.anexos;
-                        else throw new Error("Falha no envio dos ficheiros.");
+                        // 🚀 USA O NOVO MOTOR DE PROCESSAMENTO MÚLTIPLO! (Magia Pura)
+                        urlsFinais = await Workspace.Upload.enviarMultiplosFicheiros(anexosLocais);
                     }
 
                     const postRes = await Workspace.api('/workspace/posts', 'POST', {
@@ -1130,7 +1122,7 @@ Workspace.Feed = {
                     } else throw new Error();
 
                 } catch (e) {
-                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha na publicação.", "error");
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Falha na publicação. Tente enviar os ficheiros um por um.", "error");
                 } finally {
                     novoBtn.innerText = "Publicar";
                     novoBtn.disabled = false;
