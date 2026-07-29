@@ -1072,10 +1072,11 @@ Object.assign(Workspace, {
             }
         },
 
+        // 1. Atualizamos esta função para usar o nosso novo leitor!
         abrirLivro: (url, titulo, externo) => {
             if (externo) {
-                // Se veio da Open Library, abre numa nova aba no leitor fantástico deles
-                window.open(url, '_blank');
+                // Em vez de atirar para fora do site, abrimos a nossa "Janela de Vidro"
+                Workspace.Biblioteca.abrirLeitorEmbutido(url, titulo);
             } else {
                 // Se for um PDF nosso, usa o super leitor que já criámos no Feed!
                 if (Workspace.Feed && Workspace.Feed.abrirDocumento) {
@@ -1084,6 +1085,53 @@ Object.assign(Workspace, {
                     window.open(url, '_blank');
                 }
             }
+        },
+
+        // 2. A NOVA FUNÇÃO: Cria o ecrã escuro e o Leitor Embutido
+        abrirLeitorEmbutido: (url, titulo) => {
+            const id = 'ws-leitor-externo-modal';
+            // Se já existir um aberto, removemos primeiro para não duplicar
+            if (document.getElementById(id)) document.getElementById(id).remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = id;
+            // Estilo do fundo escuro, em ecrã inteiro, por cima de tudo
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; z-index:2147483647; background:rgba(0,0,0,0.9); backdrop-filter:blur(5px); opacity:0; transition: opacity 0.3s; display:flex; flex-direction:column; align-items:center; justify-content:center;";
+
+            // Usa a mesma função de segurança do Feed para limpar o título
+            const tituloSeguro = Workspace.Feed ? Workspace.Feed.limparTexto(titulo) : titulo;
+
+            // Desenhamos a estrutura HTML do Leitor
+            overlay.innerHTML = `
+                <!-- CABEÇALHO FLUTUANTE -->
+                <div style="width:100%; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-sizing:border-box; background:linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position:absolute; top:0; left:0; z-index:10;">
+                    <div style="color:white; font-weight:bold; font-size:16px; text-shadow:1px 1px 3px rgba(0,0,0,0.8);">📖 ${tituloSeguro}</div>
+                    
+                    <div style="display:flex; gap:15px; align-items:center;">
+                        <!-- O nosso Plano B: Botão caso o site externo bloqueie a janela -->
+                        <a href="${url}" target="_blank" style="color:#3498db; text-decoration:none; font-size:12px; font-weight:bold; background:rgba(255,255,255,0.1); padding:8px 14px; border-radius:20px; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Clique se o livro não carregar">Abrir noutra janela ↗</a>
+                        
+                        <!-- Botão de Fechar -->
+                        <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300)" style="background:#e74c3c; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✕</button>
+                    </div>
+                </div>
+
+                <!-- MENSAGEM DE CARREGAMENTO (Fica atrás do livro, visível até ele abrir) -->
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#aaa; font-size:14px; font-weight:bold; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px;">
+                    <span style="font-size:30px; animation: piscarSuave 1s infinite;">⏳</span>
+                    A carregar a biblioteca externa...
+                </div>
+
+                <!-- A JANELA DE VIDRO (IFRAME) -->
+                <iframe src="${url}" style="width:95vw; height:85vh; max-width:1200px; margin-top:50px; border:none; border-radius:12px; background:white; position:relative; z-index:2; box-shadow:0 10px 40px rgba(0,0,0,0.5);"></iframe>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Magia suave para o ecrã aparecer de forma elegante
+            requestAnimationFrame(() => {
+                overlay.style.opacity = '1';
+            });
         }
     },  
 
