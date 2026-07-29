@@ -891,9 +891,8 @@ Workspace.Avaliacoes = {
 
    renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
-        if (!container) return;
-
-        // 🚀 LÓGICA DE MANUTENÇÃO DE PESQUISA
+        
+        // 🚀 LÓGICA DE MANUTENÇÃO DE PESQUISA: Mantém o termo se a função for chamada sem argumentos (ex: ao apagar um item)
         if (termoBusca === null) {
             const inputAtual = document.getElementById('ws-busca-avaliacoes');
             termoBusca = inputAtual ? inputAtual.value : '';
@@ -901,39 +900,30 @@ Workspace.Avaliacoes = {
 
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
 
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
-            const abaAtual = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
-            if (abaAtual === 'ativas') {
-                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status !== 'arquivada');
-            } else {
-                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status === 'arquivada');
-            }
-        } else {
-            avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
-        }
+        if (Workspace.Avaliacoes.contextoAtual === 'encontros') avaliacoes = avaliacoes.filter(a => a.tipo === 'online');
+        else avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
 
+        // 🚀 O SEGREDO DA PESQUISA: Filtra os resultados em tempo real!
         if (termoBusca.trim() !== '') {
             const termo = termoBusca.toLowerCase().trim();
             avaliacoes = avaliacoes.filter(a => {
                 const titulo = (a.titulo || '').toLowerCase();
                 const destino = (a.destinoNome || '').toLowerCase();
-                return titulo.includes(termo) || destino.includes(termo);
+                
+                let dataAgendada = '';
+                if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                    const partes = a.dataAgendada.split('T')[0].split('-');
+                    if(partes.length === 3) dataAgendada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+                const dataCriacao = new Date(a.dataCriacao).toLocaleDateString('pt-BR').toLowerCase();
+
+                // Verifica se o texto digitado existe no título, turma, data agendada ou data de criação
+                return titulo.includes(termo) || destino.includes(termo) || dataAgendada.includes(termo) || dataCriacao.includes(termo);
             });
         }
 
-        let abasHtml = '';
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
-            const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
-            abasHtml = `
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <button class="ws-btn" style="background: ${abaAtiva === 'ativas' ? '#2c3e50' : '#f0f2f5'}; color: ${abaAtiva === 'ativas' ? 'white' : '#555'}; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;" onclick="Workspace.Avaliacoes.mudarAbaEncontros('ativas')">Sessões Ativas</button>
-                    <button class="ws-btn" style="background: ${abaAtiva === 'arquivadas' ? '#2c3e50' : '#f0f2f5'}; color: ${abaAtiva === 'arquivadas' ? 'white' : '#555'}; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;" onclick="Workspace.Avaliacoes.mudarAbaEncontros('arquivadas')">📂 Arquivadas</button>
-                </div>
-            `;
-        }
-
+        // 🚀 BARRA DE FERRAMENTAS INTELIGENTE COM CHECKBOX "TODOS"
         const topBar = `
-            ${abasHtml}
             <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
@@ -942,77 +932,90 @@ Workspace.Avaliacoes = {
                 <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
                 <div style="flex: 1; min-width: 200px; position: relative;">
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título ou turma..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
+                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título, turma ou data..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
                 </div>
-                <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar Selecionados</button>
+                <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">
+                    🗑️ Apagar Selecionados
+                </button>
             </div>
         `;
 
-        if (avaliacoes.length === 0) {
-            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta categoria.</div>';
+        if(avaliacoes.length === 0) {
+            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta pesquisa/categoria.</div>';
             return;
         }
 
-        const htmlLista = avaliacoes.map(a => {
-            let icone = '✍️'; 
-            if (a.tipo === 'oral') icone = '🎤'; 
-            if (a.tipo === 'online') icone = '🖥️';
+       const htmlLista = avaliacoes.map(a => {
+            let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
             
+            // 🚀 INTELIGÊNCIA: Verifica quem acedeu e limpa a falsa memória se voltaram a entrar
             const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
+            const reativadosCache = Workspace.Avaliacoes.getReativados(a.id);
+            
+            presencasReais.forEach(p => {
+                if (reativadosCache.some(r => r.id === p.alunoId)) {
+                    Workspace.Avaliacoes.removerReativado(a.id, p.alunoId);
+                }
+            });
+
             const presencasCount = presencasReais.length;
+            const temEntrega = presencasCount > 0;
 
-            let corStatus = '#27ae60';
-            let textoStatus = 'Online';
+            let corStatus = '#95a5a6'; // Cinza (Oculta)
+            let textoStatus = 'Oculta';
 
-            // 🚀 SEMÁFORO INTELIGENTE E DINÂMICO
-            if (a.tipo === 'online') {
-                if (presencasCount === 0) {
-                    textoStatus = 'Acesso Online (Todos)';
-                    corStatus = '#27ae60'; 
+            // Semáforo Inteligente e Fiel à Nuvem
+            if (a.status === 'ativa') {
+                if (a.tipo === 'online') {
+                    if (temEntrega) {
+                        corStatus = '#e74c3c'; // Consumido
+                        textoStatus = 'Acesso Offline';
+                    } else {
+                        corStatus = '#27ae60'; // Livre
+                        textoStatus = 'Acesso Online';
+                    }
                 } else {
-                    textoStatus = `Acesso Online / Offline (${presencasCount})`;
-                    corStatus = '#e74c3c'; 
+                    corStatus = '#27ae60';
+                    textoStatus = 'Online';
                 }
             }
 
-            // 🚀 BOTÃO DE ACESSO DIRETO PARA O PROFESSOR
-            let botaoLinkProfessor = '';
-            if (a.tipo === 'online' && a.linkSala) {
-                let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
-                botaoLinkProfessor = `
-                    <a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; padding: 6px 12px; border-radius: 15px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; margin-top: 5px;">
-                        🔗 Clique aqui para acessar o link
-                    </a>
-                `;
-            }
+            
+            const btnEditar = (temEntrega && a.tipo !== 'online')
+                ? `<button class="ws-btn" style="background:#f0f2f5; color:#aaa; flex:1; font-size:12px; padding:6px; cursor:not-allowed;" title="Já possui entregas" onclick="Workspace.mostrarAviso('Esta avaliação possui entregas. Não pode editar.', 'warning')">🔒 Bloqueado</button>`
+                : `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>`;
 
             let btnReativar = '';
             if (a.tipo === 'online') {
-                btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos (${presencasCount})</button>`;
+                btnReativar = `<button class="ws-btn" style="background:#fdfdfd; border:1px solid #f39c12; color:#f39c12; flex:1; font-size:12px; padding:6px; transition:0.2s;" onmouseover="this.style.background='#fdf2e9'" onmouseout="this.style.background='#fdfdfd'" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Ver Acessos (${presencasCount})</button>`;
             }
 
-            let btnArquivar = a.tipo === 'online' ? `
-                <button class="ws-btn" style="background:#f0f2f5; color:#7f8c8d; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.arquivarSessaoOnline('${a.id}', '${a.status === 'arquivada' ? 'ativa' : 'arquivada'}')">
-                    ${a.status === 'arquivada' ? '📂 Desarquivar' : '📥 Arquivar'}
-                </button>
-            ` : '';
+            // Exibe a data de forma clara na lista
+            let dataApresentada = '';
+            if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                const partes = a.dataAgendada.split('T')[0].split('-');
+                if(partes.length === 3) dataApresentada = `Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
 
             return `
-            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <!-- 🚀 A CHECKBOX INDIVIDUAL -->
                         <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; margin-top: 5px;">
                         <div>
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${a.titulo}</h4>
                             <span style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
                             <span style="font-size: 11px; color: #8e44ad; font-weight:bold; margin-left: 5px;">👥 ${a.destinoNome || 'Global'}</span>
-                            ${botaoLinkProfessor}
+                            <span style="font-size: 11px; color: #7f8c8d; margin-left: 5px;">Criada em: ${new Date(a.dataCriacao).toLocaleDateString('pt-BR')}</span>
+                            ${dataApresentada ? `<div style="font-size: 11px; color: #e67e22; font-weight:bold; margin-top: 5px;">📅 ${dataApresentada}</div>` : ''}
                         </div>
                     </div>
                 </div>
                 <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px;">
+                    ${btnEditar}
                     ${btnReativar}
-                    ${btnArquivar}
+                    <button class="ws-btn" style="background:#f0f2f5; color:#f39c12; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.mudarStatusAvaliacao('${a.id}', '${a.status === 'ativa' ? 'inativa' : 'ativa'}')">${a.status === 'ativa' ? '⏸️ Ocultar' : '▶️ Publicar'}</button>
                     <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:6px;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                 </div>
             </div>`;
@@ -1020,30 +1023,13 @@ Workspace.Avaliacoes = {
 
         container.innerHTML = topBar + htmlLista;
         
-        // 🚀 O TRUQUE DE UX COMPLETO: Repõe o foco no input sem interromper a digitação
+        // 🚀 O TRUQUE DE UX: Repõe o foco no input sem interromper a digitação do professor
         const inputNovo = document.getElementById('ws-busca-avaliacoes');
         if (inputNovo && termoBusca !== '') {
             inputNovo.focus();
             const val = inputNovo.value;
             inputNovo.value = '';
             inputNovo.value = val;
-        }
-    },
-
-    mudarAbaEncontros: (aba) => {
-        Workspace.Avaliacoes.abaEncontrosArquivo = aba;
-        Workspace.Avaliacoes.renderizarListaGerenciador();
-    },
-
-    arquivarSessaoOnline: async (id, novoStatus) => {
-        try {
-            await Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: novoStatus });
-            const p = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(x => x.id === id);
-            if(p) p.status = novoStatus;
-            Workspace.Avaliacoes.renderizarListaGerenciador();
-            Workspace.mostrarAviso(novoStatus === 'arquivada' ? "Sessão arquivada com sucesso!" : "Sessão desarquivada!", "success");
-        } catch(e) {
-            Workspace.mostrarAviso("Erro ao alterar o estado da sessão.", "error");
         }
     },
 
@@ -1213,16 +1199,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 if(acessos.length === 0 && reativadosLista.length === 0) {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
                 } else {
-                  acessos.forEach(acesso => {
+                    acessos.forEach(acesso => {
                         const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
                         const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
-                        
-                        // 🚀 FORMATAR HORA EXATA DO CLIQUE
-                        let horaFormatada = '';
-                        if (acesso.dataEntrega) {
-                            const d = new Date(acesso.dataEntrega);
-                            horaFormatada = `às ${d.getHours().toString().padStart(2, '0')}h${d.getMinutes().toString().padStart(2, '0')}`;
-                        }
 
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
@@ -1230,7 +1209,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
-                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado / Desativado</div>
                                     </div>
                                 </div>
                                 <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
