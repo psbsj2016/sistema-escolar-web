@@ -1132,7 +1132,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             modal.id = modalId;
             modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
             
-            // 🚀 O NOVO CABEÇALHO DO MODAL COM O BOTÃO ADICIONAR ALUNO
+            // 🚀 O BOTÃO ATUALIZADO: "Reativar Selecionados" em vez de "Reativar para Todos"
             modal.innerHTML = `
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
@@ -1142,11 +1142,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
                             <button type="button" class="ws-btn" style="background:#27ae60; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.togglePesquisaConvidado('${avaliacaoId}')">➕ Adicionar Aluno</button>
-                            <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarSalaOnline('${prova.id}')">🔄 Reativar para Todos</button>
+                            <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarAcessosSelecionados('${avaliacaoId}', '${destinoId}')">🔄 Reativar Selecionados</button>
                         </div>
                     </div>
 
-                    <!-- CAIXA DE PESQUISA (Escondida por Padrão) -->
                     <div id="ws-busca-convidado-container-${avaliacaoId}" style="display:none; margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
                         <input type="text" id="ws-input-convidado-${avaliacaoId}" placeholder="Pesquisar nome do aluno em toda a escola..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 13px;" onkeyup="Workspace.Avaliacoes.buscarConvidado('${avaliacaoId}', this.value)">
                         <div id="ws-lista-convidados-${avaliacaoId}" style="max-height: 150px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 5px;"></div>
@@ -1186,7 +1185,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             
             let alunosLista = [];
 
-            // 🚀 A JUNÇÃO: Junta os alunos da turma COM os convidados VIP!
             if (Workspace.Avaliacoes.todosAlunosCache) {
                 const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
                 alunosLista = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
@@ -1200,10 +1198,18 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
             let htmlLista = '';
 
+            // 🚀 CHECKBOX GLOBAL (Selecionar Todos)
+            const btnSelecionarTodos = acessos.length > 0 ? `
+                <div style="display:flex; align-items:center; gap:8px; padding: 10px 15px; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                    <input type="checkbox" id="ws-check-todos-reativar" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-reativar'); cbs.forEach(cb => cb.checked = this.checked);">
+                    <label for="ws-check-todos-reativar" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Selecionar todos os acessos bloqueados</label>
+                </div>
+            ` : '';
+
             if (alunosLista.length > 0) {
                 htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos consumidos.</div>`;
+                htmlLista += btnSelecionarTodos;
 
-                // Ordena os alunos por nome
                 alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
                 alunosLista.forEach(aluno => {
@@ -1214,29 +1220,31 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     const badgeConvidado = (prova.convidados && prova.convidados.some(c => c.id === aluno.id)) ? `<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 5px; border-radius: 4px; margin-left: 5px;">Convidado</span>` : '';
                     
                     if (acessoFeito) {
-                        // 🚀 FORMATAR HORA EXATA DO CLIQUE
                         let horaFormatada = '';
                         if (acessoFeito.dataEntrega) {
                             const d = new Date(acessoFeito.dataEntrega);
                             horaFormatada = `às ${d.getHours().toString().padStart(2, '0')}h${d.getMinutes().toString().padStart(2, '0')}`;
                         }
 
+                        // 🚀 CHECKBOX INDIVIDUAL INJETADA AQUI!
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
-                                <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <input type="checkbox" class="ws-check-reativar" value="${acessoFeito.id}" data-alunoid="${aluno.id}" data-alunonome="${nomeSeguro}" style="transform: scale(1.3); cursor: pointer;">
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">Reativar</button>
                             </div>
                         `;
                     } else if (foiReativado) {
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
-                                <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width: 17px;"></div><!-- Espaçador -->
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
@@ -1248,7 +1256,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     } else {
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
-                                <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width: 17px;"></div><!-- Espaçador -->
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
@@ -1260,7 +1269,53 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     }
                 });
             } else {
-                htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Nenhum aluno associado a esta sala.</div>`;
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Mostrando apenas presenças e reativações (Turma Global).</div>`;
+                htmlLista += btnSelecionarTodos;
+                
+                if(acessos.length === 0 && reativadosLista.length === 0) {
+                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
+                } else {
+                    acessos.forEach(acesso => {
+                        const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
+                        const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
+
+                        let horaFormatada = '';
+                        if (acesso.dataEntrega) {
+                            const d = new Date(acesso.dataEntrega);
+                            horaFormatada = `às ${d.getHours().toString().padStart(2, '0')}h${d.getMinutes().toString().padStart(2, '0')}`;
+                        }
+
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <input type="checkbox" class="ws-check-reativar" value="${acesso.id}" data-alunoid="${acesso.alunoId}" data-alunonome="${nomeSeguro}" style="transform: scale(1.3); cursor: pointer;">
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
+                                    </div>
+                                </div>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">Reativar</button>
+                            </div>
+                        `;
+                    });
+                    
+                    reativadosLista.forEach(reativado => {
+                        const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
+                        htmlLista += `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width: 17px;"></div>
+                                    ${avatar}
+                                    <div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
+                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
             }
             if(container) container.innerHTML = htmlLista;
         } catch(e) { if (container) container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
@@ -1375,31 +1430,53 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-    reativarSalaOnline: (id) => {
-        Workspace.Avaliacoes.confirmarDialog("Reativar Sessão para Todos", "Isto irá apagar o histórico de TODOS os alunos e a sala voltará a ficar aberta de imediato. Confirmar?", "Sim, Reativar", "#e74c3c", async () => {
+   // 🚀 LÓGICA DE REATIVAÇÃO EM MASSA (COM OPTIMISTIC UI)
+    reativarAcessosSelecionados: (avaliacaoId, destinoId) => {
+        const checkboxes = document.querySelectorAll('.ws-check-reativar:checked');
+        
+        if (checkboxes.length === 0) {
+            return Workspace.mostrarAviso("Selecione pelo menos um aluno marcando a caixa correspondente.", "warning");
+        }
+
+        Workspace.Avaliacoes.confirmarDialog("Reativar Acessos", `Tem a certeza de que deseja devolver a permissão de entrada na sala aos ${checkboxes.length} alunos selecionados?`, "Sim, Reativar", "#3498db", async () => {
+            Workspace.mostrarAviso("A reativar os acessos... ⏳", "info");
+            
             try {
-                const alunosAfetados = Workspace.Avaliacoes.entregasEmCache
-                                        .filter(e => e.avaliacaoId === id)
-                                        .map(e => ({ id: e.alunoId, nome: e.alunoNome }));
-
-                await Workspace.api(`/workspace/avaliacoes/${id}/entregas`, 'DELETE');
-                Workspace.mostrarAviso("A sala foi reativada para todos os alunos!", "success");
+                const alunosAfetados = [];
                 
+                // Dispara todos os pedidos de apagamento simultaneamente
+                const promessas = Array.from(checkboxes).map(cb => {
+                    const entregaId = cb.value;
+                    const alunoId = cb.getAttribute('data-alunoid');
+                    const alunoNome = cb.getAttribute('data-alunonome');
+                    
+                    if (alunoId && alunoNome) {
+                        alunosAfetados.push({ id: alunoId, nome: alunoNome });
+                    }
+                    
+                    // Limpeza visual instantânea na memória (Optimistic UI)
+                    Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.id !== entregaId);
+                    Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.id !== entregaId);
+                    
+                    return Workspace.api(`/workspace/avaliacoes/entregas/${entregaId}`, 'DELETE');
+                });
+
+                await Promise.all(promessas);
+
+                // Marca todos os afetados como reativados para a etiqueta Azul!
                 if (alunosAfetados.length > 0) {
-                    Workspace.Avaliacoes.marcarVariosReativados(id, alunosAfetados);
+                    Workspace.Avaliacoes.marcarVariosReativados(avaliacaoId, alunosAfetados);
                 }
-                
-                Workspace.Avaliacoes.entregasFeitas = Workspace.Avaliacoes.entregasFeitas.filter(e => e.avaliacaoId !== id);
-                Workspace.Avaliacoes.entregasEmCache = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId !== id);
 
-                // 🚀 O COMANDO DE MAGIA (SILENT UPDATE) para o clique em massa
-                Workspace.Avaliacoes.renderizarListaGerenciador();
+                Workspace.mostrarAviso(`${checkboxes.length} acesso(s) reativado(s) com sucesso!`, "success");
                 
-                const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
-                if (prova) {
-                    Workspace.Avaliacoes.abrirModalAcessos(id, prova.destino, true);
-                }
-            } catch(e) { Workspace.mostrarAviso("Erro ao limpar sala.", "error"); }
+                // Recarrega o background e o modal silenciosamente
+                Workspace.Avaliacoes.renderizarListaGerenciador();
+                Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId, true);
+
+            } catch(e) { 
+                Workspace.mostrarAviso("Ocorreu um erro na ligação com a nuvem.", "error"); 
+            }
         });
     },
 
