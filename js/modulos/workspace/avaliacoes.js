@@ -925,19 +925,23 @@ Workspace.Avaliacoes = {
         } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
     },
 
-   renderizarListaGerenciador: (termoBusca = null) => {
+  renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
+        if (!container) return;
+
+        // 1. LÓGICA DE MANUTENÇÃO DE PESQUISA
         if (termoBusca === null) {
             const inputAtual = document.getElementById('ws-busca-avaliacoes');
             termoBusca = inputAtual ? inputAtual.value : '';
         }
 
         let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
+        const contexto = Workspace.Avaliacoes.contextoAtual;
+        const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
 
-        // 🚀 O SISTEMA DE ARQUIVAMENTO (Para não poluir o painel)
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
-            const abaAtual = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
-            if (abaAtual === 'ativas') {
+        // 2. FILTRAGEM DE ABAS E PESQUISA
+        if (contexto === 'encontros') {
+            if (abaAtiva === 'ativas') {
                 avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status !== 'arquivada');
             } else {
                 avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status === 'arquivada');
@@ -955,10 +959,9 @@ Workspace.Avaliacoes = {
             });
         }
 
-        // As Abas do Arquivo
+        // 3. DESENHO DAS ABAS DE NAVEGAÇÃO
         let abasHtml = '';
-        if (Workspace.Avaliacoes.contextoAtual === 'encontros') {
-            const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
+        if (contexto === 'encontros') {
             abasHtml = `
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <button class="ws-btn" style="background: ${abaAtiva === 'ativas' ? '#2c3e50' : '#f0f2f5'}; color: ${abaAtiva === 'ativas' ? 'white' : '#555'}; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold;" onclick="Workspace.Avaliacoes.mudarAbaEncontros('ativas')">Sessões Ativas</button>
@@ -967,118 +970,194 @@ Workspace.Avaliacoes = {
             `;
         }
 
-        // 🚀 A NOVA BARRA DE FERRAMENTAS EM MASSA
+        // 4. BARRA DE FERRAMENTAS (AÇÕES EM MASSA)
         const topBar = `
             ${abasHtml}
             <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
+                    <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
                     <label for="ws-check-todos" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
                 </div>
                 <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
                 <div style="flex: 1; min-width: 200px; position: relative;">
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
+                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título ou turma..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
                 </div>
+                
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
-                    <button class="ws-btn" style="background: #f39c12; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.ocultarAvaliacoesSelecionadas()">⏸️ Ocultar</button>
-                    <button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>
+                    ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #f39c12; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.ocultarAvaliacoesSelecionadas()">⏸️ Ocultar</button>` : ''}
+                    ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>` : ''}
                 </div>
             </div>
         `;
 
         if (avaliacoes.length === 0) {
-            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhum registo encontrado nesta categoria.</div>';
+            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhuma sessão encontrada.</div>';
             return;
         }
 
+        // 5. CONSTRUÇÃO DOS CARTÕES (ATIVOS vs ARQUIVADOS)
         const htmlLista = avaliacoes.map(a => {
-            let icone = '✍️'; if (a.tipo === 'oral') icone = '🎤'; if (a.tipo === 'online') icone = '🖥️';
-            
-            // 🚀 O MOTOR DE CÁLCULO EXATO
-            let totalAlunos = 0;
+            let icone = '🖥️'; 
+            if (a.tipo === 'escrita') icone = '✍️'; 
+            if (a.tipo === 'oral') icone = '🎤';
+
+            // 🚀 O MOTOR DE CÁLCULO EXATO DE ALUNOS E CONVIDADOS
+            let alunosSessao = [];
             if (Workspace.Avaliacoes.todosAlunosCache) {
+                // 1. Busca os alunos da turma oficial
                 const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
                     const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
                     const destId = String(a.destino).toLowerCase().trim();
                     const destNome = String(a.destinoNome || '').toLowerCase().trim();
                     return a.destino === 'global' || turmasStr.includes(destId) || turmasStr.includes(destNome);
                 });
-                totalAlunos = alunosDaTurma.length;
-                // Soma os convidados que não eram da turma originalmente
+                
+                // Clona a lista para podermos adicionar os convidados
+                alunosSessao = [...alunosDaTurma];
+
+                // 2. Adiciona os Convidados VIP que não pertencem à turma
                 const convidados = a.convidados || [];
-                convidados.forEach(c => { if (!alunosDaTurma.some(al => al.id === c.id)) totalAlunos++; });
+                convidados.forEach(c => { 
+                    if (!alunosSessao.some(al => al.id === c.id)) {
+                        alunosSessao.push({ id: c.id, nome: c.nome, isConvidado: true });
+                    }
+                });
             }
 
+            const totalAlunos = alunosSessao.length;
             const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
+            const presencasIds = presencasReais.map(e => e.alunoId);
             const presencasCount = presencasReais.length;
             const faltam = totalAlunos - presencasCount;
 
-            let corStatus = '#95a5a6';
-            let textoStatus = 'Oculta';
+            // ================================================================
+            // 📂 MODO 1: CARTÃO DE RELATÓRIO (QUANDO ESTÁ ARQUIVADA)
+            // ================================================================
+            if (a.status === 'arquivada') {
+                const dArquivada = new Date(a.ultimaAtualizacao);
+                const dataArqFormatada = `${dArquivada.toLocaleDateString('pt-BR')} às ${dArquivada.getHours().toString().padStart(2, '0')}h${dArquivada.getMinutes().toString().padStart(2, '0')}`;
+                
+                // Separa os Presentes e os Ausentes
+                const presentes = [];
+                const ausentes = [];
+                
+                alunosSessao.forEach(aluno => {
+                    if (presencasIds.includes(aluno.id)) presentes.push(aluno);
+                    else ausentes.push(aluno);
+                });
 
-            if (a.status === 'ativa' || a.status === 'arquivada') {
-                if (a.tipo === 'online') {
-                    if (totalAlunos === 0) {
-                        textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db';
-                    } else if (presencasCount === 0) {
-                        textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60';
-                    } else if (presencasCount >= totalAlunos) {
-                        textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c';
-                    } else {
-                        textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12';
-                    }
-                } else {
-                    corStatus = '#27ae60'; textoStatus = 'Online';
-                }
-            }
+                // Ordena por ordem alfabética para facilitar a leitura do professor
+                presentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
+                ausentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
 
-            // Exibe a data de forma clara
-            const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
-            let dataApresentada = '';
-            if (a.dataAgendada && a.dataAgendada.includes('T')) {
-                const partes = a.dataAgendada.split('T')[0].split('-');
-                if(partes.length === 3) dataApresentada = `📅 Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
-            }
+                const htmlPresentes = presentes.length > 0 
+                    ? presentes.map(p => `<div style="font-size: 12px; color: #27ae60; padding: 4px 0; border-bottom: 1px dashed #eee;">✅ ${Workspace.escapeHTML(p.nome)} ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px;">Convidado</span>' : ''}</div>`).join('')
+                    : '<div style="font-size: 12px; color: #999; font-style: italic;">Ninguém compareceu.</div>';
+                    
+                const htmlAusentes = ausentes.length > 0 
+                    ? ausentes.map(p => `<div style="font-size: 12px; color: #e74c3c; padding: 4px 0; border-bottom: 1px dashed #eee;">❌ ${Workspace.escapeHTML(p.nome)} ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px;">Convidado</span>' : ''}</div>`).join('')
+                    : '<div style="font-size: 12px; color: #999; font-style: italic;">Não houve ausências!</div>';
 
-            // 🚀 O NOVO LAYOUT DO CARTÃO: Limpo e Hierarquizado
-            let btnEntrarSala = '';
-            if (a.tipo === 'online' && a.linkSala) {
-                let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
-                btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; flex: 1; font-size: 12px; padding: 8px; border-radius: 6px; text-align: center; font-weight: bold;">🚀 Entrar na Sala</a>`;
-            }
-
-            let btnGestao = '';
-            if (a.tipo === 'online') {
-                btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; flex: 1; font-size: 12px; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
-            }
-
-            return `
-            <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
-                <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; margin-top: 5px;">
-                    <div style="flex: 1; min-width: 0;">
-                        <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">${icone} ${a.titulo}</h4>
-                        <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 8px; font-weight: bold;">Criada em: ${dataCriacaoFmt} ${dataApresentada ? `| ${dataApresentada}` : ''}</div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span style="font-size: 11px; color: #8e44ad; font-weight:bold; background: #f4e8f8; padding: 3px 8px; border-radius: 6px;">👥 ${a.destinoNome || 'Global'}</span>
-                            <span style="font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                return `
+                <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">📂 ${a.titulo} (Relatório de Sessão)</h4>
+                            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">
+                                Arquivado em: <span style="color:#e67e22;">${dataArqFormatada}</span> &nbsp;|&nbsp; 👥 Turma: <span style="color:#8e44ad;">${a.destinoNome || 'Global'}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="ws-btn" style="background:#f0f2f5; color:#2c3e50; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarSessaoOnline('${a.id}', 'ativa')">📂 Desarquivar</button>
+                            <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                         </div>
                     </div>
-                </div>
-                
-                <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
-                    ${btnEntrarSala}
-                    ${btnGestao}
-                    ${a.tipo !== 'online' ? `<button class="ws-btn" style="background:#f0f2f5; color:#3498db; flex:1; font-size:12px; padding:8px; border-radius: 6px;" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>` : ''}
-                    <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; flex:1; font-size:12px; padding:8px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
-                </div>
-            </div>`;
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div>
+                            <h5 style="margin: 0 0 10px 0; color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">Presentes (${presentes.length})</h5>
+                            <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlPresentes}</div>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 10px 0; color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Ausentes (${ausentes.length})</h5>
+                            <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlAusentes}</div>
+                        </div>
+                    </div>
+                </div>`;
+            } 
+            
+            // ================================================================
+            // 🟢 MODO 2: CARTÃO DE GESTÃO (QUANDO ESTÁ ATIVA)
+            // ================================================================
+            else {
+                let corStatus = '#27ae60';
+                let textoStatus = 'Online';
+
+                if (a.status === 'ativa') {
+                    if (a.tipo === 'online') {
+                        if (totalAlunos === 0) {
+                            textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db';
+                        } else if (presencasCount === 0) {
+                            textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60';
+                        } else if (presencasCount >= totalAlunos) {
+                            textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c';
+                        } else {
+                            textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12';
+                        }
+                    } else {
+                        corStatus = '#27ae60'; textoStatus = 'Online';
+                    }
+                }
+
+                const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
+                let dataApresentada = '';
+                if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                    const partes = a.dataAgendada.split('T')[0].split('-');
+                    if(partes.length === 3) dataApresentada = `📅 Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+
+                let btnEntrarSala = '';
+                if (a.tipo === 'online' && a.linkSala) {
+                    let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
+                    btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sala</a>`;
+                }
+
+                let btnGestao = '';
+                if (a.tipo === 'online') {
+                    btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
+                }
+
+                return `
+                <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db; margin-top: 5px;">
+                            <div style="flex: 1; min-width: 0;">
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">${icone} ${a.titulo}</h4>
+                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 8px; font-weight: bold;">Criada em: ${dataCriacaoFmt} ${dataApresentada ? `| ${dataApresentada}` : ''}</div>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span style="font-size: 11px; color: #8e44ad; font-weight:bold; background: #f4e8f8; padding: 3px 8px; border-radius: 6px;">👥 ${a.destinoNome || 'Global'}</span>
+                                    <span style="font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap: 10px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
+                        ${btnEntrarSala}
+                        ${btnGestao}
+                        <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
+                    </div>
+                </div>`;
+            }
         }).join('');
 
         container.innerHTML = topBar + htmlLista;
         
+        // Repõe o foco no input sem interromper a digitação do professor
         const inputNovo = document.getElementById('ws-busca-avaliacoes');
         if (inputNovo && termoBusca !== '') {
             inputNovo.focus();
