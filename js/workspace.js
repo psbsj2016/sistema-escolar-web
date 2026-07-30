@@ -310,18 +310,46 @@ Object.assign(Workspace, {
     },
 
     // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com CSS Inquebrável para proporções perfeitas)
+    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com GPS Integrado)
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
         
+        // 🚀 O GPS MAGNÉTICO: Identifica de quem é a foto e o tamanho exato na tela
+        const atributoBusca = `data-avatar-nome="${Workspace.escapeHTML(nomeStr)}" data-avatar-tamanho="${tamanho}"`;
+
         if (url) {
-            // 🚀 O SEGREDO DO CSS: 'aspect-ratio: 1/1', 'object-position: center' e 'flex-shrink: 0' impedem distorções e vazios!
-            return `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
+            return `<img src="${url}" ${atributoBusca} loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
         } else {
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
-            return `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
+            return `<div ${atributoBusca} style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
         }
+    },
+
+    // 🚀 O VARREDOR MÁGICO: Atualiza toda a tela num piscar de olhos
+    atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
+        const nomeSeguro = Workspace.escapeHTML(nomeAutor);
+        const elementos = document.querySelectorAll(`[data-avatar-nome="${nomeSeguro}"]`);
+        
+        elementos.forEach(el => {
+            const tamanho = el.getAttribute('data-avatar-tamanho') || 40;
+            
+            if (el.tagName === 'IMG') {
+                // Se já era uma foto, apenas mudamos a fonte de imagem (transição super suave)
+                el.src = novaUrl;
+            } else if (el.tagName === 'DIV') {
+                // Se era uma bolinha colorida com a inicial, transformamos a bolinha numa imagem!
+                const novaImg = document.createElement('img');
+                novaImg.src = novaUrl;
+                novaImg.setAttribute('data-avatar-nome', nomeSeguro);
+                novaImg.setAttribute('data-avatar-tamanho', tamanho);
+                novaImg.setAttribute('loading', 'lazy');
+                novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;`;
+                
+                el.parentNode.replaceChild(novaImg, el);
+            }
+        });
     },
 
     toggleMenuPrincipal: () => {
@@ -417,7 +445,7 @@ Object.assign(Workspace, {
 
         const btn = document.getElementById('ws-btn-confirmar-corte');
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A processar...";
+        btn.innerText = "⏳ Atualizando...";
         btn.disabled = true;
 
         const loader = document.getElementById('ws-avatar-loading');
@@ -458,14 +486,14 @@ Object.assign(Workspace, {
                 });
 
                 if (res && res.success) {
+                    const nomeUsuario = Workspace.usuario.nome || Workspace.usuario.login;
                     Workspace.usuario.avatar = avatarFinal;
                     localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
-                    Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = avatarFinal;
+                    Workspace.avatarsCache[nomeUsuario] = avatarFinal;
                     
                     const img = document.getElementById('ws-perfil-img');
                     const letras = document.getElementById('ws-perfil-letras');
                     
-                    // Aplica a nova foto perfeitamente cortada no ecrã!
                     if(img) { 
                         img.src = avatarFinal; 
                         img.style.display = 'block'; 
@@ -473,8 +501,11 @@ Object.assign(Workspace, {
                     if(letras) letras.style.display = 'none';
 
                     Workspace.mostrarAviso("Foto de perfil linda e guardada com sucesso!", "success");
-                    if(Workspace.Sidebar) Workspace.Sidebar.carregarTurmas();
-                    if(Workspace.Feed) Workspace.Feed.carregarPosts();
+                    
+                    // 🚀 A MÁGICA ACONTECE AQUI: Atualiza Chat, Feed, Comentários e Notificações sem piscar a tela!
+                    if (Workspace.atualizarAvataresNaTela) {
+                        Workspace.atualizarAvataresNaTela(nomeUsuario, avatarFinal);
+                    }
                     
                     // Fecha o estúdio interativo
                     Workspace.fecharModalCorte();
