@@ -71,14 +71,37 @@
             </style>
 
             <div class="premium-login-card">
-                <!-- 🎓 HEADER / LOGO -->
+               <!-- 🎓 HEADER / LOGO (Design Premium Reconstruído em SVG) -->
                 <div class="premium-logo-area">
-                    <svg width="110" height="45" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto;">
-                        <path d="M100 15 L155 35 L100 55 L45 35 Z" fill="#1e3a8a"/>
-                        <path d="M150 38 L150 55" stroke="#1e3a8a" stroke-width="4"/>
-                        <rect x="145" y="55" width="10" height="15" fill="#1e3a8a"/>
-                        <text x="35" y="80" font-family="Arial, sans-serif" font-weight="900" font-size="48" fill="#2563eb" letter-spacing="-2">PTT</text>
-                        <path d="M55 42 L55 52 M75 48 L75 58 M125 48 L125 58 M145 42 L145 52" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round" opacity="0.3"/>
+                    <svg width="180" height="70" viewBox="0 0 250 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
+                        <!-- Definição do Gradiente Metálico Azul -->
+                        <defs>
+                            <linearGradient id="pttGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#2563eb" /> <!-- Azul Brilhante -->
+                                <stop offset="100%" stop-color="#1e3a8a" /> <!-- Azul Marinho Profundo -->
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Texto PTT Inclinado (Sensação de Velocidade e Tecnologia) -->
+                        <text x="35" y="70" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-size="75" fill="url(#pttGradient)" transform="skewX(-18)">PTT</text>
+
+                        <!-- Capelo (Chapéu de Formatura) posicionado sobre o último T -->
+                        <g transform="translate(142, -2)">
+                            <!-- Topo do Chapéu -->
+                            <polygon points="50,15 15,25 50,35 85,25" fill="url(#pttGradient)"/>
+                            
+                            <!-- Base do Chapéu (Parte que encaixa na cabeça) -->
+                            <path d="M 25,30 L 25,40 Q 50,50 75,40 L 75,30 Z" fill="url(#pttGradient)"/>
+                            
+                            <!-- Fio da Franja -->
+                            <path d="M 50,25 Q 85,25 90,40" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
+                            
+                            <!-- Franja/Pompom pendurado -->
+                            <rect x="86" y="40" width="8" height="18" rx="4" fill="#1e3a8a"/>
+                            
+                            <!-- Nó da Franja (Detalhe de acabamento) -->
+                            <rect x="85" y="44" width="10" height="3" rx="1" fill="#2563eb"/>
+                        </g>
                     </svg>
                     <h1>Sistema PTT</h1>
                     <p>Gestão Escolar Inteligente</p>
