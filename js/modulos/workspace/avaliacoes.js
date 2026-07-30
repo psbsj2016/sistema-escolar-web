@@ -997,16 +997,14 @@ Workspace.Avaliacoes = {
             return;
         }
 
-        // 5. CONSTRUÇÃO DOS CARTÕES (ATIVOS vs ARQUIVADOS)
+        // 5. CONSTRUÇÃO DOS CARTÕES
         const htmlLista = avaliacoes.map(a => {
             let icone = '🖥️'; 
             if (a.tipo === 'escrita') icone = '✍️'; 
             if (a.tipo === 'oral') icone = '🎤';
 
-            // 🚀 O MOTOR DE CÁLCULO EXATO DE ALUNOS E CONVIDADOS
             let alunosSessao = [];
             if (Workspace.Avaliacoes.todosAlunosCache) {
-                // 1. Busca os alunos da turma oficial
                 const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
                     const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
                     const destId = String(a.destino).toLowerCase().trim();
@@ -1014,10 +1012,8 @@ Workspace.Avaliacoes = {
                     return a.destino === 'global' || turmasStr.includes(destId) || turmasStr.includes(destNome);
                 });
                 
-                // Clona a lista para podermos adicionar os convidados
                 alunosSessao = [...alunosDaTurma];
 
-                // 2. Adiciona os Convidados VIP que não pertencem à turma
                 const convidados = a.convidados || [];
                 convidados.forEach(c => { 
                     if (!alunosSessao.some(al => al.id === c.id)) {
@@ -1028,7 +1024,6 @@ Workspace.Avaliacoes = {
 
             const totalAlunos = alunosSessao.length;
             const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
-            const presencasIds = presencasReais.map(e => e.alunoId);
             const presencasCount = presencasReais.length;
             const faltam = totalAlunos - presencasCount;
 
@@ -1039,16 +1034,20 @@ Workspace.Avaliacoes = {
                 const dArquivada = new Date(a.ultimaAtualizacao);
                 const dataArqFormatada = `${dArquivada.toLocaleDateString('pt-BR')} às ${dArquivada.getHours().toString().padStart(2, '0')}h${dArquivada.getMinutes().toString().padStart(2, '0')}`;
                 
-                // Separa os Presentes e os Ausentes
                 const presentes = [];
                 const ausentes = [];
                 
                 alunosSessao.forEach(aluno => {
-                    if (presencasIds.includes(aluno.id)) presentes.push(aluno);
+                    // 🚀 A CORREÇÃO MÁGICA: Comparação blindada (Converte para String e procura também pelo nome)
+                    const acessou = presencasReais.some(e => 
+                        String(e.alunoId) === String(aluno.id) || 
+                        (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim())
+                    );
+
+                    if (acessou) presentes.push(aluno);
                     else ausentes.push(aluno);
                 });
 
-                // Ordena por ordem alfabética para facilitar a leitura do professor
                 presentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
                 ausentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
 
@@ -1157,7 +1156,6 @@ Workspace.Avaliacoes = {
 
         container.innerHTML = topBar + htmlLista;
         
-        // Repõe o foco no input sem interromper a digitação do professor
         const inputNovo = document.getElementById('ws-busca-avaliacoes');
         if (inputNovo && termoBusca !== '') {
             inputNovo.focus();
