@@ -524,21 +524,6 @@ Object.assign(Workspace, {
     // ============================================================================
     // ✏️ EDIÇÃO DO NOME DO PERFIL
     // ============================================================================
-    editarNomePerfil: () => {
-        const nomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
-        document.getElementById('ws-input-novo-nome').value = nomeAtual;
-        
-        // Troca a vista: Esconde o nome estático e mostra a caixa de edição
-        document.getElementById('ws-perfil-nome-view').style.display = 'none';
-        document.getElementById('ws-perfil-nome-edit').style.display = 'flex';
-        document.getElementById('ws-input-novo-nome').focus();
-    },
-
-    cancelarEdicaoNome: () => {
-        document.getElementById('ws-perfil-nome-edit').style.display = 'none';
-        document.getElementById('ws-perfil-nome-view').style.display = 'flex';
-    },
-
     salvarNomePerfil: async () => {
         const input = document.getElementById('ws-input-novo-nome');
         const novoNome = input.value.trim();
@@ -554,7 +539,6 @@ Object.assign(Workspace, {
         btn.disabled = true;
 
         try {
-            // Envia o novo nome para o Servidor
             const res = await Workspace.api('/workspace/perfil/nome', 'PUT', {
                 id: Workspace.usuario.id,
                 alunoRefId: Workspace.usuario.alunoRefId,
@@ -562,14 +546,20 @@ Object.assign(Workspace, {
             });
 
             if (res && res.success) {
-                // 1. Atualiza a Memória do Navegador imediatamente
+                const nomeAntigo = res.nomeAntigo;
+
+                // 1. Atualiza a Memória do Navegador
                 Workspace.usuario.nome = novoNome;
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
 
-                // 2. Atualiza os elementos visuais na página
+                // 🚀 2. A TRANSFERÊNCIA DE AVATAR: Ensina o sistema a associar a foto ao nome novo
+                if (nomeAntigo && Workspace.avatarsCache[nomeAntigo]) {
+                    Workspace.avatarsCache[novoNome] = Workspace.avatarsCache[nomeAntigo];
+                }
+
+                // 3. Atualiza os elementos visuais na janela do Perfil
                 document.getElementById('ws-perfil-modal-nome').innerText = novoNome;
                 
-                // 3. Se o aluno não tiver foto, atualiza a inicial e a cor da bola!
                 if (!Workspace.usuario.avatar) {
                     const letrasEl = document.getElementById('ws-perfil-letras');
                     if (letrasEl) {
@@ -579,8 +569,17 @@ Object.assign(Workspace, {
                 }
 
                 Workspace.cancelarEdicaoNome();
-                Workspace.mostrarAviso("O seu nome foi atualizado com sucesso!", "success");
+                Workspace.mostrarAviso("O seu nome foi atualizado em toda a plataforma!", "success");
                 
+                // 🚀 4. A MAGIA INVISÍVEL: Apaga o Feed antigo e manda carregar o novo por trás dos panos!
+                if (Workspace.Feed) {
+                    Workspace.Feed.todosOsPosts = [];
+                    Workspace.Feed.postsCache = [];
+                    const areaFeed = document.getElementById('ws-posts-area');
+                    if (areaFeed) areaFeed.innerHTML = ''; 
+                    Workspace.Feed.carregarPosts(); 
+                }
+
                 // Força os outros módulos a lerem o nome novo
                 if (Workspace.Sidebar && Workspace.Sidebar.carregarTurmas) Workspace.Sidebar.carregarTurmas();
             } else {
