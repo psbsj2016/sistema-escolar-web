@@ -75,7 +75,7 @@
             </style>
 
             <div class="premium-login-card">
-               <!-- 🎓 HEADER / LOGO (Design Premium: P Gancho e Chapéu Flutuante) -->
+               <!-- 🎓 HEADER / LOGO (Design Premium: P em Gancho Exato e Chapéu Flutuante) -->
                 <div class="premium-logo-area">
                     <svg width="220" height="85" viewBox="0 0 260 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
                         <!-- Definição do Gradiente Metálico Azul -->
@@ -87,12 +87,11 @@
                         </defs>
 
                         <!-- 🚀 LETRAS DESENHADAS À MÃO (Vector Paths com inclinação) -->
-                        <!-- O grupo foi movido para baixo (Y=20) para dar espaço ao chapéu no topo -->
                         <g transform="translate(30, 20) skewX(-16)" fill="url(#pttGradient)">
                             
-                            <!-- A LETRA "P" EM FORMATO DE GANCHO -->
-                            <!-- A curva desce pela direita, corta reto para cima e volta, deixando um espaço vazio perfeito na frente da haste -->
-                            <path d="M 20 75 L 20 20 L 70 20 C 100 20, 100 56, 70 56 L 70 42 C 82 42, 82 34, 70 34 L 38 34 L 38 75 Z" />
+                            <!-- 🚀 A LETRA "P" EM GANCHO (Com espaço milimétrico na frente) -->
+                            <!-- A curva vai até X=100, volta para X=45 (a ponta do gancho) e sobe, deixando o vão perfeito antes da haste em X=40 -->
+                            <path d="M 20 75 L 20 20 L 60 20 C 100 20, 100 60, 60 60 L 45 60 L 45 44 L 60 44 C 80 44, 80 36, 60 36 L 40 36 L 40 75 Z" />
                             
                             <!-- Letra "T" (1) -->
                             <path d="M 80 20 L 140 20 L 140 34 L 118 34 L 118 75 L 100 75 L 100 34 L 80 34 Z" />
@@ -101,8 +100,7 @@
                             <path d="M 145 20 L 205 20 L 205 34 L 183 34 L 183 75 L 165 75 L 165 34 L 145 34 Z" />
                         </g>
 
-                        <!-- 🚀 CAPELO REALMENTE FLUTUANTE (Posicionado com gap real) -->
-                        <!-- Movido estrategicamente (Y=-6) para criar o vão físico entre ele e o T -->
+                        <!-- 🚀 CAPELO FLUTUANTE (Mantido com o espaço real sobre o T) -->
                         <g transform="translate(157, -6) scale(0.85)">
                             <!-- Preenchimento Real do Capelo -->
                             <polygon points="50,10 10,22 50,34 90,22" fill="url(#pttGradient)" />
