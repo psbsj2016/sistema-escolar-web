@@ -125,10 +125,9 @@ Workspace.Feed = {
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-    gerarHTMLComentario: (c, postId) => {
+   gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
-        // 🚀 PODER ABSOLUTO NOS COMENTÁRIOS: Permite apagar se for dono, Gestor ou Professor
         const ehDonoComentario = (
             c.autorNome === Workspace.usuario.nome || 
             Workspace.usuario.login === c.autorNome || 
@@ -139,7 +138,9 @@ Workspace.Feed = {
         
         const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
         const likesArr = Array.isArray(c.likes) ? c.likes : [];
+        const dislikesArr = Array.isArray(c.dislikes) ? c.dislikes : [];
         const euCurtiCom = likesArr.includes(meuId);
+        const euNaoCurtiCom = dislikesArr.includes(meuId);
 
         const acoesInline = ehDonoComentario ? `
             <div id="acoes-comentario-${c.id}" style="display:none; gap:10px; margin-top:6px; animation: fadeIn 0.2s; border-top:1px dashed #eee; padding-top:6px;">
@@ -148,7 +149,7 @@ Workspace.Feed = {
             </div>` : '';
         
         return `
-        <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start;">
+        <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; transition: 0.5s;">
             <div style="flex-shrink: 0; cursor:pointer;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')">${avatarComentario}</div>
             <div style="flex:1; padding-right: 5px; min-width: 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
@@ -160,6 +161,9 @@ Workspace.Feed = {
                 <div style="display:flex; gap:15px; margin-top:6px; align-items:center;">
                     <span id="btn-like-com-${c.id}" onclick="Workspace.Feed.reagirComentario('${postId}', '${c.id}', 'like')" style="font-size:11px; cursor:pointer; font-weight:bold; color:${euCurtiCom ? '#27ae60' : '#95a5a6'}; transition:0.2s;" onmouseover="this.style.filter='brightness(0.8)'" onmouseout="this.style.filter='none'">
                         👍 <span id="count-like-com-${c.id}">${likesArr.length > 0 ? likesArr.length : 'Curtir'}</span>
+                    </span>
+                    <span id="btn-dislike-com-${c.id}" onclick="Workspace.Feed.reagirComentario('${postId}', '${c.id}', 'dislike')" style="font-size:11px; cursor:pointer; font-weight:bold; color:${euNaoCurtiCom ? '#e74c3c' : '#95a5a6'}; transition:0.2s;" onmouseover="this.style.filter='brightness(0.8)'" onmouseout="this.style.filter='none'">
+                        👎 <span id="count-dislike-com-${c.id}">${dislikesArr.length > 0 ? dislikesArr.length : 'Descurtir'}</span>
                     </span>
                     ${ehDonoComentario ? `<span style="font-size:11px; color:#95a5a6; cursor:pointer; font-weight:600;" onclick="Workspace.Feed.toggleOpcoesComentario('acoes-comentario-${c.id}')">⚙️ Opções</span>` : ''}
                 </div>
@@ -1163,29 +1167,34 @@ Workspace.Feed = {
         if (!c) return;
 
         if (!Array.isArray(c.likes)) c.likes = [];
+        if (!Array.isArray(c.dislikes)) c.dislikes = [];
         let euCurti = c.likes.includes(meuId);
+        let euNaoCurti = c.dislikes.includes(meuId);
 
-        let tipoParaEnviar = tipo; // 🚀 A MÁGICA REPETE-SE AQUI!
+        let tipoParaEnviar = tipo;
 
-        if (euCurti) { 
-            c.likes = c.likes.filter(id => id !== meuId); 
-            euCurti = false; 
-            tipoParaEnviar = 'remove'; // A intenção é desfazer a curtida no comentário
+        if (tipo === 'like') {
+            if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; tipoParaEnviar = 'remove'; }
+            else { c.likes.push(meuId); euCurti = true; if (euNaoCurti) { c.dislikes = c.dislikes.filter(id => id !== meuId); euNaoCurti = false; } }
+        } else if (tipo === 'dislike') {
+            if (euNaoCurti) { c.dislikes = c.dislikes.filter(id => id !== meuId); euNaoCurti = false; tipoParaEnviar = 'remove'; }
+            else { c.dislikes.push(meuId); euNaoCurti = true; if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; } }
         }
-        else { 
-            c.likes.push(meuId); 
-            euCurti = true; 
-        }
 
-        const countEl = document.getElementById(`count-like-com-${comentarioId}`);
-        const btnEl = document.getElementById(`btn-like-com-${comentarioId}`);
-        if (countEl) countEl.innerText = c.likes.length > 0 ? c.likes.length : 'Curtir';
-        if (btnEl) btnEl.style.color = euCurti ? '#27ae60' : '#95a5a6';
+        const countLikeEl = document.getElementById(`count-like-com-${comentarioId}`);
+        const btnLikeEl = document.getElementById(`btn-like-com-${comentarioId}`);
+        if (countLikeEl) countLikeEl.innerText = c.likes.length > 0 ? c.likes.length : 'Curtir';
+        if (btnLikeEl) btnLikeEl.style.color = euCurti ? '#27ae60' : '#95a5a6';
+
+        const countDislikeEl = document.getElementById(`count-dislike-com-${comentarioId}`);
+        const btnDislikeEl = document.getElementById(`btn-dislike-com-${comentarioId}`);
+        if (countDislikeEl) countDislikeEl.innerText = c.dislikes.length > 0 ? c.dislikes.length : 'Descurtir';
+        if (btnDislikeEl) btnDislikeEl.style.color = euNaoCurti ? '#e74c3c' : '#95a5a6';
 
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            // 🚀 Envia 'remove' para o backend se estiver a desfazer!
             await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch(e) {}
     }
+
 };

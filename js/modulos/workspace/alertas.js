@@ -454,20 +454,52 @@ injetarCSS: () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // 🚀 O ROTEADOR INTELIGENTE (O "Teletransporte" para qualquer área do Hub)
-        if (origem === 'post') {
+        // 🚀 O ROTEADOR INTELIGENTE (O "Teletransporte" com Destaque)
+        if (origem === 'post' || origem === 'comentario_novo' || origem === 'comentario_reacao') {
             if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
+            
+            let postId = origemId;
+            let comentarioId = null;
+
+            // Desempacota os IDs caso seja uma interação de comentário
+            if (origemId.includes('|')) {
+                const partes = origemId.split('|');
+                postId = partes[0];
+                comentarioId = partes[1];
+            }
+
             const checkExist = setInterval(() => {
-                const postElement = document.getElementById(`box-comentarios-${origemId}`);
+                const postElement = document.getElementById(`post-${postId}`);
+                
                 if (postElement) {
                     clearInterval(checkExist);
-                    postElement.parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    if (Workspace.Feed && Workspace.Feed.toggleComentarios) {
-                        if (postElement.style.display === 'none') Workspace.Feed.toggleComentarios(origemId);
+                    
+                    // Se a notificação for de um comentário, garantimos que a aba de comentários abre!
+                    if (comentarioId && Workspace.Feed && Workspace.Feed.toggleComentarios) {
+                        const boxComentarios = document.getElementById(`box-comentarios-${postId}`);
+                        if (boxComentarios && boxComentarios.style.display === 'none') {
+                            Workspace.Feed.toggleComentarios(postId);
+                        }
                     }
+
+                    // Define quem vai brilhar (o Post inteiro ou apenas o Comentário exato)
+                    let alvoDestaque = postElement;
+                    if (comentarioId) {
+                        const comElement = document.getElementById(`comentario-${comentarioId}`);
+                        if (comElement) alvoDestaque = comElement;
+                    }
+
+                    // O Salto Automático
+                    alvoDestaque.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // O Piscar de Cor (Remove a classe e volta a adicionar para forçar o recomeço da animação)
+                    alvoDestaque.classList.remove('ws-highlight-magic');
+                    void alvoDestaque.offsetWidth; 
+                    alvoDestaque.classList.add('ws-highlight-magic');
                 }
             }, 200);
-            setTimeout(() => clearInterval(checkExist), 3000); 
-        } 
+            setTimeout(() => clearInterval(checkExist), 3000); // Desiste após 3 segundos se a net estiver lenta
+        }
         else if (origem === 'chat') {
             if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
             if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
