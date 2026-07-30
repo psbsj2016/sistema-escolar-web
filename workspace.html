@@ -1050,17 +1050,19 @@
         </div>
     </section>
 
-    <!-- 🚀 PERFIL RESTAURADO: Com Edição de Nome e Blindagem da Imagem -->
+    <!-- 🚀 PERFIL RESTAURADO: Com Edição de Nome e Blindagem Absoluta da Imagem -->
     <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">🙍 Meu Perfil</h3></div>
             <div style="padding: 30px 20px; text-align: center;">
                
                <div style="position: relative; display: inline-block; margin: 0 auto;">
-                    <!-- 🚀 BLINDAGEM DA IMAGEM: O contentor agora usa position: relative -->
+                    <!-- O contentor quadrado -->
                     <div style="cursor: pointer; border-radius: 16px; overflow: hidden; border: 3px solid #3498db; width: 120px; height: 120px; min-width: 120px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
-                        <!-- 🚀 A MAGIA CSS: position: absolute garante 100% de preenchimento sem faixas brancas -->
-                        <img id="ws-perfil-img" src="" alt="Avatar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: none; margin: 0; padding: 0;">
+                        
+                        <!-- 🚀 A MAGIA CSS (!important): Impede definitivamente que o design do Feed empurre a foto para baixo! -->
+                        <img id="ws-perfil-img" src="" alt="Avatar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: none; margin: 0 !important; padding: 0 !important; border-radius: 0 !important;">
+                        
                         <div id="ws-perfil-letras" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3498db; color: white; font-size: 45px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0;">?</div>
                     </div>
                     
@@ -1068,7 +1070,7 @@
                 </div>
                 <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
                 
-                <!-- 🚀 NOVA ÁREA INTERATIVA DO NOME -->
+                <!-- ÁREA INTERATIVA DO NOME -->
                 <div id="ws-perfil-nome-view" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0 5px 0;">
                     <h3 id="ws-perfil-modal-nome" style="margin: 0; color: #2c3e50; font-size: 20px;">Nome</h3>
                     <button onclick="Workspace.editarNomePerfil()" style="background: transparent; border: none; font-size: 14px; cursor: pointer; color: #3498db; padding: 5px; border-radius: 50%; transition: 0.2s;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" title="Editar Nome">✏️</button>
