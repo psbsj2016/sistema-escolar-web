@@ -75,36 +75,50 @@
             </style>
 
             <div class="premium-login-card">
-               <!-- 🎓 HEADER / LOGO (Design Premium com Chapéu Flutuante) -->
+               <!-- 🎓 HEADER / LOGO (Design Premium: Vetorizado, Vazado e Centralizado) -->
                 <div class="premium-logo-area">
-                    <svg width="180" height="70" viewBox="0 0 250 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
+                    <svg width="220" height="75" viewBox="0 0 260 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
                         <!-- Definição do Gradiente Metálico Azul -->
                         <defs>
                             <linearGradient id="pttGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stop-color="#2563eb" /> <!-- Azul Brilhante -->
-                                <stop offset="100%" stop-color="#1e3a8a" /> <!-- Azul Marinho Profundo -->
+                                <stop offset="100%" stop-color="#1e3a8a" /> <!-- Azul Marinho -->
                             </linearGradient>
                         </defs>
 
-                        <!-- Texto PTT Inclinado -->
-                        <text x="35" y="70" font-family="'Arial Black', Arial, sans-serif" font-weight="900" font-size="75" fill="url(#pttGradient)" transform="skewX(-18)">PTT</text>
+                        <!-- 🚀 LETRAS DESENHADAS À MÃO (Vector Paths com inclinação dinâmica) -->
+                        <g transform="translate(30, 0) skewX(-16)" fill="url(#pttGradient)">
+                            
+                            <!-- A LETRA "P" ABERTA MÁGICA -->
+                            <!-- Ela desce, faz a curva externa, entra, faz a curva interna e pára antes da haste! -->
+                            <path d="M 20 75 L 20 20 L 70 20 C 95 20, 95 56, 70 56 L 48 56 L 48 40 L 65 40 C 75 40, 75 36, 65 36 L 36 36 L 36 75 Z" />
+                            
+                            <!-- Letra "T" (1) -->
+                            <path d="M 80 20 L 140 20 L 140 36 L 118 36 L 118 75 L 102 75 L 102 36 L 80 36 Z" />
+                            
+                            <!-- Letra "T" (2) -->
+                            <path d="M 145 20 L 205 20 L 205 36 L 183 36 L 183 75 L 167 75 L 167 36 L 145 36 Z" />
+                        </g>
 
-                        <!-- 🚀 AJUSTE CIRÚRGICO: O transform agora move para a esquerda (X=118), para cima (Y=-10) e aplica um scale(0.9) para proporção perfeita -->
-                        <g transform="translate(118, -10) scale(0.9)">
-                            <!-- Topo do Chapéu -->
-                            <polygon points="50,15 15,25 50,35 85,25" fill="url(#pttGradient)"/>
+                        <!-- 🚀 CAPELO FLUTUANTE (Posicionado sobre o último T) -->
+                        <g transform="translate(155, 3) scale(0.85)">
                             
-                            <!-- Base do Chapéu (Parte que encaixa na cabeça) -->
-                            <path d="M 25,30 L 25,40 Q 50,50 75,40 L 75,30 Z" fill="url(#pttGradient)"/>
+                            <!-- O SEGREDO DO VAZADO: Esta borda branca e grossa fica atrás do chapéu e "apaga" a letra T azul -->
+                            <g stroke="#ffffff" stroke-width="9" stroke-linejoin="round" fill="none">
+                                <polygon points="50,10 10,22 50,34 90,22" />
+                                <path d="M 25,27 L 25,38 Q 50,48 75,38 L 75,27 Z" />
+                            </g>
                             
-                            <!-- Fio da Franja -->
-                            <path d="M 50,25 Q 85,25 90,40" fill="none" stroke="#1e3a8a" stroke-width="2.5"/>
-                            
-                            <!-- Franja/Pompom pendurado -->
-                            <rect x="86" y="40" width="8" height="18" rx="4" fill="#1e3a8a"/>
-                            
-                            <!-- Nó da Franja (Detalhe de acabamento) -->
-                            <rect x="85" y="44" width="10" height="3" rx="1" fill="#2563eb"/>
+                            <!-- Preenchimento Real do Capelo -->
+                            <g fill="url(#pttGradient)">
+                                <polygon points="50,10 10,22 50,34 90,22" />
+                                <path d="M 25,27 L 25,38 Q 50,48 75,38 L 75,27 Z" />
+                            </g>
+
+                            <!-- Franja (Pompom) Elegante -->
+                            <path d="M 50,22 Q 90,22 92,38" fill="none" stroke="#1e3a8a" stroke-width="3"/>
+                            <rect x="88" y="38" width="8" height="18" rx="4" fill="#1e3a8a"/>
+                            <rect x="87" y="42" width="10" height="3" rx="1" fill="#2563eb"/>
                         </g>
                     </svg>
                     <h1>Sistema PTT</h1>
