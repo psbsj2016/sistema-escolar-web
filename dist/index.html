@@ -75,9 +75,9 @@
             </style>
 
             <div class="premium-login-card">
-               <!-- 🎓 HEADER / LOGO (Design Premium: Vetorizado, Vazado e Centralizado) -->
+               <!-- 🎓 HEADER / LOGO (Design Premium: P Gancho e Chapéu Flutuante) -->
                 <div class="premium-logo-area">
-                    <svg width="220" height="75" viewBox="0 0 260 90" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
+                    <svg width="220" height="85" viewBox="0 0 260 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto; display: block;">
                         <!-- Definição do Gradiente Metálico Azul -->
                         <defs>
                             <linearGradient id="pttGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -86,34 +86,27 @@
                             </linearGradient>
                         </defs>
 
-                        <!-- 🚀 LETRAS DESENHADAS À MÃO (Vector Paths com inclinação dinâmica) -->
-                        <g transform="translate(30, 0) skewX(-16)" fill="url(#pttGradient)">
+                        <!-- 🚀 LETRAS DESENHADAS À MÃO (Vector Paths com inclinação) -->
+                        <!-- O grupo foi movido para baixo (Y=20) para dar espaço ao chapéu no topo -->
+                        <g transform="translate(30, 20) skewX(-16)" fill="url(#pttGradient)">
                             
-                            <!-- A LETRA "P" ABERTA MÁGICA -->
-                            <!-- Ela desce, faz a curva externa, entra, faz a curva interna e pára antes da haste! -->
-                            <path d="M 20 75 L 20 20 L 70 20 C 95 20, 95 56, 70 56 L 48 56 L 48 40 L 65 40 C 75 40, 75 36, 65 36 L 36 36 L 36 75 Z" />
+                            <!-- A LETRA "P" EM FORMATO DE GANCHO -->
+                            <!-- A curva desce pela direita, corta reto para cima e volta, deixando um espaço vazio perfeito na frente da haste -->
+                            <path d="M 20 75 L 20 20 L 70 20 C 100 20, 100 56, 70 56 L 70 42 C 82 42, 82 34, 70 34 L 38 34 L 38 75 Z" />
                             
                             <!-- Letra "T" (1) -->
-                            <path d="M 80 20 L 140 20 L 140 36 L 118 36 L 118 75 L 102 75 L 102 36 L 80 36 Z" />
+                            <path d="M 80 20 L 140 20 L 140 34 L 118 34 L 118 75 L 100 75 L 100 34 L 80 34 Z" />
                             
                             <!-- Letra "T" (2) -->
-                            <path d="M 145 20 L 205 20 L 205 36 L 183 36 L 183 75 L 167 75 L 167 36 L 145 36 Z" />
+                            <path d="M 145 20 L 205 20 L 205 34 L 183 34 L 183 75 L 165 75 L 165 34 L 145 34 Z" />
                         </g>
 
-                        <!-- 🚀 CAPELO FLUTUANTE (Posicionado sobre o último T) -->
-                        <g transform="translate(155, 3) scale(0.85)">
-                            
-                            <!-- O SEGREDO DO VAZADO: Esta borda branca e grossa fica atrás do chapéu e "apaga" a letra T azul -->
-                            <g stroke="#ffffff" stroke-width="9" stroke-linejoin="round" fill="none">
-                                <polygon points="50,10 10,22 50,34 90,22" />
-                                <path d="M 25,27 L 25,38 Q 50,48 75,38 L 75,27 Z" />
-                            </g>
-                            
+                        <!-- 🚀 CAPELO REALMENTE FLUTUANTE (Posicionado com gap real) -->
+                        <!-- Movido estrategicamente (Y=-6) para criar o vão físico entre ele e o T -->
+                        <g transform="translate(157, -6) scale(0.85)">
                             <!-- Preenchimento Real do Capelo -->
-                            <g fill="url(#pttGradient)">
-                                <polygon points="50,10 10,22 50,34 90,22" />
-                                <path d="M 25,27 L 25,38 Q 50,48 75,38 L 75,27 Z" />
-                            </g>
+                            <polygon points="50,10 10,22 50,34 90,22" fill="url(#pttGradient)" />
+                            <path d="M 25,27 L 25,38 Q 50,48 75,38 L 75,27 Z" fill="url(#pttGradient)" />
 
                             <!-- Franja (Pompom) Elegante -->
                             <path d="M 50,22 Q 90,22 92,38" fill="none" stroke="#1e3a8a" stroke-width="3"/>
