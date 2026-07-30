@@ -168,7 +168,7 @@
         }
 
     </style>
-  <script type="module" crossorigin src="/assets/workspace-Da5ikjY6.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-wzvU2L31.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-Ci4KKuXA.js">
   <link rel="modulepreload" crossorigin href="/assets/site-uBRfFSGd.js">
   <link rel="stylesheet" crossorigin href="/assets/site-D7LMCEVW.css">
@@ -465,7 +465,7 @@
                     <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0;" id="ws-action-flex-wrapper">
                         <!-- 🚀 O BOTÃO GERAL NASCE AQUI INSTANTANEAMENTE -->
                         <select id="ws-post-destino" class="post-action-select" style="border: 1px solid #e2e8f0; outline: none; background: #f8fafc; cursor: pointer; font-weight: 600; font-family: inherit; color: #475569; min-width: 0;">
-                            <option value="global">🌍 Geral</option>
+                            <option value="global">🌍 Público Geral</option>
                         </select>
 
                         <!-- Botão Anexar Arquivo -->
@@ -953,7 +953,7 @@
                                 <button onclick="Workspace.Bau.novaNota()" style="background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; transition: 0.2s;" onmouseover="this.style.background='#219653'">+ Nova Nota</button>
                             </div>
                             <div id="ws-bau-lista-notas" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
-                                <div style="text-align: center; color: #999; font-size: 13px; padding: 20px;">A procurar notas na nuvem... ⏳</div>
+                                <div style="text-align: center; color: #999; font-size: 13px; padding: 20px;">Atualizando as notas... ⏳</div>
                             </div>
                         </div>
 
@@ -1136,14 +1136,14 @@
                     
                     <!-- Visão do Aluno: Form para entregar -->
                     <div id="ws-area-entrega" style="display: none;">
-                        <h4 style="margin: 0 0 15px 0; color: #3498db;">📤 Enviar o meu trabalho</h4>
-                        <label style="font-size: 12px; font-weight: bold; color: #555;">Anexar Ficheiro (PDF, Imagem, Word)</label>
+                        <h4 style="margin: 0 0 15px 0; color: #3498db;">📤 Enviar o meu exercício</h4>
+                        <label style="font-size: 12px; font-weight: bold; color: #555;">Anexar Arquivo (PDF, Imagem, Slide)</label>
                         <input type="file" id="ws-tarefa-arquivo" class="ws-post-input" style="padding: 10px; margin-bottom: 15px; background: white;">
                         
                         <label style="font-size: 12px; font-weight: bold; color: #555;">Observações (Opcional)</label>
                         <textarea id="ws-tarefa-obs" class="ws-post-input" rows="3" placeholder="Alguma mensagem para o professor?"></textarea>
                         
-                        <button id="ws-btn-entregar" class="ws-btn" style="width: 100%; background: #27ae60; padding: 12px;" onclick="Workspace.Sidebar.enviarTarefa()">Enviar Trabalho</button>
+                        <button id="ws-btn-entregar" class="ws-btn" style="width: 100%; background: #27ae60; padding: 12px;" onclick="Workspace.Sidebar.enviarTarefa()">Enviar Exercício</button>
                     </div>
 
                     <!-- Visão do Aluno: Já Entregue -->

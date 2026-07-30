@@ -1306,7 +1306,7 @@ verFotoChat: () => {
             } else if (ehVideo) {
                 htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><video controls style="width:100%; border-radius:8px; border:1px solid #ddd; background:#000;"><source src="${urlCorrigida}">Seu navegador não suporta este vídeo.</video></div>`;
             } else {
-                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><a href="${urlCorrigida}" target="_blank" style="display:flex; align-items:center; gap:8px; background:#3498db; color:white; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#2980b9'">📎 Abrir Material de Apoio</a></div>`;
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><a href="${urlCorrigida}" target="_blank" style="display:flex; align-items:center; gap:8px; background:#3498db; color:white; padding:10px; border-radius:6px; text-decoration:none; font-weight:bold; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#2980b9'">📎 Ver Material de Apoio</a></div>`;
             }
         }
 
