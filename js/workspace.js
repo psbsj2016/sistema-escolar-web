@@ -490,6 +490,79 @@ Object.assign(Workspace, {
         }, 'image/jpeg', 0.92); // Qualidade JPG de 92%
     },
 
+    // ============================================================================
+    // ✏️ EDIÇÃO DO NOME DO PERFIL
+    // ============================================================================
+    editarNomePerfil: () => {
+        const nomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
+        document.getElementById('ws-input-novo-nome').value = nomeAtual;
+        
+        // Troca a vista: Esconde o nome estático e mostra a caixa de edição
+        document.getElementById('ws-perfil-nome-view').style.display = 'none';
+        document.getElementById('ws-perfil-nome-edit').style.display = 'flex';
+        document.getElementById('ws-input-novo-nome').focus();
+    },
+
+    cancelarEdicaoNome: () => {
+        document.getElementById('ws-perfil-nome-edit').style.display = 'none';
+        document.getElementById('ws-perfil-nome-view').style.display = 'flex';
+    },
+
+    salvarNomePerfil: async () => {
+        const input = document.getElementById('ws-input-novo-nome');
+        const novoNome = input.value.trim();
+
+        if (!novoNome) {
+            Workspace.mostrarAviso("Por favor, digite um nome válido.", "warning");
+            return;
+        }
+
+        const btn = document.getElementById('ws-btn-salvar-nome');
+        const txtOriginal = btn.innerText;
+        btn.innerText = "⏳";
+        btn.disabled = true;
+
+        try {
+            // Envia o novo nome para o Servidor
+            const res = await Workspace.api('/workspace/perfil/nome', 'PUT', {
+                id: Workspace.usuario.id,
+                alunoRefId: Workspace.usuario.alunoRefId,
+                novoNome: novoNome
+            });
+
+            if (res && res.success) {
+                // 1. Atualiza a Memória do Navegador imediatamente
+                Workspace.usuario.nome = novoNome;
+                localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+
+                // 2. Atualiza os elementos visuais na página
+                document.getElementById('ws-perfil-modal-nome').innerText = novoNome;
+                
+                // 3. Se o aluno não tiver foto, atualiza a inicial e a cor da bola!
+                if (!Workspace.usuario.avatar) {
+                    const letrasEl = document.getElementById('ws-perfil-letras');
+                    if (letrasEl) {
+                        letrasEl.innerText = novoNome.charAt(0).toUpperCase();
+                        letrasEl.style.background = Workspace.gerarCorPorNome(novoNome);
+                    }
+                }
+
+                Workspace.cancelarEdicaoNome();
+                Workspace.mostrarAviso("O seu nome foi atualizado com sucesso!", "success");
+                
+                // Força os outros módulos a lerem o nome novo
+                if (Workspace.Sidebar && Workspace.Sidebar.carregarTurmas) Workspace.Sidebar.carregarTurmas();
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao atualizar o nome.", "error");
+            }
+        } catch (error) {
+            Workspace.mostrarAviso("Falha na comunicação com o servidor.", "error");
+        } finally {
+            btn.innerText = txtOriginal;
+            btn.disabled = false;
+        }
+    },
+
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
     abrirPaginaBau: () => Workspace.navegarPara('bau'),
     abrirPaginaAvaliacoes: () => Workspace.navegarPara('avaliacoes'),

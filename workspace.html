@@ -1050,28 +1050,39 @@
         </div>
     </section>
 
-    <!-- 🚀 PERFIL RESTAURADO: De volta para dentro da cápsula e com layout normal de página -->
+    <!-- 🚀 PERFIL RESTAURADO: Com Edição de Nome e Blindagem da Imagem -->
     <section id="ws-perfil-modal" style="display: none; max-width: 500px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box; align-items: center; justify-content: center;">
         <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
             <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">🙍 Meu Perfil</h3></div>
             <div style="padding: 30px 20px; text-align: center;">
+               
                <div style="position: relative; display: inline-block; margin: 0 auto;">
-                    <!-- 🚀 MUDANÇA PARA QUADRADO MODERNO (border-radius: 16px em vez de 50%) -->
-                    <!-- Aumentei o tamanho para 120px para dar um aspeto mais "Premium" -->
-                    <div style="cursor: pointer; border-radius: 16px; overflow: hidden; border: 3px solid #3498db; width: 120px; height: 120px; min-width: 120px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
-                        
-                        <!-- A imagem agora preencherá todo o quadrado perfeitamente -->
-                        <img id="ws-perfil-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: none;">
-                        <div id="ws-perfil-letras" style="width: 100%; height: 100%; background: #3498db; color: white; font-size: 45px; font-weight: bold; display: flex; align-items: center; justify-content: center;">?</div>
+                    <!-- 🚀 BLINDAGEM DA IMAGEM: O contentor agora usa position: relative -->
+                    <div style="cursor: pointer; border-radius: 16px; overflow: hidden; border: 3px solid #3498db; width: 120px; height: 120px; min-width: 120px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
+                        <!-- 🚀 A MAGIA CSS: position: absolute garante 100% de preenchimento sem faixas brancas -->
+                        <img id="ws-perfil-img" src="" alt="Avatar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: none; margin: 0; padding: 0;">
+                        <div id="ws-perfil-letras" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3498db; color: white; font-size: 45px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0;">?</div>
                     </div>
                     
-                    <!-- Reposicionei o botão de Editar Foto (Câmara) para encaixar no novo canto do quadrado -->
                     <div style="position: absolute; bottom: -8px; right: -8px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Alterar Foto">📷</div>
                 </div>
                 <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
-                <h3 id="ws-perfil-modal-nome" style="margin: 15px 0 5px 0; color: #2c3e50; font-size: 20px;">Nome</h3>
+                
+                <!-- 🚀 NOVA ÁREA INTERATIVA DO NOME -->
+                <div id="ws-perfil-nome-view" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0 5px 0;">
+                    <h3 id="ws-perfil-modal-nome" style="margin: 0; color: #2c3e50; font-size: 20px;">Nome</h3>
+                    <button onclick="Workspace.editarNomePerfil()" style="background: transparent; border: none; font-size: 14px; cursor: pointer; color: #3498db; padding: 5px; border-radius: 50%; transition: 0.2s;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'" title="Editar Nome">✏️</button>
+                </div>
+
+                <div id="ws-perfil-nome-edit" style="display: none; justify-content: center; align-items: center; gap: 8px; margin: 15px 0 5px 0;">
+                    <input type="text" id="ws-input-novo-nome" class="ws-post-input" style="margin: 0; padding: 8px 15px; border-radius: 20px; font-size: 14px; text-align: center; width: 200px;" placeholder="Digite o seu nome">
+                    <button onclick="Workspace.salvarNomePerfil()" id="ws-btn-salvar-nome" style="background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">Guardar</button>
+                    <button onclick="Workspace.cancelarEdicaoNome()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;">✖</button>
+                </div>
+                <!-- FIM DA ÁREA DO NOME -->
+
                 <p id="ws-perfil-modal-login" style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: bold;">@login</p>
-                <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando a foto do perfil ⏳ ...</div>
+                <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando o perfil ⏳ ...</div>
             </div>
         </div>
     </section>
