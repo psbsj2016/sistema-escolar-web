@@ -163,8 +163,17 @@ injetarCSS: () => {
                 line-height: 1 !important;
                 box-sizing: border-box !important;
             }
+
+                @keyframes highlightMagic { 
+                0% { background-color: transparent; transform: scale(1); } 
+                20% { background-color: #fff9c4; transform: scale(1.02); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); } 
+                80% { background-color: #fff9c4; transform: scale(1.02); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); } 
+                100% { background-color: transparent; transform: scale(1); box-shadow: none; } 
+            }
+            .ws-highlight-magic { animation: highlightMagic 2.5s ease-out; }
         `;
-        document.head.appendChild(style);
+        
+         document.head.appendChild(style);
     },
 
     construirDropdown: () => {
