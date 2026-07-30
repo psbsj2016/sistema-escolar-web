@@ -1165,6 +1165,26 @@ Workspace.Avaliacoes = {
         }
     },
 
+   // ========================================================================
+    // 🚀 AS FUNÇÕES QUE FALTAVAM: NAVEGAÇÃO E ARQUIVAMENTO
+    // ========================================================================
+    mudarAbaEncontros: (aba) => {
+        Workspace.Avaliacoes.abaEncontrosArquivo = aba;
+        Workspace.Avaliacoes.renderizarListaGerenciador();
+    },
+
+    arquivarSessaoOnline: async (id, novoStatus) => {
+        try {
+            await Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: novoStatus });
+            const p = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(x => x.id === id);
+            if(p) p.status = novoStatus;
+            Workspace.Avaliacoes.renderizarListaGerenciador();
+            Workspace.mostrarAviso(novoStatus === 'arquivada' ? "Sessão arquivada com sucesso!" : "Sessão restaurada para Ativas!", "success");
+        } catch(e) {
+            Workspace.mostrarAviso("Erro ao alterar o estado da sessão.", "error");
+        }
+    },
+
   // 🧠 MEMÓRIA INTELIGENTE DE REATIVAÇÕES
     getReativados: (avaliacaoId) => {
         try { return JSON.parse(localStorage.getItem(`ws_reativados_${avaliacaoId}`)) || []; }
