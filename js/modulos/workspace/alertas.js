@@ -227,9 +227,9 @@ injetarCSS: () => {
                 if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
                     
                     novas.forEach((novaNoti, index) => {
-                        setTimeout(async () => { // Usamos async para o alarme do Baú
+                        setTimeout(async () => { 
                             
-                            const titulo = novaNoti.mensagem.split('"')[1] || 'Atividade'; // Extrai o nome da atividade que vem entre aspas
+                            const titulo = novaNoti.mensagem.split('"')[1] || 'Atividade'; 
 
                             // 1. AVALIAÇÕES (ESCRITA E ORAL)
                             if (novaNoti.origem === 'avaliacao_escrita' || novaNoti.origem === 'avaliacao_oral') {
@@ -247,22 +247,19 @@ injetarCSS: () => {
                                     subtitulo: "Sala de Aula Online",
                                     mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado no seu Baú ao confirmar!</i>`
                                 }, 'online', async () => {
-                                    // 🚀 A MÁGICA ACONTECE AQUI! (Só após o aluno clicar em "Ciente")
                                     try {
                                         let tempoLembrete;
-                                        
-                                        // 🚀 O SEGREDO DO FUSO HORÁRIO (FRONTEND): Desmontamos a data à mão!
                                         if (novaNoti.dataEvento && novaNoti.dataEvento.includes('T')) {
                                             const partes = novaNoti.dataEvento.split('T');
                                             const dataPartes = partes[0].split('-');
                                             const horaPartes = partes[1].split(':');
                                             
                                             tempoLembrete = new Date(
-                                                parseInt(dataPartes[0], 10),      // Ano
-                                                parseInt(dataPartes[1], 10) - 1,  // Mês (Janeiro começa no 0)
-                                                parseInt(dataPartes[2], 10),      // Dia
-                                                parseInt(horaPartes[0], 10),      // 🚀 A HORA EXATA DO PROFESSOR!
-                                                parseInt(horaPartes[1], 10)       // O Minuto Exato
+                                                parseInt(dataPartes[0], 10),     
+                                                parseInt(dataPartes[1], 10) - 1,  
+                                                parseInt(dataPartes[2], 10),      
+                                                parseInt(horaPartes[0], 10),      
+                                                parseInt(horaPartes[1], 10)       
                                             );
                                         } else {
                                             tempoLembrete = new Date();
@@ -275,9 +272,8 @@ injetarCSS: () => {
                                             usuarioId: Workspace.usuario.id,
                                             mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
                                             tempoDisparo: tempoDisparoMs
-                                        }); // 🚀 <-- ERA AQUI QUE FALTAVA O FECHO '});' !
+                                        }); 
                                         
-                                        // 🚀 UX EXTRA: Atualiza visualmente na mesma hora sem recarregar a página!
                                         if (res && res.success && window.Workspace && Workspace.Bau) {
                                             Workspace.Bau.alarmesAtivos.push({
                                                 id: res.id,
@@ -291,15 +287,13 @@ injetarCSS: () => {
                                 });
                             }
                             
-                                              // 2.5 EDIÇÃO DE AULAS ONLINE (Apenas informa, NÃO duplica o alarme!)
+                            // 2.5 EDIÇÃO DE AULAS ONLINE 
                             else if (novaNoti.origem === 'online_edit') {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sessão Online Atualizada ⚠️",
                                     mensagemCorpo: `O(a) professor(a) <strong>alterou a data, hora ou link</strong> da sessão: "${titulo}".<br>🗓️ <i>O lembrete no seu Baú já foi atualizado automaticamente!</i>`
                                 }, 'online', async () => {
-                                    // 🚀 MÁGICA: Não cria um alarme novo. Apenas manda o calendário redesenhar-se
-                                    // para mostrar a nova data caso o aluno esteja com o Baú aberto!
                                     if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
                                         Workspace.Bau.carregarDadosDaNuvem();
                                     }
@@ -308,7 +302,6 @@ injetarCSS: () => {
 
                             // 3. EXERCÍCIOS / TAREFAS
                             else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
-                                // 🚀 DISTINÇÃO INTELIGENTE: Verifica quem está a olhar para o ecrã
                                 const ehProfessor = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
                                 
                                 Toast.showInterativo({
@@ -329,18 +322,28 @@ injetarCSS: () => {
                                 }, 'material');
                             }
                             
-                            // 5. POSTS OU CHAT (Avisos de Ping-Pong normais)
+                            // ========================================================================
+                            // 🚀 5. POSTS, REAÇÕES, COMENTÁRIOS E CHAT (A CORREÇÃO ENTRA AQUI!)
+                            // ========================================================================
                             else {
+                                // Mostra o Toast na tela
                                 if (window.Toast && Toast.show) Toast.show(`🔔 ${novaNoti.remetenteNome} ${novaNoti.mensagem}`, 'info');
+                                
+                                // Anima o sininho
                                 const bell = document.getElementById('ws-bell');
                                 if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
+                                
+                                // 🚀 A SOLUÇÃO: Forçamos a atualização da interface IMEDIATAMENTE 
+                                // para que a bolinha vermelha e a lista sejam criadas na mesma hora!
+                                Workspace.Alertas.atualizarInterface();
                             }
 
-                        }, index * 1000); // 1 segundo de intervalo entre cada cartão
+                        }, index * 1000); 
                     });
                 }
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
-                // Não atualizamos o sininho AQUI! O sininho só atualiza quando o aluno clica em OK e a foto aterra nele!
+                
+                // Continua a atualizar as notificações silenciosas (se não existirem novas a animar)
                 if (novas.length === 0) Workspace.Alertas.atualizarInterface();
             }
         } catch (e) {}
