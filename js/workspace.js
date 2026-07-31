@@ -498,6 +498,23 @@ Object.assign(Workspace, {
         }
     },
 
+     // ============================================================================
+    // 🛡️ ESCUDO GLOBAL DE TEXTO: Converte nomes antigos no nome atual do utilizador
+    // ============================================================================
+    obterNomeProtegido: (nomeOriginal) => {
+        if (!Workspace.usuario) return nomeOriginal || 'Desconhecido';
+        
+        const meuNomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
+        
+        // Coloque aqui os nomes antigos que o sistema deve intercetar
+        const meusNomesAntigos = ["Gestor Principal", Workspace.usuario.login]; 
+        
+        if (meusNomesAntigos.includes(nomeOriginal) || nomeOriginal === meuNomeAtual) {
+            return meuNomeAtual;
+        }
+        return nomeOriginal || 'Desconhecido';
+    },
+
     // O Varredor Mágico: Substitui as fotos antigas nas publicações instantaneamente
     atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
         const nomeSeguro = Workspace.escapeHTML(nomeAutor);

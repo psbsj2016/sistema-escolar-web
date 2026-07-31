@@ -134,7 +134,12 @@ Workspace.Feed = {
             Workspace.usuario.tipo === 'Gestor' || 
             Workspace.usuario.tipo === 'Professor'
         );
-        const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
+        
+        // 🛡️ APLICAÇÃO DO ESCUDO: Limpa e protege o nome do comentário
+        const nomeProtegido = Workspace.Feed.protegerNome(c.autorNome);
+        const nomeLimpo = Workspace.Feed.limparTexto(nomeProtegido);
+        
+        const avatarComentario = window.Workspace.renderizarAvatar(nomeProtegido, 30);
         
         const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
         const likesArr = Array.isArray(c.likes) ? c.likes : [];
@@ -150,10 +155,10 @@ Workspace.Feed = {
         
         return `
         <div id="comentario-${c.id}" style="background: #fdfdfd; border:1px solid #eee; padding: 10px 15px; border-radius: 12px; font-size: 13px; position:relative; display:flex; gap:10px; align-items:flex-start; transition: 0.5s;">
-            <div style="flex-shrink: 0; cursor:pointer;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')">${avatarComentario}</div>
+            <div style="flex-shrink: 0; cursor:pointer;" onclick="Workspace.Feed.abrirPerfilUsuario('${nomeLimpo}')">${avatarComentario}</div>
             <div style="flex:1; padding-right: 5px; min-width: 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <strong style="color: #2c3e50; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                    <strong style="color: #2c3e50; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;" onclick="Workspace.Feed.abrirPerfilUsuario('${nomeLimpo}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${nomeLimpo}</strong>
                     <span class="ws-time-ago" ${tempoAttr} style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
                 </div>
                 <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
@@ -697,6 +702,18 @@ Workspace.Feed = {
 
     limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
 
+    // 🛡️ ESCUDO DE IDENTIDADE DO FEED: Troca "Gestor Principal" pelo seu nome atual em todo o lado!
+    protegerNome: (nomeOriginal) => {
+        if (!Workspace.usuario) return nomeOriginal || 'Desconhecido';
+        const meuNomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
+        const meusNomesAntigos = ["Gestor Principal", Workspace.usuario.login]; 
+        
+        if (meusNomesAntigos.includes(nomeOriginal) || nomeOriginal === meuNomeAtual) {
+            return meuNomeAtual;
+        }
+        return nomeOriginal || 'Desconhecido';
+    },
+
     // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS (Com correção de Remoção)
     reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
@@ -922,14 +939,19 @@ Workspace.Feed = {
         }).catch(err => {});
     },
 
-    // 🚀 GERAÇÃO DOS POSTS COM AVATARES CLICÁVEIS
+    // 🚀 GERAÇÃO DOS POSTS COM AVATARES CLICÁVEIS E NOMES PROTEGIDOS
     gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
         return posts.map(p => {
             const tempoAmigavel = p.dataCriacao ? Workspace.Feed.calcularTempoRelativo(p.dataCriacao) : 'Agora mesmo';
             const tempoAttr = p.dataCriacao ? `class="ws-time-ago" data-time="${p.dataCriacao}"` : '';
-            const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(p.autorNome, 45)}</div>`;
+            
+            // 🛡️ APLICAÇÃO DO ESCUDO: Limpa e protege o nome do post
+            const nomeProtegido = Workspace.Feed.protegerNome(p.autorNome);
+            const nomeLimpo = Workspace.Feed.limparTexto(nomeProtegido);
+
+            const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${nomeLimpo}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(nomeProtegido, 45)}</div>`;
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
             // 🚀 PODER ABSOLUTO: O botão apagar/editar aparece se for o dono, se for Gestor OU se for Professor!
@@ -961,7 +983,7 @@ Workspace.Feed = {
                             <div style="flex-shrink:0;">${avatarPost}</div>
                             <div style="flex: 1; min-width: 0;">
                                 <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">${Workspace.Feed.limparTexto(p.autorNome)}</span> 
+                                    <span onclick="Workspace.Feed.abrirPerfilUsuario('${nomeLimpo}')" style="cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">${nomeLimpo}</span> 
                                     <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
