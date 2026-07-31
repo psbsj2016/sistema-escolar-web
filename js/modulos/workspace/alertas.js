@@ -245,7 +245,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sala de Aula Online",
-                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado no seu Baú ao confirmar!</i>`
+                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado automaticamente no seu Baú. Clique em "Confirmar".!</i>`
                                 }, 'online', async () => {
                                     try {
                                         let tempoLembrete;
@@ -292,7 +292,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sessão Online Atualizada ⚠️",
-                                    mensagemCorpo: `O(a) professor(a) <strong>alterou a data, hora ou link</strong> da sessão: "${titulo}".<br>🗓️ <i>O lembrete no seu Baú já foi atualizado automaticamente!</i>`
+                                    mensagemCorpo: `O(a) professor(a) fez alterações em "${titulo}". Não fique de fora, acompanhe o que mudou entrando <strong>Sala de Acessos</strong>.<br>🗓️ <i>O lembrete no seu Baú foi atualizado automaticamente!</i>`
                                 }, 'online', async () => {
                                     if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
                                         Workspace.Bau.carregarDadosDaNuvem();
