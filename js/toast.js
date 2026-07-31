@@ -128,7 +128,7 @@ window.Toast = {
             <div class="toast-body">
                 ${dados.mensagemCorpo}
             </div>
-            <button class="toast-btn">Ciente (OK) 👍</button>
+            <button class="toast-btn">OK 👍🏻</button>
         `;
 
         const btn = toast.querySelector('.toast-btn');

@@ -245,7 +245,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sala de Aula Online",
-                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado automaticamente no seu Baú. Clique em "Confirmar".!</i>`
+                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado automaticamente no seu Baú. Clique em "OK 👍🏻".!</i>`
                                 }, 'online', async () => {
                                     try {
                                         let tempoLembrete;

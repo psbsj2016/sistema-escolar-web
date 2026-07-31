@@ -1156,7 +1156,7 @@ Workspace.Avaliacoes = {
                     <div style="display:flex; gap: 10px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
                         ${btnEntrarSala}
                         ${btnGestao}
-                        <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
+                        <button type="button" class="ws-btn" style="background:#e8f4f8; color:#3498db; font-size:12px; padding:8px 15px; border-radius: 8px; border: 1px solid #bde0fe; cursor: pointer; font-weight: bold; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'" onmouseout="this.style.background='#e8f4f8'" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>
                     </div>
                 </div>`;
             }
@@ -1416,7 +1416,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
                             </div>
                         `;
                     });
@@ -1990,7 +1990,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-  salvarProvaOnline: async () => {
+ salvarProvaOnline: async () => {
         const titulo = document.getElementById('ws-nova-online-titulo').value.trim();
         const dataHora = document.getElementById('ws-nova-online-data').value;
         const linkSala = document.getElementById('ws-nova-online-link').value.trim();
@@ -2015,17 +2015,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             const res = await Workspace.api(endpoint, metodo, payload);
 
             if (res && res.success) {
-                // 🚀 O SEGREDO (DOUBLE-TAP SAVE): Forçamos um PUT imediatamente após o POST para injetar a data e o link que o servidor recusou!
-                if (!isEdicao) {
-                    const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}`, 'GET');
-                    if (resAval && resAval.success) {
-                        const recemCriada = resAval.avaliacoes.find(a => a.tipo === 'online' && a.titulo === titulo);
-                        if (recemCriada) {
-                            await Workspace.api(`/workspace/avaliacoes/${recemCriada.id}`, 'PUT', { dataAgendada: dataHora, linkSala: linkSala });
-                        }
-                    }
-                }
-
+                // 🚀 O DOUBLE-TAP SAVE FOI REMOVIDO! O servidor agora faz tudo de primeira!
                 Workspace.mostrarAviso(isEdicao ? "Sessão atualizada!" : "Sessão agendada com sucesso!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else {
