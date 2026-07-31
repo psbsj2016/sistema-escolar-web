@@ -1024,31 +1024,54 @@ Workspace.Feed = {
         }).join('');
     },
 
-    // 🚀 O RASTREADOR DE LINKS (Deep Linking): Encontra o post, rola, pisca e expande
+    // 🚀 O RASTREADOR DE LINKS (Deep Linking Inteligente com Bypass de Paginação)
     focarPost: (postId) => {
+        // 1. Procura o post na memória profunda (onde todos os dados já foram entregues pela API)
+        const indexDoPost = Workspace.Feed.todosOsPosts.findIndex(p => String(p.id) === String(postId));
+        
+        if (indexDoPost !== -1) {
+            // 2. O post existe! Vamos descobrir em que "lote/página" ele está (são 5 por página)
+            const paginaAlvo = Math.ceil((indexDoPost + 1) / 5);
+            
+            // 3. Força o motor do Feed a renderizar os lotes instantaneamente até alcançar o post escondido
+            while (Workspace.Feed.paginaAtual <= paginaAlvo) {
+                Workspace.Feed.carregarLoteFiltrado(Workspace.Feed.todosOsPosts);
+            }
+        } else {
+            // Se o post foi apagado ou o utilizador não tem acesso a essa turma, avisamos
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Esta publicação já não se encontra disponível.", "warning");
+        }
+
+        // 4. Agora que temos a certeza de que o HTML do post foi injetado na tela, focamos nele!
         const checkExist = setInterval(() => {
             const postElement = document.getElementById(`post-${postId}`);
             if (postElement) {
                 clearInterval(checkExist);
                 
-                // 1. Rola suavemente a tela até bater no post
-                postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // 2. Aplica a magia de destaque visual (para chamar a atenção)
-                postElement.classList.remove('ws-highlight-magic');
-                void postElement.offsetWidth; // Força o reflow do CSS
-                postElement.classList.add('ws-highlight-magic');
-                
-                // 3. Se o professor escreveu um texto longo, o sistema expande-o sozinho!
-                const wrap = document.getElementById(`text-wrap-${postId}`);
-                if (wrap && wrap.classList.contains('ws-text-collapsed')) {
-                    const btnLerMais = postElement.querySelector('span[onclick*="toggleTextoPost"]');
-                    if (btnLerMais) Workspace.Feed.toggleTextoPost(btnLerMais, postId);
-                }
+                // Limpa a âncora da URL para não prender o utilizador neste post num futuro refresh da página
+                history.replaceState(null, null, ' ');
+
+                // Dá 600ms para as imagens pesadas do feed respirarem e o layout estabilizar
+                setTimeout(() => {
+                    // Desliza a tela suavemente até bater no post
+                    postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Piscar Mágico de Destaque (Remove e injeta a classe para forçar o reinício da animação CSS)
+                    postElement.classList.remove('ws-highlight-magic');
+                    void postElement.offsetWidth; 
+                    postElement.classList.add('ws-highlight-magic');
+                    
+                    // Se o professor escreveu um texto gigante, o assistente expande-o automaticamente
+                    const wrap = document.getElementById(`text-wrap-${postId}`);
+                    if (wrap && wrap.classList.contains('ws-text-collapsed')) {
+                        const btnLerMais = postElement.querySelector('span[onclick*="toggleTextoPost"]');
+                        if (btnLerMais) Workspace.Feed.toggleTextoPost(btnLerMais, postId);
+                    }
+                }, 600);
             }
         }, 300);
         
-        // Desiste de procurar após 5 segundos (útil se o post já tiver sido apagado)
+        // Desiste ao fim de 5 segundos para proteger a memória do navegador
         setTimeout(() => clearInterval(checkExist), 5000);
     },
 
