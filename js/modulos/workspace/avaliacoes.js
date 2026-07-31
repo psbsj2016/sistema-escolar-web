@@ -185,7 +185,7 @@ Workspace.Avaliacoes = {
                                 const novaNoti = { 
                                     id: idLocal, 
                                     remetenteNome: '🖥️ AULA AO VIVO', 
-                                    mensagem: `A sessão agendada - "${a.titulo}" - vai começar em ${min} minutos. Vá para a Sala de Acessos.`, 
+                                    mensagem: `A sessão "${a.titulo}" começa em ${min} minutos. Prepare-se para entrar na aula. Vá para a <strong>Sala de Acessos</strong>.`, 
                                     data: new Date().toISOString(), 
                                     origem: 'online', 
                                     origemId: a.id, 
