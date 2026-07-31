@@ -464,19 +464,34 @@ Object.assign(Workspace, {
         }
     },
 
-    // ============================================================================
-    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com GPS Integrado)
+   // ============================================================================
+    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com Escudo de Identidade)
     // ============================================================================
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
-        const nomeStr = nomeAutor || 'Desconhecido';
+        let nomeStr = nomeAutor || 'Desconhecido';
+        
+        // 🛡️ ESCUDO DE IDENTIDADE: Interceta nomes antigos e aplica o perfil atual
+        const meuNomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
+        const meusNomesAntigos = ["Gestor Principal", Workspace.usuario.login]; // Pode adicionar outros nomes antigos aqui
+        
+        // Se o post vier com um nome antigo seu, forçamos o sistema a usar os seus dados de hoje!
+        if (meusNomesAntigos.includes(nomeStr) || nomeStr === meuNomeAtual) {
+            nomeStr = meuNomeAtual; 
+            if (Workspace.usuario.avatar) {
+                Workspace.avatarsCache[nomeStr] = Workspace.usuario.avatar;
+            }
+        }
+
         const url = Workspace.avatarsCache[nomeStr];
         
-        // O GPS: Etiqueta os avatares para os podermos atualizar em tempo real
+        // O GPS Magnético agora usará o nome atualizado
         const atributoBusca = `data-avatar-nome="${Workspace.escapeHTML(nomeStr)}" data-avatar-tamanho="${tamanho}"`;
 
         if (url) {
+            // Desenha a Fotografia
             return `<img src="${url}" ${atributoBusca} loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
         } else {
+            // Desenha a Letra Inicial
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
             return `<div ${atributoBusca} style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
