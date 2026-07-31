@@ -91,12 +91,22 @@ Object.assign(Workspace, {
         return cores[Math.abs(hash) % cores.length];
     },
 
-    init: async () => {
+   init: async () => {
         const cacheUser = localStorage.getItem('ws_usuario_logado');
         if (!cacheUser) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
+            
+            // 🚀 GUARDIÃO DE ROTAS (Auth Guard): Deteta Invasores com Link Partilhado
+            if (window.location.hash && window.location.hash.includes('post-')) {
+                // 1. Destrói o link da barra de endereços para não ficar gravado no histórico do invasor
+                history.replaceState(null, null, ' ');
+                // 2. Lança o alerta de segurança inquebrável
+                setTimeout(() => {
+                    Workspace.mostrarAviso("Você não foi autorizado a acessar a plataforma, pois não tem cadastro no nosso sistema", "error", 8000);
+                }, 500);
+            }
             return;
         }
         
@@ -105,17 +115,20 @@ Object.assign(Workspace, {
         document.getElementById('ws-navbar').style.display = 'flex';
         
         // ====================================================================
-        // 🚀 O SEGREDO DO REFRESH INTELIGENTE: Memória de Navegação
+        // 🚀 O SEGREDO DO REFRESH E DEEP LINKING
         // ====================================================================
         let telaDestino = 'feed'; // O destino padrão de segurança
+        let postAlvo = null;      // Memoriza se o aluno clicou num link de publicação
         
-        // Verifica se existe alguma "certeza" (hash) na barra de endereços (Ex: #tarefas-aluno)
         if (window.location.hash) {
-            // Tira o '#' e troca o traço '-' por sublinhado '_' para o sistema entender
-            telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
+            if (window.location.hash.includes('post-')) {
+                telaDestino = 'feed'; // Obriga a carregar o Feed
+                postAlvo = window.location.hash.replace('#post-', ''); // Guarda a matrícula do post
+            } else {
+                telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
+            }
         }
         
-        // Navega para a tela exata onde o utilizador estava!
         Workspace.navegarPara(telaDestino, true);
         // ====================================================================
 

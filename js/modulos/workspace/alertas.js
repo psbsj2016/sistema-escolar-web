@@ -340,14 +340,18 @@ injetarCSS: () => {
                                 const bell = document.getElementById('ws-bell');
                                 if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
                                 
-                                // 🚀 A SOLUÇÃO: Forçamos a atualização da interface IMEDIATAMENTE 
-                                // para que a bolinha vermelha e a lista sejam criadas na mesma hora!
+                                // Força a atualização IMEDIATAMENTE 
                                 Workspace.Alertas.atualizarInterface();
                             }
 
                         }, index * 1000); 
                     });
+                } else if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size === 0) {
+                    // 🚀 SININHO OFFLINE RESOLVIDO: É o primeiro login e há histórico guardado!
+                    // Acende a bolinha vermelha sem precisar de fazer animações!
+                    Workspace.Alertas.atualizarInterface();
                 }
+                
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
                 
                 // Continua a atualizar as notificações silenciosas (se não existirem novas a animar)

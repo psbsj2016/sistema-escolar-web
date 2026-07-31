@@ -1257,7 +1257,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <!-- 🚀 O RECIPIENTE DINÂMICO DOS BOTÕES (Para o Ocultar Todos funcionar na perfeição) -->
                         <div id="ws-botoes-topo-acessos" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
-                            <div style="text-align:center; width:100%; font-size:12px; color:#999;">A carregar ferramentas...</div>
+                            <div style="text-align:center; width:100%; font-size:12px; color:#999;">Preparando ferramentas...</div>
                         </div>
                     </div>
 
@@ -1267,7 +1267,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     </div>
 
                     <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                        <div style="text-align: center; padding: 30px; color: #999;">Atualizando a lista de acessos... ⏳</div>
+                        <div style="text-align: center; padding: 30px; color: #999;">Carregando a lista de alunos... ⏳</div>
                     </div>
                 </div>
             `;
@@ -1712,8 +1712,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         Workspace.Avaliacoes.confirmarDialog(
             "Apagar Múltiplos", 
-            `Deseja apagar definitivamente os ${idsSelecionados.length} itens selecionados? Esta ação é irreversível.`, 
-            "Sim, Apagar Todos", 
+            `Deseja apagar definitivamente os ${idsSelecionados.length} item(s) selecionado(s)? Esta ação é irreversível.`, 
+            "Sim, apagar todos", 
             "#e74c3c", 
             async () => {
                 Workspace.mostrarAviso("Apagando sessões selecionadas... ⏳", "info");

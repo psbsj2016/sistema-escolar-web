@@ -1024,6 +1024,34 @@ Workspace.Feed = {
         }).join('');
     },
 
+    // 🚀 O RASTREADOR DE LINKS (Deep Linking): Encontra o post, rola, pisca e expande
+    focarPost: (postId) => {
+        const checkExist = setInterval(() => {
+            const postElement = document.getElementById(`post-${postId}`);
+            if (postElement) {
+                clearInterval(checkExist);
+                
+                // 1. Rola suavemente a tela até bater no post
+                postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 2. Aplica a magia de destaque visual (para chamar a atenção)
+                postElement.classList.remove('ws-highlight-magic');
+                void postElement.offsetWidth; // Força o reflow do CSS
+                postElement.classList.add('ws-highlight-magic');
+                
+                // 3. Se o professor escreveu um texto longo, o sistema expande-o sozinho!
+                const wrap = document.getElementById(`text-wrap-${postId}`);
+                if (wrap && wrap.classList.contains('ws-text-collapsed')) {
+                    const btnLerMais = postElement.querySelector('span[onclick*="toggleTextoPost"]');
+                    if (btnLerMais) Workspace.Feed.toggleTextoPost(btnLerMais, postId);
+                }
+            }
+        }, 300);
+        
+        // Desiste de procurar após 5 segundos (útil se o post já tiver sido apagado)
+        setTimeout(() => clearInterval(checkExist), 5000);
+    },
+
     htmlParaElemento: (htmlString) => {
         const template = document.createElement('template');
         template.innerHTML = htmlString.trim();

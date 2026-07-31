@@ -989,7 +989,7 @@ verFotoChat: () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        Workspace.mostrarAviso("A carregar anexo para a conversa... ⏳", "info", 5000);
+        Workspace.mostrarAviso("Carregando anexo para a conversa... ⏳", "info", 5000);
         try {
             // 🚀 USA A VIA VERDE DIRETA PARA A CLOUDFLARE
             const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
@@ -1223,7 +1223,7 @@ verFotoChat: () => {
             }
 
             if (tarefas.length === 0) {
-                 container.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; color:#7f8c8d; font-size:16px; text-align:center;">🎉 Nenhuma tarefa pendente para a sua turma!</div>';
+                 container.innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; color:#7f8c8d; font-size:16px; text-align:center;">🎉 Nenhum exercício pendente para você!</div>';
                  return;
             }
 
@@ -1633,7 +1633,7 @@ verFotoChat: () => {
             let tarefas = (eventos || []).filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
             
             if(tarefas.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">Nenhuma tarefa enviada ainda. Crie uma nova tarefa primeiro!</div>';
+                container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">Nenhum exercício enviado ainda. Crie um novo exercício primeiro!</div>';
                 return;
             }
 
