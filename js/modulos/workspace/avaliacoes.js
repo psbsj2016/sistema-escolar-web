@@ -376,14 +376,17 @@ Workspace.Avaliacoes = {
         
         const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
 
-      const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
-            // 🚀 A MÁGICA: Se for sessão online, deixa passar mesmo se o professor a tiver arquivado!
-            // Para exames escritos e orais, mantém a barreira de segurança normal (só passa se estiver ativa).
+     const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.tipo !== 'online' && a.status !== 'ativa') return false;
             
-            // 🚀 A NOVA BARREIRA DE OCULTAMENTO INDIVIDUAL
-            // Se o ID do aluno estiver na lista negra, a sessão desaparece da tela dele!
-            if (a.ocultos && a.ocultos.includes(String(Workspace.usuario.id))) return false;
+            // 🚀 A BARREIRA DE OCULTAMENTO (BLINDADA)
+            // Verifica tanto o ID de Login como o ID da Ficha do Aluno (alunoRefId)
+            const meuIdLogin = String(Workspace.usuario.id);
+            const meuIdMatricula = Workspace.usuario.alunoRefId ? String(Workspace.usuario.alunoRefId) : meuIdLogin;
+            
+            if (a.ocultos && (a.ocultos.includes(meuIdLogin) || a.ocultos.includes(meuIdMatricula))) {
+                return false; // Corta o acesso instantaneamente!
+            }
 
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             

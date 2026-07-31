@@ -50,12 +50,19 @@ Workspace.Alertas = {
                 }
             }
 
+            // 🚀 O ATUALIZADOR INSTANTÂNEO DE SALAS (Ocultar/Desocultar em Tempo Real)
+            if (data.type === 'SALA_UPDATE') {
+                if (window.Workspace && Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) {
+                    Workspace.Avaliacoes.carregarLobbies(); // O ecrã do aluno pisca e o cartão some/aparece na hora!
+                }
+            }
+
             // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 
-                // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
-                if (data.mensagem && data.mensagem.autorNome !== meuNome) {
+                    // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
+                    if (data.mensagem && data.mensagem.autorNome !== meuNome) {
                     
                     // 2. Verifica se o bate-papo daquela turma JÁ ESTÁ ABERTO no ecrã neste momento
                     const chatAberto = Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta === data.turmaId;
