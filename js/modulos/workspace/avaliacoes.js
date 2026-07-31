@@ -184,8 +184,8 @@ Workspace.Avaliacoes = {
                             if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
                                 const novaNoti = { 
                                     id: idLocal, 
-                                    remetenteNome: 'Sistema Académico', 
-                                    mensagem: `A sessão ao vivo "${a.titulo}" vai começar em ${min} minutos. Acesse as salas online.`, 
+                                    remetenteNome: 'AULA AO VIVO', 
+                                    mensagem: `A sessão agendada "${a.titulo}" vai começar em ${min} minutos. Acesse a Sala de Acessos.`, 
                                     data: new Date().toISOString(), 
                                     origem: 'online', 
                                     origemId: a.id, 
@@ -859,7 +859,7 @@ Workspace.Avaliacoes = {
         const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
         const menuEncontros = document.getElementById('ws-prof-menu-encontros');
         if (contexto === 'encontros') {
-            if(titulo) titulo.innerHTML = '<span>🖥️ Painel do Professor: Encontros Online</span>';
+            if(titulo) titulo.innerHTML = '<span>🖥️ Painel do Professor: Sala de Acessos</span>';
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'none';
             if(menuEncontros) menuEncontros.style.display = 'grid';
         } else {

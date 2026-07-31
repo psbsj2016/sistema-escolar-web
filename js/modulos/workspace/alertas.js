@@ -306,7 +306,7 @@ injetarCSS: () => {
                                 
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
-                                    subtitulo: ehProfessor ? "Trabalho Entregue 📥" : "Novo Exercício 📝",
+                                    subtitulo: ehProfessor ? "Sala de Acessos 🖥️" : "Novo Exercício 📝",
                                     mensagemCorpo: ehProfessor 
                                         ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` 
                                         : `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.!`
