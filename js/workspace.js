@@ -309,8 +309,9 @@ Object.assign(Workspace, {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com CSS Inquebrável para proporções perfeitas)
-    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com GPS Integrado)
+    // ============================================================================
+    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Puro e Estável)
+    // ============================================================================
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
@@ -319,8 +320,10 @@ Object.assign(Workspace, {
         const atributoBusca = `data-avatar-nome="${Workspace.escapeHTML(nomeStr)}" data-avatar-tamanho="${tamanho}"`;
 
         if (url) {
+            // Desenha a Fotografia
             return `<img src="${url}" ${atributoBusca} loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
         } else {
+            // Desenha a Letra Inicial
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
             return `<div ${atributoBusca} style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
@@ -336,17 +339,14 @@ Object.assign(Workspace, {
             const tamanho = el.getAttribute('data-avatar-tamanho') || 40;
             
             if (el.tagName === 'IMG') {
-                // Se já era uma foto, apenas mudamos a fonte de imagem (transição super suave)
                 el.src = novaUrl;
             } else if (el.tagName === 'DIV') {
-                // Se era uma bolinha colorida com a inicial, transformamos a bolinha numa imagem!
                 const novaImg = document.createElement('img');
                 novaImg.src = novaUrl;
                 novaImg.setAttribute('data-avatar-nome', nomeSeguro);
                 novaImg.setAttribute('data-avatar-tamanho', tamanho);
                 novaImg.setAttribute('loading', 'lazy');
                 novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;`;
-                
                 el.parentNode.replaceChild(novaImg, el);
             }
         });
@@ -464,62 +464,6 @@ Object.assign(Workspace, {
         }
     },
 
-   // ============================================================================
-    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Com Escudo de Identidade)
-    // ============================================================================
-    renderizarAvatar: (nomeAutor, tamanho = 40) => {
-        let nomeStr = nomeAutor || 'Desconhecido';
-        
-        // 🛡️ ESCUDO DE IDENTIDADE: Interceta nomes antigos e aplica o perfil atual
-        const meuNomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
-        const meusNomesAntigos = ["Gestor Principal", Workspace.usuario.login]; // Pode adicionar outros nomes antigos aqui
-        
-        // Se o post vier com um nome antigo seu, forçamos o sistema a usar os seus dados de hoje!
-        if (meusNomesAntigos.includes(nomeStr) || nomeStr === meuNomeAtual) {
-            nomeStr = meuNomeAtual; 
-            if (Workspace.usuario.avatar) {
-                Workspace.avatarsCache[nomeStr] = Workspace.usuario.avatar;
-            }
-        }
-
-        const url = Workspace.avatarsCache[nomeStr];
-        
-        // O GPS Magnético agora usará o nome atualizado
-        const atributoBusca = `data-avatar-nome="${Workspace.escapeHTML(nomeStr)}" data-avatar-tamanho="${tamanho}"`;
-
-        if (url) {
-            // Desenha a Fotografia
-            return `<img src="${url}" ${atributoBusca} loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
-        } else {
-            // Desenha a Letra Inicial
-            const letra = nomeStr.charAt(0).toUpperCase();
-            const corFundo = Workspace.gerarCorPorNome(nomeStr);
-            return `<div ${atributoBusca} style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
-        }
-    },
-
-    // O Varredor Mágico: Substitui as fotos antigas nas publicações instantaneamente
-    atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
-        const nomeSeguro = Workspace.escapeHTML(nomeAutor);
-        const elementos = document.querySelectorAll(`[data-avatar-nome="${nomeSeguro}"]`);
-        
-        elementos.forEach(el => {
-            const tamanho = el.getAttribute('data-avatar-tamanho') || 40;
-            
-            if (el.tagName === 'IMG') {
-                el.src = novaUrl;
-            } else if (el.tagName === 'DIV') {
-                const novaImg = document.createElement('img');
-                novaImg.src = novaUrl;
-                novaImg.setAttribute('data-avatar-nome', nomeSeguro);
-                novaImg.setAttribute('data-avatar-tamanho', tamanho);
-                novaImg.setAttribute('loading', 'lazy');
-                novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;`;
-                el.parentNode.replaceChild(novaImg, el);
-            }
-        });
-    },
-
     // ============================================================================
     // 📸 MOTOR DE AVATARES INTELIGENTE (ESTÚDIO DE CORTE)
     // ============================================================================
@@ -567,7 +511,7 @@ Object.assign(Workspace, {
 
         const btn = document.getElementById('ws-btn-confirmar-corte');
         const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ A processar...";
+        btn.innerText = "⏳ Atualizando...";
         btn.disabled = true;
 
         const loader = document.getElementById('ws-avatar-loading');
