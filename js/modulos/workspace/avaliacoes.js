@@ -184,8 +184,8 @@ Workspace.Avaliacoes = {
                             if (!Workspace.Alertas.idsConhecidos.has(idLocal)) {
                                 const novaNoti = { 
                                     id: idLocal, 
-                                    remetenteNome: 'AULA AO VIVO', 
-                                    mensagem: `A sessão agendada "${a.titulo}" vai começar em ${min} minutos. Acesse a Sala de Acessos.`, 
+                                    remetenteNome: '🖥️ AULA AO VIVO', 
+                                    mensagem: `A sessão agendada - "${a.titulo}" - vai começar em ${min} minutos. Vá para a Sala de Acessos.`, 
                                     data: new Date().toISOString(), 
                                     origem: 'online', 
                                     origemId: a.id, 
