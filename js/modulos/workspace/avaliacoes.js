@@ -376,8 +376,11 @@ Workspace.Avaliacoes = {
         
         const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
 
-        const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
-            if (a.status !== 'ativa') return false;
+      const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
+            // 🚀 A MÁGICA: Se for sessão online, deixa passar mesmo se o professor a tiver arquivado!
+            // Para exames escritos e orais, mantém a barreira de segurança normal (só passa se estiver ativa).
+            if (a.tipo !== 'online' && a.status !== 'ativa') return false;
+            
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             
             // 🚀 O SEGREDO VIP: Verifica se o aluno é convidado especial da sessão!
@@ -467,8 +470,10 @@ Workspace.Avaliacoes = {
         }
 
        // ONLINES
-        const onPendentes = onlines.filter(a => (entregasCount[a.id] || 0) < (a.tentativas || 1));
-        const onHistorico = onlines.filter(a => (entregasCount[a.id] || 0) >= (a.tentativas || 1));
+        // 🚀 O ROTEADOR INTELIGENTE: Se a sessão está ativa e o aluno não esgotou tentativas, fica em "Links Ativos"
+        const onPendentes = onlines.filter(a => a.status === 'ativa' && (entregasCount[a.id] || 0) < (a.tentativas || 1));
+        // Se a sessão foi arquivada pelo gestor OU o aluno já entrou, vai direto para o "Histórico"
+        const onHistorico = onlines.filter(a => a.status !== 'ativa' || (entregasCount[a.id] || 0) >= (a.tentativas || 1));
         
         // 🚀 INTELIGÊNCIA DO ALUNO (Salto Dinâmico)
         Workspace.Avaliacoes.qtdPendentesAnterior = Workspace.Avaliacoes.qtdPendentesAnterior || 0;
@@ -1473,7 +1478,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const ids = Array.from(checkboxes).map(cb => cb.value);
         if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
 
-        Workspace.Avaliacoes.confirmarDialog("Ocultar Múltiplos", `Deseja ocultar os ${ids.length} itens selecionados?`, "Sim, Ocultar", "#f39c12", async () => {
+        Workspace.Avaliacoes.confirmarDialog("Ocultar Múltiplos", `Deseja ocultar ${ids.length} acesso(s) selecionado(s)?`, "Sim, ocultar", "#f39c12", async () => {
             Workspace.mostrarAviso("Ocultando sessões... ⏳", "info");
             try {
                 await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'inativa' })));
@@ -1489,14 +1494,14 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const ids = Array.from(checkboxes).map(cb => cb.value);
         if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
 
-        Workspace.Avaliacoes.confirmarDialog("Arquivar Múltiplos", `Deseja arquivar os ${ids.length} itens selecionados?`, "Sim, Arquivar", "#7f8c8d", async () => {
-            Workspace.mostrarAviso("Arquivando sessões... ⏳", "info");
+        Workspace.Avaliacoes.confirmarDialog("Arquivar Múltiplos", `Deseja arquivar ${ids.length} a(s) aula(s) selecionada(s)?`, "Sim, arquivar", "#7f8c8d", async () => {
+            Workspace.mostrarAviso("Arquivando... ⏳", "info");
             try {
                 await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'arquivada' })));
                 Workspace.Avaliacoes.avaliacoesGerenciadorCache.forEach(a => { if(ids.includes(a.id)) a.status = 'arquivada'; });
                 Workspace.Avaliacoes.renderizarListaGerenciador();
-                Workspace.mostrarAviso(`${ids.length} itens arquivados com sucesso!`, "success");
-            } catch(e) { Workspace.mostrarAviso("Erro ao arquivar itens.", "error"); }
+                Workspace.mostrarAviso(`${ids.length} aula(s) arquivada(s) com sucesso!`, "success");
+            } catch(e) { Workspace.mostrarAviso("Erro ao arquivar aula(s).", "error"); }
         });
     },
 
