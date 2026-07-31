@@ -1122,11 +1122,19 @@ Workspace.Avaliacoes = {
                     }
                 }
 
-                const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
+               const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
                 let dataApresentada = '';
                 if (a.dataAgendada && a.dataAgendada.includes('T')) {
-                    const partes = a.dataAgendada.split('T')[0].split('-');
-                    if(partes.length === 3) dataApresentada = `📅 Agendada para: ${partes[2]}/${partes[1]}/${partes[0]}`;
+                    // Separa o texto no "T" -> [0] é a Data, [1] é a Hora
+                    const partesTempo = a.dataAgendada.split('T'); 
+                    const partesData = partesTempo[0].split('-');
+                    
+                    // Extrai apenas os primeiros 5 caracteres da hora (ex: "14:30")
+                    const horaExata = partesTempo[1].substring(0, 5); 
+                    
+                    if(partesData.length === 3) {
+                        dataApresentada = `📅 Agendada para: ${partesData[2]}/${partesData[1]}/${partesData[0]} às ${horaExata}`;
+                    }
                 }
 
                 let btnEntrarSala = '';
@@ -1359,7 +1367,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
                             </div>
                         `;
                     } else if (foiReativado) {
