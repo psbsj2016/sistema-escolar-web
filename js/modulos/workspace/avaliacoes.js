@@ -381,6 +381,10 @@ Workspace.Avaliacoes = {
             // Para exames escritos e orais, mantém a barreira de segurança normal (só passa se estiver ativa).
             if (a.tipo !== 'online' && a.status !== 'ativa') return false;
             
+            // 🚀 A NOVA BARREIRA DE OCULTAMENTO INDIVIDUAL
+            // Se o ID do aluno estiver na lista negra, a sessão desaparece da tela dele!
+            if (a.ocultos && a.ocultos.includes(String(Workspace.usuario.id))) return false;
+
             const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
             
             // 🚀 O SEGREDO VIP: Verifica se o aluno é convidado especial da sessão!
@@ -991,7 +995,6 @@ Workspace.Avaliacoes = {
                 
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
-                    ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #f39c12; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.ocultarAvaliacoesSelecionadas()">⏸️ Ocultar</button>` : ''}
                     ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>` : ''}
                 </div>
             </div>
@@ -1234,7 +1237,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             modal.id = modalId;
             modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
             
-            // 🚀 O BOTÃO ATUALIZADO: "Reativar Selecionados" em vez de "Reativar para Todos"
             modal.innerHTML = `
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
@@ -1242,9 +1244,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sessão: ${Workspace.escapeHTML(prova.titulo)}</span>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
-                            <button type="button" class="ws-btn" style="background:#27ae60; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.togglePesquisaConvidado('${avaliacaoId}')">➕ Adicionar Aluno</button>
-                            <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarAcessosSelecionados('${avaliacaoId}', '${destinoId}')">🔄 Reativar Selecionados</button>
+                        <!-- 🚀 O RECIPIENTE DINÂMICO DOS BOTÕES (Para o Ocultar Todos funcionar na perfeição) -->
+                        <div id="ws-botoes-topo-acessos" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
+                            <div style="text-align:center; width:100%; font-size:12px; color:#999;">A carregar ferramentas...</div>
                         </div>
                     </div>
 
@@ -1299,8 +1301,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             }
 
             let htmlLista = '';
+            
+            // 🚀 AS NOVAS LISTAS MÁGICAS PARA A GESTÃO DE OCULTAMENTO
+            const listaOcultos = prova.ocultos || [];
+            const alunosAtivosParaOcultar = [];
 
-            // 🚀 CHECKBOX GLOBAL (Selecionar Todos)
             const btnSelecionarTodos = acessos.length > 0 ? `
                 <div style="display:flex; align-items:center; gap:8px; padding: 10px 15px; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
                     <input type="checkbox" id="ws-check-todos-reativar" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-reativar'); cbs.forEach(cb => cb.checked = this.checked);">
@@ -1321,6 +1326,19 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
                     const badgeConvidado = (prova.convidados && prova.convidados.some(c => c.id === aluno.id)) ? `<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 5px; border-radius: 4px; margin-left: 5px;">Convidado</span>` : '';
                     
+                    const taOculto = listaOcultos.includes(String(aluno.id));
+                    
+                    // 🚀 O BOTÃO DE OCULTAR INDIVIDUAL (Dinâmico)
+                    let btnOcultarHtml = '';
+                    if (!acessoFeito) {
+                        alunosAtivosParaOcultar.push(String(aluno.id));
+                        if (taOculto) {
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'desocultar')">👁️ Desocultar</button>`;
+                        } else {
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'ocultar')">⏸️ Ocultar</button>`;
+                        }
+                    }
+
                     if (acessoFeito) {
                         let horaFormatada = '';
                         if (acessoFeito.dataEntrega) {
@@ -1328,7 +1346,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                             horaFormatada = `às ${d.getHours().toString().padStart(2, '0')}h${d.getMinutes().toString().padStart(2, '0')}`;
                         }
 
-                        // 🚀 CHECKBOX INDIVIDUAL INJETADA AQUI!
                         htmlLista += `
                             <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #e74c3c;">
                                 <div style="display:flex; align-items:center; gap:12px;">
@@ -1344,28 +1361,30 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                         `;
                     } else if (foiReativado) {
                         htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:${taOculto ? '#f8f9fa' : '#fff'}; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid ${taOculto ? '#bdc3c7' : '#3498db'}; opacity: ${taOculto ? '0.7' : '1'};">
                                 <div style="display:flex; align-items:center; gap:12px;">
-                                    <div style="width: 17px;"></div><!-- Espaçador -->
+                                    <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
-                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando)</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">🔵 Link Reativado (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
                                     </div>
                                 </div>
+                                ${btnOcultarHtml}
                             </div>
                         `;
                     } else {
                         htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #27ae60;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:${taOculto ? '#f8f9fa' : '#fff'}; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid ${taOculto ? '#bdc3c7' : '#27ae60'}; opacity: ${taOculto ? '0.7' : '1'};">
                                 <div style="display:flex; align-items:center; gap:12px;">
-                                    <div style="width: 17px;"></div><!-- Espaçador -->
+                                    <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
-                                        <div style="font-size:11px; color:#27ae60; font-weight:bold;">🟢 Acesso Ativo (Aguardando)</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#27ae60'}; font-weight:bold;">🟢 Acesso Ativo (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
                                     </div>
                                 </div>
+                                ${btnOcultarHtml}
                             </div>
                         `;
                     }
@@ -1404,23 +1423,108 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     
                     reativadosLista.forEach(reativado => {
                         const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
+                        const taOculto = listaOcultos.includes(String(reativado.id));
+                        alunosAtivosParaOcultar.push(String(reativado.id));
+
+                        let btnOcultarHtml = '';
+                        if (taOculto) {
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'desocultar')">👁️ Desocultar</button>`;
+                        } else {
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'ocultar')">⏸️ Ocultar</button>`;
+                        }
+
                         htmlLista += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid #3498db;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:${taOculto ? '#f8f9fa' : '#fff'}; border:1px solid #eee; padding:12px; border-radius:8px; margin-bottom:8px; border-left:4px solid ${taOculto ? '#bdc3c7' : '#3498db'}; opacity: ${taOculto ? '0.7' : '1'};">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
-                                        <div style="font-size:11px; color:#3498db; font-weight:bold;">🔵 Link Reativado (Aguardando)</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">🔵 Link Reativado (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
                                     </div>
                                 </div>
+                                ${btnOcultarHtml}
                             </div>
                         `;
                     });
                 }
             }
             if(container) container.innerHTML = htmlLista;
+
+            // 🚀 RENDERIZAÇÃO INTELIGENTE DO TOPO COM OS BOTÕES MACRO
+            const boxBotoes = document.getElementById('ws-botoes-topo-acessos');
+            if (boxBotoes) {
+                // Guarda a lista de alunos ativos na memória para a Ação em Massa
+                Workspace.Avaliacoes.alunosParaOcultarCache = alunosAtivosParaOcultar;
+                
+                // Calcula se TODOS os alunos ativos já estão ocultos
+                const todosOcultos = alunosAtivosParaOcultar.length > 0 && alunosAtivosParaOcultar.every(id => listaOcultos.includes(id));
+                
+                const btnMacroOcultar = alunosAtivosParaOcultar.length > 0 ? `
+                    <button type="button" class="ws-btn" style="background:${todosOcultos ? '#8e44ad' : '#f39c12'}; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.toggleOcultarTodos('${avaliacaoId}', '${destinoId}', ${todosOcultos})">
+                        ${todosOcultos ? '👁️ Desocultar Todos' : '⏸️ Ocultar Todos'}
+                    </button>
+                ` : '';
+
+                boxBotoes.innerHTML = `
+                    <button type="button" class="ws-btn" style="background:#27ae60; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.togglePesquisaConvidado('${avaliacaoId}')">➕ Adicionar Aluno</button>
+                    ${btnMacroOcultar}
+                    <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarAcessosSelecionados('${avaliacaoId}', '${destinoId}')">🔄 Reativar Selecionados</button>
+                `;
+            }
+
         } catch(e) { if (container) container.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px;">Erro ao carregar os dados.</div>'; }
+    },
+
+    toggleOcultarIndividual: async (event, avaliacaoId, destinoId, alunoId, acao) => {
+        const btn = event.target;
+        const txt = btn.innerText; btn.innerText = "⏳"; btn.disabled = true;
+        try {
+            await Workspace.api(`/workspace/avaliacoes/${avaliacaoId}/ocultar-acesso`, 'PUT', { alunoId, acao });
+            
+            // Atualiza o Cache Local instantaneamente
+            const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId) || Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
+            if (prova) {
+                if (!prova.ocultos) prova.ocultos = [];
+                if (acao === 'ocultar') prova.ocultos.push(String(alunoId));
+                else prova.ocultos = prova.ocultos.filter(id => id !== String(alunoId));
+            }
+            
+            // Atualiza a tela silenciosamente sem fechar o menu
+            Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId, true);
+        } catch (e) {
+            Workspace.mostrarAviso("Erro ao alterar visibilidade.", "error");
+            btn.innerText = txt; btn.disabled = false;
+        }
+    },
+
+    toggleOcultarTodos: async (avaliacaoId, destinoId, desocultar) => {
+        const alunosIds = Workspace.Avaliacoes.alunosParaOcultarCache || [];
+        if (alunosIds.length === 0) return;
+
+        const acao = desocultar ? 'desocultar' : 'ocultar';
+        Workspace.mostrarAviso(`${desocultar ? 'Desocultando' : 'Ocultando'} acessos no ecrã dos alunos... ⏳`, "info");
+        
+        try {
+            await Workspace.api(`/workspace/avaliacoes/${avaliacaoId}/ocultar-massa`, 'PUT', { alunoIds: alunosIds, acao });
+            
+            // Atualiza o Cache Local em massa
+            const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId) || Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
+            if (prova) {
+                if (!prova.ocultos) prova.ocultos = [];
+                if (acao === 'ocultar') {
+                    prova.ocultos = [...new Set([...prova.ocultos, ...alunosIds])];
+                } else {
+                    prova.ocultos = prova.ocultos.filter(id => !alunosIds.includes(id));
+                }
+            }
+            
+            // Recarrega o modal silenciosamente
+            Workspace.Avaliacoes.abrirModalAcessos(avaliacaoId, destinoId, true);
+            Workspace.mostrarAviso("Visibilidade atualizada com sucesso!", "success");
+        } catch (e) {
+            Workspace.mostrarAviso("Erro ao processar a ação em massa.", "error");
+        }
     },
 
   // 🚀 LÓGICA DO CONVIDADO VIP
@@ -1472,29 +1576,12 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         } catch(e) { Workspace.mostrarAviso("Erro ao adicionar convidado.", "error"); }
     },
 
-    // 🚀 AÇÕES EM MASSA (OCULTAR E ARQUIVAR)
-    ocultarAvaliacoesSelecionadas: () => {
-        const checkboxes = document.querySelectorAll('.ws-check-avaliacao:checked');
-        const ids = Array.from(checkboxes).map(cb => cb.value);
-        if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
-
-        Workspace.Avaliacoes.confirmarDialog("Ocultar Múltiplos", `Deseja ocultar ${ids.length} acesso(s) selecionado(s)?`, "Sim, ocultar", "#f39c12", async () => {
-            Workspace.mostrarAviso("Ocultando sessões... ⏳", "info");
-            try {
-                await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'inativa' })));
-                Workspace.Avaliacoes.avaliacoesGerenciadorCache.forEach(a => { if(ids.includes(a.id)) a.status = 'inativa'; });
-                Workspace.Avaliacoes.renderizarListaGerenciador();
-                Workspace.mostrarAviso(`${ids.length} itens ocultados com sucesso!`, "success");
-            } catch(e) { Workspace.mostrarAviso("Erro ao ocultar itens.", "error"); }
-        });
-    },
-
     arquivarAvaliacoesSelecionadas: () => {
         const checkboxes = document.querySelectorAll('.ws-check-avaliacao:checked');
         const ids = Array.from(checkboxes).map(cb => cb.value);
         if (ids.length === 0) return Workspace.mostrarAviso("Selecione os itens usando as caixas à esquerda.", "warning");
 
-        Workspace.Avaliacoes.confirmarDialog("Arquivar Múltiplos", `Deseja arquivar ${ids.length} a(s) aula(s) selecionada(s)?`, "Sim, arquivar", "#7f8c8d", async () => {
+        Workspace.Avaliacoes.confirmarDialog("Arquivar Múltiplos", `Deseja arquivar ${ids.length} aula(s) selecionada(s)?`, "Sim, arquivar", "#7f8c8d", async () => {
             Workspace.mostrarAviso("Arquivando... ⏳", "info");
             try {
                 await Promise.all(ids.map(id => Workspace.api(`/workspace/avaliacoes/${id}/status`, 'PATCH', { status: 'arquivada' })));

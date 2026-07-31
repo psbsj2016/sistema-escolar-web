@@ -292,7 +292,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sessão Online Atualizada ⚠️",
-                                    mensagemCorpo: `O(a) professor(a) fez alterações em "${titulo}". Não fique de fora, acompanhe o que mudou entrando <strong>Sala de Acessos</strong>.<br>🗓️ <i>O lembrete no seu Baú foi atualizado automaticamente!</i>`
+                                    mensagemCorpo: `O(a) professor(a) fez alterações em "${titulo}". Não fique de fora, acompanhe o que mudou entrando na <strong>Sala de Acessos</strong>.<br>🗓️ <i>O lembrete no seu Baú foi atualizado automaticamente!</i>`
                                 }, 'online', async () => {
                                     if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
                                         Workspace.Bau.carregarDadosDaNuvem();
