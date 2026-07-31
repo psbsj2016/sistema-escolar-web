@@ -1071,7 +1071,7 @@ Object.assign(Workspace, {
             const horaFormat = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             
             document.getElementById('ws-alarme-gigante-msg').innerText = alarme.mensagem;
-            document.getElementById('ws-alarme-gigante-tempo').innerText = `Agendado para as ${horaFormat}`;
+            document.getElementById('ws-alarme-gigante-tempo').innerText = `Agendado para às ${horaFormat}`;
             
             modal.style.display = 'flex';
             if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
@@ -1234,11 +1234,11 @@ Object.assign(Workspace, {
             { id: 'feed', titulo: 'Página Inicial (Feed)', icone: '🏠', tela: 'feed' },
             { id: 'perfil', titulo: 'Meu Perfil', icone: '🙍', tela: 'perfil' },
             { id: 'sala_aula', titulo: 'Hub da Sala de Aula', icone: '🏫', tela: 'sala_aula' },
-            { id: 'tarefas', titulo: 'Exercícios e Tarefas', icone: '🏋️', tela: 'tarefas' },
+            { id: 'tarefas', titulo: 'Exercícios', icone: '🏋️', tela: 'tarefas' },
             { id: 'avaliacoes', titulo: 'Central de Avaliações', icone: '📑', tela: 'avaliacoes' },
             { id: 'materiais', titulo: 'Estante de Materiais', icone: '📚', tela: 'materiais' },
             { id: 'bau', titulo: 'Baú das Memórias (Lembretes)', icone: '🧰', tela: 'bau' },
-            { id: 'configuracoes', titulo: 'Configurações e Senha', icone: '⚙️', tela: 'configuracoes' }
+            { id: 'configuracoes', titulo: 'Configurações', icone: '⚙️', tela: 'configuracoes' }
         ],
 
         init: () => {

@@ -516,7 +516,7 @@ Workspace.Avaliacoes = {
 
                     // 🚀 BOTÃO PROTEGIDO COM event.stopPropagation() E linkSeguro
                     const btnAcao = Workspace.Avaliacoes.abaOnline === 'abertas' 
-                        ? `<button type="button" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; color: white; border: none; cursor: pointer;" onclick="event.stopPropagation(); Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sala</button>` 
+                        ? `<button type="button" class="ws-btn" style="background: #8e44ad; padding: 8px 15px; font-size: 12px; border-radius: 20px; color: white; border: none; cursor: pointer;" onclick="event.stopPropagation(); Workspace.Avaliacoes.registrarPresencaOnline(event, '${p.id}', '${linkSeguro}')">Entrar na Sessão</button>` 
                         : `<span style="background: #f0f2f5; color: #7f8c8d; padding: 8px 15px; font-size: 12px; border-radius: 20px; font-weight: bold;">Sessão Concluída</span>`;
                     
                     return `
@@ -1121,7 +1121,7 @@ Workspace.Avaliacoes = {
                 let btnEntrarSala = '';
                 if (a.tipo === 'online' && a.linkSala) {
                     let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
-                    btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sala</a>`;
+                    btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
                 }
 
                 let btnGestao = '';
@@ -1234,7 +1234,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                     <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
-                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sala: ${Workspace.escapeHTML(prova.titulo)}</span>
+                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sessão: ${Workspace.escapeHTML(prova.titulo)}</span>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
@@ -1249,7 +1249,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     </div>
 
                     <div id="ws-acessos-lista" style="flex:1; overflow-y:auto; padding-right:5px;">
-                        <div style="text-align: center; padding: 30px; color: #999;">A cruzar dados em tempo real... ⏳</div>
+                        <div style="text-align: center; padding: 30px; color: #999;">Atualizando a lista de acessos... ⏳</div>
                     </div>
                 </div>
             `;
@@ -1304,7 +1304,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             ` : '';
 
             if (alunosLista.length > 0) {
-                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos consumidos.</div>`;
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos utilizados.</div>`;
                 htmlLista += btnSelecionarTodos;
 
                 alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
@@ -1370,7 +1370,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 htmlLista += btnSelecionarTodos;
                 
                 if(acessos.length === 0 && reativadosLista.length === 0) {
-                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acedeu à sala ainda.</div>`;
+                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acessou à sessão online ainda.</div>`;
                 } else {
                     acessos.forEach(acesso => {
                         const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
@@ -1535,8 +1535,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             return Workspace.mostrarAviso("Selecione pelo menos um aluno marcando a caixa correspondente.", "warning");
         }
 
-        Workspace.Avaliacoes.confirmarDialog("Reativar Acessos", `Tem a certeza de que deseja devolver a permissão de entrada na sala aos ${checkboxes.length} alunos selecionados?`, "Sim, Reativar", "#3498db", async () => {
-            Workspace.mostrarAviso("A reativar os acessos... ⏳", "info");
+        Workspace.Avaliacoes.confirmarDialog("Reativar Acessos", `Tem a certeza de que deseja devolver a permissão de entrada na sessão online aos ${checkboxes.length} alunos selecionados?`, "Sim, reativar", "#3498db", async () => {
+            Workspace.mostrarAviso("Reativando os acessos... ⏳", "info");
             
             try {
                 const alunosAfetados = [];
@@ -1906,7 +1906,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const destino = selDestino.value;
         const destinoNome = selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
 
-        if(!titulo || !dataHora || !linkSala) return Workspace.mostrarAviso("Preencha o título, a data e o link da sala.", "warning");
+        if(!titulo || !dataHora || !linkSala) return Workspace.mostrarAviso("Preencha o título, a data e o link da sessão.", "warning");
 
         const btn = event.target;
         const txt = btn.innerText; btn.innerText = "Agendando ⏳ ..."; btn.disabled = true;
@@ -1934,10 +1934,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     }
                 }
 
-                Workspace.mostrarAviso(isEdicao ? "Sala Atualizada!" : "Sala Agendada com sucesso!", "success");
+                Workspace.mostrarAviso(isEdicao ? "Sessão atualizada!" : "Sessão agendada com sucesso!", "success");
                 Workspace.Avaliacoes.voltarMenuProf();
             } else {
-                Workspace.mostrarAviso(res.error || "Erro ao guardar a sala.", "error");
+                Workspace.mostrarAviso(res.error || "Erro ao guardar a sessão.", "error");
             }
         } catch (e) { 
             Workspace.mostrarAviso("Erro de ligação ao servidor.", "error"); 
