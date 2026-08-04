@@ -3,7 +3,13 @@
   "short_name": "Workspace",
   "description": "Ambiente virtual de aprendizagem interativo da escola.",
   "id": "/workspace",
-  "start_url": "/#feed", 
+  
+  // 🚀 A CORREÇÃO: Coloque aqui o caminho EXATO para a página do seu Workspace
+  "start_url": "/workspace", 
+  
+  // 🚀 O ESCOPO: Impede que o aplicativo tente controlar o sistema principal
+  "scope": "/workspace",
+
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#3498db",
