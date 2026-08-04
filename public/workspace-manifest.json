@@ -2,6 +2,7 @@
   "name": "Workspace - Área do Aluno",
   "short_name": "Workspace",
   "description": "Ambiente virtual de aprendizagem interativo da escola.",
+  "id": "/workspace",
   "start_url": "/#feed", 
   "display": "standalone",
   "background_color": "#f0f2f5",
@@ -12,13 +13,25 @@
       "src": "/img/icons/workspace-logo-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/workspace-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/img/icons/workspace-logo-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/workspace-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
