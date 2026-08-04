@@ -186,7 +186,7 @@ Object.assign(App, {
             <div id="area-dinamica-hub">
                 <div class="card" style="text-align:center; padding:50px; opacity:0.6;">
                     <span style="font-size:40px;">📂</span>
-                    <p>Selecione uma das opções acima para gerenciar suas matrículas e contratos.</p>
+                    <p>Selecione uma das opções acima para gerenciar.</p>
                 </div>
             </div>
         `;
@@ -194,7 +194,7 @@ Object.assign(App, {
 
     mostrarAreaLinks: async () => {
         const area = document.getElementById('area-dinamica-hub');
-        area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar links... ⏳</p>';
+        area.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando links... ⏳</p>';
 
         try {
             const escola = await App.api('/escola');
