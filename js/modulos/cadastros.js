@@ -270,7 +270,7 @@ App.salvarCadastro = async () => {
     
     const btn = document.querySelector('.btn-confirm');
     const txtOriginal = btn ? btn.innerText : 'Salvar';
-    if(btn) { btn.innerText = "A guardar... ⏳"; btn.disabled = true; }
+    if(btn) { btn.innerText = "Salvando... ⏳"; btn.disabled = true; }
     document.body.style.cursor = 'wait';
 
     try {

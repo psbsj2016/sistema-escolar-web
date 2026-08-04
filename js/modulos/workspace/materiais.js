@@ -38,41 +38,82 @@ Workspace.Materiais = {
             const turmas = await Workspace.api('/turmas', 'GET');
             if (turmas && turmas.length > 0) {
                 const select = document.getElementById('ws-mat-destino');
-                if (!select) return;
+                // Se já for o nosso container customizado (para caso a função rode duas vezes), procuramos por ele
+                const elementoAlvo = document.getElementById('ws-multi-select-container') || select;
+                if (!elementoAlvo) return;
 
-                // 🚀 UI PREMIUM: Substituímos o <select> antigo por uma lista de Checkboxes elegantes
-                const parent = select.parentNode;
+                const parent = elementoAlvo.parentNode;
+                
+                // 🚀 UI PREMIUM: Dropdown Multi-Select com Tags (Design Compacto e Elegante)
                 const multiSelectHTML = `
-                    <div id="ws-mat-destino-container" style="max-height: 160px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: bold; cursor: pointer; padding-bottom: 8px; border-bottom: 1px dashed #ccc; color: #2c3e50;">
-                            <input type="checkbox" id="mat-chk-global" value="global" onchange="Workspace.Materiais.toggleTodasTurmas(this)" style="width: 16px; height: 16px; cursor: pointer;"> 🌍 Todas as Turmas
-                        </label>
-                        <div id="ws-mat-turmas-list" style="display: flex; flex-direction: column; gap: 8px;">
-                            ${turmas.map(t => `
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: #555; transition: 0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#555'">
-                                    <input type="checkbox" class="mat-chk-turma" value="${t.id}" data-nome="${Workspace.escapeHTML(t.nome)}" style="width: 15px; height: 15px; cursor: pointer;"> 📚 ${Workspace.escapeHTML(t.nome)}
-                                </label>
-                            `).join('')}
+                    <div id="ws-multi-select-container" style="position: relative; width: 100%; margin-bottom: 15px; font-family: sans-serif;">
+                        <!-- CAIXA PRINCIPAL (O Falso Select que guarda as Tags) -->
+                        <div id="ws-mat-select-header" onclick="document.getElementById('ws-mat-dropdown-list').style.display = document.getElementById('ws-mat-dropdown-list').style.display === 'block' ? 'none' : 'block'" style="min-height: 45px; border: 1px solid #ccc; border-radius: 8px; padding: 8px 12px; background: #fff; cursor: pointer; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; transition: border-color 0.2s;">
+                            <span id="ws-mat-placeholder" style="color: #999; font-size: 14px;">Selecione as turmas ou Todas... ⬇️</span>
+                        </div>
+                        
+                        <!-- LISTA SUSPENSA COM CHECKBOXES (Flutuante, não estica a tela) -->
+                        <div id="ws-mat-dropdown-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); z-index: 1000; margin-top: 5px; padding: 5px;">
+                            <label style="display: flex; align-items: center; gap: 8px; padding: 10px; font-weight: bold; cursor: pointer; border-bottom: 1px dashed #eee; transition: background 0.2s; border-radius: 4px;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" id="mat-chk-global" value="global" onchange="Workspace.Materiais.toggleTodasTurmas(this)" style="width: 16px; height: 16px; cursor: pointer;"> 🌍 Todas as Turmas
+                            </label>
+                            
+                            <div style="display: flex; flex-direction: column;">
+                                ${turmas.map(t => `
+                                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; font-size: 14px; color: #444; transition: background 0.2s; border-radius: 4px;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='transparent'">
+                                        <input type="checkbox" class="mat-chk-turma" value="${t.id}" data-nome="${Workspace.escapeHTML(t.nome)}" onchange="Workspace.Materiais.atualizarTagsTurmas()" style="width: 16px; height: 16px; cursor: pointer;"> 📚 ${Workspace.escapeHTML(t.nome)}
+                                    </label>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                 `;
                 
-                // Magia DOM: Substitui o <select> pelo novo container se ele ainda for um <select>
-                if (select.tagName === 'SELECT') {
-                    const divAux = document.createElement('div');
-                    divAux.innerHTML = multiSelectHTML;
-                    parent.replaceChild(divAux.firstElementChild, select);
-                }
+                const divAux = document.createElement('div');
+                divAux.innerHTML = multiSelectHTML;
+                parent.replaceChild(divAux.firstElementChild, elementoAlvo);
+
+                // 🚀 FECHO INTELIGENTE: Esconde a lista se o professor clicar fora da caixa!
+                document.addEventListener('click', (e) => {
+                    const container = document.getElementById('ws-multi-select-container');
+                    if (container && !container.contains(e.target)) {
+                        const dropdown = document.getElementById('ws-mat-dropdown-list');
+                        if (dropdown) dropdown.style.display = 'none';
+                    }
+                });
             }
         } catch(e) {}
     },
 
-    // 🚀 FUNÇÃO NOVA: Controlo do botão "Todas as Turmas"
     toggleTodasTurmas: (checkboxGlobal) => {
         const checkboxes = document.querySelectorAll('.mat-chk-turma');
-        checkboxes.forEach(chk => {
-            chk.checked = checkboxGlobal.checked;
-            chk.disabled = checkboxGlobal.checked; // Tranca os outros se "Todas" estiver marcado
+        checkboxes.forEach(chk => { chk.checked = checkboxGlobal.checked; });
+        Workspace.Materiais.atualizarTagsTurmas();
+    },
+
+    // 🚀 A MÁGICA VISUAL: Lê o que foi marcado e desenha as Etiquetas (Tags)
+    atualizarTagsTurmas: () => {
+        const header = document.getElementById('ws-mat-select-header');
+        const chkGlobal = document.getElementById('mat-chk-global');
+        const selecionadas = document.querySelectorAll('.mat-chk-turma:checked');
+        
+        // Limpa a caixa, guardando apenas o texto padrão (escondido ou visível)
+        header.innerHTML = '<span id="ws-mat-placeholder" style="color: #999; font-size: 14px; display: none;">Selecione as turmas ou Todas... ⬇️</span>';
+        
+        if (chkGlobal && chkGlobal.checked) {
+            header.innerHTML += `<span style="background: #e8f4f8; color: #3498db; padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: bold; border: 1px solid #3498db;">🌍 Todas as Turmas</span>`;
+            return;
+        }
+
+        if (selecionadas.length === 0) {
+            document.getElementById('ws-mat-placeholder').style.display = 'block'; // Mostra texto se vazio
+            return;
+        }
+
+        selecionadas.forEach(chk => {
+            const nome = chk.getAttribute('data-nome');
+            // Desenha a etiqueta redondinha e colorida para cada turma
+            header.innerHTML += `<span style="background: #f4f6f7; color: #2c3e50; padding: 4px 10px; border-radius: 14px; font-size: 12px; border: 1px solid #ddd; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">📚 ${nome}</span>`;
         });
     },
 
@@ -129,12 +170,31 @@ Workspace.Materiais = {
             const res = await Workspace.api('/workspace/materiais', 'POST', payload);
             if (res && res.success) {
                 Workspace.mostrarAviso("Material publicado com sucesso! 🎉", "success");
-                document.getElementById('ws-mat-titulo').value = ''; document.getElementById('ws-mat-desc').value = ''; document.getElementById('ws-mat-ficheiro').value = '';
-                Workspace.Materiais.listaMateriais.unshift(payload); Workspace.Materiais.renderizarProf();
+                
+                // Limpa os textos e o ficheiro
+                document.getElementById('ws-mat-titulo').value = ''; 
+                document.getElementById('ws-mat-desc').value = ''; 
+                document.getElementById('ws-mat-ficheiro').value = '';
+                
+                // 🚀 LIMPEZA VISUAL DO SELETOR: Desmarca tudo e apaga as tags
+                const chkGlobal = document.getElementById('mat-chk-global');
+                if (chkGlobal) chkGlobal.checked = false;
+                document.querySelectorAll('.mat-chk-turma').forEach(chk => chk.checked = false);
+                if (Workspace.Materiais.atualizarTagsTurmas) Workspace.Materiais.atualizarTagsTurmas();
+
+                // Atualiza a tela com o novo documento
+                Workspace.Materiais.listaMateriais.unshift(payload); 
+                Workspace.Materiais.renderizarProf();
             } else throw new Error();
+
         } catch (e) {
+            // Em caso de falha de internet ou servidor, avisa o professor
             Workspace.mostrarAviso("Erro na transferência do ficheiro.", "error");
-        } finally { btn.innerText = txtOriginal; btn.disabled = false; }
+        } finally { 
+            // Liberta sempre o botão para permitir uma nova tentativa
+            btn.innerText = txtOriginal; 
+            btn.disabled = false; 
+        }
     },
 
     renderizarProf: (termoBusca = '') => {

@@ -1031,7 +1031,7 @@ App.salvarNotasLote = async () => {
     if (data > hojeStr) return App.showToast("Bloqueado: Não é possível gravar notas com datas futuras.", "error");
 
     const btn = document.querySelector('button[onclick="App.salvarNotasLote()"]');
-    const txt = btn.innerText; btn.innerText = "A arquivar... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    const txt = btn.innerText; btn.innerText = "Arquivando... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
         const promessas = [];
@@ -1425,7 +1425,7 @@ App.salvarChamadaLote = async () => {
     if(linhas.length === 0) return;
 
     const btn = document.querySelector('button[onclick="App.salvarChamadaLote()"]');
-    const txt = btn.innerText; btn.innerText = "A arquivar matriz em lote... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
+    const txt = btn.innerText; btn.innerText = "Salvando... ⚡"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
         const planejamentos = App.cachePedagogico.planejamentos;
