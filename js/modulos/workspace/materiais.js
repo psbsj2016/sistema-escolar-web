@@ -33,17 +33,47 @@ Workspace.Materiais = {
         }
     },
 
-    carregarTurmasDropdown: async () => {
+   carregarTurmasDropdown: async () => {
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
             if (turmas && turmas.length > 0) {
                 const select = document.getElementById('ws-mat-destino');
                 if (!select) return;
-                let options = '<option value="global">🌍 Todas as Turmas</option>';
-                turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.escapeHTML(t.nome)}</option>`);
-                select.innerHTML = options;
+
+                // 🚀 UI PREMIUM: Substituímos o <select> antigo por uma lista de Checkboxes elegantes
+                const parent = select.parentNode;
+                const multiSelectHTML = `
+                    <div id="ws-mat-destino-container" style="max-height: 160px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: bold; cursor: pointer; padding-bottom: 8px; border-bottom: 1px dashed #ccc; color: #2c3e50;">
+                            <input type="checkbox" id="mat-chk-global" value="global" onchange="Workspace.Materiais.toggleTodasTurmas(this)" style="width: 16px; height: 16px; cursor: pointer;"> 🌍 Todas as Turmas
+                        </label>
+                        <div id="ws-mat-turmas-list" style="display: flex; flex-direction: column; gap: 8px;">
+                            ${turmas.map(t => `
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: #555; transition: 0.2s;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='#555'">
+                                    <input type="checkbox" class="mat-chk-turma" value="${t.id}" data-nome="${Workspace.escapeHTML(t.nome)}" style="width: 15px; height: 15px; cursor: pointer;"> 📚 ${Workspace.escapeHTML(t.nome)}
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Magia DOM: Substitui o <select> pelo novo container se ele ainda for um <select>
+                if (select.tagName === 'SELECT') {
+                    const divAux = document.createElement('div');
+                    divAux.innerHTML = multiSelectHTML;
+                    parent.replaceChild(divAux.firstElementChild, select);
+                }
             }
         } catch(e) {}
+    },
+
+    // 🚀 FUNÇÃO NOVA: Controlo do botão "Todas as Turmas"
+    toggleTodasTurmas: (checkboxGlobal) => {
+        const checkboxes = document.querySelectorAll('.mat-chk-turma');
+        checkboxes.forEach(chk => {
+            chk.checked = checkboxGlobal.checked;
+            chk.disabled = checkboxGlobal.checked; // Tranca os outros se "Todas" estiver marcado
+        });
     },
 
     carregarMateriais: async () => {
@@ -56,13 +86,28 @@ Workspace.Materiais = {
         } catch(e) {}
     },
 
-    enviarMaterial: async () => {
+   enviarMaterial: async () => {
         const titulo = document.getElementById('ws-mat-titulo').value.trim();
         const desc = document.getElementById('ws-mat-desc').value.trim();
-        const selectDestino = document.getElementById('ws-mat-destino');
-        const destino = selectDestino.value;
-        const destinoNome = selectDestino.options[selectDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
         const inputFicheiro = document.getElementById('ws-mat-ficheiro');
+        
+        // 🚀 A MÁGICA DA MULTI-SELEÇÃO: Descobre quem está marcado
+        const isGlobal = document.getElementById('mat-chk-global')?.checked;
+        let destino = [];
+        let destinoNome = [];
+        
+        if (isGlobal) {
+            destino = 'global';
+            destinoNome = 'Todas as Turmas';
+        } else {
+            const selecionados = document.querySelectorAll('.mat-chk-turma:checked');
+            selecionados.forEach(chk => {
+                destino.push(chk.value);
+                destinoNome.push(chk.getAttribute('data-nome'));
+            });
+            
+            if (destino.length === 0) return Workspace.mostrarAviso("Por favor, selecione pelo menos uma turma ou 'Todas as Turmas'.", "warning");
+        }
         
         if (!titulo) return Workspace.mostrarAviso("Por favor, dê um título ao material.", "warning");
         if (inputFicheiro.files.length === 0) return Workspace.mostrarAviso("Por favor, selecione um ficheiro para enviar.", "warning");
@@ -112,7 +157,12 @@ Workspace.Materiais = {
             const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro || mat.nomeOriginal);
             const dataFormatada = new Date(mat.dataCriacao).toLocaleDateString('pt-BR');
             
-            // 🚀 VACINA CONTRA O ERRO DE SINTAXE: Substitui aspas simples para não quebrar o HTML!
+   // 🚀 TRADUTOR DE ARRAYS: Se for uma lista de turmas, junta com vírgulas.
+          let nomesDestinoFinal = Array.isArray(mat.destinoNome) ? mat.destinoNome.join(', ') : mat.destinoNome;
+          // Se o professor marcou muitas turmas, cortamos o texto para não esticar o design!
+         if (nomesDestinoFinal.length > 40) nomesDestinoFinal = nomesDestinoFinal.substring(0, 40) + '...';
+
+         // 🚀 VACINA CONTRA O ERRO DE SINTAXE: Substitui aspas simples para não quebrar o HTML!
             const tituloSeguro = Workspace.escapeHTML(mat.titulo || 'Material').replace(/'/g, "\\'");
             
             html += `
@@ -121,7 +171,7 @@ Workspace.Materiais = {
                     <div style="font-size: 30px;">${icone}</div>
                     <div>
                         <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${Workspace.escapeHTML(mat.titulo)}</h4>
-                        <div style="font-size: 11px; color: #7f8c8d;">📅 Publicado em: ${dataFormatada} | 👥 ${Workspace.escapeHTML(mat.destinoNome)}</div>
+                        <div style="font-size: 11px; color: #7f8c8d;">📅 Publicado em: ${dataFormatada} | 👥 ${Workspace.escapeHTML(nomesDestinoFinal)}</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -137,14 +187,23 @@ Workspace.Materiais = {
         const container = document.getElementById('ws-materiais-grid-aluno');
         if (!container) return;
 
-        let materiaisPermitidos = Workspace.Materiais.listaMateriais.filter(m => {
-            if (m.destino === 'global') return true;
+       let materiaisPermitidos = Workspace.Materiais.listaMateriais.filter(m => {
+            // Se for global em formato String ou Lista, permite a entrada!
+            if (m.destino === 'global' || (Array.isArray(m.destino) && m.destino.includes('global'))) return true;
+            
             const u = Workspace.usuario;
             let minhasTurmas = [].concat(u.turmas || [], u.turma || [], u.turmaId || []);
             const turmasStr = minhasTurmas.map(t => String(t.id || t).toLowerCase().trim());
-            const destId = String(m.destino).toLowerCase().trim();
-            const destNome = String(m.destinoNome || '').toLowerCase().trim();
-            return turmasStr.includes(destId) || turmasStr.includes(destNome);
+            
+            // 🚀 O DETETIVE MÚLTIPLO: Se o destino for uma lista (novo formato)
+            if (Array.isArray(m.destino)) {
+                return m.destino.some(d => turmasStr.includes(String(d).toLowerCase().trim()));
+            } else {
+                // Mantém retrocompatibilidade com materiais antigos guardados como String
+                const destId = String(m.destino).toLowerCase().trim();
+                const destNome = String(m.destinoNome || '').toLowerCase().trim();
+                return turmasStr.includes(destId) || turmasStr.includes(destNome);
+            }
         });
 
         if (termoBusca.trim() !== '') {
