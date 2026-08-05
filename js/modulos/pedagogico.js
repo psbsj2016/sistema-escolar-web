@@ -124,7 +124,7 @@ App.renderizarPlanejamentoPro = () => {
 };
 
 App.renderizarNovoPlanejamento = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
     try {
         const alunos = await App.api('/alunos');
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
@@ -157,7 +157,7 @@ App.renderizarNovoPlanejamento = async () => {
 };
 
 App.renderizarPlanejamentosSalvos = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
     try {
         const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
         const planosAtivos = planos.filter(p => p.status !== 'Arquivado');
@@ -208,7 +208,7 @@ App.renderizarPlanejamentosSalvos = async () => {
 };
 
 App.renderizarPlanejamentosArquivados = async () => {
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar arquivados...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando arquivados...';
     try {
         const planos = await App.api(`/planejamentos?_t=${Date.now()}`);
         const planosArquivados = planos.filter(p => p.status === 'Arquivado');
@@ -635,7 +635,7 @@ App.sincronizarPlanejamentoComChamadasUI = async () => {
 // ---------------------------------------------------------
 App.renderizarBoletimVisual = async () => {
     App.setTitulo("Boletim Escolar");
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar...';
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando...';
     try {
         const alunos = await App.api('/alunos');
         const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
@@ -787,7 +787,7 @@ App.salvarConfigNotas = () => {
 App.renderizarAvaliacoesPro = async () => {
     App.setTitulo("Avaliações e Notas");
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados...</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando dados...</p>';
     
     const mediaSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('media_aprovacao') : 'media_aprovacao') || '6.0';
     const maxSalva = localStorage.getItem(App.getTenantKey ? App.getTenantKey('nota_maxima') : 'nota_maxima') || '10.0';
@@ -1103,7 +1103,7 @@ App.filaEdicaoChamada = []; // 🧠 Nova Memória do Wizard de Edição
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Controle de Presença");
     const div = document.getElementById('app-content'); 
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">A carregar dados rapidamente... ⚡</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando os dados rapidamente... ⚡</p>';
     
     App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]]; 
     App.filaEdicaoChamada = []; // Reseta a fila por segurança
@@ -1507,7 +1507,7 @@ App.salvarChamadaLote = async () => {
 
        // 🧠 A MÁGICA FINAL DO WIZARD: Se tiver gente na fila, carrega o próximo!
        if (App.filaEdicaoChamada && App.filaEdicaoChamada.length > 0) {
-           App.showToast(`Salvo! A carregar o próximo... (Faltam ${App.filaEdicaoChamada.length})`, "success");
+           App.showToast(`Salvo! Carregando o próximo... (Faltam ${App.filaEdicaoChamada.length})`, "success");
            
            // Atualiza o cache silenciosamente para não perder a edição anterior
            App.cachePedagogico.chamadas = chamadasAtualizadasNaMemoria;
@@ -1544,7 +1544,7 @@ App.excluirLancamentoChamada = (id) => {
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
     App.setTitulo("Calendário");
-    const div = document.getElementById('app-content'); div.innerHTML = 'A carregar calendário...'; 
+    const div = document.getElementById('app-content'); div.innerHTML = 'Carregando calendário...'; 
     if (!App.calendarState) App.calendarState = { month: new Date().getMonth(), year: new Date().getFullYear() }; 
     
     try { 

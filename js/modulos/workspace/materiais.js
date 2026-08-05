@@ -3,6 +3,7 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Materiais = {
     listaMateriais: [],
+    materialEmEdicao: null, // 🚀 NOVA VARIÁVEL: Memoriza qual material está a ser editado
     
     init: async () => {
         console.log("📚 Módulo de Materiais das Aulas Iniciado.");
@@ -127,12 +128,11 @@ Workspace.Materiais = {
         } catch(e) {}
     },
 
-   enviarMaterial: async () => {
+  enviarMaterial: async () => {
         const titulo = document.getElementById('ws-mat-titulo').value.trim();
         const desc = document.getElementById('ws-mat-desc').value.trim();
         const inputFicheiro = document.getElementById('ws-mat-ficheiro');
         
-        // 🚀 A MÁGICA DA MULTI-SELEÇÃO: Descobre quem está marcado
         const isGlobal = document.getElementById('mat-chk-global')?.checked;
         let destino = [];
         let destinoNome = [];
@@ -146,54 +146,91 @@ Workspace.Materiais = {
                 destino.push(chk.value);
                 destinoNome.push(chk.getAttribute('data-nome'));
             });
-            
             if (destino.length === 0) return Workspace.mostrarAviso("Por favor, selecione pelo menos uma turma ou 'Todas as Turmas'.", "warning");
         }
         
         if (!titulo) return Workspace.mostrarAviso("Por favor, dê um título ao material.", "warning");
-        if (inputFicheiro.files.length === 0) return Workspace.mostrarAviso("Por favor, selecione um ficheiro para enviar.", "warning");
         
-        const file = inputFicheiro.files[0];
+        // 🚀 VERIFICAÇÃO DE MODO: Estamos a editar?
+        const isEdicao = Workspace.Materiais.materialEmEdicao !== null;
+        const matAntigo = Workspace.Materiais.materialEmEdicao;
+
+        // Se NÃO é edição, o arquivo é obrigatório. Na edição, ele é opcional (usa o antigo se vazio).
+        if (!isEdicao && inputFicheiro.files.length === 0) {
+            return Workspace.mostrarAviso("Por favor, selecione um ficheiro para enviar.", "warning");
+        }
+        
         const btn = document.getElementById('ws-btn-enviar-mat');
-        const txtOriginal = btn.innerText;
-        btn.innerText = "Enviando arquivo... ⏳"; btn.disabled = true;
+        btn.innerText = isEdicao ? "Atualizando... ⏳" : "Enviando arquivo... ⏳"; 
+        btn.disabled = true;
 
         try {
-            const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
+            // Se for edição e não escolheram novo arquivo, mantemos as URLs antigas
+            let fileUrl = isEdicao ? matAntigo.url : '';
+            let tipoFicheiro = isEdicao ? matAntigo.tipoFicheiro : '';
+            let nomeOriginal = isEdicao ? matAntigo.nomeOriginal : '';
+
+            // Se selecionaram um arquivo novo (ou é um material novo), fazemos upload
+            if (inputFicheiro.files.length > 0) {
+                const file = inputFicheiro.files[0];
+                const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
+                fileUrl = dadosUpload.url;
+                tipoFicheiro = file.type || file.name.split('.').pop() || 'desconhecido';
+                nomeOriginal = file.name;
+            }
+
             const payload = {
-                id: 'mat_' + Date.now(), titulo, descricao: desc, destino, destinoNome, url: dadosUpload.url,
-                tipoFicheiro: file.type || file.name.split('.').pop() || 'desconhecido',
-                nomeOriginal: file.name, escolaId: Workspace.usuario.escolaId,
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login, dataCriacao: new Date().toISOString()
+                titulo, descricao: desc, destino, destinoNome, 
+                url: fileUrl, tipoFicheiro, nomeOriginal,
+                escolaId: Workspace.usuario.escolaId,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login
             };
 
-            const res = await Workspace.api('/workspace/materiais', 'POST', payload);
-            if (res && res.success) {
-                Workspace.mostrarAviso("Material publicado com sucesso! 🎉", "success");
-                
-                // Limpa os textos e o ficheiro
-                document.getElementById('ws-mat-titulo').value = ''; 
-                document.getElementById('ws-mat-desc').value = ''; 
-                document.getElementById('ws-mat-ficheiro').value = '';
-                
-                // 🚀 LIMPEZA VISUAL DO SELETOR: Desmarca tudo e apaga as tags
-                const chkGlobal = document.getElementById('mat-chk-global');
-                if (chkGlobal) chkGlobal.checked = false;
-                document.querySelectorAll('.mat-chk-turma').forEach(chk => chk.checked = false);
-                if (Workspace.Materiais.atualizarTagsTurmas) Workspace.Materiais.atualizarTagsTurmas();
+            // 🚀 ROTA DE DECISÃO: POST (Criar) ou PUT (Atualizar)
+            if (isEdicao) {
+                const res = await Workspace.api(`/workspace/materiais/${matAntigo.id}`, 'PUT', payload);
+                if (res && res.success) {
+                    Workspace.mostrarAviso("Material atualizado com sucesso! 🎉", "success");
+                    // Atualiza o card na tela imediatamente
+                    const index = Workspace.Materiais.listaMateriais.findIndex(m => m.id === matAntigo.id);
+                    if (index !== -1) Workspace.Materiais.listaMateriais[index] = { ...Workspace.Materiais.listaMateriais[index], ...payload };
+                } else throw new Error();
+            } else {
+                payload.id = 'mat_' + Date.now();
+                payload.dataCriacao = new Date().toISOString();
+                const res = await Workspace.api('/workspace/materiais', 'POST', payload);
+                if (res && res.success) {
+                    Workspace.mostrarAviso("Material publicado com sucesso! 🎉", "success");
+                    Workspace.Materiais.listaMateriais.unshift(payload); 
+                } else throw new Error();
+            }
+            
+            // 🚀 LIMPEZA GERAL APÓS SUCESSO (Criação ou Edição)
+            document.getElementById('ws-mat-titulo').value = ''; 
+            document.getElementById('ws-mat-desc').value = ''; 
+            document.getElementById('ws-mat-ficheiro').value = '';
+            
+            const chkGlobalUI = document.getElementById('mat-chk-global');
+            if (chkGlobalUI) chkGlobalUI.checked = false;
+            document.querySelectorAll('.mat-chk-turma').forEach(chk => { chk.checked = false; chk.disabled = false; });
+            if (Workspace.Materiais.atualizarTagsTurmas) Workspace.Materiais.atualizarTagsTurmas();
 
-                // Atualiza a tela com o novo documento
-                Workspace.Materiais.listaMateriais.unshift(payload); 
-                Workspace.Materiais.renderizarProf();
-            } else throw new Error();
-
+            // Encerra o modo edição e restaura o botão
+            Workspace.Materiais.materialEmEdicao = null;
+            btn.style.background = ""; // Volta à cor base
+            
+            Workspace.Materiais.renderizarProf();
+            
         } catch (e) {
-            // Em caso de falha de internet ou servidor, avisa o professor
-            Workspace.mostrarAviso("Erro na transferência do ficheiro.", "error");
+            Workspace.mostrarAviso("Erro ao processar o material.", "error");
         } finally { 
-            // Liberta sempre o botão para permitir uma nova tentativa
-            btn.innerText = txtOriginal; 
-            btn.disabled = false; 
+            // Garante que o texto do botão fica sempre correto e destrancado
+            btn.disabled = false;
+            if (Workspace.Materiais.materialEmEdicao) {
+                btn.innerText = "💾 Guardar Alterações";
+            } else {
+                btn.innerText = "Publicar Material";
+            }
         }
     },
 
@@ -236,6 +273,7 @@ Workspace.Materiais = {
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="ws-btn" style="background: #f0f2f5; color: #3498db; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="Workspace.Materiais.abrirVisualizador('${mat.url}', '${mat.tipoFicheiro}', '${tituloSeguro}')">👁️ Abrir</button>
+                    <button class="ws-btn" style="background: #fff8e1; color: #f39c12; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="Workspace.Materiais.prepararEdicao('${mat.id}')">✏️ Editar</button>
                     <button class="ws-btn" style="background: #fdf2f2; color: #e74c3c; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;" onclick="Workspace.Materiais.apagarMaterial('${mat.id}')">🗑️ Apagar</button>
                 </div>
             </div>`;
@@ -313,6 +351,50 @@ Workspace.Materiais = {
                 } catch(e) {}
             });
         }
+    },
+
+     // 🚀 O ATIVADOR DO MODO DE EDIÇÃO
+    prepararEdicao: (id) => {
+        const mat = Workspace.Materiais.listaMateriais.find(m => m.id === id);
+        if (!mat) return;
+
+        Workspace.Materiais.materialEmEdicao = mat;
+        
+        // 1. Preenche os textos antigos
+        document.getElementById('ws-mat-titulo').value = mat.titulo;
+        document.getElementById('ws-mat-desc').value = mat.descricao || '';
+        
+        // 2. Limpa o painel de turmas e prepara para marcar as antigas
+        const chkGlobal = document.getElementById('mat-chk-global');
+        if (chkGlobal) chkGlobal.checked = false;
+        document.querySelectorAll('.mat-chk-turma').forEach(chk => { chk.checked = false; chk.disabled = false; });
+        
+        // 3. Marca as turmas que já estavam escolhidas
+        if (mat.destino === 'global' || (Array.isArray(mat.destino) && mat.destino.includes('global'))) {
+            if (chkGlobal) {
+                chkGlobal.checked = true;
+                if (Workspace.Materiais.toggleTodasTurmas) Workspace.Materiais.toggleTodasTurmas(chkGlobal);
+            }
+        } else {
+            const destinosArray = Array.isArray(mat.destino) ? mat.destino : [mat.destino];
+            destinosArray.forEach(d => {
+                const chk = document.querySelector(`.mat-chk-turma[value="${d}"]`);
+                if (chk) chk.checked = true;
+            });
+            if (Workspace.Materiais.atualizarTagsTurmas) Workspace.Materiais.atualizarTagsTurmas();
+        }
+        
+        // 4. Muda a aparência do botão Principal
+        const btn = document.getElementById('ws-btn-enviar-mat');
+        if (btn) {
+            btn.innerText = "💾 Guardar Alterações";
+            btn.style.background = "#f39c12"; 
+            btn.style.color = "#fff";
+        }
+        
+        // 5. Rola suavemente para o formulário
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        Workspace.mostrarAviso("Modo de edição ativado. Altere as informações e clique em Guardar. O anexo é opcional.", "info", 5000);
     },
 
     // 🚀 O NOVO LEITOR DA MICROSOFT E GOOGLE COM EXPERIÊNCIA DE UX PREMIUM

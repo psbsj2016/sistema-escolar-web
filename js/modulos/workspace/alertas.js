@@ -57,6 +57,27 @@ Workspace.Alertas = {
                 }
             }
 
+            // 🚀 O ATUALIZADOR INSTANTÂNEO DE MATERIAIS DA AULA
+            if (data.type === 'MATERIAL_UPDATE') {
+                if (window.Workspace && Workspace.Materiais && Workspace.Materiais.carregarMateriais) {
+                    // Puxa as atualizações do banco de dados silenciosamente
+                    Workspace.Materiais.carregarMateriais().then(() => {
+                        // Descobre quem está olhando para o ecrã e redesenha a estante!
+                        if (Workspace.usuario.tipo === 'Aluno') {
+                            const areaAluno = document.getElementById('ws-materiais-aluno-area');
+                            if (areaAluno && areaAluno.style.display !== 'none') {
+                                Workspace.Materiais.renderizarAluno();
+                            }
+                        } else {
+                            const areaProf = document.getElementById('ws-materiais-prof-area');
+                            if (areaProf && areaProf.style.display !== 'none') {
+                                Workspace.Materiais.renderizarProf();
+                            }
+                        }
+                    });
+                }
+            }
+
             // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
