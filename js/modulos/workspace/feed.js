@@ -338,8 +338,7 @@ Workspace.Feed = {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // 🚀 DUPLICAÇÃO RESOLVIDA: O HTML já tem a barra de design novo, não precisamos injetar nada aqui!
-
+        // Se a lista estiver vazia (primeiro load), mostramos os skeletons
         if(Workspace.Feed.todosOsPosts.length === 0) {
             container.innerHTML = Array(3).fill(`
                 <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee;">
@@ -368,7 +367,20 @@ Workspace.Feed = {
             Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
 
         } catch (error) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Será necessário atualizar o feed por causa do longo tempo de inatividade. Por favor, clicar em <strong>"Sair"</strong> no menu <strong>☰</strong> e entrar novamente.</div>';
+            console.warn("A ligação falhou ao acordar o dispositivo. Tentando reconectar em 3s...");
+            
+            // 🚀 O SEGREDO DA EXPERIÊNCIA DO UTILIZADOR: Em vez de destruir a tela com um erro vermelho,
+            // mostramos um aviso de sincronização se o ecrã estiver vazio.
+            if (Workspace.Feed.todosOsPosts.length === 0) {
+                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Sincronizando as publicações... ⏳ A aguardar a estabilização da rede.</div>';
+            }
+            
+            // 🚀 O DESFIBRILADOR (Auto-Retry): Dá 3 segundos para a antena do aparelho ligar ao Wi-Fi/4G e tenta de novo!
+            setTimeout(() => {
+                if (Workspace.Feed && Workspace.Feed.carregarPosts) {
+                    Workspace.Feed.carregarPosts();
+                }
+            }, 3000);
         }
     },
 
@@ -405,7 +417,9 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>Atualizando o feed... ⏳ Por favor, siga a instrução do texto em vermelho.</strong></div>';
+        
+        // 🚀 A CURA VISUAL: Removemos a instrução vermelha do programador e deixamos um aviso profissional
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>A carregar publicações... ⏳</strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
