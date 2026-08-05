@@ -4,12 +4,19 @@ window.Workspace = window.Workspace || {};
 Workspace.Alertas = {
     notificacoesAtuais: [],
     idsConhecidos: new Set(),
+    
+    // 🚀 NOVAS VARIÁVEIS DE MEMÓRIA PARA O "DETETIVE DE RETORNO"
+    conexaoSSE: null, 
+    momentoSaida: null,
 
     init: () => {
         console.log("🔔 Motor de Alertas: Conexão em Tempo Real (SSE) Ativada.");
         Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
         Workspace.Alertas.atualizarInterface();
+        
+        // 🚀 LIGA O VIGIA DE ABAS ADORMECIDAS
+        Workspace.Alertas.iniciarDetetiveRetorno();
         
         const aguardarUsuario = setInterval(() => {
             if (Workspace.usuario && Workspace.usuario.nome) {
@@ -20,9 +27,83 @@ Workspace.Alertas = {
         }, 1000);
     },
 
+    // ============================================================================
+    // 🩺 O DESFIBRILADOR: ACORDA O SITE APÓS MUITO TEMPO ADORMECIDO
+    // ============================================================================
+    iniciarDetetiveRetorno: () => {
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                // O utilizador minimizou o site. Anotamos a hora no relógio.
+                Workspace.Alertas.momentoSaida = Date.now();
+            } else if (document.visibilityState === 'visible') {
+                // O utilizador voltou a olhar para o ecrã!
+                if (Workspace.Alertas.momentoSaida) {
+                    const tempoAusente = Date.now() - Workspace.Alertas.momentoSaida;
+                    
+                    // Se ficou fora por mais de 1 minuto (60000 milissegundos), reanimamos tudo!
+                    if (tempoAusente > 60000) {
+                        console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
+                        if(window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("Sincronizando as informações recentes... ⏳", "info", 2000);
+                        }
+                        Workspace.Alertas.reanimaSistema();
+                    }
+                    Workspace.Alertas.momentoSaida = null; // Limpa o relógio
+                }
+            }
+        });
+    },
+
+    reanimaSistema: async () => {
+        // 1. Reinicia o coração do site (Destrói a ligação velha e cria uma nova)
+        Workspace.Alertas.iniciarConexaoTempoReal();
+
+        // 2. Manda cada departamento recarregar as suas listas em silêncio
+        if (window.Workspace) {
+            // Atualiza as Notificações
+            if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes();
+            
+            // Atualiza a Sala de Acessos (Avaliações / Lobbies) -> Resolve o seu Bug Principal!
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) Workspace.Avaliacoes.carregarLobbies();
+            
+            // Atualiza o Bate-papo se o aluno o tiver deixado aberto na tela
+            if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) {
+                const nomeChat = document.getElementById('ws-chat-titulo') ? document.getElementById('ws-chat-titulo').innerText : 'Bate-papo';
+                Workspace.Sidebar.abrirChat(Workspace.Sidebar.turmaIdAberta, nomeChat);
+            }
+
+            // Atualiza o Mural/Feed principal
+            if (Workspace.Feed && Workspace.Feed.carregarPosts) {
+                Workspace.Feed.todosOsPosts = []; // Esvazia o lixo antigo da memória
+                Workspace.Feed.carregarPosts();
+            }
+            
+            // Atualiza a Estante de Materiais
+            if (Workspace.Materiais && Workspace.Materiais.carregarMateriais) {
+                await Workspace.Materiais.carregarMateriais();
+                if (Workspace.usuario.tipo === 'Aluno') {
+                    const areaAluno = document.getElementById('ws-materiais-aluno-area');
+                    if (areaAluno && areaAluno.style.display !== 'none') Workspace.Materiais.renderizarAluno();
+                } else {
+                    const areaProf = document.getElementById('ws-materiais-prof-area');
+                    if (areaProf && areaProf.style.display !== 'none') Workspace.Materiais.renderizarProf();
+                }
+            }
+        }
+    },
+
     iniciarConexaoTempoReal: () => {
+        // 🚀 O SEGREDO: Se já houver um túnel zombie, destrói-o antes de abrir o novo!
+        if (Workspace.Alertas.conexaoSSE) {
+            Workspace.Alertas.conexaoSSE.close();
+        }
+
         const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
-        const sse = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+        
+        // Grava a nova ligação na nossa variável para controlo futuro
+        Workspace.Alertas.conexaoSSE = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+        
+        const sse = Workspace.Alertas.conexaoSSE; // O código original continuará a funcionar com a nova variável
 
         sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
