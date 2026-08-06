@@ -977,7 +977,7 @@ Workspace.Feed = {
                         <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0;">
                             <div style="flex-shrink:0;">${avatarPost}</div>
                             <div style="flex: 1; min-width: 0;">
-                                // Substitua o span antigo por este bloco:
+                                
 <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display: flex; align-items: center;">
     <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; display: flex; align-items: center;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">
         ${window.Workspace.renderizarBolinhaOnline(p.autorNome)}
