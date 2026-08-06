@@ -19,15 +19,17 @@ Object.assign(Workspace, {
     // 🚀 NOVA MEMÓRIA: Guarda os nomes de quem está online
     usuariosOnline: new Set(),
     
-    // 🚀 NOVA FUNÇÃO: Desenha a bolinha verde pulsante
+   // 🚀 NOVA FUNÇÃO: Desenha a bolinha verde pulsante (Com flex-shrink e trim)
     renderizarBolinhaOnline: (nome) => {
         if (!nome) return '';
-        const isOnline = Workspace.usuariosOnline.has(nome);
+        const nomeLimpo = nome.trim();
+        const isOnline = Workspace.usuariosOnline.has(nomeLimpo);
+        
         // Desenhamos a bolinha com display inline-block se estiver online, ou none se estiver offline
-        return `<span class="ws-online-dot" data-nome="${Workspace.escapeHTML(nome)}" style="display: ${isOnline ? 'inline-block' : 'none'}; width: 8px; height: 8px; background-color: #27ae60; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulseGreen 2s infinite; vertical-align: middle;"></span>`;
+        return `<span class="ws-online-dot" data-nome="${Workspace.escapeHTML(nomeLimpo)}" style="display: ${isOnline ? 'inline-block' : 'none'} !important; width: 8px; height: 8px; background-color: #27ae60; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulseGreen 2s infinite; vertical-align: middle; flex-shrink: 0;"></span>`;
     },
 
-    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente e ACENDE as bolinhas
+    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente
     iniciarRadarOnline: () => {
         // Injeta o CSS da animação de pulsação suave
         if (!document.getElementById('ws-online-css')) {
@@ -40,41 +42,28 @@ Object.assign(Workspace, {
         const buscarStatus = async () => {
             if (!Workspace.usuario) return;
             try {
-                // Vai buscar quem está online agora!
                 const res = await Workspace.api('/monitoramento/status', 'GET');
-                
                 if (Array.isArray(res)) {
                     Workspace.usuariosOnline.clear();
                     res.forEach(u => {
-                        // Limpeza extra de segurança no nome para evitar falsos negativos
                         if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome.trim());
                     });
                     
-                    // 🚀 A MÁGICA: Varre toda a plataforma e atualiza TODAS as bolinhas numa fração de segundo
-                    const bolinhasNoEcra = document.querySelectorAll('.ws-online-dot');
-                    
-                    bolinhasNoEcra.forEach(dot => {
-                        // Vamos ler a quem pertence esta bolinha
+                    // 🚀 Magia DOM Turbo: Acende ou apaga as bolinhas instantaneamente!
+                    document.querySelectorAll('.ws-online-dot').forEach(dot => {
                         const nomeDaBolinha = dot.getAttribute('data-nome');
-                        
                         if (nomeDaBolinha && Workspace.usuariosOnline.has(nomeDaBolinha.trim())) {
-                            dot.style.setProperty('display', 'inline-block', 'important'); // ACENDE!
+                            dot.style.setProperty('display', 'inline-block', 'important');
                         } else {
-                            dot.style.setProperty('display', 'none', 'important'); // APAGA!
+                            dot.style.setProperty('display', 'none', 'important');
                         }
                     });
-                    
                 }
-            } catch(e) {
-                console.error("Erro no Radar de Status", e);
-            }
+            } catch(e) {}
         };
 
-        // 🚀 O SEGREDO DO ARRANQUE: Aguardamos 2.5 segundos antes da primeira leitura.
-        // Assim, damos tempo ao Feed para desenhar tudo antes de tentarmos acender as luzes!
+        // 🚀 O SEGREDO DO ARRANQUE: Aguardamos 2.5 segundos para o Feed já ter desenhado o HTML
         setTimeout(buscarStatus, 2500); 
-        
-        // Mantém a batida do coração a cada 35 segundos
         setInterval(buscarStatus, 35000); 
     },
 
