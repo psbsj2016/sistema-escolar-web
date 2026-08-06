@@ -153,7 +153,10 @@ Workspace.Feed = {
             <div style="flex-shrink: 0; cursor:pointer;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')">${avatarComentario}</div>
             <div style="flex:1; padding-right: 5px; min-width: 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <strong style="color: #2c3e50; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${Workspace.Feed.limparTexto(c.autorNome)}</strong>
+                   <strong style="color: #2c3e50; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%; display: flex; align-items: center;" onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(c.autorNome)}')" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+    ${window.Workspace.renderizarBolinhaOnline(c.autorNome)}
+    ${Workspace.Feed.limparTexto(c.autorNome)}
+</strong>
                     <span class="ws-time-ago" ${tempoAttr} style="font-size:10px; color:#aaa; margin-left:auto; flex-shrink: 0;">${tempoComentario}</span>
                 </div>
                 <span id="texto-comentario-${c.id}" style="color: #444; line-height:1.4; display: block; word-break: break-word; overflow-wrap: break-word;">${Workspace.Feed.limparTexto(c.texto)}</span>
@@ -974,10 +977,14 @@ Workspace.Feed = {
                         <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0;">
                             <div style="flex-shrink:0;">${avatarPost}</div>
                             <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">${Workspace.Feed.limparTexto(p.autorNome)}</span> 
-                                    <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
-                                </div>
+                                // Substitua o span antigo por este bloco:
+<div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display: flex; align-items: center;">
+    <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; display: flex; align-items: center;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">
+        ${window.Workspace.renderizarBolinhaOnline(p.autorNome)}
+        ${Workspace.Feed.limparTexto(p.autorNome)}
+    </span> 
+    <span style="font-size:11px; color:#aaa; margin-left:4px;">• ${p.autorTipo}</span>
+</div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge}
                                 </div>
@@ -1214,7 +1221,7 @@ Workspace.Feed = {
                 <div style="width:100px; height:100px; margin: 0 auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid #3498db; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px;">
                     ${avatarHTML}
                 </div>
-                <h2 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 20px;">${autorNome}</h2>
+                <h2 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 20px; display: flex; align-items: center; justify-content: center;"> ${window.Workspace.renderizarBolinhaOnline(autorNome)}${autorNome}</h2>
                 <p style="margin: 0; color: #7f8c8d; font-size: 13px;">Membro da Plataforma</p>
             </div>
         `;

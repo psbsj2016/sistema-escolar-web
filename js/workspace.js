@@ -16,6 +16,54 @@ Object.assign(Workspace, {
     avatarsCache: {}, 
     deferredPrompt: null,
 
+    // 🚀 NOVA MEMÓRIA: Guarda os nomes de quem está online
+    usuariosOnline: new Set(),
+    
+    // 🚀 NOVA FUNÇÃO: Desenha a bolinha verde pulsante
+    renderizarBolinhaOnline: (nome) => {
+        if (!nome) return '';
+        const isOnline = Workspace.usuariosOnline.has(nome);
+        // Desenhamos a bolinha com display inline-block se estiver online, ou none se estiver offline
+        return `<span class="ws-online-dot" data-nome="${Workspace.escapeHTML(nome)}" style="display: ${isOnline ? 'inline-block' : 'none'}; width: 8px; height: 8px; background-color: #27ae60; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulseGreen 2s infinite; vertical-align: middle;"></span>`;
+    },
+
+    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente
+    iniciarRadarOnline: () => {
+        // Injeta o CSS da animação de pulsação suave
+        if (!document.getElementById('ws-online-css')) {
+            const style = document.createElement('style');
+            style.id = 'ws-online-css';
+            style.innerHTML = `@keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); } 70% { box-shadow: 0 0 0 5px rgba(39, 174, 96, 0); } 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); } }`;
+            document.head.appendChild(style);
+        }
+
+        const buscarStatus = async () => {
+            if (!Workspace.usuario) return;
+            try {
+                const res = await Workspace.api('/monitoramento/status', 'GET');
+                if (Array.isArray(res)) {
+                    Workspace.usuariosOnline.clear();
+                    res.forEach(u => {
+                        if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome);
+                    });
+                    
+                    // Magia DOM: Acende ou apaga as bolinhas instantaneamente sem piscar a tela
+                    document.querySelectorAll('.ws-online-dot').forEach(dot => {
+                        const nome = dot.getAttribute('data-nome');
+                        if (Workspace.usuariosOnline.has(nome)) {
+                            dot.style.display = 'inline-block';
+                        } else {
+                            dot.style.display = 'none';
+                        }
+                    });
+                }
+            } catch(e) {}
+        };
+
+        buscarStatus(); // Executa o primeiro rastreio logo ao entrar
+        setInterval(buscarStatus, 35000); // Atualiza a cada 35 segundos em background
+    },
+
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo, duracao, onClickCallback);
@@ -141,6 +189,7 @@ Object.assign(Workspace, {
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
+        Workspace.iniciarRadarOnline(); // 🚀 O RADAR É LIGADO AQUI!
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
