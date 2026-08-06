@@ -15,30 +15,60 @@ Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
     deferredPrompt: null,
-
-    // 🚀 NOVA MEMÓRIA: Guarda os nomes de quem está online
-    usuariosOnline: new Set(),
     
-   // 🚀 NOVA FUNÇÃO: Desenha a bolinha verde pulsante (Com flex-shrink e trim)
-    renderizarBolinhaOnline: (nome) => {
-        if (!nome) return '';
-        const nomeLimpo = nome.trim();
-        const isOnline = Workspace.usuariosOnline.has(nomeLimpo);
-        
-        // Desenhamos a bolinha com display inline-block se estiver online, ou none se estiver offline
-        return `<span class="ws-online-dot" data-nome="${Workspace.escapeHTML(nomeLimpo)}" style="display: ${isOnline ? 'inline-block' : 'none'} !important; width: 8px; height: 8px; background-color: #27ae60; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulseGreen 2s infinite; vertical-align: middle; flex-shrink: 0;"></span>`;
+    // 🚀 BOLINHA: Base de dados de quem está online
+    usuariosOnline: new Set(), 
+    radarOnlineTimer: null,
+
+    // ============================================================================
+    // 🛡️ NOVO MOTOR DE INATIVIDADE (Força Login após tempo limite)
+    // ============================================================================
+    Sessao: {
+        ultimoAcesso: Date.now(),
+        limiteMinutos: 30, // ⏱️ Fecha o sistema após 30 minutos inativo
+
+        init: () => {
+            // Reinicia o relógio sempre que o aluno interage com o ecrã
+            const resetar = () => { Workspace.Sessao.ultimoAcesso = Date.now(); };
+            window.addEventListener('mousemove', resetar);
+            window.addEventListener('keypress', resetar);
+            window.addEventListener('touchstart', resetar);
+            window.addEventListener('scroll', resetar);
+
+            // Verifica periodicamente se o tempo estourou
+            setInterval(() => {
+                if (!Workspace.usuario) return;
+                const inativoMs = Date.now() - Workspace.Sessao.ultimoAcesso;
+                if (inativoMs >= Workspace.Sessao.limiteMinutos * 60000) {
+                    Workspace.Sessao.encerrarSessao();
+                }
+            }, 10000);
+
+            // Proteção Máxima: Se ele minimizar o site e voltar amanhã
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && Workspace.usuario) {
+                    const inativoMs = Date.now() - Workspace.Sessao.ultimoAcesso;
+                    if (inativoMs >= Workspace.Sessao.limiteMinutos * 60000) {
+                        Workspace.Sessao.encerrarSessao();
+                    } else {
+                        // Se voltou a tempo, força a atualização imediata das bolinhas verdes!
+                        if(Workspace.iniciarRadarOnline) Workspace.iniciarRadarOnline(true);
+                    }
+                }
+            });
+        },
+
+        encerrarSessao: () => {
+            console.log("Sessão expirada. Redirecionando para login...");
+            Workspace.mostrarAviso("A sua sessão expirou por inatividade. Faça login novamente.", "warning");
+            Workspace.logout(true); // Desloga e vai para o Ecrã Inicial
+        }
     },
 
-    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente
-    iniciarRadarOnline: () => {
-        // Injeta o CSS da animação de pulsação suave
-        if (!document.getElementById('ws-online-css')) {
-            const style = document.createElement('style');
-            style.id = 'ws-online-css';
-            style.innerHTML = `@keyframes pulseGreen { 0% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); } 70% { box-shadow: 0 0 0 5px rgba(39, 174, 96, 0); } 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); } }`;
-            document.head.appendChild(style);
-        }
-
+    // ============================================================================
+    // 📡 O RADAR DE BOLINHAS VERDES (Silencioso)
+    // ============================================================================
+    iniciarRadarOnline: (imediato = false) => {
         const buscarStatus = async () => {
             if (!Workspace.usuario) return;
             try {
@@ -48,23 +78,25 @@ Object.assign(Workspace, {
                     res.forEach(u => {
                         if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome.trim());
                     });
-                    
-                    // 🚀 Magia DOM Turbo: Acende ou apaga as bolinhas instantaneamente!
-                    document.querySelectorAll('.ws-online-dot').forEach(dot => {
-                        const nomeDaBolinha = dot.getAttribute('data-nome');
-                        if (nomeDaBolinha && Workspace.usuariosOnline.has(nomeDaBolinha.trim())) {
-                            dot.style.setProperty('display', 'inline-block', 'important');
+
+                    // Procura todas as bolinhas presas nas fotos e acende/apaga
+                    document.querySelectorAll('.ws-online-badge').forEach(badge => {
+                        const nome = badge.getAttribute('data-badge-nome');
+                        if (nome && Workspace.usuariosOnline.has(nome.trim())) {
+                            badge.style.display = 'block';
                         } else {
-                            dot.style.setProperty('display', 'none', 'important');
+                            badge.style.display = 'none';
                         }
                     });
                 }
             } catch(e) {}
         };
 
-        // 🚀 O SEGREDO DO ARRANQUE: Aguardamos 2.5 segundos para o Feed já ter desenhado o HTML
-        setTimeout(buscarStatus, 2500); 
-        setInterval(buscarStatus, 35000); 
+        if (imediato) buscarStatus();
+        else setTimeout(buscarStatus, 1500);
+
+        if(Workspace.radarOnlineTimer) clearInterval(Workspace.radarOnlineTimer);
+        Workspace.radarOnlineTimer = setInterval(buscarStatus, 35000);
     },
 
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
@@ -192,6 +224,7 @@ Object.assign(Workspace, {
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
+        Workspace.Sessao.init(); // 🚀 LIGA O MOTOR DE INATIVIDADE
         Workspace.iniciarRadarOnline(); // 🚀 O RADAR É LIGADO AQUI!
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
@@ -374,45 +407,53 @@ Object.assign(Workspace, {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-    // ============================================================================
-    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Puro e Estável)
+   // ============================================================================
+    // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Agora com Bolinha Online Embutida!)
     // ============================================================================
     renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
-        
-        // 🚀 O GPS MAGNÉTICO: Identifica de quem é a foto e o tamanho exato na tela
-        const atributoBusca = `data-avatar-nome="${Workspace.escapeHTML(nomeStr)}" data-avatar-tamanho="${tamanho}"`;
+        const nomeSeguro = Workspace.escapeHTML(nomeStr);
 
+        // Verifica se a pessoa está no nosso Radar Online
+        const isOnline = Workspace.usuariosOnline.has(nomeStr.trim());
+        const displayDot = isOnline ? 'block' : 'none';
+
+        // A bolinha verde fica pendurada no canto inferior direito da foto
+        const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; bottom: 0; right: 0; width: ${tamanho * 0.28}px; height: ${tamanho * 0.28}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
+
+        let htmlInterno = '';
         if (url) {
-            // Desenha a Fotografia
-            return `<img src="${url}" ${atributoBusca} loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
+            htmlInterno = `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
         } else {
-            // Desenha a Letra Inicial
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
-            return `<div ${atributoBusca} style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
+            htmlInterno = `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
         }
+
+        // Devolvemos um contentor que segura a fotografia e a bolinha ao mesmo tempo!
+        return `<div class="ws-avatar-wrapper" data-avatar-nome="${nomeSeguro}" data-avatar-tamanho="${tamanho}" style="position: relative; display: inline-block; width: ${tamanho}px; height: ${tamanho}px; flex-shrink: 0;">${htmlInterno}${bolinhaHtml}</div>`;
     },
 
-    // 🚀 O VARREDOR MÁGICO: Atualiza toda a tela num piscar de olhos
+    // 🚀 O VARREDOR MÁGICO: Atualiza as fotos instantaneamente sem destruir as bolinhas
     atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
         const nomeSeguro = Workspace.escapeHTML(nomeAutor);
-        const elementos = document.querySelectorAll(`[data-avatar-nome="${nomeSeguro}"]`);
+        // Agora procura pelos nossos contentores
+        const wrappers = document.querySelectorAll(`.ws-avatar-wrapper[data-avatar-nome="${nomeSeguro}"]`);
         
-        elementos.forEach(el => {
-            const tamanho = el.getAttribute('data-avatar-tamanho') || 40;
-            
-            if (el.tagName === 'IMG') {
-                el.src = novaUrl;
-            } else if (el.tagName === 'DIV') {
+        wrappers.forEach(wrap => {
+            const tamanho = wrap.getAttribute('data-avatar-tamanho') || 40;
+            const innerImg = wrap.querySelector('img');
+            const innerDiv = wrap.querySelector('div'); // A caixa com a letra inicial
+
+            if (innerImg) {
+                innerImg.src = novaUrl;
+            } else if (innerDiv && !innerDiv.classList.contains('ws-online-badge')) {
                 const novaImg = document.createElement('img');
                 novaImg.src = novaUrl;
-                novaImg.setAttribute('data-avatar-nome', nomeSeguro);
-                novaImg.setAttribute('data-avatar-tamanho', tamanho);
                 novaImg.setAttribute('loading', 'lazy');
                 novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;`;
-                el.parentNode.replaceChild(novaImg, el);
+                wrap.replaceChild(novaImg, innerDiv);
             }
         });
     },
