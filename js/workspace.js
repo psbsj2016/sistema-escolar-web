@@ -27,7 +27,7 @@ Object.assign(Workspace, {
         return `<span class="ws-online-dot" data-nome="${Workspace.escapeHTML(nome)}" style="display: ${isOnline ? 'inline-block' : 'none'}; width: 8px; height: 8px; background-color: #27ae60; border-radius: 50%; margin-right: 6px; box-shadow: 0 0 0 rgba(39, 174, 96, 0.4); animation: pulseGreen 2s infinite; vertical-align: middle;"></span>`;
     },
 
-    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente
+    // 🚀 NOVA FUNÇÃO: O Radar que consulta o servidor silenciosamente e ACENDE as bolinhas
     iniciarRadarOnline: () => {
         // Injeta o CSS da animação de pulsação suave
         if (!document.getElementById('ws-online-css')) {
@@ -40,28 +40,42 @@ Object.assign(Workspace, {
         const buscarStatus = async () => {
             if (!Workspace.usuario) return;
             try {
+                // Vai buscar quem está online agora!
                 const res = await Workspace.api('/monitoramento/status', 'GET');
+                
                 if (Array.isArray(res)) {
                     Workspace.usuariosOnline.clear();
                     res.forEach(u => {
-                        if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome);
+                        // Limpeza extra de segurança no nome para evitar falsos negativos
+                        if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome.trim());
                     });
                     
-                    // Magia DOM: Acende ou apaga as bolinhas instantaneamente sem piscar a tela
-                    document.querySelectorAll('.ws-online-dot').forEach(dot => {
-                        const nome = dot.getAttribute('data-nome');
-                        if (Workspace.usuariosOnline.has(nome)) {
-                            dot.style.display = 'inline-block';
+                    // 🚀 A MÁGICA: Varre toda a plataforma e atualiza TODAS as bolinhas numa fração de segundo
+                    const bolinhasNoEcra = document.querySelectorAll('.ws-online-dot');
+                    
+                    bolinhasNoEcra.forEach(dot => {
+                        // Vamos ler a quem pertence esta bolinha
+                        const nomeDaBolinha = dot.getAttribute('data-nome');
+                        
+                        if (nomeDaBolinha && Workspace.usuariosOnline.has(nomeDaBolinha.trim())) {
+                            dot.style.setProperty('display', 'inline-block', 'important'); // ACENDE!
                         } else {
-                            dot.style.display = 'none';
+                            dot.style.setProperty('display', 'none', 'important'); // APAGA!
                         }
                     });
+                    
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Erro no Radar de Status", e);
+            }
         };
 
-        buscarStatus(); // Executa o primeiro rastreio logo ao entrar
-        setInterval(buscarStatus, 35000); // Atualiza a cada 35 segundos em background
+        // 🚀 O SEGREDO DO ARRANQUE: Aguardamos 2.5 segundos antes da primeira leitura.
+        // Assim, damos tempo ao Feed para desenhar tudo antes de tentarmos acender as luzes!
+        setTimeout(buscarStatus, 2500); 
+        
+        // Mantém a batida do coração a cada 35 segundos
+        setInterval(buscarStatus, 35000); 
     },
 
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
