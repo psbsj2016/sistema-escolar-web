@@ -15,13 +15,13 @@ Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
     deferredPrompt: null,
-    
+
     // 🚀 BOLINHA: Base de dados de quem está online
     usuariosOnline: new Set(), 
     radarOnlineTimer: null,
 
     // ============================================================================
-    // 🛡️ NOVO MOTOR DE INATIVIDADE (Força Login após tempo limite)
+    // 🛡️ MOTOR DE INATIVIDADE PROFISSIONAL (Força Login após tempo limite)
     // ============================================================================
     Sessao: {
         ultimoAcesso: Date.now(),
@@ -35,7 +35,7 @@ Object.assign(Workspace, {
             window.addEventListener('touchstart', resetar);
             window.addEventListener('scroll', resetar);
 
-            // Verifica periodicamente se o tempo estourou
+            // Verifica periodicamente se o tempo estourou (a cada 10 segundos)
             setInterval(() => {
                 if (!Workspace.usuario) return;
                 const inativoMs = Date.now() - Workspace.Sessao.ultimoAcesso;
@@ -44,7 +44,7 @@ Object.assign(Workspace, {
                 }
             }, 10000);
 
-            // Proteção Máxima: Se ele minimizar o site e voltar amanhã
+            // Proteção Máxima: Se ele minimizar o site e voltar no dia seguinte
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' && Workspace.usuario) {
                     const inativoMs = Date.now() - Workspace.Sessao.ultimoAcesso;
@@ -79,7 +79,7 @@ Object.assign(Workspace, {
                         if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome.trim());
                     });
 
-                    // Procura todas as bolinhas presas nas fotos e acende/apaga
+                    // Procura todas as bolinhas presas nas fotos e acende/apaga instantaneamente
                     document.querySelectorAll('.ws-online-badge').forEach(badge => {
                         const nome = badge.getAttribute('data-badge-nome');
                         if (nome && Workspace.usuariosOnline.has(nome.trim())) {
@@ -98,7 +98,7 @@ Object.assign(Workspace, {
         if(Workspace.radarOnlineTimer) clearInterval(Workspace.radarOnlineTimer);
         Workspace.radarOnlineTimer = setInterval(buscarStatus, 35000);
     },
-
+    
     mostrarAviso: (mensagem, tipo = 'info', duracao = 3500, onClickCallback = null) => {
         if (window.Toast && typeof window.Toast.show === 'function') {
             window.Toast.show(mensagem, tipo, duracao, onClickCallback);
