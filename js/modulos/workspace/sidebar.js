@@ -1312,9 +1312,9 @@ verFotoChat: () => {
         const textoInstrucoes = evento.descricao ? Workspace.Sidebar.escapeHTML(evento.descricao).replace(/\n/g, '<br>') : 'Nenhuma instrução adicional foi fornecida pelo professor.';
         const ehAluno = Workspace.usuario.tipo === 'Aluno';
         
-        let htmlEditar = '';
+       let htmlEditar = '';
         if(!ehAluno) {
-            htmlEditar = `<div style="display:flex; justify-content:flex-end; margin-bottom:10px;"><button onclick="Workspace.Sidebar.editarTarefaInstrucoes('${evento.id}')" style="background:#e8f4f8; color:#3498db; border:1px solid #bde0fe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'">✏️ Editar Instruções</button></div>`;
+            htmlEditar = `<div style="display:flex; justify-content:flex-end; margin-bottom:10px;"><button onclick="Workspace.Sidebar.editarTarefaCompleta('${evento.id}')" style="background:#e8f4f8; color:#3498db; border:1px solid #bde0fe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'">✏️ Editar Exercício</button></div>`;
         }
 
         document.getElementById('ws-tarefa-desc').innerHTML = htmlEditar + `<div style="line-height:1.6; color:#444;">${textoInstrucoes}</div>` + htmlAnexo;
@@ -1455,14 +1455,21 @@ verFotoChat: () => {
                 const avatar = window.Workspace.renderizarAvatar(fb.autorNome, 35);
                 const hora = new Date(fb.data).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
                 
-                if (ehMeu) {
+            if (ehMeu) {
                     htmlMensagens += `
-                        <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-start; flex-direction: row-reverse;">
+                        <div id="fb-container-${fb.id}" style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-start; flex-direction: row-reverse;">
                             ${avatar}
                             <div style="background:#eafaf1; padding:12px 15px; border-radius:12px; border-top-right-radius:0; max-width:85%; box-shadow:0 1px 2px rgba(0,0,0,0.05); text-align:right;">
                                 <div style="font-size:11px; font-weight:bold; color:#27ae60; margin-bottom:4px;">Eu</div>
-                                <div style="font-size:13px; color:#2c3e50; line-height:1.5;">${Workspace.Sidebar.escapeHTML(fb.texto).replace(/\n/g, '<br>')}</div>
-                                <div style="font-size:9px; color:#aaa; margin-top:5px;">${hora}</div>
+                                <div id="fb-texto-${fb.id}" style="font-size:13px; color:#2c3e50; line-height:1.5;">${Workspace.Sidebar.escapeHTML(fb.texto).replace(/\n/g, '<br>')}</div>
+                                
+                                <div id="fb-acoes-${fb.id}" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 5px;">
+                                    <div style="display:flex; gap:8px;">
+                                        <span style="font-size:11px; color:#f39c12; cursor:pointer; font-weight:bold; transition: 0.2s;" onmouseover="this.style.color='#e67e22'" onmouseout="this.style.color='#f39c12'" onclick="Workspace.Sidebar.editarFeedbackInline('${entregaId}', '${eventoId}', '${fb.id}')">✏️ Editar</span>
+                                        <span style="font-size:11px; color:#e74c3c; cursor:pointer; font-weight:bold; transition: 0.2s;" onmouseover="this.style.color='#c0392b'" onmouseout="this.style.color='#e74c3c'" onclick="Workspace.Sidebar.apagarFeedback('${entregaId}', '${eventoId}', '${fb.id}')">🗑️ Apagar</span>
+                                    </div>
+                                    <div style="font-size:9px; color:#aaa;">${hora}</div>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1733,47 +1740,144 @@ verFotoChat: () => {
         );
     },
 
-    editarTarefaInstrucoes: (id) => {
-        const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
+    // ============================================================================
+    // 🚀 MOTOR DE EDIÇÃO GERAL (TAREFAS E FEEDBACKS)
+    // ============================================================================
+
+    // 1. EDIÇÃO COMPLETA DA TAREFA
+    editarTarefaCompleta: async (eventoId) => {
+        const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if(!evento) return;
+
+        // Fecha os modais atuais
+        document.getElementById('ws-tarefa-modal').style.display = 'none';
+        document.getElementById('ws-prof-lista-recebidas').style.display = 'none';
         
-        const descArea = document.getElementById('ws-tarefa-desc');
-        const textoAtual = evento.descricao || '';
+        // Abre o painel de "Criar Tarefa" para reaproveitarmos a interface
+        await Workspace.Sidebar.abrirPainelNovaTarefa();
+
+        // 🚀 O PREENCHIMENTO AUTOMÁTICO
+        document.getElementById('ws-nova-tarefa-titulo').value = evento.titulo || evento.nome;
+        document.getElementById('ws-nova-tarefa-desc').value = evento.descricao || '';
         
-        descArea.innerHTML = `
-            <div style="background:#f4f6f7; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
-                <label style="font-size:12px; font-weight:bold; color:#e67e22; display:block; margin-bottom:10px;">✏️ Modo de Edição de Instruções</label>
-                <textarea id="ws-edit-desc-input" rows="8" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; margin-bottom:10px; resize:vertical; box-sizing:border-box;">${textoAtual}</textarea>
-                <div style="display:flex; gap:10px;">
-                    <button class="ws-btn" style="background:#27ae60; flex:1;" onclick="Workspace.Sidebar.salvarEdicaoTarefa('${id}')">💾 Guardar Alterações</button>
-                    <button class="ws-btn" style="background:#95a5a6; flex:1;" onclick="Workspace.Sidebar.abrirModalTarefa('${id}')">Cancelar</button>
+        if(evento.data) {
+            const dataLimpa = evento.data.split('T')[0];
+            document.getElementById('ws-nova-tarefa-data').value = dataLimpa;
+        }
+
+        const sel = document.getElementById('ws-nova-tarefa-turma');
+        sel.value = evento.turma || 'global';
+
+        // 🚀 O CAMALEÃO: Transforma o botão "Criar" num botão "Guardar Alterações"
+        const btnSalvar = document.getElementById('ws-btn-salvar-tarefa');
+        btnSalvar.innerText = "💾 Guardar Alterações do Exercício";
+        btnSalvar.style.background = "#f39c12"; // Fica Laranja para alertar que é edição
+        
+        // Substitui o onclick nativo
+        btnSalvar.onclick = () => Workspace.Sidebar.salvarEdicaoTarefaCompleta(eventoId, evento.anexoUrl);
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        Workspace.mostrarAviso("Modo de Edição. O ficheiro antigo é mantido a menos que selecione um novo.", "info", 5000);
+    },
+
+    salvarEdicaoTarefaCompleta: async (eventoId, anexoAntigoUrl) => {
+        const titulo = document.getElementById('ws-nova-tarefa-titulo').value.trim();
+        const selTurma = document.getElementById('ws-nova-tarefa-turma');
+        const turmaId = selTurma.value;
+        const turmaNome = selTurma.options[selTurma.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
+        const data = document.getElementById('ws-nova-tarefa-data').value;
+        const desc = document.getElementById('ws-nova-tarefa-desc').value.trim();
+        const fileInput = document.getElementById('ws-nova-tarefa-arquivo');
+
+        if(!titulo || !turmaId || !data) return Workspace.mostrarAviso("Preencha o Título, a Turma e o Prazo!", "warning");
+
+        const btn = document.getElementById('ws-btn-salvar-tarefa');
+        btn.innerText = "⏳ Guardando..."; btn.disabled = true;
+
+        try {
+            let anexoFinalUrl = anexoAntigoUrl; // Assume o antigo por defeito
+
+            // Se o professor escolher um ficheiro NOVO, faz upload e substitui
+            if(fileInput.files.length > 0) {
+                const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(fileInput.files[0]);
+                anexoFinalUrl = dadosUpload.url;
+            }
+
+            const payload = { titulo, turma: turmaId, turmaNome, data, descricao: desc, anexoUrl: anexoFinalUrl };
+
+            const res = await Workspace.api(`/eventos/${eventoId}`, 'PUT', payload);
+            if(res && res.success) {
+                Workspace.mostrarAviso("Exercício atualizado com sucesso!", "success");
+                
+                // Restaura o botão e os campos
+                btn.style.background = "#27ae60"; 
+                btn.innerText = "🚀 Publicar Exercício para a Turma";
+                btn.onclick = Workspace.Sidebar.salvarNovaTarefa;
+                
+                document.getElementById('ws-nova-tarefa-titulo').value = '';
+                document.getElementById('ws-nova-tarefa-data').value = '';
+                document.getElementById('ws-nova-tarefa-desc').value = '';
+                fileInput.value = '';
+                
+                Workspace.Sidebar.carregarTarefas(); // Atualiza a lista na memória
+                Workspace.Sidebar.voltarMenuTarefasProf(); 
+            } else {
+                throw new Error("Erro na Base de Dados.");
+            }
+        } catch(e) { 
+            Workspace.mostrarAviso("Erro ao editar exercício.", "error"); 
+            btn.innerText = "💾 Guardar Alterações"; btn.disabled = false; 
+        }
+    },
+
+    // 2. EDIÇÃO E EXCLUSÃO IN-LINE DOS BALÕES DE FEEDBACK
+    editarFeedbackInline: (entregaId, eventoId, feedbackId) => {
+        const textoContainer = document.getElementById(`fb-texto-${feedbackId}`);
+        const acoesContainer = document.getElementById(`fb-acoes-${feedbackId}`);
+        if (!textoContainer) return;
+        
+        // Guarda o texto original tirando as quebras de linha de HTML (<br>)
+        const textoAtual = textoContainer.innerHTML.replace(/<br>/g, '\n');
+        
+        if(acoesContainer) acoesContainer.style.display = 'none';
+
+        textoContainer.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:5px; animation: fadeIn 0.2s;">
+                <textarea id="input-edit-fb-${feedbackId}" rows="3" style="padding:10px; border-radius:10px; border:1px solid #f39c12; font-family:inherit; font-size:13px; outline:none; background:#fff; width:100%; box-sizing:border-box; resize:none;">${textoAtual}</textarea>
+                <div style="display:flex; gap:10px; justify-content: flex-end;">
+                    <span style="font-size:11px; color:#95a5a6; font-weight:bold; cursor:pointer;" onclick="Workspace.Sidebar.abrirModalFeedback('${entregaId}', '${eventoId}')">Cancelar</span>
+                    <span style="font-size:11px; color:#27ae60; font-weight:bold; cursor:pointer;" onclick="Workspace.Sidebar.salvarEdicaoFeedback('${entregaId}', '${eventoId}', '${feedbackId}')">💾 Guardar</span>
                 </div>
             </div>
         `;
     },
 
-    salvarEdicaoTarefa: async (id) => {
-        const novoTexto = document.getElementById('ws-edit-desc-input').value;
-        const btn = event.target;
-        btn.innerText = "⏳ Guardando...";
-        btn.disabled = true;
+    salvarEdicaoFeedback: async (entregaId, eventoId, feedbackId) => {
+        const input = document.getElementById(`input-edit-fb-${feedbackId}`);
+        if(!input) return;
+        const novoTexto = input.value.trim();
+        if(!novoTexto) return;
 
         try {
-            const res = await Workspace.api(`/eventos/${id}`, 'PUT', { descricao: novoTexto });
+            const res = await Workspace.api(`/workspace/entregas/${entregaId}/feedback/${feedbackId}`, 'PUT', { texto: novoTexto });
             if(res && res.success) {
-                Workspace.mostrarAviso("Instruções atualizadas com sucesso!", "success");
-                const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === id);
-                if(evento) evento.descricao = novoTexto;
-                Workspace.Sidebar.abrirModalTarefa(id);
-            } else {
-                Workspace.mostrarAviso("Erro ao atualizar instruções.", "error");
+                // O servidor emite um SSE (NOVO_FEEDBACK) que vai recarregar a tela automaticamente
             }
-        } catch(e) { 
-            Workspace.mostrarAviso("Erro de comunicação com o servidor.", "error"); 
-            btn.innerText = "Guardar Alterações"; 
-            btn.disabled = false; 
-        }
+        } catch(e) { Workspace.mostrarAviso("Erro ao salvar comentário.", "error"); }
     },
+
+    apagarFeedback: (entregaId, eventoId, feedbackId) => {
+        Workspace.Sidebar.mostrarConfirmacao("Apagar Comentário?", "Deseja remover este feedback?", async () => {
+            try {
+                // Optimistic UI - Apaga do ecrã na hora
+                const balao = document.getElementById(`fb-container-${feedbackId}`);
+                if (balao) balao.remove();
+                
+                await Workspace.api(`/workspace/entregas/${entregaId}/feedback/${feedbackId}`, 'DELETE');
+            } catch(e) { Workspace.mostrarAviso("Erro ao apagar comentário.", "error"); }
+        });
+    },
+
 
    abrirPainelTarefasRecebidas: async () => {
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
