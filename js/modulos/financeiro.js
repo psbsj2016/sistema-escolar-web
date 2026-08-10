@@ -441,7 +441,7 @@ App.confirmarBaixa = async () => {
 
     const btn = document.querySelector('.btn-confirm');
     const textoOriginal = btn.innerText;
-    btn.innerText = "A guardar... ⏳"; 
+    btn.innerText = "Registrando... ⏳"; 
     btn.disabled = true;
 
     const { modo, itens, index } = App.filaBaixa;
@@ -624,7 +624,7 @@ App.acaoLote = (acao) => {
 
 App.executarAcaoLoteConfirmada = async (acao, checks, btn, corOriginal) => {
     const textoOriginal = btn.innerText;
-    btn.innerText = "A processar... ⏳"; 
+    btn.innerText = "Processando... ⏳"; 
     btn.disabled = true;
     btn.style.opacity = '0.8';
     document.body.style.cursor = 'wait';
@@ -1137,7 +1137,7 @@ App.salvarEdicaoLote = async () => {
 
     const btn = document.querySelector('.btn-confirm');
     const txtOrig = btn ? btn.innerHTML : 'Aplicar';
-    if (btn) { btn.innerHTML = "⏳ A processar..."; btn.disabled = true; btn.style.opacity = '0.8'; }
+    if (btn) { btn.innerHTML = "⏳ Processando..."; btn.disabled = true; btn.style.opacity = '0.8'; }
     document.body.style.cursor = 'wait';
 
     try {

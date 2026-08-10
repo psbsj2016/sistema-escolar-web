@@ -69,23 +69,24 @@ Object.assign(Workspace, {
     // 📡 O RADAR DE BOLINHAS VERDES (Silencioso)
     // ============================================================================
     iniciarRadarOnline: (imediato = false) => {
-        const buscarStatus = async () => {
+       const buscarStatus = async () => {
             if (!Workspace.usuario) return;
             try {
                 const res = await Workspace.api('/workspace/monitoramento/status', 'GET');
                 if (Array.isArray(res)) {
                     Workspace.usuariosOnline.clear();
                     res.forEach(u => {
-                        if (u.isOnline && u.nome) Workspace.usuariosOnline.add(u.nome.trim());
+                        // 🚀 GUARDA O NOME ESCAPADO: Para garantir a ligação perfeita com a Interface Visual!
+                        if (u.isOnline && u.nome) Workspace.usuariosOnline.add(Workspace.escapeHTML(u.nome.trim()));
                     });
 
-                    // Procura todas as bolinhas presas nas fotos e acende/apaga instantaneamente
+                    // Procura todas as bolinhas presas nas fotos e acende/apaga individualmente
                     document.querySelectorAll('.ws-online-badge').forEach(badge => {
-                        const nome = badge.getAttribute('data-badge-nome');
-                        if (nome && Workspace.usuariosOnline.has(nome.trim())) {
-                            badge.style.display = 'block';
+                        const nomeNoBadge = badge.getAttribute('data-badge-nome');
+                        if (nomeNoBadge && Workspace.usuariosOnline.has(nomeNoBadge.trim())) {
+                            badge.style.display = 'block'; // Acende o aluno exato
                         } else {
-                            badge.style.display = 'none';
+                            badge.style.display = 'none';  // Apaga se ele saiu
                         }
                     });
                 }
@@ -410,17 +411,17 @@ Object.assign(Workspace, {
    // ============================================================================
     // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Agora com Bolinha Online Embutida!)
     // ============================================================================
-    renderizarAvatar: (nomeAutor, tamanho = 40) => {
+      renderizarAvatar: (nomeAutor, tamanho = 40) => {
         const nomeStr = nomeAutor || 'Desconhecido';
         const url = Workspace.avatarsCache[nomeStr];
         const nomeSeguro = Workspace.escapeHTML(nomeStr);
 
-        // Verifica se a pessoa está no nosso Radar Online
-        const isOnline = Workspace.usuariosOnline.has(nomeStr.trim());
+        // 🚀 VERIFICAÇÃO INTELIGENTE: Procura o nome já limpo e protegido na lista do Radar
+        const isOnline = Workspace.usuariosOnline.has(nomeSeguro.trim());
         const displayDot = isOnline ? 'block' : 'none';
 
         // A bolinha verde fica pendurada no canto inferior direito da foto
-        const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; bottom: 0; right: 0; width: ${tamanho * 0.28}px; height: ${tamanho * 0.28}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
+        const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; bottom: 0; right: 0; width: ${tamanho * 0.15}px; height: ${tamanho * 0.15}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
 
         let htmlInterno = '';
         if (url) {
