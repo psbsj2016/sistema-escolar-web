@@ -1677,7 +1677,9 @@ verFotoChat: () => {
 
         const overlay = document.createElement('div');
         overlay.id = id;
-        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10005; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); opacity:0; transition: opacity 0.2s;";
+        
+        // 🚀 CORREÇÃO 1: z-index colocado no máximo absoluto (2147483647)
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2147483647; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); opacity:0; transition: opacity 0.2s;";
         
         overlay.innerHTML = `
             <div style="background:white; padding:25px; border-radius:16px; width:90%; max-width:320px; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.3); transform:scale(0.9); transition: transform 0.2s;">
@@ -1691,16 +1693,8 @@ verFotoChat: () => {
             </div>
         `;
 
-        // 🚀 O SEGREDO DO CONFINAMENTO: Se o chat estiver aberto, prendemos a confirmação dentro dele!
-        const chatBox = document.getElementById('ws-chat-modal');
-        if (chatBox && chatBox.style.display !== 'none') {
-            overlay.style.position = 'absolute';
-            overlay.style.borderRadius = 'inherit';
-            chatBox.appendChild(overlay);
-        } else {
-            // Caso seja chamada a partir do Feed/Tarefas, mantém no ecrã total
-            document.body.appendChild(overlay);
-        }
+        // 🚀 CORREÇÃO 2: Removemos o confinamento. Agora anexa sempre no body!
+        document.body.appendChild(overlay);
 
         requestAnimationFrame(() => {
             overlay.style.opacity = '1';
