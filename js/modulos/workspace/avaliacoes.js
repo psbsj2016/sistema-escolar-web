@@ -2411,20 +2411,41 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             dataStr = `${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`;
         }
 
-        const modalId = 'modal-ver-entrega';
+       const modalId = 'modal-ver-entrega';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
         const modal = document.createElement('div');
         modal.id = modalId;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);";
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); animation: fadeIn 0.2s;";
+        
+        // 🚀 A MÁGICA DA ARQUITETURA FLEXBOX: Cabeçalho inabalável e corpo elástico!
         modal.innerHTML = `
-            <div class="ws-card" style="width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 30px; position: relative;">
-                <button onclick="document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
-                <h3 style="margin: 0 0 5px 0; color: #2c3e50;">${tituloModal}</h3>
-                <span style="font-size: 13px; color: #7f8c8d; font-weight:bold;">Prova: ${prova.titulo} | Entregue: ${dataStr}</span>
-                ${htmlRespostas}
+            <div class="ws-card" style="width: 95%; max-width: 750px; height: 85vh; max-height: 85vh; padding: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
+                
+                <!-- CABEÇALHO INABALÁVEL -->
+                <div style="padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; background: #f8fafc; flex-shrink: 0; z-index: 10;">
+                    <div style="flex: 1; padding-right: 15px;">
+                        <h3 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 18px;">${tituloModal}</h3>
+                        <div style="font-size: 12px; color: #7f8c8d; font-weight:bold;">
+                            Prova: <span style="color:#2c3e50;">${Workspace.Sidebar.escapeHTML(prova.titulo)}</span> &nbsp;|&nbsp; Entregue: <span style="color:#3498db;">${dataStr}</span>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background:#e2e8f0; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#475569; font-size:18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='#e2e8f0'; this.style.color='#475569'">✕</button>
+                </div>
+                
+                <!-- CORPO DA PROVA (ONDE A ROLAGEM ACONTECE) -->
+                <div id="ws-correcao-scroll-body" style="padding: 25px; overflow-y: auto; flex: 1; background: white;">
+                    ${htmlRespostas}
+                </div>
             </div>
         `;
         document.body.appendChild(modal);
+
+        // 🚀 Bónus Visual: Deixa a barra de rolagem fininha e elegante (se o navegador suportar)
+        const scrollBody = document.getElementById('ws-correcao-scroll-body');
+        if (scrollBody) {
+            scrollBody.style.scrollbarWidth = 'thin';
+            scrollBody.style.scrollbarColor = '#cbd5e1 transparent';
+        }
     }
 };
