@@ -3,8 +3,8 @@ window.Workspace = window.Workspace || {};
 
 Workspace.Upload = {
     arquivosAtuais: [], 
-    // 🚀 LIMITES AUMENTADOS: Documentos e vídeos agora suportam até 500MB!
-    limiteTamanhoMB: { video: 500, pdf: 500, imagem: 10, documento: 500 },
+    // 🚀 LIMITES GIGANTES: Vídeos agora suportam até 1GB (1024MB)!
+    limiteTamanhoMB: { video: 1024, pdf: 500, imagem: 10, documento: 500 },
 
     init: () => {
         console.log("📎 Motor de Uploads Inteligentes (Multi-Cloud) iniciado.");
@@ -14,40 +14,44 @@ Workspace.Upload = {
     // ============================================================================
     // 🚀 O NOVO CÉREBRO: Decide se envia para Cloudflare (Direto) ou Cloudinary
     // ============================================================================
-    enviarFicheiroInteligente: async (file) => {
-        const nomeOriginal = file.name || 'documento.pdf';
+   enviarFicheiroInteligente: async (file) => {
+        const nomeOriginal = file.name || `ficheiro_${Date.now()}`;
         const extensao = nomeOriginal.split('.').pop().toLowerCase();
+        
         const ehDocumento = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip'].includes(extensao);
+        
+        // 🚀 A MÁGICA ACONTECE AQUI: Detetamos se é um vídeo!
+        const ehVideo = ['mp4', 'webm', 'mov', 'mkv', 'avi', 'm4v'].includes(extensao) || file.type.startsWith('video/');
 
-        if (ehDocumento) {
-            // 🟢 ROTA 1: VIA VERDE (CLOUDFLARE R2) - Suporta ficheiros Gigantes
-            // 1. Pede o Bilhete VIP ao servidor
+        // Se for Documento OU VÍDEO, usamos a Via Verde (Direto para a Cloudflare)
+        if (ehDocumento || ehVideo) {
+            // 🟢 ROTA 1: VIA VERDE (Ignora o servidor Render e evita crashes)
             const resLink = await Workspace.api('/workspace/upload/solicitar-link', 'POST', {
                 nomeFicheiro: nomeOriginal,
-                tipoFicheiro: file.type || 'application/octet-stream'
+                tipoFicheiro: file.type || (ehVideo ? 'video/mp4' : 'application/octet-stream')
             });
 
             if (!resLink || !resLink.success) throw new Error("Falha ao gerar Bilhete VIP.");
 
-            // 2. Envia DIRETAMENTE para a Cloudflare, ignorando o servidor Node.js!
+            // Envia DIRETAMENTE para a Cloudflare
             const uploadDir = await fetch(resLink.urlUpload, {
                 method: 'PUT',
                 body: file,
-                headers: { 'Content-Type': file.type || 'application/octet-stream' }
+                headers: { 'Content-Type': file.type || (ehVideo ? 'video/mp4' : 'application/octet-stream') }
             });
 
-            if (!uploadDir.ok) throw new Error("Falha na transferência direta para a nuvem de ficheiros.");
+            if (!uploadDir.ok) throw new Error("Falha na transferência direta para a nuvem.");
 
-            return { url: resLink.urlPublica, nome: nomeOriginal, tipo: file.type };
+            return { url: resLink.urlPublica, nome: nomeOriginal, tipo: file.type || (ehVideo ? 'video/mp4' : 'documento') };
         } else {
-            // 🔵 ROTA 2: CLOUDINARY (Imagens/Vídeos continuam a ir via Node.js para compressão)
+            // 🔵 ROTA 2: CLOUDINARY (Imagens continuam a ir via Node.js para compressão)
             const formData = new FormData();
             formData.append('anexos', file);
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });
             const uploadData = await uploadRes.json();
             
             if (!uploadData.success || !uploadData.anexos) throw new Error("Falha na fábrica multimédia.");
-            return uploadData.anexos[0]; // Retorna { url, nome, tipo }
+            return uploadData.anexos[0]; 
         }
     },
 
@@ -95,12 +99,18 @@ Workspace.Upload = {
             const tamanhoMB = file.size / (1024 * 1024);
 
             let limiteRecomendado = Workspace.Upload.limiteTamanhoMB.documento;
-            if (tipo === 'video') limiteRecomendado = Workspace.Upload.limiteTamanhoMB.video;
-            else if (tipo === 'image') limiteRecomendado = Workspace.Upload.limiteTamanhoMB.imagem;
-            else if (extensao === 'pdf') limiteRecomendado = Workspace.Upload.limiteTamanhoMB.pdf;
+            
+            // 🚀 Aplica a nossa balança inteligente de pesos (Tornou-se mais precisa)
+            if (tipo === 'video' || ['mp4', 'mov', 'webm', 'mkv', 'm4v'].includes(extensao)) {
+                limiteRecomendado = Workspace.Upload.limiteTamanhoMB.video;
+            } else if (tipo === 'image') {
+                limiteRecomendado = Workspace.Upload.limiteTamanhoMB.imagem;
+            } else if (extensao === 'pdf') {
+                limiteRecomendado = Workspace.Upload.limiteTamanhoMB.pdf;
+            }
 
             if (tamanhoMB > limiteRecomendado) {
-                if (Workspace.mostrarAviso) Workspace.mostrarAviso(`O ficheiro ${file.name} excede o novo limite de ${limiteRecomendado}MB.`, "error");
+                if (Workspace.mostrarAviso) Workspace.mostrarAviso(`O ficheiro ${file.name} excede o limite máximo de ${limiteRecomendado}MB.`, "error", 5000);
                 return;
             }
             Workspace.Upload.arquivosAtuais.push(file);
