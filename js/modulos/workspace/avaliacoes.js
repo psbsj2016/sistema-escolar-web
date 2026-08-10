@@ -36,12 +36,29 @@ Workspace.Avaliacoes = {
     momentoSaidaBlur: null,
     salasNotificadas: new Set(), 
 
-    init: () => {
+ init: () => {
         console.log("📝 Motor de Avaliações e Frequência Inteligente Ativado.");
+        Workspace.Avaliacoes.injetarCSSAvaliacoes(); // 🚀 Injeta a nova barra de rolagem
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
         }
+    },
+
+    injetarCSSAvaliacoes: () => {
+        if (document.getElementById('ws-aval-css')) return;
+        const style = document.createElement('style');
+        style.id = 'ws-aval-css';
+        style.innerHTML = `
+            /* 🚀 BARRAS DE ROLAGEM PREMIUM PARA AS PROVAS */
+            #ws-exame-foco-tela > div:nth-child(2)::-webkit-scrollbar,
+            #ws-audio-foco-tela > div:nth-child(2)::-webkit-scrollbar { width: 6px; }
+            #ws-exame-foco-tela > div:nth-child(2)::-webkit-scrollbar-track,
+            #ws-audio-foco-tela > div:nth-child(2)::-webkit-scrollbar-track { background: transparent; }
+            #ws-exame-foco-tela > div:nth-child(2)::-webkit-scrollbar-thumb,
+            #ws-audio-foco-tela > div:nth-child(2)::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        `;
+        document.head.appendChild(style);
     },
 
     iniciarSensorFraude: () => {
@@ -588,8 +605,30 @@ Workspace.Avaliacoes = {
             
             const tela = document.getElementById('ws-exame-foco-tela'); 
             if (tela) {
-                tela.style.display = 'block'; 
-                tela.scrollTop = 0;
+                // 🚀 NOVA ARQUITETURA VISUAL (FLEXBOX): O cabeçalho fica preso, as questões rolam!
+                tela.style.display = 'flex'; 
+                tela.style.flexDirection = 'column';
+                tela.style.height = '100dvh'; // Respeita a barra de navegação dos telemóveis
+                tela.style.maxHeight = '100dvh';
+                tela.style.overflow = 'hidden'; // Impede o ecrã inteiro de rolar
+
+                const header = tela.firstElementChild;
+                if (header) {
+                    header.style.position = 'relative'; // Remove o sticky que falha em mobile
+                    header.style.flexShrink = '0'; // O cabeçalho nunca encolhe
+                    header.style.zIndex = '20';
+                    header.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)';
+                }
+
+                const areaConteudo = tela.children[1];
+                if (areaConteudo) {
+                    areaConteudo.style.flex = '1'; // Preenche o resto do ecrã
+                    areaConteudo.style.overflowY = 'auto'; // 🚀 A BARRA DE ROLAGEM NASCE AQUI
+                    areaConteudo.style.width = '100%';
+                    areaConteudo.style.paddingBottom = '80px'; // Espaço extra para respirar no final
+                    areaConteudo.style.boxSizing = 'border-box';
+                    areaConteudo.scrollTop = 0; // Volta ao topo para cada prova
+                }
             } else {
                 console.warn("⚠️ Aviso: O elemento 'ws-exame-foco-tela' não existe no HTML.");
             }
@@ -696,10 +735,31 @@ Workspace.Avaliacoes = {
                 
                 document.body.style.overflow = 'hidden'; 
                 
-                // 🚀 BLINDAGEM MÁXIMA: Se não houver ecrã, acionamos o travão e não crasha!
+                // 🚀 BLINDAGEM MÁXIMA E NOVA ARQUITETURA FOCADA (FLEXBOX)
                 if (elTela) {
-                    elTela.style.display = 'block'; 
-                    elTela.scrollTop = 0; 
+                    elTela.style.display = 'flex'; 
+                    elTela.style.flexDirection = 'column';
+                    elTela.style.height = '100dvh';
+                    elTela.style.maxHeight = '100dvh';
+                    elTela.style.overflow = 'hidden';
+                    
+                    const header = elTela.firstElementChild;
+                    if (header) {
+                        header.style.position = 'relative';
+                        header.style.flexShrink = '0';
+                        header.style.zIndex = '20';
+                        header.style.boxShadow = '0 4px 10px rgba(0,0,0,0.2)';
+                    }
+
+                    const areaConteudo = elTela.children[1];
+                    if (areaConteudo) {
+                        areaConteudo.style.flex = '1';
+                        areaConteudo.style.overflowY = 'auto'; // 🚀 Barra de rolagem independente
+                        areaConteudo.style.width = '100%';
+                        areaConteudo.style.paddingBottom = '80px';
+                        areaConteudo.style.boxSizing = 'border-box';
+                        areaConteudo.scrollTop = 0;
+                    }
                 } else {
                     console.error("🚨 Erro Crítico: O elemento 'ws-audio-foco-tela' não existe no HTML.");
                     Workspace.mostrarAviso("A estrutura visual do estúdio está em falta na página.", "error");
