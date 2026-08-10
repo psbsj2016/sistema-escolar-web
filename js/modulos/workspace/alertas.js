@@ -649,11 +649,20 @@ injetarCSS: () => {
             if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
             if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
         }
-        else if (origem === 'tarefa' || origem === 'exercicio') {
-            // Abre primeiro a página de Exercícios e depois invoca o modal específico
+       else if (origem === 'tarefa' || origem === 'exercicio') {
+            // Abre primeiro a página de Exercícios 
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
-            setTimeout(() => {
-                if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
+            
+            setTimeout(async () => {
+                // 🚀 O TRUQUE DE MESTRE: Força a plataforma a atualizar as tarefas (invisivelmente)
+                // Isto garante que o aluno vê as novas edições que o professor fez!
+                if (Workspace.Sidebar && Workspace.Sidebar.carregarTarefas) {
+                    await Workspace.Sidebar.carregarTarefas();
+                }
+                // Só depois de atualizar é que abre o modal específico da tarefa
+                if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
+                    Workspace.Sidebar.abrirModalTarefa(origemId);
+                }
             }, 500); 
         }
         // 🚀 O NOVO ROTEIRO DO FEEDBACK 
