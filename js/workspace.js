@@ -72,7 +72,7 @@ Object.assign(Workspace, {
         const buscarStatus = async () => {
             if (!Workspace.usuario) return;
             try {
-                const res = await Workspace.api('/monitoramento/status', 'GET');
+                const res = await Workspace.api('/workspace/monitoramento/status', 'GET');
                 if (Array.isArray(res)) {
                     Workspace.usuariosOnline.clear();
                     res.forEach(u => {
