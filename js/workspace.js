@@ -421,7 +421,7 @@ Object.assign(Workspace, {
         const displayDot = isOnline ? 'block' : 'none';
 
         // A bolinha verde fica pendurada no canto inferior direito da foto
-        const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; top: 2; left: 1; width: ${tamanho * 0.25}px; height: ${tamanho * 0.25}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
+        const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; top: 2; left: 0; width: ${tamanho * 0.25}px; height: ${tamanho * 0.25}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
 
         let htmlInterno = '';
         if (url) {
