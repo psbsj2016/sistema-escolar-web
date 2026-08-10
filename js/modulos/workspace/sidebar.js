@@ -1287,7 +1287,6 @@ verFotoChat: () => {
         document.getElementById('ws-tarefa-id').value = evento.id;
         document.getElementById('ws-tarefa-titulo').innerText = evento.titulo || evento.nome || evento.tipo;
         
-        // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO NO MODAL
         const dataLimpa = evento.data ? evento.data.split('T')[0] : '';
         const partes = dataLimpa.split('-');
         const dataFormatada = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
@@ -1302,7 +1301,7 @@ verFotoChat: () => {
             const ehVideo = urlLower.match(/\.(mp4|webm|ogg)$/) != null || urlLower.includes('video');
 
             if (ehImagem) {
-                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><img src="${urlCorrigida}" style="width:100%; border-radius:8px; border:1px solid #ddd;"></div>`;
+                htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><img src="${urlCorrigida}" style="width:100%; border-radius:8px; border:1px solid #ddd; cursor: pointer;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Material de Apoio')"></div>`;
             } else if (ehVideo) {
                 htmlAnexo = `<div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;"><video controls style="width:100%; border-radius:8px; border:1px solid #ddd; background:#000;"><source src="${urlCorrigida}">Seu navegador não suporta este vídeo.</video></div>`;
             } else {
@@ -1341,10 +1340,21 @@ verFotoChat: () => {
                             const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
                             let urlCorrigida = ent.arquivoUrl;
                             if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
+                            
                             const nomeMinusculo = (ent.arquivoNome || '').toLowerCase();
                             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
                             const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
                             const avatarAluno = window.Workspace.renderizarAvatar(ent.alunoNome, 28);
+
+                            // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (PROFESSOR)
+                            const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlCorrigida.includes('cloudinary');
+                            let acaoArquivo = `href="${urlCorrigida}" ${attrDownload} target="_blank"`;
+
+                            if (ehImagemAnexo) {
+                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"\``;
+                            } else if (ehOffice && window.Workspace && Workspace.Materiais && Workspace.Materiais.abrirVisualizador) {
+                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.Materiais.abrirVisualizador('${urlCorrigida}', 'document', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"\``;
+                            }
 
                             htmlEntregas += `
                                 <div style="background: #f4f6f7; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
@@ -1356,7 +1366,11 @@ verFotoChat: () => {
                                         <span style="font-size: 10px; color: #7f8c8d; font-weight: bold; background: #e2e6ea; padding: 2px 6px; border-radius: 4px;">${dataEnt}</span>
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
-                                    <a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; text-align: center; font-weight: bold; margin-top: 5px; transition: 0.2s;" onmouseover="this.style.background='#2980b9'">📥 Baixar Trabalho</a>
+                                    
+                                    <div style="display: flex; gap: 8px; margin-top: 5px; width: 100%;">
+                                        <a ${acaoArquivo} style="flex: 1; background: #3498db; color: white; padding: 8px 10px; border-radius: 6px; font-size: 11px; text-decoration: none; text-align: center; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#2980b9'">📥 Arquivo</a>
+                                        <button onclick="Workspace.Sidebar.abrirModalFeedback('${ent.id}', '${evento.id}')" style="flex: 1; background: #f39c12; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#e67e22'">💬 Feedback</button>
+                                    </div>
                                 </div>
                             `;
                         });
@@ -1373,7 +1387,8 @@ verFotoChat: () => {
                 const res = await Workspace.api(`/workspace/entregas/verificar/${evento.id}/${alunoRefId}`, 'GET');
                 
                 if (res && res.entregue && res.detalhes) {
-                    document.getElementById('ws-area-entregue').style.display = 'block';
+                    const areaEntregue = document.getElementById('ws-area-entregue');
+                    areaEntregue.style.display = 'block';
                     const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
                     document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
                     
@@ -1381,14 +1396,153 @@ verFotoChat: () => {
                     if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
                     const nomeMinusculo = (res.detalhes.arquivoNome || '').toLowerCase();
                     const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
-                    const attrDownload = ehOffice ? `download="${res.detalhes.arquivoNome}"` : '';
 
+                    // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (ALUNO)
+                    const ehImagem2 = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlCorrigida.includes('cloudinary');
                     const btnLink = document.getElementById('ws-tarefa-link-entregue');
-                    btnLink.href = urlCorrigida;
-                    if(ehOffice) btnLink.setAttribute('download', res.detalhes.arquivoNome);
-                    else btnLink.removeAttribute('download');
+                    
+                    if (ehImagem2) {
+                        btnLink.href = "javascript:void(0)";
+                        btnLink.onclick = (e) => { e.preventDefault(); Workspace.abrirVisualizadorImagem(urlCorrigida, 'O Meu Trabalho'); };
+                        btnLink.removeAttribute('download');
+                    } else if (ehOffice && window.Workspace && Workspace.Materiais && Workspace.Materiais.abrirVisualizador) {
+                        btnLink.href = "javascript:void(0)";
+                        btnLink.onclick = (e) => { e.preventDefault(); Workspace.Materiais.abrirVisualizador(urlCorrigida, 'document', 'O Meu Trabalho'); };
+                        btnLink.removeAttribute('download');
+                    } else {
+                        btnLink.href = urlCorrigida;
+                        if(ehOffice) btnLink.setAttribute('download', res.detalhes.arquivoNome);
+                        else btnLink.removeAttribute('download');
+                        btnLink.onclick = null;
+                    }
+
+                    // Botão Ver Feedback do Aluno
+                    let btnFb = document.getElementById('ws-btn-ver-feedback');
+                    if(btnFb) btnFb.remove();
+                    
+                    areaEntregue.insertAdjacentHTML('beforeend', `<br><button id="ws-btn-ver-feedback" class="ws-btn" style="background:#f39c12; color:white; border:none; padding:12px 15px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; margin-top:15px; width:100%; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);" onclick="Workspace.Sidebar.abrirModalFeedback('${res.detalhes.id}', '${evento.id}')">💬 Ver Comentários do Professor</button>`);
+
                 } else { document.getElementById('ws-area-entrega').style.display = 'block'; }
             } catch (e) { document.getElementById('ws-area-entrega').style.display = 'block'; }
+        }
+    },
+
+// ========================================================================
+    // 💬 O MOTOR BIDIRECIONAL DE FEEDBACK
+    // ========================================================================
+    modalFeedbackAtivo: null, // Guarda o ID do modal para o Real-Time
+
+    abrirModalFeedback: async (entregaId, eventoId) => {
+        Workspace.Sidebar.modalFeedbackAtivo = entregaId;
+
+        // Puxa as informações da entrega na nuvem (para carregar os balões de fala)
+        const res = await Workspace.api(`/workspace/entregas/${entregaId}`, 'GET');
+        if(!res || !res.success) {
+            Workspace.mostrarAviso("Não foi possível carregar a caixa de diálogo.", "error");
+            return;
+        }
+        const entrega = res.entrega;
+        const isProf = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
+
+        const modalId = 'ws-feedback-modal';
+        if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        // 🚀 PREPARAR OS BALÕES DE FALA (Estilo WhatsApp)
+        let htmlMensagens = '';
+        if(entrega.feedbacks && entrega.feedbacks.length > 0) {
+            entrega.feedbacks.forEach(fb => {
+                const ehMeu = fb.autorNome === (Workspace.usuario.nome || Workspace.usuario.login);
+                const avatar = window.Workspace.renderizarAvatar(fb.autorNome, 35);
+                const hora = new Date(fb.data).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                
+                if (ehMeu) {
+                    htmlMensagens += `
+                        <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-start; flex-direction: row-reverse;">
+                            ${avatar}
+                            <div style="background:#eafaf1; padding:12px 15px; border-radius:12px; border-top-right-radius:0; max-width:85%; box-shadow:0 1px 2px rgba(0,0,0,0.05); text-align:right;">
+                                <div style="font-size:11px; font-weight:bold; color:#27ae60; margin-bottom:4px;">Eu</div>
+                                <div style="font-size:13px; color:#2c3e50; line-height:1.5;">${Workspace.Sidebar.escapeHTML(fb.texto).replace(/\n/g, '<br>')}</div>
+                                <div style="font-size:9px; color:#aaa; margin-top:5px;">${hora}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    htmlMensagens += `
+                        <div style="display:flex; gap:10px; margin-bottom:15px; align-items:flex-start;">
+                            ${avatar}
+                            <div style="background:#f4f6f7; padding:12px 15px; border-radius:12px; border-top-left-radius:0; max-width:85%; box-shadow:0 1px 2px rgba(0,0,0,0.05); text-align:left;">
+                                <div style="font-size:11px; font-weight:bold; color:#3498db; margin-bottom:4px;">${Workspace.Sidebar.escapeHTML(fb.autorNome)}</div>
+                                <div style="font-size:13px; color:#2c3e50; line-height:1.5;">${Workspace.Sidebar.escapeHTML(fb.texto).replace(/\n/g, '<br>')}</div>
+                                <div style="font-size:9px; color:#aaa; margin-top:5px;">${hora}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        } else {
+            htmlMensagens = '<div style="text-align:center; padding:30px; color:#999; font-size:13px; display:flex; flex-direction:column; align-items:center;"><span style="font-size:40px; margin-bottom:10px;">📭</span> O professor ainda não enviou nenhum comentário para este exercício.</div>';
+        }
+
+        // A caixa de envio só fica disponível para a Equipa Pedagógica
+        let inputArea = '';
+        if(isProf) {
+            inputArea = `
+                <div style="border-top:1px solid #eee; padding:15px; background:#f9f9f9; display:flex; gap:10px; align-items:center;">
+                    <textarea id="ws-feedback-input" rows="2" placeholder="Escreva o feedback para o aluno..." style="flex:1; border:1px solid #ccc; border-radius:12px; padding:10px 15px; font-family:inherit; font-size:13px; resize:none; outline:none;" onfocus="this.style.borderColor='#f39c12'" onblur="this.style.borderColor='#ccc'"></textarea>
+                    <button onclick="Workspace.Sidebar.enviarFeedback('${entregaId}', '${eventoId}')" class="ws-btn" style="background:#f39c12; color:white; height:45px; padding:0 20px; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Enviar</button>
+                </div>
+            `;
+        }
+
+        const modal = document.createElement('div');
+        modal.id = modalId;
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); animation: fadeIn 0.2s;";
+        
+        modal.innerHTML = `
+            <div class="ws-card" style="width:95%; max-width:550px; padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:85vh; border-radius:16px;">
+                <div style="background:#f39c12; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:16px; font-weight:700;">💬 Feedback do Trabalho</h3>
+                    <button onclick="Workspace.Sidebar.modalFeedbackAtivo = null; document.getElementById('${modalId}').remove()" style="background:rgba(255,255,255,0.2); border:none; color:white; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'">✖</button>
+                </div>
+                <div style="background:#fff8e1; padding:8px 15px; font-size:11px; font-weight:bold; color:#d35400; text-align:center; border-bottom:1px solid #fdebd0;">
+                    Exercício: ${Workspace.Sidebar.escapeHTML(entrega.eventoTitulo)}
+                </div>
+                <div id="ws-feedback-lista" style="padding:20px; overflow-y:auto; flex:1; background:white;">
+                    ${htmlMensagens}
+                </div>
+                ${inputArea}
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Empurra o scroll do chat de feedback para baixo
+        const listaContainer = document.getElementById('ws-feedback-lista');
+        listaContainer.scrollTop = listaContainer.scrollHeight;
+    },
+
+    enviarFeedback: async (entregaId, eventoId) => {
+        const input = document.getElementById('ws-feedback-input');
+        const texto = input.value.trim();
+        if(!texto) return;
+
+        const btn = event.target;
+        btn.innerText = "⏳"; btn.disabled = true;
+
+        try {
+            const res = await Workspace.api(`/workspace/entregas/${entregaId}/feedback`, 'POST', {
+                texto: texto,
+                professorNome: Workspace.usuario.nome || Workspace.usuario.login
+            });
+
+            if(res && res.success) {
+                input.value = '';
+                // 🚀 Recarrega o modal para exibir o balão novo instantaneamente!
+                Workspace.Sidebar.abrirModalFeedback(entregaId, eventoId); 
+            }
+        } catch(e) {
+            Workspace.mostrarAviso("Erro ao enviar avaliação.", "error");
+        } finally {
+            btn.innerText = "Enviar"; btn.disabled = false;
         }
     },
 
@@ -1401,7 +1555,7 @@ verFotoChat: () => {
         const file = fileInput.files[0];
 
         const btn = document.getElementById('ws-btn-entregar');
-        const txtOriginal = btn.innerText; btn.innerText = "🔄 A enviar trabalho gigante...⏳"; btn.disabled = true;
+        const txtOriginal = btn.innerText; btn.innerText = "🔄 Enviando o exercício...⏳"; btn.disabled = true;
 
         try {
             // 🚀 USA A VIA VERDE

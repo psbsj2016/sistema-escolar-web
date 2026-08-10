@@ -124,6 +124,14 @@ Workspace.Alertas = {
                 }
             }
 
+            // 🚀 A MÁGICA AO VIVO DO FEEDBACK: Se a janela estiver aberta, desenha o balão instantaneamente!
+            if (data.type === 'NOVO_FEEDBACK') {
+                const modalAberto = document.getElementById('ws-feedback-modal');
+                if (modalAberto && Workspace.Sidebar && Workspace.Sidebar.modalFeedbackAtivo === data.entregaId) {
+                    Workspace.Sidebar.abrirModalFeedback(data.entregaId, null); // Recarrega os balões s/ pestanejar
+                }
+            }
+
             // 🚀 A NOVA MAGIA: Atualiza o Baú automaticamente se o professor alterar uma data!
             if (data.type === 'BAU_UPDATE') {
                 if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
@@ -431,6 +439,18 @@ injetarCSS: () => {
                                 }, 'material');
                             }
                             
+                            // 🚀 4.5. FEEDBACK DO PROFESSOR (NOVO)
+                            else if (novaNoti.origem === 'feedback_tarefa') {
+                                Toast.showInterativo({
+                                    remetenteNome: novaNoti.remetenteNome,
+                                    subtitulo: "Novo Feedback Recebido 💬",
+                                    mensagemCorpo: `O(a) professor(a) <strong>${novaNoti.remetenteNome}</strong> enviou um comentário sobre o seu exercício. Clique em OK para ler!`
+                                }, 'tarefa', async () => {
+                                    // Invoca a função do teletransporte mágico imediatamente!
+                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
+                                });
+                            }
+                            
                             // ========================================================================
                             // 🚀 5. POSTS, REAÇÕES, COMENTÁRIOS E CHAT (A CORREÇÃO ENTRA AQUI!)
                             // ========================================================================
@@ -634,6 +654,24 @@ injetarCSS: () => {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
             setTimeout(() => {
                 if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) Workspace.Sidebar.abrirModalTarefa(origemId);
+            }, 500); 
+        }
+        // 🚀 O NOVO ROTEIRO DO FEEDBACK 
+        else if (origem === 'feedback_tarefa') {
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
+            setTimeout(() => {
+                // Desempacotamos os 2 IDs que guardamos no servidor separados pela barra vertical (|)
+                const partes = origemId.split('|');
+                const eventoId = partes[0];
+                const entregaId = partes[1];
+                
+                if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
+                    Workspace.Sidebar.abrirModalTarefa(eventoId); // Abre o exercício
+                    setTimeout(() => {
+                        // 0.6 segundos depois, sobrepõe o modal de Feedback por cima do exercício!
+                        if (Workspace.Sidebar.abrirModalFeedback) Workspace.Sidebar.abrirModalFeedback(entregaId, eventoId);
+                    }, 600); 
+                }
             }, 500); 
         }
         else if (origem === 'material') {
