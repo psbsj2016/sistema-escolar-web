@@ -14,37 +14,41 @@ Workspace.Upload = {
     // ============================================================================
     // 🚀 O NOVO CÉREBRO: Decide se envia para Cloudflare (Direto) ou Cloudinary
     // ============================================================================
-   enviarFicheiroInteligente: async (file) => {
+    enviarFicheiroInteligente: async (file) => {
         const nomeOriginal = file.name || `ficheiro_${Date.now()}`;
         const extensao = nomeOriginal.split('.').pop().toLowerCase();
         
         const ehDocumento = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip'].includes(extensao);
         
-        // 🚀 A MÁGICA ACONTECE AQUI: Detetamos se é um vídeo!
+        // 🚀 O DETETIVE: Lê a extensão para saber a verdade, mesmo que o telemóvel se engane!
         const ehVideo = ['mp4', 'webm', 'mov', 'mkv', 'avi', 'm4v'].includes(extensao) || file.type.startsWith('video/');
+        const ehAudio = ['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(extensao) || file.type.startsWith('audio/');
 
-        // Se for Documento OU VÍDEO, usamos a Via Verde (Direto para a Cloudflare)
-        if (ehDocumento || ehVideo) {
-            // 🟢 ROTA 1: VIA VERDE (Ignora o servidor Render e evita crashes)
+        // 🚀 FORÇA A ETIQUETA CORRETA: Impede que vídeos abram como áudio no navegador do professor
+        let mimeType = file.type || 'application/octet-stream';
+        if (ehVideo && !mimeType.startsWith('video/')) mimeType = `video/${extensao === 'mov' ? 'quicktime' : 'mp4'}`;
+        if (ehAudio && !mimeType.startsWith('audio/')) mimeType = `audio/${extensao === 'mp3' ? 'mpeg' : extensao}`;
+
+        if (ehDocumento || ehVideo || ehAudio) {
+            // 🟢 ROTA 1: VIA VERDE (CLOUDFLARE R2) - Suporta ficheiros e vídeos Gigantes
             const resLink = await Workspace.api('/workspace/upload/solicitar-link', 'POST', {
                 nomeFicheiro: nomeOriginal,
-                tipoFicheiro: file.type || (ehVideo ? 'video/mp4' : 'application/octet-stream')
+                tipoFicheiro: mimeType // Envia com a etiqueta forçada!
             });
 
             if (!resLink || !resLink.success) throw new Error("Falha ao gerar Bilhete VIP.");
 
-            // Envia DIRETAMENTE para a Cloudflare
             const uploadDir = await fetch(resLink.urlUpload, {
                 method: 'PUT',
                 body: file,
-                headers: { 'Content-Type': file.type || (ehVideo ? 'video/mp4' : 'application/octet-stream') }
+                headers: { 'Content-Type': mimeType }
             });
 
-            if (!uploadDir.ok) throw new Error("Falha na transferência direta para a nuvem.");
+            if (!uploadDir.ok) throw new Error("Falha na transferência direta para a nuvem de ficheiros.");
 
-            return { url: resLink.urlPublica, nome: nomeOriginal, tipo: file.type || (ehVideo ? 'video/mp4' : 'documento') };
+            return { url: resLink.urlPublica, nome: nomeOriginal, tipo: mimeType };
         } else {
-            // 🔵 ROTA 2: CLOUDINARY (Imagens continuam a ir via Node.js para compressão)
+            // 🔵 ROTA 2: CLOUDINARY (Apenas imagens para compressão)
             const formData = new FormData();
             formData.append('anexos', file);
             const uploadRes = await fetch('/api/workspace/upload', { method: 'POST', credentials: 'include', body: formData });

@@ -1346,9 +1346,20 @@ verFotoChat: () => {
                             const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
                             const avatarAluno = window.Workspace.renderizarAvatar(ent.alunoNome, 28);
 
-                            // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (PROFESSOR)
+                          // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (PROFESSOR)
                             const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlCorrigida.includes('cloudinary');
                             let acaoArquivo = `href="${urlCorrigida}" ${attrDownload} target="_blank"`;
+
+                            // 🚀 DETETOR DE MULTIMÉDIA: Gera o player nativo do navegador
+                            const ehVideoAluno = nomeMinusculo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video');
+                            const ehAudioAluno = nomeMinusculo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio');
+                            
+                            let mediaHtml = '';
+                            if (ehVideoAluno) {
+                                mediaHtml = `<video controls src="${urlCorrigida}" style="width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
+                            } else if (ehAudioAluno) {
+                                mediaHtml = `<audio controls src="${urlCorrigida}" style="width: 100%; margin-top: 10px; outline: none;"></audio>`;
+                            }
 
                             if (ehImagemAnexo) {
                                 acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"\``;
@@ -1367,8 +1378,10 @@ verFotoChat: () => {
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
                                     
+                                    ${mediaHtml} <!-- 🚀 NOVO: PLAYER DE ÁUDIO OU VÍDEO INTEGRADO -->
+                                    
                                     <div style="display: flex; gap: 8px; margin-top: 5px; width: 100%;">
-                                        <a ${acaoArquivo} style="flex: 1; background: #3498db; color: white; padding: 8px 10px; border-radius: 6px; font-size: 11px; text-decoration: none; text-align: center; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#2980b9'">📥 Arquivo</a>
+                                        <a ${acaoArquivo} style="flex: 1; background: #3498db; color: white; padding: 8px 10px; border-radius: 6px; font-size: 11px; text-decoration: none; text-align: center; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo</a>
                                         <button onclick="Workspace.Sidebar.abrirModalFeedback('${ent.id}', '${evento.id}')" style="flex: 1; background: #f39c12; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#e67e22'">💬 Feedback</button>
                                     </div>
                                 </div>
