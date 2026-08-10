@@ -1720,7 +1720,7 @@ verFotoChat: () => {
             "Esta ação é irreversível. Todos os trabalhos entregues pelos alunos também serão destruídos. Tem a certeza?",
             async () => {
                 try {
-                    const res = await Workspace.api(`/eventos/${id}`, 'DELETE');
+                    const res = await Workspace.api(`/workspace/eventos/${id}`, 'DELETE');
                     if(res && res.success) {
                         Workspace.mostrarAviso("Tarefa removida com sucesso!", "success");
                         Workspace.Sidebar.abrirPainelTarefasRecebidas(); 
@@ -1799,7 +1799,7 @@ verFotoChat: () => {
 
             const payload = { titulo, turma: turmaId, turmaNome, data, descricao: desc, anexoUrl: anexoFinalUrl };
 
-            const res = await Workspace.api(`/eventos/${eventoId}`, 'PUT', payload);
+            const res = await Workspace.api(`/workspace/eventos/${eventoId}`, 'PUT', payload);
             if(res && res.success) {
                 Workspace.mostrarAviso("Exercício atualizado com sucesso!", "success");
                 
