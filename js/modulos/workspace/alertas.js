@@ -293,41 +293,40 @@ injetarCSS: () => {
          document.head.appendChild(style);
     },
 
-    construirDropdown: () => {
-        const bell = document.getElementById('ws-bell');
-        if (!bell) return;
+ construirDropdown: () => {
+        // 🚀 CORREÇÃO 2: Procura TODOS os sininhos na tela (Mobile e PC)
+        const bells = document.querySelectorAll('#ws-bell');
+        if (bells.length === 0) return;
         
         let dropdown = document.getElementById('ws-noti-dropdown');
         if (!dropdown) {
             dropdown = document.createElement('div');
             dropdown.id = 'ws-noti-dropdown';
-            
-            // 🚀 LIMPAMOS O CSS ANTIGO: 
-            // Deixamos apenas o display:none inicial para a lógica de abrir/fechar funcionar.
-            // O nosso novo CSS no index.html (Gaveta) fará todo o resto do design!
             dropdown.style.cssText = 'display:none;'; 
-            
-            // 🚀 MUDANÇA ESTRUTURAL: 
-            // Em vez de prender o menu dentro do sininho, prendemos no 'body' 
-            // para ele poder ser uma gaveta lateral independente!
+            // Prendemos no body para ser uma gaveta independente!
             document.body.appendChild(dropdown);
         }
         
-        bell.addEventListener('click', (e) => {
-            if (e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
-                // Alterna o estado. O nosso detetive (Observer) no HTML vai ver isto e deslizar a gaveta!
-                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-                const perfilDropdown = document.getElementById('ws-perfil-dropdown');
-                if (perfilDropdown) perfilDropdown.style.display = 'none';
-            }
-        });
-        
-        // Garante que clicar fora da gaveta também a fecha
-        document.addEventListener('click', (e) => { 
-            if (!e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
-                dropdown.style.display = 'none'; 
-            }
-        });
+        // 🚀 PREVINE DUPLICAÇÃO DE CLIQUES E ATIVA INSTANTANEAMENTE EM TODOS OS SINOS
+        if (!Workspace.Alertas.cliquesConfigurados) {
+            bells.forEach(bell => {
+                bell.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation(); // Impede o clique de se perder
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    const perfilDropdown = document.getElementById('ws-perfil-dropdown');
+                    if (perfilDropdown) perfilDropdown.style.display = 'none';
+                });
+            });
+            
+            // Garante que clicar fora da gaveta também a fecha
+            document.addEventListener('click', (e) => { 
+                if (!e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
+                    dropdown.style.display = 'none'; 
+                }
+            });
+            Workspace.Alertas.cliquesConfigurados = true; // Marca que já ativou os cliques
+        }
     },
 
   buscarNotificacoes: async () => {
@@ -458,12 +457,15 @@ injetarCSS: () => {
                                 // Mostra o Toast na tela
                                 if (window.Toast && Toast.show) Toast.show(`🔔 ${novaNoti.remetenteNome} ${novaNoti.mensagem}`, 'info');
                                 
-                                // Anima o sininho
-                                const bell = document.getElementById('ws-bell');
-                                if(bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
-                                
-                                // Força a atualização IMEDIATAMENTE 
-                                Workspace.Alertas.atualizarInterface();
+                                // 🚀 CORREÇÃO 3: ATUALIZA TODOS OS SININHOS DA TELA PARA ABANAREM
+const bells = document.querySelectorAll('#ws-bell');
+bells.forEach(bell => { 
+    bell.classList.add('bell-ringing'); 
+    setTimeout(() => bell.classList.remove('bell-ringing'), 1000); 
+});
+
+// Força a atualização IMEDIATAMENTE 
+Workspace.Alertas.atualizarInterface();
                             }
 
                         }, index * 1000); 
@@ -482,14 +484,14 @@ injetarCSS: () => {
         } catch (e) {}
     },
 
-  atualizarInterface: () => {
-        const badge = document.getElementById('ws-noti-count');
+atualizarInterface: () => {
+        // 🚀 CORREÇÃO 1: Procura TODAS as bolinhas de notificação e atualiza-as em simultâneo
+        const badges = document.querySelectorAll('#ws-noti-count, .ws-badge');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
-        if (badge) {
+        badges.forEach(badge => {
             badge.innerText = qtd > 99 ? '99+' : qtd;
-            // 🚀 CORREÇÃO DO BUG DO ZERO: Força a remoção do display pelo JavaScript!
             if (qtd > 0) {
                 badge.style.setProperty('display', 'flex', 'important');
                 badge.style.animation = 'pulse 1s infinite';
@@ -497,7 +499,7 @@ injetarCSS: () => {
                 badge.style.setProperty('display', 'none', 'important');
                 badge.style.animation = 'none';
             }
-        }
+        });
 
         if (dropdown) {
             if (qtd === 0) {
