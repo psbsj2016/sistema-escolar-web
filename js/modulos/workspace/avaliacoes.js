@@ -1197,16 +1197,14 @@ Workspace.Avaliacoes = {
                     }
                 }
 
-                let btnEntrarSala = '';
+               let btnEntrarSala = '';
                 if (a.tipo === 'online' && a.linkSala) {
                     let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
                     btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
                 }
 
-                let btnGestao = '';
-                if (a.tipo === 'online') {
-                    btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
-                }
+                // 🚀 INTELIGÊNCIA GERAL: O botão agora existe para Avaliações Escritas, Orais e Online!
+                let btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
 
                 return `
                 <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
@@ -1298,6 +1296,16 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === avaliacaoId) || Workspace.Avaliacoes.avaliacoesDisponiveis.find(p => p.id === avaliacaoId);
         if(!prova) return;
 
+        // 🚀 O DICIONÁRIO INTELIGENTE: Adapta o texto se for aula ao vivo ou avaliação (prova)
+        const isOnline = prova.tipo === 'online';
+        const txtSessao = isOnline ? 'Sessão' : 'Avaliação';
+        const txtResumo = isOnline ? 'acessos utilizados' : 'entregas realizadas';
+        const txtVazio = isOnline ? 'Ninguém acessou à sessão online ainda.' : 'Nenhum aluno submeteu esta avaliação ainda.';
+        const txtUsado = isOnline ? '🔴 Acesso Usado' : '🔴 Entrega Realizada';
+        const txtAtivo = isOnline ? '🟢 Acesso Ativo' : '🟢 Prova Liberada';
+        const txtReativado = isOnline ? '🔵 Link Reativado' : '🔵 Nova Chance';
+        const txtReativarBtn = isOnline ? '🔄 Reativar Acesso' : '🔄 Nova Tentativa';
+
         const modalId = 'ws-modal-acessos-online';
         let container = document.getElementById('ws-acessos-lista');
 
@@ -1312,10 +1320,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 <div class="ws-card" style="width: 90%; max-width: 600px; max-height: 85vh; padding: 25px; position: relative; display:flex; flex-direction:column; overflow: hidden;">
                     <button type="button" onclick="Workspace.Avaliacoes.modalAcessosAberto = null; document.getElementById('${modalId}').remove()" style="position:absolute; right:15px; top:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; cursor:pointer; font-weight:bold; color:#333; font-size:18px;">×</button>
                     <h3 style="margin: 0 0 5px 0; color: #2c3e50;">📊 Gestão de Acessos</h3>
-                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">Sessão: ${Workspace.escapeHTML(prova.titulo)}</span>
+                    <span style="font-size: 13px; color: #7f8c8d; font-weight:bold; margin-bottom: 20px;">${txtSessao}: ${Workspace.escapeHTML(prova.titulo)}</span>
                     
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                        <!-- 🚀 O RECIPIENTE DINÂMICO DOS BOTÕES (Para o Ocultar Todos funcionar na perfeição) -->
                         <div id="ws-botoes-topo-acessos" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%;">
                             <div style="text-align:center; width:100%; font-size:12px; color:#999;">Preparando ferramentas...</div>
                         </div>
@@ -1373,19 +1380,18 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
             let htmlLista = '';
             
-            // 🚀 AS NOVAS LISTAS MÁGICAS PARA A GESTÃO DE OCULTAMENTO
             const listaOcultos = prova.ocultos || [];
             const alunosAtivosParaOcultar = [];
 
             const btnSelecionarTodos = acessos.length > 0 ? `
                 <div style="display:flex; align-items:center; gap:8px; padding: 10px 15px; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
                     <input type="checkbox" id="ws-check-todos-reativar" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-reativar'); cbs.forEach(cb => cb.checked = this.checked);">
-                    <label for="ws-check-todos-reativar" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Selecionar todos os acessos bloqueados</label>
+                    <label for="ws-check-todos-reativar" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Selecionar alunos pendentes</label>
                 </div>
             ` : '';
 
             if (alunosLista.length > 0) {
-                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} acessos utilizados.</div>`;
+                htmlLista += `<div style="background:#f0f2f5; padding:10px; border-radius:8px; margin-bottom:15px; font-size:13px; font-weight:bold; color:#2c3e50; text-align:center;">Resumo: ${acessos.length} de ${alunosLista.length} ${txtResumo}.</div>`;
                 htmlLista += btnSelecionarTodos;
 
                 alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
@@ -1399,14 +1405,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     
                     const taOculto = listaOcultos.includes(String(aluno.id));
                     
-                    // 🚀 O BOTÃO DE OCULTAR INDIVIDUAL (Dinâmico)
                     let btnOcultarHtml = '';
                     if (!acessoFeito) {
                         alunosAtivosParaOcultar.push(String(aluno.id));
                         if (taOculto) {
-                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'desocultar')">👁️ Desocultar</button>`;
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'desocultar')">👁️ Desbloquear</button>`;
                         } else {
-                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'ocultar')">⏸️ Ocultar</button>`;
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${aluno.id}', 'ocultar')">⏸️ Bloquear</button>`;
                         }
                     }
 
@@ -1424,10 +1429,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
-                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">${txtUsado} ${horaFormatada}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acessoFeito.id}', '${avaliacaoId}', '${destinoId}', '${aluno.id}', '${nomeSeguro}')">${txtReativarBtn}</button>
                             </div>
                         `;
                     } else if (foiReativado) {
@@ -1438,7 +1443,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
-                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">🔵 Link Reativado (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">${txtReativado} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
                                 ${btnOcultarHtml}
@@ -1452,7 +1457,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
-                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#27ae60'}; font-weight:bold;">🟢 Acesso Ativo (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#27ae60'}; font-weight:bold;">${txtAtivo} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
                                 ${btnOcultarHtml}
@@ -1461,11 +1466,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     }
                 });
             } else {
-                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Mostrando apenas presenças e reativações (Turma Global).</div>`;
+                htmlLista += `<div style="background:#fdf2f2; color:#c0392b; padding:10px; border-radius:8px; margin-bottom:15px; font-size:12px; text-align:center;">Mostrando apenas entregas/acessos (Turma Global).</div>`;
                 htmlLista += btnSelecionarTodos;
                 
                 if(acessos.length === 0 && reativadosLista.length === 0) {
-                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">Ninguém acessou à sessão online ainda.</div>`;
+                    htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">${txtVazio}</div>`;
                 } else {
                     acessos.forEach(acesso => {
                         const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
@@ -1484,10 +1489,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
-                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">🔴 Acesso Usado ${horaFormatada}</div>
+                                        <div style="font-size:11px; color:#e74c3c; font-weight:bold;">${txtUsado} ${horaFormatada}</div>
                                     </div>
                                 </div>
-                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">🔄 Reativar</button>
+                                <button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.reativarAcessoAluno(event, '${acesso.id}', '${avaliacaoId}', '${destinoId}', '${acesso.alunoId}', '${nomeSeguro}')">${txtReativarBtn}</button>
                             </div>
                         `;
                     });
@@ -1499,9 +1504,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
                         let btnOcultarHtml = '';
                         if (taOculto) {
-                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'desocultar')">👁️ Desocultar</button>`;
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#8e44ad; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'desocultar')">👁️ Desbloquear</button>`;
                         } else {
-                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'ocultar')">⏸️ Ocultar</button>`;
+                            btnOcultarHtml = `<button type="button" class="ws-btn" style="background:#f39c12; color:white; border:none; cursor:pointer; font-size:11px; padding:6px 12px; border-radius:15px;" onclick="Workspace.Avaliacoes.toggleOcultarIndividual(event, '${avaliacaoId}', '${destinoId}', '${reativado.id}', 'ocultar')">⏸️ Bloquear</button>`;
                         }
 
                         htmlLista += `
@@ -1511,7 +1516,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     ${avatar}
                                     <div>
                                         <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
-                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">🔵 Link Reativado (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Oculto]</span>' : ''}</div>
+                                        <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">${txtReativado} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
                                 ${btnOcultarHtml}
@@ -1522,25 +1527,21 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             }
             if(container) container.innerHTML = htmlLista;
 
-            // 🚀 RENDERIZAÇÃO INTELIGENTE DO TOPO COM OS BOTÕES MACRO
             const boxBotoes = document.getElementById('ws-botoes-topo-acessos');
             if (boxBotoes) {
-                // Guarda a lista de alunos ativos na memória para a Ação em Massa
                 Workspace.Avaliacoes.alunosParaOcultarCache = alunosAtivosParaOcultar;
-                
-                // Calcula se TODOS os alunos ativos já estão ocultos
                 const todosOcultos = alunosAtivosParaOcultar.length > 0 && alunosAtivosParaOcultar.every(id => listaOcultos.includes(id));
                 
                 const btnMacroOcultar = alunosAtivosParaOcultar.length > 0 ? `
                     <button type="button" class="ws-btn" style="background:${todosOcultos ? '#8e44ad' : '#f39c12'}; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.toggleOcultarTodos('${avaliacaoId}', '${destinoId}', ${todosOcultos})">
-                        ${todosOcultos ? '👁️ Desocultar Todos' : '⏸️ Ocultar Todos'}
+                        ${todosOcultos ? '👁️ Desbloquear Todos' : '⏸️ Bloquear Todos'}
                     </button>
                 ` : '';
 
                 boxBotoes.innerHTML = `
                     <button type="button" class="ws-btn" style="background:#27ae60; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.togglePesquisaConvidado('${avaliacaoId}')">➕ Adicionar Aluno</button>
                     ${btnMacroOcultar}
-                    <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarAcessosSelecionados('${avaliacaoId}', '${destinoId}')">🔄 Reativar Selecionados</button>
+                    <button type="button" class="ws-btn" style="background:#3498db; color:white; font-size:12px; padding:8px 15px; border-radius:20px; font-weight:bold; border:none; cursor:pointer; flex: 1;" onclick="Workspace.Avaliacoes.reativarAcessosSelecionados('${avaliacaoId}', '${destinoId}')">🔄 Permitir Selecionados</button>
                 `;
             }
 
