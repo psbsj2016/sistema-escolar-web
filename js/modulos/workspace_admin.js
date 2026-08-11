@@ -272,10 +272,19 @@ Object.assign(App, {
         }, 10000);
     },
 
-    atualizarDadosRadar: async (silencioso = false) => {
+   atualizarDadosRadar: async (silencioso = false) => {
         try {
-            // Nota para o Backend: Rota a ser criada na nossa próxima etapa!
-            const dados = await App.api('/workspace/monitoramento/status', 'GET', null, silencioso);
+            // 🚀 INJEÇÃO INTELIGENTE: Puxa o ID da escola para não misturar alunos de outras escolas
+            let escolaId = 'DEFAULT';
+            if (App.usuario && App.usuario.escolaId) {
+                escolaId = App.usuario.escolaId;
+            } else {
+                const escolaCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+                escolaId = escolaCache.id || 'DEFAULT';
+            }
+
+            // 🚀 ROTA CORRIGIDA: Agora pedimos o status com o ID da escola no final da URL
+            const dados = await App.api(`/workspace/monitoramento/status?escolaId=${escolaId}`, 'GET', null, silencioso);
             
             const container = document.getElementById('lista-monitoramento');
             if (!container) return;
