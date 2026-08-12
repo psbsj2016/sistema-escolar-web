@@ -410,7 +410,7 @@ Workspace.Materiais = {
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
         const urlCodificada = encodeURIComponent(absoluteUrl);
 
-        const ehOffice = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('pptx') || tipo.includes('doc');
+        const ehOffice = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('ppt') || tipo.includes('doc');
         const ehPDF = tipo.includes('pdf');
 
         if (tipo.includes('video') || tipo.includes('mp4')) {
@@ -467,7 +467,7 @@ Workspace.Materiais = {
         tipo = tipo.toLowerCase();
         if (tipo.includes('pdf')) return '📙';
         if (tipo.includes('word') || tipo.includes('doc')) return '📘';
-        if (tipo.includes('presentation') || tipo.includes('pptx')) return '📕';
+        if (tipo.includes('presentation') || tipo.includes('ppt')) return '📕';
         if (tipo.includes('video') || tipo.includes('mp4')) return '🎬';
         if (tipo.includes('audio')) return '🎧';
         if (tipo.includes('image')) return '🖼️';

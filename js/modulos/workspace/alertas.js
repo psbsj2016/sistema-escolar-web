@@ -46,7 +46,7 @@ Workspace.Alertas = {
                     if (tempoAusente > 60000 && Workspace.usuario) {
                         console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
                         if(window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("Bem-vindo de volta! Atualizando tudo... 🔄⏳", "info", 2000);
+                            Workspace.mostrarAviso("Bem-vindo de volta! Estou atualizando o seu Workspace... 🔄⏳", "info", 2000);
                         }
                         Workspace.Alertas.reanimaSistema();
                     }
