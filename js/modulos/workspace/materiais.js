@@ -397,87 +397,127 @@ Workspace.Materiais = {
         Workspace.mostrarAviso("Modo de edição ativado. Altere as informações e clique em Guardar. O anexo é opcional.", "info", 5000);
     },
 
-   // 🚀 O NOVO LEITOR INTELIGENTE COM CONEXÃO DIRETA E BACKUP DE DOWNLOAD
-    abrirVisualizador: (url, tipo, titulo) => {
+   // 🚀 O VISUALIZADOR ABSOLUTO E PERFEITO (Multi-Motor e Detetive de Ficheiros Antigos)
+    abrirVisualizador: (url, tipoFornecido, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
-        tipo = String(tipo).toLowerCase();
-        const tituloMin = String(titulo).toLowerCase();
-        let conteudoHTML = '';
-        const isMobile = window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-        
-        // 🚀 CONEXÃO DIRETA: Prepara o URL do Cloudflare R2 ou Cloudinary para o Leitor
+        // 1. 🕵️‍♂️ MÁQUINA DO TEMPO: Recupera a identidade de ficheiros antigos!
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
-        const urlCodificada = encodeURIComponent(absoluteUrl);
         const urlMin = absoluteUrl.toLowerCase();
-
-        // 🚀 O DETETIVE DE FORMATOS
-        // Agrupamos os PowerPoints com os documentos do Office para forçar a exibição online
-        const ehPowerPoint = tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('ppt') || tipo.includes('pps') || urlMin.endsWith('.ppt') || urlMin.endsWith('.pptx') || urlMin.endsWith('.pps') || urlMin.endsWith('.ppsx') || tituloMin.endsWith('.ppsx') || tituloMin.endsWith('.pptx') || tituloMin.endsWith('.pps');
         
-        const ehOffice = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('doc') || ehPowerPoint;
-        const ehPDF = tipo.includes('pdf');
+        let tipo = String(tipoFornecido || '').toLowerCase();
+        if (!tipo || tipo === 'undefined' || tipo === 'null' || tipo === '') {
+            if (urlMin.includes('.pdf')) tipo = 'pdf';
+            else if (urlMin.includes('.ppt') || urlMin.includes('.pps')) tipo = 'powerpoint';
+            else if (urlMin.includes('.doc')) tipo = 'word';
+            else if (urlMin.includes('.xls')) tipo = 'excel';
+            else if (urlMin.includes('.mp4')) tipo = 'video/mp4';
+            else if (urlMin.includes('.mp3')) tipo = 'audio/mp3';
+            else if (urlMin.match(/\.(jpg|jpeg|png|gif|webp)$/)) tipo = 'image';
+        }
 
-        // 1. Multimédia Nativa (Áudios e Vídeos rodam diretamente no navegador)
+        const tituloSeguro = Workspace.escapeHTML(titulo || 'Documento do Workspace');
+        const urlCodificada = encodeURIComponent(absoluteUrl);
+        const isMobile = window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+        // 2. 🔍 DETETIVE DE FORMATOS
+        const ehPowerPoint = tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('ppt') || tipo.includes('pps') || urlMin.endsWith('.ppt') || urlMin.endsWith('.pptx') || urlMin.endsWith('.pps') || urlMin.endsWith('.ppsx');
+        const ehWordExcel = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('doc') || urlMin.endsWith('.doc') || urlMin.endsWith('.docx') || urlMin.endsWith('.xls') || urlMin.endsWith('.xlsx');
+        const ehPDF = tipo.includes('pdf') || urlMin.endsWith('.pdf');
+        
+        let conteudoHTML = '';
+
+        // 3. 🎨 RENDERIZADORES NATIVOS PERFEITOS
         if (tipo.includes('video') || tipo.includes('mp4')) {
-            conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${absoluteUrl}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
+            conteudoHTML = `<video controls autoplay style="width: 100%; max-height: 100%; border-radius: 12px; outline: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5); background: #000;"><source src="${absoluteUrl}" type="video/mp4">Seu navegador não suporta vídeos.</video>`;
         } 
         else if (tipo.includes('audio')) {
-            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; width: 100%; max-width: 500px;"><div style="font-size:50px; margin-bottom: 20px;">🎧</div><audio controls autoplay style="width: 100%;"><source src="${absoluteUrl}" type="${tipo}"></audio></div>`;
+            conteudoHTML = `<div style="background: rgba(255,255,255,0.05); padding: 50px; border-radius: 24px; text-align: center; width: 100%; max-width: 450px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.3);"><div style="font-size:70px; margin-bottom: 30px; animation: pulse 2s infinite;">🎵</div><audio controls autoplay style="width: 100%; outline: none;"><source src="${absoluteUrl}" type="audio/mpeg"></audio></div>`;
         } 
         else if (tipo.includes('image')) {
-            conteudoHTML = `<img src="${absoluteUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
+            conteudoHTML = `<img src="${absoluteUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.4);">`;
         } 
-        // 2. Documentos e Apresentações (Word, Excel, PowerPoint, PDF)
-        else if (ehOffice || ehPDF) {
-            let iframeSrc = '';
+        else if (ehPDF) {
+            // PDF: O motor nativo do navegador é sempre o rei. Só usamos o da Google no telemóvel!
+            if (isMobile) {
+                conteudoHTML = `<iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; border-radius: 12px; background: white;"></iframe>`;
+            } else {
+                conteudoHTML = `<iframe src="${absoluteUrl}#toolbar=1" width="100%" height="100%" style="border: none; border-radius: 12px; background: white; box-shadow: 0 20px 50px rgba(0,0,0,0.3);"></iframe>`;
+            }
+        }
+        else if (ehPowerPoint || ehWordExcel) {
+            // 🚀 MULTI-MOTOR OFFICE: A Interface Premium com opção de troca em tempo real!
+            const motorMS = `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
+            const motorGoogle = `https://docs.google.com/gview?url=${urlCodificada}&embedded=true`;
             
-            // 🚀 INTELIGÊNCIA DE CONEXÃO: Força o uso dos visualizadores oficiais
-            if (ehOffice) iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
-            if (ehPDF && isMobile) iframeSrc = `https://docs.google.com/gview?url=${urlCodificada}&embedded=true`;
-            if (ehPDF && !isMobile) iframeSrc = absoluteUrl;
-
+            // Inicia com a Microsoft por defeito, pois é melhor para apresentações
             conteudoHTML = `
-            <div style="width: 100%; height: 100%; position: relative; background: white; border-radius: 8px;">
-                <!-- MENSAGEM DE FUNDO INTELIGENTE (Fica escondida atrás do iframe) -->
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; z-index: 1;">
-                    <div style="font-size: 50px; margin-bottom: 15px; animation: pulse 2s infinite;">⏳</div>
-                    <h3 style="color:#2c3e50; font-size: 18px; margin-bottom: 10px;">A Conectar à Nuvem...</h3>
-                    <p style="color:#7f8c8d; font-size: 13px; max-width: 450px; line-height: 1.5;">Estamos a carregar a apresentação diretamente do servidor.<br><br><strong style="color: #e74c3c;">Dica de Ouro:</strong> Se a apresentação for gigante e aparecer um Erro da Microsoft, significa que o leitor online atingiu o seu limite de tamanho. Clique no botão 📥 <strong>Download</strong> no canto superior direito para a reproduzir perfeitamente!</p>
-                </div>
+            <div style="width: 100%; height: 100%; position: relative; background: #f8fafc; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
                 
-                <!-- O IFRAME DE LEITURA DIRETA (Fica por cima da mensagem e cobre tudo se der certo) -->
-                <iframe src="${iframeSrc}" width="100%" height="100%" style="border: none; display: block; position: relative; z-index: 2; border-radius: 8px; background: transparent;"></iframe>
+                <!-- BARRA DE FERRAMENTAS INTELIGENTE DO DOCUMENTO -->
+                <div style="background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 10;">
+                    <div style="color: #94a3b8; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;"></span> Sistema Multi-Nuvem Ativo
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="document.getElementById('ws-iframe-leitor').src='${motorMS}'" style="background: #2563eb; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)'" title="Tentar com o Motor da Microsoft">Motor Microsoft</button>
+                        <button onclick="document.getElementById('ws-iframe-leitor').src='${motorGoogle}'" style="background: #ea4335; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#c0392b'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ea4335'; this.style.transform='translateY(0)'" title="Tentar com o Motor da Google">Motor Google</button>
+                    </div>
+                </div>
+
+                <!-- CARREGAMENTO DE FUNDO ELEGANTE -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; z-index: 1;">
+                    <div style="font-size: 45px; margin-bottom: 20px; animation: spin 3s linear infinite;">⚙️</div>
+                    <h3 style="color:#334155; font-size: 18px; margin-bottom: 10px;">Conectando ao Documento...</h3>
+                    <p style="color:#64748b; font-size: 13px; max-width: 400px; line-height: 1.5;">Se o documento apresentar erro ou ficar em branco, <strong>troque o motor de leitura</strong> utilizando os botões no topo, ou faça o download para o seu dispositivo.</p>
+                </div>
+
+                <!-- O IFRAME DE LEITURA -->
+                <iframe id="ws-iframe-leitor" src="${motorMS}" width="100%" height="100%" style="border: none; position: relative; z-index: 2; background: transparent; flex: 1;"></iframe>
             </div>`;
         } 
-        // 3. Arquivos Desconhecidos (.rar, .zip, etc)
         else {
-            conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: auto;"><div style="font-size:50px; margin-bottom: 20px;">📎</div><h3 style="color:#2c3e50; margin-bottom: 10px;">Formato Não Reconhecido</h3><p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu dispositivo.</p><a href="${absoluteUrl}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a></div>`;
+            // DESCONHECIDO (Pede Download de forma amigável)
+            conteudoHTML = `<div style="background: rgba(255,255,255,0.05); padding: 50px; border-radius: 24px; text-align: center; max-width: 450px; margin: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);"><div style="font-size:70px; margin-bottom: 25px;">📦</div><h3 style="color:#f8fafc; margin-bottom: 15px; font-size: 20px;">Formato Especial</h3><p style="color:#cbd5e1; margin-bottom: 30px; font-size: 14px; line-height: 1.6;">O sistema não suporta a pré-visualização deste formato específico na web. Por favor, transfira o ficheiro para visualizar com qualidade total.</p><a href="${absoluteUrl}" download class="ws-btn" style="background:#3b82f6; color:white; text-decoration:none; padding:15px 35px; border-radius:30px; font-weight: bold; font-size: 16px; transition: 0.2s; display: inline-block; box-shadow: 0 4px 15px rgba(59,130,246,0.4);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">📥 Transferir Ficheiro</a></div>`;
         }
 
         const modal = document.createElement('div');
         modal.id = modalId;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation: fadeIn 0.2s;";
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:100000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(10px); animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);";
         
         modal.innerHTML = `
-            <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
-                <div style="display: flex; flex-direction: column; max-width: 70%;">
-                    <span style="color: white; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">📚 ${titulo}</span>
-                    <span style="color: #f1c40f; font-size: 11.5px; margin-top: 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">⚠️ Use o botão 📥 ao lado se a apresentação não carregar.</span>
+            <style>
+                @keyframes spin { 100% { transform: rotate(360deg); } }
+                @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+            </style>
+            <!-- CABEÇALHO MODERNO DO LEITOR -->
+            <div style="width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); position: absolute; top: 0; left: 0; z-index: 100;">
+                <div style="display: flex; flex-direction: column; max-width: 75%;">
+                    <span style="color: #f8fafc; font-weight: 800; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 24px;">📄</span> ${tituloSeguro}
+                    </span>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <a href="${absoluteUrl}" download target="_blank" style="color:white; text-decoration:none; font-size:26px; transition:0.2s; margin-right: 10px;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Fazer Download">📥</a>
-                    <button id="ws-fechar-visualizador" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 45px; height: 45px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.5); flex-shrink: 0;" onmouseover="this.style.background='rgba(231, 76, 60, 0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">✖</button>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <a href="${absoluteUrl}" download target="_blank" style="color: #f8fafc; text-decoration:none; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 30px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(59, 130, 246, 0.9)'; this.style.borderColor='transparent'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)';" title="Fazer Download do Ficheiro">
+                        <span style="font-size: 18px;">📥</span> Baixar Ficheiro
+                    </a>
+                    <button id="ws-fechar-visualizador" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; width: 45px; height: 45px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;" onmouseover="this.style.background='rgba(239, 68, 68, 0.9)'; this.style.color='white'; this.style.transform='rotate(90deg) scale(1.1)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#fca5a5'; this.style.transform='rotate(0deg) scale(1)';">✖</button>
                 </div>
             </div>
-            <div style="width: 95vw; height: 85vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 50px; pointer-events: none;">
-                <div style="width: 100%; height: 100%; pointer-events: auto;">${conteudoHTML}</div>
+            
+            <!-- ÁREA DE EXIBIÇÃO CENTRAL -->
+            <div style="width: 96vw; height: 86vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 70px; pointer-events: none;">
+                <div style="width: 100%; height: 100%; pointer-events: auto; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column;">
+                    ${conteudoHTML}
+                </div>
             </div>
         `;
         
-        modal.addEventListener('click', (e) => { if (e.target === modal || e.target.id === 'ws-fechar-visualizador') modal.remove(); });
+        modal.addEventListener('click', (e) => { 
+            if (e.target === modal || e.target.id === 'ws-fechar-visualizador') modal.remove(); 
+        });
         document.body.appendChild(modal);
     },
 
