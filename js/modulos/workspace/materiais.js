@@ -397,7 +397,7 @@ Workspace.Materiais = {
         Workspace.mostrarAviso("Modo de edição ativado. Altere as informações e clique em Guardar. O anexo é opcional.", "info", 5000);
     },
 
-   // 🚀 O NOVO LEITOR INTELIGENTE (Bypassa o Microsoft Viewer para Slides Pesados)
+   // 🚀 O NOVO LEITOR INTELIGENTE COM CONEXÃO DIRETA E BACKUP DE DOWNLOAD
     abrirVisualizador: (url, tipo, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -407,29 +407,20 @@ Workspace.Materiais = {
         let conteudoHTML = '';
         const isMobile = window.innerWidth <= 900 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         
+        // 🚀 CONEXÃO DIRETA: Prepara o URL do Cloudflare R2 ou Cloudinary para o Leitor
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
         const urlCodificada = encodeURIComponent(absoluteUrl);
         const urlMin = absoluteUrl.toLowerCase();
 
-        // 🚀 O DETETIVE DE FORMATOS BLINDADO
-        // Agrupamos TODOS os PowerPoints para forçar o ecrã interativo e evitar o Erro da Microsoft (limite de 10MB)
+        // 🚀 O DETETIVE DE FORMATOS
+        // Agrupamos os PowerPoints com os documentos do Office para forçar a exibição online
         const ehPowerPoint = tipo.includes('powerpoint') || tipo.includes('presentation') || tipo.includes('ppt') || tipo.includes('pps') || urlMin.endsWith('.ppt') || urlMin.endsWith('.pptx') || urlMin.endsWith('.pps') || urlMin.endsWith('.ppsx') || tituloMin.endsWith('.ppsx') || tituloMin.endsWith('.pptx') || tituloMin.endsWith('.pps');
         
-        const ehOffice = (tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('doc')) && !ehPowerPoint;
+        const ehOffice = tipo.includes('word') || tipo.includes('document') || tipo.includes('msword') || tipo.includes('xls') || tipo.includes('spreadsheet') || tipo.includes('doc') || ehPowerPoint;
         const ehPDF = tipo.includes('pdf');
 
-        // 1. Apresentações de Slides (A Microsoft recusa abrir ficheiros grandes, então forçamos a nossa Tela Premium)
-        if (ehPowerPoint) {
-            conteudoHTML = `
-            <div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 450px; margin: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-                <div style="font-size:60px; margin-bottom: 20px; animation: pulse 2s infinite;">📽️</div>
-                <h3 style="color:#2c3e50; margin-bottom: 10px; font-size: 20px;">Apresentação de Slides</h3>
-                <p style="color:#7f8c8d; margin-bottom: 25px; font-size: 14px; line-height: 1.5;">Este ficheiro é uma Apresentação rica em multimédia.<br><br>Para evitar falhas de carregamento e garantir que todos os vídeos, áudios e animações funcionam na perfeição, faça o download para o seu dispositivo.</p>
-                <a href="${absoluteUrl}" download class="ws-btn" style="background:#27ae60; color:white; text-decoration:none; padding:15px 30px; border-radius:30px; font-weight: bold; font-size: 16px; display: inline-block; transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">📥 Baixar Apresentação</a>
-            </div>`;
-        }
-        // 2. Multimédia Nativa (Áudios e Vídeos rodam diretamente no navegador)
-        else if (tipo.includes('video') || tipo.includes('mp4')) {
+        // 1. Multimédia Nativa (Áudios e Vídeos rodam diretamente no navegador)
+        if (tipo.includes('video') || tipo.includes('mp4')) {
             conteudoHTML = `<video controls autoplay style="width: 100%; height: 100%; border-radius: 8px;"><source src="${absoluteUrl}" type="${tipo}">Seu navegador não suporta vídeos diretamente.</video>`;
         } 
         else if (tipo.includes('audio')) {
@@ -438,24 +429,29 @@ Workspace.Materiais = {
         else if (tipo.includes('image')) {
             conteudoHTML = `<img src="${absoluteUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">`;
         } 
-        // 3. Documentos Clássicos (Word, Excel, PDF)
+        // 2. Documentos e Apresentações (Word, Excel, PowerPoint, PDF)
         else if (ehOffice || ehPDF) {
             let iframeSrc = '';
+            
+            // 🚀 INTELIGÊNCIA DE CONEXÃO: Força o uso dos visualizadores oficiais
             if (ehOffice) iframeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
             if (ehPDF && isMobile) iframeSrc = `https://docs.google.com/gview?url=${urlCodificada}&embedded=true`;
             if (ehPDF && !isMobile) iframeSrc = absoluteUrl;
 
             conteudoHTML = `
             <div style="width: 100%; height: 100%; position: relative; background: white; border-radius: 8px;">
+                <!-- MENSAGEM DE FUNDO INTELIGENTE (Fica escondida atrás do iframe) -->
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; z-index: 1;">
-                    <div style="font-size: 50px; margin-bottom: 15px;">⏳</div>
-                    <h3 style="color:#2c3e50; font-size: 18px; margin-bottom: 10px;">A Carregar o Documento...</h3>
-                    <p style="color:#7f8c8d; font-size: 13px; max-width: 400px; line-height: 1.5;">Documentos pesados podem ser recusados pelos leitores online da Microsoft e da Google.<br><br><strong style="color: #e74c3c;">Se vir uma mensagem de Erro, feche esta janela e clique no botão de Download.</strong></p>
+                    <div style="font-size: 50px; margin-bottom: 15px; animation: pulse 2s infinite;">⏳</div>
+                    <h3 style="color:#2c3e50; font-size: 18px; margin-bottom: 10px;">A Conectar à Nuvem...</h3>
+                    <p style="color:#7f8c8d; font-size: 13px; max-width: 450px; line-height: 1.5;">Estamos a carregar a apresentação diretamente do servidor.<br><br><strong style="color: #e74c3c;">Dica de Ouro:</strong> Se a apresentação for gigante e aparecer um Erro da Microsoft, significa que o leitor online atingiu o seu limite de tamanho. Clique no botão 📥 <strong>Download</strong> no canto superior direito para a reproduzir perfeitamente!</p>
                 </div>
+                
+                <!-- O IFRAME DE LEITURA DIRETA (Fica por cima da mensagem e cobre tudo se der certo) -->
                 <iframe src="${iframeSrc}" width="100%" height="100%" style="border: none; display: block; position: relative; z-index: 2; border-radius: 8px; background: transparent;"></iframe>
             </div>`;
         } 
-        // 4. Arquivos Desconhecidos
+        // 3. Arquivos Desconhecidos (.rar, .zip, etc)
         else {
             conteudoHTML = `<div style="background: white; padding: 40px; border-radius: 12px; text-align: center; max-width: 400px; margin: auto;"><div style="font-size:50px; margin-bottom: 20px;">📎</div><h3 style="color:#2c3e50; margin-bottom: 10px;">Formato Não Reconhecido</h3><p style="color:#7f8c8d; margin-bottom: 25px;">Por favor, faça o download para abrir no seu dispositivo.</p><a href="${absoluteUrl}" download class="ws-btn" style="background:#3498db; color:white; text-decoration:none; padding:12px 30px; border-radius:20px;">📥 Fazer Download</a></div>`;
         }
@@ -468,6 +464,7 @@ Workspace.Materiais = {
             <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; z-index: 10;">
                 <div style="display: flex; flex-direction: column; max-width: 70%;">
                     <span style="color: white; font-weight: bold; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-shadow: 1px 1px 3px rgba(0,0,0,0.8);">📚 ${titulo}</span>
+                    <span style="color: #f1c40f; font-size: 11.5px; margin-top: 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">⚠️ Use o botão 📥 ao lado se a apresentação não carregar.</span>
                 </div>
                 
                 <div style="display: flex; align-items: center; gap: 15px;">
