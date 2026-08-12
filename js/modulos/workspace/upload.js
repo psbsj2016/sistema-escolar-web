@@ -18,7 +18,8 @@ Workspace.Upload = {
         const nomeOriginal = file.name || `ficheiro_${Date.now()}`;
         const extensao = nomeOriginal.split('.').pop().toLowerCase();
         
-        const ehDocumento = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'zip'].includes(extensao);
+        // 🚀 O NOVO DICIONÁRIO: Adicionámos pps, ppsx, rar e csv para passarem na Via Verde de Alta Velocidade!
+        const ehDocumento = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'pps', 'ppsx', 'txt', 'zip', 'rar', 'csv'].includes(extensao);
         
         // 🚀 O DETETIVE: Lê a extensão para saber a verdade, mesmo que o telemóvel se engane!
         const ehVideo = ['mp4', 'webm', 'mov', 'mkv', 'avi', 'm4v'].includes(extensao) || file.type.startsWith('video/');
@@ -75,7 +76,7 @@ Workspace.Upload = {
             const inputFicheiro = document.createElement('input');
             inputFicheiro.type = 'file';
             inputFicheiro.multiple = true;
-            inputFicheiro.accept = 'image/*,video/mp4,video/webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+            inputFicheiro.accept = 'image/*,video/mp4,video/webm,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pps,.ppsx';
             inputFicheiro.style.display = 'none';
             inputFicheiro.id = 'ws-input-upload';
 
