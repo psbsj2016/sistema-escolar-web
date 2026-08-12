@@ -419,7 +419,7 @@ Workspace.Feed = {
         sentinela.style.display = 'block';
         
         // 🚀 A CURA VISUAL: Removemos a instrução vermelha do programador e deixamos um aviso profissional
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong>Atualizando feed!... ⏳ Por favor, saia e entre novamente.</strong></div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;"><strong><h2>📢 Se você está lendo esta mensagem é porque ficou muitos dias sem acessar o WorkSpace! Por favor, saia do WorkSpace e entre novamente para que tudo seja atualizado e este aviso suma.</h2></strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
