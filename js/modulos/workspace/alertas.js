@@ -27,28 +27,30 @@ Workspace.Alertas = {
         }, 1000);
     },
 
+   
     // ============================================================================
     // 🩺 O DESFIBRILADOR: ACORDA O SITE APÓS MUITO TEMPO ADORMECIDO
     // ============================================================================
     iniciarDetetiveRetorno: () => {
         document.addEventListener('visibilitychange', () => {
+            // 🚀 ESCUDO 1: Se o utilizador já foi deslogado, o detetive nem deve trabalhar!
+            if (!window.Workspace || !Workspace.usuario) return;
+
             if (document.visibilityState === 'hidden') {
-                // O utilizador minimizou o site. Anotamos a hora no relógio.
                 Workspace.Alertas.momentoSaida = Date.now();
             } else if (document.visibilityState === 'visible') {
-                // O utilizador voltou a olhar para o ecrã!
                 if (Workspace.Alertas.momentoSaida) {
                     const tempoAusente = Date.now() - Workspace.Alertas.momentoSaida;
                     
-                    // Se ficou fora por mais de 1 minuto (60000 milissegundos), reanimamos tudo!
-                    if (tempoAusente > 60000) {
+                    // 🚀 ESCUDO 2: Só reanima se a sessão não tiver expirado a meio do processo
+                    if (tempoAusente > 60000 && Workspace.usuario) {
                         console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
                         if(window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("Bem-vindo de volta! Estou atualizando tudo... ⏳🔄", "info", 2000);
+                            Workspace.mostrarAviso("Bem-vindo novamente! 🎉 Atualizando tudo... ⏳", "info", 2000);
                         }
                         Workspace.Alertas.reanimaSistema();
                     }
-                    Workspace.Alertas.momentoSaida = null; // Limpa o relógio
+                    Workspace.Alertas.momentoSaida = null; 
                 }
             }
         });
@@ -92,18 +94,17 @@ Workspace.Alertas = {
         }
     },
 
-    iniciarConexaoTempoReal: () => {
-        // 🚀 O SEGREDO: Se já houver um túnel zombie, destrói-o antes de abrir o novo!
+   iniciarConexaoTempoReal: () => {
+        // 🚀 ESCUDO 3: Proteção final contra o Erro "Cannot read properties of null"
+        if (!window.Workspace || !Workspace.usuario) return;
+
         if (Workspace.Alertas.conexaoSSE) {
             Workspace.Alertas.conexaoSSE.close();
         }
 
         const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
-        
-        // Grava a nova ligação na nossa variável para controlo futuro
         Workspace.Alertas.conexaoSSE = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
-        
-        const sse = Workspace.Alertas.conexaoSSE; // O código original continuará a funcionar com a nova variável
+        const sse = Workspace.Alertas.conexaoSSE; 
 
         sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
