@@ -417,9 +417,10 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        
+       
+
         // 🚀 A CURA VISUAL: Removemos a instrução vermelha do programador e deixamos um aviso profissional
-        sentinela.innerHTML = '<div style="text-align:center; padding:10px; color:#249; font-size:13px;"><strong><h1>📢 Se você está lendo esta mensagem é porque ficou muitos dias sem acessar o WorkSpace! Por favor, saia do WorkSpace e entre novamente para que tudo seja atualizado e este aviso deixe de aparecer.</h1></strong></div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#249; font-size:13px; animation: pulse 1.5s infinite;"><strong><h2> Se você está lendo esta mensagem é porque ficou muitos dias sem acessar o WorkSpace! Por favor, saia do WorkSpace e entre novamente para que tudo seja atualizado e este aviso deixe de aparecer.</h2></strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },
