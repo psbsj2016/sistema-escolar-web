@@ -397,7 +397,7 @@ Workspace.Materiais = {
         Workspace.mostrarAviso("Modo de edição ativado. Altere as informações e clique em Guardar. O anexo é opcional.", "info", 5000);
     },
 
-   // 🚀 O VISUALIZADOR ABSOLUTO E PERFEITO (Multi-Motor e Detetive de Ficheiros Antigos)
+  // 🚀 O VISUALIZADOR ABSOLUTO E PERFEITO (Apresentação Imersiva e Design Sem Sobreposição)
     abrirVisualizador: (url, tipoFornecido, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -439,7 +439,6 @@ Workspace.Materiais = {
             conteudoHTML = `<img src="${absoluteUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.4);">`;
         } 
         else if (ehPDF) {
-            // PDF: O motor nativo do navegador é sempre o rei. Só usamos o da Google no telemóvel!
             if (isMobile) {
                 conteudoHTML = `<iframe src="https://docs.google.com/gview?url=${urlCodificada}&embedded=true" width="100%" height="100%" style="border: none; border-radius: 12px; background: white;"></iframe>`;
             } else {
@@ -447,16 +446,18 @@ Workspace.Materiais = {
             }
         }
         else if (ehPowerPoint || ehWordExcel) {
-            // 🚀 MULTI-MOTOR OFFICE: A Interface Premium com opção de troca em tempo real!
-            const motorMS = `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
+            // 🚀 O SEGREDO DO CINEMA: '&wdAr=1' força o PowerPoint a rodar as animações no Modo de Apresentação de Slides (Slide Show)
+            const motorMS = ehPowerPoint 
+                ? `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}&wdAr=1` 
+                : `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
+            
             const motorGoogle = `https://docs.google.com/gview?url=${urlCodificada}&embedded=true`;
             
-            // Inicia com a Microsoft por defeito, pois é melhor para apresentações
             conteudoHTML = `
             <div style="width: 100%; height: 100%; position: relative; background: #f8fafc; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
                 
                 <!-- BARRA DE FERRAMENTAS INTELIGENTE DO DOCUMENTO -->
-                <div style="background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 10;">
+                <div style="background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 10; flex-shrink: 0;">
                     <div style="color: #94a3b8; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span style="display:inline-block; width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;"></span> Sistema Multi-Nuvem Ativo
                     </div>
@@ -470,46 +471,46 @@ Workspace.Materiais = {
                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; z-index: 1;">
                     <div style="font-size: 45px; margin-bottom: 20px; animation: spin 3s linear infinite;">⚙️</div>
                     <h3 style="color:#334155; font-size: 18px; margin-bottom: 10px;">Conectando ao Documento...</h3>
-                    <p style="color:#64748b; font-size: 13px; max-width: 400px; line-height: 1.5;">Se o documento apresentar erro ou ficar em branco, <strong>troque o motor de leitura</strong> utilizando os botões no topo, ou faça o download para o seu dispositivo.</p>
+                    <p style="color:#64748b; font-size: 13px; max-width: 400px; line-height: 1.5;">A apresentação interativa está a ser preparada. Aguarde uns instantes.<br><br>Se ocorrer um erro, pode <strong>trocar o motor de leitura</strong> ou transferir o ficheiro no botão de Download.</p>
                 </div>
 
-                <!-- O IFRAME DE LEITURA -->
+                <!-- O IFRAME DE LEITURA (Agora ocupa todo o espaço com flex: 1) -->
                 <iframe id="ws-iframe-leitor" src="${motorMS}" width="100%" height="100%" style="border: none; position: relative; z-index: 2; background: transparent; flex: 1;"></iframe>
             </div>`;
         } 
         else {
-            // DESCONHECIDO (Pede Download de forma amigável)
             conteudoHTML = `<div style="background: rgba(255,255,255,0.05); padding: 50px; border-radius: 24px; text-align: center; max-width: 450px; margin: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);"><div style="font-size:70px; margin-bottom: 25px;">📦</div><h3 style="color:#f8fafc; margin-bottom: 15px; font-size: 20px;">Formato Especial</h3><p style="color:#cbd5e1; margin-bottom: 30px; font-size: 14px; line-height: 1.6;">O sistema não suporta a pré-visualização deste formato específico na web. Por favor, transfira o ficheiro para visualizar com qualidade total.</p><a href="${absoluteUrl}" download class="ws-btn" style="background:#3b82f6; color:white; text-decoration:none; padding:15px 35px; border-radius:30px; font-weight: bold; font-size: 16px; transition: 0.2s; display: inline-block; box-shadow: 0 4px 15px rgba(59,130,246,0.4);" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">📥 Transferir Ficheiro</a></div>`;
         }
 
         const modal = document.createElement('div');
         modal.id = modalId;
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:100000; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(10px); animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);";
+        // 🚀 A CORREÇÃO DE ESTRUTURA: Substituímos o bloqueio flutuante por display: flex com column!
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:100000; display:flex; flex-direction:column; backdrop-filter:blur(10px); animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);";
         
         modal.innerHTML = `
             <style>
                 @keyframes spin { 100% { transform: rotate(360deg); } }
                 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
             </style>
-            <!-- CABEÇALHO MODERNO DO LEITOR -->
-            <div style="width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); position: absolute; top: 0; left: 0; z-index: 100;">
-                <div style="display: flex; flex-direction: column; max-width: 75%;">
-                    <span style="color: #f8fafc; font-weight: 800; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 24px;">📄</span> ${tituloSeguro}
+            <!-- CABEÇALHO MODERNO DO LEITOR (Agora com flex-shrink: 0 para ocupar exatamente o seu espaço, sem sobrepor!) -->
+            <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: #020617; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                <div style="display: flex; flex-direction: column; max-width: 60%;">
+                    <span style="color: #f8fafc; font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📄</span> ${tituloSeguro}
                     </span>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <a href="${absoluteUrl}" download target="_blank" style="color: #f8fafc; text-decoration:none; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 30px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(59, 130, 246, 0.9)'; this.style.borderColor='transparent'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)';" title="Fazer Download do Ficheiro">
-                        <span style="font-size: 18px;">📥</span> Baixar Ficheiro
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <a href="${absoluteUrl}" download target="_blank" style="color: #f8fafc; text-decoration:none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(59, 130, 246, 0.9)'; this.style.borderColor='transparent'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)';" title="Fazer Download do Ficheiro">
+                        <span style="font-size: 16px;">📥</span> Download
                     </a>
-                    <button id="ws-fechar-visualizador" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; width: 45px; height: 45px; border-radius: 50%; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;" onmouseover="this.style.background='rgba(239, 68, 68, 0.9)'; this.style.color='white'; this.style.transform='rotate(90deg) scale(1.1)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#fca5a5'; this.style.transform='rotate(0deg) scale(1)';">✖</button>
+                    <button id="ws-fechar-visualizador" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;" onmouseover="this.style.background='rgba(239, 68, 68, 0.9)'; this.style.color='white'; this.style.transform='rotate(90deg) scale(1.1)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#fca5a5'; this.style.transform='rotate(0deg) scale(1)';">✖</button>
                 </div>
             </div>
             
-            <!-- ÁREA DE EXIBIÇÃO CENTRAL -->
-            <div style="width: 96vw; height: 86vh; display: flex; justify-content: center; align-items: center; position: relative; margin-top: 70px; pointer-events: none;">
-                <div style="width: 100%; height: 100%; pointer-events: auto; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column;">
+            <!-- ÁREA DE EXIBIÇÃO CENTRAL (Usa o resto do espaço disponível de forma perfeita, sem invadir o topo!) -->
+            <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; overflow: hidden;">
+                <div style="width: 100%; height: 100%; max-width: 1400px; display: flex; flex-direction: column;">
                     ${conteudoHTML}
                 </div>
             </div>
