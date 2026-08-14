@@ -80,25 +80,30 @@ Workspace.Ingles = {
     // ============================================================================
     // 🧠 SISTEMA DE MEMÓRIA E INTEGRAÇÃO MONGODB (ALGORITMO VIVO)
     // ============================================================================
+// ============================================================================
+    // 🧠 SISTEMA DE MEMÓRIA E INTEGRAÇÃO MONGODB (ALGORITMO VIVO)
+    // ============================================================================
     loadDados: async () => {
         try {
-            // 1. Puxa o cérebro global da escola da Base de Dados (Nuvel)
+            // 1. Puxa o cérebro global da escola da Base de Dados (Nuvem)
             const res = await Workspace.api('/workspace/ingles/dados', 'GET');
             
-            if (res && res.success && res.dados && Object.keys(res.dados).length > 1) {
+            // 🚀 A CORREÇÃO MESTRA: Confirmação à prova de bala baseada na existência da lista!
+            if (res && res.success && res.dados && res.dados.words) {
                 const d = res.dados;
-                Workspace.Ingles.state.words = d.words && d.words.length > 0 ? d.words : Workspace.Ingles.defaults.words;
-                Workspace.Ingles.state.phrases = d.phrases && d.phrases.length > 0 ? d.phrases : Workspace.Ingles.defaults.phrases;
-                Workspace.Ingles.state.quizzes = d.quizzes && d.quizzes.length > 0 ? d.quizzes : Workspace.Ingles.defaults.quizzes;
-                Workspace.Ingles.state.pictures = d.pictures && d.pictures.length > 0 ? d.pictures : Workspace.Ingles.defaults.pictures;
-                Workspace.Ingles.state.submissions = d.submissions || [];
-                Workspace.Ingles.state.pool = d.pool || [];
-            } else {
-                // Se a escola for nova na plataforma, carrega a Semente Básica nativa
-                Workspace.Ingles.state.words = Workspace.Ingles.defaults.words;
-                Workspace.Ingles.state.phrases = Workspace.Ingles.defaults.phrases;
-                Workspace.Ingles.state.quizzes = Workspace.Ingles.defaults.quizzes;
-                Workspace.Ingles.state.pictures = Workspace.Ingles.defaults.pictures;
+                Workspace.Ingles.state.words = Array.isArray(d.words) ? d.words : Workspace.Ingles.defaults.words;
+                Workspace.Ingles.state.phrases = Array.isArray(d.phrases) ? d.phrases : [];
+                Workspace.Ingles.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
+                Workspace.Ingles.state.pictures = Array.isArray(d.pictures) ? d.pictures : [];
+                Workspace.Ingles.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
+                Workspace.Ingles.state.pool = Array.isArray(d.pool) ? d.pool : [];
+            } 
+            else if (Workspace.Ingles.state.words.length === 0) {
+                // Se a nuvem estiver vazia E o nosso ecrã estiver vazio, aí sim injetamos a Semente Básica nativa!
+                Workspace.Ingles.state.words = [...Workspace.Ingles.defaults.words];
+                Workspace.Ingles.state.phrases = [...Workspace.Ingles.defaults.phrases];
+                Workspace.Ingles.state.quizzes = [...Workspace.Ingles.defaults.quizzes];
+                Workspace.Ingles.state.pictures = [...Workspace.Ingles.defaults.pictures];
                 Workspace.Ingles.state.submissions = [];
                 Workspace.Ingles.state.pool = [];
             }
