@@ -68,7 +68,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🧠 SISTEMA DE MEMÓRIA (Algoritmo Coletivo)
+    // 🧠 SISTEMA DE MEMÓRIA E INTEGRAÇÃO MONGODB
     // ============================================================================
     loadDados: () => {
         const getK = (k) => `ws_ingles_${Workspace.usuario.escolaId || 'default'}_${k}`;
@@ -96,6 +96,14 @@ Workspace.Ingles = {
         const userK = `ws_ingles_user_${Workspace.usuario.id}`;
         localStorage.setItem(`${userK}_xp`, Workspace.Ingles.state.xp);
         localStorage.setItem(`${userK}_streak`, Workspace.Ingles.state.streak);
+
+        // 🚀 A MÁGICA: Envia a pontuação para a Base de Dados (MongoDB em background silencioso)!
+        if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
+            Workspace.api('/workspace/ingles/xp', 'POST', {
+                xp: Workspace.Ingles.state.xp,
+                streak: Workspace.Ingles.state.streak
+            }).catch(() => console.log("Sincronização de XP aguardando rede."));
+        }
     },
 
     // ============================================================================
@@ -169,8 +177,107 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🎨 RENDERIZAÇÃO DE INTERFACE
+    // 🎨 RENDERIZAÇÃO DE INTERFACE E HTML
     // ============================================================================
+    injetarCSS: () => {
+        if(document.getElementById('ws-ingles-css')) return;
+        const style = document.createElement('style');
+        style.id = 'ws-ingles-css';
+        style.innerHTML = `
+            #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: hidden; min-height: 80vh; }
+            .ig-header { background: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; }
+            .ig-title { display: flex; align-items: center; gap: 15px; }
+            .ig-title-icon { font-size: 35px; background: linear-gradient(135deg, #4F46E5, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+            .ig-xp-badge { display: flex; gap: 12px; background: #0F172A; color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: bold; }
+            
+            .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
+            .ig-game-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; }
+            .ig-game-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(15,23,42,0.1); border-color: #C7D2FE; }
+            .ig-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
+            .ig-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+            .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
+            .ig-badge-level { background: #E0E7FF; color: #4F46E5; }
+            .ig-badge-approved { background: #D1FAE5; color: #065F46; }
+            .ig-badge-pending { background: #FEF3C7; color: #92400E; }
+            .ig-meta { display: flex; gap: 10px; margin-top: 15px; }
+            
+            .ig-sidebar { width: 250px; background: #fff; border-right: 1px solid #E2E8F0; padding: 20px; display:flex; flex-direction:column; gap:5px; }
+            .ig-side-item { background: transparent; border: none; padding: 12px 15px; border-radius: 10px; text-align: left; font-weight: bold; color: #64748B; cursor: pointer; transition: 0.2s; }
+            .ig-side-item:hover { background: #F1F5F9; }
+            .ig-side-item.active { background: #0F172A; color: #fff; }
+            .ig-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+            
+            .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
+            .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+            .ig-textarea { min-height: 100px; resize: vertical; }
+            
+            .ig-word-roulette { width: 200px; height: 200px; border-radius: 50%; border: 8px solid #EEF2FF; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: radial-gradient(circle at 30% 30%, #fff, #E0E7FF); }
+            .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
+            .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
+        `;
+        document.head.appendChild(style);
+    },
+
+    construirHTML: () => {
+        let container = document.getElementById('ws-ingles-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'ws-ingles-container';
+            container.style.display = 'none';
+            const painelPrincipal = document.getElementById('ws-main-container');
+            if (painelPrincipal && painelPrincipal.parentNode) {
+                painelPrincipal.parentNode.appendChild(container);
+            }
+        }
+
+        container.innerHTML = `
+            <div class="ig-header">
+                <div class="ig-title">
+                    <div class="ig-title-icon">🏴‍☠️</div>
+                    <div>
+                        <h2 style="margin:0; font-size:22px; color:#0F172A;">Baú do Inglês</h2>
+                        <p style="margin:0; font-size:13px; color:#64748B;">Estudos gamificados em tempo real</p>
+                    </div>
+                </div>
+                <div class="ig-xp-badge">
+                    <span>🔥 <b id="ig-streakCount">1</b> dias</span>
+                    <span>⭐ <b id="ig-xpCount">0</b> XP</span>
+                </div>
+            </div>
+
+            <div id="ig-alunoView" style="display:none;">
+                <div style="padding: 30px 30px 0 30px;">
+                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">O Baú está aberto! 🗝️</h1>
+                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um tesouro para desbloquear hoje. Tudo que você criar aqui, quando aprovado, vira material de estudo para outros alunos.</p>
+                </div>
+                <div id="ig-gamesGrid" class="ig-games-grid"></div>
+            </div>
+
+            <div id="ig-professorView" style="display:none; min-height: 70vh;">
+                <div class="ig-sidebar">
+                    <button class="ig-side-item active" data-tab="biblioteca" onclick="Workspace.Ingles.renderProfessorTab('biblioteca')">📚 Biblioteca</button>
+                    <button class="ig-side-item" data-tab="envios" onclick="Workspace.Ingles.renderProfessorTab('envios')">📥 Envios Pendentes <span id="ig-pendingCount" style="background:#F59E0B; color:white; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:5px;">0</span></button>
+                    <button class="ig-side-item" data-tab="algoritmo" onclick="Workspace.Ingles.renderProfessorTab('algoritmo')">🧠 Algoritmo</button>
+                    <button class="ig-side-item" data-tab="ranking" onclick="Workspace.Ingles.renderProfessorTab('ranking')">🏆 Ranking Global</button>
+                </div>
+                <div id="ig-tab-content" style="flex:1; padding:30px; background:#F8FAFC;"></div>
+            </div>
+
+            <div id="ig-gameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:1000000; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+                <div class="ws-card" style="width:90%; max-width:650px; background:white; border-radius:20px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh;">
+                    <div style="padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #F8FAFC;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span id="ig-modalIcon" style="font-size: 24px;"></span>
+                            <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-size: 18px;"></h2>
+                        </div>
+                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#64748B;">×</button>
+                    </div>
+                    <div id="ig-modalBody" style="padding: 30px; overflow-y: auto; flex: 1;"></div>
+                </div>
+            </div>
+        `;
+    },
+
     renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
@@ -181,7 +288,7 @@ Workspace.Ingles = {
             document.getElementById('ig-professorView').style.display = 'flex';
             document.getElementById('ig-alunoView').style.display = 'none';
             document.getElementById('ig-pendingCount').textContent = Workspace.Ingles.state.submissions.filter(s=>s.status==='pending').length;
-            Workspace.Ingles.renderProfessorTab('envios'); // Abre na aba de revisão de trabalhos
+            Workspace.Ingles.renderProfessorTab('ranking'); 
         } else {
             document.getElementById('ig-alunoView').style.display = 'block';
             document.getElementById('ig-professorView').style.display = 'none';
@@ -208,7 +315,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 👨‍🏫 O LABORATÓRIO DO PROFESSOR (Gestão e Algoritmo Coletivo)
+    // 👨‍🏫 O LABORATÓRIO DO PROFESSOR E RANKING GLOBAL
     // ============================================================================
     renderProfessorTab: (tabId) => {
         document.querySelectorAll('.ig-side-item').forEach(b => b.classList.remove('active'));
@@ -274,13 +381,52 @@ Workspace.Ingles = {
                 </div>
             `;
         }
+        else if (tabId === 'ranking') {
+            content.innerHTML = `<div style="text-align:center; padding:50px; color:#94a3b8;"><div style="font-size:40px; margin-bottom:15px; animation: pulse 1s infinite;">🏆</div>A carregar o Pódio de Honra da Escola... ⏳</div>`;
+            
+            Workspace.api(`/workspace/ingles/ranking?escolaId=${Workspace.usuario.escolaId}`, 'GET').then(res => {
+                if (res && res.success) {
+                    if (res.ranking.length === 0) {
+                        content.innerHTML = `<div class="ig-card" style="text-align:center; padding:50px;"><div style="font-size:50px; margin-bottom:15px;">🏁</div><h3 style="color:#2c3e50;">A corrida ainda não começou!</h3><p style="color:#64748B;">Nenhum aluno conquistou XP no Baú do Inglês até o momento.</p></div>`;
+                        return;
+                    }
+                    
+                    let htmlRanking = `<div class="ig-card" style="border-left: 4px solid #F59E0B; background:#FFFBEB;"><h3>🏆 Pódio da Escola (Leaderboard)</h3><p style="color:#92400E; font-size:13px; font-weight:bold;">Acompanhe o ranking em tempo real dos alunos com maior pontuação no Baú do Inglês.</p></div>`;
+                    
+                    res.ranking.forEach((aluno, index) => {
+                        let medalha = `<div style="font-size:16px; font-weight:900; color:#94a3b8; width:40px; text-align:center;">${index + 1}º</div>`;
+                        if (index === 0) medalha = `<div style="font-size:30px; width:40px; text-align:center; filter: drop-shadow(0 4px 6px rgba(245,158,11,0.4));">🥇</div>`;
+                        if (index === 1) medalha = `<div style="font-size:26px; width:40px; text-align:center;">🥈</div>`;
+                        if (index === 2) medalha = `<div style="font-size:22px; width:40px; text-align:center;">🥉</div>`;
+                        
+                        htmlRanking += `
+                            <div style="background:#fff; border:1px solid #E2E8F0; padding:15px 20px; border-radius:16px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 10px rgba(0,0,0,0.02); transition:0.3s;" onmouseover="this.style.transform='scale(1.02)'; this.style.borderColor='#4F46E5';">
+                                <div style="display:flex; align-items:center; gap:20px;">
+                                    ${medalha}
+                                    <div style="border:2px solid #E2E8F0; border-radius:50%; padding:2px;">
+                                        ${window.Workspace.renderizarAvatar(aluno.nome, 45)}
+                                    </div>
+                                    <strong style="color:#1E293B; font-size:16px;">${aluno.nome}</strong>
+                                </div>
+                                <div style="display:flex; gap:12px; align-items:center;">
+                                    <div style="background:#FEF3C7; color:#B45309; padding:6px 15px; border-radius:30px; font-weight:bold; font-size:12px; border:1px solid #FDE68A;">🔥 ${aluno.streak} Dias</div>
+                                    <div style="background:#E0E7FF; color:#4F46E5; padding:6px 15px; border-radius:30px; font-weight:900; font-size:14px; border:1px solid #C7D2FE; box-shadow:0 2px 8px rgba(79,70,229,0.15);">⭐ ${aluno.xp} XP</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = htmlRanking;
+                } else {
+                    content.innerHTML = `<div class="ig-card" style="text-align:center; color:#e74c3c; padding:40px; font-weight:bold;">Erro ao carregar o ranking da base de dados.</div>`;
+                }
+            });
+        }
     },
 
     aprovarEnvio: (id) => {
         const s = Workspace.Ingles.state.submissions.find(x => x.id === id);
         if(!s) return;
         s.status = 'approved';
-        // 🚀 O SEGREDO: Injera a resposta do aluno na piscina global
         Workspace.Ingles.state.pool.unshift({
             id: 'pool_'+Date.now(), type: s.game, text: s.text, word: s.text, origin: 'student', student: s.student, timestamp: Date.now()
         });
@@ -306,7 +452,6 @@ Workspace.Ingles = {
     // ============================================================================
     // 🎮 OS 12 MOTORES DOS JOGOS (Totalmente Integrados no Workspace)
     // ============================================================================
-    
     abrirJogo: (id) => {
         const game = Workspace.Ingles.defaults.games.find(g => g.id === id);
         if(!game) return;
