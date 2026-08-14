@@ -288,7 +288,7 @@ Workspace.Ingles = {
                     </div>
                 </div>
                 <div class="ig-xp-badge">
-                    <span>🔥 <b id="ig-streakCount">1</b> dias</span>
+                    <span>🔥 <b id="ig-streakCount">1</b> dia(s)</span>
                     <span>⭐ <b id="ig-xpCount">0</b> XP</span>
                 </div>
             </div>
@@ -296,7 +296,7 @@ Workspace.Ingles = {
             <div id="ig-alunoView" style="display:none;">
                 <div style="padding: 30px 30px 0 30px;">
                     <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">O Baú está aberto! 🗝️</h1>
-                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um tesouro para desbloquear hoje. Tudo que você criar aqui, quando aprovado, vira material de estudo para outros alunos.</p>
+                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Jogue e aprenda. Se você acertar, além de contribuir para evolução da inteligência dos jogos, marcará pontos sendo posicionando no nosso ranking!</p>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
