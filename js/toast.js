@@ -104,8 +104,7 @@ window.Toast = {
         };
     },
 
-    // 🚀 O MOTOR DE CARTÕES INTERATIVOS (Aulas, Avaliações, Exercícios)
-    // Agora aceita uma "Ação" mágica que ocorre APÓS o clique no botão!
+   // 🚀 O MOTOR DE CARTÕES INTERATIVOS (Aulas, Avaliações, Exercícios)
     showInterativo: (dados, tipoTema, onConfirmAction = null) => {
         const container = document.getElementById('ws-toast-container');
         if (!container) Toast.init();
@@ -128,14 +127,18 @@ window.Toast = {
             <div class="toast-body">
                 ${dados.mensagemCorpo}
             </div>
-            <button class="toast-btn">OK 👍🏻</button>
+            <button class="toast-btn">Acessar Agora 🚀</button>
         `;
 
         const btn = toast.querySelector('.toast-btn');
+        let acaoExecutada = false; // Bloqueia duplos cliques e voos fantasma
+
         btn.onclick = async () => {
-            btn.innerText = "Agendando... ⏳";
+            if (acaoExecutada) return;
+            acaoExecutada = true;
+            btn.innerText = "A redirecionar... ⏳";
             
-            // 🚀 A MÁGICA: Se houver uma ação enviada pelo Alertas.js, executa-a AGORA!
+            // 🚀 A MÁGICA: Teletransporta o aluno diretamente para a Sala de Aula/Avaliação
             if (onConfirmAction) {
                 try { await onConfirmAction(); } catch(e) { console.error(e); }
             }
@@ -144,6 +147,16 @@ window.Toast = {
                 if (window.Workspace && Workspace.Alertas) Workspace.Alertas.atualizarInterface();
             });
         };
+        
+        // 🚀 O VOO AUTOMÁTICO: Se o aluno não clicar no aviso após 8 segundos, ele salta sozinho para o sininho!
+        setTimeout(() => {
+            if (toast.parentNode && !acaoExecutada) {
+                acaoExecutada = true; // Impede que o utilizador clique enquanto a carta voa
+                Toast.voarParaSininho(toast, () => {
+                    if (window.Workspace && Workspace.Alertas) Workspace.Alertas.atualizarInterface();
+                });
+            }
+        }, 8000);
         
         container.appendChild(toast);
     },

@@ -4,6 +4,7 @@ window.Workspace = window.Workspace || {};
 Workspace.Alertas = {
     notificacoesAtuais: [],
     idsConhecidos: new Set(),
+    primeiraBuscaConcluida: false, // 🚀 A CHAVE DO MISTÉRIO ADICIONADA AQUI
     
     // 🚀 NOVAS VARIÁVEIS DE MEMÓRIA PARA O "DETETIVE DE RETORNO"
     conexaoSSE: null, 
@@ -330,7 +331,7 @@ injetarCSS: () => {
         }
     },
 
-  buscarNotificacoes: async () => {
+ buscarNotificacoes: async () => {
         if (!Workspace.usuario || !Workspace.usuario.nome) return;
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
@@ -341,11 +342,11 @@ injetarCSS: () => {
                 const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
-                if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size > 0) {
+                // 🚀 A CORREÇÃO LÓGICA: Se não for o 1º segundo de login e houver novidade, mostra no ecrã!
+                if (Workspace.Alertas.primeiraBuscaConcluida && novas.length > 0) {
                     
                     novas.forEach((novaNoti, index) => {
                         setTimeout(async () => { 
-                            
                             const titulo = novaNoti.mensagem.split('"')[1] || 'Atividade'; 
 
                             // 1. AVALIAÇÕES (ESCRITA E ORAL)
@@ -353,8 +354,8 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Central de Avaliações",
-                                    mensagemCorpo: `Atenção! A avaliação <strong>"${titulo}"</strong> foi liberada. Acesse a Central de Avaliações para não perder o prazo!`
-                                }, 'avaliacao');
+                                    mensagemCorpo: `Atenção! A avaliação <strong>"${titulo}"</strong> foi liberada. Aceda para não perder o prazo!`
+                                }, 'avaliacao', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
                             // 2. AULAS ONLINE / SESSÕES AO VIVO
@@ -362,7 +363,7 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sala de Aula Online",
-                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.<br>🗓️ <i>Um alarme será criado automaticamente no seu Baú. Clique em "OK 👍🏻".!</i>`
+                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.`
                                 }, 'online', async () => {
                                     try {
                                         let tempoLembrete;
@@ -370,37 +371,19 @@ injetarCSS: () => {
                                             const partes = novaNoti.dataEvento.split('T');
                                             const dataPartes = partes[0].split('-');
                                             const horaPartes = partes[1].split(':');
-                                            
-                                            tempoLembrete = new Date(
-                                                parseInt(dataPartes[0], 10),     
-                                                parseInt(dataPartes[1], 10) - 1,  
-                                                parseInt(dataPartes[2], 10),      
-                                                parseInt(horaPartes[0], 10),      
-                                                parseInt(horaPartes[1], 10)       
-                                            );
+                                            tempoLembrete = new Date(parseInt(dataPartes[0], 10), parseInt(dataPartes[1], 10) - 1, parseInt(dataPartes[2], 10), parseInt(horaPartes[0], 10), parseInt(horaPartes[1], 10));
                                         } else {
-                                            tempoLembrete = new Date();
-                                            tempoLembrete.setHours(tempoLembrete.getHours() + 24);
+                                            tempoLembrete = new Date(); tempoLembrete.setHours(tempoLembrete.getHours() + 24);
                                         }
-
                                         const tempoDisparoMs = tempoLembrete.getTime();
-
-                                        const res = await Workspace.api('/workspace/bau/alarmes', 'POST', {
-                                            usuarioId: Workspace.usuario.id,
-                                            mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
-                                            tempoDisparo: tempoDisparoMs
-                                        }); 
-                                        
+                                        const res = await Workspace.api('/workspace/bau/alarmes', 'POST', { usuarioId: Workspace.usuario.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs }); 
                                         if (res && res.success && window.Workspace && Workspace.Bau) {
-                                            Workspace.Bau.alarmesAtivos.push({
-                                                id: res.id,
-                                                mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`,
-                                                tempoDisparo: tempoDisparoMs,
-                                                disparado: false
-                                            });
+                                            Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs, disparado: false });
                                             Workspace.Bau.atualizarCalendarioVisual();
                                         }
-                                    } catch (e) { console.error("Erro ao criar alarme automático", e); }
+                                    } catch (e) {}
+                                    // Teletransporte para a sessão!
+                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
                                 });
                             }
                             
@@ -409,25 +392,21 @@ injetarCSS: () => {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Sessão Online Atualizada ⚠️",
-                                    mensagemCorpo: `O(a) professor(a) fez alterações em "${titulo}". Não fique de fora, acompanhe o que mudou entrando na <strong>Sala de Acessos</strong>.<br>🗓️ <i>O lembrete no seu Baú foi atualizado automaticamente!</i>`
+                                    mensagemCorpo: `O(a) professor(a) fez alterações em "${titulo}". Acompanhe o que mudou na <strong>Sala de Acessos</strong>.`
                                 }, 'online', async () => {
-                                    if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
-                                        Workspace.Bau.carregarDadosDaNuvem();
-                                    }
+                                    if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) Workspace.Bau.carregarDadosDaNuvem();
+                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
                                 });
                             }
 
                             // 3. EXERCÍCIOS / TAREFAS
                             else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
                                 const ehProfessor = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
-                                
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: ehProfessor ? "Sala de Acessos 🖥️" : "Novo Exercício 📝",
-                                    mensagemCorpo: ehProfessor 
-                                        ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` 
-                                        : `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.!`
-                                }, 'tarefa');
+                                    mensagemCorpo: ehProfessor ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` : `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.`
+                                }, 'tarefa', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
                             // 4. MATERIAIS
@@ -436,51 +415,34 @@ injetarCSS: () => {
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Estante Virtual",
                                     mensagemCorpo: `Há um novo material na estante aguardando você: <strong>"${titulo}"</strong>.`
-                                }, 'material');
+                                }, 'material', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
-                            // 🚀 4.5. FEEDBACK DO PROFESSOR (NOVO)
+                            // 4.5. FEEDBACK DO PROFESSOR
                             else if (novaNoti.origem === 'feedback_tarefa') {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
                                     subtitulo: "Novo Feedback Recebido 💬",
-                                    mensagemCorpo: `O(a) professor(a) <strong>${novaNoti.remetenteNome}</strong> enviou um comentário sobre o seu exercício. Clique em OK para ler!`
-                                }, 'tarefa', async () => {
-                                    // Invoca a função do teletransporte mágico imediatamente!
-                                    Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
-                                });
+                                    mensagemCorpo: `O(a) professor(a) <strong>${novaNoti.remetenteNome}</strong> enviou um comentário sobre o seu exercício.`
+                                }, 'tarefa', async () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
-                            // ========================================================================
-                            // 🚀 5. POSTS, REAÇÕES, COMENTÁRIOS E CHAT (A CORREÇÃO ENTRA AQUI!)
-                            // ========================================================================
+                            // 5. POSTS E REAÇÕES
                             else {
-                                // Mostra o Toast na tela
                                 if (window.Toast && Toast.show) Toast.show(`🔔 ${novaNoti.remetenteNome} ${novaNoti.mensagem}`, 'info');
-                                
-                                // 🚀 CORREÇÃO 3: ATUALIZA TODOS OS SININHOS DA TELA PARA ABANAREM
-const bells = document.querySelectorAll('#ws-bell');
-bells.forEach(bell => { 
-    bell.classList.add('bell-ringing'); 
-    setTimeout(() => bell.classList.remove('bell-ringing'), 1000); 
-});
-
-// Força a atualização IMEDIATAMENTE 
-Workspace.Alertas.atualizarInterface();
+                                const bells = document.querySelectorAll('#ws-bell');
+                                bells.forEach(bell => { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); });
+                                Workspace.Alertas.atualizarInterface();
                             }
 
                         }, index * 1000); 
                     });
-                } else if (novas.length > 0 && Workspace.Alertas.idsConhecidos.size === 0) {
-                    // 🚀 SININHO OFFLINE RESOLVIDO: É o primeiro login e há histórico guardado!
-                    // Acende a bolinha vermelha sem precisar de fazer animações!
-                    Workspace.Alertas.atualizarInterface();
-                }
+                } 
                 
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
+                Workspace.Alertas.primeiraBuscaConcluida = true; // 🚀 O SISTEMA APRENDE! Nas próximas, ele mostra o ecrã.
                 
-                // Continua a atualizar as notificações silenciosas (se não existirem novas a animar)
-                if (novas.length === 0) Workspace.Alertas.atualizarInterface();
+                Workspace.Alertas.atualizarInterface();
             }
         } catch (e) {}
     },
