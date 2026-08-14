@@ -977,14 +977,15 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-    abrirGerenciador: async () => {
+   abrirGerenciador: async () => {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel Inteligente... ⏳</div>';
         try {
-            // 🚀 A INJEÇÃO DE INTELIGÊNCIA: Carrega os alunos em background para cálculo do Semáforo
-            if (!Workspace.Avaliacoes.todosAlunosCache) {
-                const resAlunos = await Workspace.api('/alunos', 'GET');
-                if (resAlunos && !resAlunos.error) Workspace.Avaliacoes.todosAlunosCache = resAlunos;
+            // 🚀 HIGIENE DE CACHE: Removemos o bloqueio 'if (!Workspace.Avaliacoes.todosAlunosCache)'.
+            // Agora, o Workspace procura SEMPRE os alunos frescos da base de dados, garantindo que as turmas editadas estão corretas!
+            const resAlunos = await Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
+            if (resAlunos && !resAlunos.error) {
+                Workspace.Avaliacoes.todosAlunosCache = resAlunos;
             }
 
             const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
