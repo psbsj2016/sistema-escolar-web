@@ -7,6 +7,7 @@ import './modulos/workspace/alertas.js';
 import './modulos/workspace/sidebar.js';
 import './modulos/workspace/avaliacoes.js';
 import './modulos/workspace/materiais.js';
+import './modulos/workspace/ingles.js'; 
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -232,6 +233,7 @@ Object.assign(Workspace, {
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
         if (Workspace.Materiais) Workspace.Materiais.init();
+        if (Workspace.Ingles) Workspace.Ingles.init(); // 🚀 INICIA O BAÚ DO INGLÊS
 
         document.addEventListener('click', (e) => {
             const menuContainer = document.getElementById('ws-menu-left-container');
@@ -285,7 +287,8 @@ Object.assign(Workspace, {
             'avaliacoes_oral': 'ws-avaliacoes-oral-container',
             'avaliacoes_online': 'ws-avaliacoes-online-container',
             'encontros_prof': 'ws-avaliacoes-prof-container', 
-            'materiais': 'ws-materiais-container'
+            'materiais': 'ws-materiais-container',
+            'ingles': 'ws-ingles-container'
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
@@ -1345,6 +1348,7 @@ Object.assign(Workspace, {
             { id: 'avaliacoes', titulo: 'Central de Avaliações', icone: '📑', tela: 'avaliacoes' },
             { id: 'materiais', titulo: 'Estante de Materiais', icone: '📚', tela: 'materiais' },
             { id: 'bau', titulo: 'Baú das Memórias (Lembretes)', icone: '🧰', tela: 'bau' },
+            { id: 'ingles', titulo: 'Baú do Inglês (Games)', icone: '🏴‍☠️', tela: 'ingles' },
             { id: 'configuracoes', titulo: 'Configurações', icone: '⚙️', tela: 'configuracoes' }
         ],
 
