@@ -281,10 +281,10 @@ Workspace.Ingles = {
         container.innerHTML = `
             <div class="ig-header">
                 <div class="ig-title">
-                    <div class="ig-title-icon">🏴‍☠️</div>
+                    <div class="ig-title-icon">🧰</div>
                     <div>
                         <h2 style="margin:0; font-size:22px; color:#0F172A;">Baú do Inglês</h2>
-                        <p style="margin:0; font-size:13px; color:#64748B;">Estudos gamificados em tempo real</p>
+                        <p style="margin:0; font-size:13px; color:#64748B;">Estude de forma divertida!</p>
                     </div>
                 </div>
                 <div class="ig-xp-badge">
@@ -564,7 +564,7 @@ Workspace.Ingles = {
         const tr = document.getElementById('picTrans').value.trim();
         const em = document.getElementById('picEmoji').value.trim() || '🖼️';
         if(!w) return Workspace.mostrarAviso('Digite a palavra', 'warning');
-        Workspace.Ingles.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'});
+        Workspace.Ingles.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Geral'});
         
         await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('imagens'); 
