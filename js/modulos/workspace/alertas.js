@@ -169,6 +169,20 @@ Workspace.Alertas = {
                 }
             }
 
+            // 🚀 O ATUALIZADOR INSTANTÂNEO DO BAÚ DO INGLÊS (Algoritmo Coletivo)
+            if (data.type === 'BAU_INGLES_UPDATE') {
+                if (window.Workspace && Workspace.Ingles && Workspace.Ingles.loadDados) {
+                    // Vai à nuvem buscar a nova palavra/frase/envio silenciosamente
+                    Workspace.Ingles.loadDados().then(() => {
+                        // Se o aluno ou professor estiver com o Baú aberto neste exato segundo, atualiza os dados gráficos instantaneamente!
+                        const painelAberto = document.getElementById('ws-ingles-container');
+                        if (painelAberto && painelAberto.style.display !== 'none') {
+                            Workspace.Ingles.renderizarVisualizacao();
+                        }
+                    });
+                }
+            }
+
             // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
