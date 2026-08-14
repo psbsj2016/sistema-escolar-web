@@ -552,7 +552,7 @@ Workspace.Ingles = {
         const o2 = document.getElementById('qOpt2').value.trim();
         if(!q || !o1 || !o2) return Workspace.mostrarAviso('Preencha a pergunta e as opções', 'warning');
         
-        Workspace.Ingles.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1, o2], correct:1, explanation:'Adicionado pelo professor', level:'B1'});
+        Workspace.Ingles.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1, o2], correct:1, explanation:'Parabéns, você acertou!', level:'B1'});
         
         await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('biblioteca'); 
