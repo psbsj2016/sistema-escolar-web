@@ -77,38 +77,34 @@ Workspace.Ingles = {
         Workspace.Ingles.renderizarVisualizacao();
     },
 
-    // ============================================================================
-    // 🧠 SISTEMA DE MEMÓRIA E INTEGRAÇÃO MONGODB (ALGORITMO VIVO)
-    // ============================================================================
-// ============================================================================
+   // ============================================================================
     // 🧠 SISTEMA DE MEMÓRIA E INTEGRAÇÃO MONGODB (ALGORITMO VIVO)
     // ============================================================================
     loadDados: async () => {
         try {
-            // 1. Puxa o cérebro global da escola da Base de Dados (Nuvem)
-            const res = await Workspace.api('/workspace/ingles/dados', 'GET');
+            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+            // 🚀 Puxa o cérebro global enviando a Escola exata na rota
+            const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`, 'GET');
             
-            // 🚀 A CORREÇÃO MESTRA: Confirmação à prova de bala baseada na existência da lista!
+            // 🛡️ Prevenção Antimagnética: Confirma que o MongoDB enviou dados válidos
             if (res && res.success && res.dados && res.dados.words) {
                 const d = res.dados;
                 Workspace.Ingles.state.words = Array.isArray(d.words) ? d.words : Workspace.Ingles.defaults.words;
-                Workspace.Ingles.state.phrases = Array.isArray(d.phrases) ? d.phrases : [];
-                Workspace.Ingles.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
-                Workspace.Ingles.state.pictures = Array.isArray(d.pictures) ? d.pictures : [];
+                Workspace.Ingles.state.phrases = Array.isArray(d.phrases) ? d.phrases : Workspace.Ingles.defaults.phrases;
+                Workspace.Ingles.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : Workspace.Ingles.defaults.quizzes;
+                Workspace.Ingles.state.pictures = Array.isArray(d.pictures) ? d.pictures : Workspace.Ingles.defaults.pictures;
                 Workspace.Ingles.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
                 Workspace.Ingles.state.pool = Array.isArray(d.pool) ? d.pool : [];
-            } 
-            else if (Workspace.Ingles.state.words.length === 0) {
-                // Se a nuvem estiver vazia E o nosso ecrã estiver vazio, aí sim injetamos a Semente Básica nativa!
-                Workspace.Ingles.state.words = [...Workspace.Ingles.defaults.words];
-                Workspace.Ingles.state.phrases = [...Workspace.Ingles.defaults.phrases];
-                Workspace.Ingles.state.quizzes = [...Workspace.Ingles.defaults.quizzes];
-                Workspace.Ingles.state.pictures = [...Workspace.Ingles.defaults.pictures];
+            } else {
+                // Semente Básica de Fábrica para escolas virgens
+                Workspace.Ingles.state.words = Workspace.Ingles.defaults.words;
+                Workspace.Ingles.state.phrases = Workspace.Ingles.defaults.phrases;
+                Workspace.Ingles.state.quizzes = Workspace.Ingles.defaults.quizzes;
+                Workspace.Ingles.state.pictures = Workspace.Ingles.defaults.pictures;
                 Workspace.Ingles.state.submissions = [];
                 Workspace.Ingles.state.pool = [];
             }
 
-            // 2. XP e Streak continuam armazenados no telemóvel do aluno para leitura visual super-rápida
             const userK = `ws_ingles_user_${Workspace.usuario.id}`;
             Workspace.Ingles.state.xp = parseInt(localStorage.getItem(`${userK}_xp`) || '0');
             Workspace.Ingles.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || '1');
@@ -118,21 +114,26 @@ Workspace.Ingles = {
     },
 
     saveDados: async () => {
-        // Atualiza a tela do aluno instantaneamente
+        // Salva localmente para respostas instantâneas (UX)
         const userK = `ws_ingles_user_${Workspace.usuario.id}`;
         localStorage.setItem(`${userK}_xp`, Workspace.Ingles.state.xp);
         localStorage.setItem(`${userK}_streak`, Workspace.Ingles.state.streak);
 
         try {
-            // 🚀 A MÁGICA DO RANKING: Envia a pontuação de XP para a Base de Dados Oficial!
+            // 🚀 Envia o XP para a base de dados com Identificação Completa!
             if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
                 Workspace.api('/workspace/ingles/xp', 'POST', { 
-                    xp: Workspace.Ingles.state.xp, streak: Workspace.Ingles.state.streak 
+                    userId: Workspace.usuario.id,
+                    escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                    nome: Workspace.usuario.nome || Workspace.usuario.login,
+                    xp: Workspace.Ingles.state.xp, 
+                    streak: Workspace.Ingles.state.streak 
                 }).catch(() => {});
             }
 
-            // 🚀 A MÁGICA DA PISCINA GLOBAL: Envia todas as novidades do Professor e Envios dos Alunos para a Nuvem
+            // 🚀 Envia as Palavras e Envios para a base de dados com Identificação Completa!
             await Workspace.api('/workspace/ingles/dados', 'PUT', {
+                escolaId: Workspace.usuario.escolaId || 'DEFAULT',
                 words: Workspace.Ingles.state.words,
                 phrases: Workspace.Ingles.state.phrases,
                 quizzes: Workspace.Ingles.state.quizzes,
