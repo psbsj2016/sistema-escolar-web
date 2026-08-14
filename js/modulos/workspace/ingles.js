@@ -564,7 +564,7 @@ Workspace.Ingles = {
         const tr = document.getElementById('picTrans').value.trim();
         const em = document.getElementById('picEmoji').value.trim() || '🖼️';
         if(!w) return Workspace.mostrarAviso('Digite a palavra', 'warning');
-        Workspace.Ingles.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Geral'});
+        Workspace.Ingles.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'});
         
         await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('imagens'); 
@@ -945,12 +945,12 @@ Workspace.Ingles = {
                 <p style="color:#64748B;font-size:14px; font-weight:bold;">Categoria: <span style="color:#4F46E5;">${pic.category || 'Geral'}</span></p>
                 <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px;">
                     <p style="color:white; font-size:14px; font-weight:bold; margin-bottom:15px;">Como se chama isto em inglês?</p>
-                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; box-shadow:0 0 15px rgba(16,185,129,0.4); border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.ouvirPicturePop('${pic.word}')">🎤 Falar o Nome ao Microfone</button>
+                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; box-shadow:0 0 15px rgba(16,185,129,0.4); border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.ouvirPicturePop('${pic.word}')">🎤 Falar o nome ao microfone</button>
                     
                     <div id="ig-speechResult" style="margin-top:15px;"></div>
                     
                     <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                        <input id="ig-input" class="ig-input" placeholder="Ou se fores tímido(a), digita aqui..." style="text-align:center; font-weight:bold;">
+                        <input id="ig-input" class="ig-input" placeholder="Ou digita aqui..." style="text-align:center; font-weight:bold;">
                         <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="
                             const sim = Workspace.Ingles.similaridade(document.getElementById('ig-input').value, '${pic.word}');
                             if(sim >= 0.9) Workspace.Ingles.envioGenerico('picturePop', '${pic.word}', 75);
