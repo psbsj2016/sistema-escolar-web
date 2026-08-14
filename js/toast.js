@@ -6,7 +6,7 @@ window.Toast = {
         
         const style = document.createElement('style');
         style.innerHTML = `
-            #ws-toast-container { position: fixed; top: 20px; right: 20px; z-index: 999999; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
+            #ws-toast-container { position: fixed; top: 20px; right: 20px; z-index: 2147483647; display: flex; flex-direction: column; gap: 15px; pointer-events: none; }
             .ws-toast { background: white; color: #2c3e50; min-width: 280px; max-width: 380px; padding: 20px; border-radius: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); font-family: 'Poppins', sans-serif; position: relative; overflow: hidden; transform: translateX(120%); animation: slideInRight 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: auto; border: 1px solid #e2e8f0; }
             .ws-toast.hiding { animation: slideOutRight 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards !important; }
             
