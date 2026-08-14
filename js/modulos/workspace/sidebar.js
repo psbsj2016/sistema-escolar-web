@@ -708,13 +708,13 @@ verFotoChat: () => {
         if (!indicator) return;
 
         if (isTyping) {
-            indicator.innerText = `${Workspace.Sidebar.escapeHTML(autorNome)} está a escrever...`;
+            indicator.innerText = `${Workspace.Sidebar.escapeHTML(autorNome)} está digitando...`;
             indicator.style.display = 'block';
             
             clearTimeout(Workspace.Sidebar.typingUiTimer);
             Workspace.Sidebar.typingUiTimer = setTimeout(() => {
                 indicator.style.display = 'none';
-            }, 3000);
+            }, 5000);
         } else {
             indicator.style.display = 'none';
         }
