@@ -281,27 +281,18 @@ Workspace.Materiais = {
         container.innerHTML = html;
     },
 
-    renderizarAluno: (termoBusca = '') => {
+   renderizarAluno: (termoBusca = '') => {
         const container = document.getElementById('ws-materiais-grid-aluno');
         if (!container) return;
 
        let materiaisPermitidos = Workspace.Materiais.listaMateriais.filter(m => {
-            // Se for global em formato String ou Lista, permite a entrada!
+            // 🚀 O FILTRO ABSOLUTO NA BIBLIOTECA
             if (m.destino === 'global' || (Array.isArray(m.destino) && m.destino.includes('global'))) return true;
             
-            const u = Workspace.usuario;
-            let minhasTurmas = [].concat(u.turmas || [], u.turma || [], u.turmaId || []);
-            const turmasStr = minhasTurmas.map(t => String(t.id || t).toLowerCase().trim());
+            let destinosArr = Array.isArray(m.destino) ? m.destino : [m.destino];
+            let nomesArr = Array.isArray(m.destinoNome) ? m.destinoNome : [m.destinoNome];
             
-            // 🚀 O DETETIVE MÚLTIPLO: Se o destino for uma lista (novo formato)
-            if (Array.isArray(m.destino)) {
-                return m.destino.some(d => turmasStr.includes(String(d).toLowerCase().trim()));
-            } else {
-                // Mantém retrocompatibilidade com materiais antigos guardados como String
-                const destId = String(m.destino).toLowerCase().trim();
-                const destNome = String(m.destinoNome || '').toLowerCase().trim();
-                return turmasStr.includes(destId) || turmasStr.includes(destNome);
-            }
+            return destinosArr.some((dest, idx) => Workspace.verificarTurma(Workspace.usuario, dest, nomesArr[idx] || ''));
         });
 
         if (termoBusca.trim() !== '') {
@@ -319,8 +310,6 @@ Workspace.Materiais = {
             const icone = Workspace.Materiais.obterIconePorTipo(mat.tipoFicheiro || mat.nomeOriginal);
             const dataFormatada = new Date(mat.dataCriacao).toLocaleDateString('pt-BR');
             let linkDownload = mat.url.includes('/upload/') ? mat.url.replace('/upload/', '/upload/fl_attachment/') : mat.url;
-
-            // 🚀 VACINA CONTRA O ERRO DE SINTAXE AQUI TAMBÉM!
             const tituloSeguro = Workspace.escapeHTML(mat.titulo || 'Material').replace(/'/g, "\\'");
 
             html += `

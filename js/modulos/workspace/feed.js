@@ -1112,26 +1112,13 @@ Workspace.Feed = {
                     const tipoUsuario = Workspace.usuario.tipo;
                     
                     if (tipoUsuario === 'Professor' || tipoUsuario === 'Gestor') {
-                        // 🔓 PASSE LIVRE: Professores e Gestores veem tudo
                         turmas.forEach(t => {
                             selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
                         });
                     } else {
-                        // 🔒 ACESSO RESTRITO: Aluno só vê a sua própria turma
-                        const u = Workspace.usuario;
-                        let minhasTurmas = [];
-                        if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
-                        if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
-                        if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
-                        
-                        const turmasStr = minhasTurmas.map(t => String(t.id || t).toLowerCase().trim());
-                        
+                        // 🚀 O FILTRO ABSOLUTO PARA OS ALUNOS NÃO VEREM O QUE NÃO DEVEM
                         turmas.forEach(t => {
-                            const idTurma = String(t.id).toLowerCase().trim();
-                            const nomeTurma = String(t.nome).toLowerCase().trim();
-                            
-                            // Se a turma for a do aluno, adiciona à lista
-                            if (turmasStr.includes(idTurma) || turmasStr.includes(nomeTurma)) {
+                            if (Workspace.verificarTurma(Workspace.usuario, t.id, t.nome)) {
                                 selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
                             }
                         });

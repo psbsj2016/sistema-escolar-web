@@ -74,14 +74,26 @@ Workspace.Sidebar = {
     typingTimer: null,
     typingUiTimer: null,
 
-    init: async () => {
+  init: async () => {
         console.log("📊 Motor do Menu Lateral com Chat Avançado iniciado.");
-        Workspace.Sidebar.injetarCSSModais(); // 🚀 A NOVA BLINDAGEM VISUAL AQUI!
+        
+        // 🚀 VACINA DE AUTO-CURA DO CACHE DO ALUNO:
+        // Se a sessão estiver com lixo, puxa o aluno fresco da base de dados sem precisar de Logout!
+        if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno' && Workspace.usuario.alunoRefId) {
+            Workspace.api(`/alunos/${Workspace.usuario.alunoRefId}`, 'GET').then(alunoFresco => {
+                if (alunoFresco && !alunoFresco.error) {
+                    Workspace.usuario.turma = alunoFresco.turma;
+                    Workspace.usuario.turmas = alunoFresco.turmas;
+                    Workspace.usuario.curso = alunoFresco.curso;
+                    localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+                }
+            });
+        }
+
+        Workspace.Sidebar.injetarCSSModais();
         Workspace.Sidebar.initExtraChatTriggers();
         await Workspace.Sidebar.carregarTurmas();
         await Workspace.Sidebar.carregarTarefas();
-        
-        // 🚀 O NOVO GATILHO: Inicia o radar de presença do aluno
         Workspace.Sidebar.iniciarHeartbeatOnline();
     },
 
@@ -254,27 +266,19 @@ Workspace.Sidebar = {
 
         try {
             let turmas = await Workspace.api('/turmas', 'GET');
-            
             if (!turmas || turmas.error || turmas.length === 0) {
                 container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Nenhuma turma encontrada.</div>';
                 return;
             }
 
             if (Workspace.usuario.tipo === 'Aluno') {
-                let minhasTurmas = [];
-                const u = Workspace.usuario;
-                if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
-                if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
-                if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
-                if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
-                
-                const turmasDoAlunoSeguras = minhasTurmas.filter(t => t).map(t => String(t).toLowerCase().trim());
-
+                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI
+                let turmasExtras = [];
                 if (Workspace.Feed && Workspace.Feed.postsCache) {
                     Workspace.Feed.postsCache.forEach(post => {
                         if (post.destino && post.destino !== 'global') {
-                            turmasDoAlunoSeguras.push(String(post.destino).toLowerCase().trim());
-                            turmasDoAlunoSeguras.push(String(post.destinoNome).toLowerCase().trim());
+                            turmasExtras.push(String(post.destino).toLowerCase().trim());
+                            turmasExtras.push(String(post.destinoNome).toLowerCase().trim());
                         }
                     });
                 }
@@ -282,7 +286,7 @@ Workspace.Sidebar = {
                 turmas = turmas.filter(t => {
                     const idGeral = String(t.id).toLowerCase().trim();
                     const nomeGeral = String(t.nome).toLowerCase().trim();
-                    return turmasDoAlunoSeguras.includes(idGeral) || turmasDoAlunoSeguras.includes(nomeGeral);
+                    return Workspace.verificarTurma(Workspace.usuario, t.id, t.nome) || turmasExtras.includes(idGeral) || turmasExtras.includes(nomeGeral);
                 });
             }
 
@@ -296,11 +300,9 @@ Workspace.Sidebar = {
                 const nomeTurma = Workspace.Sidebar.escapeHTML(t.nome);
                 let avatarMenu = `<div style="width: 30px; height: 30px; min-width: 30px; border-radius: 50%; background: #8e44ad; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0;">#</div>`;
                 if(t.foto) {
-                    // 🚀 Aplicamos a mesma blindagem de fundo branco, centralização absoluta e quebra de cache no menu lateral
                     const cacheBuster = new Date().getTime();
                     const urlLimpa = t.foto.split('?')[0];
                     const urlFinal = `${urlLimpa}?v=${cacheBuster}`;
-                    
                     avatarMenu = `<div style="width: 30px; height: 30px; min-width: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd; background: #ffffff; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0; margin: 0;"><img src="${urlFinal}" style="width:100% !important; height:100% !important; object-fit:cover !important; object-position:center !important; background-color:#ffffff !important; display:block !important; margin:0 !important; padding:0 !important; border:none !important; border-radius:50% !important;"></div>`;
                 }
 
@@ -312,9 +314,7 @@ Workspace.Sidebar = {
                 `;
             });
             container.innerHTML = html;
-        } catch (e) {
-            container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>';
-        }
+        } catch (e) { container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>'; }
     },
 
   // ============================================================================
@@ -1205,21 +1205,8 @@ verFotoChat: () => {
             let tarefas = eventos.filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
 
             if (Workspace.usuario.tipo === 'Aluno') {
-                let minhasTurmas = [];
-                const u = Workspace.usuario;
-                if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
-                if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
-                if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
-                if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
-                
-                const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t).toLowerCase().trim());
-
-                tarefas = tarefas.filter(t => {
-                    if (!t.turma || String(t.turma).toLowerCase().trim() === 'global') return true;
-                    const matchId = turmasSeguras.includes(String(t.turma).toLowerCase().trim());
-                    const matchNome = t.turmaNome ? turmasSeguras.includes(String(t.turmaNome).toLowerCase().trim()) : false;
-                    return matchId || matchNome;
-                });
+                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI TAMBÉM
+                tarefas = tarefas.filter(t => Workspace.verificarTurma(Workspace.usuario, t.turma, t.turmaNome));
             }
 
             if (tarefas.length === 0) {
@@ -1232,16 +1219,11 @@ verFotoChat: () => {
 
             let html = '';
             tarefas.forEach(t => {
-                // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO
                 const dataLimpa = t.data ? t.data.split('T')[0] : '';
                 const partes = dataLimpa.split('-');
                 const dataFormatada = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
-                
-                // Forçamos o meio-dia (T12:00:00) para que o JS nunca recue para o dia anterior nos cálculos!
                 const dataObj = new Date(dataLimpa + 'T12:00:00');
-                const hoje = new Date();
-                hoje.setHours(0,0,0,0);
-                
+                const hoje = new Date(); hoje.setHours(0,0,0,0);
                 const passou = dataObj < hoje;
                 const corEstado = passou ? '#e74c3c' : '#27ae60';
                 const fundoEstado = passou ? '#fdf2f2' : '#eafaf1';
@@ -1275,9 +1257,7 @@ verFotoChat: () => {
                 `;
             });
             container.innerHTML = html;
-        } catch (e) {
-            container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color:#e74c3c; font-size:14px; text-align:center;">Erro ao carregar exercícios.</div>';
-        }
+        } catch (e) { container.innerHTML = '<div style="grid-column: 1 / -1; padding: 20px; color:#e74c3c; font-size:14px; text-align:center;">Erro ao carregar exercícios.</div>'; }
     },
 
     abrirModalTarefa: async (eventoId) => {

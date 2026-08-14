@@ -1,5 +1,33 @@
 window.Workspace = window.Workspace || {};
 
+// 🚀 O MOTOR ABSOLUTO DE VERIFICAÇÃO DE TURMAS (À Prova de Falhas e Fantasmas)
+if (!Workspace.verificarTurma) {
+    Workspace.verificarTurma = (aluno, destinoId, destinoNome) => {
+        if (!aluno) return false;
+        const dId = String(destinoId || '').toLowerCase().trim();
+        const dNome = String(destinoNome || '').toLowerCase().trim();
+        if (dId === 'global') return true;
+        if (!dId && !dNome) return false;
+
+        let turmas = [];
+        const extrato = (v) => {
+            if (!v) return;
+            if (Array.isArray(v)) v.forEach(extrato);
+            else if (typeof v === 'object') {
+                if (v.id) turmas.push(String(v.id).toLowerCase().trim());
+                if (v.nome) turmas.push(String(v.nome).toLowerCase().trim());
+            } else turmas.push(String(v).toLowerCase().trim());
+        };
+        
+        extrato(aluno.turmas); 
+        extrato(aluno.turma); 
+        extrato(aluno.turmaId); 
+        extrato(aluno.turmaNome);
+        
+        return (dId && turmas.includes(dId)) || (dNome && turmas.includes(dNome));
+    };
+}
+
 Workspace.Avaliacoes = {
     avaliacoesDisponiveis: [],
     avaliacoesGerenciadorCache: [],
@@ -240,21 +268,11 @@ Workspace.Avaliacoes = {
                     if (idAtivo) {
                         const provaAtualizada = avaliacoesNovas.find(a => a.id === idAtivo);
                         
-                        // 🚀 LÓGICA BLINDADA DE TURMAS (Igual à do Lobby para o radar não se confundir)
+                        
+                        // 🚀 LÓGICA BLINDADA DE TURMAS: Usa o Motor Absoluto!
                         let isParaMim = false;
                         if (provaAtualizada) {
-                            let minhasTurmas = [];
-                            const u = Workspace.usuario;
-                            if (u.turmas) minhasTurmas = minhasTurmas.concat(u.turmas);
-                            if (u.turma) minhasTurmas = minhasTurmas.concat(u.turma);
-                            if (u.turmaId) minhasTurmas = minhasTurmas.concat(u.turmaId);
-                            if (u.turmaNome) minhasTurmas = minhasTurmas.concat(u.turmaNome);
-                            
-                            const turmasSeguras = minhasTurmas.filter(t => t).map(t => String(t.id || t).toLowerCase().trim());
-                            const destinoLimpo = provaAtualizada.destino ? String(provaAtualizada.destino).toLowerCase().trim() : 'global';
-                            const destinoNomeLimpo = provaAtualizada.destinoNome ? String(provaAtualizada.destinoNome).toLowerCase().trim() : '';
-                            
-                            isParaMim = (destinoLimpo === 'global') || turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
+                            isParaMim = Workspace.verificarTurma(Workspace.usuario, provaAtualizada.destino, provaAtualizada.destinoNome);
                         }
                         
                         if (!provaAtualizada || provaAtualizada.status !== 'ativa' || !isParaMim) {
@@ -396,24 +414,14 @@ Workspace.Avaliacoes = {
      const avalAtivas = Workspace.Avaliacoes.avaliacoesDisponiveis.filter(a => {
             if (a.tipo !== 'online' && a.status !== 'ativa') return false;
             
-            // 🚀 A BARREIRA DE OCULTAMENTO (BLINDADA)
-            // Verifica tanto o ID de Login como o ID da Ficha do Aluno (alunoRefId)
+            // 🚀 A BARREIRA DE OCULTAMENTO
             const meuIdLogin = String(Workspace.usuario.id);
             const meuIdMatricula = Workspace.usuario.alunoRefId ? String(Workspace.usuario.alunoRefId) : meuIdLogin;
+            if (a.ocultos && (a.ocultos.includes(meuIdLogin) || a.ocultos.includes(meuIdMatricula))) return false; 
             
-            if (a.ocultos && (a.ocultos.includes(meuIdLogin) || a.ocultos.includes(meuIdMatricula))) {
-                return false; // Corta o acesso instantaneamente!
-            }
-
-            const destinoLimpo = a.destino ? String(a.destino).toLowerCase().trim() : 'global';
-            
-            // 🚀 O SEGREDO VIP: Verifica se o aluno é convidado especial da sessão!
+            // 🚀 O FILTRO ABSOLUTO DE TURMA E VIP
             const souConvidado = a.convidados && a.convidados.some(c => String(c.id) === String(Workspace.usuario.id));
-            
-            if (destinoLimpo === 'global' || souConvidado) return true;
-            
-            const destinoNomeLimpo = a.destinoNome ? String(a.destinoNome).toLowerCase().trim() : '';
-            return turmasSeguras.includes(destinoLimpo) || (destinoNomeLimpo && turmasSeguras.includes(destinoNomeLimpo));
+            return Workspace.verificarTurma(Workspace.usuario, a.destino, a.destinoNome) || souConvidado;
         });
 
         const escritas = avalAtivas.filter(a => a.tipo === 'escrita');
@@ -981,8 +989,7 @@ Workspace.Avaliacoes = {
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel Inteligente... ⏳</div>';
         try {
-            // 🚀 HIGIENE DE CACHE: Removemos o bloqueio 'if (!Workspace.Avaliacoes.todosAlunosCache)'.
-            // Agora, o Workspace procura SEMPRE os alunos frescos da base de dados, garantindo que as turmas editadas estão corretas!
+            // 🚀 HIGIENE DE CACHE: O Workspace procura SEMPRE os alunos frescos da base de dados!
             const resAlunos = await Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
             if (resAlunos && !resAlunos.error) {
                 Workspace.Avaliacoes.todosAlunosCache = resAlunos;
@@ -996,13 +1003,12 @@ Workspace.Avaliacoes = {
                 Workspace.Avaliacoes.renderizarListaGerenciador();
             }
         } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
-    },
+    }, // <--- 🚨 ESTA VÍRGULA E CHAVETA SÃO VITAIS!
 
-  renderizarListaGerenciador: (termoBusca = null) => {
+    renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
         if (!container) return;
 
-        // 1. LÓGICA DE MANUTENÇÃO DE PESQUISA
         if (termoBusca === null) {
             const inputAtual = document.getElementById('ws-busca-avaliacoes');
             termoBusca = inputAtual ? inputAtual.value : '';
@@ -1012,13 +1018,9 @@ Workspace.Avaliacoes = {
         const contexto = Workspace.Avaliacoes.contextoAtual;
         const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
 
-        // 2. FILTRAGEM DE ABAS E PESQUISA
         if (contexto === 'encontros') {
-            if (abaAtiva === 'ativas') {
-                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status !== 'arquivada');
-            } else {
-                avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status === 'arquivada');
-            }
+            if (abaAtiva === 'ativas') avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status !== 'arquivada');
+            else avaliacoes = avaliacoes.filter(a => a.tipo === 'online' && a.status === 'arquivada');
         } else {
             avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
         }
@@ -1032,7 +1034,6 @@ Workspace.Avaliacoes = {
             });
         }
 
-        // 3. DESENHO DAS ABAS DE NAVEGAÇÃO
         let abasHtml = '';
         if (contexto === 'encontros') {
             abasHtml = `
@@ -1043,7 +1044,6 @@ Workspace.Avaliacoes = {
             `;
         }
 
-        // 4. BARRA DE FERRAMENTAS (AÇÕES EM MASSA)
         const topBar = `
             ${abasHtml}
             <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
@@ -1056,7 +1056,6 @@ Workspace.Avaliacoes = {
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
                     <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título ou turma..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
                 </div>
-                
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
                     ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>` : ''}
@@ -1069,7 +1068,6 @@ Workspace.Avaliacoes = {
             return;
         }
 
-        // 5. CONSTRUÇÃO DOS CARTÕES
         const htmlLista = avaliacoes.map(a => {
             let icone = '🖥️'; 
             if (a.tipo === 'escrita') icone = '✍️'; 
@@ -1077,11 +1075,9 @@ Workspace.Avaliacoes = {
 
             let alunosSessao = [];
             if (Workspace.Avaliacoes.todosAlunosCache) {
+                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI! Garante que apenas alunos da turma exata aparecem.
                 const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
-                    const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
-                    const destId = String(a.destino).toLowerCase().trim();
-                    const destNome = String(a.destinoNome || '').toLowerCase().trim();
-                    return a.destino === 'global' || turmasStr.includes(destId) || turmasStr.includes(destNome);
+                    return Workspace.verificarTurma(aluno, a.destino, a.destinoNome);
                 });
                 
                 alunosSessao = [...alunosDaTurma];
@@ -1099,9 +1095,6 @@ Workspace.Avaliacoes = {
             const presencasCount = presencasReais.length;
             const faltam = totalAlunos - presencasCount;
 
-            // ================================================================
-            // 📂 MODO 1: CARTÃO DE RELATÓRIO (QUANDO ESTÁ ARQUIVADA)
-            // ================================================================
             if (a.status === 'arquivada') {
                 const dArquivada = new Date(a.ultimaAtualizacao);
                 const dataArqFormatada = `${dArquivada.toLocaleDateString('pt-BR')} às ${dArquivada.getHours().toString().padStart(2, '0')}h${dArquivada.getMinutes().toString().padStart(2, '0')}`;
@@ -1110,12 +1103,7 @@ Workspace.Avaliacoes = {
                 const ausentes = [];
                 
                 alunosSessao.forEach(aluno => {
-                    // 🚀 A CORREÇÃO MÁGICA: Comparação blindada (Converte para String e procura também pelo nome)
-                    const acessou = presencasReais.some(e => 
-                        String(e.alunoId) === String(aluno.id) || 
-                        (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim())
-                    );
-
+                    const acessou = presencasReais.some(e => String(e.alunoId) === String(aluno.id) || (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim()));
                     if (acessou) presentes.push(aluno);
                     else ausentes.push(aluno);
                 });
@@ -1133,20 +1121,16 @@ Workspace.Avaliacoes = {
 
                 return `
                 <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
-                    
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;">
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">📂 ${a.titulo} (Relatório de Sessão)</h4>
-                            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">
-                                Arquivado em: <span style="color:#e67e22;">${dataArqFormatada}</span> &nbsp;|&nbsp; 👥 Turma: <span style="color:#8e44ad;">${a.destinoNome || 'Global'}</span>
-                            </div>
+                            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Arquivado em: <span style="color:#e67e22;">${dataArqFormatada}</span> &nbsp;|&nbsp; 👥 Turma: <span style="color:#8e44ad;">${a.destinoNome || 'Global'}</span></div>
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button class="ws-btn" style="background:#f0f2f5; color:#2c3e50; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarSessaoOnline('${a.id}', 'ativa')">📂 Desarquivar</button>
                             <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
                         </div>
                     </div>
-                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
                         <div>
                             <h5 style="margin: 0 0 10px 0; color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">Presentes (${presentes.length})</h5>
@@ -1158,53 +1142,33 @@ Workspace.Avaliacoes = {
                         </div>
                     </div>
                 </div>`;
-            } 
-            
-            // ================================================================
-            // 🟢 MODO 2: CARTÃO DE GESTÃO (QUANDO ESTÁ ATIVA)
-            // ================================================================
-            else {
-                let corStatus = '#27ae60';
-                let textoStatus = 'Online';
+            } else {
+                let corStatus = '#27ae60'; let textoStatus = 'Online';
 
                 if (a.status === 'ativa') {
                     if (a.tipo === 'online') {
-                        if (totalAlunos === 0) {
-                            textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db';
-                        } else if (presencasCount === 0) {
-                            textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60';
-                        } else if (presencasCount >= totalAlunos) {
-                            textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c';
-                        } else {
-                            textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12';
-                        }
-                    } else {
-                        corStatus = '#27ae60'; textoStatus = 'Online';
-                    }
+                        if (totalAlunos === 0) { textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db'; } 
+                        else if (presencasCount === 0) { textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60'; } 
+                        else if (presencasCount >= totalAlunos) { textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c'; } 
+                        else { textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12'; }
+                    } else { corStatus = '#27ae60'; textoStatus = 'Online'; }
                 }
 
-               const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
+                const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
                 let dataApresentada = '';
                 if (a.dataAgendada && a.dataAgendada.includes('T')) {
-                    // Separa o texto no "T" -> [0] é a Data, [1] é a Hora
                     const partesTempo = a.dataAgendada.split('T'); 
                     const partesData = partesTempo[0].split('-');
-                    
-                    // Extrai apenas os primeiros 5 caracteres da hora (ex: "14:30")
                     const horaExata = partesTempo[1].substring(0, 5); 
-                    
-                    if(partesData.length === 3) {
-                        dataApresentada = `📅 Agendada para: ${partesData[2]}/${partesData[1]}/${partesData[0]} às ${horaExata}`;
-                    }
+                    if(partesData.length === 3) dataApresentada = `📅 Agendada para: ${partesData[2]}/${partesData[1]}/${partesData[0]} às ${horaExata}`;
                 }
 
-               let btnEntrarSala = '';
+                let btnEntrarSala = '';
                 if (a.tipo === 'online' && a.linkSala) {
                     let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
                     btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
                 }
 
-                // 🚀 INTELIGÊNCIA GERAL: O botão agora existe para Avaliações Escritas, Orais e Online!
                 let btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
 
                 return `
@@ -1222,7 +1186,6 @@ Workspace.Avaliacoes = {
                             </div>
                         </div>
                     </div>
-                    
                     <div style="display:flex; gap: 10px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
                         ${btnEntrarSala}
                         ${btnGestao}
@@ -1236,8 +1199,7 @@ Workspace.Avaliacoes = {
         
         const inputNovo = document.getElementById('ws-busca-avaliacoes');
         if (inputNovo && termoBusca !== '') {
-            inputNovo.focus();
-            const val = inputNovo.value; inputNovo.value = ''; inputNovo.value = val;
+            inputNovo.focus(); const val = inputNovo.value; inputNovo.value = ''; inputNovo.value = val;
         }
     },
 
@@ -1368,13 +1330,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             
             let alunosLista = [];
 
-            if (Workspace.Avaliacoes.todosAlunosCache) {
-                const nomeTurmaProcurada = String(prova.destinoNome).toLowerCase().trim();
+          if (Workspace.Avaliacoes.todosAlunosCache) {
+                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI TAMBÉM!
                 alunosLista = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
-                    const turmasStr = [].concat(aluno.turmas || [], aluno.turma || [], aluno.turmaId || []).map(t => String(t).toLowerCase().trim());
-                    const idProcurado = String(destinoId).toLowerCase().trim();
-                    const ehDaTurma = destinoId === 'global' || turmasStr.includes(idProcurado) || turmasStr.includes(nomeTurmaProcurada);
-                    const ehConvidado = prova.convidados && prova.convidados.some(c => c.id === aluno.id);
+                    const ehDaTurma = Workspace.verificarTurma(aluno, destinoId, prova.destinoNome);
+                    const ehConvidado = prova.convidados && prova.convidados.some(c => String(c.id) === String(aluno.id));
                     return ehDaTurma || ehConvidado;
                 });
             }
