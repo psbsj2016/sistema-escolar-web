@@ -58,19 +58,21 @@ Workspace.Ingles = {
         console.log("🏴‍☠️ Módulo Baú do Inglês Iniciado com 12 Motores!");
         Workspace.Ingles.injetarCSS();
         Workspace.Ingles.construirHTML();
-        // Aquece a Nuvem e o motor de voz
+        
+        // 🚀 O SEGREDO DO ARRANQUE: Puxa logo a nuvem ao abrir!
         Workspace.Ingles.loadDados().then(() => {
             if (Workspace.usuario && Workspace.usuario.tipo !== 'Aluno') {
                 const badge = document.getElementById('ig-pendingCount');
                 if(badge) badge.textContent = Workspace.Ingles.state.submissions.filter(s=>s.status==='pending').length;
             }
         });
+        
         if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     },
 
     abrirBau: async () => {
         Workspace.navegarPara('ingles');
-        // 🚀 HIGIENE INTELIGENTE: Puxa os desafios novos dos alunos EM TEMPO REAL ao abrir a aba
+        // 🚀 HIGIENE INTELIGENTE: Puxa os desafios novos da Nuvem EM TEMPO REAL ao clicar na aba
         await Workspace.Ingles.loadDados();
         Workspace.Ingles.renderizarVisualizacao();
     },
@@ -80,8 +82,9 @@ Workspace.Ingles = {
     // ============================================================================
     loadDados: async () => {
         try {
-            // 1. Puxa o cérebro global da escola da Base de Dados
+            // 1. Puxa o cérebro global da escola da Base de Dados (Nuvel)
             const res = await Workspace.api('/workspace/ingles/dados', 'GET');
+            
             if (res && res.success && res.dados && Object.keys(res.dados).length > 1) {
                 const d = res.dados;
                 Workspace.Ingles.state.words = d.words && d.words.length > 0 ? d.words : Workspace.Ingles.defaults.words;
@@ -91,7 +94,7 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.submissions = d.submissions || [];
                 Workspace.Ingles.state.pool = d.pool || [];
             } else {
-                // Se a escola for nova, carrega a Semente Básica do Professor
+                // Se a escola for nova na plataforma, carrega a Semente Básica nativa
                 Workspace.Ingles.state.words = Workspace.Ingles.defaults.words;
                 Workspace.Ingles.state.phrases = Workspace.Ingles.defaults.phrases;
                 Workspace.Ingles.state.quizzes = Workspace.Ingles.defaults.quizzes;
@@ -100,7 +103,7 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.pool = [];
             }
 
-            // 2. XP e Streak continuam armazenados para leitura visual instantânea
+            // 2. XP e Streak continuam armazenados no telemóvel do aluno para leitura visual super-rápida
             const userK = `ws_ingles_user_${Workspace.usuario.id}`;
             Workspace.Ingles.state.xp = parseInt(localStorage.getItem(`${userK}_xp`) || '0');
             Workspace.Ingles.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || '1');
@@ -110,20 +113,20 @@ Workspace.Ingles = {
     },
 
     saveDados: async () => {
-        // Atualiza a tela instantaneamente (Optimistic UI)
+        // Atualiza a tela do aluno instantaneamente
         const userK = `ws_ingles_user_${Workspace.usuario.id}`;
         localStorage.setItem(`${userK}_xp`, Workspace.Ingles.state.xp);
         localStorage.setItem(`${userK}_streak`, Workspace.Ingles.state.streak);
 
         try {
-            // 🚀 Envia o XP para atualizar o Pódio do Ranking Oficial
+            // 🚀 A MÁGICA DO RANKING: Envia a pontuação de XP para a Base de Dados Oficial!
             if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
                 Workspace.api('/workspace/ingles/xp', 'POST', { 
                     xp: Workspace.Ingles.state.xp, streak: Workspace.Ingles.state.streak 
-                });
+                }).catch(() => {});
             }
 
-            // 🚀 Envia todas as novidades (Aprovações do Professor, Envios dos Alunos) para a Nuvem
+            // 🚀 A MÁGICA DA PISCINA GLOBAL: Envia todas as novidades do Professor e Envios dos Alunos para a Nuvem
             await Workspace.api('/workspace/ingles/dados', 'PUT', {
                 words: Workspace.Ingles.state.words,
                 phrases: Workspace.Ingles.state.phrases,
@@ -245,6 +248,14 @@ Workspace.Ingles = {
             .ig-word-roulette { width: 200px; height: 200px; border-radius: 50%; border: 8px solid #EEF2FF; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: radial-gradient(circle at 30% 30%, #fff, #E0E7FF); }
             .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
+            
+            /* Melhorias de Responsividade para Tabelas Internas */
+            .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
+            @media (max-width: 900px) {
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
+                .ig-side-item { white-space: nowrap; }
+                #ig-professorView { flex-direction: column; }
+            }
         `;
         document.head.appendChild(style);
     },
@@ -284,11 +295,11 @@ Workspace.Ingles = {
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
 
-            <div id="ig-professorView" style="display:none; min-height: 70vh;">
+            <div id="ig-professorView" style="display:none; min-height: 70vh; display: flex;">
                 <div class="ig-sidebar">
                     <button class="ig-side-item active" data-tab="biblioteca" onclick="Workspace.Ingles.renderProfessorTab('biblioteca')">📚 Biblioteca</button>
                     <button class="ig-side-item" data-tab="imagens" onclick="Workspace.Ingles.renderProfessorTab('imagens')">🖼️ Imagens</button>
-                    <button class="ig-side-item" data-tab="envios" onclick="Workspace.Ingles.renderProfessorTab('envios')">📥 Envios Pendentes <span id="ig-pendingCount" style="background:#F59E0B; color:white; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:5px;">0</span></button>
+                    <button class="ig-side-item" data-tab="envios" onclick="Workspace.Ingles.renderProfessorTab('envios')">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B; color:white; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:5px;">0</span></button>
                     <button class="ig-side-item" data-tab="algoritmo" onclick="Workspace.Ingles.renderProfessorTab('algoritmo')">🧠 Algoritmo</button>
                     <button class="ig-side-item" data-tab="ranking" onclick="Workspace.Ingles.renderProfessorTab('ranking')">🏆 Ranking Global</button>
                 </div>
@@ -320,7 +331,7 @@ Workspace.Ingles = {
             document.getElementById('ig-professorView').style.display = 'flex';
             document.getElementById('ig-alunoView').style.display = 'none';
             document.getElementById('ig-pendingCount').textContent = Workspace.Ingles.state.submissions.filter(s=>s.status==='pending').length;
-            Workspace.Ingles.renderProfessorTab('ranking'); 
+            Workspace.Ingles.renderProfessorTab('envios'); 
         } else {
             document.getElementById('ig-alunoView').style.display = 'block';
             document.getElementById('ig-professorView').style.display = 'none';
@@ -347,7 +358,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 👨‍🏫 O LABORATÓRIO DO PROFESSOR (Gestão e Algoritmo Coletivo)
+    // 👨‍🏫 O LABORATÓRIO DO PROFESSOR (Interface Cloud Atualizada)
     // ============================================================================
     renderProfessorTab: (tabId) => {
         document.querySelectorAll('.ig-side-item').forEach(b => b.classList.remove('active'));
@@ -366,13 +377,13 @@ Workspace.Ingles = {
                 <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
                     <div class="ig-card" style="flex:1; min-width:300px;">
                         <h3>Palavras Raiz (${state.words.length})</h3>
-                        <div style="display:flex; gap:10px; margin-bottom:15px;"><input id="nwWord" class="ig-input" placeholder="Inglês (Ex: resilient)"><input id="nwTrans" class="ig-input" placeholder="Tradução"><button class="ws-btn" style="background:#4F46E5; color:white;" onclick="Workspace.Ingles.addWord()">Add</button></div>
-                        <div style="max-height: 250px; overflow-y: auto;">${state.words.map(w=>`<div class="ig-list-item" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;"><span><b>${w.word}</b> - ${w.translation}</span><button class="ws-btn" style="background:transparent; color:#e74c3c; padding:5px;" onclick="Workspace.Ingles.remItem('words','${w.id}')">✕</button></div>`).join('')}</div>
+                        <div style="display:flex; gap:10px; margin-bottom:15px;"><input id="nwWord" class="ig-input" placeholder="Inglês (Ex: resilient)"><input id="nwTrans" class="ig-input" placeholder="Tradução"><button class="ws-btn" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addWord()">Add</button></div>
+                        <div style="max-height: 250px; overflow-y: auto;">${state.words.map(w=>`<div class="ig-list-item"><span><b>${w.word}</b> - ${w.translation}</span><button style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-weight:bold; font-size:16px;" onclick="Workspace.Ingles.remItem('words','${w.id}')">✕</button></div>`).join('')}</div>
                     </div>
                     <div class="ig-card" style="flex:1; min-width:300px;">
                         <h3>Frases (${state.phrases.length})</h3>
-                        <div style="display:flex; gap:10px; margin-bottom:15px;"><textarea id="nwPhrase" class="ig-textarea" style="min-height:40px;" placeholder="Nova frase em inglês..."></textarea><button class="ws-btn" style="background:#4F46E5; color:white;" onclick="Workspace.Ingles.addPhrase()">Add</button></div>
-                        <div style="max-height: 250px; overflow-y: auto;">${state.phrases.map(p=>`<div class="ig-list-item" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;"><span>${p.phrase}</span><button class="ws-btn" style="background:transparent; color:#e74c3c; padding:5px;" onclick="Workspace.Ingles.remItem('phrases','${p.id}')">✕</button></div>`).join('')}</div>
+                        <div style="display:flex; gap:10px; margin-bottom:15px;"><textarea id="nwPhrase" class="ig-textarea" style="min-height:45px;" placeholder="Nova frase em inglês..."></textarea><button class="ws-btn" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addPhrase()">Add</button></div>
+                        <div style="max-height: 250px; overflow-y: auto;">${state.phrases.map(p=>`<div class="ig-list-item"><span>${p.phrase}</span><button style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-weight:bold; font-size:16px;" onclick="Workspace.Ingles.remItem('phrases','${p.id}')">✕</button></div>`).join('')}</div>
                     </div>
                 </div>
                 <div class="ig-card" style="margin-top:20px;">
@@ -381,9 +392,9 @@ Workspace.Ingles = {
                         <input id="qQuestion" class="ig-input" style="flex:2; min-width:200px;" placeholder="Pergunta">
                         <input id="qOpt1" class="ig-input" style="flex:1; min-width:100px;" placeholder="Opção 1 (Incorreta)">
                         <input id="qOpt2" class="ig-input" style="flex:1; min-width:100px;" placeholder="Opção 2 (Correta)">
-                        <button class="ws-btn" style="background:#4F46E5; color:white;" onclick="Workspace.Ingles.addQuiz()">Add Quiz</button>
+                        <button class="ws-btn" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addQuiz()">Add Quiz</button>
                     </div>
-                    <div style="max-height: 250px; overflow-y: auto;">${state.quizzes.map(q=>`<div class="ig-list-item" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;"><span><b>${q.question}</b> | Correta: ${q.options[q.correct]}</span><button class="ws-btn" style="background:transparent; color:#e74c3c; padding:5px;" onclick="Workspace.Ingles.remItem('quizzes','${q.id}')">✕</button></div>`).join('')}</div>
+                    <div style="max-height: 250px; overflow-y: auto;">${state.quizzes.map(q=>`<div class="ig-list-item"><span><b>${q.question}</b> | Correta: ${q.options[q.correct]}</span><button style="background:transparent; border:none; color:#e74c3c; cursor:pointer; font-weight:bold; font-size:16px;" onclick="Workspace.Ingles.remItem('quizzes','${q.id}')">✕</button></div>`).join('')}</div>
                 </div>
             `;
         } 
@@ -396,7 +407,7 @@ Workspace.Ingles = {
                         <input id="picWord" class="ig-input" style="flex:2; min-width:150px;" placeholder="Palavra em inglês (Ex: watermelon)">
                         <input id="picTrans" class="ig-input" style="flex:2; min-width:150px;" placeholder="Tradução">
                         <input id="picEmoji" class="ig-input" style="flex:1; min-width:80px;" placeholder="Emoji 🍉">
-                        <button class="ws-btn" style="background:#4F46E5; color:white;" onclick="Workspace.Ingles.addPic()">Add Imagem</button>
+                        <button class="ws-btn" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addPic()">Add Imagem</button>
                     </div>
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:15px;">
@@ -405,7 +416,7 @@ Workspace.Ingles = {
                             <div style="font-size:48px; margin-bottom:10px;">${p.emoji}</div>
                             <b style="color:#1E293B;">${p.word}</b>
                             <div style="font-size:12px; color:#64748B; margin-bottom:10px;">${p.translation}</div>
-                            <button class="ws-btn" style="background:#F1F5F9; color:#EF4444; width:100%; font-size:12px;" onclick="Workspace.Ingles.remItem('pictures','${p.id}')">Remover</button>
+                            <button class="ws-btn" style="background:#F1F5F9; color:#EF4444; width:100%; border:none; padding:8px; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;" onclick="Workspace.Ingles.remItem('pictures','${p.id}')">Remover</button>
                         </div>
                     `).join('')}
                 </div>
@@ -425,9 +436,9 @@ Workspace.Ingles = {
                         <p style="font-size:15px; color:#2c3e50; background:#f4f6f7; padding:10px; border-radius:8px;">${Workspace.escapeHTML(s.text)}</p>
                         ${s.audioURL ? `<audio controls src="${s.audioURL}" style="width:100%; margin-top:10px; outline:none;"></audio>` : ''}
                         <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
-                            <button class="ws-btn" style="background:#10B981; color:white; flex:1; font-weight:bold;" onclick="Workspace.Ingles.aprovarEnvio('${s.id}')">✅ Aprovar para a Piscina Global</button>
-                            <button class="ws-btn" style="background:#F59E0B; color:white; flex:1; font-weight:bold;" onclick="Workspace.Ingles.enviarFeedbackEnvio('${s.id}')">💬 Dar Feedback</button>
-                            <button class="ws-btn" style="background:#e74c3c; color:white; font-weight:bold;" onclick="Workspace.Ingles.remItem('submissions','${s.id}')">🗑️ Rejeitar</button>
+                            <button class="ws-btn" style="background:#10B981; border:none; padding:10px; border-radius:8px; cursor:pointer; color:white; flex:1; font-weight:bold;" onclick="Workspace.Ingles.aprovarEnvio('${s.id}')">✅ Aprovar para a Piscina Global</button>
+                            <button class="ws-btn" style="background:#F59E0B; border:none; padding:10px; border-radius:8px; cursor:pointer; color:white; flex:1; font-weight:bold;" onclick="Workspace.Ingles.enviarFeedbackEnvio('${s.id}')">💬 Dar Feedback</button>
+                            <button class="ws-btn" style="background:#e74c3c; border:none; padding:10px; border-radius:8px; cursor:pointer; color:white; font-weight:bold;" onclick="Workspace.Ingles.remItem('submissions','${s.id}')">🗑️ Rejeitar</button>
                         </div>
                         ${s.feedback ? `<div style="margin-top:10px;background:#FEF3C7;padding:10px;border-radius:8px;font-size:13px;color:#92400E;"><b>Seu feedback:</b> ${Workspace.escapeHTML(s.feedback)}</div>` : ''}
                     </div>
@@ -471,24 +482,28 @@ Workspace.Ingles = {
             Workspace.api(`/workspace/ingles/ranking?escolaId=${Workspace.usuario.escolaId}`, 'GET').then(res => {
                 if (res && res.success) {
                     if (res.ranking.length === 0) {
-                        content.innerHTML = `<div class="ig-card" style="text-align:center; padding:50px;"><div style="font-size:50px; margin-bottom:15px;">🏁</div><h3 style="color:#2c3e50;">A corrida ainda não começou!</h3><p style="color:#64748B;">Nenhum aluno conquistou XP até ao momento.</p></div>`;
+                        content.innerHTML = `<div class="ig-card" style="text-align:center; padding:50px;"><div style="font-size:50px; margin-bottom:15px;">🏁</div><h3 style="color:#2c3e50;">A corrida ainda não começou!</h3><p style="color:#64748B;">Nenhum aluno conquistou XP no Baú do Inglês até o momento.</p></div>`;
                         return;
                     }
-                    let htmlRanking = `<div class="ig-card" style="border-left: 4px solid #F59E0B; background:#FFFBEB;"><h3>🏆 Pódio da Escola (Leaderboard)</h3></div>`;
+                    let htmlRanking = `<div class="ig-card" style="border-left: 4px solid #F59E0B; background:#FFFBEB;"><h3>🏆 Pódio da Escola (Leaderboard)</h3><p style="color:#92400E; font-size:13px; font-weight:bold;">Acompanhe o ranking em tempo real dos alunos com maior pontuação.</p></div>`;
                     res.ranking.forEach((aluno, index) => {
                         let medalha = `<div style="font-size:16px; font-weight:900; color:#94a3b8; width:40px; text-align:center;">${index + 1}º</div>`;
-                        if (index === 0) medalha = `<div style="font-size:30px; width:40px; text-align:center;">🥇</div>`;
+                        if (index === 0) medalha = `<div style="font-size:30px; width:40px; text-align:center; filter: drop-shadow(0 4px 6px rgba(245,158,11,0.4));">🥇</div>`;
                         if (index === 1) medalha = `<div style="font-size:26px; width:40px; text-align:center;">🥈</div>`;
                         if (index === 2) medalha = `<div style="font-size:22px; width:40px; text-align:center;">🥉</div>`;
+                        
                         htmlRanking += `
-                            <div style="background:#fff; border:1px solid #E2E8F0; padding:15px 20px; border-radius:16px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 10px rgba(0,0,0,0.02);">
+                            <div style="background:#fff; border:1px solid #E2E8F0; padding:15px 20px; border-radius:16px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 10px rgba(0,0,0,0.02); transition:0.3s;" onmouseover="this.style.transform='scale(1.02)'; this.style.borderColor='#4F46E5';">
                                 <div style="display:flex; align-items:center; gap:20px;">
                                     ${medalha}
-                                    <div style="border:2px solid #E2E8F0; border-radius:50%; padding:2px;">${window.Workspace.renderizarAvatar(aluno.nome, 45)}</div>
+                                    <div style="border:2px solid #E2E8F0; border-radius:50%; padding:2px;">
+                                        ${window.Workspace.renderizarAvatar(aluno.nome, 45)}
+                                    </div>
                                     <strong style="color:#1E293B; font-size:16px;">${aluno.nome}</strong>
                                 </div>
                                 <div style="display:flex; gap:12px; align-items:center;">
-                                    <div style="background:#E0E7FF; color:#4F46E5; padding:6px 15px; border-radius:30px; font-weight:900; font-size:14px; border:1px solid #C7D2FE;">⭐ ${aluno.xp} XP</div>
+                                    <div style="background:#FEF3C7; color:#B45309; padding:6px 15px; border-radius:30px; font-weight:bold; font-size:12px; border:1px solid #FDE68A;">🔥 ${aluno.streak} Dias</div>
+                                    <div style="background:#E0E7FF; color:#4F46E5; padding:6px 15px; border-radius:30px; font-weight:900; font-size:14px; border:1px solid #C7D2FE; box-shadow:0 2px 8px rgba(79,70,229,0.15);">⭐ ${aluno.xp} XP</div>
                                 </div>
                             </div>
                         `;
@@ -502,7 +517,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ⚙️ AÇÕES DE INJEÇÃO EM TEMPO REAL NA NUVEM
+    // ⚙️ AÇÕES DE INJEÇÃO EM TEMPO REAL NA NUVEM (MongoDB Assíncrono)
     // ============================================================================
     addWord: async () => {
         const w = document.getElementById('nwWord').value.trim();
@@ -510,7 +525,7 @@ Workspace.Ingles = {
         if(!w) return Workspace.mostrarAviso('Digite a palavra', 'warning');
         Workspace.Ingles.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1', example:'', context:'Professor'});
         
-        await Workspace.Ingles.saveDados(); // Sincroniza com o MongoDB instantaneamente
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('biblioteca'); 
         Workspace.mostrarAviso('Palavra injetada no algoritmo! Já disponível para os alunos.', 'success');
     },
@@ -520,7 +535,7 @@ Workspace.Ingles = {
         if(!p) return Workspace.mostrarAviso('Digite a frase', 'warning');
         Workspace.Ingles.state.phrases.unshift({id:'p'+Date.now(), phrase:p});
         
-        await Workspace.Ingles.saveDados(); 
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('biblioteca'); 
         Workspace.mostrarAviso('Frase injetada no algoritmo!', 'success');
     },
@@ -531,10 +546,9 @@ Workspace.Ingles = {
         const o2 = document.getElementById('qOpt2').value.trim();
         if(!q || !o1 || !o2) return Workspace.mostrarAviso('Preencha a pergunta e as opções', 'warning');
         
-        // Colocamos o o2 como a opção correta por defeito para simplificar a criação rápida
         Workspace.Ingles.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1, o2], correct:1, explanation:'Adicionado pelo professor', level:'B1'});
         
-        await Workspace.Ingles.saveDados(); 
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('biblioteca'); 
         Workspace.mostrarAviso('Quiz injetado no algoritmo!', 'success');
     },
@@ -546,7 +560,7 @@ Workspace.Ingles = {
         if(!w) return Workspace.mostrarAviso('Digite a palavra', 'warning');
         Workspace.Ingles.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'});
         
-        await Workspace.Ingles.saveDados(); 
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('imagens'); 
         Workspace.mostrarAviso('Imagem injetada no algoritmo!', 'success');
     },
@@ -554,7 +568,7 @@ Workspace.Ingles = {
     remItem: async (key, id) => {
         Workspace.Ingles.state[key] = Workspace.Ingles.state[key].filter(i => i.id !== id);
         
-        await Workspace.Ingles.saveDados(); 
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         const activeTab = document.querySelector('.ig-side-item.active');
         if(activeTab) Workspace.Ingles.renderProfessorTab(activeTab.dataset.tab);
     },
@@ -573,7 +587,7 @@ Workspace.Ingles = {
             Workspace.Ingles.state.pictures.push({id:'pic'+Date.now(), word:s.text, translation:'(criado por aluno)', emoji:'✨', category:'Aluno'});
         }
         
-        await Workspace.Ingles.saveDados(); 
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('envios'); 
         Workspace.mostrarAviso('Aprovado! Material injetado na Piscina Global 🌍', 'success');
         
@@ -588,7 +602,7 @@ Workspace.Ingles = {
         if(!s) return;
         s.feedback = fb;
         
-        await Workspace.Ingles.saveDados();
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem!
         Workspace.Ingles.renderProfessorTab('envios');
         Workspace.mostrarAviso('Feedback anexado com sucesso!', 'success');
     },
@@ -626,13 +640,15 @@ Workspace.Ingles = {
         if(Workspace.Ingles.recognition) Workspace.Ingles.recognition.stop();
     },
 
-    envioGenerico: (gameId, texto, bonus = 50) => {
+    envioGenerico: async (gameId, texto, bonus = 50) => {
         if(!texto || texto.trim().length < 2) return Workspace.mostrarAviso("Responda ao desafio de forma válida!", "warning");
+        
         Workspace.Ingles.state.submissions.unshift({
             id: 'sub_' + Date.now(), student: Workspace.usuario.nome, game: gameId, text: texto, audioURL: Workspace.Ingles.currentAudioURL || '', status: 'pending', timestamp: Date.now()
         });
         Workspace.Ingles.state.xp += bonus;
-        Workspace.Ingles.saveDados();
+        
+        await Workspace.Ingles.saveDados(); // 🚀 Sincroniza com a Nuvem a submissão e o XP!
         Workspace.mostrarAviso(`Desafio Concluído! +${bonus} XP ⭐`, "success");
         Workspace.Ingles.fecharJogo();
         Workspace.Ingles.renderizarVisualizacao();
@@ -656,8 +672,8 @@ Workspace.Ingles = {
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="ws-btn" style="flex:1; background:#95a5a6; color:white;" onclick="Workspace.Ingles.abrirJogo('wordSpark')">🎲 Sortear Outra</button>
-                <button class="ws-btn" style="flex:2; background:#4F46E5; color:white;" onclick="
+                <button class="ws-btn" style="flex:1; background:#95a5a6; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer;" onclick="Workspace.Ingles.abrirJogo('wordSpark')">🎲 Sortear Outra</button>
+                <button class="ws-btn" style="flex:2; background:#4F46E5; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="
                     const txt = document.getElementById('ig-input').value;
                     if(!txt.toLowerCase().includes('${w.word.toLowerCase()}')) return Workspace.mostrarAviso('A frase tem de conter a palavra sorteada!', 'warning');
                     Workspace.Ingles.envioGenerico('wordSpark', txt);
@@ -675,7 +691,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase">${phraseText}</div>
             <div style="text-align:center; margin:15px 0;">
-                <button class="ws-btn" style="background:#0F172A; color:white; border-radius:30px;" onclick="Workspace.Ingles.falar('${phraseText.replace(/'/g,"\\'")}')">🔊 Ouvir a Pronúncia do Professor (IA)</button>
+                <button class="ws-btn" style="background:#0F172A; color:white; border-radius:30px; border:none; padding:10px 20px; cursor:pointer;" onclick="Workspace.Ingles.falar('${phraseText.replace(/'/g,"\\'")}')">🔊 Ouvir a Pronúncia do Professor (IA)</button>
             </div>
             <div style="text-align: center; margin-top: 20px; background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0;">
                 <p style="font-size:13px; color:#333; font-weight:bold;">Sua vez de brilhar. Grave você lendo:</p>
@@ -683,7 +699,7 @@ Workspace.Ingles = {
                 <div id="ig-recStatus" style="font-size:12px; color:#666; margin-top:5px;"></div>
                 <audio id="ig-audioPrev" controls style="display:none; width:100%; margin-top:10px; outline:none;"></audio>
             </div>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; font-size:16px;" onclick="Workspace.Ingles.envioGenerico('readAloud', '${phraseText.replace(/'/g,"\\'")}')">Enviar Áudio 📤</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; font-size:16px; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.envioGenerico('readAloud', '${phraseText.replace(/'/g,"\\'")}')">Enviar Áudio 📤</button>
         `;
         Workspace.Ingles.setupRecorder();
     },
@@ -696,12 +712,12 @@ Workspace.Ingles = {
                 <div style="font-size:60px; margin-bottom:10px;">👂</div>
                 <h3 style="margin-bottom:5px; color:#0F172A;">Escute e digite o que ouviu</h3>
                 <p style="color:#64748B;font-size:13px; margin-bottom:20px;">Afine os seus ouvidos. Pode ouvir as vezes que quiser.</p>
-                <button class="ws-btn" style="background:#4F46E5; color:white; border-radius:30px; padding:10px 30px; font-size:16px; margin-bottom:25px; box-shadow:0 10px 20px rgba(79,70,229,0.3);" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Tocar Áudio</button>
+                <button class="ws-btn" style="background:#4F46E5; color:white; border-radius:30px; padding:10px 30px; font-size:16px; margin-bottom:25px; box-shadow:0 10px 20px rgba(79,70,229,0.3); border:none; cursor:pointer;" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Tocar Áudio</button>
                 
                 <input id="ig-listenInput" class="ig-input" placeholder="Digite exatamente o que ouviu..." style="font-size:16px; font-weight:bold; text-align:center;">
                 <div id="ig-feedback" style="margin-top:15px;"></div>
                 
-                <button class="ws-btn" style="width:100%; background:#10B981; color:white; margin-top:15px; font-size:16px;" onclick="
+                <button class="ws-btn" style="width:100%; background:#10B981; color:white; margin-top:15px; font-size:16px; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="
                     const digitado = document.getElementById('ig-listenInput').value;
                     const sim = Workspace.Ingles.similaridade(digitado, '${p.phrase.replace(/'/g,"\\'")}');
                     const fb = document.getElementById('ig-feedback');
@@ -724,7 +740,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:18px">${q.question}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px" id="ig-quizOptions">
-                ${q.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; text-align:left; justify-content:flex-start; padding:15px; font-size:14px; font-weight:600;" onclick="
+                ${q.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; text-align:left; justify-content:flex-start; padding:15px; font-size:14px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="
                     document.querySelectorAll('#ig-quizOptions button').forEach(b => b.disabled = true);
                     const isCorrect = ${i} === ${q.correct};
                     this.style.background = isCorrect ? '#D1FAE5' : '#FEE2E2';
@@ -734,7 +750,9 @@ Workspace.Ingles = {
                     fb.innerHTML = '<div style=\\'background:'+(isCorrect?'#D1FAE5':'#FEE2E2')+'; color:'+(isCorrect?'#065F46':'#B91C1C')+'; padding:15px; border-radius:10px; font-weight:bold; margin-top:15px;\\'>'+(isCorrect?'✅':'❌')+' ${q.explanation.replace(/'/g,"\\'")}</div>';
                     
                     if(isCorrect) {
-                        Workspace.Ingles.state.xp += 30; Workspace.Ingles.saveDados(); Workspace.Ingles.renderizarVisualizacao();
+                        Workspace.Ingles.state.xp += 30; 
+                        Workspace.Ingles.saveDados(); // Sincroniza XP na Nuvem
+                        Workspace.Ingles.renderizarVisualizacao();
                         setTimeout(() => Workspace.Ingles.fecharJogo(), 2500);
                     }
                 ">${o}</button>`).join('')}
@@ -754,13 +772,15 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:22px; color:#4F46E5;">${s.text}</div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;" id="ig-pickerOptions">
-                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-size:16px; font-weight:bold; border-radius:30px;" onclick="
+                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-size:16px; font-weight:bold; border-radius:30px; cursor:pointer;" onclick="
                     const isCorrect = ${i} === ${s.correct};
                     const fb = document.getElementById('ig-pickerFb');
                     if(isCorrect) {
                         this.style.background = '#D1FAE5'; this.style.borderColor = '#10B981';
                         fb.innerHTML = '<div style=\\'background:#D1FAE5; color:#065F46; padding:12px; border-radius:10px; font-weight:bold; text-align:center;\\'>✅ Excelente! A gramática está em dia.</div>';
-                        Workspace.Ingles.state.xp += 20; Workspace.Ingles.saveDados(); Workspace.Ingles.renderizarVisualizacao();
+                        Workspace.Ingles.state.xp += 20; 
+                        Workspace.Ingles.saveDados(); // Sincroniza XP na Nuvem
+                        Workspace.Ingles.renderizarVisualizacao();
                         setTimeout(() => Workspace.Ingles.renderGameWordPicker(), 1500);
                     } else {
                         this.style.background = '#FEE2E2'; this.style.borderColor = '#EF4444';
@@ -781,7 +801,7 @@ Workspace.Ingles = {
             <div style="text-align:center"><span class="ig-badge" style="background:#0F172A; color:white; font-size:13px; padding:6px 15px;">🎯 Missão: ${task}</span></div>
             <div class="ig-big-phrase" style="margin-top:15px; font-size:18px;">${phrase.phrase}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="A sua transformação inteligente aqui..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; font-size:15px;" onclick="Workspace.Ingles.envioGenerico('sentenceShuffle', document.getElementById('ig-input').value)">Submeter Transformação 🔀</button>
+            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; font-size:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioGenerico('sentenceShuffle', document.getElementById('ig-input').value)">Submeter Transformação 🔀</button>
         `;
     },
 
@@ -798,7 +818,7 @@ Workspace.Ingles = {
                 <div id="ig-recStatus" style="font-size:11px; color:#999; margin-top:5px;">Gravar voz (opcional)</div>
                 <audio id="ig-audioPrev" controls style="display:none; width:100%; outline:none; margin-top:5px;"></audio>
             </div>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#F59E0B; color:white; font-size:16px;" onclick="Workspace.Ingles.envioGenerico('answerQuest', document.getElementById('ig-input').value)">Enviar Resposta Mestra 🚀</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:#F59E0B; color:white; font-size:16px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioGenerico('answerQuest', document.getElementById('ig-input').value)">Enviar Resposta Mestra 🚀</button>
         `;
         Workspace.Ingles.setupRecorder();
     },
@@ -812,7 +832,7 @@ Workspace.Ingles = {
             <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${a}"</div>
             <p style="margin-top:16px;font-weight:600; text-align:center;">Que pergunta em inglês gerou esta resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you... / Where did you..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px;" onclick="
+            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="
                 const v = document.getElementById('ig-input').value.trim();
                 if(v.includes('?') && v.split(' ').length >= 3) {
                     Workspace.Ingles.envioGenerico('questionMaker', v);
@@ -834,7 +854,7 @@ Workspace.Ingles = {
             <div class="ig-big-phrase" style="font-size:18px; text-align:left;">${c.title}<br><br><span style="font-size:15px;font-weight:400;color:#64748B">${c.prompt}</span></div>
             <p style="font-size:13px;background:#FEF3C7; color:#92400E; padding:10px; border-radius:8px; font-weight:bold;">💡 Dica de Mestre: ${c.tip}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Imagina que estás na situação real. O que dizes?..." style="margin-top:12px;"></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; font-size:16px;" onclick="Workspace.Ingles.envioGenerico('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel (Roleplay) 🎭</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; font-size:16px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioGenerico('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel (Roleplay) 🎭</button>
         `;
     },
 
@@ -845,13 +865,13 @@ Workspace.Ingles = {
             <div class="ig-big-phrase" style="font-size:18px">🤖 Clube de Debate (Inteligência Artificial)<br><br><span style="font-size:16px;color:#4F46E5; font-weight:900;">${topic.topic}</span></div>
             <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:15px; margin-top:12px; border-left: 4px solid #4F46E5;">
                 <b style="font-size:13px; color:#4F46E5;">🤖 AI Agent diz:</b> <span style="font-size:14px; font-weight:600;">${topic.starter}</span>
-                <button class="ws-btn" style="padding:4px 8px;margin-left:8px; background:white; color:#0F172A; border:1px solid #ddd;" onclick="Workspace.Ingles.falar('${topic.starter.replace(/'/g,"\\'")}')">🔊 Ouvir</button>
+                <button class="ws-btn" style="padding:4px 8px;margin-left:8px; background:white; color:#0F172A; border:1px solid #ddd; border-radius:6px; cursor:pointer;" onclick="Workspace.Ingles.falar('${topic.starter.replace(/'/g,"\\'")}')">🔊 Ouvir</button>
             </div>
             <div id="ig-debateHistory" style="margin-top:15px;display:flex;flex-direction:column;gap:10px;max-height:200px;overflow-y:auto; padding-right:5px;"></div>
             
             <textarea id="ig-input" class="ig-textarea" placeholder="Defende a tua posição usando conectores ingleses (In my opinion, However, Therefore...)" style="margin-top:15px; border-color:#4F46E5;"></textarea>
             
-            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; font-size:16px;" onclick="
+            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; font-size:16px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="
                 const v = document.getElementById('ig-input').value;
                 if(v.trim().split(' ').length < 8) return Workspace.mostrarAviso('O teu argumento é muito curto. Desenvolve a ideia! (Mín. 8 palavras)', 'error');
                 
@@ -880,16 +900,16 @@ Workspace.Ingles = {
                 <h3 style="font-size:22px; color:#0F172A;">👄 Laboratório Fonético</h3>
                 <p style="color:#64748B;font-size:13px; margin-bottom:20px;">Estes sons são quase iguais. Ouve com atenção e descobre o alvo!</p>
                 <div style="display:flex;gap:15px;justify-content:center;margin-bottom:20px">
-                    <div style="background:#fff;border:2px solid #E2E8F0;border-radius:16px;padding:20px;flex:1;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><div style="font-size:30px;font-weight:900;color:#2c3e50;">${pair.a}</div><div style="font-size:12px;color:#64748B;margin-bottom:10px;">${pair.ipaA}</div><button class="ws-btn" style="background:#F8FAFC; color:#333; border:1px solid #ddd; width:100%;" onclick="Workspace.Ingles.falar('${pair.a}')">🔊 Ouvir</button></div>
-                    <div style="background:#fff;border:2px solid #E2E8F0;border-radius:16px;padding:20px;flex:1;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><div style="font-size:30px;font-weight:900;color:#2c3e50;">${pair.b}</div><div style="font-size:12px;color:#64748B;margin-bottom:10px;">${pair.ipaB}</div><button class="ws-btn" style="background:#F8FAFC; color:#333; border:1px solid #ddd; width:100%;" onclick="Workspace.Ingles.falar('${pair.b}')">🔊 Ouvir</button></div>
+                    <div style="background:#fff;border:2px solid #E2E8F0;border-radius:16px;padding:20px;flex:1;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><div style="font-size:30px;font-weight:900;color:#2c3e50;">${pair.a}</div><div style="font-size:12px;color:#64748B;margin-bottom:10px;">${pair.ipaA}</div><button class="ws-btn" style="background:#F8FAFC; color:#333; border:1px solid #ddd; width:100%; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${pair.a}')">🔊 Ouvir</button></div>
+                    <div style="background:#fff;border:2px solid #E2E8F0;border-radius:16px;padding:20px;flex:1;box-shadow:0 4px 10px rgba(0,0,0,0.05);"><div style="font-size:30px;font-weight:900;color:#2c3e50;">${pair.b}</div><div style="font-size:12px;color:#64748B;margin-bottom:10px;">${pair.ipaB}</div><button class="ws-btn" style="background:#F8FAFC; color:#333; border:1px solid #ddd; width:100%; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${pair.b}')">🔊 Ouvir</button></div>
                 </div>
                 
                 <div style="background:#0F172A; padding:20px; border-radius:16px; margin-bottom:20px;">
-                    <button class="ws-btn" style="background:#4F46E5; color:white; font-size:16px; padding:12px 30px; border-radius:30px; border:2px solid white; box-shadow:0 0 15px rgba(79,70,229,0.5);" onclick="Workspace.Ingles.falar('${target}')">🎧 Tocar a Palavra Misteriosa</button>
+                    <button class="ws-btn" style="background:#4F46E5; color:white; font-size:16px; padding:12px 30px; border-radius:30px; border:2px solid white; box-shadow:0 0 15px rgba(79,70,229,0.5); cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${target}')">🎧 Tocar a Palavra Misteriosa</button>
                     <p style="color:white; font-size:14px; margin-top:15px; font-weight:bold;">Qual palavra foi lida pela máquina?</p>
                     <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:16px; padding:10px 25px;" onclick="Workspace.Ingles.verificarMinimal('${pair.a}', '${target}')">${pair.a}</button>
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:16px; padding:10px 25px;" onclick="Workspace.Ingles.verificarMinimal('${pair.b}', '${target}')">${pair.b}</button>
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:16px; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="Workspace.Ingles.verificarMinimal('${pair.a}', '${target}')">${pair.a}</button>
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:16px; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="Workspace.Ingles.verificarMinimal('${pair.b}', '${target}')">${pair.b}</button>
                     </div>
                 </div>
                 <div id="ig-minimalFb"></div>
@@ -909,23 +929,23 @@ Workspace.Ingles = {
 
     // 🖼️ 12. PICTURE POP (Deteção Vocal Nativa)
     renderGamePicturePop: () => {
-        const pic = Workspace.Ingles.defaults.pictures[Math.floor(Math.random()*Workspace.Ingles.defaults.pictures.length)];
+        const pic = Workspace.Ingles.state.pictures[Math.floor(Math.random()*Workspace.Ingles.state.pictures.length)] || Workspace.Ingles.defaults.pictures[0];
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center">
                 <h3 style="font-size:22px; color:#0F172A; font-weight:900;">🖼️ Picture Pop</h3>
                 <div style="width:150px; height:150px; border-radius:24px; background:#F8FAFC; border:2px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:20px auto; box-shadow:0 10px 30px rgba(0,0,0,0.05); font-size:80px; transition:0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                     ${pic.emoji}
                 </div>
-                <p style="color:#64748B;font-size:14px; font-weight:bold;">Categoria: <span style="color:#4F46E5;">${pic.category}</span></p>
+                <p style="color:#64748B;font-size:14px; font-weight:bold;">Categoria: <span style="color:#4F46E5;">${pic.category || 'Geral'}</span></p>
                 <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px;">
                     <p style="color:white; font-size:14px; font-weight:bold; margin-bottom:15px;">Como se chama isto em inglês?</p>
-                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; box-shadow:0 0 15px rgba(16,185,129,0.4);" onclick="Workspace.Ingles.ouvirPicturePop('${pic.word}')">🎤 Falar o Nome ao Microfone</button>
+                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; box-shadow:0 0 15px rgba(16,185,129,0.4); border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.ouvirPicturePop('${pic.word}')">🎤 Falar o Nome ao Microfone</button>
                     
                     <div id="ig-speechResult" style="margin-top:15px;"></div>
                     
                     <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
                         <input id="ig-input" class="ig-input" placeholder="Ou se fores tímido(a), digita aqui..." style="text-align:center; font-weight:bold;">
-                        <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold;" onclick="
+                        <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="
                             const sim = Workspace.Ingles.similaridade(document.getElementById('ig-input').value, '${pic.word}');
                             if(sim >= 0.9) Workspace.Ingles.envioGenerico('picturePop', '${pic.word}', 75);
                             else Workspace.mostrarAviso('Escrita incorreta. Tenta novamente!', 'error');
