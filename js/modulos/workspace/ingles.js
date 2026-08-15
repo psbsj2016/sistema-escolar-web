@@ -8,12 +8,13 @@ Workspace.Ingles = {
     },
     mediaRecorder: null, audioChunks: [], currentAudioURL: null, audioBlob: null, streamMicrofone: null, recognition: null,
     
-    // 🚀 VARIÁVEIS DE GAMIFICAÇÃO
+    // 🚀 VARIÁVEIS DE GAMIFICAÇÃO E MEMÓRIA DE CURTO PRAZO
     bauDestrancado: false, 
     jogoAtual: null,
     tempoRestante: 0,
     timerSessao: null,
     xpGanhosNaSessao: 0,
+    desafioAtualObj: null, // Guarda a palavra exata para avaliar o erro com precisão
 
     defaults: {
         words: [
@@ -127,7 +128,7 @@ Workspace.Ingles = {
                 words: Workspace.Ingles.state.words, phrases: Workspace.Ingles.state.phrases,
                 quizzes: Workspace.Ingles.state.quizzes, pictures: Workspace.Ingles.state.pictures,
                 submissions: Workspace.Ingles.state.submissions, pool: Workspace.Ingles.state.pool,
-                errosRetidos: Workspace.Ingles.state.errosRetidos // 🚀 Guarda os erros na Nuvem
+                errosRetidos: Workspace.Ingles.state.errosRetidos
             });
         } catch (e) {}
     },
@@ -136,7 +137,6 @@ Workspace.Ingles = {
     // 🧠 SISTEMA DE REPETIÇÃO ESPAÇADA (Inteligência Artificial de Ensino)
     // ============================================================================
     registrarErro: (itemOriginal, tipoConteudo) => {
-        // Verifica se a palavra/frase já está na lista de castigo
         const jaExiste = Workspace.Ingles.state.errosRetidos.find(e => e.id === itemOriginal.id);
         if (!jaExiste) {
             Workspace.Ingles.state.errosRetidos.push({ ...itemOriginal, _tipoDefeito: tipoConteudo });
@@ -148,7 +148,7 @@ Workspace.Ingles = {
         const index = Workspace.Ingles.state.errosRetidos.findIndex(e => e.id === itemId);
         if (index !== -1) {
             Workspace.Ingles.state.errosRetidos.splice(index, 1);
-            Workspace.Ingles.saveDados(); // Limpou o nome!
+            Workspace.Ingles.saveDados(); 
         }
     },
 
@@ -158,12 +158,11 @@ Workspace.Ingles = {
         if (listaErros.length > 0 && Math.random() < 0.60) {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
-        // Caso contrário, sorteia um conteúdo novo e fresco
         return listaPadrao[Math.floor(Math.random() * listaPadrao.length)] || listaPadrao[0];
     },
 
     // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS
+    // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
     falar: (text, lang='en-US') => {
         if(!('speechSynthesis' in window)) return;
@@ -247,9 +246,11 @@ Workspace.Ingles = {
             .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
+            /* 🚀 ANIMAÇÕES DA FECHADURA E EXPLOSÃO */
             @keyframes pulseChest { 0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(241,196,15,0.2)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(241,196,15,0.8)); } 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(241,196,15,0.2)); } }
-            .ig-particle { position: absolute; width: 12px; height: 12px; border-radius: 50%; pointer-events: none; z-index: 9999999; animation: explodirParticula 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-            @keyframes explodirParticula { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+            .ig-particle { position: fixed; pointer-events: none; z-index: 9999999; animation: explodirParticula 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+            @keyframes explodirParticula { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
+            
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } }
         `;
@@ -342,13 +343,33 @@ Workspace.Ingles = {
             } else {
                 document.getElementById('ig-unlock-screen').style.display = 'none';
                 document.getElementById('ig-alunoView').style.display = 'block';
+                // 🚀 CARREGA OS JOGOS NA TELA! A PEÇA QUE FALTAVA
                 Workspace.Ingles.renderAlunoGrid();
             }
         }
     },
 
+    // 🚀 A PEÇA CORRIGIDA: Renderiza as opções de jogo para o Aluno
+    renderAlunoGrid: () => {
+        const grid = document.getElementById('ig-gamesGrid');
+        if(!grid) return;
+        grid.innerHTML = Workspace.Ingles.defaults.games.map(g => `
+            <div class="ig-game-card" onclick="Workspace.Ingles.abrirJogo('${g.id}')">
+                <div class="ig-top">
+                    <div class="ig-icon" style="background:${g.color}">${g.icon}</div>
+                    <span class="ig-badge ig-badge-level">${g.level}</span>
+                </div>
+                <h3>${g.title}</h3>
+                <p>${g.desc}</p>
+                <div class="ig-meta">
+                    <span class="ig-badge" style="background:#F1F5F9; color: #333;">⭐ +${['picturePop','minimalPairs','debateAI'].includes(g.id) ? '75' : '50'} XP</span>
+                </div>
+            </div>
+        `).join('');
+    },
+
     // ============================================================================
-    // 🧲 FÍSICA E ANIMAÇÃO: ARRASTAR A CHAVE
+    // 🧲 FÍSICA E ANIMAÇÃO MÁGICA: ARRASTAR A CHAVE
     // ============================================================================
     ativarFisicaFechadura: () => {
         const key = document.getElementById('ig-drag-key');
@@ -401,26 +422,51 @@ Workspace.Ingles = {
         Workspace.Ingles.bauDestrancado = true;
         document.getElementById('ig-drag-key').style.display = 'none';
         document.getElementById('ig-chest-lock').style.animation = 'none';
-        document.getElementById('ig-chest-lock').style.transform = 'scale(1.2)';
+        document.getElementById('ig-chest-lock').style.transform = 'scale(1.3) rotate(5deg)';
         
-        for (let i = 0; i < 40; i++) {
+        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg'); audio.play().catch(()=>{}); } catch(e){}
+
+        // 🌟 CHUVA DE MÁGICA: Partículas a cobrir o ecrã inteiro!
+        const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
+        for (let i = 0; i < 60; i++) {
             let p = document.createElement('div');
             p.className = 'ig-particle';
             document.body.appendChild(p);
             let angle = Math.random() * Math.PI * 2;
-            let velocity = 60 + Math.random() * 150;
-            let tx = Math.cos(angle) * velocity; let ty = Math.sin(angle) * velocity;
-            p.style.left = x + 'px'; p.style.top = y + 'px';
+            let velocity = 100 + Math.random() * 250;
+            let tx = Math.cos(angle) * velocity; let ty = Math.sin(angle) * velocity - 100;
+            p.style.left = (x + 20) + 'px'; p.style.top = (y + 20) + 'px';
             p.style.setProperty('--tx', tx + 'px'); p.style.setProperty('--ty', ty + 'px');
-            p.style.backgroundColor = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71'][Math.floor(Math.random()*6)];
-            setTimeout(() => p.remove(), 1000);
+            p.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+            p.style.boxShadow = `0 0 8px ${p.style.backgroundColor}`;
+            
+            let size = (5 + Math.random() * 10) + 'px';
+            p.style.width = size; p.style.height = size;
+            p.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+            
+            setTimeout(() => p.remove(), 1500);
         }
-        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg'); audio.play().catch(()=>{}); } catch(e){}
 
+        // Oculta a fechadura e mostra os jogos suavemente
         setTimeout(() => {
-            document.getElementById('ig-unlock-screen').style.opacity = '0';
-            document.getElementById('ig-unlock-screen').style.transition = 'opacity 0.5s';
-            setTimeout(() => { Workspace.Ingles.renderizarVisualizacao(); }, 500);
+            const screen = document.getElementById('ig-unlock-screen');
+            screen.style.opacity = '0';
+            screen.style.transform = 'scale(1.1)';
+            screen.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            setTimeout(() => { 
+                Workspace.Ingles.renderizarVisualizacao(); 
+                const grid = document.getElementById('ig-gamesGrid');
+                if (grid) {
+                    grid.style.opacity = '0';
+                    grid.style.transform = 'translateY(30px)';
+                    requestAnimationFrame(() => {
+                        grid.style.transition = 'all 0.6s ease-out';
+                        grid.style.opacity = '1';
+                        grid.style.transform = 'translateY(0)';
+                    });
+                }
+            }, 600);
         }, 800);
     },
 
@@ -674,8 +720,9 @@ Workspace.Ingles = {
     renderDesafioAtual: () => {
         if (Workspace.Ingles.tempoRestante <= 0) return;
         Workspace.Ingles.currentAudioURL = null; 
-        const id = Workspace.Ingles.jogoAtual;
+        Workspace.Ingles.desafioAtualObj = null; // Reseta o objeto de desafio atual
         
+        const id = Workspace.Ingles.jogoAtual;
         if(id === 'wordSpark') Workspace.Ingles.renderGameWordSpark();
         else if(id === 'readAloud') Workspace.Ingles.renderGameReadAloud();
         else if(id === 'listenType') Workspace.Ingles.renderGameListenType();
@@ -725,15 +772,17 @@ Workspace.Ingles = {
         Workspace.Ingles.state.submissions.unshift({
             id: 'sub_' + Date.now(), student: Workspace.usuario.nome, game: gameId, text: texto, audioURL: Workspace.Ingles.currentAudioURL || '', status: 'pending', timestamp: Date.now()
         });
-        Workspace.Ingles.sucessoGenerico(bonus); // Submissões abertas dão um XP mínimo de participação
+        Workspace.Ingles.sucessoGenerico(bonus);
     },
 
     // ============================================================================
-    // 🎮 JOGOS INTELIGENTES
+    // 🎮 JOGOS INTELIGENTES (AVALIAÇÃO E MEMÓRIA DE ERRO)
     // ============================================================================
     
     renderGameWordSpark: () => {
-        const w = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.words, 'word');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.words, 'word');
+        const w = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-word-roulette"><div class="ig-roulette-word">${w.word}</div></div>
             <p style="text-align:center;margin:12px 0;color:#64748B;font-weight:bold;">${w.translation}</p>
@@ -742,11 +791,11 @@ Workspace.Ingles = {
             
             <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:15px;" onclick="
                 const txt = document.getElementById('ig-input').value;
-                if(!txt.toLowerCase().includes('${w.word.toLowerCase()}')) {
-                    Workspace.Ingles.registrarErro(${JSON.stringify(w)}, 'word');
+                if(!txt.toLowerCase().includes(Workspace.Ingles.desafioAtualObj.word.toLowerCase())) {
+                    Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'word');
                     Workspace.Ingles.falhaGenerica();
                 } else {
-                    Workspace.Ingles.superarErro('${w.id}');
+                    Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
                     Workspace.Ingles.envioAoProfessor('wordSpark', txt, 50);
                 }
             ">Verificar Inteligência 🚀</button>
@@ -754,7 +803,9 @@ Workspace.Ingles = {
     },
 
     renderGameReadAloud: () => {
-        const p = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        const p = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase">${p.phrase}</div>
             <div style="text-align:center; margin:15px 0;">
@@ -762,14 +813,16 @@ Workspace.Ingles = {
             </div>
             <div style="text-align: center; margin-top: 20px; background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0;">
                 <p style="font-size:13px; color:#333; font-weight:bold;">Sua vez. A IA vai analisar a sua voz:</p>
-                <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', ${JSON.stringify(p)}, 'phrase')">🎤 Iniciar Leitura</button>
+                <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', Workspace.Ingles.desafioAtualObj, 'phrase')">🎤 Iniciar Leitura</button>
                 <div id="ig-speechResult" style="margin-top:15px;"></div>
             </div>
         `;
     },
 
     renderGameListenType: () => {
-        const p = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        const p = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center;padding:20px">
                 <div style="font-size:60px; margin-bottom:10px;">👂</div>
@@ -780,12 +833,12 @@ Workspace.Ingles = {
                 
                 <button class="ws-btn" style="width:100%; background:#10B981; color:white; margin-top:15px; font-size:16px; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="
                     const digitado = document.getElementById('ig-listenInput').value;
-                    const sim = Workspace.Ingles.similaridade(digitado, '${p.phrase.replace(/'/g,"\\'")}');
+                    const sim = Workspace.Ingles.similaridade(digitado, Workspace.Ingles.desafioAtualObj.phrase);
                     if(sim >= 0.9) {
-                        Workspace.Ingles.superarErro('${p.id}');
+                        Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
                         Workspace.Ingles.sucessoGenerico(50);
                     } else {
-                        Workspace.Ingles.registrarErro(${JSON.stringify(p)}, 'phrase');
+                        Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'phrase');
                         Workspace.Ingles.falhaGenerica();
                     }
                 ">Verificar Rigorosa</button>
@@ -794,17 +847,19 @@ Workspace.Ingles = {
     },
 
     renderGameQuiz: () => {
-        const q = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.quizzes, 'quiz');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.quizzes, 'quiz');
+        const q = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:18px">${q.question}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px" id="ig-quizOptions">
                 ${q.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; text-align:left; padding:15px; font-size:14px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="
                     document.querySelectorAll('#ig-quizOptions button').forEach(b => b.disabled = true);
-                    if(${i} === ${q.correct}) {
-                        Workspace.Ingles.superarErro('${q.id}');
+                    if(${i} === Workspace.Ingles.desafioAtualObj.correct) {
+                        Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
                         Workspace.Ingles.sucessoGenerico(30);
                     } else {
-                        Workspace.Ingles.registrarErro(${JSON.stringify(q)}, 'quiz');
+                        Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'quiz');
                         Workspace.Ingles.falhaGenerica();
                     }
                 ">${o}</button>`).join('')}
@@ -813,27 +868,42 @@ Workspace.Ingles = {
     },
 
     renderGamePicturePop: () => {
-        const pic = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.pictures, 'picture');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.pictures, 'picture');
+        const pic = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center">
                 <div style="width:150px; height:150px; border-radius:24px; background:#F8FAFC; border:2px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:20px auto; font-size:80px;">${pic.emoji}</div>
                 <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px;">
                     <p style="color:white; font-size:14px; font-weight:bold; margin-bottom:15px;">Fale o nome exato:</p>
-                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', ${JSON.stringify(pic)}, 'picture')">🎤 Falar Nome</button>
+                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', Workspace.Ingles.desafioAtualObj, 'picture')">🎤 Falar Nome</button>
                     <div id="ig-speechResult" style="margin-top:15px;"></div>
+                    
+                    <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                        <input id="ig-input" class="ig-input" placeholder="Ou digita aqui..." style="text-align:center; font-weight:bold;">
+                        <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="
+                            const sim = Workspace.Ingles.similaridade(document.getElementById('ig-input').value, Workspace.Ingles.desafioAtualObj.word);
+                            if(sim >= 0.9) {
+                                Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
+                                Workspace.Ingles.sucessoGenerico(75);
+                            } else {
+                                Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'picture');
+                                Workspace.Ingles.falhaGenerica();
+                            }
+                        ">Verificar</button>
+                    </div>
                 </div>
             </div>
         `;
     },
 
-    // 🚀 O MOTOR DE IA QUE JULGA A PRONÚNCIA EM TEMPO REAL E ALIMENTA A MEMÓRIA
+    // 🚀 MOTOR DE INTELIGÊNCIA ARTIFICIAL PARA VOZ
     iniciarReconhecimentoDeVoz: (esperado, itemObj, tipoConteudo) => {
         const btn = document.getElementById('ig-btnVoz');
         const resEl = document.getElementById('ig-speechResult');
         
         if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
-            Workspace.mostrarAviso('Navegador sem suporte a deteção de voz.', 'warning');
-            return;
+            Workspace.mostrarAviso('Navegador sem suporte a deteção de voz.', 'warning'); return;
         }
 
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -852,11 +922,11 @@ Workspace.Ingles = {
             const sim = Workspace.Ingles.similaridade(falado, esperado);
             if(sim >= 0.75) {
                 resEl.innerHTML = `<div style="background:#D1FAE5; color:#065F46; padding:10px; border-radius:8px; font-weight:bold;">✅ Perfeito!</div>`;
-                Workspace.Ingles.superarErro(itemObj.id);
+                if (itemObj) Workspace.Ingles.superarErro(itemObj.id);
                 setTimeout(() => Workspace.Ingles.sucessoGenerico(75), 1000);
             } else {
                 resEl.innerHTML = `<div style="background:#FEE2E2; color:#B91C1C; padding:10px; border-radius:8px; font-weight:bold;">❌ IA entendeu: "${falado}"</div>`;
-                Workspace.Ingles.registrarErro(itemObj, tipoConteudo);
+                if (itemObj) Workspace.Ingles.registrarErro(itemObj, tipoConteudo);
                 setTimeout(() => Workspace.Ingles.falhaGenerica(), 1500);
             }
         };
@@ -867,7 +937,55 @@ Workspace.Ingles = {
         };
     },
 
-    // (Outros Jogos Subjetivos mantêm-se como Envio ao Professor)
+    // ============================================================================
+    // 🧩 OUTROS JOGOS (Com submissão para Professor ou Lógica Simples)
+    // ============================================================================
+    renderGameWordPicker: () => {
+        const sentences = [{id:'wp1', text:'I have _____ my keys.', options:['lost','lose','loosed'], correct:0}, {id:'wp2', text:'She is _____ than her sister.', options:['tall','taller','tallest'], correct:1}];
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(sentences, 'picker');
+        const s = Workspace.Ingles.desafioAtualObj;
+        
+        document.getElementById('ig-modalBody').innerHTML = `
+            <div class="ig-big-phrase" style="font-size:22px; color:#4F46E5;">${s.text}</div>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
+                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-weight:bold; border-radius:30px; cursor:pointer;" onclick="
+                    if(${i} === Workspace.Ingles.desafioAtualObj.correct) { 
+                        Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); 
+                        Workspace.Ingles.sucessoGenerico(20); 
+                    } else { 
+                        Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'picker'); 
+                        Workspace.Ingles.falhaGenerica(); 
+                    }
+                ">${o}</button>`).join('')}
+            </div>
+        `;
+    },
+
+    renderGameMinimalPairs: () => {
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.minimalPairs, 'minimal');
+        const pair = Workspace.Ingles.desafioAtualObj;
+        const target = Math.random() > 0.5 ? pair.a : pair.b;
+        
+        document.getElementById('ig-modalBody').innerHTML = `
+            <div style="text-align:center">
+                <h3 style="font-size:22px; color:#0F172A;">👄 Laboratório Fonético</h3>
+                <div style="background:#0F172A; padding:20px; border-radius:16px; margin-top:20px;">
+                    <button class="ws-btn" style="background:#4F46E5; color:white; padding:12px 30px; border-radius:30px; border:2px solid white; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${target}')">🎧 Tocar a Palavra Misteriosa</button>
+                    <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
+                            if('${pair.a}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
+                            else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
+                        ">${pair.a}</button>
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
+                            if('${pair.b}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
+                            else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
+                        ">${pair.b}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
     renderGameSentenceShuffle: () => {
         const task = ['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
         const phrase = Workspace.Ingles.defaults.phrases[Math.floor(Math.random()*Workspace.Ingles.defaults.phrases.length)];
@@ -886,60 +1004,33 @@ Workspace.Ingles = {
         `;
     },
     renderGameQuestionMaker: () => {
+        const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>p.text);
+        const a = poolAnswers.length > 0 ? poolAnswers[0] : 'I go to the gym because I want to be healthy.';
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "I go to the gym because I want to be healthy."</div>
-            <p style="text-align:center;">Que pergunta em inglês gerou esta resposta?</p>
+            <p style="color:#64748B;font-size:13px;text-align:center; font-weight:bold; text-transform:uppercase;">Um aluno respondeu isto:</p>
+            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${a}"</div>
+            <p style="margin-top:16px;font-weight:600; text-align:center;">Que pergunta em inglês gerou esta resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('questionMaker', document.getElementById('ig-input').value, 50)">Enviar ❓</button>
+            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="
+                const v = document.getElementById('ig-input').value.trim();
+                if(v.includes('?') && v.split(' ').length >= 3) { Workspace.Ingles.envioAoProfessor('questionMaker', v, 50); } 
+                else { Workspace.mostrarAviso('Atenção: A tua pergunta tem de conter (?) e pelo menos 3 palavras!', 'error'); }
+            ">Verificar ❓</button>
         `;
     },
     renderGameContextRole: () => {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:18px; text-align:left;">✈️ No Aeroporto<br><br><span style="font-size:15px;font-weight:400;color:#64748B">Attendant: "Can I see your passport?"</span></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?..."></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 50)">Assumir Papel 🎭</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel 🎭</button>
         `;
     },
     renderGameDebateAI: () => {
+        const topic = Workspace.Ingles.defaults.debates[0];
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:18px">🤖 Clube de Debate<br><br><span style="font-size:16px;color:#4F46E5;">AI will replace teachers</span></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Defende a tua posição..."></textarea>
             <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75)">Contra-Atacar 🧠</button>
-        `;
-    },
-    renderGameMinimalPairs: () => {
-        const pair = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.minimalPairs, 'minimal');
-        const target = Math.random() > 0.5 ? pair.a : pair.b;
-        document.getElementById('ig-modalBody').innerHTML = `
-            <div style="text-align:center">
-                <h3 style="font-size:22px; color:#0F172A;">👄 Laboratório Fonético</h3>
-                <div style="background:#0F172A; padding:20px; border-radius:16px; margin-top:20px;">
-                    <button class="ws-btn" style="background:#4F46E5; color:white; padding:12px 30px; border-radius:30px; border:2px solid white; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${target}')">🎧 Tocar a Palavra Misteriosa</button>
-                    <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
-                            if('${pair.a}' === '${target}') { Workspace.Ingles.superarErro('${pair.id}'); Workspace.Ingles.sucessoGenerico(75); } 
-                            else { Workspace.Ingles.registrarErro(${JSON.stringify(pair)}, 'minimal'); Workspace.Ingles.falhaGenerica(); }
-                        ">${pair.a}</button>
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
-                            if('${pair.b}' === '${target}') { Workspace.Ingles.superarErro('${pair.id}'); Workspace.Ingles.sucessoGenerico(75); } 
-                            else { Workspace.Ingles.registrarErro(${JSON.stringify(pair)}, 'minimal'); Workspace.Ingles.falhaGenerica(); }
-                        ">${pair.b}</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    renderGameWordPicker: () => {
-        const sentences = [{id:'wp1', text:'I have _____ my keys.', options:['lost','lose','loosed'], correct:0}, {id:'wp2', text:'She is _____ than her sister.', options:['tall','taller','tallest'], correct:1}];
-        const s = Workspace.Ingles.obterItemInteligente(sentences, 'picker');
-        document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:22px; color:#4F46E5;">${s.text}</div>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
-                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-weight:bold; border-radius:30px; cursor:pointer;" onclick="
-                    if(${i} === ${s.correct}) { Workspace.Ingles.superarErro('${s.id}'); Workspace.Ingles.sucessoGenerico(20); } 
-                    else { Workspace.Ingles.registrarErro(${JSON.stringify(s)}, 'picker'); Workspace.Ingles.falhaGenerica(); }
-                ">${o}</button>`).join('')}
-            </div>
         `;
     }
 };
