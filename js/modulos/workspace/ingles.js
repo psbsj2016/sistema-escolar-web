@@ -27,9 +27,9 @@ Workspace.Ingles = {
     defaults: {
         magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
-            { id: 'm1', text: 'Olá, (citarAluno)! Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! Quanto tempo temos hoje?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). Quantos minutos pretende focar-se hoje?' }
+            { id: 'm1', text: 'Olá, (citarAluno)! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
+            { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
+            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). 🗝️ Quantos minutos pretende focar-se hoje?' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -239,32 +239,28 @@ Workspace.Ingles = {
     // ============================================================================
     // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
-   // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
-    // ============================================================================
-    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
+    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
         u.lang = lang; 
         
+        u.pitch = isMago ? 0.7 : pitch;
+        u.rate = isMago ? 0.85 : rate;
+        
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
         if (isMago) {
-            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Lento (0.85), levemente grave (0.85) para não distorcer.
-            u.pitch = 0.85; 
-            u.rate = 0.85; 
-            // Procura vozes masculinas em Português
-            const vozesPT = voices.filter(v => v.lang.includes('pt'));
-            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
+            vozSelec = voices.find(v => v.lang.includes('pt') && (v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')))
+                    || voices.find(v => v.lang.includes('pt'));
         } else {
-            // 🇺🇸 Voz normal para os jogos em Inglês
-            u.pitch = pitch;
-            u.rate = rate;
             const idiomaPrincipal = lang.split('-')[0];
-            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
+            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')))
+                    || voices.find(v => v.lang.includes(idiomaPrincipal))
+                    || voices.find(v => v.lang.includes('en'))
+                    || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -536,36 +532,30 @@ Workspace.Ingles = {
     // 🧙‍♂️ NARRATIVA: O GUARDIÃO E A FECHADURA MÁGICA
     // ============================================================================
     encerrarSessaoBau: () => {
-        // 🚀 O RESET ABSOLUTO: Tranca o Baú e desliga todos os motores e memórias da sessão anterior!
         Workspace.Ingles.tempoGlobalDefinido = false;
         Workspace.Ingles.sessaoEncerrada = false;
         Workspace.Ingles.bauDestrancado = false;
-        Workspace.Ingles.digitandoAtivo = false;
-        
-        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
-        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
-        
         Workspace.navegarPara('feed');
     },
 
-   iniciarFalaGuardiao: (forcarRestart = false) => {
+    iniciarFalaGuardiao: (forcarRestart = false) => {
         if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
         Workspace.Ingles.digitandoAtivo = true;
         if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
         
         const balao = document.getElementById('ig-guardian-text');
         const botoes = document.getElementById('ig-guardian-options');
-        if (balao) balao.innerHTML = '';
-        if (botoes) botoes.classList.remove('visivel');
+        balao.innerHTML = '';
+        botoes.classList.remove('visivel');
 
         const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
 
         let fraseBruta = "";
 
-        // 1. INTELIGÊNCIA DE EXIBIÇÃO (Sorteio, Sequência ou Fixa)
+        // 🚀 O SEGREDO DO CONTROLO: Aleatório vs Sequencial vs Fixo
         if (config.modoExibicao === 'sequencial') {
-            const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
+            const userK = `ws_mago_acessos_${Workspace.usuario.id}`;
             let acessos = parseInt(localStorage.getItem(userK) || '0');
             const indice = acessos % frasesLivres.length; 
             fraseBruta = frasesLivres[indice].text;
@@ -576,47 +566,43 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
-        // 2. CAPTURA DO NOME REAL DO ALUNO
-        let nomeDoAluno = 'Aprendiz';
-        if (Workspace.usuario) {
-            nomeDoAluno = (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0];
-        }
+        const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
         
-        // 3. A DUPLA IDENTIDADE ABSOLUTA (Ignora se o professor esqueceu parênteses, etc)
-        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
-        const fraseAudio = fraseBruta.replace(regexCitar, nomeDoAluno);
-        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${nomeDoAluno}</strong>`);
+        // 🚀 A DUPLA IDENTIDADE (Áudio sem HTML, Tela com HTML e Cor)
+        const regexCitar = /\(citarAluno\)/gi;
+        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
+        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
 
-        // 4. ATIVA A VOZ DO MAGO (Usando o isMago = true)
+        // Controlo da Voz do Mago
         if (config.vozAtiva) {
             Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
         }
 
-        // 5. MÁQUINA DE ESCREVER BLINDADA CONTRA BUGS VISUAIS
         let i = 0;
+        let isTag = false;
+        let htmlAcumulado = "";
+
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
+        // 🚀 A MÁQUINA DE ESCREVER BLINDADA (Ignora Quebra de Tags HTML)
         Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            // Se o cursor bater num '<', ele dá um salto gigante até fechar a tag '>'
-            // Isto garante que a formatação não se parte a meio!
-            if (fraseVisual.charAt(i) === '<') {
-                const fimDaTag = fraseVisual.indexOf('>', i);
-                if (fimDaTag !== -1) {
-                    i = fimDaTag; 
-                }
+            const char = fraseVisual.charAt(i);
+
+            if (char === '<') isTag = true;
+            htmlAcumulado += char;
+            if (char === '>') isTag = false;
+
+            if (!isTag) {
+                balao.innerHTML = htmlAcumulado;
             }
 
-            // Agora sim, imprime o texto seguro
-            if (balao) balao.innerHTML = fraseVisual.substring(0, i + 1);
-            
             i++;
-
             if (i >= fraseVisual.length) {
                 clearInterval(Workspace.Ingles.magoIntervalTimer);
                 Workspace.Ingles.digitandoAtivo = false;
-                if (botoes) setTimeout(() => { botoes.classList.add('visivel'); }, 300);
+                setTimeout(() => { botoes.classList.add('visivel'); }, 300);
             }
         }, 35); 
     },
@@ -663,96 +649,105 @@ Workspace.Ingles = {
         }
     },
 
-   // ============================================================================
+    // ============================================================================
     // 🧲 FÍSICA E ANIMAÇÃO MÁGICA: ARRASTAR A CHAVE
     // ============================================================================
     ativarFisicaFechadura: () => {
-        let key = document.getElementById('ig-drag-key'); // Usamos 'let' para podermos atualizar a variável
+        const key = document.getElementById('ig-drag-key');
         const lock = document.getElementById('ig-keyhole');
-        const chestLock = document.getElementById('ig-chest-lock');
-        const screen = document.getElementById('ig-unlock-screen');
-
         if (!key || !lock) return;
 
-        // 1. HIGIENE VISUAL: Restaura as posições
-        key.style.display = 'block';
+        let isDragging = false;
+        let currentX = 0, currentY = 0;
+        let initialMouseX, initialMouseY;
+
         key.style.transform = `translate(0px, 0px)`;
-        
-        if (chestLock) {
-            chestLock.style.animation = 'pulseChest 2s infinite';
-            chestLock.style.transform = 'scale(1) rotate(0deg)'; 
-        }
-        
-        if (screen) {
-            screen.style.opacity = '1';
-            screen.style.transform = 'scale(1)';
-        }
-
-        // 2. HIGIENE DE EVENTOS: Clona a chave para eliminar cliques velhos 
-        key.replaceWith(key.cloneNode(true));
-        
-        // 🚀 A CORREÇÃO: Atualizamos a variável para a NOVA chave "viva" na tela!
-        key = document.getElementById('ig-drag-key'); 
-
-        // 3. VARIÁVEIS DE FÍSICA
-        Workspace.Ingles.fisica = { isDragging: false, currentX: 0, currentY: 0, startX: 0, startY: 0 };
 
         const startDrag = (e) => {
-            Workspace.Ingles.fisica.isDragging = true; 
-            key.style.cursor = 'grabbing';
+            isDragging = true; key.style.cursor = 'grabbing';
             const evt = e.type.includes('mouse') ? e : e.touches[0];
-            Workspace.Ingles.fisica.startX = evt.clientX - Workspace.Ingles.fisica.currentX;
-            Workspace.Ingles.fisica.startY = evt.clientY - Workspace.Ingles.fisica.currentY;
+            initialMouseX = evt.clientX - currentX;
+            initialMouseY = evt.clientY - currentY;
         };
 
-        Workspace.Ingles.onDragFechadura = (e) => {
-            if (!Workspace.Ingles.fisica.isDragging) return;
-            e.preventDefault(); 
-            
+        const onDrag = (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
             const evt = e.type.includes('mouse') ? e : e.touches[0];
-            Workspace.Ingles.fisica.currentX = evt.clientX - Workspace.Ingles.fisica.startX;
-            Workspace.Ingles.fisica.currentY = evt.clientY - Workspace.Ingles.fisica.startY;
-            key.style.transform = `translate(${Workspace.Ingles.fisica.currentX}px, ${Workspace.Ingles.fisica.currentY}px)`;
+            currentX = evt.clientX - initialMouseX;
+            currentY = evt.clientY - initialMouseY;
+            key.style.transform = `translate(${currentX}px, ${currentY}px)`;
 
-            // Deteta se a Chave tocou na Fechadura
             const keyRect = key.getBoundingClientRect();
             const lockRect = lock.getBoundingClientRect();
             const overlap = !(keyRect.right < lockRect.left || keyRect.left > lockRect.right || keyRect.bottom < lockRect.top || keyRect.top > lockRect.bottom);
 
-            if (overlap) { 
-                Workspace.Ingles.fisica.isDragging = false; 
-                Workspace.Ingles.explodirBau(lockRect.left + 15, lockRect.top + 15); 
-            }
+            if (overlap) { isDragging = false; Workspace.Ingles.explodirBau(lockRect.left + 15, lockRect.top + 15); }
         };
 
-        Workspace.Ingles.stopDragFechadura = () => {
-            Workspace.Ingles.fisica.isDragging = false; 
-            key.style.cursor = 'grab';
-            
-            // Regressa à origem se falhar a fechadura
+        const stopDrag = () => {
+            isDragging = false; key.style.cursor = 'grab';
             if (!Workspace.Ingles.bauDestrancado) {
-                Workspace.Ingles.fisica.currentX = 0; 
-                Workspace.Ingles.fisica.currentY = 0;
+                currentX = 0; currentY = 0;
                 key.style.transition = 'transform 0.3s ease';
                 key.style.transform = `translate(0px, 0px)`;
                 setTimeout(() => key.style.transition = 'none', 300);
             }
         };
 
-        // 4. REMOVE VIGILANTES GLOBAIS ANTIGOS (Do Documento)
-        document.removeEventListener('mousemove', Workspace.Ingles.onDragFechadura);
-        document.removeEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
-        document.removeEventListener('touchmove', Workspace.Ingles.onDragFechadura);
-        document.removeEventListener('touchend', Workspace.Ingles.stopDragFechadura);
+        key.addEventListener('mousedown', startDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag);
+        key.addEventListener('touchstart', startDrag, {passive: false}); document.addEventListener('touchmove', onDrag, {passive: false}); document.addEventListener('touchend', stopDrag);
+    },
+
+    explodirBau: (x, y) => {
+        Workspace.Ingles.bauDestrancado = true;
+        document.getElementById('ig-drag-key').style.display = 'none';
+        document.getElementById('ig-chest-lock').style.animation = 'none';
+        document.getElementById('ig-chest-lock').style.transform = 'scale(1.3) rotate(5deg)';
         
-        // 5. LIGA OS NOVOS MOTORES À CHAVE VIVA
-        key.addEventListener('mousedown', startDrag); 
-        document.addEventListener('mousemove', Workspace.Ingles.onDragFechadura); 
-        document.addEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
-        
-        key.addEventListener('touchstart', startDrag, {passive: false}); 
-        document.addEventListener('touchmove', Workspace.Ingles.onDragFechadura, {passive: false}); 
-        document.addEventListener('touchend', Workspace.Ingles.stopDragFechadura);
+        try { const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); audio.volume = 1.0; audio.play().catch(()=>{}); } catch(e){}
+
+        const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
+        for (let i = 0; i < 60; i++) {
+            let p = document.createElement('div');
+            p.className = 'ig-particle';
+            document.body.appendChild(p);
+            let angle = Math.random() * Math.PI * 2;
+            let velocity = 100 + Math.random() * 250;
+            let tx = Math.cos(angle) * velocity; let ty = Math.sin(angle) * velocity - 100;
+            p.style.left = (x + 20) + 'px'; p.style.top = (y + 20) + 'px';
+            p.style.setProperty('--tx', tx + 'px'); p.style.setProperty('--ty', ty + 'px');
+            p.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
+            p.style.boxShadow = `0 0 8px ${p.style.backgroundColor}`;
+            
+            let size = (5 + Math.random() * 10) + 'px';
+            p.style.width = size; p.style.height = size;
+            p.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+            
+            setTimeout(() => p.remove(), 1500);
+        }
+
+        setTimeout(() => {
+            const screen = document.getElementById('ig-unlock-screen');
+            screen.style.opacity = '0';
+            screen.style.transform = 'scale(1.1)';
+            screen.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+            
+            setTimeout(() => { 
+                Workspace.Ingles.iniciarTimerGlobal();
+                Workspace.Ingles.renderizarVisualizacao(); 
+                const grid = document.getElementById('ig-gamesGrid');
+                if (grid) {
+                    grid.style.opacity = '0';
+                    grid.style.transform = 'translateY(30px)';
+                    requestAnimationFrame(() => {
+                        grid.style.transition = 'all 0.6s ease-out';
+                        grid.style.opacity = '1';
+                        grid.style.transform = 'translateY(0)';
+                    });
+                }
+            }, 600);
+        }, 800);
     },
 
     // ============================================================================
@@ -774,9 +769,9 @@ Workspace.Ingles = {
                     <h3>🧙‍♂️ Inteligência do Guardião (Mago IA)</h3>
                     <p style="color:#64748B;font-size:13px">Configure o comportamento do Mago e crie falas personalizadas.</p>
                     
-                    <!-- 🚀 PAINEL DE CONTROLO DE COMPORTAMENTO -->
+                    <!-- 🚀 PAINEL DE CONTROLE DE COMPORTAMENTO -->
                     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Controlo da Inteligência</h4>
+                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Painel de Controle de Comportamento</h4>
                         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: #2c3e50;">
                                 <input type="checkbox" id="mago-voz-toggle" ${configMago.vozAtiva ? 'checked' : ''} onchange="Workspace.Ingles.atualizarConfigMago()" style="transform: scale(1.2);"> 
@@ -784,11 +779,11 @@ Workspace.Ingles = {
                             </label>
                             <div style="width: 1px; height: 20px; background: #cbd5e1;"></div>
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #2c3e50;">
-                                <span>Lógica de Leitura:</span>
+                                <span>Ordem das Falas:</span>
                                 <select id="mago-modo-select" class="ig-input" style="width: auto; padding: 6px 12px; height: 32px;" onchange="Workspace.Ingles.atualizarConfigMago()">
-                                    <option value="aleatorio" ${configMago.modoExibicao === 'aleatorio' ? 'selected' : ''}>🎲 Sortear uma frase (Aleatório)</option>
-                                    <option value="sequencial" ${configMago.modoExibicao === 'sequencial' ? 'selected' : ''}>🔢 Sequencial (Acesso 1, 2, 3...)</option>
-                                    <option value="fixa" ${configMago.modoExibicao === 'fixa' ? 'selected' : ''}>📌 Fixa (Sempre a nº 1 da lista)</option>
+                                    <option value="aleatorio" ${configMago.modoExibicao === 'aleatorio' ? 'selected' : ''}>🎲 Modo Aleatório</option>
+                                    <option value="sequencial" ${configMago.modoExibicao === 'sequencial' ? 'selected' : ''}>🔢 Modo Sequencial (Por Acesso)</option>
+                                    <option value="fixa" ${configMago.modoExibicao === 'fixa' ? 'selected' : ''}>📌 Modo Fixo (Apenas a 1ª da lista)</option>
                                 </select>
                             </div>
                         </div>
@@ -797,22 +792,22 @@ Workspace.Ingles = {
                     <!-- 🚀 CRIAÇÃO DE NOVAS FALAS COM BOTÃO CITAÇÃO -->
                     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Adicionar / Editar Fala:</label>
-                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome do Aluno</button>
+                            <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Nova Fala do Mago:</label>
+                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome (citarAluno)</button>
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <input id="nwMago" class="ig-input" placeholder="Clique no campo de texto para inserir a variável mágica onde desejar...">
+                            <input id="nwMago" class="ig-input" placeholder="Ex: Olá (citarAluno)! Preparado para hoje?">
                             <button class="ws-btn" id="btn-salvar-mago" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addMagoPhrase()">Salvar Fala</button>
                         </div>
                     </div>
 
-                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas Cadastradas (Segure a seta ↕ para reordenar)</h4>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas Cadastradas (Arraste para reordenar)</h4>
                     <div id="ws-mago-lista-falas" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                         ${state.magoPhrases.map((m, index) => `
                         <div class="ig-list-item ws-mago-drag" draggable="true" data-id="${m.id}" ondragstart="Workspace.Ingles.dragStart(event)" ondragover="Workspace.Ingles.dragOver(event)" ondragleave="Workspace.Ingles.dragLeave(event)" ondrop="Workspace.Ingles.drop(event)" ondragend="Workspace.Ingles.dragEnd(event)" style="background:#fff; border: 1px solid #eee; border-left: 4px solid #4F46E5; border-radius:8px; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; cursor: grab; transition: border 0.2s;">
                             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                                 <span style="font-weight:900; color:#cbd5e1; font-size:16px; width: 25px;">${index + 1}.</span>
-                                <span style="font-size:18px; color:#94a3b8; cursor:grab;" title="Arraste para mover">↕</span>
+                                <span style="font-size:18px; color:#94a3b8; cursor:grab;">↕</span>
                                 <div style="font-weight:600; color:#2c3e50; font-size:13px; flex: 1;">${Workspace.escapeHTML(m.text)}</div>
                             </div>
                             <div style="display:flex; gap: 8px;">
@@ -997,7 +992,7 @@ Workspace.Ingles = {
         document.querySelectorAll('.ws-mago-drag').forEach(node => node.style.borderTop = '1px solid #eee');
     },
 
-    // 🚀 INSERIR NOME MAGO
+    // 🚀 INSERIR NOME MAGO E EDITAR
     inserirVariavelMago: () => {
         const input = document.getElementById('nwMago');
         if (!input) return;
@@ -1005,8 +1000,6 @@ Workspace.Ingles = {
         const end = input.selectionEnd;
         const text = input.value;
         const variable = "(citarAluno)";
-        
-        // Insere a palavra mágica exatamente onde o cursor de texto estiver a piscar!
         input.value = text.substring(0, start) + variable + text.substring(end);
         input.focus();
         input.selectionStart = input.selectionEnd = start + variable.length;
