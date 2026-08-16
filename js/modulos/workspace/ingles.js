@@ -239,28 +239,32 @@ Workspace.Ingles = {
     // ============================================================================
     // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
-    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
+   // ============================================================================
+    // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
+    // ============================================================================
+    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
         u.lang = lang; 
         
-        u.pitch = isMago ? 0.7 : pitch;
-        u.rate = isMago ? 0.85 : rate;
-        
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
         if (isMago) {
-            vozSelec = voices.find(v => v.lang.includes('pt') && (v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')))
-                    || voices.find(v => v.lang.includes('pt'));
+            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Lento (0.85), levemente grave (0.85) para não distorcer.
+            u.pitch = 0.85; 
+            u.rate = 0.85; 
+            // Procura vozes masculinas em Português
+            const vozesPT = voices.filter(v => v.lang.includes('pt'));
+            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
         } else {
+            // 🇺🇸 Voz normal para os jogos em Inglês
+            u.pitch = pitch;
+            u.rate = rate;
             const idiomaPrincipal = lang.split('-')[0];
-            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')))
-                    || voices.find(v => v.lang.includes(idiomaPrincipal))
-                    || voices.find(v => v.lang.includes('en'))
-                    || voices[0];
+            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -544,7 +548,7 @@ Workspace.Ingles = {
         Workspace.navegarPara('feed');
     },
 
-    iniciarFalaGuardiao: (forcarRestart = false) => {
+   iniciarFalaGuardiao: (forcarRestart = false) => {
         if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
         Workspace.Ingles.digitandoAtivo = true;
         if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
@@ -572,19 +576,18 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
-        // 2. CAPTURA DO NOME REAL DO ALUNO (Traz diretamente do perfil do login)
+        // 2. CAPTURA DO NOME REAL DO ALUNO
         let nomeDoAluno = 'Aprendiz';
         if (Workspace.usuario) {
             nomeDoAluno = (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0];
         }
         
-        // 3. A DUPLA IDENTIDADE ABSOLUTA (Ignora erros de digitação do professor)
-        // O regex "g" substitui em TODOS os lugares da frase. O "i" ignora maiúsculas/minúsculas.
-        const regexCitar = /\(?citarAluno\)?/gi;
+        // 3. A DUPLA IDENTIDADE ABSOLUTA (Ignora se o professor esqueceu parênteses, etc)
+        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
         const fraseAudio = fraseBruta.replace(regexCitar, nomeDoAluno);
         const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${nomeDoAluno}</strong>`);
 
-        // 4. ATIVA A VOZ DO MAGO (Usando apenas o texto limpo, sem códigos visuais)
+        // 4. ATIVA A VOZ DO MAGO (Usando o isMago = true)
         if (config.vozAtiva) {
             Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
@@ -596,8 +599,8 @@ Workspace.Ingles = {
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
         Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            // Se encontrar o início de uma formatação HTML (ex: <strong>), o cursor pula para o final da tag (>)
-            // Isso garante que o navegador desenha o código inteiro de uma vez, sem quebrar o ecrã!
+            // Se o cursor bater num '<', ele dá um salto gigante até fechar a tag '>'
+            // Isto garante que a formatação não se parte a meio!
             if (fraseVisual.charAt(i) === '<') {
                 const fimDaTag = fraseVisual.indexOf('>', i);
                 if (fimDaTag !== -1) {
@@ -605,7 +608,7 @@ Workspace.Ingles = {
                 }
             }
 
-            // Exibe o texto cortado até ao ponto atual de forma limpa
+            // Agora sim, imprime o texto seguro
             if (balao) balao.innerHTML = fraseVisual.substring(0, i + 1);
             
             i++;
@@ -770,9 +773,9 @@ Workspace.Ingles = {
                     <h3>🧙‍♂️ Inteligência do Guardião (Mago IA)</h3>
                     <p style="color:#64748B;font-size:13px">Configure o comportamento do Mago e crie falas personalizadas.</p>
                     
-                    <!-- 🚀 PAINEL DE CONTROLE DE COMPORTAMENTO -->
+                    <!-- 🚀 PAINEL DE CONTROLO DE COMPORTAMENTO -->
                     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Painel de Controle de Comportamento</h4>
+                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Controlo da Inteligência</h4>
                         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                             <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: #2c3e50;">
                                 <input type="checkbox" id="mago-voz-toggle" ${configMago.vozAtiva ? 'checked' : ''} onchange="Workspace.Ingles.atualizarConfigMago()" style="transform: scale(1.2);"> 
@@ -780,11 +783,11 @@ Workspace.Ingles = {
                             </label>
                             <div style="width: 1px; height: 20px; background: #cbd5e1;"></div>
                             <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #2c3e50;">
-                                <span>Ordem das Falas:</span>
+                                <span>Lógica de Leitura:</span>
                                 <select id="mago-modo-select" class="ig-input" style="width: auto; padding: 6px 12px; height: 32px;" onchange="Workspace.Ingles.atualizarConfigMago()">
-                                    <option value="aleatorio" ${configMago.modoExibicao === 'aleatorio' ? 'selected' : ''}>🎲 Modo Aleatório</option>
-                                    <option value="sequencial" ${configMago.modoExibicao === 'sequencial' ? 'selected' : ''}>🔢 Modo Sequencial (Por Acesso)</option>
-                                    <option value="fixa" ${configMago.modoExibicao === 'fixa' ? 'selected' : ''}>📌 Modo Fixo (Apenas a 1ª da lista)</option>
+                                    <option value="aleatorio" ${configMago.modoExibicao === 'aleatorio' ? 'selected' : ''}>🎲 Sortear uma frase (Aleatório)</option>
+                                    <option value="sequencial" ${configMago.modoExibicao === 'sequencial' ? 'selected' : ''}>🔢 Sequencial (Acesso 1, 2, 3...)</option>
+                                    <option value="fixa" ${configMago.modoExibicao === 'fixa' ? 'selected' : ''}>📌 Fixa (Sempre a nº 1 da lista)</option>
                                 </select>
                             </div>
                         </div>
@@ -793,22 +796,22 @@ Workspace.Ingles = {
                     <!-- 🚀 CRIAÇÃO DE NOVAS FALAS COM BOTÃO CITAÇÃO -->
                     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Nova Fala do Mago:</label>
-                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome (citarAluno)</button>
+                            <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Adicionar / Editar Fala:</label>
+                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome do Aluno</button>
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <input id="nwMago" class="ig-input" placeholder="Ex: Olá (citarAluno)! Preparado para hoje?">
+                            <input id="nwMago" class="ig-input" placeholder="Clique no campo de texto para inserir a variável mágica onde desejar...">
                             <button class="ws-btn" id="btn-salvar-mago" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addMagoPhrase()">Salvar Fala</button>
                         </div>
                     </div>
 
-                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas Cadastradas (Arraste para reordenar)</h4>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas Cadastradas (Segure a seta ↕ para reordenar)</h4>
                     <div id="ws-mago-lista-falas" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                         ${state.magoPhrases.map((m, index) => `
                         <div class="ig-list-item ws-mago-drag" draggable="true" data-id="${m.id}" ondragstart="Workspace.Ingles.dragStart(event)" ondragover="Workspace.Ingles.dragOver(event)" ondragleave="Workspace.Ingles.dragLeave(event)" ondrop="Workspace.Ingles.drop(event)" ondragend="Workspace.Ingles.dragEnd(event)" style="background:#fff; border: 1px solid #eee; border-left: 4px solid #4F46E5; border-radius:8px; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; cursor: grab; transition: border 0.2s;">
                             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                                 <span style="font-weight:900; color:#cbd5e1; font-size:16px; width: 25px;">${index + 1}.</span>
-                                <span style="font-size:18px; color:#94a3b8; cursor:grab;">↕</span>
+                                <span style="font-size:18px; color:#94a3b8; cursor:grab;" title="Arraste para mover">↕</span>
                                 <div style="font-weight:600; color:#2c3e50; font-size:13px; flex: 1;">${Workspace.escapeHTML(m.text)}</div>
                             </div>
                             <div style="display:flex; gap: 8px;">
@@ -993,7 +996,7 @@ Workspace.Ingles = {
         document.querySelectorAll('.ws-mago-drag').forEach(node => node.style.borderTop = '1px solid #eee');
     },
 
-    // 🚀 INSERIR NOME MAGO E EDITAR
+    // 🚀 INSERIR NOME MAGO
     inserirVariavelMago: () => {
         const input = document.getElementById('nwMago');
         if (!input) return;
@@ -1001,6 +1004,8 @@ Workspace.Ingles = {
         const end = input.selectionEnd;
         const text = input.value;
         const variable = "(citarAluno)";
+        
+        // Insere a palavra mágica exatamente onde o cursor de texto estiver a piscar!
         input.value = text.substring(0, start) + variable + text.substring(end);
         input.focus();
         input.selectionStart = input.selectionEnd = start + variable.length;
