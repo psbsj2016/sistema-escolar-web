@@ -23,9 +23,9 @@ Workspace.Ingles = {
 
     defaults: {
         magoPhrases: [
-            { id: 'm1', text: 'Olá, jovem aprendiz! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam. 🗝️ Quantos minutos pretende focar-se hoje?' }
+            { id: 'm1', text: 'Olá, <strong>${aluno.nome}</strong>! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
+            { id: 'm2', text: 'Bem-vindo de volta! Vejo que está muito empolgado! <strong>${aluno.nome}</strong> Quanto tempo temos hoje?' },
+            { id: 'm3', text: 'Os segredos do Baú aguardam. <strong>${aluno.nome}</strong>, quantos minutos pretende focar-se hoje?' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
