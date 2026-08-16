@@ -6,22 +6,26 @@ Workspace.Ingles = {
         xp: 0, streak: 1, words: [], phrases: [], quizzes: [], pictures: [], minimalPairs: [], debates: [], submissions: [], pool: [],
         errosRetidos: [], 
         itensConcluidos: [],
-        magoPhrases: [] // 🧙‍♂️ NOVO: Memória de falas do Mago
+        magoPhrases: [], // 🧙‍♂️ Memória de falas do Mago
+        magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' } // ⚙️ O novo cérebro de configurações do Mago
     },
     mediaRecorder: null, audioChunks: [], currentAudioURL: null, audioBlob: null, streamMicrofone: null, recognition: null,
     
     // 🚀 VARIÁVEIS DE GAMIFICAÇÃO E TEMPO GLOBAL
     bauDestrancado: false, 
-    tempoGlobalDefinido: false, // Controla se o Mago já perguntou
-    sessaoEncerrada: false,     // Controla quando o Baú fecha
+    tempoGlobalDefinido: false, 
+    sessaoEncerrada: false,     
     jogoAtual: null,
     tempoRestante: 0,
-    timerGlobal: null,          // O relógio agora é Global!
+    timerGlobal: null,          
     xpGanhosNaSessao: 0,
     desafioAtualObj: null,
-    digitandoAtivo: false,      // Controla a máquina de escrever
+    digitandoAtivo: false,      
+    magoIntervalTimer: null, // Controla o tempo de digitação do Mago
+    sseListenerConfigurado: false, // Evita duplicação da Antena de Tempo Real
 
     defaults: {
+        magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
             { id: 'm1', text: 'Olá, (citarAluno)! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
             { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
@@ -88,17 +92,43 @@ Workspace.Ingles = {
     init: () => {
         Workspace.Ingles.injetarCSS();
         Workspace.Ingles.construirHTML();
-        Workspace.Ingles.loadDados().then(() => {
-            if (Workspace.usuario && Workspace.usuario.tipo !== 'Aluno') {
-                const badge = document.getElementById('ig-pendingCount');
-                if(badge) badge.textContent = Workspace.Ingles.state.submissions.filter(s=>s.status==='pending').length;
-            }
-        });
+        
+        // 📡 A ANTENA DE TEMPO REAL: Deteta as alterações do Professor e atualiza o Aluno instantaneamente!
+        if (!Workspace.Ingles.sseListenerConfigurado && Workspace.usuario) {
+            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+            const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
+            evtSource.onmessage = (event) => {
+                try {
+                    const dados = JSON.parse(event.data);
+                    if (dados.type === 'BAU_INGLES_UPDATE') {
+                        Workspace.Ingles.sincronizarTempoReal();
+                    }
+                } catch(e) {}
+            };
+            Workspace.Ingles.sseListenerConfigurado = true;
+        }
+
         if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     },
 
     abrirBau: () => {
         Workspace.navegarPara('ingles');
+    },
+
+    sincronizarTempoReal: async () => {
+        await Workspace.Ingles.loadDados();
+        
+        // Se o Aluno estiver na tela do Mago a olhar, nós recarregamos a fala do Mago ao vivo!
+        const telaMago = document.getElementById('ig-guardian-screen');
+        if (telaMago && telaMago.style.display !== 'none' && Workspace.usuario.tipo === 'Aluno') {
+            Workspace.Ingles.iniciarFalaGuardiao(true); // O 'true' força o Mago a apagar tudo e falar de novo!
+        }
+        
+        // Se for o Professor na Aba do Mago, a tela dele atualiza-se sem piscar!
+        const activeTab = document.querySelector('.ig-side-item.active');
+        if (activeTab && Workspace.usuario.tipo !== 'Aluno') {
+            Workspace.Ingles.renderProfessorTab(activeTab.dataset.tab);
+        }
     },
 
     loadDados: async () => {
@@ -116,6 +146,7 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 Workspace.Ingles.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
                 Workspace.Ingles.state.magoPhrases = Array.isArray(d.magoPhrases) ? d.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
+                Workspace.Ingles.state.magoConfig = d.magoConfig || Workspace.Ingles.defaults.magoConfig;
             } else if (Workspace.Ingles.state.words.length === 0) {
                 Workspace.Ingles.state.words = [...Workspace.Ingles.defaults.words];
                 Workspace.Ingles.state.phrases = [...Workspace.Ingles.defaults.phrases];
@@ -125,6 +156,7 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.pool = [];
                 Workspace.Ingles.state.errosRetidos = [];
                 Workspace.Ingles.state.magoPhrases = [...Workspace.Ingles.defaults.magoPhrases];
+                Workspace.Ingles.state.magoConfig = { ...Workspace.Ingles.defaults.magoConfig };
             }
 
             const userK = `ws_ingles_user_${Workspace.usuario.id}`;
@@ -153,7 +185,8 @@ Workspace.Ingles = {
                 words: Workspace.Ingles.state.words, phrases: Workspace.Ingles.state.phrases,
                 quizzes: Workspace.Ingles.state.quizzes, pictures: Workspace.Ingles.state.pictures,
                 submissions: Workspace.Ingles.state.submissions, pool: Workspace.Ingles.state.pool,
-                errosRetidos: Workspace.Ingles.state.errosRetidos, magoPhrases: Workspace.Ingles.state.magoPhrases
+                errosRetidos: Workspace.Ingles.state.errosRetidos, magoPhrases: Workspace.Ingles.state.magoPhrases,
+                magoConfig: Workspace.Ingles.state.magoConfig // ⚙️ Salva as configurações de voz e ordem
             });
         } catch (e) {}
     },
@@ -213,7 +246,6 @@ Workspace.Ingles = {
         const u = new SpeechSynthesisUtterance(text); 
         u.lang = lang; 
         
-        // 🚀 O FEITIÇO CORRIGIDO: Um tom ligeiramente mais grave (0.7), sem distorcer o robô!
         u.pitch = isMago ? 0.7 : pitch;
         u.rate = isMago ? 0.85 : rate;
         
@@ -221,11 +253,9 @@ Workspace.Ingles = {
         let vozSelec = null;
 
         if (isMago) {
-            // 🧙‍♂️ Busca Inteligente: Tenta encontrar as vozes masculinas do sistema (Antonio, Daniel, etc)
             vozSelec = voices.find(v => v.lang.includes('pt') && (v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')))
                     || voices.find(v => v.lang.includes('pt'));
         } else {
-            // 🇺🇸 Busca Premium para os Jogos: Tenta usar as vozes Google ou Naturais
             const idiomaPrincipal = lang.split('-')[0];
             vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')))
                     || voices.find(v => v.lang.includes(idiomaPrincipal))
@@ -409,7 +439,7 @@ Workspace.Ingles = {
                 <button class="ws-btn" style="background:#0F172A; color:white; padding:12px 25px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
             </div>
 
-            <div id="ig-professorView" style="display:none; min-height: 70vh;">
+            <div id="ig-professorView" style="display: none; min-height: 70vh;">
                 <div class="ig-sidebar">
                     <button class="ig-side-item" data-tab="mago" onclick="Workspace.Ingles.renderProfessorTab('mago')">🧙‍♂️ Mago IA</button>
                     <button class="ig-side-item active" data-tab="biblioteca" onclick="Workspace.Ingles.renderProfessorTab('biblioteca')">📚 Biblioteca</button>
@@ -436,7 +466,7 @@ Workspace.Ingles = {
         `;
     },
 
-   renderizarVisualizacao: () => {
+    renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
         
@@ -454,7 +484,7 @@ Workspace.Ingles = {
         } else {
             document.getElementById('ig-professorView').style.display = 'none';
 
-            // 🚀 HIGIENE VISUAL ABSOLUTA: Limpa a tela de resíduos antigos antes de abrir a nova etapa!
+            // 🚀 HIGIENE VISUAL
             document.getElementById('ig-guardian-screen').style.display = 'none';
             document.getElementById('ig-unlock-screen').style.display = 'none';
             document.getElementById('ig-alunoView').style.display = 'none';
@@ -508,30 +538,47 @@ Workspace.Ingles = {
         Workspace.navegarPara('feed');
     },
 
-    iniciarFalaGuardiao: () => {
-        if (Workspace.Ingles.digitandoAtivo) return; 
+    iniciarFalaGuardiao: (forcarRestart = false) => {
+        if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
         Workspace.Ingles.digitandoAtivo = true;
+        if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
         
         const balao = document.getElementById('ig-guardian-text');
         const botoes = document.getElementById('ig-guardian-options');
         balao.innerHTML = '';
         botoes.classList.remove('visivel');
 
-        // 1. A INTELIGÊNCIA: Sorteia uma frase que o Professor cadastrou no MongoDB
+        const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
-        const fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
 
-        // 2. Extrai o nome do aluno que está logado agora
+        let fraseBruta = "";
+
+        // 🚀 O SEGREDO DO CONTROLO: Aleatório vs Sequencial vs Fixo
+        if (config.modoExibicao === 'sequencial') {
+            const userK = `ws_mago_acessos_${Workspace.usuario.id}`;
+            let acessos = parseInt(localStorage.getItem(userK) || '0');
+            const indice = acessos % frasesLivres.length; 
+            fraseBruta = frasesLivres[indice].text;
+            if (!forcarRestart) localStorage.setItem(userK, acessos + 1); 
+        } else if (config.modoExibicao === 'fixa') {
+            fraseBruta = frasesLivres[0].text;
+        } else {
+            fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
+        }
+
         const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
+        
+        // 🚀 A DUPLA IDENTIDADE (Áudio sem HTML, Tela com HTML e Cor)
+        const regexCitar = /\(citarAluno\)/gi;
+        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
+        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
 
-        // 3. Monta a frase limpa para o Motor de Voz (Para não ler códigos HTML)
-        const fraseAudio = fraseBruta.replace(/\(citarAluno\)/g, primeiroNome);
-
-        // 4. Monta a frase visual para a tela (Com cores e negrito)
-        const fraseVisual = fraseBruta.replace(/\(citarAluno\)/g, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
-
-       // 🚀 Passamos o parâmetro 'true' no fim, para o motor saber que é o Mago a falar!
-        Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
+        // Controlo da Voz do Mago
+        if (config.vozAtiva) {
+            Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
+        } else if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); 
+        }
 
         let i = 0;
         let isTag = false;
@@ -539,14 +586,12 @@ Workspace.Ingles = {
 
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
-        // 🚀 A MÁQUINA DE ESCREVER INTELIGENTE (Ignora a quebra de tags HTML)
-        const intervalo = setInterval(() => {
+        // 🚀 A MÁQUINA DE ESCREVER BLINDADA (Ignora Quebra de Tags HTML)
+        Workspace.Ingles.magoIntervalTimer = setInterval(() => {
             const char = fraseVisual.charAt(i);
 
             if (char === '<') isTag = true;
-            
             htmlAcumulado += char;
-            
             if (char === '>') isTag = false;
 
             if (!isTag) {
@@ -555,7 +600,7 @@ Workspace.Ingles = {
 
             i++;
             if (i >= fraseVisual.length) {
-                clearInterval(intervalo);
+                clearInterval(Workspace.Ingles.magoIntervalTimer);
                 Workspace.Ingles.digitandoAtivo = false;
                 setTimeout(() => { botoes.classList.add('visivel'); }, 300);
             }
@@ -654,18 +699,13 @@ Workspace.Ingles = {
         key.addEventListener('touchstart', startDrag, {passive: false}); document.addEventListener('touchmove', onDrag, {passive: false}); document.addEventListener('touchend', stopDrag);
     },
 
-   explodirBau: (x, y) => {
+    explodirBau: (x, y) => {
         Workspace.Ingles.bauDestrancado = true;
         document.getElementById('ig-drag-key').style.display = 'none';
         document.getElementById('ig-chest-lock').style.animation = 'none';
         document.getElementById('ig-chest-lock').style.transform = 'scale(1.3) rotate(5deg)';
         
-        // 🚀 O NOVO SOM MÁGICO (Pó de Fada e Fechadura)
-        try { 
-            const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); 
-            audio.volume = 1.0; // Volume no máximo
-            audio.play().catch(()=>{}); 
-        } catch(e){}
+        try { const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); audio.volume = 1.0; audio.play().catch(()=>{}); } catch(e){}
 
         const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
         for (let i = 0; i < 60; i++) {
@@ -721,17 +761,39 @@ Workspace.Ingles = {
         
         const content = document.getElementById('ig-tab-content');
         const state = Workspace.Ingles.state;
+        const configMago = state.magoConfig || Workspace.Ingles.defaults.magoConfig;
         
         if (tabId === 'mago') {
             content.innerHTML = `
                 <div class="ig-card">
                     <h3>🧙‍♂️ Inteligência do Guardião (Mago IA)</h3>
-                    <p style="color:#64748B;font-size:13px">Crie falas personalizadas. Use o botão abaixo para inserir a palavra mágica e o Mago dirá o nome do aluno em voz alta!</p>
+                    <p style="color:#64748B;font-size:13px">Configure o comportamento do Mago e crie falas personalizadas.</p>
                     
+                    <!-- 🚀 PAINEL DE CONTROLE DE COMPORTAMENTO -->
                     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Painel de Controle de Comportamento</h4>
+                        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: #2c3e50;">
+                                <input type="checkbox" id="mago-voz-toggle" ${configMago.vozAtiva ? 'checked' : ''} onchange="Workspace.Ingles.atualizarConfigMago()" style="transform: scale(1.2);"> 
+                                🔊 Ativar Voz do Mago
+                            </label>
+                            <div style="width: 1px; height: 20px; background: #cbd5e1;"></div>
+                            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: bold; color: #2c3e50;">
+                                <span>Ordem das Falas:</span>
+                                <select id="mago-modo-select" class="ig-input" style="width: auto; padding: 6px 12px; height: 32px;" onchange="Workspace.Ingles.atualizarConfigMago()">
+                                    <option value="aleatorio" ${configMago.modoExibicao === 'aleatorio' ? 'selected' : ''}>🎲 Modo Aleatório</option>
+                                    <option value="sequencial" ${configMago.modoExibicao === 'sequencial' ? 'selected' : ''}>🔢 Modo Sequencial (Por Acesso)</option>
+                                    <option value="fixa" ${configMago.modoExibicao === 'fixa' ? 'selected' : ''}>📌 Modo Fixo (Apenas a 1ª da lista)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🚀 CRIAÇÃO DE NOVAS FALAS COM BOTÃO CITAÇÃO -->
+                    <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                             <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Nova Fala do Mago:</label>
-                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome (citarAluno)</button>
+                            <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome (citarAluno)</button>
                         </div>
                         <div style="display:flex; gap:10px;">
                             <input id="nwMago" class="ig-input" placeholder="Ex: Olá (citarAluno)! Preparado para hoje?">
@@ -739,7 +801,7 @@ Workspace.Ingles = {
                         </div>
                     </div>
 
-                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas (Arraste para reordenar)</h4>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">Lista de Falas Cadastradas (Arraste para reordenar)</h4>
                     <div id="ws-mago-lista-falas" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
                         ${state.magoPhrases.map((m, index) => `
                         <div class="ig-list-item ws-mago-drag" draggable="true" data-id="${m.id}" ondragstart="Workspace.Ingles.dragStart(event)" ondragover="Workspace.Ingles.dragOver(event)" ondragleave="Workspace.Ingles.dragLeave(event)" ondrop="Workspace.Ingles.drop(event)" ondragend="Workspace.Ingles.dragEnd(event)" style="background:#fff; border: 1px solid #eee; border-left: 4px solid #4F46E5; border-radius:8px; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; cursor: grab; transition: border 0.2s;">
@@ -876,6 +938,15 @@ Workspace.Ingles = {
                 } else content.innerHTML = `<div class="ig-card" style="text-align:center; padding:50px;">A corrida ainda não começou!</div>`;
             });
         }
+    },
+
+    // 🚀 LÓGICA DE CONTROLO DO MAGO
+    atualizarConfigMago: async () => {
+        const voz = document.getElementById('mago-voz-toggle').checked;
+        const modo = document.getElementById('mago-modo-select').value;
+        Workspace.Ingles.state.magoConfig = { vozAtiva: voz, modoExibicao: modo };
+        await Workspace.Ingles.saveDados();
+        Workspace.mostrarAviso("Configuração de comportamento atualizada!", "success");
     },
 
     // 🚀 LÓGICA DO DRAG & DROP DO MAGO
@@ -1331,6 +1402,7 @@ Workspace.Ingles = {
     renderGameQuestionMaker: () => {
         const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>({ id: p.id, text: p.text }));
         
+        // Se a piscina global de alunos estiver vazia, usa uma resposta padrão forte
         const defaultAnswer = { id: 'fallback1', text: 'I go to the gym because I want to be healthy.' };
         Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : defaultAnswer;
         const a = Workspace.Ingles.desafioAtualObj;
