@@ -545,17 +545,17 @@ Workspace.Ingles = {
         
         const balao = document.getElementById('ig-guardian-text');
         const botoes = document.getElementById('ig-guardian-options');
-        balao.innerHTML = '';
-        botoes.classList.remove('visivel');
+        if (balao) balao.innerHTML = '';
+        if (botoes) botoes.classList.remove('visivel');
 
         const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
 
         let fraseBruta = "";
 
-        // 🚀 O SEGREDO DO CONTROLO: Aleatório vs Sequencial vs Fixo
+        // 1. INTELIGÊNCIA DE EXIBIÇÃO (Sorteio, Sequência ou Fixa)
         if (config.modoExibicao === 'sequencial') {
-            const userK = `ws_mago_acessos_${Workspace.usuario.id}`;
+            const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
             let acessos = parseInt(localStorage.getItem(userK) || '0');
             const indice = acessos % frasesLivres.length; 
             fraseBruta = frasesLivres[indice].text;
@@ -566,43 +566,48 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
-        const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
+        // 2. CAPTURA DO NOME REAL DO ALUNO (Traz diretamente do perfil do login)
+        let nomeDoAluno = 'Aprendiz';
+        if (Workspace.usuario) {
+            nomeDoAluno = (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0];
+        }
         
-        // 🚀 A DUPLA IDENTIDADE (Áudio sem HTML, Tela com HTML e Cor)
-        const regexCitar = /\(citarAluno\)/gi;
-        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
-        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
+        // 3. A DUPLA IDENTIDADE ABSOLUTA (Ignora erros de digitação do professor)
+        // O regex "g" substitui em TODOS os lugares da frase. O "i" ignora maiúsculas/minúsculas.
+        const regexCitar = /\(?citarAluno\)?/gi;
+        const fraseAudio = fraseBruta.replace(regexCitar, nomeDoAluno);
+        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${nomeDoAluno}</strong>`);
 
-        // Controlo da Voz do Mago
+        // 4. ATIVA A VOZ DO MAGO (Usando apenas o texto limpo, sem códigos visuais)
         if (config.vozAtiva) {
             Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
         }
 
+        // 5. MÁQUINA DE ESCREVER BLINDADA CONTRA BUGS VISUAIS
         let i = 0;
-        let isTag = false;
-        let htmlAcumulado = "";
-
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
-        // 🚀 A MÁQUINA DE ESCREVER BLINDADA (Ignora Quebra de Tags HTML)
         Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            const char = fraseVisual.charAt(i);
-
-            if (char === '<') isTag = true;
-            htmlAcumulado += char;
-            if (char === '>') isTag = false;
-
-            if (!isTag) {
-                balao.innerHTML = htmlAcumulado;
+            // Se encontrar o início de uma formatação HTML (ex: <strong>), o cursor pula para o final da tag (>)
+            // Isso garante que o navegador desenha o código inteiro de uma vez, sem quebrar o ecrã!
+            if (fraseVisual.charAt(i) === '<') {
+                const fimDaTag = fraseVisual.indexOf('>', i);
+                if (fimDaTag !== -1) {
+                    i = fimDaTag; 
+                }
             }
 
+            // Exibe o texto cortado até ao ponto atual de forma limpa
+            if (balao) balao.innerHTML = fraseVisual.substring(0, i + 1);
+            
             i++;
+
             if (i >= fraseVisual.length) {
                 clearInterval(Workspace.Ingles.magoIntervalTimer);
                 Workspace.Ingles.digitandoAtivo = false;
-                setTimeout(() => { botoes.classList.add('visivel'); }, 300);
+                if (botoes) setTimeout(() => { botoes.classList.add('visivel'); }, 300);
             }
         }, 35); 
     },
