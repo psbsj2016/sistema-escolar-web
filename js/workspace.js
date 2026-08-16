@@ -267,34 +267,24 @@ Object.assign(Workspace, {
         }
     },
 
-   navegarPara: (tela, registarNoHistorico = true) => {
+ navegarPara: async (tela, registarNoHistorico = true) => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
         const ecras = {
-            'feed': 'ws-main-container', 
-            'bau': 'ws-bau-container',
-            'configuracoes': 'ws-config-container',
-            'sala_aula': 'ws-sala-aula-container',
-            'tarefas_aluno': 'ws-tarefas-container', 
-            'tarefas_prof': 'ws-tarefas-professor-container',
-            'perfil': 'ws-perfil-modal', 
-            'avaliacoes_aluno': 'ws-avaliacoes-container',
-            'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
-            'avaliacoes_escrita': 'ws-avaliacoes-escrita-container',
-            'avaliacoes_oral': 'ws-avaliacoes-oral-container',
-            'avaliacoes_online': 'ws-avaliacoes-online-container',
-            'encontros_prof': 'ws-avaliacoes-prof-container', 
-            'materiais': 'ws-materiais-container',
-            'ingles': 'ws-ingles-container'
+            'feed': 'ws-main-container', 'bau': 'ws-bau-container', 'configuracoes': 'ws-config-container',
+            'sala_aula': 'ws-sala-aula-container', 'tarefas_aluno': 'ws-tarefas-container', 'tarefas_prof': 'ws-tarefas-professor-container',
+            'perfil': 'ws-perfil-modal', 'avaliacoes_aluno': 'ws-avaliacoes-container', 'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
+            'avaliacoes_escrita': 'ws-avaliacoes-escrita-container', 'avaliacoes_oral': 'ws-avaliacoes-oral-container',
+            'avaliacoes_online': 'ws-avaliacoes-online-container', 'encontros_prof': 'ws-avaliacoes-prof-container', 
+            'materiais': 'ws-materiais-container', 'ingles': 'ws-ingles-container'
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
         if (tela === 'avaliacoes') tela = Workspace.usuario.tipo === 'Aluno' ? 'avaliacoes_aluno' : 'avaliacoes_prof';
 
-        // 🚀 O CAMALEÃO
         if (tela === 'encontros_prof') {
             tela = 'avaliacoes_prof';
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('encontros');
@@ -302,38 +292,49 @@ Object.assign(Workspace, {
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('avaliacoes');
         }
 
-        // ====================================================================
-        // 🚀 A MAGIA DO PERFIL: Sempre que abrir o perfil, preenche os dados primeiro!
-        // ====================================================================
         if (tela === 'perfil' && Workspace.usuario) {
             const nome = Workspace.usuario.nome || Workspace.usuario.login;
             const elNome = document.getElementById('ws-perfil-modal-nome');
             const elLogin = document.getElementById('ws-perfil-modal-login');
-            
             if (elNome) elNome.innerText = nome;
             if (elLogin) elLogin.innerText = `@${Workspace.usuario.login}`;
-
             const imgEl = document.getElementById('ws-perfil-img');
             const letrasEl = document.getElementById('ws-perfil-letras');
-
             if (Workspace.usuario.avatar) {
                 if (imgEl) { imgEl.src = Workspace.usuario.avatar; imgEl.style.display = 'block'; }
                 if (letrasEl) letrasEl.style.display = 'none';
             } else {
                 if (imgEl) imgEl.style.display = 'none';
                 if (letrasEl) {
-                    letrasEl.style.display = 'flex';
-                    letrasEl.innerText = nome.charAt(0).toUpperCase();
-                    letrasEl.style.background = Workspace.gerarCorPorNome(nome);
+                    letrasEl.style.display = 'flex'; letrasEl.innerText = nome.charAt(0).toUpperCase(); letrasEl.style.background = Workspace.gerarCorPorNome(nome);
                 }
             }
         }
-        // ====================================================================
 
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
+
+        // ====================================================================
+        // 🚀 A CURA DA AMNÉSIA: O Roteador aciona o recarregamento automático dos dados!
+        // ====================================================================
+        if (tela === 'ingles' && Workspace.Ingles) {
+            await Workspace.Ingles.loadDados();
+            Workspace.Ingles.renderizarVisualizacao();
+        } 
+        else if (tela === 'materiais' && Workspace.Materiais) {
+            await Workspace.Materiais.carregarMateriais();
+            if (Workspace.usuario.tipo === 'Aluno') Workspace.Materiais.renderizarAluno();
+            else Workspace.Materiais.renderizarProf();
+        } 
+        else if (tela === 'bau' && Workspace.Bau) {
+            if (Workspace.Bau.carregarDadosDaNuvem) Workspace.Bau.carregarDadosDaNuvem();
+            // Puxa da memória a última aba do Baú que ele estava a ver!
+            const abaBauAtiva = localStorage.getItem('ws_bau_aba_ativa') || 'meu';
+            if (Workspace.Bau.mudarAba) Workspace.Bau.mudarAba(abaBauAtiva);
+        }
+        // ====================================================================
 
         const ecraAtivo = document.getElementById(ecras[tela]);
         if (ecraAtivo) {
@@ -776,6 +777,7 @@ Object.assign(Workspace, {
 
         // ======================= SISTEMA DE NAVEGAÇÃO =======================
         mudarAba: (aba) => {
+            localStorage.setItem('ws_bau_aba_ativa', aba); // 🚀 O SEGREDO: Grava se está no "Meu Baú" ou no "Baú dos Livros"
             const btnMeu = document.getElementById('tab-bau-meu');
             const btnInst = document.getElementById('tab-bau-inst');
             if(aba === 'meu') {
