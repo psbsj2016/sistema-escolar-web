@@ -5,29 +5,31 @@ Workspace.Ingles = {
     state: {
         xp: 0, streak: 1, words: [], phrases: [], quizzes: [], pictures: [], minimalPairs: [], debates: [], submissions: [], pool: [],
         errosRetidos: [], 
-        itensConcluidos: [] // 🚀 ADICIONADO: Memória de conteúdos já dominados
+        itensConcluidos: [] // 🚀 Memória de conteúdos já dominados
     },
     mediaRecorder: null, audioChunks: [], currentAudioURL: null, audioBlob: null, streamMicrofone: null, recognition: null,
     
-    // 🚀 VARIÁVEIS DE GAMIFICAÇÃO E MEMÓRIA DE CURTO PRAZO
+    // 🚀 VARIÁVEIS DE GAMIFICAÇÃO E TEMPO GLOBAL
     bauDestrancado: false, 
+    tempoGlobalDefinido: false, // Controla se o Mago já perguntou
+    sessaoEncerrada: false,     // Controla quando o Baú fecha
     jogoAtual: null,
     tempoRestante: 0,
-    timerSessao: null,
+    timerGlobal: null,          // O relógio agora é Global!
     xpGanhosNaSessao: 0,
-    desafioAtualObj: null, // Guarda a palavra exata para avaliar o erro com precisão
+    desafioAtualObj: null,
+    digitandoAtivo: false,      // Controla a máquina de escrever
 
+    // 📚 DADOS INICIAIS (Expandido para Todos os Jogos Terem Inteligência)
     defaults: {
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
             {id:'w2', word:'Beneath', translation:'Abaixo de', level:'B1', example:'The keys were beneath the book.', context:'Preposição'},
-            {id:'w3', word:'Achieve', translation:'Alcançar', level:'B1', example:'You can achieve anything with focus.', context:'Verbo'},
-            {id:'w4', word:'Whisper', translation:'Sussurrar', level:'B2', example:'She whispered a secret.', context:'Verbo'}
+            {id:'w3', word:'Achieve', translation:'Alcançar', level:'B1', example:'You can achieve anything with focus.', context:'Verbo'}
         ],
         phrases: [
             {id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2', focus:'Politeness'},
-            {id:'p2', phrase:'If I had more time, I would travel the world.', translation:'Se eu tivesse mais tempo, viajaria o mundo.', level:'B2', focus:'Second Conditional'},
-            {id:'p3', phrase:'She has been learning English for three years.', translation:'Ela está aprendendo inglês há três anos.', level:'B1', focus:'Present Perfect Continuous'}
+            {id:'p2', phrase:'If I had more time, I would travel the world.', translation:'Se eu tivesse mais tempo, viajaria o mundo.', level:'B2', focus:'Second Conditional'}
         ],
         quizzes: [
             {id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year','I have went to London last year'], correct:1, explanation:'Use past simple with finished time (last year).', level:'B1'},
@@ -36,8 +38,7 @@ Workspace.Ingles = {
         pictures: [
             {id:'pic1', word:'apple', translation:'maçã', emoji:'🍎', category:'Food'},
             {id:'pic2', word:'bicycle', translation:'bicicleta', emoji:'🚲', category:'Transport'},
-            {id:'pic3', word:'laptop', translation:'notebook', emoji:'💻', category:'Tech'},
-            {id:'pic4', word:'umbrella', translation:'guarda-chuva', emoji:'☂️', category:'Objects'}
+            {id:'pic3', word:'laptop', translation:'notebook', emoji:'💻', category:'Tech'}
         ],
         minimalPairs: [
             {id:'mp1', a:'ship', b:'sheep', ipaA:'/ʃɪp/', ipaB:'/ʃiːp/', sentenceA:'The ship is big.', sentenceB:'The sheep is white.'},
@@ -46,6 +47,19 @@ Workspace.Ingles = {
         debates: [
             {id:'d1', topic:'Social media does more harm than good', stance:'Do you agree?', starter:'Social media connects us, but also increases anxiety. What is your opinion?'},
             {id:'d2', topic:'AI will replace teachers', stance:'You defend teachers', starter:'AI can give exercises, but can it motivate a student?'}
+        ],
+        wordPickers: [
+            {id:'wp1', text:'I have _____ my keys. Have you seen them?', options:['lost','lose','loosed'], correct:0},
+            {id:'wp2', text:'She is _____ than her sister.', options:['tall','taller','tallest'], correct:1}
+        ],
+        questions: [
+            {id:'aq1', text:'What did you do last weekend?'},
+            {id:'aq2', text:'Describe your dream house.'},
+            {id:'aq3', text:'If you could live anywhere, where would you live?'}
+        ],
+        roleplays: [
+            {id:'rp1', title:'✈️ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
+            {id:'rp2', title:'🍽️ No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
         ],
         games: [
             {id:'wordSpark', title:'Word Spark', desc:'Crie uma frase com a palavra. Deteção IA.', icon:'🎲', color:'#E0E7FF', level:'B1-B2'},
@@ -105,11 +119,10 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.errosRetidos = [];
             }
 
-            // 2. XP, Streak e Conquistas armazenados no telemóvel do aluno
             const userK = `ws_ingles_user_${Workspace.usuario.id}`;
             Workspace.Ingles.state.xp = parseInt(localStorage.getItem(`${userK}_xp`) || '0');
             Workspace.Ingles.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || '1');
-            Workspace.Ingles.state.itensConcluidos = JSON.parse(localStorage.getItem(`${userK}_concluidos`)) || []; // 🚀 Carrega o que já sabe
+            Workspace.Ingles.state.itensConcluidos = JSON.parse(localStorage.getItem(`${userK}_concluidos`)) || []; 
         } catch (e) { console.error("Erro ao conectar ao Algoritmo.", e); }
     },
 
@@ -117,7 +130,7 @@ Workspace.Ingles = {
         const userK = `ws_ingles_user_${Workspace.usuario.id}`;
         localStorage.setItem(`${userK}_xp`, Workspace.Ingles.state.xp);
         localStorage.setItem(`${userK}_streak`, Workspace.Ingles.state.streak);
-        localStorage.setItem(`${userK}_concluidos`, JSON.stringify(Workspace.Ingles.state.itensConcluidos)); // 🚀 Guarda o que já sabe
+        localStorage.setItem(`${userK}_concluidos`, JSON.stringify(Workspace.Ingles.state.itensConcluidos));
 
         try {
             if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
@@ -137,7 +150,7 @@ Workspace.Ingles = {
         } catch (e) {}
     },
 
-   // ============================================================================
+    // ============================================================================
     // 🧠 SISTEMA DE PROGRESSÃO E REPETIÇÃO ESPAÇADA
     // ============================================================================
     registrarErro: (itemOriginal, tipoConteudo) => {
@@ -165,24 +178,24 @@ Workspace.Ingles = {
     },
 
     obterItemInteligente: (listaPadrao, tipoConteudo) => {
-        // 1. FILTRO DE EVOLUÇÃO: Remove da lista tudo o que o aluno já acertou antes
+        // 1. FILTRO DE PROGRESSÃO
         let listaDisponivel = listaPadrao.filter(item => !Workspace.Ingles.state.itensConcluidos.includes(item.id));
 
-        // 🚀 SE ZEROU O JOGO: Ele dominou a biblioteca! Damos os parabéns e resetamos a memória para ele rever o conteúdo.
+        // 🚀 SE ZEROU A BIBLIOTECA
         if (listaDisponivel.length === 0 && listaPadrao.length > 0) {
-            Workspace.mostrarAviso("🏆 Incrível! Você dominou todas as palavras desta categoria. Vamos treinar de novo!", "success");
+            Workspace.mostrarAviso("🏆 Incrível! Você dominou todo este conteúdo. Vamos rever!", "success");
             Workspace.Ingles.state.itensConcluidos = [];
             Workspace.Ingles.saveDados();
             listaDisponivel = listaPadrao;
         }
 
-        // 2. O SORTEADOR VICIADO (Foca nos erros passados - 60% chance)
+        // 2. SORTEADOR VICIADO (Foca nos Erros)
         const listaErros = Workspace.Ingles.state.errosRetidos.filter(e => e._tipoDefeito === tipoConteudo && !Workspace.Ingles.state.itensConcluidos.includes(e.id));
         if (listaErros.length > 0 && Math.random() < 0.60) {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
         
-        // 3. Apresenta o conteúdo novo
+        // 3. APRESENTA CONTEÚDO NOVO
         return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
@@ -276,6 +289,18 @@ Workspace.Ingles = {
             .ig-particle { position: fixed; pointer-events: none; z-index: 9999999; animation: explodirParticula 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             @keyframes explodirParticula { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
+            /* 🧙‍♂️ ANIMAÇÕES DO GUARDIÃO MÁGICO */
+            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; background: #F8FAFC; position: relative; }
+            .ig-guardian-avatar { font-size: 90px; animation: flutuarMago 3s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); }
+            .ig-balao-fala { background: white; padding: 25px 35px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); position: relative; max-width: 450px; text-align: center; font-size: 18px; font-weight: bold; color: #2c3e50; min-height: 90px; display: flex; align-items: center; justify-content: center; line-height: 1.5; }
+            .ig-balao-fala::after { content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0; border-style: solid; border-color: white transparent transparent transparent; }
+            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 30px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+            .ig-opcoes-tempo.visivel { opacity: 1; transform: translateY(0); pointer-events: auto; }
+            @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+            
+            /* ⏱️ RELÓGIO GLOBAL */
+            .ig-global-timer { font-family: monospace; font-size: 16px; font-weight: 900; color: #e74c3c; background: #fdf2f2; padding: 6px 12px; border-radius: 20px; border: 2px solid #fadbd8; display: none; align-items: center; justify-content: center; }
+
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } }
         `;
@@ -298,13 +323,28 @@ Workspace.Ingles = {
                     <div class="ig-title-icon">🧰</div>
                     <div><h2 style="margin:0; font-size:22px; color:#0F172A;">Baú do Inglês</h2><p style="margin:0; font-size:13px; color:#64748B;">Estude de forma inteligente e adaptativa!</p></div>
                 </div>
-                <div class="ig-xp-badge"><span>🔥 <b id="ig-streakCount">1</b> dia(s)</span><span>⭐ <b id="ig-xpCount">0</b> XP</span></div>
+                <div class="ig-xp-badge">
+                    <!-- 🚀 O RELÓGIO GLOBAL -->
+                    <div id="ig-global-timer-display" class="ig-global-timer">00:00</div>
+                    <span>🔥 <b id="ig-streakCount">1</b> dia(s)</span><span>⭐ <b id="ig-xpCount">0</b> XP</span>
+                </div>
+            </div>
+
+            <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO -->
+            <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
+                <div class="ig-guardian-avatar">🧙‍♂️</div>
+                <div class="ig-balao-fala" id="ig-guardian-text"></div>
+                <div class="ig-opcoes-tempo" id="ig-guardian-options">
+                    <button class="ws-btn" style="background:#E0E7FF; color:#4F46E5; font-size:16px; font-weight:bold; border:2px solid #4F46E5; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(3)">3 Minutos</button>
+                    <button class="ws-btn" style="background:#4F46E5; color:white; font-size:16px; font-weight:bold; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(5)">5 Minutos 🔥</button>
+                    <button class="ws-btn" style="background:#1E293B; color:white; font-size:16px; font-weight:bold; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(10)">10 Minutos</button>
+                </div>
             </div>
 
             <!-- 🚀 A FECHADURA MÁGICA -->
             <div id="ig-unlock-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; position:relative; background:#F8FAFC;">
                 <h1 style="font-size:32px; margin-bottom:10px; color:#1E293B; font-weight:900;">Destranque o Baú</h1>
-                <p style="color:#64748B; margin-bottom:50px; font-size:16px;">Arraste a chave mágica até a fechadura para iniciar os seus estudos.</p>
+                <p style="color:#64748B; margin-bottom:50px; font-size:16px;">O tempo começa a contar assim que a fechadura abrir!</p>
                 <div style="position:relative; width:100%; max-width:400px; height:250px; display:flex; justify-content:space-between; align-items:center;">
                     <div id="ig-drag-key" style="font-size:70px; cursor:grab; user-select:none; filter:drop-shadow(0 5px 15px rgba(241,196,15,0.6)); position:absolute; left:20px; z-index:10; touch-action:none;">🗝️</div>
                     <div id="ig-chest-lock" style="font-size:130px; animation: pulseChest 2s infinite; position:absolute; right:20px; user-select:none;">🧰
@@ -315,10 +355,22 @@ Workspace.Ingles = {
 
             <div id="ig-alunoView" style="display:none;">
                 <div style="padding: 30px 30px 0 30px;">
-                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">O Baú está aberto! 🗝️</h1>
-                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Atenção: A inteligência do sistema regista o que você erra para aplicar em outros contextos. Só avança no ranking quem domina o conteúdo!</p>
+                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">O relógio está a contar! ⏳</h1>
+                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um jogo. Se errar, a IA guardará o seu erro. Só avança no ranking quem domina o conteúdo!</p>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
+            </div>
+
+            <!-- 🔒 ECRÃ DE FIM DE TEMPO -->
+            <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
+                <div style="font-size:70px; margin-bottom:10px;">🔒</div>
+                <h1 style="font-size:32px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
+                <p style="color:#64748B; margin-bottom:20px;">O Baú fechou-se magicamente. Excelente treino!</p>
+                <div style="background:#D1FAE5; border:2px solid #10B981; padding:20px; border-radius:16px; display:inline-block; margin-bottom:30px;">
+                    <div style="font-size:14px; color:#065F46; font-weight:bold; text-transform:uppercase;">XP Ganho Hoje</div>
+                    <div style="font-size:36px; font-weight:900; color:#10B981;" id="ig-timeout-xp">+0 XP ⭐</div>
+                </div>
+                <button class="ws-btn" style="background:#0F172A; color:white; padding:12px 25px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.navegarPara('feed')">Guardar e Sair</button>
             </div>
 
             <div id="ig-professorView" style="display:none; min-height: 70vh; display: flex;">
@@ -339,7 +391,6 @@ Workspace.Ingles = {
                             <span id="ig-modalIcon" style="font-size: 24px;"></span>
                             <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-size: 18px;"></h2>
                         </div>
-                        <div id="ig-timer-display" style="display:none; font-family:monospace; font-size:20px; font-weight:900; color:#e74c3c; background:#fdf2f2; padding:5px 15px; border-radius:20px; border:2px solid #fadbd8;">00:00</div>
                         <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#64748B;">×</button>
                     </div>
                     <div id="ig-modalBody" style="padding: 30px; overflow-y: auto; flex: 1;"></div>
@@ -358,23 +409,41 @@ Workspace.Ingles = {
             document.getElementById('ig-professorView').style.display = 'flex';
             document.getElementById('ig-alunoView').style.display = 'none';
             document.getElementById('ig-unlock-screen').style.display = 'none';
+            document.getElementById('ig-guardian-screen').style.display = 'none';
+            document.getElementById('ig-timeout-screen').style.display = 'none';
             Workspace.Ingles.renderProfessorTab('envios'); 
         } else {
             document.getElementById('ig-professorView').style.display = 'none';
-            if (!Workspace.Ingles.bauDestrancado) {
+
+            if (Workspace.Ingles.sessaoEncerrada) {
+                document.getElementById('ig-guardian-screen').style.display = 'none';
+                document.getElementById('ig-unlock-screen').style.display = 'none';
+                document.getElementById('ig-alunoView').style.display = 'none';
+                document.getElementById('ig-gameModal').style.display = 'none';
+                document.getElementById('ig-timeout-screen').style.display = 'flex';
+                document.getElementById('ig-timeout-xp').innerText = `+${Workspace.Ingles.xpGanhosNaSessao} XP ⭐`;
+            } 
+            else if (!Workspace.Ingles.tempoGlobalDefinido) {
+                document.getElementById('ig-unlock-screen').style.display = 'none';
+                document.getElementById('ig-alunoView').style.display = 'none';
+                document.getElementById('ig-guardian-screen').style.display = 'flex';
+                Workspace.Ingles.iniciarFalaGuardiao();
+            } 
+            else if (!Workspace.Ingles.bauDestrancado) {
+                document.getElementById('ig-guardian-screen').style.display = 'none';
                 document.getElementById('ig-alunoView').style.display = 'none';
                 document.getElementById('ig-unlock-screen').style.display = 'flex';
                 Workspace.Ingles.ativarFisicaFechadura();
-            } else {
+            } 
+            else {
+                document.getElementById('ig-guardian-screen').style.display = 'none';
                 document.getElementById('ig-unlock-screen').style.display = 'none';
                 document.getElementById('ig-alunoView').style.display = 'block';
-                // 🚀 CARREGA OS JOGOS NA TELA! A PEÇA QUE FALTAVA
                 Workspace.Ingles.renderAlunoGrid();
             }
         }
     },
 
-    // 🚀 A PEÇA CORRIGIDA: Renderiza as opções de jogo para o Aluno
     renderAlunoGrid: () => {
         const grid = document.getElementById('ig-gamesGrid');
         if(!grid) return;
@@ -391,6 +460,76 @@ Workspace.Ingles = {
                 </div>
             </div>
         `).join('');
+    },
+
+    // ============================================================================
+    // 🧙‍♂️ NARRATIVA: O GUARDIÃO E A FECHADURA MÁGICA
+    // ============================================================================
+    iniciarFalaGuardiao: () => {
+        if (Workspace.Ingles.digitandoAtivo) return; 
+        Workspace.Ingles.digitandoAtivo = true;
+        
+        const balao = document.getElementById('ig-guardian-text');
+        const botoes = document.getElementById('ig-guardian-options');
+        balao.innerHTML = '';
+        botoes.classList.remove('visivel');
+
+        const texto = "Olá, jovem aprendiz! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?";
+        let i = 0;
+        
+        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
+
+        const intervalo = setInterval(() => {
+            balao.innerHTML += texto.charAt(i);
+            i++;
+            if (i >= texto.length) {
+                clearInterval(intervalo);
+                Workspace.Ingles.digitandoAtivo = false;
+                setTimeout(() => { botoes.classList.add('visivel'); }, 300);
+            }
+        }, 35); 
+    },
+
+    definirTempoGlobal: (minutos) => {
+        Workspace.Ingles.tempoRestante = minutos * 60;
+        Workspace.Ingles.xpGanhosNaSessao = 0;
+        Workspace.Ingles.tempoGlobalDefinido = true;
+        Workspace.Ingles.renderizarVisualizacao(); 
+    },
+
+    iniciarTimerGlobal: () => {
+        const display = document.getElementById('ig-global-timer-display');
+        display.style.display = 'flex';
+        Workspace.Ingles.atualizarDisplayTimerGlobal();
+
+        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
+        
+        Workspace.Ingles.timerGlobal = setInterval(() => {
+            Workspace.Ingles.tempoRestante--;
+            Workspace.Ingles.atualizarDisplayTimerGlobal();
+            
+            if (Workspace.Ingles.tempoRestante <= 0) {
+                clearInterval(Workspace.Ingles.timerGlobal);
+                Workspace.Ingles.sessaoEncerrada = true;
+                Workspace.Ingles.fecharJogo(); 
+                try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg'); audio.play().catch(()=>{}); } catch(e){}
+                Workspace.Ingles.renderizarVisualizacao();
+            }
+        }, 1000);
+    },
+
+    atualizarDisplayTimerGlobal: () => {
+        const d = document.getElementById('ig-global-timer-display');
+        if(!d) return;
+        const m = Math.floor(Workspace.Ingles.tempoRestante / 60).toString().padStart(2, '0');
+        const s = (Workspace.Ingles.tempoRestante % 60).toString().padStart(2, '0');
+        d.innerText = `⏱️ ${m}:${s}`;
+        
+        if (Workspace.Ingles.tempoRestante < 30 && Workspace.Ingles.tempoRestante > 0) { 
+            d.style.color = 'white'; d.style.background = '#e74c3c'; d.style.animation = 'pulse 1s infinite'; 
+        } else { 
+            d.style.color = '#e74c3c'; d.style.background = '#fdf2f2'; d.style.animation = 'none'; 
+        }
     },
 
     // ============================================================================
@@ -451,7 +590,6 @@ Workspace.Ingles = {
         
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg'); audio.play().catch(()=>{}); } catch(e){}
 
-        // 🌟 CHUVA DE MÁGICA: Partículas a cobrir o ecrã inteiro!
         const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
         for (let i = 0; i < 60; i++) {
             let p = document.createElement('div');
@@ -472,7 +610,6 @@ Workspace.Ingles = {
             setTimeout(() => p.remove(), 1500);
         }
 
-        // Oculta a fechadura e mostra os jogos suavemente
         setTimeout(() => {
             const screen = document.getElementById('ig-unlock-screen');
             screen.style.opacity = '0';
@@ -480,6 +617,7 @@ Workspace.Ingles = {
             screen.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
             
             setTimeout(() => { 
+                Workspace.Ingles.iniciarTimerGlobal();
                 Workspace.Ingles.renderizarVisualizacao(); 
                 const grid = document.getElementById('ig-gamesGrid');
                 if (grid) {
@@ -664,7 +802,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ⏱️ O NOVO CICLO CONTÍNUO E TEMPORIZADOR
+    // 🎮 ABRIR JOGOS
     // ============================================================================
     abrirJogo: (id) => {
         const game = Workspace.Ingles.defaults.games.find(g => g.id === id);
@@ -674,101 +812,19 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent = game.icon;
         document.getElementById('ig-modalTitle').textContent = game.title;
         document.getElementById('ig-gameModal').style.display = 'flex';
-        document.getElementById('ig-timer-display').style.display = 'none'; 
         Workspace.Ingles.currentAudioURL = null;
         
-        document.getElementById('ig-modalBody').innerHTML = `
-            <div style="text-align:center; padding:30px;">
-                <h2 style="font-size:26px; color:#1E293B; margin-bottom:10px;">Modo Concentração 🧠</h2>
-                <p style="color:#64748B; margin-bottom:30px;">O jogo não vai parar de lhe lançar desafios até o tempo esgotar.</p>
-                <div style="display:flex; justify-content:center; gap:15px; flex-wrap:wrap;">
-                    <button class="ws-btn" style="background:#E0E7FF; color:#4F46E5; font-size:18px; font-weight:bold; border:2px solid #4F46E5; padding:15px 30px; border-radius:16px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.iniciarSessaoJogo(3)">3 Minutos</button>
-                    <button class="ws-btn" style="background:#4F46E5; color:white; font-size:18px; font-weight:bold; border:none; padding:15px 30px; border-radius:16px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.iniciarSessaoJogo(5)">5 Minutos 🔥</button>
-                    <button class="ws-btn" style="background:#1E293B; color:white; font-size:18px; font-weight:bold; border:none; padding:15px 30px; border-radius:16px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.iniciarSessaoJogo(10)">10 Minutos</button>
-                </div>
-            </div>
-        `;
-    },
-
-    iniciarSessaoJogo: (minutos) => {
-        Workspace.Ingles.tempoRestante = minutos * 60;
-        Workspace.Ingles.xpGanhosNaSessao = 0;
-        document.getElementById('ig-timer-display').style.display = 'block';
-        Workspace.Ingles.atualizarDisplayTimer();
-
-        if (Workspace.Ingles.timerSessao) clearInterval(Workspace.Ingles.timerSessao);
-        Workspace.Ingles.timerSessao = setInterval(() => {
-            Workspace.Ingles.tempoRestante--;
-            Workspace.Ingles.atualizarDisplayTimer();
-            if (Workspace.Ingles.tempoRestante <= 0) Workspace.Ingles.finalizarSessaoJogo();
-        }, 1000);
-
         Workspace.Ingles.renderDesafioAtual();
     },
 
-    atualizarDisplayTimer: () => {
-        const d = document.getElementById('ig-timer-display');
-        if(!d) return;
-        const m = Math.floor(Workspace.Ingles.tempoRestante / 60).toString().padStart(2, '0');
-        const s = (Workspace.Ingles.tempoRestante % 60).toString().padStart(2, '0');
-        d.innerText = `⏱️ ${m}:${s}`;
-        if (Workspace.Ingles.tempoRestante < 30) { d.style.color = 'white'; d.style.background = '#e74c3c'; d.style.animation = 'pulse 1s infinite'; }
-        else { d.style.color = '#e74c3c'; d.style.background = '#fdf2f2'; d.style.animation = 'none'; }
-    },
-
-    finalizarSessaoJogo: () => {
-        if (Workspace.Ingles.timerSessao) clearInterval(Workspace.Ingles.timerSessao);
-        document.getElementById('ig-timer-display').style.display = 'none';
-        try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg'); audio.play().catch(()=>{}); } catch(e){}
-
-        document.getElementById('ig-modalBody').innerHTML = `
-            <div style="text-align:center; padding:40px;">
-                <div style="font-size:60px; margin-bottom:15px; animation: pulseChest 2s infinite;">🏁</div>
-                <h2 style="font-size:32px; color:#1E293B; margin-bottom:10px;">Sessão Concluída!</h2>
-                <div style="background:#D1FAE5; border:2px solid #10B981; padding:20px; border-radius:16px; display:inline-block; margin-bottom:30px;">
-                    <div style="font-size:14px; color:#065F46; font-weight:bold; text-transform:uppercase;">Recompensa da Sessão</div>
-                    <div style="font-size:36px; font-weight:900; color:#10B981;">+${Workspace.Ingles.xpGanhosNaSessao} XP ⭐</div>
-                </div>
-                <button class="ws-btn" style="width:100%; max-width:300px; background:#0F172A; color:white; border:none; padding:15px; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.fecharJogo()">Voltar ao Baú</button>
-            </div>
-        `;
-    },
-
     fecharJogo: () => {
-        if (Workspace.Ingles.timerSessao) clearInterval(Workspace.Ingles.timerSessao);
         document.getElementById('ig-gameModal').style.display = 'none';
         if(Workspace.Ingles.mediaRecorder && Workspace.Ingles.mediaRecorder.state === 'recording') Workspace.Ingles.mediaRecorder.stop();
         if(Workspace.Ingles.recognition) Workspace.Ingles.recognition.stop();
-        Workspace.Ingles.renderizarVisualizacao(); 
     },
 
-    renderDesafioAtual: () => {
-        if (Workspace.Ingles.tempoRestante <= 0) return;
-        Workspace.Ingles.currentAudioURL = null; 
-        Workspace.Ingles.desafioAtualObj = null; // Reseta o objeto de desafio atual
-        
-        const id = Workspace.Ingles.jogoAtual;
-        if(id === 'wordSpark') Workspace.Ingles.renderGameWordSpark();
-        else if(id === 'readAloud') Workspace.Ingles.renderGameReadAloud();
-        else if(id === 'listenType') Workspace.Ingles.renderGameListenType();
-        else if(id === 'quiz') Workspace.Ingles.renderGameQuiz();
-        else if(id === 'wordPicker') Workspace.Ingles.renderGameWordPicker();
-        else if(id === 'sentenceShuffle') Workspace.Ingles.renderGameSentenceShuffle();
-        else if(id === 'answerQuest') Workspace.Ingles.renderGameAnswerQuest();
-        else if(id === 'questionMaker') Workspace.Ingles.renderGameQuestionMaker();
-        else if(id === 'contextRole') Workspace.Ingles.renderGameContextRole();
-        else if(id === 'debateAI') Workspace.Ingles.renderGameDebateAI();
-        else if(id === 'minimalPairs') Workspace.Ingles.renderGameMinimalPairs();
-        else if(id === 'picturePop') Workspace.Ingles.renderGamePicturePop();
-    },
-
-    proximoDesafio: () => {
-        if (Workspace.Ingles.tempoRestante > 0) Workspace.Ingles.renderDesafioAtual();
-    },
-
-  // 🚀 O NOVO GESTOR VISUAL DE VITÓRIA E DERROTA
+    // 🚀 O NOVO GESTOR VISUAL DE VITÓRIA E DERROTA
     sucessoGenerico: async (bonus) => {
-        // 🚀 A MÁGICA INVISÍVEL: Se o jogo estava focado numa palavra e o aluno acertou, marca como concluído!
         if (Workspace.Ingles.desafioAtualObj && Workspace.Ingles.desafioAtualObj.id) {
             Workspace.Ingles.marcarComoConcluido(Workspace.Ingles.desafioAtualObj.id);
         }
@@ -805,8 +861,37 @@ Workspace.Ingles = {
         Workspace.Ingles.sucessoGenerico(bonus);
     },
 
+    renderDesafioAtual: () => {
+        if (Workspace.Ingles.tempoRestante <= 0) return;
+        Workspace.Ingles.currentAudioURL = null; 
+        Workspace.Ingles.desafioAtualObj = null; 
+        
+        const id = Workspace.Ingles.jogoAtual;
+        if(id === 'wordSpark') Workspace.Ingles.renderGameWordSpark();
+        else if(id === 'readAloud') Workspace.Ingles.renderGameReadAloud();
+        else if(id === 'listenType') Workspace.Ingles.renderGameListenType();
+        else if(id === 'quiz') Workspace.Ingles.renderGameQuiz();
+        else if(id === 'wordPicker') Workspace.Ingles.renderGameWordPicker();
+        else if(id === 'sentenceShuffle') Workspace.Ingles.renderGameSentenceShuffle();
+        else if(id === 'answerQuest') Workspace.Ingles.renderGameAnswerQuest();
+        else if(id === 'questionMaker') Workspace.Ingles.renderGameQuestionMaker();
+        else if(id === 'contextRole') Workspace.Ingles.renderGameContextRole();
+        else if(id === 'debateAI') Workspace.Ingles.renderGameDebateAI();
+        else if(id === 'minimalPairs') Workspace.Ingles.renderGameMinimalPairs();
+        else if(id === 'picturePop') Workspace.Ingles.renderGamePicturePop();
+    },
+
+    proximoDesafio: () => {
+        if (Workspace.Ingles.tempoRestante > 0) {
+            Workspace.Ingles.renderDesafioAtual();
+        } else {
+            // Se o tempo esgotou durante a janela de feedback, fecha o jogo.
+            Workspace.Ingles.fecharJogo();
+        }
+    },
+
     // ============================================================================
-    // 🎮 JOGOS INTELIGENTES (AVALIAÇÃO E MEMÓRIA DE ERRO)
+    // 🎮 JOGOS INTELIGENTES
     // ============================================================================
     
     renderGameWordSpark: () => {
@@ -968,11 +1053,10 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🧩 OUTROS JOGOS (Com submissão para Professor ou Lógica Simples)
+    // 🧩 OUTROS JOGOS (Agora 100% integrados no Spaced Repetition System)
     // ============================================================================
     renderGameWordPicker: () => {
-        const sentences = [{id:'wp1', text:'I have _____ my keys.', options:['lost','lose','loosed'], correct:0}, {id:'wp2', text:'She is _____ than her sister.', options:['tall','taller','tallest'], correct:1}];
-        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(sentences, 'picker');
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.wordPickers, 'picker');
         const s = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1017,8 +1101,10 @@ Workspace.Ingles = {
     },
 
     renderGameSentenceShuffle: () => {
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        const phrase = Workspace.Ingles.desafioAtualObj;
         const task = ['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
-        const phrase = Workspace.Ingles.defaults.phrases[Math.floor(Math.random()*Workspace.Ingles.defaults.phrases.length)];
+        
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center"><span class="ig-badge" style="background:#0F172A; color:white; padding:6px 15px;">🎯 Missão: ${task}</span></div>
             <div class="ig-big-phrase" style="margin-top:15px; font-size:18px;">${phrase.phrase}</div>
@@ -1026,39 +1112,60 @@ Workspace.Ingles = {
             <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('sentenceShuffle', document.getElementById('ig-input').value, 50)">Submeter 🔀</button>
         `;
     },
+
     renderGameAnswerQuest: () => {
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.questions, 'question');
+        const q = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ What did you do last weekend?</div>
+            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${q.text}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Responda em inglês..."></textarea>
             <button class="ws-btn" style="width:100%; margin-top:15px; background:#F59E0B; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('answerQuest', document.getElementById('ig-input').value, 50)">Enviar 🚀</button>
         `;
     },
+
     renderGameQuestionMaker: () => {
-        const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>p.text);
-        const a = poolAnswers.length > 0 ? poolAnswers[0] : 'I go to the gym because I want to be healthy.';
+        const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>({ id: p.id, text: p.text }));
+        
+        // Se a piscina global de alunos estiver vazia, usa uma resposta padrão forte
+        const defaultAnswer = { id: 'fallback1', text: 'I go to the gym because I want to be healthy.' };
+        Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : defaultAnswer;
+        const a = Workspace.Ingles.desafioAtualObj;
+
         document.getElementById('ig-modalBody').innerHTML = `
             <p style="color:#64748B;font-size:13px;text-align:center; font-weight:bold; text-transform:uppercase;">Um aluno respondeu isto:</p>
-            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${a}"</div>
+            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${a.text}"</div>
             <p style="margin-top:16px;font-weight:600; text-align:center;">Que pergunta em inglês gerou esta resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
             <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="
                 const v = document.getElementById('ig-input').value.trim();
-                if(v.includes('?') && v.split(' ').length >= 3) { Workspace.Ingles.envioAoProfessor('questionMaker', v, 50); } 
-                else { Workspace.mostrarAviso('Atenção: A tua pergunta tem de conter (?) e pelo menos 3 palavras!', 'error'); }
+                if(v.includes('?') && v.split(' ').length >= 3) { 
+                    Workspace.Ingles.envioAoProfessor('questionMaker', v, 50); 
+                } else { 
+                    Workspace.mostrarAviso('Atenção: A tua pergunta tem de conter (?) e pelo menos 3 palavras!', 'error'); 
+                }
             ">Verificar ❓</button>
         `;
     },
+
     renderGameContextRole: () => {
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.roleplays, 'roleplay');
+        const c = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:18px; text-align:left;">✈️ No Aeroporto<br><br><span style="font-size:15px;font-weight:400;color:#64748B">Attendant: "Can I see your passport?"</span></div>
+            <div class="ig-big-phrase" style="font-size:18px; text-align:left;">${c.title}<br><br><span style="font-size:15px;font-weight:400;color:#64748B">${c.prompt}</span></div>
+            <p style="font-size:13px;background:#FEF3C7; color:#92400E; padding:10px; border-radius:8px; font-weight:bold;">💡 Dica de Mestre: ${c.tip}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?..."></textarea>
             <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel 🎭</button>
         `;
     },
+
     renderGameDebateAI: () => {
-        const topic = Workspace.Ingles.defaults.debates[0];
+        Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.debates, 'debate');
+        const topic = Workspace.Ingles.desafioAtualObj;
+        
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:18px">🤖 Clube de Debate<br><br><span style="font-size:16px;color:#4F46E5;">AI will replace teachers</span></div>
+            <div class="ig-big-phrase" style="font-size:18px">🤖 Clube de Debate<br><br><span style="font-size:16px;color:#4F46E5;">${topic.topic}</span></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Defende a tua posição..."></textarea>
             <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75)">Contra-Atacar 🧠</button>
         `;
