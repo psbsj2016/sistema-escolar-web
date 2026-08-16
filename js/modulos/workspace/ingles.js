@@ -331,15 +331,25 @@ Workspace.Ingles = {
             </div>
 
             <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO -->
-            <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
-                <div class="ig-guardian-avatar">🧙‍♂️</div>
-                <div class="ig-balao-fala" id="ig-guardian-text"></div>
-                <div class="ig-opcoes-tempo" id="ig-guardian-options">
-                    <button class="ws-btn" style="background:#E0E7FF; color:#4F46E5; font-size:16px; font-weight:bold; border:2px solid #4F46E5; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(3)">3 Minutos</button>
-                    <button class="ws-btn" style="background:#4F46E5; color:white; font-size:16px; font-weight:bold; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(5)">5 Minutos 🔥</button>
-                    <button class="ws-btn" style="background:#1E293B; color:white; font-size:16px; font-weight:bold; border:none; padding:12px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.Ingles.definirTempoGlobal(10)">10 Minutos</button>
+           <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 12px; border: 2px solid #4F46E5; box-shadow: 0 4px 10px rgba(79,70,229,0.1);">
+                        <input type="number" id="ig-tempo-escolhido" class="ig-input" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 20px; font-weight: 900; color: #0F172A; text-align: center; padding: 5px; outline: none;">
+                        <span style="font-size: 16px; font-weight: bold; color: #4F46E5;">Minutos</span>
+                    </div>
+
+                    <button class="ws-btn" style="background:#10B981; color:white; font-size:16px; font-weight:bold; border:none; padding:15px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="
+                        const campoTempo = document.getElementById('ig-tempo-escolhido');
+                        const minutos = parseInt(campoTempo.value);
+                        if (!minutos || minutos <= 0) {
+                            Workspace.mostrarAviso('O Mago avisa: Digite um tempo válido para treinar!', 'warning');
+                            campoTempo.focus();
+                        } else {
+                            Workspace.Ingles.definirTempoGlobal(minutos);
+                        }
+                    ">Confirmar Mágica ✨</button>
+
                 </div>
-            </div>
 
             <!-- 🚀 A FECHADURA MÁGICA -->
             <div id="ig-unlock-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; position:relative; background:#F8FAFC;">
