@@ -153,7 +153,6 @@ Workspace.Ingles = {
                 words: Workspace.Ingles.state.words, phrases: Workspace.Ingles.state.phrases,
                 quizzes: Workspace.Ingles.state.quizzes, pictures: Workspace.Ingles.state.pictures,
                 submissions: Workspace.Ingles.state.submissions, pool: Workspace.Ingles.state.pool,
-                errosRetidos: Workspace.Ingles.state.errosRetidos,
                 errosRetidos: Workspace.Ingles.state.errosRetidos, magoPhrases: Workspace.Ingles.state.magoPhrases
             });
         } catch (e) {}
@@ -207,12 +206,11 @@ Workspace.Ingles = {
     // ============================================================================
     // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
- falar: (text, lang='en-US') => {
+    falar: (text, lang='en-US') => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = 0.9;
         const voices = window.speechSynthesis.getVoices();
-        // 🚀 O SEGREDO DA VOZ: Procura a voz no idioma pedido. Se não achar, usa Inglês.
         const idiomaPrincipal = lang.split('-')[0];
         const vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         if(vozSelec) u.voice = vozSelec;
@@ -339,15 +337,13 @@ Workspace.Ingles = {
 
             <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
-                <div class="ig-guardian-avatar">🧙</div>
+                <div class="ig-guardian-avatar">🧙‍♂️</div>
                 <div class="ig-balao-fala" id="ig-guardian-text"></div>
                 <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
-                    
                     <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 12px; border: 2px solid #4F46E5; box-shadow: 0 4px 10px rgba(79,70,229,0.1);">
                         <input type="number" id="ig-tempo-escolhido" class="ig-input" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 20px; font-weight: 900; color: #0F172A; text-align: center; padding: 5px; outline: none;">
                         <span style="font-size: 16px; font-weight: bold; color: #4F46E5;">Minutos</span>
                     </div>
-
                     <button class="ws-btn" style="background:#10B981; color:white; font-size:16px; font-weight:bold; border:none; padding:15px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="
                         const campoTempo = document.getElementById('ig-tempo-escolhido');
                         const minutos = parseInt(campoTempo.value) || 0;
@@ -358,7 +354,6 @@ Workspace.Ingles = {
                             Workspace.Ingles.definirTempoGlobal(minutos);
                         }
                     ">Confirmar Mágica ✨</button>
-
                 </div>
             </div>
 
@@ -427,20 +422,19 @@ Workspace.Ingles = {
         
         const isAluno = Workspace.usuario.tipo === 'Aluno';
         
-           if (!isAluno) {
-               document.getElementById('ig-professorView').style.display = 'flex';
-               document.getElementById('ig-alunoView').style.display = 'none';
-               document.getElementById('ig-unlock-screen').style.display = 'none';
-               document.getElementById('ig-guardian-screen').style.display = 'none';
-               document.getElementById('ig-timeout-screen').style.display = 'none';
+        if (!isAluno) {
+            document.getElementById('ig-professorView').style.display = 'flex';
+            document.getElementById('ig-alunoView').style.display = 'none';
+            document.getElementById('ig-unlock-screen').style.display = 'none';
+            document.getElementById('ig-guardian-screen').style.display = 'none';
+            document.getElementById('ig-timeout-screen').style.display = 'none';
             
-            // 🚀 A CURA DA AMNÉSIA (PROFESSOR): Puxa a última aba que ele estava a ver!
             const abaSalva = localStorage.getItem('ws_ingles_aba_prof') || 'envios';
             Workspace.Ingles.renderProfessorTab(abaSalva); 
         } else {
             document.getElementById('ig-professorView').style.display = 'none';
 
-           if (Workspace.Ingles.sessaoEncerrada) {
+            if (Workspace.Ingles.sessaoEncerrada) {
                 document.getElementById('ig-guardian-screen').style.display = 'none';
                 document.getElementById('ig-unlock-screen').style.display = 'none';
                 document.getElementById('ig-alunoView').style.display = 'none';
@@ -491,7 +485,6 @@ Workspace.Ingles = {
     // 🧙‍♂️ NARRATIVA: O GUARDIÃO E A FECHADURA MÁGICA
     // ============================================================================
     encerrarSessaoBau: () => {
-        // 🚀 O RESET ABSOLUTO: Tranca o Baú, remove as variáveis de tempo e envia para o Feed!
         Workspace.Ingles.tempoGlobalDefinido = false;
         Workspace.Ingles.sessaoEncerrada = false;
         Workspace.Ingles.bauDestrancado = false;
@@ -507,11 +500,11 @@ Workspace.Ingles = {
         balao.innerHTML = '';
         botoes.classList.remove('visivel');
 
-        // 🚀 A INTELIGÊNCIA: Sorteia uma frase que o Professor cadastrou no MongoDB
+        // Sorteia frase para o Mago IA
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
         const fraseMago = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
 
-        // 🚀 A MAGIA SONORA: O Mago lê a frase em Português usando Inteligência Artificial
+        // Ativa a Voz do Mago
         Workspace.Ingles.falar(fraseMago, 'pt-BR');
 
         let i = 0;
@@ -675,7 +668,7 @@ Workspace.Ingles = {
     // 👨‍🏫 O LABORATÓRIO DO PROFESSOR
     // ============================================================================
     renderProfessorTab: (tabId) => {
-        localStorage.setItem('ws_ingles_aba_prof', tabId); // 🚀 MEMÓRIA: Guarda a aba onde o professor clicou
+        localStorage.setItem('ws_ingles_aba_prof', tabId); 
         document.querySelectorAll('.ig-side-item').forEach(b => b.classList.remove('active'));
         const btn = document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
         if(btn) btn.classList.add('active');
