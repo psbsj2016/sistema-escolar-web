@@ -206,26 +206,33 @@ Workspace.Ingles = {
     // ============================================================================
     // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
-    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95) => {
+    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
         u.lang = lang; 
         
-        // 🚀 A MÁGICA SONORA OTIMIZADA: Tom normal, Velocidade ligeiramente pausada
-        u.rate = rate;
-        u.pitch = pitch;
+        // 🚀 O FEITIÇO CORRIGIDO: Um tom ligeiramente mais grave (0.7), sem distorcer o robô!
+        u.pitch = isMago ? 0.7 : pitch;
+        u.rate = isMago ? 0.85 : rate;
         
         const voices = window.speechSynthesis.getVoices();
-        const idiomaPrincipal = lang.split('-')[0];
-        
-        // 🚀 O FILTRO DE INTELIGÊNCIA: Tenta encontrar as vozes da Microsoft ou Google que são neurais/premium
-        const vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Premium')))
-                      || voices.find(v => v.lang.includes(idiomaPrincipal))
-                      || voices.find(v => v.lang.includes('en'))
-                      || voices[0];
-        
+        let vozSelec = null;
+
+        if (isMago) {
+            // 🧙‍♂️ Busca Inteligente: Tenta encontrar as vozes masculinas do sistema (Antonio, Daniel, etc)
+            vozSelec = voices.find(v => v.lang.includes('pt') && (v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')))
+                    || voices.find(v => v.lang.includes('pt'));
+        } else {
+            // 🇺🇸 Busca Premium para os Jogos: Tenta usar as vozes Google ou Naturais
+            const idiomaPrincipal = lang.split('-')[0];
+            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')))
+                    || voices.find(v => v.lang.includes(idiomaPrincipal))
+                    || voices.find(v => v.lang.includes('en'))
+                    || voices[0];
+        }
+
         if(vozSelec) u.voice = vozSelec;
         window.speechSynthesis.speak(u);
     },
@@ -429,7 +436,7 @@ Workspace.Ingles = {
         `;
     },
 
-    renderizarVisualizacao: () => {
+   renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
         
@@ -447,29 +454,26 @@ Workspace.Ingles = {
         } else {
             document.getElementById('ig-professorView').style.display = 'none';
 
+            // 🚀 HIGIENE VISUAL ABSOLUTA: Limpa a tela de resíduos antigos antes de abrir a nova etapa!
+            document.getElementById('ig-guardian-screen').style.display = 'none';
+            document.getElementById('ig-unlock-screen').style.display = 'none';
+            document.getElementById('ig-alunoView').style.display = 'none';
+            document.getElementById('ig-gameModal').style.display = 'none';
+            document.getElementById('ig-timeout-screen').style.display = 'none';
+
             if (Workspace.Ingles.sessaoEncerrada) {
-                document.getElementById('ig-guardian-screen').style.display = 'none';
-                document.getElementById('ig-unlock-screen').style.display = 'none';
-                document.getElementById('ig-alunoView').style.display = 'none';
-                document.getElementById('ig-gameModal').style.display = 'none';
                 document.getElementById('ig-timeout-screen').style.display = 'flex';
                 document.getElementById('ig-timeout-xp').innerText = `+${Workspace.Ingles.xpGanhosNaSessao} XP ⭐`;
             } 
             else if (!Workspace.Ingles.tempoGlobalDefinido) {
-                document.getElementById('ig-unlock-screen').style.display = 'none';
-                document.getElementById('ig-alunoView').style.display = 'none';
                 document.getElementById('ig-guardian-screen').style.display = 'flex';
                 Workspace.Ingles.iniciarFalaGuardiao();
             } 
             else if (!Workspace.Ingles.bauDestrancado) {
-                document.getElementById('ig-guardian-screen').style.display = 'none';
-                document.getElementById('ig-alunoView').style.display = 'none';
                 document.getElementById('ig-unlock-screen').style.display = 'flex';
                 Workspace.Ingles.ativarFisicaFechadura();
             } 
             else {
-                document.getElementById('ig-guardian-screen').style.display = 'none';
-                document.getElementById('ig-unlock-screen').style.display = 'none';
                 document.getElementById('ig-alunoView').style.display = 'block';
                 Workspace.Ingles.renderAlunoGrid();
             }
@@ -526,8 +530,8 @@ Workspace.Ingles = {
         // 4. Monta a frase visual para a tela (Com cores e negrito)
         const fraseVisual = fraseBruta.replace(/\(citarAluno\)/g, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
 
-        // 🚀 A MAGIA SONORA: O Mago lê a frase
-        Workspace.Ingles.falar(fraseAudio, 'pt-BR');
+       // 🚀 Passamos o parâmetro 'true' no fim, para o motor saber que é o Mago a falar!
+        Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
 
         let i = 0;
         let isTag = false;
@@ -650,13 +654,18 @@ Workspace.Ingles = {
         key.addEventListener('touchstart', startDrag, {passive: false}); document.addEventListener('touchmove', onDrag, {passive: false}); document.addEventListener('touchend', stopDrag);
     },
 
-    explodirBau: (x, y) => {
+   explodirBau: (x, y) => {
         Workspace.Ingles.bauDestrancado = true;
         document.getElementById('ig-drag-key').style.display = 'none';
         document.getElementById('ig-chest-lock').style.animation = 'none';
         document.getElementById('ig-chest-lock').style.transform = 'scale(1.3) rotate(5deg)';
         
-        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg'); audio.play().catch(()=>{}); } catch(e){}
+        // 🚀 O NOVO SOM MÁGICO (Pó de Fada e Fechadura)
+        try { 
+            const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); 
+            audio.volume = 1.0; // Volume no máximo
+            audio.play().catch(()=>{}); 
+        } catch(e){}
 
         const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
         for (let i = 0; i < 60; i++) {
