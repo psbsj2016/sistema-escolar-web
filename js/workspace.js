@@ -176,18 +176,21 @@ Object.assign(Workspace, {
         return cores[Math.abs(hash) % cores.length];
     },
 
-   init: async () => {
+   // ============================================================================
+    // 🚀 INICIALIZADOR MESTRE DA PLATAFORMA (BOOT SEQUENCE)
+    // ============================================================================
+    init: async () => {
         const cacheUser = localStorage.getItem('ws_usuario_logado');
+        
+        // 1. Verificação de Segurança (Login)
         if (!cacheUser) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
             
-            // 🚀 GUARDIÃO DE ROTAS (Auth Guard): Deteta Invasores com Link Partilhado
+            // 🛡️ GUARDIÃO DE ROTAS: Deteta Invasores
             if (window.location.hash && window.location.hash.includes('post-')) {
-                // 1. Destrói o link da barra de endereços para não ficar gravado no histórico do invasor
                 history.replaceState(null, null, ' ');
-                // 2. Lança o alerta de segurança inquebrável
                 setTimeout(() => {
                     Workspace.mostrarAviso("Você não foi autorizado a acessar a plataforma, pois não tem cadastro no nosso sistema", "error", 8000);
                 }, 500);
@@ -199,42 +202,49 @@ Object.assign(Workspace, {
         document.getElementById('ws-login-screen').style.display = 'none';
         document.getElementById('ws-navbar').style.display = 'flex';
         
-        // ====================================================================
-        // 🚀 O SEGREDO DO REFRESH E DEEP LINKING
-        // ====================================================================
-        let telaDestino = 'feed'; // O destino padrão de segurança
-        let postAlvo = null;      // Memoriza se o aluno clicou num link de publicação
-        
-        if (window.location.hash) {
-            if (window.location.hash.includes('post-')) {
-                telaDestino = 'feed'; // Obriga a carregar o Feed
-                postAlvo = window.location.hash.replace('#post-', ''); // Guarda a matrícula do post
-            } else {
-                telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
-            }
-        }
-        
-        Workspace.navegarPara(telaDestino, true);
-        // ====================================================================
-
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) boxCriarPost.style.display = 'block';
 
         Workspace.avatarsCache = await Workspace.api('/workspace/avatars', 'GET') || {};
         Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
 
+        // ====================================================================
+        // 🚀 PASSO 2: INICIALIZAR TODOS OS MÓDULOS PRIMEIRO (CONSTRUIR HTML)
+        // O sistema deve preparar as telas ocultas antes de tentar navegar para elas.
+        // ====================================================================
         if (Workspace.Feed) await Workspace.Feed.init();
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
-        Workspace.Sessao.init(); // 🚀 LIGA O MOTOR DE INATIVIDADE
-        Workspace.iniciarRadarOnline(); // 🚀 O RADAR É LIGADO AQUI!
+        Workspace.Sessao.init(); 
+        Workspace.iniciarRadarOnline(); 
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
         if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
         if (Workspace.Materiais) Workspace.Materiais.init();
-        if (Workspace.Ingles) Workspace.Ingles.init(); // 🚀 INICIA O BAÚ DO INGLÊS
+        if (Workspace.Ingles) Workspace.Ingles.init(); // 🛠️ O HTML do Baú é criado aqui!
 
+        // ====================================================================
+        // 🚀 PASSO 3: O GPS DA PLATAFORMA (NAVEGAÇÃO)
+        // Agora que tudo está construído, navegamos o utilizador para a tela correta.
+        // ====================================================================
+        let telaDestino = 'feed'; 
+        let postAlvo = null;      
+        
+        if (window.location.hash) {
+            if (window.location.hash.includes('post-')) {
+                telaDestino = 'feed'; 
+                postAlvo = window.location.hash.replace('#post-', ''); 
+            } else {
+                telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
+            }
+        }
+        
+        // A navegação acontece e preenche os dados sem erro, pois o HTML já existe!
+        Workspace.navegarPara(telaDestino, true);
+        // ====================================================================
+
+        // 4. Configuração de eventos globais
         document.addEventListener('click', (e) => {
             const menuContainer = document.getElementById('ws-menu-left-container');
             const menuDropdown = document.getElementById('ws-main-menu-dropdown');
@@ -243,8 +253,8 @@ Object.assign(Workspace, {
             }
         });
 
+        // 5. Histórico do Navegador (Botão Voltar)
         window.addEventListener('popstate', (e) => {
-            // Também blindamos o botão "Voltar" do navegador para respeitar a Hash!
             if (e.state && e.state.tela) {
                 Workspace.navegarPara(e.state.tela, false); 
             } else if (window.location.hash) {
