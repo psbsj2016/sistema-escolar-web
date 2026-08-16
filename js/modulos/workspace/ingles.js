@@ -203,17 +203,26 @@ Workspace.Ingles = {
         return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
-    // ============================================================================
+   // ============================================================================
     // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
     // ============================================================================
-    falar: (text, lang='en-US') => {
+    falar: (text, lang='en-US', pitch = 1, rate = 0.9) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = 0.9;
+        
+        const u = new SpeechSynthesisUtterance(text); 
+        u.lang = lang; 
+        
+        // 🚀 OS NOVOS PARÂMETROS MÁGICOS
+        u.rate = rate;   // Velocidade da fala
+        u.pitch = pitch; // Tom da voz (Grave ou Agudo)
+        
         const voices = window.speechSynthesis.getVoices();
+        // 🚀 O SEGREDO DA VOZ: Procura a voz no idioma pedido. Se não achar, usa Inglês.
         const idiomaPrincipal = lang.split('-')[0];
         const vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         if(vozSelec) u.voice = vozSelec;
+        
         window.speechSynthesis.speak(u);
     },
 
@@ -504,8 +513,9 @@ Workspace.Ingles = {
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
         const fraseMago = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
 
-        // Ativa a Voz do Mago
-        Workspace.Ingles.falar(fraseMago, 'pt-BR');
+        // 🚀 A MAGIA SONORA: O Mago lê a frase em Português usando Inteligência Artificial
+        // Passamos 0.1 para ficar super grave e 0.75 para ficar lento e idoso!
+        Workspace.Ingles.falar(fraseMago, 'pt-BR', 0.1, 0.75);
 
         let i = 0;
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
