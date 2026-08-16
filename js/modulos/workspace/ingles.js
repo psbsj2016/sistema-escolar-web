@@ -73,19 +73,19 @@ Workspace.Ingles = {
             {id:'rp1', title:'✈️ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
             {id:'rp2', title:'🍽️ No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
         ],
-        games: [
-            {id:'wordSpark', title:'Word Spark', desc:'Crie uma frase com a palavra. Deteção IA.', icon:'🎲', color:'#E0E7FF', level:'B1-B2'},
-            {id:'readAloud', title:'Read Aloud Lab', desc:'Fale ao microfone e a IA corrige a pronúncia.', icon:'🎙️', color:'#D1FAE5', level:'A2-C1'},
-            {id:'listenType', title:'Listen & Type', desc:'Escute o áudio e escreva sem errar.', icon:'👂', color:'#FEF3C7', level:'A2-B1'},
-            {id:'quiz', title:'Quiz Master', desc:'Responda corretamente para não ser penalizado.', icon:'🧩', color:'#FEE2E2', level:'A1-B2'},
-            {id:'wordPicker', title:'Word Picker', desc:'Gramática rigorosa. Escolha a opção certa.', icon:'✍️', color:'#E0E7FF', level:'A2-B1'},
-            {id:'sentenceShuffle', title:'Sentence Shuffle', desc:'Sorteio de frases. Transforme!', icon:'🔀', color:'#D1FAE5', level:'B1-B2'},
-            {id:'answerQuest', title:'Answer Quest', desc:'Responda abertamente. Professor avalia.', icon:'💬', color:'#FEF3C7', level:'B1-C1'},
-            {id:'questionMaker', title:'Question Maker', desc:'Formule perguntas em inglês.', icon:'❓', color:'#F5D0FE', level:'B1-B2'},
-            {id:'contextRole', title:'Context Roleplay', desc:'Simulação de papéis. Professor avalia.', icon:'🎭', color:'#CCFBF1', level:'B1-C1'},
-            {id:'debateAI', title:'AI Debate Club', desc:'Debate denso com Inteligência Artificial.', icon:'🤖', color:'#E0F2FE', level:'B2-C1'},
-            {id:'minimalPairs', title:'Minimal Pairs Lab', desc:'Teste de audição extrema. ship vs sheep.', icon:'👄', color:'#FFEDD5', level:'B1-C1'},
-            {id:'picturePop', title:'Picture Pop', desc:'Deteção de voz: Fale o nome da imagem.', icon:'🖼️', color:'#DCFCE7', level:'A1-B1'}
+      games: [
+            {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave. Deteção de Magia IA.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
+            {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará o poder da sua pronúncia.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
+            {id:'listenType', title:'🦉 Ecos da Coruja', desc:'Escute o áudio misterioso e transcreva sem errar.', icon:'🦉', color:'#FEF3C7', level:'A2-B1'},
+            {id:'quiz', title:'👁️ Enigma da Esfinge', desc:'Responda corretamente para não perder energia vital.', icon:'👁️', color:'#FEE2E2', level:'A1-B2'},
+            {id:'wordPicker', title:'🧪 Poção Sintática', desc:'Gramática rigorosa. Escolha o ingrediente (palavra) certo.', icon:'🧪', color:'#E0E7FF', level:'A2-B1'},
+            {id:'sentenceShuffle', title:'🌀 Labirinto Ilusório', desc:'Sorteio de frases. Transforme-as para escapar do labirinto!', icon:'🌀', color:'#D1FAE5', level:'B1-B2'},
+            {id:'answerQuest', title:'📜 Pergaminho do Herói', desc:'Responda abertamente. O Mestre avaliará a sua sabedoria.', icon:'📜', color:'#FEF3C7', level:'B1-C1'},
+            {id:'questionMaker', title:'🔮 Espelho do Oráculo', desc:'Formule a pergunta em inglês que revela a resposta oculta.', icon:'🔮', color:'#F5D0FE', level:'B1-B2'},
+            {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma a identidade do personagem. O Mestre avalia a atuação.', icon:'🎭', color:'#CCFBF1', level:'B1-C1'},
+            {id:'debateAI', title:'⚔️ Duelo de Mentes', desc:'Enfrente a Inteligência Artificial num debate denso e argumentativo.', icon:'⚔️', color:'#E0F2FE', level:'B2-C1'},
+            {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Teste de audição extrema: diferencie sons quase idênticos.', icon:'♊', color:'#FFEDD5', level:'B1-C1'},
+            {id:'picturePop', title:'👁️‍🗨️ Visão do Alquimista', desc:'Deteção de voz: Invoque o nome exato da relíquia (imagem).', icon:'👁️‍🗨️', color:'#DCFCE7', level:'A1-B1'}
         ]
     },
 
@@ -322,11 +322,11 @@ Workspace.Ingles = {
             .ig-xp-badge { display: flex; gap: 12px; background: #0F172A; color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: bold; }
             .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
             .ig-game-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; }
-            .ig-game-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(15,23,42,0.1); border-color: #C7D2FE; }
+            .ig-game-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.2); border-color: #8B5CF6; }
             .ig-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
-            .ig-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+            .ig-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
             .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
-            .ig-badge-level { background: #E0E7FF; color: #4F46E5; }
+            .ig-badge-level { background: #E0E7FF; color: #4F46E5; border: 1px solid #C7D2FE; }
             .ig-sidebar { width: 250px; background: #fff; border-right: 1px solid #E2E8F0; padding: 20px; display:flex; flex-direction:column; gap:5px; }
             .ig-side-item { background: transparent; border: none; padding: 12px 15px; border-radius: 10px; text-align: left; font-weight: bold; color: #64748B; cursor: pointer; transition: 0.2s; }
             .ig-side-item:hover { background: #F1F5F9; }
@@ -340,18 +340,24 @@ Workspace.Ingles = {
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
             /* 🚀 ANIMAÇÕES DA FECHADURA E EXPLOSÃO */
-            @keyframes pulseChest { 0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(241,196,15,0.2)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(241,196,15,0.8)); } 100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(241,196,15,0.2)); } }
+            @keyframes pulseChest { 0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(241,196,15,0.4)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 35px rgba(241,196,15,1)); } 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(241,196,15,0.4)); } }
             .ig-particle { position: fixed; pointer-events: none; z-index: 9999999; animation: explodirParticula 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             @keyframes explodirParticula { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
-            /* 🧙‍♂️ ANIMAÇÕES DO GUARDIÃO MÁGICO */
-            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; background: #F8FAFC; position: relative; }
-            .ig-guardian-avatar { font-size: 90px; animation: flutuarMago 3s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); }
-            .ig-balao-fala { background: white; padding: 25px 35px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); position: relative; max-width: 450px; text-align: center; font-size: 18px; font-weight: bold; color: #2c3e50; min-height: 90px; display: flex; align-items: center; justify-content: center; line-height: 1.5; }
-            .ig-balao-fala::after { content: ''; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); border-width: 0 15px 15px 15px; border-style: solid; border-color: transparent transparent white transparent; }
-            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 30px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; }
+            /* 🧙‍♂️ O NOVO REINO DO GUARDIÃO MÁGICO (Cenário de RPG) */
+            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #2b1055 0%, #0f0c29 100%); overflow: hidden; border-radius: 0 0 16px 16px; }
+            .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
+            @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
+            
+            .ig-guardian-avatar { font-size: 110px; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 25px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)) drop-shadow(0 15px 15px rgba(0,0,0,0.5)); z-index: 2; }
+            
+            .ig-balao-fala { background: rgba(20, 15, 45, 0.85); padding: 25px 35px; border-radius: 20px; box-shadow: 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5); position: relative; max-width: 500px; text-align: center; font-size: 20px; font-weight: bold; color: #E2E8F0; min-height: 100px; display: flex; align-items: center; justify-content: center; line-height: 1.6; z-index: 2; backdrop-filter: blur(5px); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+            .ig-balao-fala::after { content: ''; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); border-width: 0 18px 18px 18px; border-style: solid; border-color: transparent transparent rgba(139, 92, 246, 0.5) transparent; z-index: 1;}
+            .ig-balao-fala::before { content: ''; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); border-width: 0 16px 16px 16px; border-style: solid; border-color: transparent transparent rgba(20, 15, 45, 0.95) transparent; z-index: 2;}
+            
+            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 35px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; z-index: 2; }
             .ig-opcoes-tempo.visivel { opacity: 1; transform: translateY(0); pointer-events: auto; }
-            @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+            @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)) drop-shadow(0 25px 20px rgba(0,0,0,0.7)); } }
             
             /* ⏱️ RELÓGIO GLOBAL */
             .ig-global-timer { font-family: monospace; font-size: 16px; font-weight: 900; color: #e74c3c; background: #fdf2f2; padding: 6px 12px; border-radius: 20px; border: 2px solid #fadbd8; display: none; align-items: center; justify-content: center; }
@@ -385,25 +391,26 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO -->
+       <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO IMERSIVO -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
+                <div class="ig-guardian-stars"></div>
                 <div class="ig-guardian-avatar">🧙‍♂️</div>
                 <div class="ig-balao-fala" id="ig-guardian-text"></div>
                 <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 12px; border: 2px solid #4F46E5; box-shadow: 0 4px 10px rgba(79,70,229,0.1);">
-                        <input type="number" id="ig-tempo-escolhido" class="ig-input" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 20px; font-weight: 900; color: #0F172A; text-align: center; padding: 5px; outline: none;">
-                        <span style="font-size: 16px; font-weight: bold; color: #4F46E5;">Minutos</span>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 16px; border: 2px solid rgba(139, 92, 246, 0.5); backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <input type="number" id="ig-tempo-escolhido" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 22px; font-weight: 900; color: #FFF; background: transparent; text-align: center; padding: 5px; outline: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                        <span style="font-size: 16px; font-weight: bold; color: #D8B4FE; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Minutos</span>
                     </div>
-                    <button class="ws-btn" style="background:#10B981; color:white; font-size:16px; font-weight:bold; border:none; padding:15px 25px; border-radius:12px; cursor:pointer; transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onclick="
+                    <button class="ws-btn" style="background: linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; font-weight:bold; border: 1px solid #34D399; padding:15px 30px; border-radius:16px; cursor:pointer; transition:0.2s; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 2px 4px rgba(255,255,255,0.3);" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 25px rgba(16, 185, 129, 0.7)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 15px rgba(16, 185, 129, 0.4)'" onclick="
                         const campoTempo = document.getElementById('ig-tempo-escolhido');
                         const minutos = parseInt(campoTempo.value) || 0;
                         if (minutos <= 0) {
-                            Workspace.mostrarAviso('O Mago avisa: Digite um tempo válido para treinar!', 'warning');
+                            Workspace.mostrarAviso('O Mestre avisa: Digite um tempo de treino válido!', 'warning');
                             campoTempo.focus();
                         } else {
                             Workspace.Ingles.definirTempoGlobal(minutos);
                         }
-                    ">Confirmar Mágica ✨</button>
+                    ">Ativar Feitiço ✨</button>
                 </div>
             </div>
 
