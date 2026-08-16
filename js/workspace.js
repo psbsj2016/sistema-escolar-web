@@ -275,6 +275,12 @@ Object.assign(Workspace, {
     // 🗺️ O NOVO ROTEADOR INTELIGENTE (Velocidade da Luz & Anti-Amnésia)
     // ============================================================================
     navegarPara: async (tela, registarNoHistorico = true) => {
+        
+        // 🚀 O SILENCIADOR GLOBAL: Interrompe imediatamente qualquer voz (Mago ou Jogos) ao sair da tela!
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
         const modalChat = document.getElementById('ws-chat-modal');
@@ -318,7 +324,7 @@ Object.assign(Workspace, {
             }
         }
 
-        // 🚀 PASSO 1: APAGA AS LUZES E ACENDE A NOVA TELA IMEDIATAMENTE (Sem 'awaits' a travar!)
+        // 🚀 PASSO 1: APAGA AS LUZES E ACENDE A NOVA TELA IMEDIATAMENTE
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
@@ -335,7 +341,7 @@ Object.assign(Workspace, {
 
         if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
 
-        // 🚀 PASSO 2: PUXA OS DADOS EM SEGUNDO PLANO (.then em vez de await)
+        // 🚀 PASSO 2: PUXA OS DADOS EM SEGUNDO PLANO
         if (tela === 'ingles' && Workspace.Ingles) {
             Workspace.Ingles.loadDados().then(() => Workspace.Ingles.renderizarVisualizacao());
         } 

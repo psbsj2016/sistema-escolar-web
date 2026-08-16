@@ -23,9 +23,9 @@ Workspace.Ingles = {
 
     defaults: {
         magoPhrases: [
-            { id: 'm1', text: 'Olá, <strong>${aluno.nome}</strong>! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta! Vejo que está muito empolgado! <strong>${aluno.nome}</strong> Quanto tempo temos hoje?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam. <strong>${aluno.nome}</strong>, quantos minutos pretende focar-se hoje?' }
+            { id: 'm1', text: 'Olá, {NOME}! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
+            { id: 'm2', text: 'Bem-vindo de volta, {NOME}! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
+            { id: 'm3', text: 'Os segredos do Baú aguardam, {NOME}. 🗝️ Quantos minutos pretende focar-se hoje?' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -500,7 +500,7 @@ Workspace.Ingles = {
         Workspace.navegarPara('feed');
     },
 
-    iniciarFalaGuardiao: () => {
+   iniciarFalaGuardiao: () => {
         if (Workspace.Ingles.digitandoAtivo) return; 
         Workspace.Ingles.digitandoAtivo = true;
         
@@ -509,21 +509,49 @@ Workspace.Ingles = {
         balao.innerHTML = '';
         botoes.classList.remove('visivel');
 
-        // Sorteia frase para o Mago IA
+        // 1. Sorteia a frase bruta do banco de dados (criada pelo professor)
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
-        const fraseMago = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
+        const fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
 
-        // 🚀 A MAGIA SONORA: O Mago lê a frase em Português usando Inteligência Artificial
-        // Passamos 0.1 para ficar super grave e 0.75 para ficar lento e idoso!
-        Workspace.Ingles.falar(fraseMago, 'pt-BR', 0.1, 0.75);
+        // 2. Descobre o primeiro nome do aluno
+        const primeiroNome = (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0];
+
+        // 3. Cria DUAS versões da frase (Uma para os ouvidos, outra para os olhos)
+        const fraseAudio = fraseBruta.replace(/{NOME}/g, primeiroNome);
+        // O nome visual ganha negrito e a cor azul do tema para máximo destaque!
+        const fraseVisual = fraseBruta.replace(/{NOME}/g, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
+
+        // 4. Ativa a Voz do Mago APENAS com a frase limpa (Áudio)
+        Workspace.Ingles.falar(fraseAudio, 'pt-BR', 0.1, 0.75);
 
         let i = 0;
+        let textoExibido = "";
+        let isTag = false;
+        let tagHTML = "";
+
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
+        // 5. A Máquina de Escrever Inteligente (Lê as tags HTML sem as quebrar)
         const intervalo = setInterval(() => {
-            balao.innerHTML += fraseMago.charAt(i);
+            const char = fraseVisual.charAt(i);
+            
+            if (char === '<') isTag = true;
+            
+            if (isTag) {
+                tagHTML += char;
+                if (char === '>') {
+                    isTag = false;
+                    textoExibido += tagHTML;
+                    tagHTML = "";
+                    balao.innerHTML = textoExibido; // Pinta a tag inteira no ecrã num milissegundo!
+                }
+            } else {
+                textoExibido += char;
+                balao.innerHTML = textoExibido;
+            }
+            
             i++;
-            if (i >= fraseMago.length) {
+            if (i >= fraseVisual.length) {
                 clearInterval(intervalo);
                 Workspace.Ingles.digitandoAtivo = false;
                 setTimeout(() => { botoes.classList.add('visivel'); }, 300);
