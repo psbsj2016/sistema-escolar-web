@@ -27,9 +27,9 @@ Workspace.Ingles = {
     defaults: {
         magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
-            { id: 'm1', text: 'Olá, (citarAluno)! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). 🗝️ Quantos minutos pretende focar-se hoje?' }
+            { id: 'm1', text: 'Olá, (citarAluno)! Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
+            { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! Quanto tempo temos hoje?' },
+            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). Quantos minutos pretende focar-se hoje?' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -532,9 +532,15 @@ Workspace.Ingles = {
     // 🧙‍♂️ NARRATIVA: O GUARDIÃO E A FECHADURA MÁGICA
     // ============================================================================
     encerrarSessaoBau: () => {
+        // 🚀 O RESET ABSOLUTO: Tranca o Baú e desliga todos os motores e memórias da sessão anterior!
         Workspace.Ingles.tempoGlobalDefinido = false;
         Workspace.Ingles.sessaoEncerrada = false;
         Workspace.Ingles.bauDestrancado = false;
+        Workspace.Ingles.digitandoAtivo = false;
+        
+        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
+        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
+        
         Workspace.navegarPara('feed');
     },
 
@@ -660,99 +666,89 @@ Workspace.Ingles = {
     ativarFisicaFechadura: () => {
         const key = document.getElementById('ig-drag-key');
         const lock = document.getElementById('ig-keyhole');
+        const chestLock = document.getElementById('ig-chest-lock');
+        const screen = document.getElementById('ig-unlock-screen');
+
         if (!key || !lock) return;
 
-        let isDragging = false;
-        let currentX = 0, currentY = 0;
-        let initialMouseX, initialMouseY;
-
+        // 🚀 1. A CURA DO TRAVAMENTO (HIGIENE VISUAL): 
+        // Garante que a chave, o baú e a tela voltam a ficar visíveis e na posição original!
+        key.style.display = 'block';
         key.style.transform = `translate(0px, 0px)`;
+        
+        if (chestLock) {
+            chestLock.style.animation = 'pulseChest 2s infinite';
+            chestLock.style.transform = 'scale(1) rotate(0deg)'; // Remove o zoom e a rotação da explosão antiga
+        }
+        
+        if (screen) {
+            screen.style.opacity = '1';
+            screen.style.transform = 'scale(1)';
+        }
+
+        // 2. Variáveis de física atreladas ao Workspace para não existirem "fantasmas" na memória
+        Workspace.Ingles.fisica = { isDragging: false, currentX: 0, currentY: 0, startX: 0, startY: 0 };
 
         const startDrag = (e) => {
-            isDragging = true; key.style.cursor = 'grabbing';
+            Workspace.Ingles.fisica.isDragging = true; 
+            key.style.cursor = 'grabbing';
             const evt = e.type.includes('mouse') ? e : e.touches[0];
-            initialMouseX = evt.clientX - currentX;
-            initialMouseY = evt.clientY - currentY;
+            Workspace.Ingles.fisica.startX = evt.clientX - Workspace.Ingles.fisica.currentX;
+            Workspace.Ingles.fisica.startY = evt.clientY - Workspace.Ingles.fisica.currentY;
         };
 
-        const onDrag = (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
+        Workspace.Ingles.onDragFechadura = (e) => {
+            if (!Workspace.Ingles.fisica.isDragging) return;
+            e.preventDefault(); // Evita que a tela do telemóvel deslize enquanto arrasta a chave
+            
             const evt = e.type.includes('mouse') ? e : e.touches[0];
-            currentX = evt.clientX - initialMouseX;
-            currentY = evt.clientY - initialMouseY;
-            key.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            Workspace.Ingles.fisica.currentX = evt.clientX - Workspace.Ingles.fisica.startX;
+            Workspace.Ingles.fisica.currentY = evt.clientY - Workspace.Ingles.fisica.startY;
+            key.style.transform = `translate(${Workspace.Ingles.fisica.currentX}px, ${Workspace.Ingles.fisica.currentY}px)`;
 
+            // Deteta se a Chave tocou na Fechadura
             const keyRect = key.getBoundingClientRect();
             const lockRect = lock.getBoundingClientRect();
             const overlap = !(keyRect.right < lockRect.left || keyRect.left > lockRect.right || keyRect.bottom < lockRect.top || keyRect.top > lockRect.bottom);
 
-            if (overlap) { isDragging = false; Workspace.Ingles.explodirBau(lockRect.left + 15, lockRect.top + 15); }
+            if (overlap) { 
+                Workspace.Ingles.fisica.isDragging = false; 
+                Workspace.Ingles.explodirBau(lockRect.left + 15, lockRect.top + 15); 
+            }
         };
 
-        const stopDrag = () => {
-            isDragging = false; key.style.cursor = 'grab';
+        Workspace.Ingles.stopDragFechadura = () => {
+            Workspace.Ingles.fisica.isDragging = false; 
+            key.style.cursor = 'grab';
+            
+            // Se soltar a chave fora da fechadura, ela regressa suavemente à origem
             if (!Workspace.Ingles.bauDestrancado) {
-                currentX = 0; currentY = 0;
+                Workspace.Ingles.fisica.currentX = 0; 
+                Workspace.Ingles.fisica.currentY = 0;
                 key.style.transition = 'transform 0.3s ease';
                 key.style.transform = `translate(0px, 0px)`;
                 setTimeout(() => key.style.transition = 'none', 300);
             }
         };
 
-        key.addEventListener('mousedown', startDrag); document.addEventListener('mousemove', onDrag); document.addEventListener('mouseup', stopDrag);
-        key.addEventListener('touchstart', startDrag, {passive: false}); document.addEventListener('touchmove', onDrag, {passive: false}); document.addEventListener('touchend', stopDrag);
-    },
+        // 🚀 3. BLINDAGEM CONTRA DUPLICAÇÃO DE EVENTOS
+        // Remove eventuais "rastreadores" da sessão anterior para não sobrecarregar o telemóvel do aluno!
+        document.removeEventListener('mousemove', Workspace.Ingles.onDragFechadura);
+        document.removeEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
+        document.removeEventListener('touchmove', Workspace.Ingles.onDragFechadura);
+        document.removeEventListener('touchend', Workspace.Ingles.stopDragFechadura);
 
-    explodirBau: (x, y) => {
-        Workspace.Ingles.bauDestrancado = true;
-        document.getElementById('ig-drag-key').style.display = 'none';
-        document.getElementById('ig-chest-lock').style.animation = 'none';
-        document.getElementById('ig-chest-lock').style.transform = 'scale(1.3) rotate(5deg)';
+        // Clona a chave para eliminar cliques velhos e liga os novos motores!
+        key.replaceWith(key.cloneNode(true));
+        const newKey = document.getElementById('ig-drag-key');
         
-        try { const audio = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); audio.volume = 1.0; audio.play().catch(()=>{}); } catch(e){}
-
-        const cores = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71', '#ff9ff3', '#00d8d6'];
-        for (let i = 0; i < 60; i++) {
-            let p = document.createElement('div');
-            p.className = 'ig-particle';
-            document.body.appendChild(p);
-            let angle = Math.random() * Math.PI * 2;
-            let velocity = 100 + Math.random() * 250;
-            let tx = Math.cos(angle) * velocity; let ty = Math.sin(angle) * velocity - 100;
-            p.style.left = (x + 20) + 'px'; p.style.top = (y + 20) + 'px';
-            p.style.setProperty('--tx', tx + 'px'); p.style.setProperty('--ty', ty + 'px');
-            p.style.backgroundColor = cores[Math.floor(Math.random() * cores.length)];
-            p.style.boxShadow = `0 0 8px ${p.style.backgroundColor}`;
-            
-            let size = (5 + Math.random() * 10) + 'px';
-            p.style.width = size; p.style.height = size;
-            p.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
-            
-            setTimeout(() => p.remove(), 1500);
-        }
-
-        setTimeout(() => {
-            const screen = document.getElementById('ig-unlock-screen');
-            screen.style.opacity = '0';
-            screen.style.transform = 'scale(1.1)';
-            screen.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
-            
-            setTimeout(() => { 
-                Workspace.Ingles.iniciarTimerGlobal();
-                Workspace.Ingles.renderizarVisualizacao(); 
-                const grid = document.getElementById('ig-gamesGrid');
-                if (grid) {
-                    grid.style.opacity = '0';
-                    grid.style.transform = 'translateY(30px)';
-                    requestAnimationFrame(() => {
-                        grid.style.transition = 'all 0.6s ease-out';
-                        grid.style.opacity = '1';
-                        grid.style.transform = 'translateY(0)';
-                    });
-                }
-            }, 600);
-        }, 800);
+        newKey.addEventListener('mousedown', startDrag); 
+        document.addEventListener('mousemove', Workspace.Ingles.onDragFechadura); 
+        document.addEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
+        
+        newKey.addEventListener('touchstart', startDrag, {passive: false}); 
+        document.addEventListener('touchmove', Workspace.Ingles.onDragFechadura, {passive: false}); 
+        document.addEventListener('touchend', Workspace.Ingles.stopDragFechadura);
     },
 
     // ============================================================================
