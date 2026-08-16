@@ -398,7 +398,8 @@ Workspace.Ingles = {
                 <button class="ws-btn" style="background:#0F172A; color:white; padding:12px 25px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
             </div>
 
-            <div id="ig-professorView" style="display:none; min-height: 70vh; display: flex;">
+            <!-- 🛡️ ECRÃ DO PROFESSOR (Inicia totalmente oculto e sem conflitos CSS) -->
+            <div id="ig-professorView" style="display: none; min-height: 70vh;">
                 <div class="ig-sidebar">
                     <button class="ig-side-item" data-tab="mago" onclick="Workspace.Ingles.renderProfessorTab('mago')">🧙‍♂️ Mago IA</button>
                     <button class="ig-side-item active" data-tab="biblioteca" onclick="Workspace.Ingles.renderProfessorTab('biblioteca')">📚 Biblioteca</button>
