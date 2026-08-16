@@ -328,7 +328,7 @@ Workspace.Ingles = {
 
             <!-- 🧙‍♂️ NOVO: ECRÃ DO GUARDIÃO MÁGICO -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
-                <div class="ig-guardian-avatar">🧙‍♂️</div>
+                <div class="ig-guardian-avatar">🧙</div>
                 <div class="ig-balao-fala" id="ig-guardian-text"></div>
                 <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
                     

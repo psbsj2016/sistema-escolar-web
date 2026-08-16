@@ -177,18 +177,16 @@ Object.assign(Workspace, {
     },
 
    // ============================================================================
-    // 🚀 INICIALIZADOR MESTRE DA PLATAFORMA (BOOT SEQUENCE)
+    // 🚀 INICIALIZADOR MESTRE DA PLATAFORMA (VELOCIDADE DA LUZ)
     // ============================================================================
     init: async () => {
         const cacheUser = localStorage.getItem('ws_usuario_logado');
         
-        // 1. Verificação de Segurança (Login)
         if (!cacheUser) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
             
-            // 🛡️ GUARDIÃO DE ROTAS: Deteta Invasores
             if (window.location.hash && window.location.hash.includes('post-')) {
                 history.replaceState(null, null, ' ');
                 setTimeout(() => {
@@ -205,29 +203,20 @@ Object.assign(Workspace, {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) boxCriarPost.style.display = 'block';
 
-        Workspace.avatarsCache = await Workspace.api('/workspace/avatars', 'GET') || {};
-        Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
+        // 🚀 O SEGREDO 1: Busca as fotos de perfil em SEGUNDO PLANO sem travar a tela!
+        Workspace.api('/workspace/avatars', 'GET').then(res => {
+            Workspace.avatarsCache = res || {};
+            Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
+        }).catch(()=>{});
 
-        // ====================================================================
-        // 🚀 PASSO 2: INICIALIZAR TODOS OS MÓDULOS PRIMEIRO (CONSTRUIR HTML)
-        // O sistema deve preparar as telas ocultas antes de tentar navegar para elas.
-        // ====================================================================
-        if (Workspace.Feed) await Workspace.Feed.init();
+        // 🚀 PASSO 1: PREPARA AS PAREDES DA CASA (Execução Imediata)
+        if (Workspace.Ingles) Workspace.Ingles.init(); 
+        if (Workspace.Materiais) Workspace.Materiais.init();
+        if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
-        Workspace.Sessao.init(); 
-        Workspace.iniciarRadarOnline(); 
-        if (Workspace.Alertas) Workspace.Alertas.init(); 
-        if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
-        if (Workspace.Sidebar) await Workspace.Sidebar.init(); 
-        if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
-        if (Workspace.Materiais) Workspace.Materiais.init();
-        if (Workspace.Ingles) Workspace.Ingles.init(); // 🛠️ O HTML do Baú é criado aqui!
 
-        // ====================================================================
-        // 🚀 PASSO 3: O GPS DA PLATAFORMA (NAVEGAÇÃO)
-        // Agora que tudo está construído, navegamos o utilizador para a tela correta.
-        // ====================================================================
+        // 🚀 PASSO 2: LIGA AS LUZES (Navega para a tela antes de pedir os dados pesados)
         let telaDestino = 'feed'; 
         let postAlvo = null;      
         
@@ -239,12 +228,18 @@ Object.assign(Workspace, {
                 telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
             }
         }
-        
-        // A navegação acontece e preenche os dados sem erro, pois o HTML já existe!
         Workspace.navegarPara(telaDestino, true);
-        // ====================================================================
 
-        // 4. Configuração de eventos globais
+        // 🚀 PASSO 3: PUXA OS MÓVEIS (Dados pesados carregados em Background sem o 'await')
+        if (Workspace.Feed) Workspace.Feed.init(); 
+        if (Workspace.Sidebar) Workspace.Sidebar.init(); 
+        if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
+        if (Workspace.Alertas) Workspace.Alertas.init(); 
+        
+        Workspace.Sessao.init(); 
+        Workspace.iniciarRadarOnline(); 
+
+        // Configuração dos Menus e Navegação de Histórico
         document.addEventListener('click', (e) => {
             const menuContainer = document.getElementById('ws-menu-left-container');
             const menuDropdown = document.getElementById('ws-main-menu-dropdown');
@@ -253,7 +248,6 @@ Object.assign(Workspace, {
             }
         });
 
-        // 5. Histórico do Navegador (Botão Voltar)
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.tela) {
                 Workspace.navegarPara(e.state.tela, false); 
@@ -277,7 +271,10 @@ Object.assign(Workspace, {
         }
     },
 
- navegarPara: async (tela, registarNoHistorico = true) => {
+ // ============================================================================
+    // 🗺️ O NOVO ROTEADOR INTELIGENTE (Velocidade da Luz & Anti-Amnésia)
+    // ============================================================================
+    navegarPara: async (tela, registarNoHistorico = true) => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
         const modalChat = document.getElementById('ws-chat-modal');
@@ -321,44 +318,41 @@ Object.assign(Workspace, {
             }
         }
 
+        // 🚀 PASSO 1: APAGA AS LUZES E ACENDE A NOVA TELA IMEDIATAMENTE (Sem 'awaits' a travar!)
         Object.values(ecras).forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
-
-        // ====================================================================
-        // 🚀 A CURA DA AMNÉSIA: O Roteador aciona o recarregamento automático dos dados!
-        // ====================================================================
-        if (tela === 'ingles' && Workspace.Ingles) {
-            await Workspace.Ingles.loadDados();
-            Workspace.Ingles.renderizarVisualizacao();
-        } 
-        else if (tela === 'materiais' && Workspace.Materiais) {
-            await Workspace.Materiais.carregarMateriais();
-            if (Workspace.usuario.tipo === 'Aluno') Workspace.Materiais.renderizarAluno();
-            else Workspace.Materiais.renderizarProf();
-        } 
-        else if (tela === 'bau' && Workspace.Bau) {
-            if (Workspace.Bau.carregarDadosDaNuvem) Workspace.Bau.carregarDadosDaNuvem();
-            // Puxa da memória a última aba do Baú que ele estava a ver!
-            const abaBauAtiva = localStorage.getItem('ws_bau_aba_ativa') || 'meu';
-            if (Workspace.Bau.mudarAba) Workspace.Bau.mudarAba(abaBauAtiva);
-        }
-        // ====================================================================
 
         const ecraAtivo = document.getElementById(ecras[tela]);
         if (ecraAtivo) {
             if (tela === 'feed') ecraAtivo.style.display = 'grid';
             else if (tela === 'perfil') ecraAtivo.style.display = 'flex';
             else ecraAtivo.style.display = 'block';
-            ecraAtivo.style.animation = 'fadeIn 0.3s ease-out';
+            ecraAtivo.style.animation = 'fadeIn 0.2s ease-out';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
+
+        // 🚀 PASSO 2: PUXA OS DADOS EM SEGUNDO PLANO (.then em vez de await)
+        if (tela === 'ingles' && Workspace.Ingles) {
+            Workspace.Ingles.loadDados().then(() => Workspace.Ingles.renderizarVisualizacao());
+        } 
+        else if (tela === 'materiais' && Workspace.Materiais) {
+            Workspace.Materiais.carregarMateriais().then(() => {
+                if (Workspace.usuario.tipo === 'Aluno') Workspace.Materiais.renderizarAluno();
+                else Workspace.Materiais.renderizarProf();
+            });
+        } 
+        else if (tela === 'bau' && Workspace.Bau) {
+            if (Workspace.Bau.carregarDadosDaNuvem) Workspace.Bau.carregarDadosDaNuvem();
+            const abaBauAtiva = localStorage.getItem('ws_bau_aba_ativa') || 'meu';
+            if (Workspace.Bau.mudarAba) Workspace.Bau.mudarAba(abaBauAtiva);
         }
 
         if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
-
-        if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
     },
 
     fazerLogin: async () => {
