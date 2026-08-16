@@ -4,7 +4,8 @@ window.Workspace = window.Workspace || {};
 Workspace.Ingles = {
     state: {
         xp: 0, streak: 1, words: [], phrases: [], quizzes: [], pictures: [], minimalPairs: [], debates: [], submissions: [], pool: [],
-        errosRetidos: [] // 🚀 O NOVO COFRE DE ERROS INTELIGENTE
+        errosRetidos: [], 
+        itensConcluidos: [] // 🚀 ADICIONADO: Memória de conteúdos já dominados
     },
     mediaRecorder: null, audioChunks: [], currentAudioURL: null, audioBlob: null, streamMicrofone: null, recognition: null,
     
@@ -104,9 +105,11 @@ Workspace.Ingles = {
                 Workspace.Ingles.state.errosRetidos = [];
             }
 
+            // 2. XP, Streak e Conquistas armazenados no telemóvel do aluno
             const userK = `ws_ingles_user_${Workspace.usuario.id}`;
             Workspace.Ingles.state.xp = parseInt(localStorage.getItem(`${userK}_xp`) || '0');
             Workspace.Ingles.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || '1');
+            Workspace.Ingles.state.itensConcluidos = JSON.parse(localStorage.getItem(`${userK}_concluidos`)) || []; // 🚀 Carrega o que já sabe
         } catch (e) { console.error("Erro ao conectar ao Algoritmo.", e); }
     },
 
@@ -114,6 +117,7 @@ Workspace.Ingles = {
         const userK = `ws_ingles_user_${Workspace.usuario.id}`;
         localStorage.setItem(`${userK}_xp`, Workspace.Ingles.state.xp);
         localStorage.setItem(`${userK}_streak`, Workspace.Ingles.state.streak);
+        localStorage.setItem(`${userK}_concluidos`, JSON.stringify(Workspace.Ingles.state.itensConcluidos)); // 🚀 Guarda o que já sabe
 
         try {
             if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
@@ -133,8 +137,8 @@ Workspace.Ingles = {
         } catch (e) {}
     },
 
-    // ============================================================================
-    // 🧠 SISTEMA DE REPETIÇÃO ESPAÇADA (Inteligência Artificial de Ensino)
+   // ============================================================================
+    // 🧠 SISTEMA DE PROGRESSÃO E REPETIÇÃO ESPAÇADA
     // ============================================================================
     registrarErro: (itemOriginal, tipoConteudo) => {
         const jaExiste = Workspace.Ingles.state.errosRetidos.find(e => e.id === itemOriginal.id);
@@ -152,13 +156,34 @@ Workspace.Ingles = {
         }
     },
 
+    marcarComoConcluido: (itemId) => {
+        if (!itemId) return;
+        if (!Workspace.Ingles.state.itensConcluidos.includes(itemId)) {
+            Workspace.Ingles.state.itensConcluidos.push(itemId);
+            Workspace.Ingles.saveDados();
+        }
+    },
+
     obterItemInteligente: (listaPadrao, tipoConteudo) => {
-        // 🚀 O SORTEADOR VICIADO: 60% de probabilidade de forçar um erro antigo do aluno!
-        const listaErros = Workspace.Ingles.state.errosRetidos.filter(e => e._tipoDefeito === tipoConteudo);
+        // 1. FILTRO DE EVOLUÇÃO: Remove da lista tudo o que o aluno já acertou antes
+        let listaDisponivel = listaPadrao.filter(item => !Workspace.Ingles.state.itensConcluidos.includes(item.id));
+
+        // 🚀 SE ZEROU O JOGO: Ele dominou a biblioteca! Damos os parabéns e resetamos a memória para ele rever o conteúdo.
+        if (listaDisponivel.length === 0 && listaPadrao.length > 0) {
+            Workspace.mostrarAviso("🏆 Incrível! Você dominou todas as palavras desta categoria. Vamos treinar de novo!", "success");
+            Workspace.Ingles.state.itensConcluidos = [];
+            Workspace.Ingles.saveDados();
+            listaDisponivel = listaPadrao;
+        }
+
+        // 2. O SORTEADOR VICIADO (Foca nos erros passados - 60% chance)
+        const listaErros = Workspace.Ingles.state.errosRetidos.filter(e => e._tipoDefeito === tipoConteudo && !Workspace.Ingles.state.itensConcluidos.includes(e.id));
         if (listaErros.length > 0 && Math.random() < 0.60) {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
-        return listaPadrao[Math.floor(Math.random() * listaPadrao.length)] || listaPadrao[0];
+        
+        // 3. Apresenta o conteúdo novo
+        return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
     // ============================================================================
@@ -741,8 +766,13 @@ Workspace.Ingles = {
         if (Workspace.Ingles.tempoRestante > 0) Workspace.Ingles.renderDesafioAtual();
     },
 
-    // 🚀 O NOVO GESTOR VISUAL DE VITÓRIA E DERROTA
+  // 🚀 O NOVO GESTOR VISUAL DE VITÓRIA E DERROTA
     sucessoGenerico: async (bonus) => {
+        // 🚀 A MÁGICA INVISÍVEL: Se o jogo estava focado numa palavra e o aluno acertou, marca como concluído!
+        if (Workspace.Ingles.desafioAtualObj && Workspace.Ingles.desafioAtualObj.id) {
+            Workspace.Ingles.marcarComoConcluido(Workspace.Ingles.desafioAtualObj.id);
+        }
+
         Workspace.Ingles.state.xp += bonus;
         Workspace.Ingles.xpGanhosNaSessao += bonus; 
         await Workspace.Ingles.saveDados(); 
