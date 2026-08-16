@@ -667,21 +667,20 @@ Workspace.Ingles = {
     // 🧲 FÍSICA E ANIMAÇÃO MÁGICA: ARRASTAR A CHAVE
     // ============================================================================
     ativarFisicaFechadura: () => {
-        const key = document.getElementById('ig-drag-key');
+        let key = document.getElementById('ig-drag-key'); // Usamos 'let' para podermos atualizar a variável
         const lock = document.getElementById('ig-keyhole');
         const chestLock = document.getElementById('ig-chest-lock');
         const screen = document.getElementById('ig-unlock-screen');
 
         if (!key || !lock) return;
 
-        // 🚀 1. A CURA DO TRAVAMENTO (HIGIENE VISUAL): 
-        // Garante que a chave, o baú e a tela voltam a ficar visíveis e na posição original!
+        // 1. HIGIENE VISUAL: Restaura as posições
         key.style.display = 'block';
         key.style.transform = `translate(0px, 0px)`;
         
         if (chestLock) {
             chestLock.style.animation = 'pulseChest 2s infinite';
-            chestLock.style.transform = 'scale(1) rotate(0deg)'; // Remove o zoom e a rotação da explosão antiga
+            chestLock.style.transform = 'scale(1) rotate(0deg)'; 
         }
         
         if (screen) {
@@ -689,7 +688,13 @@ Workspace.Ingles = {
             screen.style.transform = 'scale(1)';
         }
 
-        // 2. Variáveis de física atreladas ao Workspace para não existirem "fantasmas" na memória
+        // 2. HIGIENE DE EVENTOS: Clona a chave para eliminar cliques velhos 
+        key.replaceWith(key.cloneNode(true));
+        
+        // 🚀 A CORREÇÃO: Atualizamos a variável para a NOVA chave "viva" na tela!
+        key = document.getElementById('ig-drag-key'); 
+
+        // 3. VARIÁVEIS DE FÍSICA
         Workspace.Ingles.fisica = { isDragging: false, currentX: 0, currentY: 0, startX: 0, startY: 0 };
 
         const startDrag = (e) => {
@@ -702,7 +707,7 @@ Workspace.Ingles = {
 
         Workspace.Ingles.onDragFechadura = (e) => {
             if (!Workspace.Ingles.fisica.isDragging) return;
-            e.preventDefault(); // Evita que a tela do telemóvel deslize enquanto arrasta a chave
+            e.preventDefault(); 
             
             const evt = e.type.includes('mouse') ? e : e.touches[0];
             Workspace.Ingles.fisica.currentX = evt.clientX - Workspace.Ingles.fisica.startX;
@@ -724,7 +729,7 @@ Workspace.Ingles = {
             Workspace.Ingles.fisica.isDragging = false; 
             key.style.cursor = 'grab';
             
-            // Se soltar a chave fora da fechadura, ela regressa suavemente à origem
+            // Regressa à origem se falhar a fechadura
             if (!Workspace.Ingles.bauDestrancado) {
                 Workspace.Ingles.fisica.currentX = 0; 
                 Workspace.Ingles.fisica.currentY = 0;
@@ -734,22 +739,18 @@ Workspace.Ingles = {
             }
         };
 
-        // 🚀 3. BLINDAGEM CONTRA DUPLICAÇÃO DE EVENTOS
-        // Remove eventuais "rastreadores" da sessão anterior para não sobrecarregar o telemóvel do aluno!
+        // 4. REMOVE VIGILANTES GLOBAIS ANTIGOS (Do Documento)
         document.removeEventListener('mousemove', Workspace.Ingles.onDragFechadura);
         document.removeEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
         document.removeEventListener('touchmove', Workspace.Ingles.onDragFechadura);
         document.removeEventListener('touchend', Workspace.Ingles.stopDragFechadura);
-
-        // Clona a chave para eliminar cliques velhos e liga os novos motores!
-        key.replaceWith(key.cloneNode(true));
-        const newKey = document.getElementById('ig-drag-key');
         
-        newKey.addEventListener('mousedown', startDrag); 
+        // 5. LIGA OS NOVOS MOTORES À CHAVE VIVA
+        key.addEventListener('mousedown', startDrag); 
         document.addEventListener('mousemove', Workspace.Ingles.onDragFechadura); 
         document.addEventListener('mouseup', Workspace.Ingles.stopDragFechadura);
         
-        newKey.addEventListener('touchstart', startDrag, {passive: false}); 
+        key.addEventListener('touchstart', startDrag, {passive: false}); 
         document.addEventListener('touchmove', Workspace.Ingles.onDragFechadura, {passive: false}); 
         document.addEventListener('touchend', Workspace.Ingles.stopDragFechadura);
     },
