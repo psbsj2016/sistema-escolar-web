@@ -398,7 +398,8 @@ Workspace.Ingles = {
             <!-- 🛡️ CABEÇALHO RPG COM O BAÚ PIXELADO -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <img id="ig-header-chest" src="/img/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.src='bau_roxo_pixel.jpg'" />
+                    <!-- Caminho simplificado e Fallback Seguro para o Emoji caso a imagem falhe -->
+                    <img id="ig-header-chest" src="bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
                 <div class="ig-rpg-hud">
@@ -408,11 +409,12 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- ⏱️ ECRÃ DE PREPARAÇÃO COM O MAGO PNG -->
+            <!-- ⏱️ ECRÃ DE PREPARAÇÃO COM O MAGO -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 
-                <img src="/img/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.src='mago_bau_ingles_2.jpg'" />
+                <!-- Caminho simplificado do Mago -->
+                <img src="mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
                 
                 <div class="ig-balao-fala-static">
                     <span style="color: #f1c40f;">Mestre:</span><br/>O feitiço requer o teu tempo de foco.<br/>Quantos minutos vais treinar hoje?
@@ -441,7 +443,7 @@ Workspace.Ingles = {
                 <div class="ig-hub-banner">
                     <div class="ig-guardian-stars"></div>
                     
-                    <img src="/img/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.src='mago_bau_ingles_2.jpg'" />
+                    <img src="mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
                     
                     <div style="flex: 1; z-index: 2;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
@@ -455,7 +457,7 @@ Workspace.Ingles = {
 
             <!-- 🔒 ECRÃ DE FIM DE TEMPO (Usa o Baú) -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
-                <img src="/img/bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.src='bau_roxo_pixel.jpg'" />
+                <img src="bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'font-size:70px; margin-bottom:10px; filter: grayscale(100%);\\'>🧰</div>';" />
                 <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
                 <p style="color:#64748B; margin-bottom:20px; font-size: 18px;">O Baú fechou-se magicamente. Missão Concluída!</p>
                 <div style="background:#1a1a2e; border:4px solid #d4af37; padding:25px; border-radius:8px; display:inline-block; margin-bottom:30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
@@ -542,97 +544,106 @@ Workspace.Ingles = {
         }
     },
 
-    // ============================================================================
+   // ============================================================================
     // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ DO TOPO
     // ============================================================================
     abrirBauMagico: (minutos) => {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
+        try {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
 
-        // Som de carregamento
-        try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
+            // Som de carregamento
+            try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
 
-        // Anima o Baú no Cabeçalho
-        const chest = document.getElementById('ig-header-chest');
-        if (chest) {
-            chest.classList.add('chest-shake');
-        }
+            // Anima o Baú no Cabeçalho
+            const chest = document.getElementById('ig-header-chest');
+            if (chest) chest.classList.add('chest-shake');
 
-        const magoScr = document.getElementById('ig-guardian-screen');
-        if(magoScr) magoScr.style.opacity = '0';
+            const magoScr = document.getElementById('ig-guardian-screen');
+            if(magoScr) magoScr.style.opacity = '0';
 
-        // O Baú Explode
-        setTimeout(() => {
-            if(magoScr) magoScr.style.display = 'none';
-
-            if (chest) {
-                chest.classList.remove('chest-shake');
-                chest.classList.add('chest-explode');
-            }
-
-            // Som da Explosão
-            try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
-            try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
-
-            // Onda de Choque
-            const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
-            const originX = rect.left + 27; // Centralizado na imagem
-            const originY = rect.top + 27;
-
-            let wave = document.createElement('div');
-            wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 50px 20px #f1c40f, inset 0 0 20px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1s ease-out forwards;`;
-            document.body.appendChild(wave);
-            setTimeout(() => wave.remove(), 1000);
-
-            // Bolas de Fogo e Estrelas
-            const coresFogo = ['#ffeb3b', '#e67e22', '#c0392b', '#ff9800'];
-            for (let i = 0; i < 40; i++) {
-                let fb = document.createElement('div');
-                fb.className = i % 2 === 0 ? 'ig-fireball' : 'ig-sparkle';
-                document.body.appendChild(fb);
-                
-                let angle = Math.random() * Math.PI * 2;
-                let velocity = (Math.random() * 300) + 200;
-                let tx = Math.cos(angle) * velocity;
-                let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); 
-                
-                fb.style.left = originX + 'px'; 
-                fb.style.top = originY + 'px';
-                fb.style.setProperty('--tx', tx + 'px'); 
-                fb.style.setProperty('--ty', ty + 'px');
-                fb.style.backgroundColor = i % 2 === 0 ? coresFogo[Math.floor(Math.random() * coresFogo.length)] : '#fff';
-                
-                setTimeout(() => fb.remove(), 1500);
-            }
-
-            // Revela o Hub de Jogos
+            // O Baú Explode
             setTimeout(() => {
-                Workspace.Ingles.tempoRestante = minutos * 60;
-                Workspace.Ingles.xpGanhosNaSessao = 0;
-                Workspace.Ingles.tempoGlobalDefinido = true;
-                
-                Workspace.Ingles.iniciarTimerGlobal();
-                Workspace.Ingles.renderizarVisualizacao(); 
-                
-                const grid = document.getElementById('ig-gamesGrid');
-                if (grid) {
-                    grid.style.opacity = '0';
-                    grid.style.transform = 'translateY(50px) scale(0.9)';
-                    requestAnimationFrame(() => {
-                        grid.style.transition = 'all 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)';
-                        grid.style.opacity = '1';
-                        grid.style.transform = 'translateY(0) scale(1)';
-                    });
+                if(magoScr) magoScr.style.display = 'none';
+
+                if (chest) {
+                    chest.classList.remove('chest-shake');
+                    chest.classList.add('chest-explode');
                 }
 
-                // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES DO PROFESSOR!
+                // Som da Explosão
+                try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
+                try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
+
+                // Onda de Choque
+                const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
+                const originX = rect.left + 27; 
+                const originY = rect.top + 27;
+
+                let wave = document.createElement('div');
+                wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 50px 20px #f1c40f, inset 0 0 20px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1s ease-out forwards;`;
+                document.body.appendChild(wave);
+                setTimeout(() => wave.remove(), 1000);
+
+                // Bolas de Fogo e Estrelas
+                const coresFogo = ['#ffeb3b', '#e67e22', '#c0392b', '#ff9800'];
+                for (let i = 0; i < 40; i++) {
+                    let fb = document.createElement('div');
+                    fb.className = i % 2 === 0 ? 'ig-fireball' : 'ig-sparkle';
+                    document.body.appendChild(fb);
+                    
+                    let angle = Math.random() * Math.PI * 2;
+                    let velocity = (Math.random() * 300) + 200;
+                    let tx = Math.cos(angle) * velocity;
+                    let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); 
+                    
+                    fb.style.left = originX + 'px'; 
+                    fb.style.top = originY + 'px';
+                    fb.style.setProperty('--tx', tx + 'px'); 
+                    fb.style.setProperty('--ty', ty + 'px');
+                    fb.style.backgroundColor = i % 2 === 0 ? coresFogo[Math.floor(Math.random() * coresFogo.length)] : '#fff';
+                    
+                    setTimeout(() => fb.remove(), 1500);
+                }
+
+                // Revela o Hub de Jogos com Garantia Absoluta
                 setTimeout(() => {
-                    Workspace.Ingles.iniciarFalaGuardiao();
-                }, 500);
+                    Workspace.Ingles.tempoRestante = minutos * 60;
+                    Workspace.Ingles.xpGanhosNaSessao = 0;
+                    Workspace.Ingles.tempoGlobalDefinido = true;
+                    
+                    Workspace.Ingles.iniciarTimerGlobal();
+                    Workspace.Ingles.renderizarVisualizacao(); 
+                    
+                    const grid = document.getElementById('ig-gamesGrid');
+                    if (grid) {
+                        grid.style.opacity = '0';
+                        grid.style.transform = 'translateY(50px) scale(0.9)';
+                        requestAnimationFrame(() => {
+                            grid.style.transition = 'all 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)';
+                            grid.style.opacity = '1';
+                            grid.style.transform = 'translateY(0) scale(1)';
+                        });
+                    }
 
-            }, 800);
+                    // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES!
+                    setTimeout(() => {
+                        Workspace.Ingles.iniciarFalaGuardiao();
+                    }, 500);
 
-        }, 1500); 
+                }, 800);
+
+            }, 1500); 
+
+        } catch (error) {
+            // FALLBACK DE SEGURANÇA: Se a animação falhar, o Hub abre imediatamente de qualquer forma!
+            console.error("Erro na animação mágica:", error);
+            Workspace.Ingles.tempoRestante = minutos * 60;
+            Workspace.Ingles.tempoGlobalDefinido = true;
+            Workspace.Ingles.iniciarTimerGlobal();
+            Workspace.Ingles.renderizarVisualizacao();
+            setTimeout(() => { Workspace.Ingles.iniciarFalaGuardiao(); }, 500);
+        }
     },
 
     // ============================================================================
