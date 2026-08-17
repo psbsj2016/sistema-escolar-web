@@ -531,6 +531,13 @@ Workspace.Ingles = {
         if (chest) {
             chest.classList.remove('chest-shake', 'chest-explode');
             chest.style.transform = 'scale(1)';
+            
+            // 🚀 O FEITIÇO DO RESET: Garante que a imagem volta a ser o Baú Fechado!
+            chest.src = '/assets/bau_roxo_pixel.png';
+            chest.onerror = function() { 
+                this.onerror=null; 
+                this.src='/public/assets/bau_roxo_pixel.png'; 
+            };
         }
         
         if (!isAluno) {
@@ -590,7 +597,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ DO TOPO
+    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA E ABERTURA DO BAÚ DO TOPO
     // ============================================================================
     abrirBauMagico: (minutos) => {
         try {
@@ -614,6 +621,13 @@ Workspace.Ingles = {
                 if (chest) {
                     chest.classList.remove('chest-shake');
                     chest.classList.add('chest-explode');
+                    
+                    // 🚀 A TROCA DE SPRITE (SWAP): O Baú Abre!
+                    chest.src = '/assets/bau_roxo_pixel_aberto.png';
+                    chest.onerror = function() { 
+                        this.onerror=null; 
+                        this.src='/public/assets/bau_roxo_pixel_aberto.png'; 
+                    };
                 }
 
                 // Sons de Impacto
