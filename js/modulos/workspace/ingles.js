@@ -384,7 +384,7 @@ Workspace.Ingles = {
         document.head.appendChild(style);
     },
 
-    construirHTML: () => {
+   construirHTML: () => {
         let container = document.getElementById('ws-ingles-container');
         if (!container) {
             container = document.createElement('div');
@@ -398,8 +398,8 @@ Workspace.Ingles = {
             <!-- 🛡️ CABEÇALHO RPG COM O BAÚ PIXELADO -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <!-- Caminho simplificado e Fallback Seguro para o Emoji caso a imagem falhe -->
-                    <img id="ig-header-chest" src="bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
+                    <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                    <img id="ig-header-chest" src="/asserts/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
                 <div class="ig-rpg-hud">
@@ -413,8 +413,8 @@ Workspace.Ingles = {
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 
-                <!-- Caminho simplificado do Mago -->
-                <img src="mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
+                <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
                 
                 <div class="ig-balao-fala-static">
                     <span style="color: #f1c40f;">Mestre:</span><br/>O feitiço requer o teu tempo de foco.<br/>Quantos minutos vais treinar hoje?
@@ -443,7 +443,8 @@ Workspace.Ingles = {
                 <div class="ig-hub-banner">
                     <div class="ig-guardian-stars"></div>
                     
-                    <img src="mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
+                    <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                    <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
                     
                     <div style="flex: 1; z-index: 2;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
@@ -457,7 +458,8 @@ Workspace.Ingles = {
 
             <!-- 🔒 ECRÃ DE FIM DE TEMPO (Usa o Baú) -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
-                <img src="bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'font-size:70px; margin-bottom:10px; filter: grayscale(100%);\\'>🧰</div>';" />
+                <!-- 🚀 CAMINHO ALINHADO -->
+                <img src="/asserts/bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'font-size:70px; margin-bottom:10px; filter: grayscale(100%);\\'>🧰</div>';" />
                 <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
                 <p style="color:#64748B; margin-bottom:20px; font-size: 18px;">O Baú fechou-se magicamente. Missão Concluída!</p>
                 <div style="background:#1a1a2e; border:4px solid #d4af37; padding:25px; border-radius:8px; display:inline-block; margin-bottom:30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
