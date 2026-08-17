@@ -117,7 +117,6 @@ Workspace.Ingles = {
     sincronizarTempoReal: async () => {
         await Workspace.Ingles.loadDados();
         const telaHub = document.getElementById('ig-alunoView');
-        // A fala do mago agora vive no Hub do Aluno!
         if (telaHub && telaHub.style.display !== 'none' && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Ingles.iniciarFalaGuardiao(true); 
         }
@@ -210,17 +209,24 @@ Workspace.Ingles = {
     },
 
     obterItemInteligente: (listaPadrao, tipoConteudo) => {
-        let listaDisponivel = listaPadrao.filter(item => !Workspace.Ingles.state.itensConcluidos.includes(item.id));
+        // 🚀 HIGIENE DE DADOS: Garante que os arrays não estão corrompidos
+        const concluidos = Workspace.Ingles.state.itensConcluidos || [];
+        const retidos = Workspace.Ingles.state.errosRetidos || [];
+        
+        let listaDisponivel = listaPadrao.filter(item => !concluidos.includes(item.id));
+        
         if (listaDisponivel.length === 0 && listaPadrao.length > 0) {
             Workspace.mostrarAviso("🏆 Incrível! Dominaste este nível da magia. Vamos rever!", "success");
             Workspace.Ingles.state.itensConcluidos = [];
             Workspace.Ingles.saveDados();
             listaDisponivel = listaPadrao;
         }
-        const listaErros = Workspace.Ingles.state.errosRetidos.filter(e => e._tipoDefeito === tipoConteudo && !Workspace.Ingles.state.itensConcluidos.includes(e.id));
+        
+        const listaErros = retidos.filter(e => e._tipoDefeito === tipoConteudo && !concluidos.includes(e.id));
         if (listaErros.length > 0 && Math.random() < 0.60) {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
+        
         return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
@@ -346,6 +352,13 @@ Workspace.Ingles = {
             @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
             @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
+            /* 🚀 ANIMAÇÃO BLINDADA DE ENTRADA DA GRELHA */
+            @keyframes slideUpFade { 
+                0% { opacity: 0; transform: translateY(50px) scale(0.9); } 
+                100% { opacity: 1; transform: translateY(0) scale(1); } 
+            }
+            .grid-entrance { animation: slideUpFade 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+
             /* 🧙‍♂️ CENÁRIO DO GUARDIÃO */
             .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
@@ -384,7 +397,7 @@ Workspace.Ingles = {
         document.head.appendChild(style);
     },
 
-   construirHTML: () => {
+    construirHTML: () => {
         let container = document.getElementById('ws-ingles-container');
         if (!container) {
             container = document.createElement('div');
@@ -398,7 +411,7 @@ Workspace.Ingles = {
             <!-- 🛡️ CABEÇALHO RPG COM O BAÚ PIXELADO -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                    <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ -->
                     <img id="ig-header-chest" src="/asserts/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
@@ -413,7 +426,7 @@ Workspace.Ingles = {
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 
-                <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                <!-- 🚀 CAMINHO ALINHADO: Mago -->
                 <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
                 
                 <div class="ig-balao-fala-static">
@@ -443,7 +456,7 @@ Workspace.Ingles = {
                 <div class="ig-hub-banner">
                     <div class="ig-guardian-stars"></div>
                     
-                    <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ do seu sistema -->
+                    <!-- 🚀 CAMINHO ALINHADO: Mago no Hub -->
                     <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
                     
                     <div style="flex: 1; z-index: 2;">
@@ -453,6 +466,7 @@ Workspace.Ingles = {
                         <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none;"></div>
                     </div>
                 </div>
+                <!-- 🚀 CONTAINER DOS JOGOS -->
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
 
@@ -546,7 +560,29 @@ Workspace.Ingles = {
         }
     },
 
-   // ============================================================================
+    // 🚀 LÓGICA BLINDADA DO HUB DE JOGOS
+    renderAlunoGrid: () => {
+        const grid = document.getElementById('ig-gamesGrid');
+        if(!grid) return;
+        // Limpa a classe de entrada caso exista de uma sessão anterior
+        grid.classList.remove('grid-entrance');
+        
+        grid.innerHTML = Workspace.Ingles.defaults.games.map(g => `
+            <div class="ig-game-card" onclick="Workspace.Ingles.abrirJogo('${g.id}')">
+                <div class="ig-top">
+                    <div class="ig-icon" style="background:${g.color}">${g.icon}</div>
+                    <span class="ig-badge ig-badge-level">${g.level}</span>
+                </div>
+                <h3>${g.title}</h3>
+                <p>${g.desc}</p>
+                <div class="ig-meta">
+                    <span class="ig-badge" style="background:#F1F5F9; color: #333;">⭐ +${['picturePop','minimalPairs','debateAI'].includes(g.id) ? '75' : '50'} XP</span>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // ============================================================================
     // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ DO TOPO
     // ============================================================================
     abrirBauMagico: (minutos) => {
@@ -554,7 +590,7 @@ Workspace.Ingles = {
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
 
-            // Som de carregamento
+            // Som de carregamento da magia
             try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
 
             // Anima o Baú no Cabeçalho
@@ -573,7 +609,7 @@ Workspace.Ingles = {
                     chest.classList.add('chest-explode');
                 }
 
-                // Som da Explosão
+                // Sons de Impacto
                 try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
                 try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
 
@@ -608,7 +644,7 @@ Workspace.Ingles = {
                     setTimeout(() => fb.remove(), 1500);
                 }
 
-                // Revela o Hub de Jogos com Garantia Absoluta
+                // 🚀 REVELA O HUB DE JOGOS E ANIMA A GRELHA (Solução CSS Segura)
                 setTimeout(() => {
                     Workspace.Ingles.tempoRestante = minutos * 60;
                     Workspace.Ingles.xpGanhosNaSessao = 0;
@@ -617,18 +653,13 @@ Workspace.Ingles = {
                     Workspace.Ingles.iniciarTimerGlobal();
                     Workspace.Ingles.renderizarVisualizacao(); 
                     
+                    // Entrada animada e garantida da grelha de jogos
                     const grid = document.getElementById('ig-gamesGrid');
                     if (grid) {
-                        grid.style.opacity = '0';
-                        grid.style.transform = 'translateY(50px) scale(0.9)';
-                        requestAnimationFrame(() => {
-                            grid.style.transition = 'all 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)';
-                            grid.style.opacity = '1';
-                            grid.style.transform = 'translateY(0) scale(1)';
-                        });
+                        grid.classList.add('grid-entrance');
                     }
 
-                    // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES!
+                    // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES DO PROFESSOR!
                     setTimeout(() => {
                         Workspace.Ingles.iniciarFalaGuardiao();
                     }, 500);
@@ -636,10 +667,9 @@ Workspace.Ingles = {
                 }, 800);
 
             }, 1500); 
-
         } catch (error) {
-            // FALLBACK DE SEGURANÇA: Se a animação falhar, o Hub abre imediatamente de qualquer forma!
-            console.error("Erro na animação mágica:", error);
+            // 🛡️ FALLBACK: Se houver qualquer falha do navegador com animações, o Hub abre na mesma
+            console.error("Erro na transição mágica:", error);
             Workspace.Ingles.tempoRestante = minutos * 60;
             Workspace.Ingles.tempoGlobalDefinido = true;
             Workspace.Ingles.iniciarTimerGlobal();
