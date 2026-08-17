@@ -27,9 +27,9 @@ Workspace.Ingles = {
     defaults: {
         magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
-            { id: 'm1', text: 'Saudações, (citarAluno)! 🎓 O conhecimento é o maior dos tesouros. Quanto tempo desejas treinar hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta, citarAluno! Sinto uma aura de sabedoria à tua volta. 🧙‍♂️ Quantos minutos temos?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). 🗝️ Qual será o tempo do teu foco hoje?' }
+            { id: 'm1', text: 'Saudações, (citarAluno)! 🎓 O conhecimento é o maior dos tesouros. Que os teus reflexos sejam rápidos!' },
+            { id: 'm2', text: 'Bem-vindo à tua provação, (citarAluno)! Sinto uma aura de sabedoria à tua volta. 🧙‍♂️' },
+            { id: 'm3', text: 'Os segredos da magia aguardam, (citarAluno). 🗝️ Escolhe o teu primeiro desafio!' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -116,8 +116,9 @@ Workspace.Ingles = {
 
     sincronizarTempoReal: async () => {
         await Workspace.Ingles.loadDados();
-        const telaMago = document.getElementById('ig-guardian-screen');
-        if (telaMago && telaMago.style.display !== 'none' && Workspace.usuario.tipo === 'Aluno') {
+        const telaHub = document.getElementById('ig-alunoView');
+        // A fala do mago agora vive no Hub do Aluno!
+        if (telaHub && telaHub.style.display !== 'none' && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Ingles.iniciarFalaGuardiao(true); 
         }
         const activeTab = document.querySelector('.ig-side-item.active');
@@ -320,7 +321,7 @@ Workspace.Ingles = {
             .ig-hud-stat { display: flex; align-items: center; gap: 8px; }
             .ig-hud-stat span { color: #f1c40f; }
             
-            .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
+            .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 0 30px 0; }
             .ig-game-card { background: #fffcf0; border: 2px solid #d4af37; border-radius: 8px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1), 0 4px 6px rgba(0,0,0,0.1); }
             .ig-game-card:hover { transform: translateY(-5px); box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.3), 0 10px 15px rgba(212, 175, 55, 0.4); border-color: #f1c40f; }
             .ig-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
@@ -329,7 +330,7 @@ Workspace.Ingles = {
             .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; border: 1px solid currentColor; }
             .ig-badge-level { background: #1a1a2e; color: #f1c40f; }
             
-            /* 🚀 ANIMAÇÕES CINEMÁTICAS */
+            /* 🚀 ANIMAÇÕES CINEMÁTICAS DO BAÚ */
             @keyframes openHeaderChest { 0%, 100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.4) rotate(-15deg); filter: drop-shadow(0 0 20px #f1c40f); } 50% { transform: scale(1.5) rotate(15deg); filter: drop-shadow(0 0 40px #e67e22); } 75% { transform: scale(1.6) rotate(-10deg); filter: drop-shadow(0 0 60px #e74c3c); } }
             .chest-shake { animation: chestShake 0.5s ease-in-out infinite; }
             @keyframes chestShake { 0%, 100% { transform: translate(1px, -2px) rotate(-5deg); } 50% { transform: translate(-1px, 2px) rotate(5deg); } }
@@ -341,31 +342,39 @@ Workspace.Ingles = {
             @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
             @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
-            /* 🧙‍♂️ CENÁRIO DO GUARDIÃO (Caixa de Texto JRPG Clássica) */
+            /* 🧙‍♂️ CENÁRIO INICIAL (Tempo) */
             .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
             
-            .ig-guardian-avatar { font-size: 110px; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 10px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)) drop-shadow(0 15px 15px rgba(0,0,0,0.5)); z-index: 2; }
+            img.ig-guardian-avatar { width: 180px; height: auto; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
+            @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)); } }
             
-            /* CAIXA DE DIÁLOGO RETRO RPG */
-            .ig-balao-fala { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 25px 35px; border-radius: 4px; border: 4px solid #f1c40f; box-shadow: 0 0 0 4px #000, inset 0 0 0 2px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; width: 80%; max-width: 600px; text-align: left; font-family: 'VT323', monospace; font-size: 26px; color: #fff; min-height: 120px; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; }
+            .ig-balao-fala-static { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 4px; border: 4px solid #f1c40f; box-shadow: 0 0 0 4px #000, inset 0 0 0 2px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; width: 80%; max-width: 500px; text-align: center; font-family: 'VT323', monospace; font-size: 24px; color: #fff; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; }
+            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 25px; z-index: 2; }
             
-            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 25px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; z-index: 2; }
-            .ig-opcoes-tempo.visivel { opacity: 1; transform: translateY(0); pointer-events: auto; }
-            @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)) drop-shadow(0 25px 20px rgba(0,0,0,0.7)); } }
+            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (Onde o Mago fala as frases personalizadas) */
+            .ig-hub-banner { display: flex; align-items: flex-start; gap: 25px; padding: 25px 35px; background: radial-gradient(circle at left, #1a0b2e 0%, #000 100%); border-radius: 8px; margin-bottom: 30px; border: 4px solid #d4af37; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(212,175,55,0.2); position: relative; overflow: hidden; }
+            img.ig-hub-mago-img { width: 140px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
+            
+            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 4px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: left; font-family: 'VT323', monospace; font-size: 22px; color: #fff; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-top: 15px;}
+            .ig-balao-fala-hub::before { content: ''; position: absolute; top: 20px; left: -12px; border-width: 10px 12px 10px 0; border-style: solid; border-color: transparent #000 transparent transparent; z-index: 2;}
+            .ig-balao-fala-hub::after { content: ''; position: absolute; top: 18px; left: -16px; border-width: 12px 16px 12px 0; border-style: solid; border-color: transparent #f1c40f transparent transparent; z-index: 1;}
             
             /* ⏱️ RELÓGIO GLOBAL (Estilo Quest Timer) */
-            .ig-global-timer { font-family: 'VT323', monospace; font-size: 22px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px;}
+            .ig-global-timer { font-family: 'VT323', monospace; font-size: 24px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px;}
 
-            /* Estilos Painel Professor - Ocultados da vista aluno */
+            /* Estilos Modal e Professor */
+            .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
             .ig-sidebar { width: 250px; background: #fff; border-right: 1px solid #E2E8F0; padding: 20px; display:flex; flex-direction:column; gap:5px; }
             .ig-side-item { background: transparent; border: none; padding: 12px 15px; border-radius: 10px; text-align: left; font-weight: bold; color: #64748B; cursor: pointer; transition: 0.2s; }
             .ig-side-item.active { background: #0F172A; color: #fff; }
             .ig-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-            .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
-            @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } }
+            .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
+            .ig-word-roulette { width: 200px; height: 200px; border-radius: 50%; border: 8px solid #EEF2FF; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: radial-gradient(circle at 30% 30%, #fff, #E0E7FF); }
+            .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
+            @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } .ig-hub-banner { flex-direction: column; align-items: center; text-align: center; } .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: none; } }
         `;
         document.head.appendChild(style);
     },
@@ -384,7 +393,7 @@ Workspace.Ingles = {
             <!-- 🛡️ CABEÇALHO RPG -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <div id="ig-header-chest" class="ig-title-icon" style="transition: 0.3s; cursor:pointer;" onclick="Workspace.Ingles.renderizarVisualizacao()">🧰</div>
+                    <div id="ig-header-chest" class="ig-title-icon" style="transition: 0.3s;">🧰</div>
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
                 <div class="ig-rpg-hud">
@@ -394,15 +403,17 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- 🧙‍♂️ ECRÃ DO GUARDIÃO MÁGICO IMERSIVO (JRPG Style) -->
+            <!-- ⏱️ ECRÃ DE PREPARAÇÃO (Definir o Tempo) -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
-                <div class="ig-guardian-avatar">🧙‍♂️</div>
+                <!-- O Mago com fundo transparente via CSS -->
+                <img src="mago_bau_ingles.jpg" class="ig-guardian-avatar" alt="Mago" />
                 
-                <!-- CAIXA DE TEXTO RETRO RPG -->
-                <div class="ig-balao-fala" id="ig-guardian-text"></div>
+                <div class="ig-balao-fala-static">
+                    <span style="color: #f1c40f;">Mestre:</span><br/>O feitiço requer o teu tempo de foco.<br/>Quantos minutos vais treinar hoje?
+                </div>
                 
-                <div class="ig-opcoes-tempo" id="ig-guardian-options">
+                <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap; opacity: 1; pointer-events: auto;">
                     <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 4px; border: 2px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.8);">
                         <input type="number" id="ig-tempo-escolhido" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 26px; font-family: 'VT323', monospace; color: #f1c40f; background: transparent; text-align: center; padding: 5px; outline: none; text-shadow: 2px 2px 0 #000;">
                         <span style="font-size: 20px; font-family: 'VT323', monospace; color: #fff; text-shadow: 2px 2px 0 #000;">MINUTOS</span>
@@ -416,15 +427,21 @@ Workspace.Ingles = {
                         } else {
                             Workspace.Ingles.abrirBauMagico(minutos);
                         }
-                    ">Aceitar Missão</button>
+                    ">Aceitar Missão ✨</button>
                 </div>
             </div>
 
-            <!-- GRELHA DE JOGOS DO ALUNO -->
-            <div id="ig-alunoView" style="display:none; padding-bottom: 40px;">
-                <div style="padding: 30px 30px 0 30px;">
-                    <h1 style="font-family: 'Cinzel', serif; color:#0F172A; font-size:32px; margin:0 0 10px 0;">A tua jornada começou! ⏳</h1>
-                    <p style="color:#64748B; font-size:16px; max-width:800px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
+            <!-- ⚔️ ARENA DE BATALHA (Hub do Aluno com o Mago) -->
+            <div id="ig-alunoView" style="display:none; padding: 30px 30px 40px 30px;">
+                <div class="ig-hub-banner">
+                    <div class="ig-guardian-stars"></div>
+                    <img src="mago_bau_ingles.jpg" class="ig-hub-mago-img" alt="Mago" />
+                    <div style="flex: 1; z-index: 2;">
+                        <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
+                        <p style="color:#cbd5e1; font-size:16px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
+                        <!-- O BALÃO DE FALA INTELIGENTE APARECE AQUI -->
+                        <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none;"></div>
+                    </div>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
@@ -441,6 +458,7 @@ Workspace.Ingles = {
                 <button class="ws-btn" style="background: linear-gradient(180deg, #d4af37, #996515); color:#fff; font-family: 'Cinzel', serif; padding:12px 35px; border-radius:4px; font-size: 18px; font-weight:bold; border: 2px solid #fff; cursor:pointer; box-shadow: 0 4px 0 #000;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
             </div>
 
+            <!-- 👨‍🏫 PAINEL DO PROFESSOR -->
             <div id="ig-professorView" style="display: none; min-height: 70vh;">
                 <div class="ig-sidebar">
                     <button class="ig-side-item" data-tab="mago" onclick="Workspace.Ingles.renderProfessorTab('mago')">🧙‍♂️ Mago IA</button>
@@ -453,6 +471,7 @@ Workspace.Ingles = {
                 <div id="ig-tab-content" style="flex:1; padding:30px; background:#F8FAFC;"></div>
             </div>
 
+            <!-- ⚔️ MODAL DE JOGOS -->
             <div id="ig-gameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); z-index:1000000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
                 <div class="ws-card" style="width:90%; max-width:650px; background:#fffcf0; border: 4px solid #d4af37; border-radius:8px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh; box-shadow:0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(212,175,55,0.2);">
                     <div style="padding: 20px 25px; border-bottom: 2px dashed #d4af37; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.5);">
@@ -460,7 +479,7 @@ Workspace.Ingles = {
                             <span id="ig-modalIcon" style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></span>
                             <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-family: 'Cinzel', serif; font-size: 22px; font-weight: bold;"></h2>
                         </div>
-                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:30px; cursor:pointer; color:#64748B; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'">×</button>
+                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:30px; cursor:pointer; color:#64748B; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#64748B'">×</button>
                     </div>
                     <div id="ig-modalBody" style="padding: 30px; overflow-y: auto; flex: 1;"></div>
                 </div>
@@ -468,14 +487,14 @@ Workspace.Ingles = {
         `;
     },
 
-    // 🚀 HIGIENE VISUAL ABSOLUTA (Garante que telas não se sobrepõem e remove bugs visuais)
+    // 🚀 HIGIENE VISUAL ABSOLUTA
     renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
         
         const isAluno = Workspace.usuario.tipo === 'Aluno';
         
-        // Assegura que o baú e a opacidade voltam ao normal caso tenha saído após explodir
+        // Restaura o baú do cabeçalho caso tenha saído após explodir
         const chest = document.getElementById('ig-header-chest');
         if (chest) {
             chest.classList.remove('chest-shake', 'chest-explode');
@@ -509,7 +528,7 @@ Workspace.Ingles = {
                 const magoScr = document.getElementById('ig-guardian-screen');
                 magoScr.style.display = 'flex';
                 magoScr.style.opacity = '1';
-                Workspace.Ingles.iniciarFalaGuardiao();
+                // O Mago só fala após explodir e entrar no Hub!
             } 
             else {
                 document.getElementById('ig-alunoView').style.display = 'block';
@@ -518,131 +537,28 @@ Workspace.Ingles = {
         }
     },
 
-    renderAlunoGrid: () => {
-        const grid = document.getElementById('ig-gamesGrid');
-        if(!grid) return;
-        grid.innerHTML = Workspace.Ingles.defaults.games.map(g => `
-            <div class="ig-game-card" onclick="Workspace.Ingles.abrirJogo('${g.id}')">
-                <div class="ig-top">
-                    <div class="ig-icon" style="background:${g.color}">${g.icon}</div>
-                    <span class="ig-badge ig-badge-level">${g.level}</span>
-                </div>
-                <h3>${g.title}</h3>
-                <p>${g.desc}</p>
-                <div class="ig-meta">
-                    <span class="ig-badge" style="background:#F1F5F9; color: #333;">⭐ +${['picturePop','minimalPairs','debateAI'].includes(g.id) ? '75' : '50'} XP</span>
-                </div>
-            </div>
-        `).join('');
-    },
-
     // ============================================================================
-    // 🧙‍♂️ NARRATIVA: O CÉREBRO DO GUARDIÃO
-    // ============================================================================
-    encerrarSessaoBau: () => {
-        Workspace.Ingles.tempoGlobalDefinido = false;
-        Workspace.Ingles.sessaoEncerrada = false;
-        Workspace.Ingles.bauDestrancado = false;
-        Workspace.Ingles.digitandoAtivo = false;
-        
-        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
-        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
-        
-        Workspace.navegarPara('feed');
-    },
-
-    iniciarFalaGuardiao: (forcarRestart = false) => {
-        if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
-        Workspace.Ingles.digitandoAtivo = true;
-        if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
-        
-        const balao = document.getElementById('ig-guardian-text');
-        const botoes = document.getElementById('ig-guardian-options');
-        if (balao) balao.innerHTML = '';
-        if (botoes) botoes.classList.remove('visivel');
-
-        const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
-        const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
-
-        let fraseBruta = "";
-
-        // LÓGICA DE EXIBIÇÃO
-        if (config.modoExibicao === 'sequencial') {
-            const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
-            let acessos = parseInt(localStorage.getItem(userK) || '0');
-            const indice = acessos % frasesLivres.length; 
-            fraseBruta = frasesLivres[indice].text;
-            if (!forcarRestart) localStorage.setItem(userK, acessos + 1); 
-        } else if (config.modoExibicao === 'fixa') {
-            fraseBruta = frasesLivres[0].text;
-        } else {
-            fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
-        }
-
-        // CAPTURA DO NOME REAL
-        const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
-        
-        // 🚀 O FILTRO BLINDADO DO NOME (Encontra a citação com ou sem parênteses, com ou sem espaços!)
-        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
-        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
-        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
-
-        // VOZ
-        if (config.vozAtiva) {
-            Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
-        } else if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); 
-        }
-
-        // 🚀 A MÁQUINA DE ESCREVER BLINDADA CONTRA BUGS DE HTML
-        let i = 0;
-        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
-
-        Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            if (fraseVisual.charAt(i) === '<') {
-                const fimDaTag = fraseVisual.indexOf('>', i);
-                if (fimDaTag !== -1) {
-                    i = fimDaTag; 
-                }
-            }
-
-            if (balao) balao.innerHTML = fraseVisual.substring(0, i + 1);
-            
-            i++;
-
-            if (i >= fraseVisual.length) {
-                clearInterval(Workspace.Ingles.magoIntervalTimer);
-                Workspace.Ingles.digitandoAtivo = false;
-                if (botoes) setTimeout(() => { botoes.classList.add('visivel'); }, 300);
-            }
-        }, 35); 
-    },
-
-    // ============================================================================
-    // ✨ A GRANDE TRANSIÇÃO CINEMÁTICA (EXPLOSÃO DO BAÚ MÁGICO)
+    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ
     // ============================================================================
     abrirBauMagico: (minutos) => {
-        // 1. Silencia o Mago e limpa timers
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
 
         // Som de carregamento da magia
         try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
 
-        // 2. Anima o Baú no Cabeçalho (Tremor de poder)
+        // Anima o Baú no Cabeçalho
         const chest = document.getElementById('ig-header-chest');
         if (chest) {
             chest.classList.add('chest-shake');
             chest.style.filter = 'drop-shadow(0 0 20px #f1c40f) brightness(1.5)';
         }
 
-        // 3. Esconde o Ecrã do Mago suavemente (Fade out)
+        // Esconde o Ecrã de Preparação suavemente
         const magoScr = document.getElementById('ig-guardian-screen');
-        if(magoScr) {
-            magoScr.style.opacity = '0';
-        }
+        if(magoScr) magoScr.style.opacity = '0';
 
-        // Após suspense de 1.5s, o Baú Explode
+        // O Baú Explode
         setTimeout(() => {
             if(magoScr) magoScr.style.display = 'none';
 
@@ -656,7 +572,7 @@ Workspace.Ingles = {
             try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
             try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
 
-            // 4. Criação da Onda de Choque (Shockwave)
+            // Onda de Choque
             const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
             const originX = rect.left + 20;
             const originY = rect.top + 20;
@@ -666,7 +582,7 @@ Workspace.Ingles = {
             document.body.appendChild(wave);
             setTimeout(() => wave.remove(), 1000);
 
-            // 5. Invocação de Bolas de Fogo e Estrelas
+            // Bolas de Fogo e Estrelas
             const coresFogo = ['#ffeb3b', '#e67e22', '#c0392b', '#ff9800'];
             for (let i = 0; i < 40; i++) {
                 let fb = document.createElement('div');
@@ -676,7 +592,7 @@ Workspace.Ingles = {
                 let angle = Math.random() * Math.PI * 2;
                 let velocity = (Math.random() * 300) + 200;
                 let tx = Math.cos(angle) * velocity;
-                let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); // Efeito de gravidade
+                let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); 
                 
                 fb.style.left = originX + 'px'; 
                 fb.style.top = originY + 'px';
@@ -687,7 +603,7 @@ Workspace.Ingles = {
                 setTimeout(() => fb.remove(), 1500);
             }
 
-            // 6. Revela a Grelha de Jogos com suavidade e inicia os Relógios
+            // Revela o Hub de Jogos
             setTimeout(() => {
                 Workspace.Ingles.tempoRestante = minutos * 60;
                 Workspace.Ingles.xpGanhosNaSessao = 0;
@@ -706,49 +622,100 @@ Workspace.Ingles = {
                         grid.style.transform = 'translateY(0) scale(1)';
                     });
                 }
+
+                // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES DO PROFESSOR!
+                setTimeout(() => {
+                    Workspace.Ingles.iniciarFalaGuardiao();
+                }, 500);
+
             }, 800);
 
         }, 1500); 
     },
 
-    definirTempoGlobal: (minutos) => {
-        // Redireciona a chamada velha para a nova explosão
-        Workspace.Ingles.abrirBauMagico(minutos);
-    },
-
-    iniciarTimerGlobal: () => {
-        const display = document.getElementById('ig-global-timer-display');
-        display.style.display = 'flex';
-        Workspace.Ingles.atualizarDisplayTimerGlobal();
-
+    // ============================================================================
+    // 🧙‍♂️ NARRATIVA: O CÉREBRO DO GUARDIÃO
+    // ============================================================================
+    encerrarSessaoBau: () => {
+        Workspace.Ingles.tempoGlobalDefinido = false;
+        Workspace.Ingles.sessaoEncerrada = false;
+        Workspace.Ingles.bauDestrancado = false;
+        Workspace.Ingles.digitandoAtivo = false;
+        
         if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
+        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
         
-        Workspace.Ingles.timerGlobal = setInterval(() => {
-            Workspace.Ingles.tempoRestante--;
-            Workspace.Ingles.atualizarDisplayTimerGlobal();
-            
-            if (Workspace.Ingles.tempoRestante <= 0) {
-                clearInterval(Workspace.Ingles.timerGlobal);
-                Workspace.Ingles.sessaoEncerrada = true;
-                Workspace.Ingles.fecharJogo(); 
-                try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg'); audio.play().catch(()=>{}); } catch(e){}
-                Workspace.Ingles.renderizarVisualizacao();
-            }
-        }, 1000);
+        const balao = document.getElementById('ig-hub-mago-text');
+        if (balao) balao.style.display = 'none';
+
+        Workspace.navegarPara('feed');
     },
 
-    atualizarDisplayTimerGlobal: () => {
-        const d = document.getElementById('ig-global-timer-display');
-        if(!d) return;
-        const m = Math.floor(Workspace.Ingles.tempoRestante / 60).toString().padStart(2, '0');
-        const s = (Workspace.Ingles.tempoRestante % 60).toString().padStart(2, '0');
-        d.innerText = `⏱️ ${m}:${s}`;
+    iniciarFalaGuardiao: (forcarRestart = false) => {
+        if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
+        Workspace.Ingles.digitandoAtivo = true;
+        if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
         
-        if (Workspace.Ingles.tempoRestante < 30 && Workspace.Ingles.tempoRestante > 0) { 
-            d.style.color = 'white'; d.style.background = '#e74c3c'; d.style.animation = 'pulse 1s infinite'; 
-        } else { 
-            d.style.color = '#e74c3c'; d.style.background = '#fdf2f2'; d.style.animation = 'none'; 
+        // 🚀 AGORA FALA NO BALÃO DO HUB DE JOGOS!
+        const balao = document.getElementById('ig-hub-mago-text');
+        if (!balao) return;
+        
+        balao.style.display = 'flex';
+        balao.innerHTML = '';
+
+        const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
+        const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
+
+        let fraseBruta = "";
+
+        if (config.modoExibicao === 'sequencial') {
+            const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
+            let acessos = parseInt(localStorage.getItem(userK) || '0');
+            const indice = acessos % frasesLivres.length; 
+            fraseBruta = frasesLivres[indice].text;
+            if (!forcarRestart) localStorage.setItem(userK, acessos + 1); 
+        } else if (config.modoExibicao === 'fixa') {
+            fraseBruta = frasesLivres[0].text;
+        } else {
+            fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
+
+        const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
+        
+        // 🚀 O FILTRO BLINDADO
+        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
+        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
+        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #f1c40f; font-weight: 900;">${primeiroNome}</strong>`);
+
+        if (config.vozAtiva) {
+            Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
+        } else if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); 
+        }
+
+        let i = 0;
+        let isTag = false;
+        let htmlAcumulado = "";
+
+        try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.1; audio.play().catch(()=>{}); } catch(e){}
+
+        Workspace.Ingles.magoIntervalTimer = setInterval(() => {
+            const char = fraseVisual.charAt(i);
+
+            if (char === '<') isTag = true;
+            htmlAcumulado += char;
+            if (char === '>') isTag = false;
+
+            if (!isTag) {
+                balao.innerHTML = htmlAcumulado;
+            }
+
+            i++;
+            if (i >= fraseVisual.length) {
+                clearInterval(Workspace.Ingles.magoIntervalTimer);
+                Workspace.Ingles.digitandoAtivo = false;
+            }
+        }, 35); 
     },
 
     // ============================================================================
@@ -1105,8 +1072,8 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center; padding:50px;">
                 <div style="font-size:60px; margin-bottom:15px;">✅</div>
-                <h2 style="font-size:28px; color:#10B981; margin-bottom:10px;">Excelente!</h2>
-                <div style="font-size:20px; font-weight:bold; color:#0F172A;">+${bonus} XP Ganho</div>
+                <h2 style="font-family:'Cinzel', serif; font-size:32px; color:#10B981; margin-bottom:10px;">Excelente!</h2>
+                <div style="font-family:'VT323', monospace; font-size:30px; color:#0F172A;">+${bonus} XP Ganho</div>
             </div>`;
         setTimeout(() => Workspace.Ingles.proximoDesafio(), 1500);
     },
@@ -1115,9 +1082,9 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center; padding:50px;">
                 <div style="font-size:60px; margin-bottom:15px;">❌</div>
-                <h2 style="font-size:28px; color:#EF4444; margin-bottom:10px;">Atenção!</h2>
-                <div style="font-size:16px; font-weight:bold; color:#64748B;">Erro guardado na memória. Voltaremos a este ponto depois.</div>
-                <div style="font-size:20px; font-weight:bold; color:#EF4444; margin-top:10px;">0 XP</div>
+                <h2 style="font-family:'Cinzel', serif; font-size:32px; color:#EF4444; margin-bottom:10px;">Atenção!</h2>
+                <div style="font-size:16px; font-weight:bold; color:#64748B;">A Inteligência guardou este erro. Irás enfrentá-lo novamente em breve.</div>
+                <div style="font-family:'VT323', monospace; font-size:30px; color:#EF4444; margin-top:15px;">0 XP</div>
             </div>`;
         setTimeout(() => Workspace.Ingles.proximoDesafio(), 2500);
     },
@@ -1172,7 +1139,7 @@ Workspace.Ingles = {
             <div class="ig-big-phrase">Missão: Crie uma frase com a palavra <b>${w.word}</b></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence here..."></textarea>
             
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:15px;" onclick="
+            <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; border:none; padding:15px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:16px; margin-top:15px;" onclick="
                 const txt = document.getElementById('ig-input').value;
                 if(!txt.toLowerCase().includes(Workspace.Ingles.desafioAtualObj.word.toLowerCase())) {
                     Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'word');
@@ -1181,7 +1148,7 @@ Workspace.Ingles = {
                     Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
                     Workspace.Ingles.envioAoProfessor('wordSpark', txt, 50);
                 }
-            ">Verificar Inteligência 🚀</button>
+            ">Lançar Feitiço ✨</button>
         `;
     },
 
@@ -1192,11 +1159,11 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase">${p.phrase}</div>
             <div style="text-align:center; margin:15px 0;">
-                <button class="ws-btn" style="background:#0F172A; color:white; border-radius:30px; border:none; padding:10px 20px; cursor:pointer;" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Ouvir IA</button>
+                <button class="ws-btn" style="background:#0F172A; color:white; border-radius:30px; border:none; padding:10px 20px; cursor:pointer;" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Ouvir o Oráculo</button>
             </div>
             <div style="text-align: center; margin-top: 20px; background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0;">
-                <p style="font-size:13px; color:#333; font-weight:bold;">Sua vez. A IA vai analisar a sua voz:</p>
-                <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', Workspace.Ingles.desafioAtualObj, 'phrase')">🎤 Iniciar Leitura</button>
+                <p style="font-size:13px; color:#333; font-weight:bold;">Sua vez. A Magia analisará a tua voz:</p>
+                <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', Workspace.Ingles.desafioAtualObj, 'phrase')">🎤 Iniciar Sopro</button>
                 <div id="ig-speechResult" style="margin-top:15px;"></div>
             </div>
         `;
@@ -1208,13 +1175,13 @@ Workspace.Ingles = {
         
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center;padding:20px">
-                <div style="font-size:60px; margin-bottom:10px;">👂</div>
-                <h3 style="margin-bottom:5px; color:#0F172A;">Escute e digite o que ouviu</h3>
-                <button class="ws-btn" style="background:#4F46E5; color:white; border-radius:30px; padding:10px 30px; font-size:16px; margin-bottom:25px; border:none; cursor:pointer;" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Tocar Áudio</button>
+                <div style="font-size:60px; margin-bottom:10px;">🦉</div>
+                <h3 style="margin-bottom:5px; color:#0F172A; font-family:'Cinzel', serif;">Escute e transcreva</h3>
+                <button class="ws-btn" style="background:#4F46E5; color:white; border-radius:30px; padding:10px 30px; font-size:16px; margin-bottom:25px; border:none; cursor:pointer;" onclick="Workspace.Ingles.falar('${p.phrase.replace(/'/g,"\\'")}')">🔊 Tocar Ecos</button>
                 
-                <input id="ig-listenInput" class="ig-input" placeholder="Digite exatamente o que ouviu..." style="font-size:16px; font-weight:bold; text-align:center;">
+                <input id="ig-listenInput" class="ig-input" placeholder="Transcreve exatamente o que ouviste..." style="font-size:16px; font-weight:bold; text-align:center;">
                 
-                <button class="ws-btn" style="width:100%; background:#10B981; color:white; margin-top:15px; font-size:16px; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="
+                <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10B981, #059669); color:white; margin-top:15px; font-size:16px; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;" onclick="
                     const digitado = document.getElementById('ig-listenInput').value;
                     const sim = Workspace.Ingles.similaridade(digitado, Workspace.Ingles.desafioAtualObj.phrase);
                     if(sim >= 0.9) {
@@ -1224,7 +1191,7 @@ Workspace.Ingles = {
                         Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'phrase');
                         Workspace.Ingles.falhaGenerica();
                     }
-                ">Verificar Rigorosa</button>
+                ">Desvendar</button>
             </div>
         `;
     },
@@ -1234,9 +1201,9 @@ Workspace.Ingles = {
         const q = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:18px">${q.question}</div>
+            <div class="ig-big-phrase" style="font-size:20px; font-family:'Cinzel', serif;">${q.question}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-top:20px" id="ig-quizOptions">
-                ${q.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; text-align:left; padding:15px; font-size:14px; font-weight:600; border-radius:8px; cursor:pointer;" onclick="
+                ${q.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; text-align:left; padding:15px; font-size:16px; font-weight:600; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.borderColor='#d4af37'" onmouseout="this.style.borderColor='#E2E8F0'" onclick="
                     document.querySelectorAll('#ig-quizOptions button').forEach(b => b.disabled = true);
                     if(${i} === Workspace.Ingles.desafioAtualObj.correct) {
                         Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
@@ -1256,15 +1223,15 @@ Workspace.Ingles = {
         
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center">
-                <div style="width:150px; height:150px; border-radius:24px; background:#F8FAFC; border:2px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:20px auto; font-size:80px;">${pic.emoji}</div>
-                <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px;">
+                <div style="width:150px; height:150px; border-radius:24px; background:#F8FAFC; border:4px solid #d4af37; display:flex; align-items:center; justify-content:center; margin:20px auto; font-size:80px; box-shadow: inset 0 0 20px rgba(212,175,55,0.3);">${pic.emoji}</div>
+                <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px; border:2px solid #333;">
                     <p style="color:white; font-size:14px; font-weight:bold; margin-bottom:15px;">Fale o nome exato:</p>
-                    <button id="ig-btnVoz" class="ws-btn" style="background:#10B981; color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', Workspace.Ingles.desafioAtualObj, 'picture')">🎤 Falar Nome</button>
+                    <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', Workspace.Ingles.desafioAtualObj, 'picture')">🎤 Falar Nome</button>
                     <div id="ig-speechResult" style="margin-top:15px;"></div>
                     
                     <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                        <input id="ig-input" class="ig-input" placeholder="Ou digita aqui..." style="text-align:center; font-weight:bold;">
-                        <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold; border:none; padding:10px; border-radius:8px; cursor:pointer;" onclick="
+                        <input id="ig-input" class="ig-input" placeholder="Ou digita a resposta..." style="text-align:center; font-weight:bold;">
+                        <button class="ws-btn" style="width:100%; background:white; color:#0F172A; margin-top:10px; font-weight:bold; border:none; padding:12px; border-radius:8px; cursor:pointer;" onclick="
                             const sim = Workspace.Ingles.similaridade(document.getElementById('ig-input').value, Workspace.Ingles.desafioAtualObj.word);
                             if(sim >= 0.9) {
                                 Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
@@ -1273,7 +1240,7 @@ Workspace.Ingles = {
                                 Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'picture');
                                 Workspace.Ingles.falhaGenerica();
                             }
-                        ">Verificar</button>
+                        ">Verificar Visão</button>
                     </div>
                 </div>
             </div>
@@ -1286,7 +1253,7 @@ Workspace.Ingles = {
         const resEl = document.getElementById('ig-speechResult');
         
         if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
-            Workspace.mostrarAviso('Navegador sem suporte a deteção de voz.', 'warning'); return;
+            Workspace.mostrarAviso('O teu navegador não suporta Deteção de Voz.', 'warning'); return;
         }
 
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1295,7 +1262,7 @@ Workspace.Ingles = {
         Workspace.Ingles.recognition.interimResults = false;
         Workspace.Ingles.recognition.maxAlternatives = 1;
         
-        btn.innerText = "🎧 Escutando..."; btn.style.background = "#F59E0B"; btn.style.animation = "pulse 1s infinite";
+        btn.innerText = "🎧 A Escutar Magia..."; btn.style.background = "#F59E0B"; btn.style.animation = "pulse 1s infinite";
         Workspace.Ingles.recognition.start();
 
         Workspace.Ingles.recognition.onresult = (e) => {
@@ -1304,11 +1271,11 @@ Workspace.Ingles = {
             
             const sim = Workspace.Ingles.similaridade(falado, esperado);
             if(sim >= 0.75) {
-                resEl.innerHTML = `<div style="background:#D1FAE5; color:#065F46; padding:10px; border-radius:8px; font-weight:bold;">✅ Perfeito!</div>`;
+                resEl.innerHTML = `<div style="background:#D1FAE5; color:#065F46; padding:10px; border-radius:8px; font-weight:bold;">✅ Magia Perfeita!</div>`;
                 if (itemObj) Workspace.Ingles.superarErro(itemObj.id);
                 setTimeout(() => Workspace.Ingles.sucessoGenerico(75), 1000);
             } else {
-                resEl.innerHTML = `<div style="background:#FEE2E2; color:#B91C1C; padding:10px; border-radius:8px; font-weight:bold;">❌ IA entendeu: "${falado}"</div>`;
+                resEl.innerHTML = `<div style="background:#FEE2E2; color:#B91C1C; padding:10px; border-radius:8px; font-weight:bold;">❌ O Mestre entendeu: "${falado}"</div>`;
                 if (itemObj) Workspace.Ingles.registrarErro(itemObj, tipoConteudo);
                 setTimeout(() => Workspace.Ingles.falhaGenerica(), 1500);
             }
@@ -1316,7 +1283,7 @@ Workspace.Ingles = {
 
         Workspace.Ingles.recognition.onerror = () => {
             btn.style.animation = "none"; btn.style.background = "#10B981"; btn.innerText = "🎤 Falar Novamente";
-            Workspace.mostrarAviso("Não consegui ouvir. Tenta de novo.", "error");
+            Workspace.mostrarAviso("Não consegui ouvir. Lança o feitiço novamente.", "error");
         };
     },
 
@@ -1327,7 +1294,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-size:22px; color:#4F46E5;">${s.text}</div>
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
-                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-weight:bold; border-radius:30px; cursor:pointer;" onclick="
+                ${s.options.map((o,i)=>`<button class="ws-btn" style="background:white; color:#0F172A; border:2px solid #E2E8F0; padding:12px 25px; font-size:16px; font-weight:bold; border-radius:30px; cursor:pointer;" onmouseover="this.style.borderColor='#d4af37'" onmouseout="this.style.borderColor='#E2E8F0'" onclick="
                     if(${i} === Workspace.Ingles.desafioAtualObj.correct) { 
                         Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); 
                         Workspace.Ingles.sucessoGenerico(20); 
@@ -1347,15 +1314,15 @@ Workspace.Ingles = {
         
         document.getElementById('ig-modalBody').innerHTML = `
             <div style="text-align:center">
-                <h3 style="font-size:22px; color:#0F172A;">👄 Laboratório Fonético</h3>
-                <div style="background:#0F172A; padding:20px; border-radius:16px; margin-top:20px;">
-                    <button class="ws-btn" style="background:#4F46E5; color:white; padding:12px 30px; border-radius:30px; border:2px solid white; cursor:pointer; font-weight:bold;" onclick="Workspace.Ingles.falar('${target}')">🎧 Tocar a Palavra Misteriosa</button>
-                    <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
+                <h3 style="font-family:'Cinzel', serif; font-size:24px; color:#0F172A;">👄 Sussurros Gêmeos</h3>
+                <div style="background:#0F172A; padding:20px; border-radius:16px; margin-top:20px; border:2px solid #333;">
+                    <button class="ws-btn" style="background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; padding:12px 30px; border-radius:30px; border:2px solid white; cursor:pointer; font-weight:bold; font-size:16px;" onclick="Workspace.Ingles.falar('${target}')">🎧 Ouvir o Sussurro</button>
+                    <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:18px; padding:12px 30px; border-radius:8px; cursor:pointer; border:none;" onclick="
                             if('${pair.a}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
                             else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
                         ">${pair.a}</button>
-                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; padding:10px 25px; border-radius:8px; cursor:pointer; border:none;" onclick="
+                        <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:18px; padding:12px 30px; border-radius:8px; cursor:pointer; border:none;" onclick="
                             if('${pair.b}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
                             else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
                         ">${pair.b}</button>
@@ -1371,10 +1338,10 @@ Workspace.Ingles = {
         const task = ['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
         
         document.getElementById('ig-modalBody').innerHTML = `
-            <div style="text-align:center"><span class="ig-badge" style="background:#0F172A; color:white; padding:6px 15px;">🎯 Missão: ${task}</span></div>
-            <div class="ig-big-phrase" style="margin-top:15px; font-size:18px;">${phrase.phrase}</div>
+            <div style="text-align:center"><span class="ig-badge" style="background:#0F172A; color:white; padding:8px 15px; font-size:14px;">🎯 Missão: ${task}</span></div>
+            <div class="ig-big-phrase" style="margin-top:15px; font-size:20px; font-family:'Cinzel', serif;">${phrase.phrase}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua frase aqui..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('sentenceShuffle', document.getElementById('ig-input').value, 50)">Submeter 🔀</button>
+            <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('sentenceShuffle', document.getElementById('ig-input').value, 50)">Submeter 🔀</button>
         `;
     },
 
@@ -1383,9 +1350,9 @@ Workspace.Ingles = {
         const q = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${q.text}</div>
-            <textarea id="ig-input" class="ig-textarea" placeholder="Responda em inglês..."></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#F59E0B; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('answerQuest', document.getElementById('ig-input').value, 50)">Enviar 🚀</button>
+            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#d4af37; color:#92400E; font-family:'Cinzel', serif;">❓ ${q.text}</div>
+            <textarea id="ig-input" class="ig-textarea" placeholder="A tua resposta em inglês..."></textarea>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(180deg, #d4af37, #996515); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('answerQuest', document.getElementById('ig-input').value, 50)">Enviar para o Mestre 🚀</button>
         `;
     },
 
@@ -1397,18 +1364,18 @@ Workspace.Ingles = {
         const a = Workspace.Ingles.desafioAtualObj;
 
         document.getElementById('ig-modalBody').innerHTML = `
-            <p style="color:#64748B;font-size:13px;text-align:center; font-weight:bold; text-transform:uppercase;">Um aluno respondeu isto:</p>
+            <p style="color:#64748B;font-size:14px;text-align:center; font-weight:bold; text-transform:uppercase;">Um aventureiro respondeu isto:</p>
             <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${a.text}"</div>
-            <p style="margin-top:16px;font-weight:600; text-align:center;">Que pergunta em inglês gerou esta resposta?</p>
+            <p style="margin-top:16px;font-weight:600; font-size:16px; text-align:center; color:#2c3e50;">Que pergunta em inglês gerou esta resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#4F46E5; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="
+            <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="
                 const v = document.getElementById('ig-input').value.trim();
                 if(v.includes('?') && v.split(' ').length >= 3) { 
                     Workspace.Ingles.envioAoProfessor('questionMaker', v, 50); 
                 } else { 
                     Workspace.mostrarAviso('Atenção: A tua pergunta tem de conter (?) e pelo menos 3 palavras!', 'error'); 
                 }
-            ">Verificar ❓</button>
+            ">Verificar no Espelho 🔮</button>
         `;
     },
 
@@ -1417,10 +1384,10 @@ Workspace.Ingles = {
         const c = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:18px; text-align:left;">${c.title}<br><br><span style="font-size:15px;font-weight:400;color:#64748B">${c.prompt}</span></div>
-            <p style="font-size:13px;background:#FEF3C7; color:#92400E; padding:10px; border-radius:8px; font-weight:bold;">💡 Dica de Mestre: ${c.tip}</p>
+            <div class="ig-big-phrase" style="font-family:'Cinzel', serif; font-size:22px; text-align:left;">${c.title}<br><br><span style="font-size:16px;font-weight:bold;color:#64748B;font-family:sans-serif;">${c.prompt}</span></div>
+            <p style="font-size:14px;background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:bold;">💡 Dica de Mestre: ${c.tip}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?..."></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:#10B981; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel 🎭</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(135deg, #10B981, #059669); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel 🎭</button>
         `;
     },
 
@@ -1429,9 +1396,9 @@ Workspace.Ingles = {
         const topic = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
-            <div class="ig-big-phrase" style="font-size:18px">🤖 Clube de Debate<br><br><span style="font-size:16px;color:#4F46E5;">${topic.topic}</span></div>
+            <div class="ig-big-phrase" style="font-family:'Cinzel', serif; font-size:22px;">🤖 Duelo de Mentes<br><br><span style="font-size:18px;color:#4F46E5;font-family:sans-serif;font-weight:bold;">${topic.topic}</span></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Defende a tua posição..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75)">Contra-Atacar 🧠</button>
+            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75)">Contra-Atacar ⚔️</button>
         `;
     }
 };
