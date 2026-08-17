@@ -343,36 +343,34 @@ Workspace.Ingles = {
             .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; border: 1px solid currentColor; }
             .ig-badge-level { background: #1a1a2e; color: #f1c40f; }
             
-            /* 🚀 ANIMAÇÕES CINEMÁTICAS DO BAÚ DE PIXEL */
-            .chest-shake { animation: chestShake 0.5s ease-in-out infinite; }
+            /* 🚀 ANIMAÇÕES CINEMÁTICAS DO BAÚ DE PIXEL E EXPLOSÃO MAXIMA */
+            .chest-shake { animation: chestShake 0.4s ease-in-out infinite; }
             @keyframes chestShake { 0%, 100% { transform: translate(1px, -2px) rotate(-5deg); } 50% { transform: translate(-1px, 2px) rotate(5deg); } }
             
-            .chest-explode { animation: chestExplode 1s ease-in forwards; }
+            .chest-explode { animation: chestExplode 1s ease-out forwards; }
             @keyframes chestExplode { 
                 0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px #f1c40f); } 
-                50% { transform: scale(2.5) translateY(15px); filter: brightness(2) drop-shadow(0 0 50px #fff); } 
+                20% { transform: scale(3) translateY(20px); filter: brightness(2.5) drop-shadow(0 0 100px #fff); } 
                 100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } 
             }
             
-            @keyframes shockwave { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #f1c40f; } 100% { transform: translate(-50%, -50%) scale(250); opacity: 0; border: 50px solid #e67e22; } }
-            .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; pointer-events: none; z-index: 9999999; animation: shootFireball 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-            .ig-sparkle { position: fixed; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 10px #fff, 0 0 20px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootSparkle 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-            @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
-            @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
+            @keyframes shockwave { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #fff; } 100% { transform: translate(-50%, -50%) scale(400); opacity: 0; border: 80px solid #e67e22; } }
             
-            /* 🚀 ANIMAÇÃO BLINDADA DE ENTRADA DA GRELHA */
-            @keyframes slideUpFade { 
-                0% { opacity: 0; transform: translateY(50px) scale(0.9); } 
-                100% { opacity: 1; transform: translateY(0) scale(1); } 
+            /* AS TRÊS PARTÍCULAS: Fogo, Purpurina e Pó Mágico */
+            .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 40px currentColor; pointer-events: none; z-index: 9999999; animation: shootParticle 1.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
+            .ig-sparkle { position: fixed; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 10px #fff, 0 0 30px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootParticle 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
+            .ig-magic-dust { position: fixed; border-radius: 50%; background: #fff; box-shadow: 0 0 5px #fff, 0 0 15px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootParticle 2.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+            
+            @keyframes shootParticle { 
+                0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 
+                100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(1080deg); opacity: 0; } 
             }
-            .grid-entrance { animation: slideUpFade 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-
+            
             /* 🧙‍♂️ CENÁRIO DO GUARDIÃO */
             .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
             
-            /* ✨ O SEGREDO DO PNG: mix-blend-mode apaga o fundo preto da imagem .jpg */
             img.ig-guardian-avatar { width: 180px; height: auto; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
             @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)); } }
             
@@ -597,7 +595,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA E ABERTURA DO BAÚ DO TOPO
+    // ✨ ANIMAÇÃO CINEMÁTICA SUPREMA: EXPLOSÃO DE ECRÃ INTEIRO
     // ============================================================================
     abrirBauMagico: (minutos) => {
         try {
@@ -607,65 +605,111 @@ Workspace.Ingles = {
             // Som de carregamento da magia
             try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
 
-            // Anima o Baú no Cabeçalho
+            // Anima o Baú no Cabeçalho (Fase de Carregamento)
             const chest = document.getElementById('ig-header-chest');
             if (chest) chest.classList.add('chest-shake');
 
             const magoScr = document.getElementById('ig-guardian-screen');
             if(magoScr) magoScr.style.opacity = '0';
 
-            // O Baú Explode
+            // 💥 O BAÚ EXPLODE APÓS 1.5 SEGUNDOS
             setTimeout(() => {
                 if(magoScr) magoScr.style.display = 'none';
 
                 if (chest) {
                     chest.classList.remove('chest-shake');
-                    chest.classList.add('chest-explode');
+                    chest.classList.add('chest-explode'); // CSS aumenta muito o baú e dá muito brilho
                     
-                    // 🚀 A TROCA DE SPRITE (SWAP): O Baú Abre!
+                    // A TROCA DE SPRITE (SWAP): O Baú Abre!
                     chest.src = '/assets/bau_roxo_pixel_aberto.png';
-                    chest.onerror = function() { 
-                        this.onerror=null; 
-                        this.src='/public/assets/bau_roxo_pixel_aberto.png'; 
-                    };
+                    chest.onerror = function() { this.onerror=null; this.src='/public/assets/bau_roxo_pixel_aberto.png'; };
                 }
 
-                // Sons de Impacto
-                try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
+                // ⚡ CLARÃO DE ECRÃ (Flash Bang) para impacto máximo
+                let flash = document.createElement('div');
+                flash.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:white; z-index:9999999; opacity:0.8; transition:opacity 0.6s ease-out; pointer-events:none;';
+                document.body.appendChild(flash);
+                setTimeout(() => { flash.style.opacity = '0'; }, 50);
+                setTimeout(() => { flash.remove(); }, 800);
+
+                // 🔊 Sons de Impacto (Explosão e Magia intensa)
+                try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.9; a2.play().catch(()=>{}); } catch(e){}
                 try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
 
-                // Onda de Choque
+                // 🎯 O PONTO DE ORIGEM (Exatamente do centro do Baú)
                 const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
-                const originX = rect.left + 27; 
-                const originY = rect.top + 27;
+                const originX = rect.left + (rect.width / 2); 
+                const originY = rect.top + (rect.height / 2);
 
+                // 🌊 1. ONDA DE CHOQUE GIGANTE
                 let wave = document.createElement('div');
-                wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 50px 20px #f1c40f, inset 0 0 20px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1s ease-out forwards;`;
+                wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 80px 40px #f1c40f, inset 0 0 30px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1.2s ease-out forwards;`;
                 document.body.appendChild(wave);
-                setTimeout(() => wave.remove(), 1000);
+                setTimeout(() => wave.remove(), 1200);
 
-                // Bolas de Fogo e Estrelas
+                // 🚀 O MOTOR DE FÍSICA PARA COBRIR O ECRÃ INTEIRO
+                // Baseamos a força na largura da tela do utilizador para que as partículas cheguem a todos os cantos
+                const forcaMaxima = window.innerWidth * 0.9; 
                 const coresFogo = ['#ffeb3b', '#e67e22', '#c0392b', '#ff9800'];
-                for (let i = 0; i < 40; i++) {
+
+                // 🔥 2. BOLAS DE FOGO (60 partículas pesadas e rápidas)
+                for (let i = 0; i < 60; i++) {
                     let fb = document.createElement('div');
-                    fb.className = i % 2 === 0 ? 'ig-fireball' : 'ig-sparkle';
+                    fb.className = 'ig-fireball';
                     document.body.appendChild(fb);
                     
-                    let angle = Math.random() * Math.PI * 2;
-                    let velocity = (Math.random() * 300) + 200;
+                    let angle = Math.random() * Math.PI * 2; // 360 graus
+                    let velocity = 300 + Math.random() * forcaMaxima; // Muito rápido
                     let tx = Math.cos(angle) * velocity;
-                    let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); 
+                    let ty = Math.sin(angle) * velocity; 
                     
-                    fb.style.left = originX + 'px'; 
-                    fb.style.top = originY + 'px';
-                    fb.style.setProperty('--tx', tx + 'px'); 
-                    fb.style.setProperty('--ty', ty + 'px');
-                    fb.style.backgroundColor = i % 2 === 0 ? coresFogo[Math.floor(Math.random() * coresFogo.length)] : '#fff';
+                    fb.style.left = originX + 'px'; fb.style.top = originY + 'px';
+                    fb.style.setProperty('--tx', tx + 'px'); fb.style.setProperty('--ty', ty + 'px');
+                    fb.style.backgroundColor = coresFogo[Math.floor(Math.random() * coresFogo.length)];
                     
+                    let size = (15 + Math.random() * 25) + 'px';
+                    fb.style.width = size; fb.style.height = size;
                     setTimeout(() => fb.remove(), 1500);
                 }
 
-                // 🚀 REVELA O HUB DE JOGOS E ANIMA A GRELHA (Solução CSS Segura)
+                // ✨ 3. PURPURINA (100 Estrelas Brilhantes)
+                for (let i = 0; i < 100; i++) {
+                    let gl = document.createElement('div');
+                    gl.className = 'ig-sparkle';
+                    document.body.appendChild(gl);
+                    
+                    let angle = Math.random() * Math.PI * 2;
+                    let velocity = 200 + Math.random() * (forcaMaxima * 1.2); // Vão ainda mais longe
+                    
+                    gl.style.left = originX + 'px'; gl.style.top = originY + 'px';
+                    gl.style.setProperty('--tx', (Math.cos(angle) * velocity) + 'px'); 
+                    gl.style.setProperty('--ty', (Math.sin(angle) * velocity) + 'px');
+                    gl.style.backgroundColor = '#fff';
+                    
+                    let size = (5 + Math.random() * 10) + 'px';
+                    gl.style.width = size; gl.style.height = size;
+                    setTimeout(() => gl.remove(), 2000);
+                }
+
+                // 💫 4. PÓ MÁGICO (150 partículas minúsculas douradas flutuantes)
+                for (let i = 0; i < 150; i++) {
+                    let dust = document.createElement('div');
+                    dust.className = 'ig-magic-dust';
+                    document.body.appendChild(dust);
+                    
+                    let angle = Math.random() * Math.PI * 2;
+                    let velocity = 100 + Math.random() * forcaMaxima; 
+                    
+                    dust.style.left = originX + 'px'; dust.style.top = originY + 'px';
+                    dust.style.setProperty('--tx', (Math.cos(angle) * velocity) + 'px'); 
+                    dust.style.setProperty('--ty', (Math.sin(angle) * velocity) + 'px');
+                    
+                    let size = (2 + Math.random() * 4) + 'px';
+                    dust.style.width = size; dust.style.height = size;
+                    setTimeout(() => dust.remove(), 2500);
+                }
+
+                // 🚀 REVELA O HUB DE JOGOS
                 setTimeout(() => {
                     Workspace.Ingles.tempoRestante = minutos * 60;
                     Workspace.Ingles.xpGanhosNaSessao = 0;
@@ -674,22 +718,22 @@ Workspace.Ingles = {
                     Workspace.Ingles.iniciarTimerGlobal();
                     Workspace.Ingles.renderizarVisualizacao(); 
                     
-                    // Entrada animada e garantida da grelha de jogos
+                    // Entrada animada
                     const grid = document.getElementById('ig-gamesGrid');
                     if (grid) {
                         grid.classList.add('grid-entrance');
                     }
 
-                    // 🚀 O MAGO APARECE NO HUB E FALA AS INSTRUÇÕES DO PROFESSOR!
+                    // O Mago fala as instruções do Professor no Hub!
                     setTimeout(() => {
                         Workspace.Ingles.iniciarFalaGuardiao();
                     }, 500);
 
-                }, 800);
+                }, 1000);
 
             }, 1500); 
         } catch (error) {
-            // 🛡️ FALLBACK: Se houver qualquer falha do navegador com animações, o Hub abre na mesma
+            // FALLBACK DE SEGURANÇA
             console.error("Erro na transição mágica:", error);
             Workspace.Ingles.tempoRestante = minutos * 60;
             Workspace.Ingles.tempoGlobalDefinido = true;
