@@ -412,7 +412,7 @@ Workspace.Ingles = {
             <div class="ig-header">
                 <div class="ig-title">
                     <!-- 🚀 CAMINHO ALINHADO: Aponta para a pasta /asserts/ -->
-                    <img id="ig-header-chest" src="/asserts/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
+                    <img id="ig-header-chest" src="./asserts/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.onerror=null; this.outerHTML='<div id=\\'ig-header-chest\\' class=\\'ig-title-icon\\' style=\\'transition: 0.3s;\\'>🧰</div>';" />
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
                 <div class="ig-rpg-hud">
@@ -427,10 +427,10 @@ Workspace.Ingles = {
                 <div class="ig-guardian-stars"></div>
                 
                 <!-- 🚀 CAMINHO ALINHADO: Mago -->
-                <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
+                <img src="./asserts/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.style.display='none';" />
                 
                 <div class="ig-balao-fala-static">
-                    <span style="color: #f1c40f;">Mestre:</span><br/>O feitiço requer o teu tempo de foco.<br/>Quantos minutos vais treinar hoje?
+                    <span style="color: #f1c40f;">Mestre:</span><br/>Os jogos requerem certo tempo de foco.<br/>Quantos minutos você vai treinar agora?
                 </div>
                 
                 <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap; opacity: 1; pointer-events: auto;">
@@ -457,7 +457,7 @@ Workspace.Ingles = {
                     <div class="ig-guardian-stars"></div>
                     
                     <!-- 🚀 CAMINHO ALINHADO: Mago no Hub -->
-                    <img src="/asserts/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
+                    <img src="./asserts/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.style.display='none';" />
                     
                     <div style="flex: 1; z-index: 2;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
@@ -473,7 +473,7 @@ Workspace.Ingles = {
             <!-- 🔒 ECRÃ DE FIM DE TEMPO (Usa o Baú) -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
                 <!-- 🚀 CAMINHO ALINHADO -->
-                <img src="/asserts/bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'font-size:70px; margin-bottom:10px; filter: grayscale(100%);\\'>🧰</div>';" />
+                <img src="./asserts/bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.onerror=null; this.outerHTML='<div style=\\'font-size:70px; margin-bottom:10px; filter: grayscale(100%);\\'>🧰</div>';" />
                 <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
                 <p style="color:#64748B; margin-bottom:20px; font-size: 18px;">O Baú fechou-se magicamente. Missão Concluída!</p>
                 <div style="background:#1a1a2e; border:4px solid #d4af37; padding:25px; border-radius:8px; display:inline-block; margin-bottom:30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
