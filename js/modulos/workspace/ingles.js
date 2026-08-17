@@ -6,8 +6,8 @@ Workspace.Ingles = {
         xp: 0, streak: 1, words: [], phrases: [], quizzes: [], pictures: [], minimalPairs: [], debates: [], submissions: [], pool: [],
         errosRetidos: [], 
         itensConcluidos: [],
-        magoPhrases: [], // 🧙‍♂️ Memória de falas do Mago
-        magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' } // ⚙️ O novo cérebro de configurações do Mago
+        magoPhrases: [], 
+        magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' } 
     },
     mediaRecorder: null, audioChunks: [], currentAudioURL: null, audioBlob: null, streamMicrofone: null, recognition: null,
     
@@ -21,15 +21,15 @@ Workspace.Ingles = {
     xpGanhosNaSessao: 0,
     desafioAtualObj: null,
     digitandoAtivo: false,      
-    magoIntervalTimer: null, // Controla o tempo de digitação do Mago
-    sseListenerConfigurado: false, // Evita duplicação da Antena de Tempo Real
+    magoIntervalTimer: null, 
+    sseListenerConfigurado: false, 
 
     defaults: {
         magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
-            { id: 'm1', text: 'Olá, (citarAluno)! 🎓 Quanto tempo deseja explorar os segredos do Baú do Inglês hoje?' },
-            { id: 'm2', text: 'Bem-vindo de volta, (citarAluno)! Vejo que está muito empolgado! 🧙‍♂️ Quanto tempo temos hoje?' },
-            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). 🗝️ Quantos minutos pretende focar-se hoje?' }
+            { id: 'm1', text: 'Saudações, (citarAluno)! 🎓 O conhecimento é o maior dos tesouros. Quanto tempo desejas treinar hoje?' },
+            { id: 'm2', text: 'Bem-vindo de volta, citarAluno! Sinto uma aura de sabedoria à tua volta. 🧙‍♂️ Quantos minutos temos?' },
+            { id: 'm3', text: 'Os segredos do Baú aguardam, (citarAluno). 🗝️ Qual será o tempo do teu foco hoje?' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -73,13 +73,14 @@ Workspace.Ingles = {
             {id:'rp1', title:'✈️ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
             {id:'rp2', title:'🍽️ No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
         ],
-      games: [
+        // 🚀 O BATISMO MÁGICO DOS JOGOS (RPG)
+        games: [
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave. Deteção de Magia IA.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará o poder da sua pronúncia.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
             {id:'listenType', title:'🦉 Ecos da Coruja', desc:'Escute o áudio misterioso e transcreva sem errar.', icon:'🦉', color:'#FEF3C7', level:'A2-B1'},
             {id:'quiz', title:'👁️ Enigma da Esfinge', desc:'Responda corretamente para não perder energia vital.', icon:'👁️', color:'#FEE2E2', level:'A1-B2'},
             {id:'wordPicker', title:'🧪 Poção Sintática', desc:'Gramática rigorosa. Escolha o ingrediente (palavra) certo.', icon:'🧪', color:'#E0E7FF', level:'A2-B1'},
-            {id:'sentenceShuffle', title:'🌀 Labirinto Ilusório', desc:'Sorteio de frases. Transforme-as para escapar do labirinto!', icon:'🌀', color:'#D1FAE5', level:'B1-B2'},
+            {id:'sentenceShuffle', title:'🌀 Labirinto Ilusório', desc:'Sorteio de frases. Transforme-as para escapar!', icon:'🌀', color:'#D1FAE5', level:'B1-B2'},
             {id:'answerQuest', title:'📜 Pergaminho do Herói', desc:'Responda abertamente. O Mestre avaliará a sua sabedoria.', icon:'📜', color:'#FEF3C7', level:'B1-C1'},
             {id:'questionMaker', title:'🔮 Espelho do Oráculo', desc:'Formule a pergunta em inglês que revela a resposta oculta.', icon:'🔮', color:'#F5D0FE', level:'B1-B2'},
             {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma a identidade do personagem. O Mestre avalia a atuação.', icon:'🎭', color:'#CCFBF1', level:'B1-C1'},
@@ -93,7 +94,7 @@ Workspace.Ingles = {
         Workspace.Ingles.injetarCSS();
         Workspace.Ingles.construirHTML();
         
-        // 📡 A ANTENA DE TEMPO REAL: Deteta as alterações do Professor e atualiza o Aluno instantaneamente!
+        // 📡 A ANTENA DE TEMPO REAL
         if (!Workspace.Ingles.sseListenerConfigurado && Workspace.usuario) {
             const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
             const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
@@ -111,20 +112,14 @@ Workspace.Ingles = {
         if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
     },
 
-    abrirBau: () => {
-        Workspace.navegarPara('ingles');
-    },
+    abrirBau: () => { Workspace.navegarPara('ingles'); },
 
     sincronizarTempoReal: async () => {
         await Workspace.Ingles.loadDados();
-        
-        // Se o Aluno estiver na tela do Mago a olhar, nós recarregamos a fala do Mago ao vivo!
         const telaMago = document.getElementById('ig-guardian-screen');
         if (telaMago && telaMago.style.display !== 'none' && Workspace.usuario.tipo === 'Aluno') {
-            Workspace.Ingles.iniciarFalaGuardiao(true); // O 'true' força o Mago a apagar tudo e falar de novo!
+            Workspace.Ingles.iniciarFalaGuardiao(true); 
         }
-        
-        // Se for o Professor na Aba do Mago, a tela dele atualiza-se sem piscar!
         const activeTab = document.querySelector('.ig-side-item.active');
         if (activeTab && Workspace.usuario.tipo !== 'Aluno') {
             Workspace.Ingles.renderProfessorTab(activeTab.dataset.tab);
@@ -186,14 +181,11 @@ Workspace.Ingles = {
                 quizzes: Workspace.Ingles.state.quizzes, pictures: Workspace.Ingles.state.pictures,
                 submissions: Workspace.Ingles.state.submissions, pool: Workspace.Ingles.state.pool,
                 errosRetidos: Workspace.Ingles.state.errosRetidos, magoPhrases: Workspace.Ingles.state.magoPhrases,
-                magoConfig: Workspace.Ingles.state.magoConfig // ⚙️ Salva as configurações de voz e ordem
+                magoConfig: Workspace.Ingles.state.magoConfig 
             });
         } catch (e) {}
     },
 
-    // ============================================================================
-    // 🧠 SISTEMA DE PROGRESSÃO E REPETIÇÃO ESPAÇADA
-    // ============================================================================
     registrarErro: (itemOriginal, tipoConteudo) => {
         const jaExiste = Workspace.Ingles.state.errosRetidos.find(e => e.id === itemOriginal.id);
         if (!jaExiste) {
@@ -201,7 +193,6 @@ Workspace.Ingles = {
             Workspace.Ingles.saveDados();
         }
     },
-
     superarErro: (itemId) => {
         const index = Workspace.Ingles.state.errosRetidos.findIndex(e => e.id === itemId);
         if (index !== -1) {
@@ -209,7 +200,6 @@ Workspace.Ingles = {
             Workspace.Ingles.saveDados(); 
         }
     },
-
     marcarComoConcluido: (itemId) => {
         if (!itemId) return;
         if (!Workspace.Ingles.state.itensConcluidos.includes(itemId)) {
@@ -220,47 +210,44 @@ Workspace.Ingles = {
 
     obterItemInteligente: (listaPadrao, tipoConteudo) => {
         let listaDisponivel = listaPadrao.filter(item => !Workspace.Ingles.state.itensConcluidos.includes(item.id));
-
         if (listaDisponivel.length === 0 && listaPadrao.length > 0) {
-            Workspace.mostrarAviso("🏆 Incrível! Você dominou todo este conteúdo. Vamos rever!", "success");
+            Workspace.mostrarAviso("🏆 Incrível! Dominaste este nível da magia. Vamos rever!", "success");
             Workspace.Ingles.state.itensConcluidos = [];
             Workspace.Ingles.saveDados();
             listaDisponivel = listaPadrao;
         }
-
         const listaErros = Workspace.Ingles.state.errosRetidos.filter(e => e._tipoDefeito === tipoConteudo && !Workspace.Ingles.state.itensConcluidos.includes(e.id));
         if (listaErros.length > 0 && Math.random() < 0.60) {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
-        
         return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
     // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS E DE INTERFACE
+    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Masculina vs Premium)
     // ============================================================================
-    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
+    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
         u.lang = lang; 
         
-        u.pitch = isMago ? 0.7 : pitch;
-        u.rate = isMago ? 0.85 : rate;
-        
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
         if (isMago) {
-            vozSelec = voices.find(v => v.lang.includes('pt') && (v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')))
-                    || voices.find(v => v.lang.includes('pt'));
+            // 🧙‍♂️ O FEITIÇO DA VOZ: Lento, maduro, sem distorcer o áudio do sistema
+            u.pitch = 0.85; 
+            u.rate = 0.85; 
+            const vozesPT = voices.filter(v => v.lang.includes('pt'));
+            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
         } else {
+            // 🇺🇸 Voz Americana Premium para os Jogos
+            u.pitch = pitch;
+            u.rate = rate;
             const idiomaPrincipal = lang.split('-')[0];
-            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')))
-                    || voices.find(v => v.lang.includes(idiomaPrincipal))
-                    || voices.find(v => v.lang.includes('en'))
-                    || voices[0];
+            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -310,6 +297,9 @@ Workspace.Ingles = {
         };
     },
 
+    // ============================================================================
+    // 🎨 CSS MÁGICO (Design Imersivo e Partículas)
+    // ============================================================================
     injetarCSS: () => {
         if(document.getElementById('ws-ingles-css')) return;
         const style = document.createElement('style');
@@ -339,21 +329,33 @@ Workspace.Ingles = {
             .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
-            /* 🚀 NOVAS ANIMAÇÕES MAGICAS (BOLAS DE FOGO E PURPURINA) */
-            @keyframes openHeaderChest {
-                0%, 100% { transform: scale(1) rotate(0deg); }
-                25% { transform: scale(1.4) rotate(-15deg); filter: drop-shadow(0 0 20px #f1c40f); }
-                50% { transform: scale(1.5) rotate(15deg); filter: drop-shadow(0 0 40px #e67e22); }
-                75% { transform: scale(1.6) rotate(-10deg); filter: drop-shadow(0 0 60px #e74c3c); }
+            /* 🚀 TRANSIÇÃO CINEMÁTICA: O BAÚ MÁGICO */
+            #ig-header-chest { cursor: pointer; transform-origin: center; display: inline-block; filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.4)); }
+            .chest-shake { animation: chestShake 0.5s ease-in-out infinite; }
+            @keyframes chestShake {
+                0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-5deg); }
+                20% { transform: translate(-3px, 0px) rotate(5deg); } 30% { transform: translate(3px, 2px) rotate(0deg); }
+                40% { transform: translate(1px, -1px) rotate(5deg); } 50% { transform: translate(-1px, 2px) rotate(-5deg); }
+                60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-5deg); }
+                80% { transform: translate(-1px, -1px) rotate(5deg); } 90% { transform: translate(1px, 2px) rotate(0deg); }
+                100% { transform: translate(1px, -2px) rotate(-5deg); }
             }
-            .ig-fireball { position: fixed; border-radius: 50%; background: radial-gradient(circle, #fff 0%, #ffeb3b 30%, #e67e22 70%, #c0392b 100%); box-shadow: 0 0 20px #e67e22, 0 0 40px #c0392b; pointer-events: none; z-index: 9999999; animation: shootParticle 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-            .ig-sparkle { position: fixed; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff, 0 0 20px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootParticle 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
-            @keyframes shootParticle { 
-                0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 
-                100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } 
+            .chest-explode { animation: chestExplode 0.8s ease-out forwards; }
+            @keyframes chestExplode {
+                0% { transform: scale(1); filter: brightness(1); }
+                50% { transform: scale(1.6); filter: brightness(2) drop-shadow(0 0 50px #f1c40f); }
+                100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); }
             }
+            @keyframes shockwave {
+                0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #f1c40f; }
+                100% { transform: translate(-50%, -50%) scale(250); opacity: 0; border: 50px solid #e67e22; }
+            }
+            .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; pointer-events: none; z-index: 9999999; animation: shootFireball 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+            .ig-sparkle { position: fixed; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 10px #fff, 0 0 20px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootSparkle 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
+            @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+            @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
-            /* 🧙‍♂️ O NOVO REINO DO GUARDIÃO MÁGICO (Cenário de RPG) */
+            /* 🧙‍♂️ O NOVO REINO DO GUARDIÃO MÁGICO (Cenário RPG) */
             .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #2b1055 0%, #0f0c29 100%); overflow: hidden; border-radius: 0 0 16px 16px; }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
@@ -400,11 +402,11 @@ Workspace.Ingles = {
             </div>
 
             <!-- 🧙‍♂️ ECRÃ DO GUARDIÃO MÁGICO IMERSIVO -->
-            <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none;">
+            <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 <div class="ig-guardian-avatar">🧙‍♂️</div>
                 <div class="ig-balao-fala" id="ig-guardian-text"></div>
-                <div class="ig-opcoes-tempo" id="ig-guardian-options" style="display: flex; gap: 15px; margin-top: 30px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <div class="ig-opcoes-tempo" id="ig-guardian-options">
                     <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 16px; border: 2px solid rgba(139, 92, 246, 0.5); backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                         <input type="number" id="ig-tempo-escolhido" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 22px; font-weight: 900; color: #FFF; background: transparent; text-align: center; padding: 5px; outline: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
                         <span style="font-size: 16px; font-weight: bold; color: #D8B4FE; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Minutos</span>
@@ -422,11 +424,10 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- GRELHA DE JOGOS DO ALUNO -->
             <div id="ig-alunoView" style="display:none;">
                 <div style="padding: 30px 30px 0 30px;">
-                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">O relógio está a contar! ⏳</h1>
-                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um pergaminho ou poção. Se errar, a IA guardará o seu erro. Só avança no ranking quem domina a magia!</p>
+                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">A tua jornada começou! ⏳</h1>
+                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina o feitiço!</p>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
@@ -470,25 +471,34 @@ Workspace.Ingles = {
         `;
     },
 
+    // 🚀 HIGIENE VISUAL ABSOLUTA (Garante que telas não se sobrepõem e remove bugs visuais)
     renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
         
         const isAluno = Workspace.usuario.tipo === 'Aluno';
         
+        // Assegura que o baú e a opacidade voltam ao normal caso tenha saído após explodir
+        const chest = document.getElementById('ig-header-chest');
+        if (chest) {
+            chest.classList.remove('chest-shake', 'chest-explode');
+            chest.innerText = '🧰';
+            chest.style.transform = 'scale(1)';
+            chest.style.filter = 'none';
+        }
+        
         if (!isAluno) {
             document.getElementById('ig-professorView').style.display = 'flex';
             document.getElementById('ig-alunoView').style.display = 'none';
-            document.getElementById('ig-unlock-screen').style.display = 'none';
             document.getElementById('ig-guardian-screen').style.display = 'none';
             document.getElementById('ig-timeout-screen').style.display = 'none';
             
             const abaSalva = localStorage.getItem('ws_ingles_aba_prof') || 'envios';
             Workspace.Ingles.renderProfessorTab(abaSalva); 
-    } else {
+        } else {
             document.getElementById('ig-professorView').style.display = 'none';
 
-            // 🚀 HIGIENE VISUAL
+            // Oculta tudo primeiro
             document.getElementById('ig-guardian-screen').style.display = 'none';
             document.getElementById('ig-alunoView').style.display = 'none';
             document.getElementById('ig-gameModal').style.display = 'none';
@@ -499,7 +509,9 @@ Workspace.Ingles = {
                 document.getElementById('ig-timeout-xp').innerText = `+${Workspace.Ingles.xpGanhosNaSessao} XP ⭐`;
             } 
             else if (!Workspace.Ingles.tempoGlobalDefinido) {
-                document.getElementById('ig-guardian-screen').style.display = 'flex';
+                const magoScr = document.getElementById('ig-guardian-screen');
+                magoScr.style.display = 'flex';
+                magoScr.style.opacity = '1';
                 Workspace.Ingles.iniciarFalaGuardiao();
             } 
             else {
@@ -528,12 +540,17 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🧙‍♂️ NARRATIVA: O GUARDIÃO E A FECHADURA MÁGICA
+    // 🧙‍♂️ NARRATIVA: O CÉREBRO DO GUARDIÃO
     // ============================================================================
     encerrarSessaoBau: () => {
         Workspace.Ingles.tempoGlobalDefinido = false;
         Workspace.Ingles.sessaoEncerrada = false;
         Workspace.Ingles.bauDestrancado = false;
+        Workspace.Ingles.digitandoAtivo = false;
+        
+        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
+        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
+        
         Workspace.navegarPara('feed');
     },
 
@@ -544,17 +561,17 @@ Workspace.Ingles = {
         
         const balao = document.getElementById('ig-guardian-text');
         const botoes = document.getElementById('ig-guardian-options');
-        balao.innerHTML = '';
-        botoes.classList.remove('visivel');
+        if (balao) balao.innerHTML = '';
+        if (botoes) botoes.classList.remove('visivel');
 
         const config = Workspace.Ingles.state.magoConfig || Workspace.Ingles.defaults.magoConfig;
         const frasesLivres = Workspace.Ingles.state.magoPhrases.length > 0 ? Workspace.Ingles.state.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
 
         let fraseBruta = "";
 
-        // 🚀 O SEGREDO DO CONTROLO: Aleatório vs Sequencial vs Fixo
+        // LÓGICA DE EXIBIÇÃO
         if (config.modoExibicao === 'sequencial') {
-            const userK = `ws_mago_acessos_${Workspace.usuario.id}`;
+            const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
             let acessos = parseInt(localStorage.getItem(userK) || '0');
             const indice = acessos % frasesLivres.length; 
             fraseBruta = frasesLivres[indice].text;
@@ -565,52 +582,141 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
+        // CAPTURA DO NOME REAL
         const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
         
-        // 🚀 A DUPLA IDENTIDADE (Áudio sem HTML, Tela com HTML e Cor)
-        const regexCitar = /\(citarAluno\)/gi;
+        // 🚀 O FILTRO BLINDADO DO NOME (Encontra a citação com ou sem parênteses, com ou sem espaços!)
+        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
         const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
         const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #4F46E5; font-weight: 900;">${primeiroNome}</strong>`);
 
-        // Controlo da Voz do Mago
+        // VOZ
         if (config.vozAtiva) {
             Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
         }
 
+        // 🚀 A MÁQUINA DE ESCREVER BLINDADA CONTRA BUGS DE HTML
         let i = 0;
-        let isTag = false;
-        let htmlAcumulado = "";
-
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.2; audio.play().catch(()=>{}); } catch(e){}
 
-        // 🚀 A MÁQUINA DE ESCREVER BLINDADA (Ignora Quebra de Tags HTML)
         Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            const char = fraseVisual.charAt(i);
-
-            if (char === '<') isTag = true;
-            htmlAcumulado += char;
-            if (char === '>') isTag = false;
-
-            if (!isTag) {
-                balao.innerHTML = htmlAcumulado;
+            if (fraseVisual.charAt(i) === '<') {
+                const fimDaTag = fraseVisual.indexOf('>', i);
+                if (fimDaTag !== -1) {
+                    i = fimDaTag; 
+                }
             }
 
+            if (balao) balao.innerHTML = fraseVisual.substring(0, i + 1);
+            
             i++;
+
             if (i >= fraseVisual.length) {
                 clearInterval(Workspace.Ingles.magoIntervalTimer);
                 Workspace.Ingles.digitandoAtivo = false;
-                setTimeout(() => { botoes.classList.add('visivel'); }, 300);
+                if (botoes) setTimeout(() => { botoes.classList.add('visivel'); }, 300);
             }
         }, 35); 
     },
 
+    // ============================================================================
+    // ✨ A GRANDE TRANSIÇÃO CINEMÁTICA (EXPLOSÃO DO BAÚ MÁGICO)
+    // ============================================================================
+    abrirBauMagico: (minutos) => {
+        // 1. Silencia o Mago e limpa timers
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
+
+        // Som de carregamento da magia
+        try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
+
+        // 2. Anima o Baú no Cabeçalho (Tremor de poder)
+        const chest = document.getElementById('ig-header-chest');
+        if (chest) {
+            chest.classList.add('chest-shake');
+            chest.style.filter = 'drop-shadow(0 0 20px #f1c40f) brightness(1.5)';
+        }
+
+        // 3. Esconde o Ecrã do Mago suavemente (Fade out)
+        const magoScr = document.getElementById('ig-guardian-screen');
+        if(magoScr) {
+            magoScr.style.opacity = '0';
+        }
+
+        // Após suspense de 1.5s, o Baú Explode
+        setTimeout(() => {
+            if(magoScr) magoScr.style.display = 'none';
+
+            if (chest) {
+                chest.classList.remove('chest-shake');
+                chest.classList.add('chest-explode');
+                chest.innerText = '💎'; // Tesouro Revelado!
+            }
+
+            // Som da Explosão e Purpurina
+            try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
+            try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
+
+            // 4. Criação da Onda de Choque (Shockwave)
+            const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
+            const originX = rect.left + 20;
+            const originY = rect.top + 20;
+
+            let wave = document.createElement('div');
+            wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 50px 20px #f1c40f, inset 0 0 20px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1s ease-out forwards;`;
+            document.body.appendChild(wave);
+            setTimeout(() => wave.remove(), 1000);
+
+            // 5. Invocação de Bolas de Fogo e Estrelas
+            const coresFogo = ['#ffeb3b', '#e67e22', '#c0392b', '#ff9800'];
+            for (let i = 0; i < 40; i++) {
+                let fb = document.createElement('div');
+                fb.className = i % 2 === 0 ? 'ig-fireball' : 'ig-sparkle';
+                document.body.appendChild(fb);
+                
+                let angle = Math.random() * Math.PI * 2;
+                let velocity = (Math.random() * 300) + 200;
+                let tx = Math.cos(angle) * velocity;
+                let ty = (Math.sin(angle) * velocity) + (Math.random() * 150); // Efeito de gravidade
+                
+                fb.style.left = originX + 'px'; 
+                fb.style.top = originY + 'px';
+                fb.style.setProperty('--tx', tx + 'px'); 
+                fb.style.setProperty('--ty', ty + 'px');
+                fb.style.backgroundColor = i % 2 === 0 ? coresFogo[Math.floor(Math.random() * coresFogo.length)] : '#fff';
+                
+                setTimeout(() => fb.remove(), 1500);
+            }
+
+            // 6. Revela a Grelha de Jogos com suavidade e inicia os Relógios
+            setTimeout(() => {
+                Workspace.Ingles.tempoRestante = minutos * 60;
+                Workspace.Ingles.xpGanhosNaSessao = 0;
+                Workspace.Ingles.tempoGlobalDefinido = true;
+                
+                Workspace.Ingles.iniciarTimerGlobal();
+                Workspace.Ingles.renderizarVisualizacao(); 
+                
+                const grid = document.getElementById('ig-gamesGrid');
+                if (grid) {
+                    grid.style.opacity = '0';
+                    grid.style.transform = 'translateY(50px) scale(0.9)';
+                    requestAnimationFrame(() => {
+                        grid.style.transition = 'all 0.8s cubic-bezier(0.1, 0.8, 0.3, 1)';
+                        grid.style.opacity = '1';
+                        grid.style.transform = 'translateY(0) scale(1)';
+                    });
+                }
+            }, 800);
+
+        }, 1500); 
+    },
+
     definirTempoGlobal: (minutos) => {
-        Workspace.Ingles.tempoRestante = minutos * 60;
-        Workspace.Ingles.xpGanhosNaSessao = 0;
-        Workspace.Ingles.tempoGlobalDefinido = true;
-        Workspace.Ingles.renderizarVisualizacao(); 
+        // Redireciona a chamada velha para a nova explosão
+        Workspace.Ingles.abrirBauMagico(minutos);
     },
 
     iniciarTimerGlobal: () => {
@@ -649,99 +755,6 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ DO TOPO
-    // ============================================================================
-    abrirBauMagico: (minutos) => {
-        // 1. Desliga a voz do Mago e esconde a tela dele
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
-        document.getElementById('ig-guardian-screen').style.display = 'none';
-
-        // 2. Anima o Baú no Cabeçalho
-        const chest = document.getElementById('ig-header-chest');
-        if (chest) {
-            chest.style.animation = 'openHeaderChest 1.2s ease-in-out';
-            chest.innerText = '🎁'; // Transforma a caixa de ferramentas num Baú Aberto/Mágico!
-        }
-
-        // 3. Efeitos Sonoros Duplos (Feitiço + Fogo)
-        try { 
-            const audioMagico = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); 
-            audioMagico.volume = 1.0; audioMagico.play().catch(()=>{}); 
-        } catch(e){}
-
-        // 4. Invoca Bolas de Fogo e Purpurina a partir da posição do baú
-        const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
-        const originX = rect.left + 20;
-        const originY = rect.top + 20;
-
-        // Gerar 20 Bolas de Fogo
-        for (let i = 0; i < 20; i++) {
-            let fb = document.createElement('div');
-            fb.className = 'ig-fireball';
-            document.body.appendChild(fb);
-            
-            let angle = Math.random() * Math.PI * 2;
-            let velocity = 150 + Math.random() * 400;
-            let tx = Math.cos(angle) * velocity;
-            let ty = (Math.sin(angle) * velocity) + 200; // Maior gravidade para baixo
-            
-            fb.style.left = originX + 'px'; 
-            fb.style.top = originY + 'px';
-            fb.style.setProperty('--tx', tx + 'px'); 
-            fb.style.setProperty('--ty', ty + 'px');
-            
-            let size = (10 + Math.random() * 20) + 'px';
-            fb.style.width = size; fb.style.height = size;
-            
-            setTimeout(() => fb.remove(), 1200);
-        }
-
-        // Gerar 40 Partículas de Purpurina
-        for (let i = 0; i < 40; i++) {
-            let gl = document.createElement('div');
-            gl.className = 'ig-sparkle';
-            document.body.appendChild(gl);
-            
-            let angle = Math.random() * Math.PI * 2;
-            let velocity = 100 + Math.random() * 300;
-            
-            gl.style.left = originX + 'px'; 
-            gl.style.top = originY + 'px';
-            gl.style.setProperty('--tx', (Math.cos(angle) * velocity) + 'px'); 
-            gl.style.setProperty('--ty', ((Math.sin(angle) * velocity) + 150) + 'px');
-            
-            let size = (3 + Math.random() * 6) + 'px';
-            gl.style.width = size; gl.style.height = size;
-            
-            setTimeout(() => gl.remove(), 1500);
-        }
-
-        // 5. Após 1 segundo (tempo da explosão), revela a tela dos Jogos e ativa o Relógio!
-        setTimeout(() => {
-            if (chest) chest.style.animation = 'none'; // Reseta o CSS
-            Workspace.Ingles.tempoRestante = minutos * 60;
-            Workspace.Ingles.xpGanhosNaSessao = 0;
-            Workspace.Ingles.tempoGlobalDefinido = true;
-            
-            Workspace.Ingles.iniciarTimerGlobal();
-            Workspace.Ingles.renderizarVisualizacao(); 
-            
-            // Entrada suave da Grelha
-            const grid = document.getElementById('ig-gamesGrid');
-            if (grid) {
-                grid.style.opacity = '0';
-                grid.style.transform = 'translateY(40px)';
-                requestAnimationFrame(() => {
-                    grid.style.transition = 'all 0.6s cubic-bezier(0.1, 0.8, 0.3, 1)';
-                    grid.style.opacity = '1';
-                    grid.style.transform = 'translateY(0)';
-                });
-            }
-        }, 1100);
-    },
-
-    // ============================================================================
     // 👨‍🏫 O LABORATÓRIO DO PROFESSOR (GESTÃO DRAG & DROP DO MAGO)
     // ============================================================================
     renderProfessorTab: (tabId) => {
@@ -760,7 +773,6 @@ Workspace.Ingles = {
                     <h3>🧙‍♂️ Inteligência do Guardião (Mago IA)</h3>
                     <p style="color:#64748B;font-size:13px">Configure o comportamento do Mago e crie falas personalizadas.</p>
                     
-                    <!-- 🚀 PAINEL DE CONTROLE DE COMPORTAMENTO -->
                     <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
                         <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 14px;">⚙️ Painel de Controle de Comportamento</h4>
                         <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
@@ -780,14 +792,13 @@ Workspace.Ingles = {
                         </div>
                     </div>
 
-                    <!-- 🚀 CRIAÇÃO DE NOVAS FALAS COM BOTÃO CITAÇÃO -->
                     <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                             <label style="font-size:13px; font-weight:bold; color:#2c3e50;">Nova Fala do Mago:</label>
                             <button class="ws-btn" style="background:#8e44ad; color:white; border:none; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(142, 68, 173, 0.2);" onclick="Workspace.Ingles.inserirVariavelMago()">+ Inserir Nome (citarAluno)</button>
                         </div>
                         <div style="display:flex; gap:10px;">
-                            <input id="nwMago" class="ig-input" placeholder="Ex: Olá (citarAluno)! Preparado para hoje?">
+                            <input id="nwMago" class="ig-input" placeholder="Clique no campo de texto e adicione o código mágico...">
                             <button class="ws-btn" id="btn-salvar-mago" style="background:#4F46E5; color:white; border:none; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.addMagoPhrase()">Salvar Fala</button>
                         </div>
                     </div>
@@ -798,7 +809,7 @@ Workspace.Ingles = {
                         <div class="ig-list-item ws-mago-drag" draggable="true" data-id="${m.id}" ondragstart="Workspace.Ingles.dragStart(event)" ondragover="Workspace.Ingles.dragOver(event)" ondragleave="Workspace.Ingles.dragLeave(event)" ondrop="Workspace.Ingles.drop(event)" ondragend="Workspace.Ingles.dragEnd(event)" style="background:#fff; border: 1px solid #eee; border-left: 4px solid #4F46E5; border-radius:8px; margin-bottom:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; cursor: grab; transition: border 0.2s;">
                             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                                 <span style="font-weight:900; color:#cbd5e1; font-size:16px; width: 25px;">${index + 1}.</span>
-                                <span style="font-size:18px; color:#94a3b8; cursor:grab;">↕</span>
+                                <span style="font-size:18px; color:#94a3b8; cursor:grab;" title="Segure aqui para arrastar">↕</span>
                                 <div style="font-weight:600; color:#2c3e50; font-size:13px; flex: 1;">${Workspace.escapeHTML(m.text)}</div>
                             </div>
                             <div style="display:flex; gap: 8px;">
@@ -884,7 +895,6 @@ Workspace.Ingles = {
             }
         }
         else if (tabId === 'algoritmo') {
-            const totalCreated = state.pool.length;
             const totalProfessor = state.words.length + state.phrases.length + state.quizzes.length + state.pictures.length;
             content.innerHTML = `
                 <div class="ig-card">
@@ -931,7 +941,6 @@ Workspace.Ingles = {
         }
     },
 
-    // 🚀 LÓGICA DE CONTROLO DO MAGO
     atualizarConfigMago: async () => {
         const voz = document.getElementById('mago-voz-toggle').checked;
         const modo = document.getElementById('mago-modo-select').value;
@@ -940,7 +949,6 @@ Workspace.Ingles = {
         Workspace.mostrarAviso("Configuração de comportamento atualizada!", "success");
     },
 
-    // 🚀 LÓGICA DO DRAG & DROP DO MAGO
     dragStart: (e) => {
         e.dataTransfer.setData('text/plain', e.target.closest('.ws-mago-drag').dataset.id);
         e.dataTransfer.effectAllowed = 'move';
@@ -983,7 +991,6 @@ Workspace.Ingles = {
         document.querySelectorAll('.ws-mago-drag').forEach(node => node.style.borderTop = '1px solid #eee');
     },
 
-    // 🚀 INSERIR NOME MAGO E EDITAR
     inserirVariavelMago: () => {
         const input = document.getElementById('nwMago');
         if (!input) return;
@@ -1004,7 +1011,7 @@ Workspace.Ingles = {
         input.value = phrase.text;
         input.focus();
         btn.innerText = "Atualizar Fala";
-        btn.style.background = "#f39c12"; // Laranja para edição
+        btn.style.background = "#f39c12"; 
         
         btn.onclick = async () => {
             if(!input.value.trim()) return Workspace.mostrarAviso("A fala não pode estar vazia!", "warning");
@@ -1089,7 +1096,6 @@ Workspace.Ingles = {
         if(Workspace.Ingles.recognition) Workspace.Ingles.recognition.stop();
     },
 
-    // 🚀 O NOVO GESTOR VISUAL DE VITÓRIA E DERROTA
     sucessoGenerico: async (bonus) => {
         if (Workspace.Ingles.desafioAtualObj && Workspace.Ingles.desafioAtualObj.id) {
             Workspace.Ingles.marcarComoConcluido(Workspace.Ingles.desafioAtualObj.id);
@@ -1151,7 +1157,6 @@ Workspace.Ingles = {
         if (Workspace.Ingles.tempoRestante > 0) {
             Workspace.Ingles.renderDesafioAtual();
         } else {
-            // Se o tempo esgotou durante a janela de feedback, fecha o jogo.
             Workspace.Ingles.fecharJogo();
         }
     },
@@ -1318,9 +1323,6 @@ Workspace.Ingles = {
         };
     },
 
-    // ============================================================================
-    // 🧩 OUTROS JOGOS (Agora 100% integrados no Spaced Repetition System)
-    // ============================================================================
     renderGameWordPicker: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.wordPickers, 'picker');
         const s = Workspace.Ingles.desafioAtualObj;
@@ -1393,7 +1395,6 @@ Workspace.Ingles = {
     renderGameQuestionMaker: () => {
         const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>({ id: p.id, text: p.text }));
         
-        // Se a piscina global de alunos estiver vazia, usa uma resposta padrão forte
         const defaultAnswer = { id: 'fallback1', text: 'I go to the gym because I want to be healthy.' };
         Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : defaultAnswer;
         const a = Workspace.Ingles.desafioAtualObj;
