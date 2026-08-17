@@ -231,30 +231,38 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Masculina vs Premium)
+    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Masculina Premium em Inglês)
     // ============================================================================
-    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
+    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
-        u.lang = lang; 
+        // 🚀 Forçamos o inglês para garantir pronúncia perfeita
+        u.lang = 'en-US'; 
         
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
+        // Filtramos apenas vozes em inglês (americano ou britânico)
+        const vozesEN = voices.filter(v => v.lang.includes('en'));
+
+        // 🚀 A PROCURA CIRÚRGICA: Procura vozes masculinas (David, Mark, Alex, Daniel ou 'male') de alta qualidade
+        vozSelec = vozesEN.find(v => 
+            (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark') || v.name.toLowerCase().includes('alex') || v.name.toLowerCase().includes('daniel')) && 
+            (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))
+        ) || vozesEN.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark') || v.name.toLowerCase().includes('alex') || v.name.toLowerCase().includes('daniel')) 
+          || vozesEN.find(v => v.name.includes('Google') || v.name.includes('Natural')) 
+          || vozesEN[0] || voices[0];
+
         if (isMago) {
-            // 🧙‍♂️ O FEITIÇO DA VOZ: Lento, maduro, sem distorcer o áudio do sistema
+            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Lento e grave, mas natural
             u.pitch = 0.85; 
             u.rate = 0.85; 
-            const vozesPT = voices.filter(v => v.lang.includes('pt'));
-            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
         } else {
-            // 🇺🇸 Voz Americana Premium para os Jogos
+            // 🇺🇸 Voz normal e dinâmica para os jogos
             u.pitch = pitch;
             u.rate = rate;
-            const idiomaPrincipal = lang.split('-')[0];
-            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -731,8 +739,9 @@ Workspace.Ingles = {
         const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
         const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #f1c40f; font-weight: 900;">${primeiroNome}</strong>`);
 
-        if (config.vozAtiva) {
-            Workspace.Ingles.falar(fraseAudio, 'pt-BR', 1.0, 0.95, true);
+       if (config.vozAtiva) {
+            // 🚀 Mudamos de 'pt-BR' para 'en-US' para que o Mago leia as suas novas frases em inglês perfeito!
+            Workspace.Ingles.falar(fraseAudio, 'en-US', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
         }
