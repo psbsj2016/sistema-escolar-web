@@ -312,7 +312,6 @@ Workspace.Ingles = {
             #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: hidden; min-height: 80vh; position: relative; }
             .ig-header { background: #1a1a2e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10; position: relative;}
             .ig-title { display: flex; align-items: center; gap: 15px; }
-            .ig-title-icon { font-size: 35px; filter: drop-shadow(0 0 10px #f1c40f); }
             .ig-title h2 { font-family: 'Cinzel', serif; margin:0; font-size:26px; color:#f1c40f; text-shadow: 2px 2px 4px #000; letter-spacing: 1px;}
             .ig-title p { margin:0; font-size:12px; color:#a0a0b0; font-family: monospace; text-transform: uppercase;}
             
@@ -330,38 +329,44 @@ Workspace.Ingles = {
             .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; border: 1px solid currentColor; }
             .ig-badge-level { background: #1a1a2e; color: #f1c40f; }
             
-            /* 🚀 ANIMAÇÕES CINEMÁTICAS DO BAÚ */
-            @keyframes openHeaderChest { 0%, 100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.4) rotate(-15deg); filter: drop-shadow(0 0 20px #f1c40f); } 50% { transform: scale(1.5) rotate(15deg); filter: drop-shadow(0 0 40px #e67e22); } 75% { transform: scale(1.6) rotate(-10deg); filter: drop-shadow(0 0 60px #e74c3c); } }
+            /* 🚀 ANIMAÇÕES CINEMÁTICAS DO BAÚ DE PIXEL */
             .chest-shake { animation: chestShake 0.5s ease-in-out infinite; }
             @keyframes chestShake { 0%, 100% { transform: translate(1px, -2px) rotate(-5deg); } 50% { transform: translate(-1px, 2px) rotate(5deg); } }
-            .chest-explode { animation: chestExplode 0.8s ease-out forwards; }
-            @keyframes chestExplode { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.6); filter: brightness(2) drop-shadow(0 0 50px #f1c40f); } 100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } }
+            
+            .chest-explode { animation: chestExplode 1s ease-in forwards; }
+            @keyframes chestExplode { 
+                0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px #f1c40f); } 
+                50% { transform: scale(2.5) translateY(15px); filter: brightness(2) drop-shadow(0 0 50px #fff); } 
+                100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } 
+            }
+            
             @keyframes shockwave { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #f1c40f; } 100% { transform: translate(-50%, -50%) scale(250); opacity: 0; border: 50px solid #e67e22; } }
             .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; pointer-events: none; z-index: 9999999; animation: shootFireball 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             .ig-sparkle { position: fixed; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 10px #fff, 0 0 20px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootSparkle 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
             @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
-            /* 🧙‍♂️ CENÁRIO INICIAL (Tempo) */
+            /* 🧙‍♂️ CENÁRIO DO GUARDIÃO */
             .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
             
+            /* ✨ O SEGREDO DO PNG: mix-blend-mode apaga o fundo preto da imagem .jpg */
             img.ig-guardian-avatar { width: 180px; height: auto; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
             @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)); } }
             
             .ig-balao-fala-static { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 4px; border: 4px solid #f1c40f; box-shadow: 0 0 0 4px #000, inset 0 0 0 2px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; width: 80%; max-width: 500px; text-align: center; font-family: 'VT323', monospace; font-size: 24px; color: #fff; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; }
             .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 25px; z-index: 2; }
             
-            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (Onde o Mago fala as frases personalizadas) */
+            /* 🧙‍♂️ BANNER DO HUB DE JOGOS */
             .ig-hub-banner { display: flex; align-items: flex-start; gap: 25px; padding: 25px 35px; background: radial-gradient(circle at left, #1a0b2e 0%, #000 100%); border-radius: 8px; margin-bottom: 30px; border: 4px solid #d4af37; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(212,175,55,0.2); position: relative; overflow: hidden; }
             img.ig-hub-mago-img { width: 140px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
             
-            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 4px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: left; font-family: 'VT323', monospace; font-size: 22px; color: #fff; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-top: 15px;}
+            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 4px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: left; font-family: 'VT323', monospace; font-size: 24px; color: #fff; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-top: 15px;}
             .ig-balao-fala-hub::before { content: ''; position: absolute; top: 20px; left: -12px; border-width: 10px 12px 10px 0; border-style: solid; border-color: transparent #000 transparent transparent; z-index: 2;}
             .ig-balao-fala-hub::after { content: ''; position: absolute; top: 18px; left: -16px; border-width: 12px 16px 12px 0; border-style: solid; border-color: transparent #f1c40f transparent transparent; z-index: 1;}
             
-            /* ⏱️ RELÓGIO GLOBAL (Estilo Quest Timer) */
+            /* ⏱️ RELÓGIO GLOBAL */
             .ig-global-timer { font-family: 'VT323', monospace; font-size: 24px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px;}
 
             /* Estilos Modal e Professor */
@@ -390,10 +395,10 @@ Workspace.Ingles = {
         }
 
         container.innerHTML = `
-            <!-- 🛡️ CABEÇALHO RPG -->
+            <!-- 🛡️ CABEÇALHO RPG COM O BAÚ PIXELADO -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <div id="ig-header-chest" class="ig-title-icon" style="transition: 0.3s;">🧰</div>
+                    <img id="ig-header-chest" src="/img/bau_roxo_pixel.jpg" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" onerror="this.src='bau_roxo_pixel.jpg'" />
                     <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
                 <div class="ig-rpg-hud">
@@ -403,11 +408,11 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- ⏱️ ECRÃ DE PREPARAÇÃO (Definir o Tempo) -->
+            <!-- ⏱️ ECRÃ DE PREPARAÇÃO COM O MAGO PNG -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
-                <!-- O Mago com fundo transparente via CSS -->
-                <img src="mago_bau_ingles.jpg" class="ig-guardian-avatar" alt="Mago" />
+                
+                <img src="/img/mago_bau_ingles_2.jpg" class="ig-guardian-avatar" alt="Mago" onerror="this.src='mago_bau_ingles_2.jpg'" />
                 
                 <div class="ig-balao-fala-static">
                     <span style="color: #f1c40f;">Mestre:</span><br/>O feitiço requer o teu tempo de foco.<br/>Quantos minutos vais treinar hoje?
@@ -431,11 +436,13 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- ⚔️ ARENA DE BATALHA (Hub do Aluno com o Mago) -->
+            <!-- ⚔️ ARENA DE BATALHA COM O MAGO (Falas Personalizadas) -->
             <div id="ig-alunoView" style="display:none; padding: 30px 30px 40px 30px;">
                 <div class="ig-hub-banner">
                     <div class="ig-guardian-stars"></div>
-                    <img src="mago_bau_ingles.jpg" class="ig-hub-mago-img" alt="Mago" />
+                    
+                    <img src="/img/mago_bau_ingles_2.jpg" class="ig-hub-mago-img" alt="Mago" onerror="this.src='mago_bau_ingles_2.jpg'" />
+                    
                     <div style="flex: 1; z-index: 2;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
                         <p style="color:#cbd5e1; font-size:16px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
@@ -446,9 +453,9 @@ Workspace.Ingles = {
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
 
-            <!-- 🔒 ECRÃ DE FIM DE TEMPO -->
+            <!-- 🔒 ECRÃ DE FIM DE TEMPO (Usa o Baú) -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
-                <div style="font-size:70px; margin-bottom:10px; filter: grayscale(100%);">🧰</div>
+                <img src="/img/bau_roxo_pixel.jpg" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" onerror="this.src='bau_roxo_pixel.jpg'" />
                 <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
                 <p style="color:#64748B; margin-bottom:20px; font-size: 18px;">O Baú fechou-se magicamente. Missão Concluída!</p>
                 <div style="background:#1a1a2e; border:4px solid #d4af37; padding:25px; border-radius:8px; display:inline-block; margin-bottom:30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
@@ -487,7 +494,7 @@ Workspace.Ingles = {
         `;
     },
 
-    // 🚀 HIGIENE VISUAL ABSOLUTA
+    // 🚀 HIGIENE VISUAL ABSOLUTA 
     renderizarVisualizacao: () => {
         document.getElementById('ig-xpCount').textContent = Workspace.Ingles.state.xp;
         document.getElementById('ig-streakCount').textContent = Workspace.Ingles.state.streak;
@@ -498,9 +505,7 @@ Workspace.Ingles = {
         const chest = document.getElementById('ig-header-chest');
         if (chest) {
             chest.classList.remove('chest-shake', 'chest-explode');
-            chest.innerText = '🧰';
             chest.style.transform = 'scale(1)';
-            chest.style.filter = 'none';
         }
         
         if (!isAluno) {
@@ -538,23 +543,21 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ
+    // ✨ ANIMAÇÃO CINEMÁTICA: EXPLOSÃO MÁGICA DO BAÚ DO TOPO
     // ============================================================================
     abrirBauMagico: (minutos) => {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         if (Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
 
-        // Som de carregamento da magia
+        // Som de carregamento
         try { const a1 = new Audio('https://actions.google.com/sounds/v1/science_fiction/force_field_loop.ogg'); a1.volume = 0.5; a1.play().catch(()=>{}); setTimeout(()=>a1.pause(), 1500); } catch(e){}
 
         // Anima o Baú no Cabeçalho
         const chest = document.getElementById('ig-header-chest');
         if (chest) {
             chest.classList.add('chest-shake');
-            chest.style.filter = 'drop-shadow(0 0 20px #f1c40f) brightness(1.5)';
         }
 
-        // Esconde o Ecrã de Preparação suavemente
         const magoScr = document.getElementById('ig-guardian-screen');
         if(magoScr) magoScr.style.opacity = '0';
 
@@ -565,17 +568,16 @@ Workspace.Ingles = {
             if (chest) {
                 chest.classList.remove('chest-shake');
                 chest.classList.add('chest-explode');
-                chest.innerText = '💎'; // Tesouro Revelado!
             }
 
-            // Som da Explosão e Purpurina
+            // Som da Explosão
             try { const a2 = new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a2.volume = 0.8; a2.play().catch(()=>{}); } catch(e){}
             try { const a3 = new Audio('https://actions.google.com/sounds/v1/science_fiction/magic_sparkle.ogg'); a3.volume = 1.0; a3.play().catch(()=>{}); } catch(e){}
 
             // Onda de Choque
             const rect = chest ? chest.getBoundingClientRect() : { left: window.innerWidth / 2, top: 50 };
-            const originX = rect.left + 20;
-            const originY = rect.top + 20;
+            const originX = rect.left + 27; // Centralizado na imagem
+            const originY = rect.top + 27;
 
             let wave = document.createElement('div');
             wave.style.cssText = `position:fixed; left:${originX}px; top:${originY}px; width:10px; height:10px; border-radius:50%; box-shadow:0 0 50px 20px #f1c40f, inset 0 0 20px #fff; background:transparent; z-index:9999998; pointer-events:none; transform:translate(-50%, -50%); animation:shockwave 1s ease-out forwards;`;
@@ -716,6 +718,46 @@ Workspace.Ingles = {
                 Workspace.Ingles.digitandoAtivo = false;
             }
         }, 35); 
+    },
+
+    definirTempoGlobal: (minutos) => {
+        // Redireciona a chamada velha para a nova explosão
+        Workspace.Ingles.abrirBauMagico(minutos);
+    },
+
+    iniciarTimerGlobal: () => {
+        const display = document.getElementById('ig-global-timer-display');
+        display.style.display = 'flex';
+        Workspace.Ingles.atualizarDisplayTimerGlobal();
+
+        if (Workspace.Ingles.timerGlobal) clearInterval(Workspace.Ingles.timerGlobal);
+        
+        Workspace.Ingles.timerGlobal = setInterval(() => {
+            Workspace.Ingles.tempoRestante--;
+            Workspace.Ingles.atualizarDisplayTimerGlobal();
+            
+            if (Workspace.Ingles.tempoRestante <= 0) {
+                clearInterval(Workspace.Ingles.timerGlobal);
+                Workspace.Ingles.sessaoEncerrada = true;
+                Workspace.Ingles.fecharJogo(); 
+                try { const audio = new Audio('https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg'); audio.play().catch(()=>{}); } catch(e){}
+                Workspace.Ingles.renderizarVisualizacao();
+            }
+        }, 1000);
+    },
+
+    atualizarDisplayTimerGlobal: () => {
+        const d = document.getElementById('ig-global-timer-display');
+        if(!d) return;
+        const m = Math.floor(Workspace.Ingles.tempoRestante / 60).toString().padStart(2, '0');
+        const s = (Workspace.Ingles.tempoRestante % 60).toString().padStart(2, '0');
+        d.innerText = `⏱️ ${m}:${s}`;
+        
+        if (Workspace.Ingles.tempoRestante < 30 && Workspace.Ingles.tempoRestante > 0) { 
+            d.style.color = 'white'; d.style.background = '#e74c3c'; d.style.animation = 'pulse 1s infinite'; 
+        } else { 
+            d.style.color = '#e74c3c'; d.style.background = '#fdf2f2'; d.style.animation = 'none'; 
+        }
     },
 
     // ============================================================================
