@@ -305,74 +305,65 @@ Workspace.Ingles = {
         const style = document.createElement('style');
         style.id = 'ws-ingles-css';
         style.innerHTML = `
-            #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: hidden; min-height: 80vh; position: relative; }
-            .ig-header { background: #fff; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; }
-            .ig-title { display: flex; align-items: center; gap: 15px; }
-            .ig-title-icon { font-size: 35px; background: linear-gradient(135deg, #4F46E5, #7C3AED); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-            .ig-xp-badge { display: flex; gap: 12px; background: #0F172A; color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: bold; }
-            .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
-            .ig-game-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; }
-            .ig-game-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(79, 70, 229, 0.2); border-color: #8B5CF6; }
-            .ig-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
-            .ig-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-            .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 20px; }
-            .ig-badge-level { background: #E0E7FF; color: #4F46E5; border: 1px solid #C7D2FE; }
-            .ig-sidebar { width: 250px; background: #fff; border-right: 1px solid #E2E8F0; padding: 20px; display:flex; flex-direction:column; gap:5px; }
-            .ig-side-item { background: transparent; border: none; padding: 12px 15px; border-radius: 10px; text-align: left; font-weight: bold; color: #64748B; cursor: pointer; transition: 0.2s; }
-            .ig-side-item:hover { background: #F1F5F9; }
-            .ig-side-item.active { background: #0F172A; color: #fff; }
-            .ig-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-            .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
-            .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-            .ig-textarea { min-height: 100px; resize: vertical; }
-            .ig-word-roulette { width: 200px; height: 200px; border-radius: 50%; border: 8px solid #EEF2FF; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: radial-gradient(circle at 30% 30%, #fff, #E0E7FF); }
-            .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
-            .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
+            /* FONTES E CORES GERAIS RPG */
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=VT323&display=swap');
             
-            /* 🚀 TRANSIÇÃO CINEMÁTICA: O BAÚ MÁGICO */
-            #ig-header-chest { cursor: pointer; transform-origin: center; display: inline-block; filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.4)); }
+            #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: hidden; min-height: 80vh; position: relative; }
+            .ig-header { background: #1a1a2e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10; position: relative;}
+            .ig-title { display: flex; align-items: center; gap: 15px; }
+            .ig-title-icon { font-size: 35px; filter: drop-shadow(0 0 10px #f1c40f); }
+            .ig-title h2 { font-family: 'Cinzel', serif; margin:0; font-size:26px; color:#f1c40f; text-shadow: 2px 2px 4px #000; letter-spacing: 1px;}
+            .ig-title p { margin:0; font-size:12px; color:#a0a0b0; font-family: monospace; text-transform: uppercase;}
+            
+            /* 🛡️ HUD DE RPG (Status do Jogador) */
+            .ig-rpg-hud { display: flex; gap: 20px; background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #555; box-shadow: inset 0 0 10px #000; font-family: 'VT323', monospace; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+            .ig-hud-stat { display: flex; align-items: center; gap: 8px; }
+            .ig-hud-stat span { color: #f1c40f; }
+            
+            .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 30px; }
+            .ig-game-card { background: #fffcf0; border: 2px solid #d4af37; border-radius: 8px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1), 0 4px 6px rgba(0,0,0,0.1); }
+            .ig-game-card:hover { transform: translateY(-5px); box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.3), 0 10px 15px rgba(212, 175, 55, 0.4); border-color: #f1c40f; }
+            .ig-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
+            .ig-icon { width: 50px; height: 50px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.1); }
+            .ig-game-card h3 { font-family: 'Cinzel', serif; color: #2c3e50; font-size: 18px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px dashed #d4af37; padding-bottom: 5px; }
+            .ig-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 4px; border: 1px solid currentColor; }
+            .ig-badge-level { background: #1a1a2e; color: #f1c40f; }
+            
+            /* 🚀 ANIMAÇÕES CINEMÁTICAS */
+            @keyframes openHeaderChest { 0%, 100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.4) rotate(-15deg); filter: drop-shadow(0 0 20px #f1c40f); } 50% { transform: scale(1.5) rotate(15deg); filter: drop-shadow(0 0 40px #e67e22); } 75% { transform: scale(1.6) rotate(-10deg); filter: drop-shadow(0 0 60px #e74c3c); } }
             .chest-shake { animation: chestShake 0.5s ease-in-out infinite; }
-            @keyframes chestShake {
-                0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-5deg); }
-                20% { transform: translate(-3px, 0px) rotate(5deg); } 30% { transform: translate(3px, 2px) rotate(0deg); }
-                40% { transform: translate(1px, -1px) rotate(5deg); } 50% { transform: translate(-1px, 2px) rotate(-5deg); }
-                60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-5deg); }
-                80% { transform: translate(-1px, -1px) rotate(5deg); } 90% { transform: translate(1px, 2px) rotate(0deg); }
-                100% { transform: translate(1px, -2px) rotate(-5deg); }
-            }
+            @keyframes chestShake { 0%, 100% { transform: translate(1px, -2px) rotate(-5deg); } 50% { transform: translate(-1px, 2px) rotate(5deg); } }
             .chest-explode { animation: chestExplode 0.8s ease-out forwards; }
-            @keyframes chestExplode {
-                0% { transform: scale(1); filter: brightness(1); }
-                50% { transform: scale(1.6); filter: brightness(2) drop-shadow(0 0 50px #f1c40f); }
-                100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); }
-            }
-            @keyframes shockwave {
-                0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #f1c40f; }
-                100% { transform: translate(-50%, -50%) scale(250); opacity: 0; border: 50px solid #e67e22; }
-            }
+            @keyframes chestExplode { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.6); filter: brightness(2) drop-shadow(0 0 50px #f1c40f); } 100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } }
+            @keyframes shockwave { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #f1c40f; } 100% { transform: translate(-50%, -50%) scale(250); opacity: 0; border: 50px solid #e67e22; } }
             .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 30px currentColor; pointer-events: none; z-index: 9999999; animation: shootFireball 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             .ig-sparkle { position: fixed; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); box-shadow: 0 0 10px #fff, 0 0 20px #f1c40f; pointer-events: none; z-index: 9999999; animation: shootSparkle 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; }
             @keyframes shootFireball { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
             @keyframes shootSparkle { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(720deg); opacity: 0; } }
             
-            /* 🧙‍♂️ O NOVO REINO DO GUARDIÃO MÁGICO (Cenário RPG) */
-            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #2b1055 0%, #0f0c29 100%); overflow: hidden; border-radius: 0 0 16px 16px; }
+            /* 🧙‍♂️ CENÁRIO DO GUARDIÃO (Caixa de Texto JRPG Clássica) */
+            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
             
-            .ig-guardian-avatar { font-size: 110px; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 25px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)) drop-shadow(0 15px 15px rgba(0,0,0,0.5)); z-index: 2; }
+            .ig-guardian-avatar { font-size: 110px; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 10px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)) drop-shadow(0 15px 15px rgba(0,0,0,0.5)); z-index: 2; }
             
-            .ig-balao-fala { background: rgba(20, 15, 45, 0.85); padding: 25px 35px; border-radius: 20px; box-shadow: 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5); position: relative; max-width: 500px; text-align: center; font-size: 20px; font-weight: bold; color: #E2E8F0; min-height: 100px; display: flex; align-items: center; justify-content: center; line-height: 1.6; z-index: 2; backdrop-filter: blur(5px); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-            .ig-balao-fala::after { content: ''; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); border-width: 0 18px 18px 18px; border-style: solid; border-color: transparent transparent rgba(139, 92, 246, 0.5) transparent; z-index: 1;}
-            .ig-balao-fala::before { content: ''; position: absolute; top: -16px; left: 50%; transform: translateX(-50%); border-width: 0 16px 16px 16px; border-style: solid; border-color: transparent transparent rgba(20, 15, 45, 0.95) transparent; z-index: 2;}
+            /* CAIXA DE DIÁLOGO RETRO RPG */
+            .ig-balao-fala { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 25px 35px; border-radius: 4px; border: 4px solid #f1c40f; box-shadow: 0 0 0 4px #000, inset 0 0 0 2px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; width: 80%; max-width: 600px; text-align: left; font-family: 'VT323', monospace; font-size: 26px; color: #fff; min-height: 120px; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; }
             
-            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 35px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; z-index: 2; }
+            .ig-opcoes-tempo { display: flex; gap: 15px; margin-top: 25px; opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); pointer-events: none; z-index: 2; }
             .ig-opcoes-tempo.visivel { opacity: 1; transform: translateY(0); pointer-events: auto; }
             @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)) drop-shadow(0 25px 20px rgba(0,0,0,0.7)); } }
             
-            /* ⏱️ RELÓGIO GLOBAL */
-            .ig-global-timer { font-family: monospace; font-size: 16px; font-weight: 900; color: #e74c3c; background: #fdf2f2; padding: 6px 12px; border-radius: 20px; border: 2px solid #fadbd8; display: none; align-items: center; justify-content: center; }
+            /* ⏱️ RELÓGIO GLOBAL (Estilo Quest Timer) */
+            .ig-global-timer { font-family: 'VT323', monospace; font-size: 22px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px;}
 
+            /* Estilos Painel Professor - Ocultados da vista aluno */
+            .ig-sidebar { width: 250px; background: #fff; border-right: 1px solid #E2E8F0; padding: 20px; display:flex; flex-direction:column; gap:5px; }
+            .ig-side-item { background: transparent; border: none; padding: 12px 15px; border-radius: 10px; text-align: left; font-weight: bold; color: #64748B; cursor: pointer; transition: 0.2s; }
+            .ig-side-item.active { background: #0F172A; color: #fff; }
+            .ig-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+            .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } }
         `;
@@ -390,28 +381,33 @@ Workspace.Ingles = {
         }
 
         container.innerHTML = `
+            <!-- 🛡️ CABEÇALHO RPG -->
             <div class="ig-header">
                 <div class="ig-title">
-                    <div id="ig-header-chest" class="ig-title-icon" style="transition: 0.3s;">🧰</div>
-                    <div><h2 style="margin:0; font-size:22px; color:#0F172A;">Baú do Inglês</h2><p style="margin:0; font-size:13px; color:#64748B;">Estude de forma inteligente e adaptativa!</p></div>
+                    <div id="ig-header-chest" class="ig-title-icon" style="transition: 0.3s; cursor:pointer;" onclick="Workspace.Ingles.renderizarVisualizacao()">🧰</div>
+                    <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
-                <div class="ig-xp-badge">
+                <div class="ig-rpg-hud">
                     <div id="ig-global-timer-display" class="ig-global-timer">00:00</div>
-                    <span>🔥 <b id="ig-streakCount">1</b> dia(s)</span><span>⭐ <b id="ig-xpCount">0</b> XP</span>
+                    <div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div>
+                    <div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div>
                 </div>
             </div>
 
-            <!-- 🧙‍♂️ ECRÃ DO GUARDIÃO MÁGICO IMERSIVO -->
+            <!-- 🧙‍♂️ ECRÃ DO GUARDIÃO MÁGICO IMERSIVO (JRPG Style) -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 <div class="ig-guardian-avatar">🧙‍♂️</div>
+                
+                <!-- CAIXA DE TEXTO RETRO RPG -->
                 <div class="ig-balao-fala" id="ig-guardian-text"></div>
+                
                 <div class="ig-opcoes-tempo" id="ig-guardian-options">
-                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 16px; border: 2px solid rgba(139, 92, 246, 0.5); backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <input type="number" id="ig-tempo-escolhido" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 22px; font-weight: 900; color: #FFF; background: transparent; text-align: center; padding: 5px; outline: none; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                        <span style="font-size: 16px; font-weight: bold; color: #D8B4FE; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Minutos</span>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.8); padding: 5px 15px; border-radius: 4px; border: 2px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.8);">
+                        <input type="number" id="ig-tempo-escolhido" placeholder="Ex: 15" min="1" max="120" style="width: 80px; border: none; box-shadow: none; font-size: 26px; font-family: 'VT323', monospace; color: #f1c40f; background: transparent; text-align: center; padding: 5px; outline: none; text-shadow: 2px 2px 0 #000;">
+                        <span style="font-size: 20px; font-family: 'VT323', monospace; color: #fff; text-shadow: 2px 2px 0 #000;">MINUTOS</span>
                     </div>
-                    <button class="ws-btn" style="background: linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; font-weight:bold; border: 1px solid #34D399; padding:15px 30px; border-radius:16px; cursor:pointer; transition:0.2s; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 2px 4px rgba(255,255,255,0.3);" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 25px rgba(16, 185, 129, 0.7)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 15px rgba(16, 185, 129, 0.4)'" onclick="
+                    <button class="ws-btn" style="background: linear-gradient(180deg, #d4af37, #996515); color:#fff; font-family: 'Cinzel', serif; font-size:18px; font-weight:bold; border: 2px solid #fff; padding:10px 30px; border-radius:4px; cursor:pointer; transition:0.2s; box-shadow: 0 4px 0 #000, inset 0 2px 4px rgba(255,255,255,0.5);" onmouseover="this.style.transform='translateY(2px)'; this.style.boxShadow='0 2px 0 #000, inset 0 2px 4px rgba(255,255,255,0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 0 #000, inset 0 2px 4px rgba(255,255,255,0.5)';" onclick="
                         const campoTempo = document.getElementById('ig-tempo-escolhido');
                         const minutos = parseInt(campoTempo.value) || 0;
                         if (minutos <= 0) {
@@ -420,28 +416,29 @@ Workspace.Ingles = {
                         } else {
                             Workspace.Ingles.abrirBauMagico(minutos);
                         }
-                    ">Ativar Feitiço ✨</button>
+                    ">Aceitar Missão</button>
                 </div>
             </div>
 
-            <div id="ig-alunoView" style="display:none;">
+            <!-- GRELHA DE JOGOS DO ALUNO -->
+            <div id="ig-alunoView" style="display:none; padding-bottom: 40px;">
                 <div style="padding: 30px 30px 0 30px;">
-                    <h1 style="color:#0F172A; font-size:28px; margin:0 0 10px 0;">A tua jornada começou! ⏳</h1>
-                    <p style="color:#64748B; font-size:15px; max-width:800px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina o feitiço!</p>
+                    <h1 style="font-family: 'Cinzel', serif; color:#0F172A; font-size:32px; margin:0 0 10px 0;">A tua jornada começou! ⏳</h1>
+                    <p style="color:#64748B; font-size:16px; max-width:800px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
 
             <!-- 🔒 ECRÃ DE FIM DE TEMPO -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
-                <div style="font-size:70px; margin-bottom:10px;">🔒</div>
-                <h1 style="font-size:32px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
-                <p style="color:#64748B; margin-bottom:20px;">O Baú fechou-se magicamente. Excelente treino!</p>
-                <div style="background:#D1FAE5; border:2px solid #10B981; padding:20px; border-radius:16px; display:inline-block; margin-bottom:30px;">
-                    <div style="font-size:14px; color:#065F46; font-weight:bold; text-transform:uppercase;">XP Ganho Hoje</div>
-                    <div style="font-size:36px; font-weight:900; color:#10B981;" id="ig-timeout-xp">+0 XP ⭐</div>
+                <div style="font-size:70px; margin-bottom:10px; filter: grayscale(100%);">🧰</div>
+                <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
+                <p style="color:#64748B; margin-bottom:20px; font-size: 18px;">O Baú fechou-se magicamente. Missão Concluída!</p>
+                <div style="background:#1a1a2e; border:4px solid #d4af37; padding:25px; border-radius:8px; display:inline-block; margin-bottom:30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);">
+                    <div style="font-size:16px; color:#fff; font-family: 'VT323', monospace; text-transform:uppercase; letter-spacing: 2px;">XP Ganho Hoje</div>
+                    <div style="font-size:42px; font-family: 'VT323', monospace; color:#f1c40f; text-shadow: 2px 2px 0 #000;" id="ig-timeout-xp">+0 XP ⭐</div>
                 </div>
-                <button class="ws-btn" style="background:#0F172A; color:white; padding:12px 25px; border-radius:12px; font-weight:bold; border:none; cursor:pointer;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
+                <button class="ws-btn" style="background: linear-gradient(180deg, #d4af37, #996515); color:#fff; font-family: 'Cinzel', serif; padding:12px 35px; border-radius:4px; font-size: 18px; font-weight:bold; border: 2px solid #fff; cursor:pointer; box-shadow: 0 4px 0 #000;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
             </div>
 
             <div id="ig-professorView" style="display: none; min-height: 70vh;">
@@ -457,13 +454,13 @@ Workspace.Ingles = {
             </div>
 
             <div id="ig-gameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); z-index:1000000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
-                <div class="ws-card" style="width:90%; max-width:650px; background:white; border-radius:24px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
-                    <div style="padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center; background: #F8FAFC;">
+                <div class="ws-card" style="width:90%; max-width:650px; background:#fffcf0; border: 4px solid #d4af37; border-radius:8px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh; box-shadow:0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(212,175,55,0.2);">
+                    <div style="padding: 20px 25px; border-bottom: 2px dashed #d4af37; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.5);">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span id="ig-modalIcon" style="font-size: 24px;"></span>
-                            <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-size: 18px;"></h2>
+                            <span id="ig-modalIcon" style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></span>
+                            <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-family: 'Cinzel', serif; font-size: 22px; font-weight: bold;"></h2>
                         </div>
-                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:24px; cursor:pointer; color:#64748B;">×</button>
+                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:30px; cursor:pointer; color:#64748B; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'">×</button>
                     </div>
                     <div id="ig-modalBody" style="padding: 30px; overflow-y: auto; flex: 1;"></div>
                 </div>
