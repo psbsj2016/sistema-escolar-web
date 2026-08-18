@@ -307,7 +307,8 @@ if ('serviceWorker' in navigator) {
             return;
         }
         try {
-            const res = await fetch(`${API_BASE}/public/escola/${escolaId}`);
+            // 🚀 O SEGREDO DO CACHE-BUSTING: Traz os dados sempre atualizados em tempo real!
+            const res = await fetch(`${API_BASE}/public/escola/${escolaId}?v=${new Date().getTime()}`);
             if(!res.ok) throw new Error("Escola não encontrada");
             const dados = await res.json();
 

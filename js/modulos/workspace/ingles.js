@@ -1123,7 +1123,7 @@ Workspace.Ingles = {
         const start = input.selectionStart;
         const end = input.selectionEnd;
         const text = input.value;
-        const variable = "(citarAluno)";
+        const variable = "(citarAluno)"; "(${aluno.nome})";
         input.value = text.substring(0, start) + variable + text.substring(end);
         input.focus();
         input.selectionStart = input.selectionEnd = start + variable.length;
