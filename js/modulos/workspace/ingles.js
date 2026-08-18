@@ -231,38 +231,33 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Masculina Premium em Inglês)
+    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Inteligência Mobile/Desktop)
     // ============================================================================
-    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
+    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
         const u = new SpeechSynthesisUtterance(text); 
-        // 🚀 Forçamos o inglês para garantir pronúncia perfeita
-        u.lang = 'en-US'; 
+        u.lang = lang; 
         
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
-        // Filtramos apenas vozes em inglês (americano ou britânico)
-        const vozesEN = voices.filter(v => v.lang.includes('en'));
-
-        // 🚀 A PROCURA CIRÚRGICA: Procura vozes masculinas (David, Mark, Alex, Daniel ou 'male') de alta qualidade
-        vozSelec = vozesEN.find(v => 
-            (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark') || v.name.toLowerCase().includes('alex') || v.name.toLowerCase().includes('daniel')) && 
-            (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))
-        ) || vozesEN.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('mark') || v.name.toLowerCase().includes('alex') || v.name.toLowerCase().includes('daniel')) 
-          || vozesEN.find(v => v.name.includes('Google') || v.name.includes('Natural')) 
-          || vozesEN[0] || voices[0];
+        // 📱 DETEÇÃO DE DISPOSITIVO MÓVEL: Essencial para não quebrar motores de voz simples
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMago) {
-            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Lento e grave, mas natural
-            u.pitch = 0.85; 
-            u.rate = 0.85; 
+            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Se for mobile, mantemos o tom natural (1.0) para evitar som robótico.
+            u.pitch = isMobile ? 1.0 : 0.85; 
+            u.rate = isMobile ? 1.0 : 0.85; 
+            const vozesPT = voices.filter(v => v.lang.includes('pt'));
+            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
         } else {
-            // 🇺🇸 Voz normal e dinâmica para os jogos
+            // 🇺🇸 Voz Americana Premium para os Jogos
             u.pitch = pitch;
             u.rate = rate;
+            const idiomaPrincipal = lang.split('-')[0];
+            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -313,7 +308,7 @@ Workspace.Ingles = {
     },
 
     // ============================================================================
-    // 🎨 CSS MÁGICO (Design Imersivo e Partículas)
+    // 🎨 CSS MÁGICO (Design Imersivo, Partículas e Responsividade Mobile)
     // ============================================================================
     injetarCSS: () => {
         if(document.getElementById('ws-ingles-css')) return;
@@ -329,10 +324,10 @@ Workspace.Ingles = {
             .ig-title h2 { font-family: 'Cinzel', serif; margin:0; font-size:26px; color:#f1c40f; text-shadow: 2px 2px 4px #000; letter-spacing: 1px;}
             .ig-title p { margin:0; font-size:12px; color:#a0a0b0; font-family: monospace; text-transform: uppercase;}
             
-            /* 🛡️ HUD DE RPG (Status do Jogador) */
-            .ig-rpg-hud { display: flex; gap: 20px; background: rgba(0, 0, 0, 0.6); padding: 10px 20px; border-radius: 8px; border: 2px solid #555; box-shadow: inset 0 0 10px #000; font-family: 'VT323', monospace; color: #fff; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
-            .ig-hud-stat { display: flex; align-items: center; gap: 8px; }
-            .ig-hud-stat span { color: #f1c40f; }
+            /* 🛡️ HUD DE RPG (Status do Jogador - NOVO DESIGN) */
+            .ig-rpg-hud { display: flex; gap: 12px; background: linear-gradient(180deg, #1a1a2e 0%, #000 100%); padding: 8px 15px; border-radius: 12px; border: 2px solid #d4af37; box-shadow: inset 0 0 10px rgba(212,175,55,0.2), 0 4px 10px rgba(0,0,0,0.5); font-family: 'VT323', monospace; color: #fff; font-size: 20px; text-transform: uppercase; letter-spacing: 1px; align-items: center; }
+            .ig-hud-stat { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(212,175,55,0.3); }
+            .ig-hud-stat span { color: #f1c40f; font-weight: bold; font-size: 24px; text-shadow: 1px 1px 0 #000;}
             
             .ig-games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 0 0 30px 0; }
             .ig-game-card { background: #fffcf0; border: 2px solid #d4af37; border-radius: 8px; padding: 20px; cursor: pointer; transition: 0.3s; position: relative; box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.1), 0 4px 6px rgba(0,0,0,0.1); }
@@ -367,10 +362,11 @@ Workspace.Ingles = {
             }
             
             /* 🧙‍♂️ CENÁRIO DO GUARDIÃO */
-            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
+            .ig-guardian-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 65vh; position: relative; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); overflow: hidden; border-radius: 0 0 16px 16px; border: 4px solid #333; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); padding: 20px;}
             .ig-guardian-stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent url('data:image/svg+xml;utf8,<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="1" fill="white" opacity="0.3"/><circle cx="150" cy="80" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="180" r="1" fill="white" opacity="0.2"/></svg>') repeat; z-index: 0; animation: starDrift 60s linear infinite; }
             @keyframes starDrift { from { background-position: 0 0; } to { background-position: -1000px 500px; } }
             
+            /* ✨ O SEGREDO DO PNG: mix-blend-mode apaga o fundo preto da imagem */
             img.ig-guardian-avatar { width: 180px; height: auto; animation: flutuarMago 4s ease-in-out infinite; margin-bottom: 20px; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; }
             @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-25px); filter: drop-shadow(0 0 50px rgba(142, 68, 173, 1)); } }
             
@@ -385,8 +381,8 @@ Workspace.Ingles = {
             .ig-balao-fala-hub::before { content: ''; position: absolute; top: 20px; left: -12px; border-width: 10px 12px 10px 0; border-style: solid; border-color: transparent #000 transparent transparent; z-index: 2;}
             .ig-balao-fala-hub::after { content: ''; position: absolute; top: 18px; left: -16px; border-width: 12px 16px 12px 0; border-style: solid; border-color: transparent #f1c40f transparent transparent; z-index: 1;}
             
-            /* ⏱️ RELÓGIO GLOBAL */
-            .ig-global-timer { font-family: 'VT323', monospace; font-size: 24px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px;}
+            /* ⏱️ RELÓGIO GLOBAL (Estilo Quest Timer) */
+            .ig-global-timer { font-family: 'VT323', monospace; font-size: 24px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px dashed #ff4757;}
 
             /* Estilos Modal e Professor */
             .ig-input, .ig-textarea { width: 100%; padding: 12px 15px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; }
@@ -398,7 +394,20 @@ Workspace.Ingles = {
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             .ig-word-roulette { width: 200px; height: 200px; border-radius: 50%; border: 8px solid #EEF2FF; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: radial-gradient(circle at 30% 30%, #fff, #E0E7FF); }
             .ig-roulette-word { font-size: 26px; font-weight: 800; color: #0F172A; text-align: center; }
-            @media (max-width: 900px) { .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } .ig-side-item { white-space: nowrap; } #ig-professorView { flex-direction: column; } .ig-hub-banner { flex-direction: column; align-items: center; text-align: center; } .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: none; } }
+            
+            /* 📱 RESPONSIVIDADE PARA TELEMÓVEL: Evita cortes no HUB e organiza o layout */
+            @media (max-width: 768px) { 
+                .ig-header { flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+                .ig-title { flex-direction: column; gap: 10px; }
+                .ig-rpg-hud { width: 100%; justify-content: center; flex-wrap: wrap; gap: 10px; font-size: 16px; padding: 12px; }
+                .ig-hud-stat span { font-size: 20px; }
+                .ig-global-timer { width: 100%; margin-bottom: 5px; font-size: 28px; }
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
+                .ig-side-item { white-space: nowrap; } 
+                #ig-professorView { flex-direction: column; } 
+                .ig-hub-banner { flex-direction: column; align-items: center; text-align: center; } 
+                .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: none; } 
+            }
         `;
         document.head.appendChild(style);
     },
