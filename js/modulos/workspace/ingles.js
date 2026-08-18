@@ -131,18 +131,21 @@ Workspace.Ingles = {
             const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
             const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`, 'GET');
             
-            if (res && res.success && res.dados && res.dados.words) {
+            // 🚀 CORREÇÃO: Agora o sistema carrega os dados independentemente de haver palavras ou não!
+            if (res && res.success && res.dados) {
                 const d = res.dados;
-                Workspace.Ingles.state.words = Array.isArray(d.words) ? d.words : Workspace.Ingles.defaults.words;
-                Workspace.Ingles.state.phrases = Array.isArray(d.phrases) ? d.phrases : Workspace.Ingles.defaults.phrases;
-                Workspace.Ingles.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : Workspace.Ingles.defaults.quizzes;
-                Workspace.Ingles.state.pictures = Array.isArray(d.pictures) ? d.pictures : Workspace.Ingles.defaults.pictures;
+                Workspace.Ingles.state.words = Array.isArray(d.words) && d.words.length > 0 ? d.words : Workspace.Ingles.defaults.words;
+                Workspace.Ingles.state.phrases = Array.isArray(d.phrases) && d.phrases.length > 0 ? d.phrases : Workspace.Ingles.defaults.phrases;
+                Workspace.Ingles.state.quizzes = Array.isArray(d.quizzes) && d.quizzes.length > 0 ? d.quizzes : Workspace.Ingles.defaults.quizzes;
+                Workspace.Ingles.state.pictures = Array.isArray(d.pictures) && d.pictures.length > 0 ? d.pictures : Workspace.Ingles.defaults.pictures;
                 Workspace.Ingles.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
                 Workspace.Ingles.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 Workspace.Ingles.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
-                Workspace.Ingles.state.magoPhrases = Array.isArray(d.magoPhrases) ? d.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
-                Workspace.Ingles.state.magoConfig = d.magoConfig || Workspace.Ingles.defaults.magoConfig;
-            } else if (Workspace.Ingles.state.words.length === 0) {
+                Workspace.Ingles.state.magoPhrases = Array.isArray(d.magoPhrases) && d.magoPhrases.length > 0 ? d.magoPhrases : Workspace.Ingles.defaults.magoPhrases;
+                
+                // Salva o comportamento exato do Mago escolhido pelo Professor!
+                Workspace.Ingles.state.magoConfig = (d.magoConfig && typeof d.magoConfig === 'object') ? d.magoConfig : Workspace.Ingles.defaults.magoConfig;
+            } else {
                 Workspace.Ingles.state.words = [...Workspace.Ingles.defaults.words];
                 Workspace.Ingles.state.phrases = [...Workspace.Ingles.defaults.phrases];
                 Workspace.Ingles.state.quizzes = [...Workspace.Ingles.defaults.quizzes];
@@ -772,7 +775,7 @@ Workspace.Ingles = {
         Workspace.navegarPara('feed');
     },
 
-   iniciarFalaGuardiao: (forcarRestart = false) => {
+  iniciarFalaGuardiao: (forcarRestart = false) => {
         if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
         Workspace.Ingles.digitandoAtivo = true;
         if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
@@ -789,6 +792,7 @@ Workspace.Ingles = {
 
         let fraseBruta = "";
 
+        // 🚀 LÓGICA DE SEQUÊNCIA MÁGICA: Aqui o Mago decide que frase puxar baseado no acesso!
         if (config.modoExibicao === 'sequencial') {
             const userK = `ws_mago_acessos_${Workspace.usuario ? Workspace.usuario.id : 'default'}`;
             let acessos = parseInt(localStorage.getItem(userK) || '0');
@@ -801,39 +805,31 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
-        // 🚀 A SUA NOVA LÓGICA DE MESTRE APLICADA DE FORMA LIMPA!
-        const nomeDoAluno = Workspace.Ingles.getNomeAlunoReal(); // Chama a sua função modular
-        
-        // O Filtro Blindado criado por si
+        // 🚀 O FILTRO BLINDADO: Apanha o nome limpo para não quebrar a máquina de escrever!
         const regexCitar = /(?:\(citarAluno\)|citarAluno|\$\{aluno\.nome\}|\{\{aluno\.nome\}\})/gi;
+        const nomeDoAluno = Workspace.Ingles.getNomeAlunoReal();
 
-        // Substituição inteligente
+        // O áudio usa o nome normal, o visual usa o nome em MAIÚSCULAS para destaque RPG!
         const fraseAudio = fraseBruta.replace(regexCitar, nomeDoAluno);
-        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #f1c40f; font-weight: 900;">${nomeDoAluno}</strong>`);
+        const fraseVisual = fraseBruta.replace(regexCitar, nomeDoAluno.toUpperCase());
 
         if (config.vozAtiva) {
-            // 🚀 O Mago lê as frases em inglês perfeito com a variável já substituída
+            // Mudamos de 'pt-BR' para 'en-US' para que o Mago leia em inglês perfeito!
             Workspace.Ingles.falar(fraseAudio, 'en-US', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
         }
 
         let i = 0;
-        let isTag = false;
         let htmlAcumulado = "";
 
+        // Som de "Boing" ou bolhas ao aparecer o balão
         try { const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'); audio.volume = 0.1; audio.play().catch(()=>{}); } catch(e){}
 
+        // Máquina de Escrever Perfeita (Sem HTML quebrado)
         Workspace.Ingles.magoIntervalTimer = setInterval(() => {
-            const char = fraseVisual.charAt(i);
-
-            if (char === '<') isTag = true;
-            htmlAcumulado += char;
-            if (char === '>') isTag = false;
-
-            if (!isTag) {
-                balao.innerHTML = htmlAcumulado;
-            }
+            htmlAcumulado += fraseVisual.charAt(i);
+            balao.innerText = htmlAcumulado; // innerText é 100% à prova de balas para injeções
 
             i++;
             if (i >= fraseVisual.length) {
