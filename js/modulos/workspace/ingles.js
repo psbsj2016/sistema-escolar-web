@@ -1128,9 +1128,20 @@ Workspace.Ingles = {
 },
 
 getNomeAlunoReal: () => {
-    const nomeCompleto = Workspace.usuario?.nome || Workspace.usuario?.login || 'Aventureiro';
-    return nomeCompleto.split(' ')[0]; // só primeiro nome
-},
+        // 1. Tenta pegar o nome ou login do utilizador logado
+        const nomeCompleto = Workspace.usuario?.nome || Workspace.usuario?.login || 'Aventureiro';
+        const tipoUser = Workspace.usuario?.tipo || 'Aluno';
+        
+        // 2. Extrai apenas o primeiro nome[cite: 7]
+        let primeiroNome = nomeCompleto.split(' ')[0];
+
+        // 3. 🚀 FILTRO DE IMERSÃO: Se a conta logada se chamar "Teste", substituímos por um título digno!
+        if (primeiroNome.toLowerCase() === 'teste') {
+            primeiroNome = tipoUser === 'Aluno' ? 'Aventureiro' : 'Professor';
+        }
+
+        return primeiroNome;
+    },
 
     
 
