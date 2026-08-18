@@ -628,8 +628,29 @@ if ('serviceWorker' in navigator) {
 }
     }
 
-    // Inicia tudo
+// Inicia tudo[cite: 3, 4]
     carregarConfiguracoes();
+
+    // ============================================================================
+    // 📡 A ANTENA DE TEMPO REAL (Velocidade da Luz)[cite: 3, 4]
+    // ============================================================================
+    if (escolaId) {
+        // O navegador cria uma linha direta invisível com a rádio do servidor[cite: 3, 4]
+        const sse = new EventSource(`${API_BASE}/public/stream-matricula/${escolaId}`);
+        
+        // Fica sempre à escuta silenciosamente[cite: 3, 4]
+        sse.onmessage = (event) => {
+            try {
+                const dados = JSON.parse(event.data);
+                // Se o servidor avisar que houve mudança, chama novamente a função![cite: 3, 4]
+                if (dados.type === 'RELOAD') {
+                    console.log("⚡ Magia a atuar: Atualização em tempo real detetada!");
+                    // Como já tínhamos o Cache-Busting no fetch, o DOM vai ser redesenhado instantaneamente com as novas cores, contratos e planos[cite: 3, 4]
+                    carregarConfiguracoes(); 
+                }
+            } catch(e) {}
+        };
+    }
 </script>
 
 </body>
