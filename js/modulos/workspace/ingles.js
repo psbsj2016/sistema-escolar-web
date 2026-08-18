@@ -772,7 +772,7 @@ Workspace.Ingles = {
         Workspace.navegarPara('feed');
     },
 
-    iniciarFalaGuardiao: (forcarRestart = false) => {
+   iniciarFalaGuardiao: (forcarRestart = false) => {
         if (Workspace.Ingles.digitandoAtivo && !forcarRestart) return; 
         Workspace.Ingles.digitandoAtivo = true;
         if(Workspace.Ingles.magoIntervalTimer) clearInterval(Workspace.Ingles.magoIntervalTimer);
@@ -801,15 +801,18 @@ Workspace.Ingles = {
             fraseBruta = frasesLivres[Math.floor(Math.random() * frasesLivres.length)].text;
         }
 
-        const primeiroNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login || 'Aprendiz').split(' ')[0] : 'Aprendiz';
+        // 🚀 A SUA NOVA LÓGICA DE MESTRE APLICADA DE FORMA LIMPA!
+        const nomeDoAluno = Workspace.Ingles.getNomeAlunoReal(); // Chama a sua função modular
         
-        // 🚀 O FILTRO BLINDADO
-        const regexCitar = /[\(\[\{]?citar\s*aluno[\)\]\}]?/gi;
-        const fraseAudio = fraseBruta.replace(regexCitar, primeiroNome);
-        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #f1c40f; font-weight: 900;">${primeiroNome}</strong>`);
+        // O Filtro Blindado criado por si
+        const regexCitar = /(?:\(citarAluno\)|citarAluno|\$\{aluno\.nome\}|\{\{aluno\.nome\}\})/gi;
 
-       if (config.vozAtiva) {
-            // 🚀 Mudamos de 'pt-BR' para 'en-US' para que o Mago leia as suas novas frases em inglês perfeito!
+        // Substituição inteligente
+        const fraseAudio = fraseBruta.replace(regexCitar, nomeDoAluno);
+        const fraseVisual = fraseBruta.replace(regexCitar, `<strong style="color: #f1c40f; font-weight: 900;">${nomeDoAluno}</strong>`);
+
+        if (config.vozAtiva) {
+            // 🚀 O Mago lê as frases em inglês perfeito com a variável já substituída
             Workspace.Ingles.falar(fraseAudio, 'en-US', 1.0, 0.95, true);
         } else if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
@@ -1117,47 +1120,20 @@ Workspace.Ingles = {
         document.querySelectorAll('.ws-mago-drag').forEach(node => node.style.borderTop = '1px solid #eee');
     },
 
-  // 1. Botão + Inserir Nome - CORRIGIDO
-inserirVariavelMago: () => {
+ inserirVariavelMago: () => {
     const input = document.getElementById('nwMago');
     if (!input) return;
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    const variable = "(citarAluno)"; // Padrão único, o mais simples
+    const variable = "(citarAluno)";
     input.value = input.value.substring(0, start) + variable + input.value.substring(end);
     input.focus();
     input.selectionStart = input.selectionEnd = start + variable.length;
 },
 
-// 2. Pega o nome real de onde seu sistema já tem
 getNomeAlunoReal: () => {
-    // Seu sistema já tem o nome em Workspace.usuario.nome
     const nomeCompleto = Workspace.usuario?.nome || Workspace.usuario?.login || 'Aventureiro';
-    // Pega só o primeiro nome pra ficar natural: "Paulo Sérgio" -> "Paulo"
-    return nomeCompleto.split(' ')[0];
-},
-
-// 3. A MÁGICA - transforma o placeholder no nome
-formatarFalaMago: (texto) => {
-    const primeiroNome = Workspace.Ingles.getNomeAlunoReal();
-    // Isso aceita tanto (citarAluno) quanto ${aluno.nome} se você já digitou assim
-    const textoComNome = texto.replace(/\(citarAluno\)|\$\{aluno\.nome\}/g, primeiroNome);
-    return Workspace.escapeHTML(textoComNome);
-},
-
-// 4. Na hora de mostrar o mago, use assim:
-mostrarFalaMago: () => {
-    const frases = Workspace.Ingles.magoPhrases || [];
-    if(frases.length === 0) return;
-
-    // Seu modo aleatorio que já existe
-    const sorteada = frases[Math.floor(Math.random() * frases.length)];
-    
-    // AQUI aplica o nome
-    const textoFinal = Workspace.Ingles.formatarFalaMago(sorteada.text);
-
-    const balao = document.getElementById('ws-mago-balloon'); // ou onde você mostra
-    if(balao) balao.innerHTML = textoFinal;
+    return nomeCompleto.split(' ')[0]; // só primeiro nome
 },
 
     
