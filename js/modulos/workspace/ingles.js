@@ -472,7 +472,7 @@ Workspace.Ingles = {
                 
                 /* 🚀 3. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago Menor */
                 .ig-hub-banner { 
-                    margin: 30px; 
+                    margin: 5px; 
                     padding: 12px 12px; 
                     border-width: 2px;
                     border-radius: 12px;
