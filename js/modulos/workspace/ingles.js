@@ -233,10 +233,10 @@ Workspace.Ingles = {
         return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
     },
 
+  // ============================================================================
+    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Inteligência Premium em Inglês)
     // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Inteligência Mobile/Desktop)
-    // ============================================================================
-    falar: (text, lang='pt-BR', pitch = 1.0, rate = 0.95, isMago = false) => {
+    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
         if(!('speechSynthesis' in window)) return;
         window.speechSynthesis.cancel();
         
@@ -246,21 +246,40 @@ Workspace.Ingles = {
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
-        // 📱 DETEÇÃO DE DISPOSITIVO MÓVEL: Essencial para não quebrar motores de voz simples
+        // 📱 DETEÇÃO DE DISPOSITIVO MÓVEL: Evita distorções de áudio em TTS simples
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMago) {
-            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Se for mobile, mantemos o tom natural (1.0) para evitar som robótico.
+            // 🧙‍♂️ O FEITIÇO DA VOZ DO MAGO: Foco absoluto em vozes masculinas e imponentes
             u.pitch = isMobile ? 1.0 : 0.85; 
             u.rate = isMobile ? 1.0 : 0.85; 
-            const vozesPT = voices.filter(v => v.lang.includes('pt'));
-            vozSelec = vozesPT.find(v => v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('masculino')) || vozesPT[0];
+            
+            // Procura vozes do idioma solicitado (agora en-US)
+            const vozesIdioma = voices.filter(v => v.lang.includes(lang.split('-')[0]));
+            
+            // Prioriza nomes de motores TTS masculinos conhecidos
+            vozSelec = vozesIdioma.find(v => 
+                v.name.toLowerCase().includes('male') || 
+                v.name.toLowerCase().includes('david') || 
+                v.name.toLowerCase().includes('mark') ||
+                v.name.toLowerCase().includes('george') ||
+                v.name.toLowerCase().includes('arthur')
+            ) || vozesIdioma[0];
+            
         } else {
-            // 🇺🇸 Voz Americana Premium para os Jogos
+            // 🇺🇸 ÁUDIO DOS JOGOS: Foco em vozes Premium, fluidas e naturais
             u.pitch = pitch;
             u.rate = rate;
-            const idiomaPrincipal = lang.split('-')[0];
-            vozSelec = voices.find(v => v.lang.includes(idiomaPrincipal) && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) || voices.find(v => v.lang.includes(idiomaPrincipal)) || voices.find(v => v.lang.includes('en')) || voices[0];
+            const vozesIdioma = voices.filter(v => v.lang.includes(lang.split('-')[0]));
+            
+            // Caça especificamente a Google US English ou versões Premium
+            vozSelec = vozesIdioma.find(v => 
+                v.name.includes('Google US English') || 
+                v.name.includes('Google UK English Female') ||
+                v.name.includes('Google') || 
+                v.name.includes('Natural') || 
+                v.name.includes('Premium')
+            ) || vozesIdioma[0] || voices.find(v => v.lang.includes('en')) || voices[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
