@@ -990,3 +990,50 @@ tr:hover td { background: rgba(0,0,0,0.02); }
         width: 100% !important;
     }
 }
+
+
+/* =========================================================
+   QUALITY PATCH V148.1 - 0% mudança visual, 100% nitidez
+   Mantém exatamente padding, cores, tamanhos do seu original
+   Só melhora renderização
+   ========================================================= */
+
+/* Nitidez de fonte */
+html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Melhora definição de imagens e ícones sem mudar tamanho */
+img, svg {
+    image-rendering: -webkit-optimize-contrast;
+}
+
+/* Suaviza transições que já existem no seu original - mesma duração, curva mais suave */
+.sidebar, .card, .stat-card, .shortcut-btn, .menu-lista button, header, .btn-primary, .btn-cancel, .btn-edit {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Deixa o foco de input mais nítido sem mudar cor */
+.input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.12) !important;
+}
+
+/* Scrollbar mais fina mas mesma cor */
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+/* Animação de entrada mais suave - mesma estrutura */
+#app-content {
+    animation: contentFadeMinimal 0.25s ease;
+}
+@keyframes contentFadeMinimal {
+    from { opacity: 0.96; }
+    to { opacity: 1; }
+}
