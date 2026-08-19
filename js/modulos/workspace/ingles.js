@@ -67,9 +67,9 @@ Workspace.Ingles = {
     defaults: {
         magoConfig: { vozAtiva: true, modoExibicao: 'aleatorio' },
         magoPhrases: [
-            { id: 'm1', text: 'Saudações, (citarAluno)! 🎓 O conhecimento é o maior dos tesouros. Que os teus reflexos sejam rápidos!' },
-            { id: 'm2', text: 'Bem-vindo à tua provação, (citarAluno)! Sinto uma aura de sabedoria à tua volta. 🧙‍♂️' },
-            { id: 'm3', text: 'Os segredos da magia aguardam, (citarAluno). 🗝️ Escolhe o teu primeiro desafio!' }
+            { id: 'm1', text: 'Let us go!' },
+            { id: 'm2', text: 'Welcome again!' },
+            { id: 'm3', text: 'Choose one!' }
         ],
         words: [
             {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
@@ -1482,7 +1482,7 @@ getNomeAlunoReal: () => {
     
     renderGameWordSpark: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.words, 'word');
-        // 🚀 BLOQUEIO DE FIM DE JORNADA
+        // 🚀 BLOQUEIO DE FIM DE JORNADA (Aqui o jogo termina naturalmente)
         if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const w = Workspace.Ingles.desafioAtualObj;
         
@@ -1501,6 +1501,8 @@ getNomeAlunoReal: () => {
                     Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id);
                     Workspace.Ingles.envioAoProfessor('wordSpark', txt, 50);
                 }
+                // 🔄 LOOP CONTÍNUO: Aguarda 1.5s e carrega o próximo conteúdo
+                setTimeout(() => Workspace.Ingles.renderGameWordSpark(), 1500);
             ">Lançar Feitiço ✨</button>
         `;
     },
@@ -1517,10 +1519,11 @@ getNomeAlunoReal: () => {
             </div>
             <div style="text-align: center; margin-top: 20px; background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0;">
                 <p style="font-size:13px; color:#333; font-weight:bold;">Sua vez. A Magia analisará a tua voz:</p>
-                <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', Workspace.Ingles.desafioAtualObj, 'phrase')">🎤 Iniciar Sopro</button>
+                <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer; margin-top:10px;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${p.phrase.replace(/'/g,"\\'")}', Workspace.Ingles.desafioAtualObj, 'phrase', 'renderGameReadAloud')">🎤 Iniciar Sopro</button>
                 <div id="ig-speechResult" style="margin-top:15px;"></div>
             </div>
         `;
+        // Nota: O Loop contínuo desta tela foi adicionado na função iniciarReconhecimentoDeVoz (abaixo)
     },
 
     renderGameListenType: () => {
@@ -1546,6 +1549,8 @@ getNomeAlunoReal: () => {
                         Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'phrase');
                         Workspace.Ingles.falhaGenerica();
                     }
+                    // 🔄 LOOP CONTÍNUO
+                    setTimeout(() => Workspace.Ingles.renderGameListenType(), 1500);
                 ">Desvendar</button>
             </div>
         `;
@@ -1568,6 +1573,8 @@ getNomeAlunoReal: () => {
                         Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'quiz');
                         Workspace.Ingles.falhaGenerica();
                     }
+                    // 🔄 LOOP CONTÍNUO
+                    setTimeout(() => Workspace.Ingles.renderGameQuiz(), 1500);
                 ">${o}</button>`).join('')}
             </div>
         `;
@@ -1583,7 +1590,7 @@ getNomeAlunoReal: () => {
                 <div style="width:150px; height:150px; border-radius:24px; background:#F8FAFC; border:4px solid #d4af37; display:flex; align-items:center; justify-content:center; margin:20px auto; font-size:80px; box-shadow: inset 0 0 20px rgba(212,175,55,0.3);">${pic.emoji}</div>
                 <div style="margin-top:25px; background:#0F172A; padding:20px; border-radius:16px; border:2px solid #333;">
                     <p style="color:white; font-size:14px; font-weight:bold; margin-bottom:15px;">Fale o nome exato:</p>
-                    <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', Workspace.Ingles.desafioAtualObj, 'picture')">🎤 Falar Nome</button>
+                    <button id="ig-btnVoz" class="ws-btn" style="background:linear-gradient(135deg, #10B981, #059669); color:white; font-size:16px; width:100%; border-radius:30px; padding:12px; border:none; font-weight:bold; cursor:pointer;" onclick="Workspace.Ingles.iniciarReconhecimentoDeVoz('${pic.word}', Workspace.Ingles.desafioAtualObj, 'picture', 'renderGamePicturePop')">🎤 Falar Nome</button>
                     <div id="ig-speechResult" style="margin-top:15px;"></div>
                     
                     <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
@@ -1597,6 +1604,8 @@ getNomeAlunoReal: () => {
                                 Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'picture');
                                 Workspace.Ingles.falhaGenerica();
                             }
+                            // 🔄 LOOP CONTÍNUO
+                            setTimeout(() => Workspace.Ingles.renderGamePicturePop(), 1500);
                         ">Verificar Visão</button>
                     </div>
                 </div>
@@ -1604,8 +1613,9 @@ getNomeAlunoReal: () => {
         `;
     },
 
-    // 🚀 MOTOR DE INTELIGÊNCIA ARTIFICIAL PARA VOZ
-    iniciarReconhecimentoDeVoz: (esperado, itemObj, tipoConteudo) => {
+    // 🚀 MOTOR DE INTELIGÊNCIA ARTIFICIAL PARA VOZ (Atualizado para receber a função de retorno)
+    // Adicionada a variável nomeDaFuncaoRetorno para saber para qual jogo voltar!
+    iniciarReconhecimentoDeVoz: (esperado, itemObj, tipoConteudo, nomeDaFuncaoRetorno) => {
         const btn = document.getElementById('ig-btnVoz');
         const resEl = document.getElementById('ig-speechResult');
         
@@ -1630,11 +1640,15 @@ getNomeAlunoReal: () => {
             if(sim >= 0.75) {
                 resEl.innerHTML = `<div style="background:#D1FAE5; color:#065F46; padding:10px; border-radius:8px; font-weight:bold;">✅ Magia Perfeita!</div>`;
                 if (itemObj) Workspace.Ingles.superarErro(itemObj.id);
-                setTimeout(() => Workspace.Ingles.sucessoGenerico(75), 1000);
+                Workspace.Ingles.sucessoGenerico(75);
             } else {
                 resEl.innerHTML = `<div style="background:#FEE2E2; color:#B91C1C; padding:10px; border-radius:8px; font-weight:bold;">❌ O Mestre entendeu: "${falado}"</div>`;
                 if (itemObj) Workspace.Ingles.registrarErro(itemObj, tipoConteudo);
-                setTimeout(() => Workspace.Ingles.falhaGenerica(), 1500);
+                Workspace.Ingles.falhaGenerica();
+            }
+            // 🔄 LOOP CONTÍNUO: Chama o jogo que enviou a solicitação de voz dinamicamente após 2.5s
+            if (nomeDaFuncaoRetorno && typeof Workspace.Ingles[nomeDaFuncaoRetorno] === 'function') {
+                setTimeout(() => Workspace.Ingles[nomeDaFuncaoRetorno](), 2500);
             }
         };
 
@@ -1660,6 +1674,8 @@ getNomeAlunoReal: () => {
                         Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'picker'); 
                         Workspace.Ingles.falhaGenerica(); 
                     }
+                    // 🔄 LOOP CONTÍNUO
+                    setTimeout(() => Workspace.Ingles.renderGameWordPicker(), 1500);
                 ">${o}</button>`).join('')}
             </div>
         `;
@@ -1680,10 +1696,14 @@ getNomeAlunoReal: () => {
                         <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:18px; padding:12px 30px; border-radius:8px; cursor:pointer; border:none;" onclick="
                             if('${pair.a}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
                             else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
+                            // 🔄 LOOP CONTÍNUO
+                            setTimeout(() => Workspace.Ingles.renderGameMinimalPairs(), 1500);
                         ">${pair.a}</button>
                         <button class="ws-btn" style="background:white; color:#0F172A; font-weight:bold; font-size:18px; padding:12px 30px; border-radius:8px; cursor:pointer; border:none;" onclick="
                             if('${pair.b}' === '${target}') { Workspace.Ingles.superarErro(Workspace.Ingles.desafioAtualObj.id); Workspace.Ingles.sucessoGenerico(75); } 
                             else { Workspace.Ingles.registrarErro(Workspace.Ingles.desafioAtualObj, 'minimal'); Workspace.Ingles.falhaGenerica(); }
+                            // 🔄 LOOP CONTÍNUO
+                            setTimeout(() => Workspace.Ingles.renderGameMinimalPairs(), 1500);
                         ">${pair.b}</button>
                     </div>
                 </div>
@@ -1701,7 +1721,11 @@ getNomeAlunoReal: () => {
             <div style="text-align:center"><span class="ig-badge" style="background:#0F172A; color:white; padding:8px 15px; font-size:14px;">🎯 Missão: ${task}</span></div>
             <div class="ig-big-phrase" style="margin-top:15px; font-size:20px; font-family:'Cinzel', serif;">${phrase.phrase}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua frase aqui..."></textarea>
-            <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('sentenceShuffle', document.getElementById('ig-input').value, 50)">Submeter 🔀</button>
+            <button class="ws-btn" style="width:100%; background:linear-gradient(135deg, #4F46E5, #3730A3); color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="
+                Workspace.Ingles.envioAoProfessor('sentenceShuffle', document.getElementById('ig-input').value, 50);
+                // 🔄 LOOP CONTÍNUO
+                setTimeout(() => Workspace.Ingles.renderGameSentenceShuffle(), 1500);
+            ">Submeter 🔀</button>
         `;
     },
 
@@ -1713,14 +1737,17 @@ getNomeAlunoReal: () => {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#d4af37; color:#92400E; font-family:'Cinzel', serif;">❓ ${q.text}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="A tua resposta em inglês..."></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(180deg, #d4af37, #996515); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('answerQuest', document.getElementById('ig-input').value, 50)">Enviar para o Mestre 🚀</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(180deg, #d4af37, #996515); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="
+                Workspace.Ingles.envioAoProfessor('answerQuest', document.getElementById('ig-input').value, 50);
+                // 🔄 LOOP CONTÍNUO
+                setTimeout(() => Workspace.Ingles.renderGameAnswerQuest(), 1500);
+            ">Enviar para o Mestre 🚀</button>
         `;
     },
 
     renderGameQuestionMaker: () => {
         const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>({ id: p.id, text: p.text }));
         
-        // Se a piscina de respostas não tiver nada ou já foi toda respondida, mostra o fim da jornada
         Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : null;
         if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
 
@@ -1735,6 +1762,8 @@ getNomeAlunoReal: () => {
                 const v = document.getElementById('ig-input').value.trim();
                 if(v.includes('?') && v.split(' ').length >= 3) { 
                     Workspace.Ingles.envioAoProfessor('questionMaker', v, 50); 
+                    // 🔄 LOOP CONTÍNUO
+                    setTimeout(() => Workspace.Ingles.renderGameQuestionMaker(), 1500);
                 } else { 
                     Workspace.mostrarAviso('Atenção: A tua pergunta tem de conter (?) e pelo menos 3 palavras!', 'error'); 
                 }
@@ -1751,7 +1780,11 @@ getNomeAlunoReal: () => {
             <div class="ig-big-phrase" style="font-family:'Cinzel', serif; font-size:22px; text-align:left;">${c.title}<br><br><span style="font-size:16px;font-weight:bold;color:#64748B;font-family:sans-serif;">${c.prompt}</span></div>
             <p style="font-size:14px;background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:bold;">💡 Dica de Mestre: ${c.tip}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?..."></textarea>
-            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(135deg, #10B981, #059669); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60)">Assumir Papel 🎭</button>
+            <button class="ws-btn" style="width:100%; margin-top:15px; background:linear-gradient(135deg, #10B981, #059669); color:white; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="
+                Workspace.Ingles.envioAoProfessor('contextRole', document.getElementById('ig-input').value, 60);
+                // 🔄 LOOP CONTÍNUO
+                setTimeout(() => Workspace.Ingles.renderGameContextRole(), 1500);
+            ">Assumir Papel 🎭</button>
         `;
     },
 
@@ -1763,7 +1796,11 @@ getNomeAlunoReal: () => {
         document.getElementById('ig-modalBody').innerHTML = `
             <div class="ig-big-phrase" style="font-family:'Cinzel', serif; font-size:22px;">🤖 Duelo de Mentes<br><br><span style="font-size:18px;color:#4F46E5;font-family:sans-serif;font-weight:bold;">${topic.topic}</span></div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Defende a tua posição..."></textarea>
-            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75)">Contra-Atacar ⚔️</button>
+            <button class="ws-btn" style="width:100%; background:#0F172A; color:white; margin-top:15px; border:none; padding:15px; border-radius:8px; font-weight:bold; font-size:16px; cursor:pointer;" onclick="
+                Workspace.Ingles.envioAoProfessor('debateAI', document.getElementById('ig-input').value, 75);
+                // 🔄 LOOP CONTÍNUO
+                setTimeout(() => Workspace.Ingles.renderGameDebateAI(), 1500);
+            ">Contra-Atacar ⚔️</button>
         `;
     }
 };
