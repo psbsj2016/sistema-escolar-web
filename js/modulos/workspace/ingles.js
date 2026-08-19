@@ -623,15 +623,25 @@ falar: (text, lang='en-US', pitch=1.0, rate=0.95, isMago=false) => {
                 <div id="ig-tab-content" style="flex:1; padding:30px; background:#F8FAFC;"></div>
             </div>
 
+          <!-- ⚔️ MODAL DE JOGOS (Com Novo Botão de Troca) -->
             <div id="ig-gameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); z-index:1000000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
                 <div class="ws-card" style="width:90%; max-width:650px; background:#fffcf0; border: 4px solid #d4af37; border-radius:8px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh; box-shadow:0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(212,175,55,0.2);">
-                    <div style="padding: 20px 25px; border-bottom: 2px dashed #d4af37; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.5);">
+                    
+                    <!-- CABEÇALHO DO JOGO RESPONSIVO -->
+                    <div style="padding: 15px 20px; border-bottom: 2px dashed #d4af37; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.5);">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span id="ig-modalIcon" style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></span>
-                            <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-family: 'Cinzel', serif; font-size: 22px; font-weight: bold;"></h2>
+                            <h2 id="ig-modalTitle" style="margin: 0; color: #0F172A; font-family: 'Cinzel', serif; font-size: 20px; font-weight: bold;"></h2>
                         </div>
-                        <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:30px; cursor:pointer; color:#64748B; transition: 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#64748B'">×</button>
+                        
+                        <!-- 🚀 BOTÕES DE AÇÃO -->
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <button onclick="Workspace.Ingles.abrirMiniHub()" style="background: #0F172A; color: #fff; border: 2px solid #d4af37; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🔄 Mudar de Jogo</button>
+                            
+                            <button onclick="Workspace.Ingles.fecharJogo()" style="background:transparent; border:none; font-size:35px; cursor:pointer; color:#e74c3c; transition: 0.2s; display: flex; align-items: center; justify-content: center; height: 35px; width: 35px; border-radius: 50%;" onmouseover="this.style.background='rgba(231,76,60,0.1)'" onmouseout="this.style.background='transparent'">×</button>
+                        </div>
                     </div>
+                    
                     <div id="ig-modalBody" style="padding: 30px; overflow-y: auto; flex: 1;"></div>
                 </div>
             </div>
@@ -1337,6 +1347,34 @@ getNomeAlunoReal: () => {
         Workspace.Ingles.currentAudioURL = null;
         
         Workspace.Ingles.renderDesafioAtual();
+    },
+
+    // 🚀 NOVO: O MINI-MAPA DE JOGOS SOBREPOSTO
+    abrirMiniHub: () => {
+        // Pausa qualquer gravação que estivesse a ocorrer
+        if(Workspace.Ingles.mediaRecorder && Workspace.Ingles.mediaRecorder.state === 'recording') Workspace.Ingles.mediaRecorder.stop();
+        if(Workspace.Ingles.recognition) Workspace.Ingles.recognition.stop();
+        
+        document.getElementById('ig-modalIcon').textContent = '🗺️';
+        document.getElementById('ig-modalTitle').textContent = 'Mapa de Missões';
+        
+        const body = document.getElementById('ig-modalBody');
+        body.innerHTML = `
+            <div style="text-align: center; margin-bottom: 25px;">
+                <p style="color: #64748B; font-size: 15px; margin: 0; font-weight: bold;">A magia não para. Seleciona a tua próxima área de treino!</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;">
+                ${Workspace.Ingles.defaults.games.map(g => `
+                    <div onclick="Workspace.Ingles.abrirJogo('${g.id}')" style="background: ${g.color}; padding: 15px; border-radius: 12px; cursor: pointer; border: 2px solid rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#d4af37'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.borderColor='rgba(0,0,0,0.05)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)'">
+                        <div style="font-size: 32px; background: rgba(255,255,255,0.6); width: 55px; height: 55px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">${g.icon}</div>
+                        <div>
+                            <h4 style="margin: 0; font-family: 'Cinzel', serif; font-size: 13px; color: #1E293B; font-weight: bold;">${g.title}</h4>
+                            <div style="font-size: 10px; font-weight: bold; background: rgba(255,255,255,0.6); padding: 2px 8px; border-radius: 4px; color: #475569; display: inline-block; margin-top: 6px;">${g.level}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     },
 
     fecharJogo: () => {
