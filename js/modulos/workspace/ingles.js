@@ -398,7 +398,7 @@ Workspace.Ingles = {
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
-            /* 📱 RESPONSIVIDADE MAXIMIZADA PARA TELEMÓVEL (Sem Scroll Vertical) */
+            /* 📱 RESPONSIVIDADE MAXIMIZADA PARA TELEMÓVEL (Distribuição Espacial) */
             @media (max-width: 768px) { 
                 .ig-header { flex-direction: column; gap: 10px; text-align: center; padding: 15px; }
                 .ig-title { flex-direction: column; gap: 5px; }
@@ -406,14 +406,14 @@ Workspace.Ingles = {
                 .ig-hud-stat span { font-size: 18px; }
                 .ig-global-timer { width: 100%; margin-bottom: 5px; font-size: 24px; }
                 
-                /* Ecrã Inicial muito mais compacto */
-                .ig-guardian-container { min-height: auto; padding: 25px 10px; }
-                .ig-prep-layout { flex-direction: row; gap: 12px; margin-bottom: 15px; }
+                /* 🚀 O SEGREDO DO ESPAÇAMENTO: O cenário escuro agora ocupa 65% da tela e afasta os itens */
+                .ig-guardian-container { min-height: 65vh; padding: 40px 15px 30px 15px; justify-content: space-around; }
+                .ig-prep-layout { flex-direction: row; gap: 12px; margin-bottom: 0; }
                 img.ig-guardian-avatar { width: 90px; }
                 .ig-balao-fala-static { font-size: 18px; padding: 12px 15px; }
                 
-                /* O Segredo para o Botão e Minutos caberem Lado a Lado no telemóvel */
-                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 8px; margin-top: 5px; width: 100%; max-width: 350px;}
+                /* O Botão e Minutos são empurrados para baixo de forma equilibrada */
+                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 10px; margin-top: 20px; width: 100%; max-width: 350px;}
                 
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
                 .ig-side-item { white-space: nowrap; } 
