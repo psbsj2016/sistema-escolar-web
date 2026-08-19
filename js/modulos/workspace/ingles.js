@@ -347,16 +347,16 @@ Workspace.Ingles = {
             /* FONTES E CORES GERAIS RPG */
             @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=VT323&display=swap');
             
-            /* 🚀 OVERFLOW VISIBLE para o baú explodir por cima de tudo */
-            #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: visible; min-height: 80vh; position: relative; }
+            /* 🚀 OVERFLOW VISIBLE + FLEXBOX: A caixa agora é uma coluna elástica */
+            #ws-ingles-container { background: #F8FAFC; border-radius: 16px; overflow: visible; min-height: 80vh; position: relative; display: flex; flex-direction: column; }
             
-            /* Z-INDEX COLOSSAL NO HEADER */
-            .ig-header { background: #1a1a2e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999999; position: relative;}
+            /* 🚀 HEADER STICKY: Fica eternamente colado ao topo, inabalável perante o teclado! */
+            .ig-header { background: #1a1a2e; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #f1c40f; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999999; position: sticky; top: 0;}
             
             .ig-title { display: flex; align-items: center; gap: 20px; }
             .ig-title-text { display: flex; flex-direction: column; text-align: left; }
-            .ig-title h2 { font-family: 'Cinzel', serif; margin:0; font-size:26px; color:#f1c40f; text-shadow: 2px 2px 4px #000; letter-spacing: 1px;}
-            .ig-title p { margin:0; font-size:12px; color:#a0a0b0; font-family: monospace; text-transform: uppercase;}
+            .ig-title-text h2 { font-family: 'Cinzel', serif; margin:0; font-size:26px; color:#f1c40f; text-shadow: 2px 2px 4px #000; letter-spacing: 1px;}
+            .ig-title-text p { margin:0; font-size:12px; color:#a0a0b0; font-family: monospace; text-transform: uppercase;}
             
             /* Tamanho base do Baú */
             .ig-bau-topo { width: 65px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f); }
@@ -408,12 +408,14 @@ Workspace.Ingles = {
             
             .ig-opcoes-tempo { display: flex; gap: 15px; align-items: stretch; justify-content: center; z-index: 2; }
             
-            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (PARTE INTERNA) */
+            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (A PARTE INTERNA) */
             .ig-hub-banner { padding: 25px 35px; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); border-radius: 8px; margin-bottom: 30px; border: 4px solid #d4af37; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(212,175,55,0.2); position: relative; overflow: hidden; }
             img.ig-hub-mago-img { width: 140px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; flex-shrink: 0;}
             
-            /* 💬 BALÃO DA PARTE INTERNA (SETA PARA BAIXO) */
-            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 12px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: center; font-family: 'VT323', monospace; font-size: 22px; color: #fff; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-bottom: 15px;}
+            /* 💬 BALÃO DA PARTE INTERNA COM FORMATO DE CHAT PARA BAIXO */
+            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 12px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: center; font-family: 'VT323', monospace; font-size: 22px; color: #fff; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-bottom: 20px;}
+            
+            /* Seta Apontando para Baixo (na direção do Mago) */
             .ig-balao-fala-hub::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0 15px; border-style: solid; border-color: #f1c40f transparent transparent transparent; z-index: 1;}
             .ig-balao-fala-hub::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0 12px; border-style: solid; border-color: #000 transparent transparent transparent; z-index: 2;}
             
@@ -429,23 +431,29 @@ Workspace.Ingles = {
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
-            /* 📱 RESPONSIVIDADE CIRÚRGICA PARA TELEMÓVEL */
+            /* 📱 RESPONSIVIDADE ESTRITA PARA O TELEMÓVEL */
             @media (max-width: 768px) { 
-                /* 1. Cabeçalho (Baú Maior à ESQUERDA do título) */
+                /* O contentor base passa a ter altura total para preencher a tela inteira orgânicamente */
+                #ws-ingles-container { min-height: 100vh; border-radius: 0; }
+                
+                /* 1. Cabeçalho HUD: Baú à esquerda maior e Itens Lado a Lado */
                 .ig-header { flex-direction: column; gap: 12px; padding: 15px; }
                 .ig-title { flex-direction: row; gap: 15px; align-items: center; justify-content: center; width: 100%; }
-                .ig-bau-topo { width: 100px; } /* Baú Maior */
-                .ig-title-text h2 { font-size: 22px; }
+                .ig-bau-topo { width: 100px !important; } /* Baú bastante maior */
+                .ig-title-text { text-align: left; }
+                .ig-title-text h2 { font-size: 22px; margin-bottom: 2px;}
+                .ig-title-text p { font-size: 10px; margin: 0;}
                 
-                /* 2. HUD Numa Só Linha (Timer, Fogo e Estrela lado a lado) */
+                /* HUD com Timer, Fogo e Estrela na mesma linha */
                 .ig-rpg-hud { flex-direction: row; width: 100%; justify-content: center; flex-wrap: nowrap; gap: 6px; padding: 5px; background: transparent; border: none; box-shadow: none; }
                 .ig-global-timer { width: auto; margin-bottom: 0; font-size: 15px; padding: 6px 10px; flex: 1; }
                 .ig-hud-stat { font-size: 11px; padding: 6px 8px; flex: 1; justify-content: center; background: rgba(0,0,0,0.6); border: 1px solid rgba(212,175,55,0.4); }
                 .ig-hud-stat span { font-size: 16px; }
                 
-                /* 🚀 3. TELA INICIAL: Fundo completo sem barra branca e sem scroll (calc) */
+                /* 🚀 2. TELA INICIAL (FLEX 1): O Fundo preenche o espaço automaticamente, aproximando o Mago do HUD e imune ao salto do teclado */
                 .ig-guardian-container { 
-                    height: calc(100vh - 145px); 
+                    flex: 1; 
+                    min-height: 60vh; 
                     padding: 20px 15px; 
                     justify-content: center; 
                     border-radius: 0; 
@@ -457,24 +465,24 @@ Workspace.Ingles = {
                 .ig-balao-fala-static { font-size: 16px; padding: 12px 15px; }
                 .ig-opcoes-tempo { flex-wrap: nowrap; gap: 8px; margin-top: 10px; width: 100%; max-width: 350px;}
                 
-                /* 🚀 4. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago pequeno */
+                /* 🚀 3. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago Menor */
                 .ig-hub-banner { 
-                    margin: 18px; /* Margem nos 4 lados */
+                    margin: 15px; 
                     padding: 15px 12px; 
                     border-width: 2px;
                     border-radius: 12px;
                     display: flex;
-                    flex-direction: column; /* Força empilhamento: Balão em cima, Mago embaixo */
+                    flex-direction: column; 
                     align-items: center;
                     text-align: center;
                 }
                 .ig-hub-banner h1 { font-size: 20px; margin-bottom: 5px; }
-                .ig-hub-banner p { display: none; } /* Esconde texto secundário para poupar espaço vertical */
+                .ig-hub-banner p { display: none; } 
                 
                 .ig-balao-fala-hub { font-size: 16px; padding: 10px; margin-bottom: 15px !important; margin-top: 0;}
                 .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: block !important; } 
                 
-                img.ig-hub-mago-img { width: 75px; margin-top: 5px; } /* Mago bastante reduzido */
+                img.ig-hub-mago-img { width: 75px !important; margin-top: 5px;} 
                 
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
                 .ig-side-item { white-space: nowrap; } 
