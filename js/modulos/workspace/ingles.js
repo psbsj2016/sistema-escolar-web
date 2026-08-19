@@ -1,6 +1,46 @@
 // js/modulos/workspace/ingles.js
 window.Workspace = window.Workspace || {};
 
+let VOZ_MASC_CACHE = null;
+function acharVozMasculina() {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+
+    const listaMacho = ['david','mark','daniel','alex','fred','aaron','arthur','oliver','guy','james','thomas','microsoft','google uk english male','male'];
+    const listaFemea = ['female','samantha','zira','karen','victoria','tessa','moira','siri','veena','fiona','susan','heather','zira'];
+
+    const ingles = voices.filter(v => v.lang.toLowerCase().startsWith('en'));
+
+    // 1º: só pega quem tem nome de macho
+    let machos = ingles.filter(v => {
+        const id = (v.name + " " + v.voiceURI).toLowerCase();
+        if (listaFemea.some(f => id.includes(f))) return false;
+        return listaMacho.some(m => id.includes(m));
+    });
+
+    // Se não achou nenhum macho, retorna null (vamos forçar no pitch)
+    if (!machos.length) return null;
+
+    machos.sort((a,b) => {
+        const score = (v) => {
+            const id = (v.name + " " + v.voiceURI).toLowerCase();
+            if (id.includes('david')) return 1000; // PC
+            if (id.includes('daniel')) return 950; // iPhone
+            if (id.includes('google uk english male')) return 900; // Android
+            if (id.includes('mark')) return 850;
+            if (id.includes('alex')) return 800;
+            return 100;
+        };
+        return score(b) - score(a);
+    });
+    return machos[0];
+}
+if ('speechSynthesis' in window) {
+    const init = () => { VOZ_MASC_CACHE = acharVozMasculina(); };
+    window.speechSynthesis.onvoiceschanged = init;
+    init();
+}
+
 Workspace.Ingles = {
     state: {
         xp: 0, streak: 1, words: [], phrases: [], quizzes: [], pictures: [], minimalPairs: [], debates: [], submissions: [], pool: [],
@@ -239,99 +279,30 @@ Workspace.Ingles = {
  // ============================================================================
 // 🗣 FERRAMENTAS NATIVAS DE VOZ - VERSÃO 100% MASCULINA BLINDADA
 // ============================================================================
-falar: (text, lang = 'en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
-    if (!('speechSynthesis' in window)) return;
+falar: (text, lang='en-US', pitch=1.0, rate=0.95, isMago=false) => {
+    if(!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-
     const u = new SpeechSynthesisUtterance(text);
-    let voices = window.speechSynthesis.getVoices();
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // Se as vozes ainda não carregaram (bug clássico de celular), força o carregamento
-    if (!voices.length) {
-        window.speechSynthesis.getVoices();
-        // Tenta novamente em 100ms, isso resolve 90% dos casos no Android/iOS
-        setTimeout(() => {
-            // Recursivo pra garantir que vai falar masculino
-            if (window.speechSynthesis.getVoices().length > 0) {
-                // Re-chama a própria função com os mesmos parâmetros
-                // @ts-ignore
-                this.falar(text, lang, pitch, rate, isMago);
-            }
-        }, 100);
-    }
+    let voz = VOZ_MASC_CACHE || acharVozMasculina();
 
-    const vozesIngles = voices.filter(v => v.lang.toLowerCase().startsWith('en'));
-
-    // --- LISTAS DEFINITIVAS ---
-    const marcadoresFemininos = ['female', 'samantha', 'zira', 'karen', 'victoria', 'tessa', 'moira', 'siri', 'veena', 'fiona', 'susan', 'heather', 'linda', 'luciana', 'anna', 'melina'];
-    const marcadoresMasculinosPremium = [
-        'david', 'mark', 'daniel', 'alex', 'fred', 'aaron',
-        'arthur', 'oliver', 'guy', 'james', 'thomas', 'lee', 'nicky', 'matthew', 'tom', 'google uk english male'
-    ];
-
-    // 1º PASSO: Remove TUDO que é feminino - essa é a blindagem
-    let candidatas = vozesIngles.filter(v => {
-        const id = (v.name + " " + (v.voiceURI || "")).toLowerCase();
-        return!marcadoresFemininos.some(f => id.includes(f));
-    });
-
-    // Se filtrou tudo e não sobrou nada (acontece em alguns Androids), volta pra lista original
-    if (candidatas.length === 0) candidatas = vozesIngles;
-
-    // 2º PASSO: Pontuação para achar a voz masculina mais LINDA
-    const pontuarVoz = (v) => {
-        const id = (v.name + " " + (v.voiceURI || "")).toLowerCase();
-        let score = 0;
-
-        if (id.includes('microsoft david')) score += 100; // A mais bonita no Windows
-        if (id.includes('daniel')) score += 95; // A mais bonita no iPhone/Mac - O Daniel do UK
-        if (id.includes('google uk english male')) score += 90; // Melhor no Android
-        if (id.includes('alex')) score += 85;
-        if (id.includes('fred')) score += 80;
-        if (id.includes('aaron') || id.includes('arthur')) score += 75;
-        if (id.includes('oliver') || id.includes('guy')) score += 70;
-        if (id.includes('male')) score += 60;
-
-        if (id.includes('premium') || id.includes('natural') || id.includes('neural')) score += 25;
-        if (v.lang === 'en-GB' || v.lang === 'en_GB') score += 20; // en-GB no celular quase sempre é masculina
-        if (v.lang.includes('US')) score += 10;
-
-        // Penalidade se ainda tiver nome feminino escondido
-        if (marcadoresFemininos.some(f => id.includes(f))) score -= 1000;
-
-        return score;
-    };
-
-    candidatas.sort((a, b) => pontuarVoz(b) - pontuarVoz(a));
-
-    let vozSelec = candidatas[0] || null;
-
-    // 3º PASSO: Configuração de tom - AQUI ESTÁ O TRUQUE DA VOZ LINDA
-    if (isMago) {
-        // 🧙‍♂️ O MAGO: Grave, majestoso e 100% masculino
-        u.pitch = 0.75; // Mais grave que 0.8 fica muito mais masculino
-        u.rate = 0.85;
-        u.volume = 1;
+    if (voz) {
+        // TEM VOZ MASCULINA INSTALADA - usa ela
+        u.voice = voz;
+        u.lang = voz.lang;
+        u.pitch = isMago? (isMobile? 0.6 : 0.8) : (isMobile? 0.75 : 0.92);
+        u.rate = isMago? 0.85 : (rate || 1.0);
     } else {
-        // 🇺🇸 JOGOS: Agora também 100% masculina, jovem e clara (antes você estava chamando a Samantha)
-        u.pitch = 0.92; // Abaixo de 1.0 masculiniza qualquer voz
-        u.rate = rate || 1.0;
-        u.volume = 1;
-    }
-
-    // 4º PASSO: BLINDAGEM FINAL DE IDIOMA E VOZ
-    if (vozSelec) {
-        u.voice = vozSelec;
-        u.lang = vozSelec.lang; // NUNCA use o lang passado, use o da voz encontrada
-    } else {
-        // Último recurso: se não achou voz nenhuma, força um pitch masculino em qualquer voz
-        u.lang = 'en-GB'; // en-GB tem mais chance de ser Daniel no iOS
-        u.pitch = 0.7;
+        // NÃO TEM VOZ MASCULINA NO APARELHO - masculiniza na marra
+        // Isso aqui que salvou o PC e o celular
+        u.lang = isMobile? 'en-GB' : 'en-US';
+        u.pitch = isMago? 0.3 : 0.5; // 0.5 deixa até a Samantha grave
+        u.rate = isMago? 0.85 : (rate || 1.0);
     }
 
     window.speechSynthesis.speak(u);
 },
-
     similaridade: (a, b) => {
         const norm = (s) => s.toLowerCase().trim().replace(/[^\w\s]/g,'');
         let nA = norm(a), nB = norm(b);
