@@ -598,7 +598,7 @@ falar: (text, lang = 'en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
                     <!-- 1. OS TEXTOS E O BALÃO DE FALA VÊM PRIMEIRO (EM CIMA) -->
                     <div style="z-index: 2; width: 100%;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
-                        <p style="color:#cbd5e1; font-size:16px; margin:0 0 20px 0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
+                        <p style="color:#cbd5e1; font-size:16px; margin:0 0 20px 0;">Escolha um pergaminho ou poção. A Inteligência do Mago guardará os seus erros para treiná-los novamente. Aqui você vai domina a magia!</p>
                         
                         <!-- O BALÃO TEM O FORMATO 💬 (SETA APONTA PARA BAIXO) -->
                         <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
