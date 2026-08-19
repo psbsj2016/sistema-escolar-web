@@ -130,10 +130,32 @@ Workspace.Ingles = {
         ]
     },
 
-    init: () => {
+   init: () => {
         Workspace.Ingles.injetarCSS();
         Workspace.Ingles.construirHTML();
         
+        // 🚀 O INTERCEPTADOR DE NAVEGAÇÃO: Controla a visibilidade do módulo
+        if (!Workspace.Ingles.navConfigurada && typeof Workspace.navegarPara === 'function') {
+            const navegacaoOriginal = Workspace.navegarPara;
+            Workspace.navegarPara = (tela, historico) => {
+                const containerIngles = document.getElementById('ws-ingles-container');
+                
+                if (containerIngles) {
+                    // Se o aluno aceder ao Baú do Inglês, o contentor fica visível.
+                    // Se aceder a outra área qualquer, o Baú esconde-se silenciosamente!
+                    if (tela === 'ingles') {
+                        containerIngles.style.display = 'block';
+                    } else {
+                        containerIngles.style.display = 'none';
+                    }
+                }
+                
+                // Continua o fluxo normal de navegação do Workspace
+                navegacaoOriginal(tela, historico);
+            };
+            Workspace.Ingles.navConfigurada = true; // Evita criar duplos interceptadores
+        }
+
         // 📡 A ANTENA DE TEMPO REAL
         if (!Workspace.Ingles.sseListenerConfigurado && Workspace.usuario) {
             const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
@@ -150,9 +172,6 @@ Workspace.Ingles = {
         }
 
         if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
-        window.speechSynthesis.onvoiceschanged = () => {
-  console.log(window.speechSynthesis.getVoices().map(v => `${v.name} - ${v.lang}`));
-};
     },
 
     abrirBau: () => { Workspace.navegarPara('ingles'); },
