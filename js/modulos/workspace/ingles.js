@@ -310,7 +310,7 @@ Workspace.Ingles = {
         };
     },
 
-   // ============================================================================
+  // ============================================================================
     // 🎨 CSS MÁGICO (Design Imersivo, Partículas e Responsividade Mobile)
     // ============================================================================
     injetarCSS: () => {
@@ -344,13 +344,8 @@ Workspace.Ingles = {
             /* 🚀 EXPLOSÃO DO BAÚ */
             .chest-shake { animation: chestShake 0.4s ease-in-out infinite; }
             @keyframes chestShake { 0%, 100% { transform: translate(1px, -2px) rotate(-5deg); } 50% { transform: translate(-1px, 2px) rotate(5deg); } }
-            
             .chest-explode { animation: chestExplode 1s ease-out forwards; }
-            @keyframes chestExplode { 
-                0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px #f1c40f); } 
-                20% { transform: scale(3) translateY(20px); filter: brightness(2.5) drop-shadow(0 0 100px #fff); } 
-                100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } 
-            }
+            @keyframes chestExplode { 0% { transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px #f1c40f); } 20% { transform: scale(3) translateY(20px); filter: brightness(2.5) drop-shadow(0 0 100px #fff); } 100% { transform: scale(1); filter: drop-shadow(0 0 15px #f1c40f); } }
             @keyframes shockwave { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; border: 5px solid #fff; } 100% { transform: translate(-50%, -50%) scale(400); opacity: 0; border: 80px solid #e67e22; } }
             
             .ig-fireball { position: fixed; border-radius: 50%; box-shadow: 0 0 15px currentColor, 0 0 40px currentColor; pointer-events: none; z-index: 9999999; animation: shootParticle 1.5s cubic-bezier(0.1, 0.8, 0.2, 1) forwards; }
@@ -367,10 +362,11 @@ Workspace.Ingles = {
             img.ig-guardian-avatar { width: 130px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; flex-shrink: 0; }
             @keyframes flutuarMago { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); filter: drop-shadow(0 0 40px rgba(142, 68, 173, 1)); } }
             
+            /* 💬 BALÃO COM FORMATO CHAT E ANIMAÇÃO DE SUBIDA */
             .ig-balao-fala-static { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 20px 25px; border-radius: 12px; border: 3px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; text-align: left; font-family: 'VT323', monospace; font-size: 24px; color: #fff; line-height: 1.3; text-shadow: 2px 2px 0px #000; flex: 1; opacity: 0; transform: translateY(20px) scale(0.9); transform-origin: left center; animation: balaoRise 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
             @keyframes balaoRise { to { opacity: 1; transform: translateY(0) scale(1); } }
             
-            /* Seta do Balão Inicial (Fica como estava) */
+            /* Seta do Balão Inicial */
             .ig-balao-fala-static::before { content: ''; position: absolute; top: 50%; left: -15px; transform: translateY(-50%); border-width: 12px 15px 12px 0; border-style: solid; border-color: transparent #000 transparent transparent; z-index: 2; }
             .ig-balao-fala-static::after { content: ''; position: absolute; top: 50%; left: -20px; transform: translateY(-50%); border-width: 15px 20px 15px 0; border-style: solid; border-color: transparent #f1c40f transparent transparent; z-index: 1; }
             
@@ -399,11 +395,10 @@ Workspace.Ingles = {
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
-            /* 📱 RESPONSIVIDADE E AJUSTES EXATOS PARA O TELEMÓVEL */
+            /* 📱 RESPONSIVIDADE CIRÚRGICA PARA TELEMÓVEL */
             @media (max-width: 768px) { 
+                /* 1. Cabeçalho com Baú à Esquerda */
                 .ig-header { flex-direction: column; gap: 10px; padding: 15px; }
-                
-                /* 🚀 BAÚ GARANTIDO À ESQUERDA NO MOBILE (flex-direction: row) */
                 .ig-title { flex-direction: row; gap: 15px; align-items: center; text-align: left; width: 100%; justify-content: center;}
                 .ig-title h2 { font-size: 20px; }
                 .ig-title p { font-size: 10px; }
@@ -411,21 +406,43 @@ Workspace.Ingles = {
                 .ig-rpg-hud { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; font-size: 14px; padding: 8px; }
                 .ig-hud-stat span { font-size: 18px; }
                 
-                /* 🚀 CRONÓMETRO MENOR NO CELULAR */
+                /* Cronómetro Reduzido */
                 .ig-global-timer { width: 100%; margin-bottom: 5px; font-size: 16px; padding: 4px 10px; }
                 
-                .ig-guardian-container { min-height: auto; padding: 25px 10px; }
+                /* 🚀 2. TELA INICIAL: Ocupa a tela toda (Sem Scroll Branco) */
+                .ig-guardian-container { 
+                    height: calc(100vh - 145px); /* Ecrã Total menos o cabeçalho */
+                    padding: 20px 15px; 
+                    justify-content: center; 
+                    border-radius: 0; 
+                    border-left: none;
+                    border-right: none;
+                    border-bottom: none;
+                    margin-bottom: 0;
+                }
                 .ig-prep-layout { flex-direction: row; gap: 12px; margin-bottom: 15px; }
                 img.ig-guardian-avatar { width: 90px; }
-                .ig-balao-fala-static { font-size: 18px; padding: 12px 15px; }
-                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 8px; margin-top: 5px; width: 100%; max-width: 350px;}
+                .ig-balao-fala-static { font-size: 16px; padding: 12px 15px; }
+                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 8px; margin-top: 10px; width: 100%; max-width: 350px;}
+                
+                /* 🚀 3. TELA INTERNA (CARD MAGO): Com margens nos 4 lados e Mago menor */
+                .ig-hub-banner { 
+                    margin: 15px; /* Margem nos 4 lados */
+                    padding: 20px 15px; 
+                    border-width: 2px;
+                    border-radius: 12px; /* Cantos arredondados do Card */
+                }
+                .ig-hub-banner h1 { font-size: 22px; }
+                .ig-hub-banner p { font-size: 14px; line-height: 1.3; }
+                
+                .ig-balao-fala-hub { font-size: 18px; padding: 12px; margin-bottom: 12px; }
+                .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: block !important; } 
+                
+                img.ig-hub-mago-img { width: 80px; margin-top: 5px;} /* Mago reduzido na parte interna */
                 
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
                 .ig-side-item { white-space: nowrap; } 
                 #ig-professorView { flex-direction: column; } 
-                
-                /* Mantém a Seta Visível no Mobile na parte interna */
-                .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: block !important; } 
             }
         `;
         document.head.appendChild(style);
