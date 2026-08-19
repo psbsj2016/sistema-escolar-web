@@ -248,42 +248,41 @@ Workspace.Ingles = {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMago) {
-            // 🧙‍♂️ O MAGO: Prefere vozes Britânicas (en-GB) masculinas para um ar mais idoso e sábio!
-            u.lang = 'en-GB'; 
-            u.pitch = isMobile ? 0.9 : 0.85; // Engrossa a voz 10% no mobile para evitar som robótico
+            // 🧙‍♂️ O MAGO: Retornamos ao Inglês Americano (en-US) com as melhores vozes masculinas
+            u.lang = 'en-US'; 
+            u.pitch = isMobile ? 0.9 : 0.85; // Engrossa a voz levemente para não soar robótica
             u.rate = isMobile ? 0.95 : 0.85; 
             
             // Procura todas as vozes em inglês
             const vozesIngles = voices.filter(v => v.lang.includes('en'));
             
-            // O Arsenal de Nomes Masculinos Nativos no iOS e Android
+            // 🚀 CAÇA ÀS VOZES MASCULINAS AMERICANAS MAIS BONITAS
             vozSelec = vozesIngles.find(v => 
-                v.name.toLowerCase().includes('uk english male') || // Android Padrão Masculino
-                v.name.toLowerCase().includes('daniel') ||          // iOS Padrão Britânico Masculino
-                v.name.toLowerCase().includes('aaron') ||           // iOS US Masculino
-                v.name.toLowerCase().includes('arthur') ||
-                v.name.toLowerCase().includes('male') ||
-                v.name.toLowerCase().includes('david') ||
-                v.name.toLowerCase().includes('mark')
+                v.name.includes('Google US English Male') || // Android e Chrome Premium Masculino
+                v.name.includes('David') ||                  // Windows Padrão Masculino
+                v.name.includes('Aaron') ||                  // iOS Premium Masculino
+                v.name.includes('Alex') ||                   // iOS/Mac Masculino
+                v.name.includes('Fred') ||                   // iOS/Mac Masculino
+                v.name.toLowerCase().includes('male')        // Qualquer outra catalogada como masculina
             );
 
-            // Se o telemóvel for muito simples e não tiver vozes catalogadas, pega a voz Britânica padrão
+            // Fallback de segurança: Se o telemóvel não tiver nomes, pega a primeira voz en-US
             if (!vozSelec) {
-                vozSelec = vozesIngles.find(v => v.lang === 'en-GB') || vozesIngles[0];
+                vozSelec = vozesIngles.find(v => v.lang === 'en-US') || vozesIngles[0];
             }
             
         } else {
-            // 🇺🇸 JOGOS: Vozes Americanas Premium (en-US) fluidas e naturais
+            // 🇺🇸 JOGOS: Vozes Americanas (en-US) fluidas e naturais
             u.lang = lang;
             u.pitch = pitch;
             u.rate = rate;
             
             const vozesIngles = voices.filter(v => v.lang.includes('en'));
             
-            // Caça especificamente vozes de alta qualidade
+            // Caça especificamente vozes de alta qualidade para os jogos
             vozSelec = vozesIngles.find(v => 
-                v.name.toLowerCase().includes('google us english') || 
-                v.name.toLowerCase().includes('samantha') || // iOS Premium US
+                v.name.includes('Google US English') || 
+                v.name.includes('Samantha') || // iOS Premium US
                 v.name.toLowerCase().includes('premium') ||
                 v.name.toLowerCase().includes('natural')
             ) || vozesIngles.find(v => v.lang === 'en-US') || vozesIngles[0];
