@@ -248,44 +248,53 @@ Workspace.Ingles = {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (isMago) {
-            // 🧙‍♂️ O MAGO: Retornamos ao Inglês Americano (en-US) com as melhores vozes masculinas
+            // 🧙‍♂️ O MAGO: Retornamos ao Inglês Americano (en-US)
             u.lang = 'en-US'; 
-            u.pitch = isMobile ? 0.9 : 0.85; // Engrossa a voz levemente para não soar robótica
+            
+            // 🚀 O TRUQUE DE MESTRE (PITCH GRAVE): 
+            // Baixamos o tom para 0.75. Assim, se o telemóvel forçar uma voz feminina 
+            // por falta de download, a magia digital torna-a grossa e misteriosa como um Mago!
+            u.pitch = isMobile ? 0.75 : 0.75; 
             u.rate = isMobile ? 0.95 : 0.85; 
             
-            // Procura todas as vozes em inglês
-            const vozesIngles = voices.filter(v => v.lang.includes('en'));
+            // Procura todas as vozes em inglês (ignorando maiúsculas e minúsculas)
+            const vozesIngles = voices.filter(v => v.lang.toLowerCase().includes('en'));
             
-            // 🚀 CAÇA ÀS VOZES MASCULINAS AMERICANAS MAIS BONITAS
-            vozSelec = vozesIngles.find(v => 
-                v.name.includes('Google US English Male') || // Android e Chrome Premium Masculino
-                v.name.includes('David') ||                  // Windows Padrão Masculino
-                v.name.includes('Aaron') ||                  // iOS Premium Masculino
-                v.name.includes('Alex') ||                   // iOS/Mac Masculino
-                v.name.includes('Fred') ||                   // iOS/Mac Masculino
-                v.name.toLowerCase().includes('male')        // Qualquer outra catalogada como masculina
-            );
+            // 🚀 CAÇA IMPLACÁVEL ÀS VOZES MASCULINAS (Case-Insensitive)
+            vozSelec = vozesIngles.find(v => {
+                const nome = v.name.toLowerCase();
+                return nome.includes('male') || 
+                       nome.includes('david') || 
+                       nome.includes('aaron') || 
+                       nome.includes('alex') || 
+                       nome.includes('fred') || 
+                       nome.includes('mark') || 
+                       nome.includes('daniel') || 
+                       nome.includes('arthur');
+            });
 
-            // Fallback de segurança: Se o telemóvel não tiver nomes, pega a primeira voz en-US
+            // Fallback de segurança: Pega a primeira americana disponível
             if (!vozSelec) {
-                vozSelec = vozesIngles.find(v => v.lang === 'en-US') || vozesIngles[0];
+                vozSelec = vozesIngles.find(v => v.lang.includes('US')) || vozesIngles[0];
             }
             
         } else {
-            // 🇺🇸 JOGOS: Vozes Americanas (en-US) fluidas e naturais
+            // 🇺🇸 JOGOS: Vozes Americanas (en-US) fluidas, naturais e claras
             u.lang = lang;
-            u.pitch = pitch;
+            u.pitch = pitch; // Mantém o pitch natural original (geralmente 1.0)
             u.rate = rate;
             
-            const vozesIngles = voices.filter(v => v.lang.includes('en'));
+            const vozesIngles = voices.filter(v => v.lang.toLowerCase().includes('en'));
             
-            // Caça especificamente vozes de alta qualidade para os jogos
-            vozSelec = vozesIngles.find(v => 
-                v.name.includes('Google US English') || 
-                v.name.includes('Samantha') || // iOS Premium US
-                v.name.toLowerCase().includes('premium') ||
-                v.name.toLowerCase().includes('natural')
-            ) || vozesIngles.find(v => v.lang === 'en-US') || vozesIngles[0];
+            // Procura vozes femininas premium/naturais para os jogos
+            vozSelec = vozesIngles.find(v => {
+                const nome = v.name.toLowerCase();
+                return nome.includes('google us english') || 
+                       nome.includes('samantha') || 
+                       nome.includes('premium') ||
+                       nome.includes('natural') ||
+                       nome.includes('female');
+            }) || vozesIngles.find(v => v.lang.includes('US')) || vozesIngles[0];
         }
 
         if(vozSelec) u.voice = vozSelec;
@@ -466,8 +475,8 @@ Workspace.Ingles = {
                 
                 /* 🚀 3. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago Menor */
                 .ig-hub-banner { 
-                    margin: 15px; 
-                    padding: 15px 12px; 
+                    margin: 18px; 
+                    padding: 15px 15px; 
                     border-width: 2px;
                     border-radius: 12px;
                     display: flex;
