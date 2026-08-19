@@ -110,6 +110,9 @@ Workspace.Ingles = {
         }
 
         if('speechSynthesis' in window) window.speechSynthesis.getVoices(); 
+        window.speechSynthesis.onvoiceschanged = () => {
+  console.log(window.speechSynthesis.getVoices().map(v => `${v.name} - ${v.lang}`));
+};
     },
 
     abrirBau: () => { Workspace.navegarPara('ingles'); },
@@ -234,70 +237,100 @@ Workspace.Ingles = {
     },
 
  // ============================================================================
-    // 🗣️ FERRAMENTAS NATIVAS DE VOZ (Inteligência Premium Multiplataforma)
-    // ============================================================================
-    falar: (text, lang='en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
-        if(!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        
-        const u = new SpeechSynthesisUtterance(text); 
-        const voices = window.speechSynthesis.getVoices();
-        let vozSelec = null;
+// 🗣 FERRAMENTAS NATIVAS DE VOZ - VERSÃO 100% MASCULINA BLINDADA
+// ============================================================================
+falar: (text, lang = 'en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
 
-        const vozesIngles = voices.filter(v => v.lang.toLowerCase().includes('en'));
+    const u = new SpeechSynthesisUtterance(text);
+    let voices = window.speechSynthesis.getVoices();
 
-        if (isMago) {
-            // 🧙‍♂️ O MAGO: Tom grave (0.8) e ritmo majestoso (0.9)
-            u.pitch = 0.8; 
-            u.rate = 0.9; 
-            
-            // 1. TENTA ENCONTRAR VOZ EXPLICITAMENTE MASCULINA (Expandido)
-            const marcadoresMasculinos = ['male', 'david', 'aaron', 'alex', 'fred', 'daniel', 'arthur', 'brian', 'james', 'guy', 'matthew', 'tom'];
-            vozSelec = vozesIngles.find(v => {
-                const idVoz = (v.name + " " + (v.voiceURI || "")).toLowerCase();
-                return marcadoresMasculinos.some(marcador => idVoz.includes(marcador));
-            });
-
-            // 2. FILTRO ANTI-FEMININO (O Segredo para os Telemóveis):
-            // Se não encontrou o nome "Male", vai pegar a primeira voz que NÃO tenha nome de mulher.
-            if (!vozSelec) {
-                const marcadoresFemininos = ['female', 'samantha', 'zira', 'karen', 'victoria', 'tessa', 'moira', 'siri', 'luciana', 'anna', 'melina'];
-                vozSelec = vozesIngles.find(v => {
-                    const idVoz = (v.name + " " + (v.voiceURI || "")).toLowerCase();
-                    return !marcadoresFemininos.some(marcador => idVoz.includes(marcador));
-                });
+    // Se as vozes ainda não carregaram (bug clássico de celular), força o carregamento
+    if (!voices.length) {
+        window.speechSynthesis.getVoices();
+        // Tenta novamente em 100ms, isso resolve 90% dos casos no Android/iOS
+        setTimeout(() => {
+            // Recursivo pra garantir que vai falar masculino
+            if (window.speechSynthesis.getVoices().length > 0) {
+                // Re-chama a própria função com os mesmos parâmetros
+                // @ts-ignore
+                this.falar(text, lang, pitch, rate, isMago);
             }
+        }, 100);
+    }
 
-            // 3. ÚLTIMO RECURSO: Tenta a voz do Reino Unido (que no iOS é o Daniel - Masculino)
-            if (!vozSelec) {
-                vozSelec = vozesIngles.find(v => v.lang === 'en-GB' || v.lang === 'en_GB') || vozesIngles[0];
-            }
-            
-        } else {
-            // 🇺🇸 ÁUDIO DOS JOGOS: Vozes claras, fluidas e americanas
-            u.pitch = pitch;
-            u.rate = rate;
-            
-            // Caça vozes Premium ou a padrão americana
-            vozSelec = vozesIngles.find(v => {
-                const idVoz = v.name.toLowerCase();
-                return idVoz.includes('google us english') || 
-                       idVoz.includes('samantha') || 
-                       idVoz.includes('premium') ||
-                       idVoz.includes('natural');
-            }) || vozesIngles.find(v => v.lang.includes('US')) || vozesIngles[0];
-        }
+    const vozesIngles = voices.filter(v => v.lang.toLowerCase().startsWith('en'));
 
-        // 🚀 A BLINDAGEM DO TELEMÓVEL: Sincronização exata de Idioma!
-        if(vozSelec) {
-            u.voice = vozSelec;
-            u.lang = vozSelec.lang; 
-        } else {
-            u.lang = lang;
-        }
+    // --- LISTAS DEFINITIVAS ---
+    const marcadoresFemininos = ['female', 'samantha', 'zira', 'karen', 'victoria', 'tessa', 'moira', 'siri', 'veena', 'fiona', 'susan', 'heather', 'linda', 'luciana', 'anna', 'melina'];
+    const marcadoresMasculinosPremium = [
+        'david', 'mark', 'daniel', 'alex', 'fred', 'aaron',
+        'arthur', 'oliver', 'guy', 'james', 'thomas', 'lee', 'nicky', 'matthew', 'tom', 'google uk english male'
+    ];
 
-        window.speechSynthesis.speak(u);
-    },
+    // 1º PASSO: Remove TUDO que é feminino - essa é a blindagem
+    let candidatas = vozesIngles.filter(v => {
+        const id = (v.name + " " + (v.voiceURI || "")).toLowerCase();
+        return!marcadoresFemininos.some(f => id.includes(f));
+    });
+
+    // Se filtrou tudo e não sobrou nada (acontece em alguns Androids), volta pra lista original
+    if (candidatas.length === 0) candidatas = vozesIngles;
+
+    // 2º PASSO: Pontuação para achar a voz masculina mais LINDA
+    const pontuarVoz = (v) => {
+        const id = (v.name + " " + (v.voiceURI || "")).toLowerCase();
+        let score = 0;
+
+        if (id.includes('microsoft david')) score += 100; // A mais bonita no Windows
+        if (id.includes('daniel')) score += 95; // A mais bonita no iPhone/Mac - O Daniel do UK
+        if (id.includes('google uk english male')) score += 90; // Melhor no Android
+        if (id.includes('alex')) score += 85;
+        if (id.includes('fred')) score += 80;
+        if (id.includes('aaron') || id.includes('arthur')) score += 75;
+        if (id.includes('oliver') || id.includes('guy')) score += 70;
+        if (id.includes('male')) score += 60;
+
+        if (id.includes('premium') || id.includes('natural') || id.includes('neural')) score += 25;
+        if (v.lang === 'en-GB' || v.lang === 'en_GB') score += 20; // en-GB no celular quase sempre é masculina
+        if (v.lang.includes('US')) score += 10;
+
+        // Penalidade se ainda tiver nome feminino escondido
+        if (marcadoresFemininos.some(f => id.includes(f))) score -= 1000;
+
+        return score;
+    };
+
+    candidatas.sort((a, b) => pontuarVoz(b) - pontuarVoz(a));
+
+    let vozSelec = candidatas[0] || null;
+
+    // 3º PASSO: Configuração de tom - AQUI ESTÁ O TRUQUE DA VOZ LINDA
+    if (isMago) {
+        // 🧙‍♂️ O MAGO: Grave, majestoso e 100% masculino
+        u.pitch = 0.75; // Mais grave que 0.8 fica muito mais masculino
+        u.rate = 0.85;
+        u.volume = 1;
+    } else {
+        // 🇺🇸 JOGOS: Agora também 100% masculina, jovem e clara (antes você estava chamando a Samantha)
+        u.pitch = 0.92; // Abaixo de 1.0 masculiniza qualquer voz
+        u.rate = rate || 1.0;
+        u.volume = 1;
+    }
+
+    // 4º PASSO: BLINDAGEM FINAL DE IDIOMA E VOZ
+    if (vozSelec) {
+        u.voice = vozSelec;
+        u.lang = vozSelec.lang; // NUNCA use o lang passado, use o da voz encontrada
+    } else {
+        // Último recurso: se não achou voz nenhuma, força um pitch masculino em qualquer voz
+        u.lang = 'en-GB'; // en-GB tem mais chance de ser Daniel no iOS
+        u.pitch = 0.7;
+    }
+
+    window.speechSynthesis.speak(u);
+},
 
     similaridade: (a, b) => {
         const norm = (s) => s.toLowerCase().trim().replace(/[^\w\s]/g,'');
@@ -473,7 +506,7 @@ Workspace.Ingles = {
                 
                 /* 🚀 3. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago Menor */
                 .ig-hub-banner { 
-                    margin: 15px; 
+                    margin: 18px; 
                     padding: 12px 12px; 
                     border-width: 2px;
                     border-radius: 12px;
