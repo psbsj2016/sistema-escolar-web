@@ -370,20 +370,22 @@ Workspace.Ingles = {
             .ig-balao-fala-static { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 20px 25px; border-radius: 12px; border: 3px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 15px 35px rgba(0,0,0,0.8); position: relative; text-align: left; font-family: 'VT323', monospace; font-size: 24px; color: #fff; line-height: 1.3; text-shadow: 2px 2px 0px #000; flex: 1; opacity: 0; transform: translateY(20px) scale(0.9); transform-origin: left center; animation: balaoRise 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
             @keyframes balaoRise { to { opacity: 1; transform: translateY(0) scale(1); } }
             
-            /* SETA DO BALÃO APONTANDO PARA A ESQUERDA (TELA INICIAL) */
+            /* Seta do Balão Inicial (Fica como estava) */
             .ig-balao-fala-static::before { content: ''; position: absolute; top: 50%; left: -15px; transform: translateY(-50%); border-width: 12px 15px 12px 0; border-style: solid; border-color: transparent #000 transparent transparent; z-index: 2; }
             .ig-balao-fala-static::after { content: ''; position: absolute; top: 50%; left: -20px; transform: translateY(-50%); border-width: 15px 20px 15px 0; border-style: solid; border-color: transparent #f1c40f transparent transparent; z-index: 1; }
             
             .ig-opcoes-tempo { display: flex; gap: 15px; align-items: stretch; justify-content: center; z-index: 2; }
             
-            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (MAGO À DIREITA, TEXTO À ESQUERDA) */
-            .ig-hub-banner { display: flex; align-items: flex-start; gap: 25px; padding: 25px 35px; background: radial-gradient(circle at left, #1a0b2e 0%, #000 100%); border-radius: 8px; margin-bottom: 30px; border: 4px solid #d4af37; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(212,175,55,0.2); position: relative; overflow: hidden; }
-            img.ig-hub-mago-img { width: 120px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; flex-shrink: 0;}
+            /* 🧙‍♂️ BANNER DO HUB DE JOGOS (PARTE INTERNA) */
+            .ig-hub-banner { padding: 25px 35px; background: radial-gradient(circle at center, #1a0b2e 0%, #000 100%); border-radius: 8px; margin-bottom: 30px; border: 4px solid #d4af37; box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 30px rgba(212,175,55,0.2); position: relative; overflow: hidden; }
+            img.ig-hub-mago-img { width: 140px; height: auto; animation: flutuarMago 4s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(142, 68, 173, 0.8)); mix-blend-mode: screen; z-index: 2; flex-shrink: 0;}
             
-            /* SETA DO BALÃO APONTANDO PARA A DIREITA (HUB DE JOGOS) */
-            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 12px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: left; font-family: 'VT323', monospace; font-size: 22px; color: #fff; display: flex; align-items: flex-start; justify-content: flex-start; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-top: 15px; margin-right: 15px;}
-            .ig-balao-fala-hub::before { content: ''; position: absolute; top: 20px; right: -12px; left: auto; border-width: 10px 0 10px 12px; border-style: solid; border-color: transparent transparent transparent #000; z-index: 2;}
-            .ig-balao-fala-hub::after { content: ''; position: absolute; top: 18px; right: -16px; left: auto; border-width: 12px 0 12px 16px; border-style: solid; border-color: transparent transparent transparent #f1c40f; z-index: 1;}
+            /* 💬 BALÃO DA PARTE INTERNA COM FORMATO 💬 (SETA PARA BAIXO) */
+            .ig-balao-fala-hub { background: linear-gradient(180deg, #0f172a 0%, #000 100%); padding: 15px 25px; border-radius: 12px; border: 2px solid #f1c40f; box-shadow: 0 0 0 2px #000, inset 0 0 0 1px rgba(255,255,255,0.2), 0 10px 20px rgba(0,0,0,0.8); position: relative; width: 100%; text-align: center; font-family: 'VT323', monospace; font-size: 22px; color: #fff; line-height: 1.4; z-index: 2; text-shadow: 2px 2px 0px #000; margin-bottom: 20px;}
+            
+            /* A MAGIA DO FORMATO 💬 (A Seta aponta diretamente para a cabeça do mago) */
+            .ig-balao-fala-hub::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 15px 15px 0 15px; border-style: solid; border-color: #f1c40f transparent transparent transparent; z-index: 1;}
+            .ig-balao-fala-hub::before { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 12px 12px 0 12px; border-style: solid; border-color: #000 transparent transparent transparent; z-index: 2;}
             
             /* ⏱️ RELÓGIO GLOBAL */
             .ig-global-timer { font-family: 'VT323', monospace; font-size: 24px; color: #ff4757; text-shadow: 1px 1px 0 #000; display: none; align-items: center; justify-content: center; letter-spacing: 2px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 6px; border: 1px dashed #ff4757;}
@@ -397,30 +399,33 @@ Workspace.Ingles = {
             .ig-list-item { display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; align-items:center; }
             .ig-big-phrase { font-size: 22px; font-weight: bold; text-align: center; padding: 20px; background: #F8FAFC; border: 1px dashed #E2E8F0; border-radius: 14px; margin: 15px 0; color: #1E293B; }
             
-            /* 📱 RESPONSIVIDADE EXTREMA PARA TELEMÓVEL (Prioridade no Fogo e Estrela) */
+            /* 📱 RESPONSIVIDADE E AJUSTES EXATOS PARA O TELEMÓVEL */
             @media (max-width: 768px) { 
-                .ig-header { flex-direction: column; gap: 10px; text-align: center; padding: 15px; }
-                .ig-title { flex-direction: column; gap: 5px; }
+                .ig-header { flex-direction: column; gap: 10px; padding: 15px; }
                 
-                /* Configuração do HUD Móvel: Dias/XP grandes em cima, Relógio em baixo */
-                .ig-rpg-hud { flex-direction: column; width: 100%; justify-content: center; gap: 10px; padding: 15px;}
-                .ig-status-grupo { order: 1; display: flex; justify-content: center; gap: 20px; width: 100%; }
-                .ig-hud-stat { font-size: 18px; padding: 8px 15px; } 
-                .ig-hud-stat span { font-size: 32px; } /* Gigante no mobile */
-                .ig-global-timer { order: 2; width: 100%; margin-bottom: 5px; font-size: 32px; padding: 8px; }
+                /* 🚀 BAÚ GARANTIDO À ESQUERDA NO MOBILE (flex-direction: row) */
+                .ig-title { flex-direction: row; gap: 15px; align-items: center; text-align: left; width: 100%; justify-content: center;}
+                .ig-title h2 { font-size: 20px; }
+                .ig-title p { font-size: 10px; }
                 
-                .ig-guardian-container { min-height: 65vh; padding: 40px 15px 30px 15px; justify-content: space-around; }
-                .ig-prep-layout { flex-direction: row; gap: 12px; margin-bottom: 0; }
+                .ig-rpg-hud { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; font-size: 14px; padding: 8px; }
+                .ig-hud-stat span { font-size: 18px; }
+                
+                /* 🚀 CRONÓMETRO MENOR NO CELULAR */
+                .ig-global-timer { width: 100%; margin-bottom: 5px; font-size: 16px; padding: 4px 10px; }
+                
+                .ig-guardian-container { min-height: auto; padding: 25px 10px; }
+                .ig-prep-layout { flex-direction: row; gap: 12px; margin-bottom: 15px; }
                 img.ig-guardian-avatar { width: 90px; }
                 .ig-balao-fala-static { font-size: 18px; padding: 12px 15px; }
-                
-                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 10px; margin-top: 20px; width: 100%; max-width: 350px;}
+                .ig-opcoes-tempo { flex-wrap: nowrap; gap: 8px; margin-top: 5px; width: 100%; max-width: 350px;}
                 
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
                 .ig-side-item { white-space: nowrap; } 
                 #ig-professorView { flex-direction: column; } 
-                .ig-hub-banner { flex-direction: column-reverse; align-items: center; text-align: center; padding: 15px; } 
-                .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: none; } 
+                
+                /* Mantém a Seta Visível no Mobile na parte interna */
+                .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: block !important; } 
             }
         `;
         document.head.appendChild(style);
@@ -438,23 +443,14 @@ Workspace.Ingles = {
 
         container.innerHTML = `
             <div class="ig-header">
-                <!-- 🚀 1. TÍTULO À ESQUERDA, BAÚ GIGANTE À DIREITA -->
                 <div class="ig-title">
-                    <div style="text-align: left;">
-                        <h2>Baú do Inglês</h2>
-                        <p>Treinamento Épico Adaptativo</p>
-                    </div>
-                    <!-- Baú Duplicado para 110px de largura -->
-                    <img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" onerror="this.onerror=null; this.src='/public/assets/bau_roxo_pixel.png';" alt="Baú" style="width: 110px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" />
+                    <img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" onerror="this.onerror=null; this.src='/public/assets/bau_roxo_pixel.png';" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" />
+                    <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
-                
-                <!-- 🚀 2. ESTRUTURA PARA EMPILHAR NO MOBILE (Dias/XP cima, Timer baixo) -->
                 <div class="ig-rpg-hud">
-                    <div class="ig-status-grupo" style="display: flex; gap: 12px; align-items: center;">
-                        <div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div>
-                        <div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div>
-                    </div>
                     <div id="ig-global-timer-display" class="ig-global-timer">00:00</div>
+                    <div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div>
+                    <div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div>
                 </div>
             </div>
 
@@ -488,20 +484,22 @@ Workspace.Ingles = {
                 </div>
             </div>
 
+            <!-- 🚀 A PARTE INTERNA: BALÃO EM CIMA (Com Seta para baixo), MAGO EM BAIXO -->
             <div id="ig-alunoView" style="display:none; padding: 30px 30px 40px 30px;">
-                <!-- 🚀 3. BALÃO À ESQUERDA E MAGO À DIREITA -->
-                <div class="ig-hub-banner">
+                <div class="ig-hub-banner" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
                     <div class="ig-guardian-stars"></div>
                     
-                    <div style="flex: 1; z-index: 2; text-align: right;">
+                    <!-- 1. OS TEXTOS E O BALÃO DE FALA -->
+                    <div style="z-index: 2; width: 100%;">
                         <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
-                        <p style="color:#cbd5e1; font-size:16px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
-                        <!-- O BALÃO DE FALA APONTA AGORA PARA A DIREITA -->
-                        <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none;"></div>
+                        <p style="color:#cbd5e1; font-size:16px; margin:0 0 20px 0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
+                        
+                        <!-- O BALÃO TEM O FORMATO 💬 E A SETA APONTA PARA O MAGO ABAIXO -->
+                        <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none; max-width: 90%; margin-left: auto; margin-right: auto;"></div>
                     </div>
                     
-                    <!-- MAGO NA DIREITA -->
-                    <img src="/assets/mago_bau_ingles.png" onerror="this.onerror=null; this.src='/public/assets/mago_bau_ingles.png';" class="ig-hub-mago-img" alt="Mago" />
+                    <!-- 2. A IMAGEM DO MAGO -->
+                    <img src="/assets/mago_bau_ingles.png" onerror="this.onerror=null; this.src='/public/assets/mago_bau_ingles.png';" class="ig-hub-mago-img" alt="Mago" style="margin-top: 15px;" />
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
