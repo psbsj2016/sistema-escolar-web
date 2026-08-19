@@ -134,29 +134,40 @@ Workspace.Ingles = {
         Workspace.Ingles.injetarCSS();
         Workspace.Ingles.construirHTML();
         
-        // 🚀 O INTERCEPTADOR DE NAVEGAÇÃO: Controla a visibilidade do módulo
+        // 1. O INTERCEPTADOR DE NAVEGAÇÃO (Mantemos para as trocas normais de ecrã)
         if (!Workspace.Ingles.navConfigurada && typeof Workspace.navegarPara === 'function') {
             const navegacaoOriginal = Workspace.navegarPara;
             Workspace.navegarPara = (tela, historico) => {
                 const containerIngles = document.getElementById('ws-ingles-container');
-                
                 if (containerIngles) {
-                    // Se o aluno aceder ao Baú do Inglês, o contentor fica visível.
-                    // Se aceder a outra área qualquer, o Baú esconde-se silenciosamente!
-                    if (tela === 'ingles') {
-                        containerIngles.style.display = 'block';
-                    } else {
+                    containerIngles.style.display = (tela === 'ingles') ? 'block' : 'none';
+                }
+                navegacaoOriginal(tela, historico);
+            };
+            Workspace.Ingles.navConfigurada = true;
+        }
+
+        // 🚀 2. NOVO: O VIGIA GLOBAL (A Blindagem para o Bate-papo)
+        if (!Workspace.Ingles.vigiaBatePapoConfigurado) {
+            document.addEventListener('click', (event) => {
+                const containerIngles = document.getElementById('ws-ingles-container');
+                // Se o Baú já estiver escondido ou não existir, ignoramos
+                if (!containerIngles || containerIngles.style.display === 'none') return;
+                
+                // Verifica se o aluno clicou nalgum botão, link ou item de menu
+                const elementoClicado = event.target.closest('a, button, li, div[onclick], div[class*="menu"]');
+                if (elementoClicado) {
+                    const htmlDoElemento = elementoClicado.outerHTML.toLowerCase();
+                    // Se o elemento clicado tiver palavras relacionadas ao chat, escondemos o Baú!
+                    if (htmlDoElemento.includes('chat') || htmlDoElemento.includes('bate') || htmlDoElemento.includes('papo') || htmlDoElemento.includes('message')) {
                         containerIngles.style.display = 'none';
                     }
                 }
-                
-                // Continua o fluxo normal de navegação do Workspace
-                navegacaoOriginal(tela, historico);
-            };
-            Workspace.Ingles.navConfigurada = true; // Evita criar duplos interceptadores
+            });
+            Workspace.Ingles.vigiaBatePapoConfigurado = true;
         }
 
-        // 📡 A ANTENA DE TEMPO REAL
+        // 📡 3. A ANTENA DE TEMPO REAL
         if (!Workspace.Ingles.sseListenerConfigurado && Workspace.usuario) {
             const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
             const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
