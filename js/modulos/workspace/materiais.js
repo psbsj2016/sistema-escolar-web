@@ -386,7 +386,7 @@ Workspace.Materiais = {
         Workspace.mostrarAviso("Modo de edição ativado. Altere as informações e clique em Guardar. O anexo é opcional.", "info", 5000);
     },
 
-  // 🚀 O VISUALIZADOR ABSOLUTO E PERFEITO (Apresentação Imersiva e Design Sem Sobreposição)
+  // 🚀 O VISUALIZADOR ABSOLUTO E PERFEITO (Apresentação Imersiva e Botão Fechar Garantido)
     abrirVisualizador: (url, tipoFornecido, titulo) => {
         const modalId = 'ws-modal-visualizador-material';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
@@ -435,7 +435,7 @@ Workspace.Materiais = {
             }
         }
         else if (ehPowerPoint || ehWordExcel) {
-            // 🚀 O SEGREDO DO CINEMA: '&wdAr=1' força o PowerPoint a rodar as animações no Modo de Apresentação de Slides (Slide Show)
+            // '&wdAr=1' força o PowerPoint a rodar as animações no Modo de Apresentação de Slides
             const motorMS = ehPowerPoint 
                 ? `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}&wdAr=1` 
                 : `https://view.officeapps.live.com/op/embed.aspx?src=${urlCodificada}`;
@@ -444,7 +444,6 @@ Workspace.Materiais = {
             
             conteudoHTML = `
             <div style="width: 100%; height: 100%; position: relative; background: #f8fafc; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
-                
                 <!-- BARRA DE FERRAMENTAS INTELIGENTE DO DOCUMENTO -->
                 <div style="background: #0f172a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; z-index: 10; flex-shrink: 0;">
                     <div style="color: #94a3b8; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px;">
@@ -463,7 +462,7 @@ Workspace.Materiais = {
                     <p style="color:#64748b; font-size: 13px; max-width: 400px; line-height: 1.5;">A apresentação interativa está a ser preparada. Aguarde uns instantes.<br><br>Se ocorrer um erro, pode <strong>trocar o motor de leitura</strong> ou transferir o ficheiro no botão de Download.</p>
                 </div>
 
-                <!-- O IFRAME DE LEITURA (Agora ocupa todo o espaço com flex: 1) -->
+                <!-- O IFRAME DE LEITURA -->
                 <iframe id="ws-iframe-leitor" src="${motorMS}" width="100%" height="100%" style="border: none; position: relative; z-index: 2; background: transparent; flex: 1;"></iframe>
             </div>`;
         } 
@@ -473,40 +472,47 @@ Workspace.Materiais = {
 
         const modal = document.createElement('div');
         modal.id = modalId;
-        // 🚀 A CORREÇÃO DE ESTRUTURA: Substituímos o bloqueio flutuante por display: flex com column!
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:100000; display:flex; flex-direction:column; backdrop-filter:blur(10px); animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);";
+        // z-index colossal para sobrepor qualquer coisa no sistema
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2, 6, 23, 0.95); z-index:2147483647; display:flex; flex-direction:column; backdrop-filter:blur(10px); animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);";
         
         modal.innerHTML = `
             <style>
                 @keyframes spin { 100% { transform: rotate(360deg); } }
                 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+                /* No telemóvel, esconde o texto "Download" para poupar espaço, deixando só o ícone */
+                @media (max-width: 600px) { .ws-hide-mobile { display: none !important; } }
             </style>
-            <!-- CABEÇALHO MODERNO DO LEITOR (Agora com flex-shrink: 0 para ocupar exatamente o seu espaço, sem sobrepor!) -->
-            <div style="width: 100%; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: #020617; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                <div style="display: flex; flex-direction: column; max-width: 60%;">
+            
+            <!-- 🚀 CABEÇALHO DO LEITOR (Z-INDEX ALTO) -->
+            <div style="width: 100%; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; background: #020617; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.8); z-index: 99999;">
+                <div style="display: flex; flex-direction: column; max-width: 50%;">
                     <span style="color: #f8fafc; font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 20px;">📄</span> ${tituloSeguro}
                     </span>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <a href="${absoluteUrl}" download target="_blank" style="color: #f8fafc; text-decoration:none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(59, 130, 246, 0.9)'; this.style.borderColor='transparent'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)'; this.style.transform='translateY(0)';" title="Fazer Download do Ficheiro">
-                        <span style="font-size: 16px;">📥</span> Download
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <a href="${absoluteUrl}" download target="_blank" style="color: #f8fafc; text-decoration:none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: bold; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(59, 130, 246, 0.9)'; this.style.borderColor='transparent';" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,255,255,0.2)';">
+                        <span style="font-size: 16px;">📥</span> <span class="ws-hide-mobile">Download</span>
                     </a>
-                    <button id="ws-fechar-visualizador" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;" onmouseover="this.style.background='rgba(239, 68, 68, 0.9)'; this.style.color='white'; this.style.transform='rotate(90deg) scale(1.1)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#fca5a5'; this.style.transform='rotate(0deg) scale(1)';">✖</button>
+                    <!-- 🚀 BOTÃO FECHAR BLINDADO (Comando direto na veia 'onclick') -->
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background: #e74c3c; color: white; border: none; height: 35px; padding: 0 15px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); transition: 0.2s;" onmouseover="this.style.background='#c0392b'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='#e74c3c'; this.style.transform='scale(1)'">
+                        ✖ Fechar
+                    </button>
                 </div>
             </div>
             
-            <!-- ÁREA DE EXIBIÇÃO CENTRAL (Usa o resto do espaço disponível de forma perfeita, sem invadir o topo!) -->
-            <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; overflow: hidden;">
+            <!-- ÁREA DE EXIBIÇÃO CENTRAL -->
+            <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; overflow: hidden; z-index: 1;">
                 <div style="width: 100%; height: 100%; max-width: 1400px; display: flex; flex-direction: column;">
                     ${conteudoHTML}
                 </div>
             </div>
         `;
         
+        // Mantém o ouvinte de cliques para o fundo escuro, caso consigam clicar fora
         modal.addEventListener('click', (e) => { 
-            if (e.target === modal || e.target.id === 'ws-fechar-visualizador') modal.remove(); 
+            if (e.target === modal) modal.remove(); 
         });
         document.body.appendChild(modal);
     },
