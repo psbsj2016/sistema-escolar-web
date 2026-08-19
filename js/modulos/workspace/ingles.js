@@ -244,60 +244,57 @@ Workspace.Ingles = {
         const voices = window.speechSynthesis.getVoices();
         let vozSelec = null;
 
-        // 📱 DETEÇÃO DE DISPOSITIVO MÓVEL
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         if (isMago) {
-            // 🧙‍♂️ O MAGO: Retornamos ao Inglês Americano (en-US)
-            u.lang = 'en-US'; 
+            // 🧙‍♂️ O MAGO: Tom levemente mais grave (0.9) e ritmo sábio (0.9), sem distorções!
+            u.pitch = 0.9; 
+            u.rate = 0.9; 
             
-            // 🚀 O TRUQUE DE MESTRE (PITCH GRAVE): 
-            // Baixamos o tom para 0.75. Assim, se o telemóvel forçar uma voz feminina 
-            // por falta de download, a magia digital torna-a grossa e misteriosa como um Mago!
-            u.pitch = isMobile ? 0.75 : 0.75; 
-            u.rate = isMobile ? 0.95 : 0.85; 
-            
-            // Procura todas as vozes em inglês (ignorando maiúsculas e minúsculas)
             const vozesIngles = voices.filter(v => v.lang.toLowerCase().includes('en'));
             
-            // 🚀 CAÇA IMPLACÁVEL ÀS VOZES MASCULINAS (Case-Insensitive)
+            // 🚀 CAÇA DE ELITE ÀS VOZES MASCULINAS (Apanha Windows, Android, Mac e iOS)
             vozSelec = vozesIngles.find(v => {
-                const nome = v.name.toLowerCase();
-                return nome.includes('male') || 
-                       nome.includes('david') || 
-                       nome.includes('aaron') || 
-                       nome.includes('alex') || 
-                       nome.includes('fred') || 
-                       nome.includes('mark') || 
-                       nome.includes('daniel') || 
-                       nome.includes('arthur');
+                const idVoz = (v.name + " " + (v.voiceURI || "")).toLowerCase();
+                return idVoz.includes('david') ||    // Windows Masculino Padrão
+                       idVoz.includes('alex') ||     // Mac/iOS Premium Masculino
+                       idVoz.includes('aaron') ||    // iOS Masculino
+                       idVoz.includes('daniel') ||   // iOS UK Masculino (Muito Majestoso)
+                       idVoz.includes('fred') ||     // Mac Masculino
+                       idVoz.includes('mark') ||     // Google Masculino
+                       idVoz.includes('arthur') ||   // Vozes Genéricas
+                       idVoz.includes('male');       // Android Genérico Masculino
             });
 
-            // Fallback de segurança: Pega a primeira americana disponível
-            if (!vozSelec) {
-                vozSelec = vozesIngles.find(v => v.lang.includes('US')) || vozesIngles[0];
-            }
+            // Fallback: Se o celular for extremamente simples, tenta puxar a do Reino Unido (Geralmente Masculina no iOS)
+            if (!vozSelec) vozSelec = vozesIngles.find(v => v.lang === 'en-GB' || v.lang === 'en_GB');
+            
+            // Último recurso
+            if (!vozSelec) vozSelec = vozesIngles.find(v => v.lang.includes('US')) || voices[0];
             
         } else {
-            // 🇺🇸 JOGOS: Vozes Americanas (en-US) fluidas, naturais e claras
-            u.lang = lang;
-            u.pitch = pitch; // Mantém o pitch natural original (geralmente 1.0)
+            // 🇺🇸 JOGOS: Vozes claras, dinâmicas e perfeitas para o listening do aluno
+            u.pitch = pitch;
             u.rate = rate;
             
             const vozesIngles = voices.filter(v => v.lang.toLowerCase().includes('en'));
             
-            // Procura vozes femininas premium/naturais para os jogos
+            // 🚀 CAÇA ÀS VOZES AMERICANAS PREMIUM
             vozSelec = vozesIngles.find(v => {
-                const nome = v.name.toLowerCase();
-                return nome.includes('google us english') || 
-                       nome.includes('samantha') || 
-                       nome.includes('premium') ||
-                       nome.includes('natural') ||
-                       nome.includes('female');
+                const idVoz = v.name.toLowerCase();
+                return idVoz.includes('google us english') || // Padrão Perfeito Android/Chrome
+                       idVoz.includes('samantha') ||          // Padrão Perfeito iOS
+                       idVoz.includes('premium') ||
+                       idVoz.includes('natural');
             }) || vozesIngles.find(v => v.lang.includes('US')) || vozesIngles[0];
         }
 
-        if(vozSelec) u.voice = vozSelec;
+        // 🚀 A BLINDAGEM DO TELEMÓVEL: Sincronização exata de Idioma para o Android/iOS não ignorar a voz!
+        if(vozSelec) {
+            u.voice = vozSelec;
+            u.lang = vozSelec.lang; 
+        } else {
+            u.lang = lang;
+        }
+
         window.speechSynthesis.speak(u);
     },
 
