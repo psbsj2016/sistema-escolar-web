@@ -475,8 +475,8 @@ Workspace.Ingles = {
                 
                 /* 🚀 3. TELA INTERNA (CARD MAGO): Margens nos 4 lados, Balão em cima 💬, Mago Menor */
                 .ig-hub-banner { 
-                    margin: 18px; 
-                    padding: 15px 15px; 
+                    margin: 10px; 
+                    padding: 12px 112px; 
                     border-width: 2px;
                     border-radius: 12px;
                     display: flex;
@@ -490,7 +490,7 @@ Workspace.Ingles = {
                 .ig-balao-fala-hub { font-size: 16px; padding: 10px; margin-bottom: 15px !important; margin-top: 0;}
                 .ig-balao-fala-hub::before, .ig-balao-fala-hub::after { display: block !important; } 
                 
-                img.ig-hub-mago-img { width: 75px !important; margin-top: 5px;} 
+                img.ig-hub-mago-img { width: 80px !important; margin-top: 5px;} 
                 
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; } 
                 .ig-side-item { white-space: nowrap; } 
