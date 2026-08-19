@@ -280,11 +280,14 @@ Workspace.Ingles = {
         
         let listaDisponivel = listaPadrao.filter(item => !concluidos.includes(item.id));
         
+        // 🚀 FIM DO MODO LOOP: Se o aluno respondeu a tudo, o sistema envia "null" (Fim de Jornada)
         if (listaDisponivel.length === 0 && listaPadrao.length > 0) {
-            Workspace.mostrarAviso("🏆 Incrível! Dominaste este nível da magia. Vamos rever!", "success");
-            Workspace.Ingles.state.itensConcluidos = [];
-            Workspace.Ingles.saveDados();
-            listaDisponivel = listaPadrao;
+            return null; 
+        }
+        
+        // Se a lista geral estiver vazia (O professor ainda não criou conteúdos)
+        if (listaPadrao.length === 0) {
+            return null;
         }
         
         const listaErros = retidos.filter(e => e._tipoDefeito === tipoConteudo && !concluidos.includes(e.id));
@@ -292,7 +295,7 @@ Workspace.Ingles = {
             return listaErros[Math.floor(Math.random() * listaErros.length)];
         }
         
-        return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || listaPadrao[0];
+        return listaDisponivel[Math.floor(Math.random() * listaDisponivel.length)] || null;
     },
 
  // ============================================================================
@@ -1448,12 +1451,28 @@ getNomeAlunoReal: () => {
         }
     },
 
+    // 🚀 NOVO: O ECRÃ DE TRIUNFO (Quando os conteúdos do jogo acabam)
+    renderTelaFimDeJornada: () => {
+        document.getElementById('ig-modalBody').innerHTML = `
+            <div style="text-align:center; padding:50px 20px;">
+                <div style="font-size:70px; margin-bottom:15px; animation: pulse 2s infinite;">🏆</div>
+                <h2 style="font-family:'Cinzel', serif; font-size:32px; color:#d4af37; margin-bottom:10px; text-shadow: 1px 1px 2px #000;">Jornada Concluída!</h2>
+                <p style="color:#64748B; font-size:16px; margin-bottom:25px; font-weight:bold;">Dominaste todos os pergaminhos inéditos desta missão. A tua mente está afiada!</p>
+                <div style="background:#EEF2FF; border:1px dashed #4F46E5; color:#4F46E5; padding:15px; border-radius:12px; font-weight:bold; font-size:15px; max-width: 400px; margin: 0 auto; line-height: 1.5; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    Clica no botão <span style="background:#0F172A; color:white; padding:4px 8px; border-radius:6px; font-size:12px; margin: 0 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🔄 Mudar de Jogo</span> no topo do ecrã para escolheres o teu próximo destino!
+                </div>
+            </div>
+        `;
+    },
+
     // ============================================================================
-    // 🎮 JOGOS INTELIGENTES
+    // 🎮 JOGOS INTELIGENTES (Modo Campanha: Continuidade Garantida)
     // ============================================================================
     
     renderGameWordSpark: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.words, 'word');
+        // 🚀 BLOQUEIO DE FIM DE JORNADA
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const w = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1477,6 +1496,7 @@ getNomeAlunoReal: () => {
 
     renderGameReadAloud: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const p = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1494,6 +1514,7 @@ getNomeAlunoReal: () => {
 
     renderGameListenType: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const p = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1521,6 +1542,7 @@ getNomeAlunoReal: () => {
 
     renderGameQuiz: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.quizzes, 'quiz');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const q = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1542,6 +1564,7 @@ getNomeAlunoReal: () => {
 
     renderGamePicturePop: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.pictures, 'picture');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const pic = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1612,6 +1635,7 @@ getNomeAlunoReal: () => {
 
     renderGameWordPicker: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.wordPickers, 'picker');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const s = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1632,6 +1656,7 @@ getNomeAlunoReal: () => {
 
     renderGameMinimalPairs: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.minimalPairs, 'minimal');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const pair = Workspace.Ingles.desafioAtualObj;
         const target = Math.random() > 0.5 ? pair.a : pair.b;
         
@@ -1657,6 +1682,7 @@ getNomeAlunoReal: () => {
 
     renderGameSentenceShuffle: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.state.phrases, 'phrase');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const phrase = Workspace.Ingles.desafioAtualObj;
         const task = ['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
         
@@ -1670,6 +1696,7 @@ getNomeAlunoReal: () => {
 
     renderGameAnswerQuest: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.questions, 'question');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const q = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1682,8 +1709,10 @@ getNomeAlunoReal: () => {
     renderGameQuestionMaker: () => {
         const poolAnswers = Workspace.Ingles.state.pool.filter(p=>p.type==='answerQuest').map(p=>({ id: p.id, text: p.text }));
         
-        const defaultAnswer = { id: 'fallback1', text: 'I go to the gym because I want to be healthy.' };
-        Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : defaultAnswer;
+        // Se a piscina de respostas não tiver nada ou já foi toda respondida, mostra o fim da jornada
+        Workspace.Ingles.desafioAtualObj = poolAnswers.length > 0 ? Workspace.Ingles.obterItemInteligente(poolAnswers, 'qmaker') : null;
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
+
         const a = Workspace.Ingles.desafioAtualObj;
 
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1704,6 +1733,7 @@ getNomeAlunoReal: () => {
 
     renderGameContextRole: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.roleplays, 'roleplay');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const c = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
@@ -1716,6 +1746,7 @@ getNomeAlunoReal: () => {
 
     renderGameDebateAI: () => {
         Workspace.Ingles.desafioAtualObj = Workspace.Ingles.obterItemInteligente(Workspace.Ingles.defaults.debates, 'debate');
+        if (!Workspace.Ingles.desafioAtualObj) return Workspace.Ingles.renderTelaFimDeJornada();
         const topic = Workspace.Ingles.desafioAtualObj;
         
         document.getElementById('ig-modalBody').innerHTML = `
