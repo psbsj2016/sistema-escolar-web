@@ -440,28 +440,18 @@ Workspace.Ingles = {
         }
 
         container.innerHTML = `
-            <!-- 🛡️ NOVO CABEÇALHO RPG (HUD EM 2 LINHAS) -->
             <div class="ig-header">
-                <!-- LINHA 1: Título na Esquerda e Baú na Direita -->
-                <div class="ig-header-linha">
-                    <div class="ig-title-box">
-                        <h2>Baú do Inglês</h2>
-                        <p>Treinamento Épico Adaptativo</p>
-                    </div>
-                    <img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" onerror="this.onerror=null; this.src='/public/assets/bau_roxo_pixel.png';" alt="Baú" class="ig-bau-topo" />
+                <div class="ig-title">
+                    <img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" onerror="this.onerror=null; this.src='/public/assets/bau_roxo_pixel.png';" alt="Baú" style="width: 55px; height: auto; mix-blend-mode: screen; transition: 0.3s; filter: drop-shadow(0 0 10px #f1c40f);" />
+                    <div><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div>
                 </div>
-                
-                <!-- LINHA 2: Relógio na Esquerda e Fogo/Estrela Empilhados na Direita -->
-                <div class="ig-header-linha-base">
+                <div class="ig-rpg-hud">
                     <div id="ig-global-timer-display" class="ig-global-timer">00:00</div>
-                    <div class="ig-status-coluna">
-                        <div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div>
-                        <div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div>
-                    </div>
+                    <div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div>
+                    <div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div>
                 </div>
             </div>
 
-            <!-- ⏱️ ECRÃ DE PREPARAÇÃO (LAYOUT LADO A LADO) -->
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none; transition: opacity 0.5s ease-out;">
                 <div class="ig-guardian-stars"></div>
                 
@@ -492,25 +482,21 @@ Workspace.Ingles = {
                 </div>
             </div>
 
-            <!-- ⚔️ ARENA DE BATALHA COM O MAGO (Falas Personalizadas) -->
             <div id="ig-alunoView" style="display:none; padding: 30px 30px 40px 30px;">
-                <!-- 🚀 BANNER TIPO CARTA COMPACTA -->
                 <div class="ig-hub-banner">
                     <div class="ig-guardian-stars"></div>
                     
                     <img src="/assets/mago_bau_ingles.png" onerror="this.onerror=null; this.src='/public/assets/mago_bau_ingles.png';" class="ig-hub-mago-img" alt="Mago" />
                     
-                    <div class="ig-hub-banner-content">
-                        <h1>A tua jornada começou! ⏳</h1>
-                        <p>Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
-                        <!-- O BALÃO DE FALA INTELIGENTE APARECE AQUI -->
+                    <div style="flex: 1; z-index: 2;">
+                        <h1 style="font-family: 'Cinzel', serif; color:#f1c40f; font-size:32px; margin:0 0 10px 0; text-shadow: 2px 2px 4px #000;">A tua jornada começou! ⏳</h1>
+                        <p style="color:#cbd5e1; font-size:16px; margin:0;">Escolha um pergaminho ou poção. A Inteligência guardará os teus erros para os refazeres. Domina a magia!</p>
                         <div class="ig-balao-fala-hub" id="ig-hub-mago-text" style="display:none;"></div>
                     </div>
                 </div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
 
-            <!-- 🔒 ECRÃ DE FIM DE TEMPO (Usa o Baú) -->
             <div id="ig-timeout-screen" style="display:none; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; background:#F8FAFC; text-align:center;">
                 <img src="/assets/bau_roxo_pixel.png" onerror="this.onerror=null; this.src='/public/assets/bau_roxo_pixel.png';" alt="Baú Fechado" style="width: 140px; mix-blend-mode: screen; filter: grayscale(100%) opacity(0.6); margin-bottom: 20px;" />
                 <h1 style="font-family: 'Cinzel', serif; font-size:36px; color:#1E293B; margin-bottom:10px;">O tempo esgotou!</h1>
@@ -522,7 +508,6 @@ Workspace.Ingles = {
                 <button class="ws-btn" style="background: linear-gradient(180deg, #d4af37, #996515); color:#fff; font-family: 'Cinzel', serif; padding:12px 35px; border-radius:4px; font-size: 18px; font-weight:bold; border: 2px solid #fff; cursor:pointer; box-shadow: 0 4px 0 #000;" onclick="Workspace.Ingles.encerrarSessaoBau()">Guardar e Sair</button>
             </div>
 
-            <!-- 👨‍🏫 PAINEL DO PROFESSOR -->
             <div id="ig-professorView" style="display: none; min-height: 70vh;">
                 <div class="ig-sidebar">
                     <button class="ig-side-item" data-tab="mago" onclick="Workspace.Ingles.renderProfessorTab('mago')">🧙‍♂️ Mago IA</button>
@@ -535,7 +520,6 @@ Workspace.Ingles = {
                 <div id="ig-tab-content" style="flex:1; padding:30px; background:#F8FAFC;"></div>
             </div>
 
-            <!-- ⚔️ MODAL DE JOGOS -->
             <div id="ig-gameModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); z-index:1000000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
                 <div class="ws-card" style="width:90%; max-width:650px; background:#fffcf0; border: 4px solid #d4af37; border-radius:8px; overflow:hidden; padding:0; display:flex; flex-direction:column; max-height:90vh; box-shadow:0 25px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(212,175,55,0.2);">
                     <div style="padding: 20px 25px; border-bottom: 2px dashed #d4af37; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.5);">
