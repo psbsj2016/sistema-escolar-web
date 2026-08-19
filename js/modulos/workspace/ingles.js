@@ -568,7 +568,7 @@ falar: (text, lang = 'en-US', pitch = 1.0, rate = 0.95, isMago = false) => {
                     
                     <div class="ig-balao-fala-static">
                         <span style="color: #f1c40f; font-weight: 900;">Mestre Mago:</span><br/>
-                        <span style="color: #e2e8f0; font-size: 0.9em;">O feitiço requer o teu tempo de foco. Quantos minutos vais treinar hoje?</span>
+                        <span style="color: #e2e8f0; font-size: 0.9em;">O feitiço requer o seu tempo de foco. Quantos minutos você vai treinar agora?</span>
                     </div>
                 </div>
                 
