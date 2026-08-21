@@ -279,7 +279,16 @@ Workspace.Ingles = {
         }
     },
     abrirBau(){ Workspace.navegarPara('ingles'); },
-    sincronizarTempoReal: async function(){ await this.loadDados(); const modal=document.getElementById('ig-gameModal'); if(modal && modal.style.display!=='none') return; const hub=document.getElementById('ig-alunoView'); if(hub && hub.style.display!=='none' && Workspace.usuario.tipo==='Aluno') this.iniciarFalaGuardiao(true); const tab=document.querySelector('.ig-side-item.active'); if(tab && Workspace.usuario.tipo!=='Aluno') this.renderProfessorTab(tab.dataset.tab); },
+    sincronizarTempoReal: async function(){ 
+        const modal=document.getElementById('ig-gameModal'); 
+        if(modal && modal.style.display!=='none') return; // NUNCA sincroniza durante jogo - evita sair
+        await this.loadDados(); 
+        const hub=document.getElementById('ig-alunoView'); 
+        if(hub && hub.style.display!=='none' && Workspace.usuario.tipo==='Aluno'){
+            // Só fala se não estiver digitando
+            if(!this.digitandoAtivo) this.iniciarFalaGuardiao(false);
+        }
+ const tab=document.querySelector('.ig-side-item.active'); if(tab && Workspace.usuario.tipo!=='Aluno') this.renderProfessorTab(tab.dataset.tab); },
 
     loadDados: async function(){
         try{
@@ -725,10 +734,20 @@ Workspace.Ingles = {
     },
 
     iniciarFalaGuardiao(forcarRestart=false){
-        // FIX: nunca fala durante jogo, só no hub
+        // FIX DEFINITIVO: nunca fala durante jogo, debounce pra não repetir
         const modal=document.getElementById('ig-gameModal');
         if(modal && modal.style.display!=='none') return;
-        if(this.digitandoAtivo && !forcarRestart) return; this.digitandoAtivo=true;
+        // Debounce: se chamou há menos de 1.5s, ignora
+        const agora=Date.now();
+        if(this._ultimoFalaGuardiao && (agora - this._ultimoFalaGuardiao < 1500) && !forcarRestart){
+            return;
+        }
+        this._ultimoFalaGuardiao=agora;
+        // Limpa qualquer fala anterior e intervalo
+        try{ speechSynthesis.cancel(); }catch{}
+        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
+        if(this.digitandoAtivo && !forcarRestart) return; 
+        this.digitandoAtivo=true;
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
         const balao=document.getElementById('ig-hub-mago-text');
         if(!balao) return; balao.style.display='block'; balao.innerHTML='';
@@ -984,7 +1003,15 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
     },
-    fecharJogo(){ try{ speechSynthesis.cancel(); }catch{} if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; } this.digitandoAtivo=false; document.getElementById('ig-gameModal').style.display='none'; if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop(); },
+    fecharJogo(){ 
+        // FIX: fecha jogo, silencia tudo, NÃO chama mago repetido
+        try{ speechSynthesis.cancel(); }catch{}
+        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
+        this.digitandoAtivo=false;
+        this._ultimoFalaGuardiao=0; // reseta debounce pra próxima vez no hub
+        document.getElementById('ig-gameModal').style.display='none';
+        // Não chama renderizarVisualizacao aqui pra não dar loop de voz - deixa hub quieto
+ if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop(); },
 
 
     sucessoGenerico: async function(bonus){
@@ -1034,13 +1061,7 @@ Workspace.Ingles = {
     },
 
     renderDesafioAtual(){
-        // FIX: nunca sai sozinho, só se tempo realmente acabou e é chamado pelo timer
-        if(this.tempoRestante<=0 && this.tempoGlobalDefinido){
-            // Só fecha se tempo acabou de verdade, não durante jogo normal
-            if(this.tempoRestante<=0){
-                // mantém modal aberto com mensagem, não fecha automaticamente aqui
-            }
-        }
+        // FIX DEFINITIVO: NUNCA sai sozinho ao receber XP, só sai no X, Mudar ou tempo acabar de verdade
         this.currentAudioURL=null; this.desafioAtualObj=null;
         const id=this.jogoAtual;
         if(id==='wordSpark') this.renderGameWordSpark();
@@ -1061,7 +1082,8 @@ Workspace.Ingles = {
             this.renderGameDebateAI();
             return;
         }
-        if(this.tempoRestante>0){
+        // FIX: só fecha se tempo acabou MESMO, nunca por XP
+        if(this.tempoRestante>0 || !this.tempoGlobalDefinido){
             this.renderDesafioAtual();
         }else{
             this.fecharJogo();
