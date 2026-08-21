@@ -394,6 +394,7 @@ Workspace.Ingles = {
         return nA.split(' ').some(w=>nB.includes(w))?0.6:0;
     },
 
+    
     injetarCSS(){
         if(document.getElementById('ws-ingles-css')) return;
         if(!document.querySelector('link[data-ig-font]')){
@@ -401,35 +402,68 @@ Workspace.Ingles = {
         }
         const style=document.createElement('style'); style.id='ws-ingles-css';
         style.textContent=`
-            #ws-ingles-container{background:#F8FAFC;border-radius:16px;overflow:visible;min-height:80vh;position:relative;display:flex;flex-direction:column}
-            .ig-header{background:#1a1a2e;padding:15px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #f1c40f;position:sticky;top:0;z-index:9999}
-            .ig-title{display:flex;align-items:center;gap:20px}
-            .ig-bau-topo{width:65px;filter:drop-shadow(0 0 10px #f1c40f);transition:0.3s}
-            .ig-rpg-hud{display:flex;gap:12px;background:linear-gradient(180deg,#1a1a2e 0%,#000 100%);padding:8px 15px;border-radius:12px;border:2px solid #d4af37;color:#fff;font-family:VT323,monospace;font-size:20px;align-items:center}
-            .ig-hud-stat{display:flex;gap:6px;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:6px;border:1px solid rgba(212,175,55,0.3)}
-            .ig-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding:20px 0 30px 0}
-            .ig-game-card{background:#fffcf0;border:2px solid #d4af37;border-radius:8px;padding:20px;cursor:pointer;transition:0.3s}
-            .ig-game-card:hover{transform:translateY(-5px);box-shadow:0 10px 15px rgba(212,175,55,0.4)}
+            #ws-ingles-container{background:linear-gradient(180deg,#F8FAFC 0%,#EEF2FF 100%);border-radius:20px;overflow:visible;min-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(15,23,42,0.08);border:1px solid #E2E8F0}
+            .ig-header{background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 40%,#1e1b4b 100%);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d4af37;position:relative;top:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+            .ig-title{display:flex;align-items:center;gap:18px}
+            .ig-bau-topo{width:72px;filter:drop-shadow(0 0 14px rgba(241,196,15,0.8)) drop-shadow(0 4px 12px rgba(0,0,0,0.5));transition:0.3s}
+            .ig-title-text h2{font-family:'Cinzel',serif;font-size:30px;font-weight:900;margin:0;background:linear-gradient(90deg,#fde68a 0%,#f1c40f 25%,#fde68a 50%,#d4af37 75%,#fde68a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(2px 2px 0px #000) drop-shadow(0 0 20px rgba(241,196,15,0.35));background-size:200% auto;animation:shineGold 4s linear infinite}
+            @keyframes shineGold{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+            .ig-title-text p{margin:3px 0 0 0;font-size:11px;color:#f8fafc;font-family:'VT323',monospace;text-transform:uppercase;letter-spacing:3px;opacity:0.95;text-shadow:0 1px 0 #000}
+            .ig-rpg-hud{display:flex;gap:10px;background:rgba(0,0,0,0.6);padding:8px 14px;border-radius:14px;border:1.5px solid rgba(212,175,55,0.5)}
+            .ig-hud-stat{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.25);color:#fff;font-family:'VT323',monospace;font-size:18px}
+            .ig-hud-stat span{color:#fde68a;font-size:22px}
+            .ig-global-timer{font-family:'VT323',monospace;font-size:22px;color:#ff4757;display:none;align-items:center;letter-spacing:2px;background:rgba(239,68,68,0.15);padding:5px 12px;border-radius:8px;border:1.5px dashed #ef4444}
+            .ig-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:0 0 30px 0}
+            .ig-game-card{background:linear-gradient(180deg,#ffffff 0%,#fffcf0 100%);border:2px solid #eab308;border-radius:16px;padding:22px;cursor:pointer;transition:0.3s;box-shadow:0 4px 0 #d4af37, 0 8px 24px rgba(0,0,0,0.06)}
+            .ig-game-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 8px 0 #d4af37, 0 16px 32px rgba(212,175,55,0.25)}
+            .ig-game-card h3{font-family:'Cinzel',serif;color:#0f172a;font-size:17px;font-weight:800;margin:12px 0 8px 0}
+            .ig-game-card p{color:#334155;font-size:13.5px;font-weight:500;margin:0 0 12px 0}
+            .ig-top{display:flex;justify-content:space-between;align-items:center}
+            .ig-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px}
+            .ig-badge{font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;border:1px solid}
+            .ig-badge-level{background:#0f172a;color:#fde68a;border-color:#d4af37}
             .chest-shake{animation:chestShake 0.4s infinite} @keyframes chestShake{0%,100%{transform:translate(1px,-2px) rotate(-5deg)}50%{transform:translate(-1px,2px) rotate(5deg)}}
-            .chest-explode{animation:chestExplode 1.2s forwards;z-index:9999999!important} @keyframes chestExplode{0%{transform:scale(1)}20%{transform:scale(3.5) translateY(20px);filter:brightness(2.5) drop-shadow(0 0 150px #fff)}100%{transform:scale(1)}}
+            .chest-explode{animation:chestExplode 1.2s forwards;z-index:9999999!important} @keyframes chestExplode{0%{transform:scale(1)}20%{transform:scale(3.5) translateY(20px);filter:brightness(2.5)}100%{transform:scale(1)}}
             @keyframes shockwave{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(400);opacity:0}}
-            .ig-fireball{position:fixed;border-radius:50%;box-shadow:0 0 15px currentColor;pointer-events:none;z-index:9999999;animation:shootParticle 1.5s cubic-bezier(0.1,0.8,0.2,1) forwards}
+            .ig-fireball{position:fixed;border-radius:50%;pointer-events:none;z-index:9999999;animation:shootParticle 1.5s forwards}
             .ig-sparkle{position:fixed;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);pointer-events:none;z-index:9999999;animation:shootParticle 2s forwards}
-            @keyframes shootParticle{0%{transform:translate(0,0) scale(1) rotate(0deg);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0) rotate(1080deg);opacity:0}}
-            .ig-guardian-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;background:radial-gradient(circle at center,#1a0b2e 0%,#000 100%);border-radius:0 0 16px 16px;border:4px solid #333;padding:30px 20px}
-            .ig-balao-fala-static{background:linear-gradient(180deg,#0f172a 0%,#000 100%);padding:20px 25px;border-radius:12px;border:3px solid #f1c40f;color:#fff;font-family:VT323,monospace;font-size:24px}
-            .ig-global-timer{font-family:VT323,monospace;font-size:24px;color:#ff4757;display:none;align-items:center;letter-spacing:2px;background:rgba(0,0,0,0.5);padding:4px 10px;border-radius:6px;border:1px dashed #ff4757}
-            .ig-input,.ig-textarea{width:100%;padding:12px 15px;border:1px solid #E2E8F0;border-radius:10px;box-sizing:border-box}
-            .ig-sidebar{width:250px;background:#fff;border-right:1px solid #E2E8F0;padding:20px;display:flex;flex-direction:column;gap:5px}
-            .ig-side-item{background:transparent;border:none;padding:12px 15px;border-radius:10px;text-align:left;font-weight:bold;color:#64748B;cursor:pointer;transition:0.2s}
+            @keyframes shootParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+            .ig-guardian-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;background:radial-gradient(ellipse at 30% 20%, #2a1a4a 0%, #1a0b2e 25%, #0f0f23 60%, #000 100%);border-radius:0 0 20px 20px;border:4px solid #1e1b4b;border-top:none;padding:32px 24px}
+            .ig-guardian-avatar{width:92px;animation:flutuarMago 3.5s ease-in-out infinite;filter:drop-shadow(0 0 28px rgba(142,68,173,0.9))}
+            @keyframes flutuarMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+            .ig-balao-fala-static{background:linear-gradient(180deg,#0f172a 0%,#020617 100%);padding:20px 22px;border-radius:14px;border:2.5px solid #f1c40f;color:#fff;font-family:'VT323',monospace;font-size:22px;flex:1;box-shadow:0 8px 24px rgba(0,0,0,0.6);position:relative}
+            .ig-hub-banner{display:flex;align-items:center;gap:18px;padding:18px 22px;background:linear-gradient(135deg, #0f0f23 0%, #1a1a2e 30%, #1e1b4b 70%, #0f172a 100%);border:2px solid #d4af37;border-radius:18px;margin:0 0 26px 0;box-shadow:0 12px 32px rgba(0,0,0,0.4)}
+            .ig-hub-mago-img{width:68px;animation:flutuarMago 3.5s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(142,68,173,0.9));flex-shrink:0}
+            .ig-balao-fala-hub{background:linear-gradient(180deg, #0f172a 0%, #020617 100%);color:#f8fafc;padding:14px 18px;border-radius:14px;border:2px solid #f1c40f;font-family:'VT323',monospace;font-size:20px;flex:1;position:relative}
+            .ig-big-phrase{background:#ffffff;border:2.5px solid #cbd5e1;color:#0f172a;font-weight:800;font-size:22px;text-align:center;padding:22px;border-radius:16px;margin:16px 0;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+            .ig-input,.ig-textarea{background:#ffffff;color:#0f172a;border:2.5px solid #cbd5e1;border-radius:12px;font-weight:600;font-size:15px;width:100%;padding:12px 15px;box-sizing:border-box}
+            .ig-input:focus,.ig-textarea:focus{border-color:#4f46e5;outline:none;box-shadow:0 0 0 4px rgba(79,70,229,0.12)}
+            .ig-input::placeholder,.ig-textarea::placeholder{color:#64748b;opacity:1}
+            .ig-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:22px;margin-bottom:18px}
+            .ig-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#0f172a;font-weight:500}
+            .ig-sidebar{width:250px;background:#fff;border-right:1px solid #E2E8F0;padding:20px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+            .ig-side-item{background:transparent;border:none;padding:12px 15px;border-radius:10px;text-align:left;font-weight:bold;color:#64748B;cursor:pointer;transition:0.2s;white-space:nowrap}
             .ig-side-item.active{background:#0F172A;color:#fff}
-            .ig-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 4px 15px rgba(0,0,0,0.02)}
-            .ig-list-item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #eee;align-items:center}
-            .ig-big-phrase{font-size:22px;font-weight:bold;text-align:center;padding:20px;background:#F8FAFC;border:1px dashed #E2E8F0;border-radius:14px;margin:15px 0;color:#1E293B}
-            @media(max-width:768px){#ws-ingles-container{min-height:100vh;border-radius:0}.ig-header{flex-direction:column}.ig-bau-topo{width:100px!important}.ig-rpg-hud{width:100%}.ig-guardian-container{flex:1;min-height:60vh}}
+            #ig-professorView{display:flex;min-height:70vh}
+            #ig-tab-content{flex:1;padding:28px;background:#F8FAFC;overflow-y:auto}
+            @media(max-width:768px){
+              #ws-ingles-container{min-height:100vh;border-radius:0}
+              .ig-header{flex-direction:column;gap:14px;padding:12px 16px;position:relative}
+              .ig-bau-topo{width:92px!important}
+              .ig-title-text h2{font-size:24px}
+              .ig-games-grid{grid-template-columns:1fr;padding:0 16px 30px 16px}
+              .ig-hub-banner{flex-direction:column;text-align:center;padding:14px}
+              #ig-professorView{flex-direction:column}
+              .ig-sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:8px;padding:12px;border-right:none;border-bottom:2px solid #E2E8F0;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+              .ig-side-item{flex-shrink:0;padding:10px 14px;font-size:13px}
+              #ig-tab-content{padding:16px}
+              .ig-guardian-container{padding:20px 16px;min-height:60vh}
+              .ig-balao-fala-static{font-size:18px}
+            }
         `;
         document.head.appendChild(style);
     },
+
 
     construirHTML(){
         let container=document.getElementById('ws-ingles-container');
@@ -443,7 +477,7 @@ Workspace.Ingles = {
                 <div class="ig-prep-layout" style="display:flex;gap:25px;align-items:center"><img src="/assets/mago_bau_ingles.png" class="ig-guardian-avatar" style="width:130px;mix-blend-mode:screen" /><div class="ig-balao-fala-static"><span style="color:#f1c40f">Mestre Mago:</span><br/>Quantos minutos vai treinar agora?</div></div>
                 <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
             </div>
-            <div id="ig-alunoView" style="display:none;padding:30px"><div id="ig-hub-mago-text" class="ig-balao-fala-static" style="display:none;margin-bottom:20px"></div><div id="ig-gamesGrid" class="ig-games-grid"></div></div>
+            <div id="ig-alunoView" style="display:none;padding:28px"><div class="ig-hub-banner"><img src="/assets/mago_bau_ingles.png" class="ig-hub-mago-img" alt="Mago" /><div id="ig-hub-mago-text" class="ig-balao-fala-hub" style="display:none"></div></div><div id="ig-gamesGrid" class="ig-games-grid"></div></div>
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
             <div id="ig-professorView" style="display:none;min-height:70vh"><div class="ig-sidebar">
                 <button data-action="render-tab" data-tab="mago" class="ig-side-item">🧙 Mago IA</button>
@@ -621,12 +655,26 @@ Workspace.Ingles = {
             },1000);
         },1500);
     },
+    
     encerrarSessaoBau(){
-        TimerService.stop(); this.tempoGlobalDefinido=false; this.sessaoEncerrada=false; this.digitandoAtivo=false;
+        TimerService.stop();
+        this.tempoGlobalDefinido=false;
+        this.sessaoEncerrada=false;
+        this.bauDestrancado=false;
+        this.tempoRestante=0;
+        this.digitandoAtivo=false;
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
-        const balao=document.getElementById('ig-hub-mago-text'); if(balao) balao.style.display='none';
-        Workspace.navegarPara('feed');
+        const chest=document.getElementById('ig-header-chest');
+        if(chest){ chest.classList.remove('chest-shake','chest-explode'); chest.style.transform='scale(1)'; chest.src='/assets/bau_roxo_pixel.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel.png'; }; }
+        document.getElementById('ig-gameModal').style.display='none';
+        document.getElementById('ig-timeout-screen').style.display='none';
+        document.getElementById('ig-alunoView').style.display='none';
+        const guardian=document.getElementById('ig-guardian-screen');
+        if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; const inp=document.getElementById('ig-tempo-escolhido'); if(inp) inp.value=''; }
+        this.renderizarVisualizacao();
+        Workspace.mostrarAviso('Sessão guardada! Escolha novo tempo para voltar a jogar.','success');
     },
+
     iniciarFalaGuardiao(forcarRestart=false){
         if(this.digitandoAtivo && !forcarRestart) return; this.digitandoAtivo=true;
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
