@@ -446,11 +446,15 @@ Workspace.Ingles = {
             .ig-side-item.active{background:#0F172A;color:#fff}
             #ig-professorView{display:flex;min-height:70vh}
             #ig-tab-content{flex:1;padding:28px;background:#F8FAFC;overflow-y:auto}
-            .ws-btn{font-weight:800!important;color:#0f172a!important}
-            .ws-btn[style*="background:#fff"]{color:#0f172a!important;border:2px solid #cbd5e1!important}
-            .ws-btn[style*="background:#0f172a"]{color:#fde68a!important}
-            .ws-btn[style*="background:#4F46E5"]{color:#ffffff!important}
-            .ws-btn[style*="background:#10B981"]{color:#ffffff!important}
+            /* FIX BOTÕES - APENAS DENTRO DO BAÚ DO INGLÊS, NÃO AFETA OUTROS WORKSPACES */
+            #ws-ingles-container .ws-btn, #ig-gameModal .ws-btn{font-weight:800!important}
+            #ws-ingles-container .ws-btn[style*="background:#fff"], #ig-gameModal .ws-btn[style*="background:#fff"]{color:#0f172a!important;border:2px solid #cbd5e1!important}
+            #ws-ingles-container .ws-btn[style*="background:#ffffff"], #ig-gameModal .ws-btn[style*="background:#ffffff"]{color:#0f172a!important}
+            #ws-ingles-container .ws-btn[style*="background:#0f172a"], #ig-gameModal .ws-btn[style*="background:#0f172a"]{color:#fde68a!important}
+            #ws-ingles-container .ws-btn[style*="background:#4F46E5"], #ig-gameModal .ws-btn[style*="background:#4F46E5"]{color:#ffffff!important}
+            #ws-ingles-container .ws-btn[style*="background:#10B981"], #ig-gameModal .ws-btn[style*="background:#10B981"]{color:#ffffff!important}
+            #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
+
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
               .ig-header{flex-direction:column;gap:14px;padding:12px 16px;position:relative}
@@ -918,6 +922,7 @@ Workspace.Ingles = {
 
     abrirJogo(id){
         const game=this.defaults.games.find(g=>g.id===id); if(!game) return;
+        // FIX 3: FEITIÇO NUNCA INTERFERE COM DUELO - isolamento total
         if(id!=='debateAI'){
             this.state._debateChat=[];
             this.state._debateTopicId=null;
@@ -998,6 +1003,20 @@ Workspace.Ingles = {
         if(this.tempoRestante>0) this.renderDesafioAtual(); else this.fecharJogo(); 
     },
     renderTelaFimDeJornada(){
+        // FIX 1: TODOS OS JOGOS CONTINUAM - nunca empurra para local dos jogos
+        if(this.jogoAtual){
+            // Reseta concluídos e continua no mesmo jogo
+            const colecao = this.getColecaoDoJogoAtual();
+            if(colecao){
+                const idsDoTipo = colecao.map(i=>i.id);
+                this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!idsDoTipo.includes(id));
+                const userK=`ws_ingles_user_${Workspace.usuario.id}`;
+                try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos)); }catch{}
+                this.renderDesafioAtual();
+                return;
+            }
+        }
+
         if(this.jogoAtual==='debateAI'){
             this.state._debateChat=[];
             this.state._debateTopicId=null;
@@ -1011,6 +1030,11 @@ Workspace.Ingles = {
     },
 
     renderGameWordSpark(){
+        // FIX 3: ISOLAMENTO TOTAL - limpa qualquer estado de debate
+        this.state._debateChat=[];
+        this.state._debateTopicId=null;
+        this.state._minimalTarget=null;
+
         // FEITIÇO ISOLADO - não usa estado do Duelo
 
         this.desafioAtualObj=this.obterItemInteligente(this.state.words,'word'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
