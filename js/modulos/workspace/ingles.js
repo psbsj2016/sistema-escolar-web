@@ -922,7 +922,6 @@ Workspace.Ingles = {
 
     abrirJogo(id){
         const game=this.defaults.games.find(g=>g.id===id); if(!game) return;
-        // FIX 3: FEITIÇO NUNCA INTERFERE COM DUELO - isolamento total
         if(id!=='debateAI'){
             this.state._debateChat=[];
             this.state._debateTopicId=null;
@@ -935,7 +934,33 @@ Workspace.Ingles = {
         const titleEl=document.getElementById('ig-modalTitle'); if(titleEl) titleEl.textContent=game.title;
         const modal=document.getElementById('ig-gameModal'); if(modal) modal.style.display='flex'; 
         this.currentAudioURL=null; 
-        this.renderDesafioAtual();
+        this.renderGameCapa();
+    },
+    renderGameCapa(){
+        const game=this.defaults.games.find(g=>g.id===this.jogoAtual);
+        if(!game) return;
+        const intro = this.defaults.intros ? this.defaults.intros[this.jogoAtual] : null;
+        const como = intro ? intro.como : game.desc;
+        const objetivo = intro ? intro.objetivo : 'Treine inglês de forma épica.';
+        const dica = intro ? intro.dica : 'Foque e divirta-se!';
+        const xp = intro ? intro.xp : '+50 XP';
+        const totalItens = (()=>{ const c=this.getColecaoDoJogoAtual(); return c?c.length:0; })();
+        const vencidos = Object.values(this.state.srs).filter(s=>s.tipo===this.jogoAtual && s.due<=Date.now()).length;
+        document.getElementById('ig-modalBody').innerHTML=`
+            <div style="text-align:center;padding:10px 0">
+                <div style="width:84px;height:84px;border-radius:20px;background:${game.color};display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 14px auto;box-shadow:0 8px 24px rgba(0,0,0,0.15);border:3px solid #fff">${game.icon}</div>
+                <h2 style="font-family:Cinzel,serif;color:#0f172a;margin:0;font-size:22px">${game.title}</h2>
+                <span style="background:#0f172a;color:#fde68a;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;margin-top:8px;display:inline-block;border:1px solid #d4af37">${game.level} • ${totalItens} desafios • ${vencidos? vencidos+' para revisar 🔥': 'SRS ativo'}</span>
+                <div style="text-align:left;background:linear-gradient(180deg,#ffffff 0%,#F8FAFC 100%);border:2px solid #E2E8F0;border-radius:16px;padding:18px;margin-top:18px">
+                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#4F46E5;letter-spacing:1px;margin-bottom:4px">📖 COMO FUNCIONA</div><div style="font-size:14px;color:#0f172a;line-height:1.5">${como}</div></div>
+                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#059669;letter-spacing:1px;margin-bottom:4px">🎯 OBJETIVO</div><div style="font-size:13px;color:#334155;line-height:1.5">${objetivo}</div></div>
+                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#d97706;letter-spacing:1px;margin-bottom:4px">💡 DICA DO MAGO</div><div style="font-size:13px;color:#334155;line-height:1.5;background:#FFFBEB;border:1px solid #fde68a;padding:10px;border-radius:10px">${dica}</div></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span style="background:#EEF2FF;color:#4338ca;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800;border:1px solid #c7d2fe">⭐ ${xp}</span><span style="background:#F1F5F9;color:#475569;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">⏱ Só acaba no X, Mudar ou tempo</span><span style="background:#D1FAE5;color:#065f46;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">♾️ Treino infinito - nunca expulsa</span></div>
+                </div>
+                <button data-action="iniciar-jogo" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:14px;margin-top:18px;cursor:pointer;font-weight:800;font-size:16px;box-shadow:0 6px 0 #312e81, 0 8px 24px rgba(79,70,229,0.3)">▶ Iniciar Treino Épico</button>
+                <p style="font-size:11px;color:#94a3b8;margin-top:10px">Depois de iniciar, fica treinando no mesmo jogo até clicar em Mudar 🗺, X ou acabar o tempo global</p>
+            </div>
+        `;
     },
     abrirMiniHub(){
         if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop();
