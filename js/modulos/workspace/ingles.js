@@ -985,33 +985,33 @@ Workspace.Ingles = {
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; await this.saveDados();
         const srs=this.state.srs[this.desafioAtualObj?.id];
-        // Inteligência: mostra XP sem interromper, continua no mesmo jogo
         const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:toastIn 0.4s ease';
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
         toast.innerHTML=`✅ +${bonus} XP • Próxima revisão em ${srs?.interval||1}d`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1500);
-        // FIX: NUNCA remove, só traz próximo conteúdo do MESMO jogo
-        setTimeout(()=>{ 
+        setTimeout(()=>{
             const modal=document.getElementById('ig-gameModal');
             if(modal && modal.style.display!=='none' && this.tempoRestante>0){
-                this.renderDesafioAtual(); // continua no mesmo jogo, sem ir pro hub
+                this.renderDesafioAtual();
             }
-        }, 700);
+        }, 800);
     },
 
 
     falhaGenerica: async function(){
-        // FIX: falha nunca remove, continua no mesmo jogo com próximo conteúdo (SRS traz de volta em 2 min)
-
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
-        const body=document.getElementById('ig-modalBody');
         const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 8px 24px rgba(0,0,0,0.3)';
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
         toast.innerHTML=`❌ Erro guardado • Volta em 2 min`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1800);
-        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); }, 1800);
+        setTimeout(()=>{
+            const modal=document.getElementById('ig-gameModal');
+            if(modal && modal.style.display!=='none' && this.tempoRestante>0){
+                this.renderDesafioAtual();
+            }
+        }, 1200);
     },
 
     envioAoProfessor: async function(gameId, texto, bonus=20){
@@ -1042,7 +1042,11 @@ Workspace.Ingles = {
             this.renderGameDebateAI();
             return;
         }
-        if(this.tempoRestante>0) this.renderDesafioAtual(); else this.fecharJogo(); 
+        if(this.tempoRestante>0){
+            this.renderDesafioAtual();
+        }else{
+            this.fecharJogo();
+        }
     },
     getColecaoDoJogoAtual(){
         const id=this.jogoAtual;
@@ -1059,47 +1063,18 @@ Workspace.Ingles = {
         return null;
     },
     renderTelaFimDeJornada(){
-        // FIX DEFINITIVO: NUNCA empurra pro hub, NUNCA mostra Jornada Concluída, sempre continua no mesmo jogo
         if(this.jogoAtual){
             const colecao = this.getColecaoDoJogoAtual();
             if(colecao && colecao.length){
-                const idsDoTipo = colecao.map(i=>i.id);
-                this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!idsDoTipo.includes(id));
-                const userK=`ws_ingles_user_${Workspace.usuario.id}`;
-                try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos)); }catch{}
+                const ids = colecao.map(i=>i.id);
+                this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!ids.includes(id));
+                const k=`ws_ingles_user_${Workspace.usuario.id}`;
+                try{ localStorage.setItem(k+`_concluidos`, JSON.stringify(this.state.itensConcluidos)); }catch{}
                 this.renderDesafioAtual();
                 return;
             }
         }
-        // Fallback: se por algum motivo colecao vazia, tenta qualquer jogo
         this.renderDesafioAtual();
-        return;
-        // código antigo abaixo nunca executa
-
-        // FIX 1: TODOS OS JOGOS CONTINUAM - nunca empurra para local dos jogos
-        if(this.jogoAtual){
-            // Reseta concluídos e continua no mesmo jogo
-            const colecao = this.getColecaoDoJogoAtual();
-            if(colecao){
-                const idsDoTipo = colecao.map(i=>i.id);
-                this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!idsDoTipo.includes(id));
-                const userK=`ws_ingles_user_${Workspace.usuario.id}`;
-                try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos)); }catch{}
-                this.renderDesafioAtual();
-                return;
-            }
-        }
-
-        if(this.jogoAtual==='debateAI'){
-            this.state._debateChat=[];
-            this.state._debateTopicId=null;
-            this.renderGameDebateAI();
-            return;
-        }
-
-        const due=Object.values(this.state.srs).filter(s=>s.due<=Date.now()).length;
-        const next=Object.values(this.state.srs).filter(s=>s.interval>0).sort((a,b)=>a.due-b.due)[0];
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;padding:40px 20px"><div style="font-size:70px">🏆</div><h2 style="font-family:Cinzel;color:#d4af37">Jornada Concluída!</h2><p style="color:#64748B;font-weight:bold">Dominaste tudo por hoje. ${due?`Mas tem ${due} vencidos pra revisar!`:''}</p><div style="background:#EEF2FF;border:1px dashed #4F46E5;padding:15px;border-radius:12px;margin:20px auto;max-width:400px">Próxima revisão: ${next?new Date(next.due).toLocaleDateString():'amanhã - volte e o SRS trará mais'}</div><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:10px 20px;border-radius:8px;cursor:pointer">🗺 Ver Mapa</button></div>`;
     },
 
     renderGameWordSpark(){
