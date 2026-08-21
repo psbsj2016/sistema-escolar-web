@@ -446,6 +446,11 @@ Workspace.Ingles = {
             .ig-side-item.active{background:#0F172A;color:#fff}
             #ig-professorView{display:flex;min-height:70vh}
             #ig-tab-content{flex:1;padding:28px;background:#F8FAFC;overflow-y:auto}
+            .ws-btn{font-weight:800!important;color:#0f172a!important}
+            .ws-btn[style*="background:#fff"]{color:#0f172a!important;border:2px solid #cbd5e1!important}
+            .ws-btn[style*="background:#0f172a"]{color:#fde68a!important}
+            .ws-btn[style*="background:#4F46E5"]{color:#ffffff!important}
+            .ws-btn[style*="background:#10B981"]{color:#ffffff!important}
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
               .ig-header{flex-direction:column;gap:14px;padding:12px 16px;position:relative}
@@ -985,8 +990,21 @@ Workspace.Ingles = {
         else if(id==='minimalPairs') this.renderGameMinimalPairs();
         else if(id==='picturePop') this.renderGamePicturePop();
     },
-    proximoDesafio(){ if(this.tempoRestante>0) this.renderDesafioAtual(); else this.fecharJogo(); },
+    proximoDesafio(){ 
+        if(this.jogoAtual==='debateAI'){
+            this.renderGameDebateAI();
+            return;
+        }
+        if(this.tempoRestante>0) this.renderDesafioAtual(); else this.fecharJogo(); 
+    },
     renderTelaFimDeJornada(){
+        if(this.jogoAtual==='debateAI'){
+            this.state._debateChat=[];
+            this.state._debateTopicId=null;
+            this.renderGameDebateAI();
+            return;
+        }
+
         const due=Object.values(this.state.srs).filter(s=>s.due<=Date.now()).length;
         const next=Object.values(this.state.srs).filter(s=>s.interval>0).sort((a,b)=>a.due-b.due)[0];
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;padding:40px 20px"><div style="font-size:70px">🏆</div><h2 style="font-family:Cinzel;color:#d4af37">Jornada Concluída!</h2><p style="color:#64748B;font-weight:bold">Dominaste tudo por hoje. ${due?`Mas tem ${due} vencidos pra revisar!`:''}</p><div style="background:#EEF2FF;border:1px dashed #4F46E5;padding:15px;border-radius:12px;margin:20px auto;max-width:400px">Próxima revisão: ${next?new Date(next.due).toLocaleDateString():'amanhã - volte e o SRS trará mais'}</div><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:10px 20px;border-radius:8px;cursor:pointer">🗺 Ver Mapa</button></div>`;
@@ -1041,11 +1059,103 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel;text-align:left">${Workspace.escapeHTML(c.title)}<br><br><span style="font-size:14px;color:#64748B">${Workspace.escapeHTML(c.prompt)}</span></div><p style="font-size:12px;background:#FEF3C7;color:#92400E;padding:12px;border-radius:8px;font-weight:bold">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p><textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?"></textarea><button data-action="verificar-envio" data-game="contextRole" data-bonus="60" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Assumir Papel 🎭</button>`;
     },
     renderGameDebateAI(){
-        this.desafioAtualObj=this.obterItemInteligente((this.state.debates&&this.state.debates.length?this.state.debates:this.defaults.debates),'debate'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        if(!this.state._debateChat) this.state._debateChat=[];
+        if(!this.desafioAtualObj || this.state._debateTopicId !== (this.desafioAtualObj?.id)){
+            this.desafioAtualObj=this.obterItemInteligente((this.state.debates&&this.state.debates.length?this.state.debates:this.defaults.debates),'debate');
+            if(!this.desafioAtualObj){
+                this.desafioAtualObj={id:'temp_'+Date.now(), topic:'Is technology making us less human?', starter:'Technology connects us, but are we losing real connection?'};
+            }
+            this.state._debateTopicId=this.desafioAtualObj.id;
+            if(this.state._debateChat.length===0){
+                this.state._debateChat=[{role:'ai', text: this.desafioAtualObj.starter, source:'professor', inteligencia:'Mago Sábio'}];
+            }
+        }
         const topic=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel">🤖 Duelo de Mentes<br><br><span style="font-size:16px;color:#4F46E5">${Workspace.escapeHTML(topic.topic)}</span></div><textarea id="ig-input" class="ig-textarea" placeholder="Defende tua posição..."></textarea><button data-action="verificar-envio" data-game="debateAI" data-bonus="75" class="ws-btn" style="width:100%;background:#0F172A;color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Contra-Atacar ⚔</button>`;
+        const poolRelacionado = this.state.pool.filter(p=>p.type==='debateAI' || p.type==='answerQuest').slice(0,2);
+        const inteligencias = {
+            'Mago Sábio': {emoji:'🧙‍♂️', color:'#4F46E5', desc:'Socrático'},
+            'Mago Rebelde': {emoji:'😈', color:'#dc2626', desc:'Advogado do Diabo'},
+            'Mago Coletivo': {emoji:'🧠', color:'#d97706', desc:'Coletivo'},
+            'Mago Gramático': {emoji:'📝', color:'#059669', desc:'Correção'},
+            'Mago IA': {emoji:'🤖', color:'#0f172a', desc:'Contra'}
+        };
+        const chatHtml=this.state._debateChat.map(m=>{
+            const isUser=m.role==='user';
+            const intel = inteligencias[m.inteligencia||'Mago IA'] || inteligencias['Mago IA'];
+            if(isUser){
+                return `<div style="display:flex;gap:10px;margin-bottom:14px;justify-content:flex-end"><div style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 16px;border-radius:18px 18px 4px 18px;max-width:78%;box-shadow:0 4px 12px rgba(79,70,229,0.25)"><div style="font-size:10px;opacity:0.8;letter-spacing:1px">VOCÊ</div><div style="font-size:14px;margin-top:4px;line-height:1.5;word-break:break-word">${Workspace.escapeHTML(m.text)}</div></div><div style="width:36px;height:36px;border-radius:50%;background:#E0E7FF;border:2px solid #818cf8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧑‍🎓</div></div>`;
+            }else{
+                return `<div style="display:flex;gap:10px;margin-bottom:14px"><div style="width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid ${intel.color};display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0"><img src="/assets/mago_bau_ingles.png" style="width:28px;height:28px;object-fit:cover" onerror="this.style.display='none'"><span style="font-size:16px">${intel.emoji}</span></div><div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:4px 18px 18px 18px;padding:12px 14px;max-width:78%;box-shadow:0 2px 12px rgba(0,0,0,0.06)"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:${intel.color}">${(m.inteligencia||'Mago IA').toUpperCase()}</b><span style="font-size:9px;background:${intel.color}15;color:${intel.color};padding:2px 6px;border-radius:10px">${intel.desc}</span></div><div style="font-size:14px;color:#0f172a;margin-top:6px;line-height:1.5;word-break:break-word">${Workspace.escapeHTML(m.text)}</div>${m.grammar?`<div style="margin-top:8px;background:#FFFBEB;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:11px;color:#92400E">💡 ${Workspace.escapeHTML(m.grammar)}</div>`:''}</div></div>`;
+            }
+        }).join('');
+        const coletivoHtml = poolRelacionado.length ? `<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#92400E;margin-bottom:8px">🧠 COLETIVO • ${this.state.pool.length} debates</div>${poolRelacionado.map(p=>`<div style="font-size:12px;background:#fff;padding:8px 10px;border-radius:8px;margin-bottom:6px;border-left:3px solid #f59e0b">${Workspace.escapeHTML(p.text.substring(0,110))}...</div>`).join('')}</div>` : '';
+        document.getElementById('ig-modalBody').innerHTML=`
+            <div style="background:linear-gradient(135deg,#0f0f23 0%,#1e1b4b 100%);padding:14px 18px;border-radius:14px;margin-bottom:14px;border:2px solid #d4af37">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <img src="/assets/mago_bau_ingles.png" style="width:48px;height:48px;border-radius:50%;border:2px solid #d4af37" />
+                    <div style="flex:1"><div style="color:#fde68a;font-family:Cinzel,serif;font-weight:800;font-size:15px">⚔ ${Workspace.escapeHTML(topic.topic)} <span style="background:#d4af37;color:#000;font-size:9px;padding:2px 6px;border-radius:10px">CHAT AO VIVO</span></div><div style="color:#cbd5e1;font-size:11px;margin-top:2px">4 inteligências • ${this.state._debateChat.filter(m=>m.role==='user').length} trocas • Treino infinito</div></div>
+                </div>
+            </div>
+            ${coletivoHtml}
+            <div id="ig-debate-chat" style="display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;padding:14px;background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F9 100%);border:2px solid #E2E8F0;border-radius:16px;margin-bottom:14px">${chatHtml}<div id="ig-debate-typing" style="display:none"><div style="display:flex;gap:10px;margin-bottom:14px"><div style="width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid #4F46E5;display:flex;align-items:center;justify-content:center"><img src="/assets/mago_bau_ingles.png" style="width:28px;height:28px" /></div><div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:4px 18px 18px 18px;padding:12px 16px"><div style="display:flex;gap:4px"><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite"></span><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite 0.2s"></span><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite 0.4s"></span></div><div style="font-size:10px;color:#64748B;margin-top:6px">Mago consultando 4 inteligências + Pollinations...</div></div></div></div>
+            <div style="background:#fff;border:2px solid #E2E8F0;border-radius:14px;padding:10px;display:flex;gap:10px;align-items:flex-end"><textarea id="ig-input" class="ig-textarea" placeholder="Argumente em inglês..." style="min-height:70px;flex:1;border:none;box-shadow:none;resize:none" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); document.querySelector('[data-action=verificar-debate]')?.click();}"></textarea><button data-action="verificar-debate" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;width:48px;height:48px;border-radius:12px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0">➤</button></div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span style="font-size:10px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px">🧙‍♂️ Sábio</span><span style="font-size:10px;background:#FEE2E2;color:#dc2626;padding:4px 8px;border-radius:20px">😈 Rebelde</span><span style="font-size:10px;background:#FFFBEB;color:#d97706;padding:4px 8px;border-radius:20px">🧠 Coletivo</span><span style="font-size:10px;background:#D1FAE5;color:#059669;padding:4px 8px;border-radius:20px">📝 Gramático</span></div><style>@keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}</style>
+        `;
+        const chatDiv=document.getElementById('ig-debate-chat');
+        if(chatDiv) chatDiv.scrollTop=chatDiv.scrollHeight;
+    },
+
+    async checarGramaticaIngles(texto){
+        try{
+            const params = new URLSearchParams();
+            params.append('language','en-US');
+            params.append('text', texto);
+            const res = await fetch('https://api.languagetool.org/v2/check', {method:'POST', body:params});
+            if(res.ok){
+                const data = await res.json();
+                if(data.matches && data.matches.length>0){
+                    const first = data.matches[0];
+                    return first.message + (first.replacements && first.replacements[0] ? ` → "${first.replacements[0].value}"` : '');
+                }
+            }
+        }catch(e){}
+        return null;
+    },
+    async gerarContraArgumentoIA(topic, userText, historico){
+        const poolTexts = this.state.pool.filter(p=>p.text).slice(0,5).map(p=>p.text.substring(0,100)).join(' | ');
+        const inteligenciasPool = ['Mago Sábio','Mago Rebelde','Mago Coletivo','Mago IA'];
+        const intelEscolhida = inteligenciasPool[historico % inteligenciasPool.length];
+        let promptBase = '';
+        if(intelEscolhida==='Mago Sábio'){
+            promptBase = `You are Mago Sábio, Socratic tutor. Ask deep Socratic question. Topic: "${topic.topic}". Student: "${userText}". B2, concise.`;
+        }else if(intelEscolhida==='Mago Rebelde'){
+            promptBase = `You are Mago Rebelde, Devil's Advocate. Strongly counter-argue. Topic: "${topic.topic}". Student: "${userText}". Collective: "${poolTexts}". Be provocative, 2 sentences, B2.`;
+        }else if(intelEscolhida==='Mago Coletivo'){
+            promptBase = `You are Mago Coletivo, collective intelligence. Topic: "${topic.topic}". Student: "${userText}". Others said: "${poolTexts}". Synthesize and challenge. B2, 2 sentences.`;
+        }else{
+            promptBase = `You are Mago IA, debate opponent. Topic: "${topic.topic}". Professor: "${topic.starter||''}". Student: "${userText}". Collective: "${poolTexts}". Counter-argument, B2, 2-3 sentences, with question.`;
+        }
+        try{
+            const controller = new AbortController();
+            const timeout = setTimeout(()=>controller.abort(), 7000);
+            const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(promptBase), { signal: controller.signal });
+            clearTimeout(timeout);
+            if(res.ok){
+                let txt = await res.text();
+                txt = txt.trim().replace(/^["']|["']$/g,'').substring(0,400);
+                if(txt.length>20) return {text: txt, inteligencia: intelEscolhida};
+            }
+        }catch(e){}
+        const fallbacks={
+            'Mago Sábio': `If "${userText.substring(0,50)}..." is true, what would happen if everyone thought like you? What hidden assumptions are there?`,
+            'Mago Rebelde': `You defend "${userText.substring(0,40)}...", but ${this.state.pool.length} students argued differently: "${poolTexts.substring(0,80)}...". How do you respond?`,
+            'Mago Coletivo': `Collective intelligence: ${this.state.pool.length} debates. Some said "${poolTexts.substring(0,100)}...". Where do you stand?`,
+            'Mago IA': `Valid, but long-term impact? Can you give concrete example for "${userText.substring(0,30)}..."?`
+        };
+        return {text: fallbacks[intelEscolhida] || fallbacks['Mago IA'], inteligencia: intelEscolhida};
     },
     renderGameMinimalPairs(){
+
         this.desafioAtualObj=this.obterItemInteligente((this.state.minimalPairs&&this.state.minimalPairs.length?this.state.minimalPairs:this.defaults.minimalPairs),'minimal'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const pair=this.desafioAtualObj; const target=Math.random()>0.5?pair.a:pair.b; this.state._minimalTarget=target;
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><h3 style="font-family:Cinzel">👄 Sussurros Gêmeos</h3><div style="background:#0F172A;padding:20px;border-radius:16px;margin-top:20px"><button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 30px;border-radius:30px;border:2px solid #fff;cursor:pointer">🎧 Ouvir Sussurro</button><div style="display:flex;gap:10px;justify-content:center;margin-top:20px"><button data-action="verificar-minimal" data-choice="${pair.a}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.a}</button><button data-action="verificar-minimal" data-choice="${pair.b}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.b}</button></div></div></div>`;
