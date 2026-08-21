@@ -498,7 +498,7 @@ Workspace.Ingles = {
     bindEvents(){
         const root=document.getElementById('ws-ingles-container');
         if(!root || root._bound) return; root._bound=true;
-        root.addEventListener('click', e=>{
+        root.addEventListener('click', async e=>{
             const b=e.target.closest('[data-action]'); if(!b) return;
             const a=b.dataset.action;
             switch(a){
@@ -532,7 +532,7 @@ Workspace.Ingles = {
             if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') this.atualizarConfigMago();
         });
         const modal=document.getElementById('ig-modalBody');
-        modal.addEventListener('click', e=>{
+        modal.addEventListener('click', async e=>{
             const b=e.target.closest('[data-action]'); if(!b) return;
             const cur=this.desafioAtualObj;
             const input=document.getElementById('ig-input')?.value?.trim()||'';
@@ -574,13 +574,44 @@ Workspace.Ingles = {
                 if(sim>=0.9){ this.updateSRS(cur.id,'picture',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
+
             if(b.dataset.action==='verificar-envio'){
                 if(input.length<2) return Workspace.mostrarAviso('Responda válido','warning');
-                if(b.dataset.game==='questionMaker' && (!input.includes('?') || input.split(' ').length<3)){
-                    return Workspace.mostrarAviso('Pergunta precisa ter ? e 3 palavras','error');
-                }
+                if(b.dataset.game==='questionMaker' && (!input.includes('?') || input.split(' ').length<3)) return Workspace.mostrarAviso('Pergunta precisa ter ? e 3 palavras','error');
                 this.envioAoProfessor(b.dataset.game, input, parseInt(b.dataset.bonus||'50'));
             }
+            if(b.dataset.action==='verificar-debate'){
+                const texto=document.getElementById('ig-input')?.value?.trim()||'';
+                if(texto.length<3) return Workspace.mostrarAviso('Escreva seu argumento','warning');
+                const topic=this.desafioAtualObj;
+                // Add user message
+                this.state._debateChat.push({role:'user', text:texto});
+                // XP for participation
+                this.state.xp+=15; this.xpGanhosNaSessao+=15; await this.saveDados();
+                // Show typing
+                const typing=document.getElementById('ig-debate-typing');
+                if(typing) typing.style.display='block';
+                // Generate AI response after delay
+                setTimeout(()=>{
+                    const aiResp=this.gerarContraArgumentoIA(topic, texto, this.state._debateChat.length);
+                    this.state._debateChat.push({role:'ai', text:aiResp});
+                    this.renderGameDebateAI();
+                    // Auto scroll
+                    const inputEl=document.getElementById('ig-input'); if(inputEl) inputEl.value='';
+                    // Bonus XP after 3 exchanges
+                    if(this.state._debateChat.filter(m=>m.role==='user').length>=3){
+                        this.state.xp+=60; this.xpGanhosNaSessao+=60; this.saveDados();
+                        const toast=document.createElement('div');
+                        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#996515);color:#000;padding:10px 18px;border-radius:20px;font-weight:800;z-index:1000001';
+                        toast.innerHTML='⚔ Duelo épico! +60 XP bônus';
+                        document.body.appendChild(toast); setTimeout(()=>toast.remove(),2000);
+                    }
+                }, 1200 + Math.random()*800);
+                // Clear input immediately and re-render to show user message
+                document.getElementById('ig-input').value='';
+                this.renderGameDebateAI();
+            }
+
         });
     },
 
@@ -869,11 +900,14 @@ Workspace.Ingles = {
         if(!qVal||!o1||!o2) return Workspace.mostrarAviso('Preencha pergunta e 2 opções','warning');
         this.state.quizzes.unshift({id:'q'+Date.now(), question:qVal, options:[o1,o2], correct:1, explanation:'Professor', level:'B1'}); await this.saveDados(); this.renderProfessorTab('biblioteca');
     },
-    addPic: async function(){
-        const w=document.getElementById('picWord')?.value.trim(); const tr=document.getElementById('picTrans')?.value.trim(); const em=document.getElementById('picEmoji')?.value.trim()||'🖼';
-        if(!w) return Workspace.mostrarAviso('Digite a palavra','warning');
-        this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'}); await this.saveDados(); this.renderProfessorTab('imagens');
-    },
+
+    addPic: async function(){ const w=document.getElementById('picWord')?.value.trim()||''; if(!w) return; const tr=document.getElementById('picTrans')?.value.trim()||''; const em=document.getElementById('picEmoji')?.value.trim()||'🖼'; this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'}); await this.saveDados(); this.renderProfessorTab('imagens'); },
+    addWordPicker: async function(){ const text=document.getElementById('wpText')?.value.trim(); const o1=document.getElementById('wpOpt1')?.value.trim(); const o2=document.getElementById('wpOpt2')?.value.trim(); const o3=document.getElementById('wpOpt3')?.value.trim(); const correct=parseInt(document.getElementById('wpCorrect')?.value||'0'); if(!text||!o1) return Workspace.mostrarAviso('Preencha texto e opções','warning'); const opts=[o1,o2,o3].filter(Boolean); this.state.wordPickers.unshift({id:'wp'+Date.now(), text, options:opts, correct}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Poção adicionada!','success'); },
+    addMinimal: async function(){ const a=document.getElementById('mpA')?.value.trim(); const b=document.getElementById('mpB')?.value.trim(); if(!a||!b) return; this.state.minimalPairs.unshift({id:'mp'+Date.now(), a, b}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
+    addRoleplay: async function(){ const title=document.getElementById('rpTitle')?.value.trim(); const prompt=document.getElementById('rpPrompt')?.value.trim(); const tip=document.getElementById('rpTip')?.value.trim()||'Use inglês natural'; if(!title||!prompt) return; this.state.roleplays.unshift({id:'rp'+Date.now(), title, prompt, tip}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
+    addQuestion: async function(){ const text=document.getElementById('aqText')?.value.trim(); if(!text) return; this.state.questions.unshift({id:'aq'+Date.now(), text}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
+    addDebate: async function(){ const topic=document.getElementById('dbTopic')?.value.trim(); const starter=document.getElementById('dbStarter')?.value.trim()||'What is your opinion?'; if(!topic) return; this.state.debates.unshift({id:'d'+Date.now(), topic, starter}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Duelo adicionado com IA!','success'); },
+
     remItem: async function(key,id){ this.state[key]=this.state[key].filter(i=>i.id!==id); if(key==='magoPhrases'&&this.state.editingMagoId===id) this.state.editingMagoId=null; await this.saveDados(); const active=document.querySelector('.ig-side-item.active'); if(active) this.renderProfessorTab(active.dataset.tab); },
     aprovarEnvio: async function(id){ const s=this.state.submissions.find(x=>x.id===id); if(!s) return; s.status='approved'; this.state.pool.unshift({id:'pool_'+Date.now(), type:s.game, text:s.text, word:s.text, origin:'student', student:s.student, timestamp:Date.now()}); await this.saveDados(); this.renderProfessorTab('envios'); Workspace.mostrarAviso('Aprovado para Piscina Global!','success'); },
 
@@ -889,35 +923,34 @@ Workspace.Ingles = {
     },
     fecharJogo(){ document.getElementById('ig-gameModal').style.display='none'; if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop(); },
 
-    // [FIX] Não remove automaticamente - mostra botão Próximo
+
     sucessoGenerico: async function(bonus){
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; await this.saveDados();
         const srs=this.state.srs[this.desafioAtualObj?.id];
-        document.getElementById('ig-modalBody').innerHTML=`
-            <div style="text-align:center;padding:30px">
-                <div style="font-size:60px;margin-bottom:10px">✅</div>
-                <h2 style="font-family:Cinzel;color:#10B981">Excelente!</h2>
-                <div style="font-family:VT323,monospace;font-size:28px;color:#0F172A">+${bonus} XP</div>
-                <div style="font-size:12px;color:#64748B;margin-top:8px">SRS: Próxima revisão em ${srs?.interval||1} dia(s) • Ease ${srs?.ease?.toFixed(2)||'2.50'}</div>
-                <button data-action="proximo-desafio" style="margin-top:25px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:14px 30px;border-radius:30px;cursor:pointer;font-weight:bold;font-size:16px">Próximo Desafio →</button>
-                <p style="font-size:11px;color:#94a3b8;margin-top:10px">Avança sozinho em 4s</p>
-            </div>`;
-        // Auto-avança após 4s se não clicar (mantém fluxo mas não força)
-        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); },4000);
+        const body=document.getElementById('ig-modalBody');
+        // Toast de sucesso que não sai do jogo
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:toastIn 0.4s ease';
+        toast.innerHTML=`✅ +${bonus} XP • Próxima revisão em ${srs?.interval||1}d`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),1500);
+        // Auto próximo conteúdo DENTRO do mesmo jogo
+        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); }, 900);
     },
+
+
     falhaGenerica: async function(){
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
-        document.getElementById('ig-modalBody').innerHTML=`
-            <div style="text-align:center;padding:30px">
-                <div style="font-size:60px;margin-bottom:10px">❌</div>
-                <h2 style="font-family:Cinzel;color:#EF4444">Atenção!</h2>
-                <div style="font-size:14px;font-weight:bold;color:#64748B;margin-top:10px">A Inteligência guardou este erro. Volta em 2 minutos (SRS).</div>
-                <div style="font-family:VT323,monospace;font-size:24px;color:#EF4444;margin-top:15px">0 XP</div>
-                <button data-action="proximo-desafio" style="margin-top:25px;background:#0F172A;color:#fff;border:none;padding:12px 30px;border-radius:30px;cursor:pointer;font-weight:bold">Tentar outro →</button>
-            </div>`;
-        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); },4000);
+        const body=document.getElementById('ig-modalBody');
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 8px 24px rgba(0,0,0,0.3)';
+        toast.innerHTML=`❌ Erro guardado • Volta em 2 min`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),1800);
+        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); }, 1800);
     },
+
     envioAoProfessor: async function(gameId, texto, bonus=20){
         if(!texto||texto.trim().length<2) return Workspace.mostrarAviso('Responda válido!','warning');
         this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario.nome, game:gameId, text:texto, audioURL:this.currentAudioURL||'', status:'pending', timestamp:Date.now()});
@@ -968,7 +1001,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel">${Workspace.escapeHTML(q.question)}</div><div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:15px;border-radius:8px;cursor:pointer;text-align:left">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
     },
     renderGameWordPicker(){
-        this.desafioAtualObj=this.obterItemInteligente(this.defaults.wordPickers,'picker'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        this.desafioAtualObj=this.obterItemInteligente((this.state.wordPickers&&this.state.wordPickers.length?this.state.wordPickers:this.defaults.wordPickers),'picker'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const s=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="color:#4F46E5">${Workspace.escapeHTML(s.text)}</div><div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:12px 25px;border-radius:30px;cursor:pointer;font-weight:bold">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
     },
@@ -978,7 +1011,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><span style="background:#0F172A;color:#fff;padding:8px 15px;border-radius:20px;font-size:12px">${task}</span></div><div class="ig-big-phrase" style="margin-top:15px">${Workspace.escapeHTML(phrase.phrase)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua frase aqui..."></textarea><button data-action="verificar-envio" data-game="sentenceShuffle" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Submeter 🔀</button>`;
     },
     renderGameAnswerQuest(){
-        this.desafioAtualObj=this.obterItemInteligente(this.defaults.questions,'question'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        this.desafioAtualObj=this.obterItemInteligente((this.state.questions&&this.state.questions.length?this.state.questions:this.defaults.questions),'question'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="background:#FEF3C7;border-color:#d4af37;color:#92400E;font-family:Cinzel">❓ ${Workspace.escapeHTML(q.text)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..."></textarea><button data-action="verificar-envio" data-game="answerQuest" data-bonus="50" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(180deg,#d4af37,#996515);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Enviar para o Mestre 🚀</button>`;
     },
@@ -990,17 +1023,17 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML=`<p style="color:#64748B;font-size:13px;text-align:center;font-weight:bold">Um aventureiro respondeu:</p><div class="ig-big-phrase" style="background:#EEF2FF;color:#4F46E5;font-style:italic">💬 "${Workspace.escapeHTML(a.text)}"</div><p style="margin-top:16px;font-weight:600;text-align:center">Que pergunta gerou esta resposta?</p><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you...?"></textarea><button data-action="verificar-envio" data-game="questionMaker" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Verificar no Espelho 🔮</button>`;
     },
     renderGameContextRole(){
-        this.desafioAtualObj=this.obterItemInteligente(this.defaults.roleplays,'roleplay'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        this.desafioAtualObj=this.obterItemInteligente((this.state.roleplays&&this.state.roleplays.length?this.state.roleplays:this.defaults.roleplays),'roleplay'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const c=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel;text-align:left">${Workspace.escapeHTML(c.title)}<br><br><span style="font-size:14px;color:#64748B">${Workspace.escapeHTML(c.prompt)}</span></div><p style="font-size:12px;background:#FEF3C7;color:#92400E;padding:12px;border-radius:8px;font-weight:bold">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p><textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?"></textarea><button data-action="verificar-envio" data-game="contextRole" data-bonus="60" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Assumir Papel 🎭</button>`;
     },
     renderGameDebateAI(){
-        this.desafioAtualObj=this.obterItemInteligente(this.defaults.debates,'debate'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        this.desafioAtualObj=this.obterItemInteligente((this.state.debates&&this.state.debates.length?this.state.debates:this.defaults.debates),'debate'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const topic=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel">🤖 Duelo de Mentes<br><br><span style="font-size:16px;color:#4F46E5">${Workspace.escapeHTML(topic.topic)}</span></div><textarea id="ig-input" class="ig-textarea" placeholder="Defende tua posição..."></textarea><button data-action="verificar-envio" data-game="debateAI" data-bonus="75" class="ws-btn" style="width:100%;background:#0F172A;color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Contra-Atacar ⚔</button>`;
     },
     renderGameMinimalPairs(){
-        this.desafioAtualObj=this.obterItemInteligente(this.defaults.minimalPairs,'minimal'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        this.desafioAtualObj=this.obterItemInteligente((this.state.minimalPairs&&this.state.minimalPairs.length?this.state.minimalPairs:this.defaults.minimalPairs),'minimal'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const pair=this.desafioAtualObj; const target=Math.random()>0.5?pair.a:pair.b; this.state._minimalTarget=target;
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><h3 style="font-family:Cinzel">👄 Sussurros Gêmeos</h3><div style="background:#0F172A;padding:20px;border-radius:16px;margin-top:20px"><button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 30px;border-radius:30px;border:2px solid #fff;cursor:pointer">🎧 Ouvir Sussurro</button><div style="display:flex;gap:10px;justify-content:center;margin-top:20px"><button data-action="verificar-minimal" data-choice="${pair.a}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.a}</button><button data-action="verificar-minimal" data-choice="${pair.b}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.b}</button></div></div></div>`;
     },
