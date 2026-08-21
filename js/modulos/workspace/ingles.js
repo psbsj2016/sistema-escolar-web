@@ -552,8 +552,6 @@ Workspace.Ingles = {
         modal.addEventListener('click', async e=>{
             const b=e.target.closest('[data-action]'); if(!b) return;
             if(b.dataset.action==='iniciar-jogo'){ e.preventDefault(); this.renderDesafioAtual(); return; }
-            // existing handler continues
-            e.target.closest('[data-action]'); if(!b) return;
             const cur=this.desafioAtualObj;
             const input=document.getElementById('ig-input')?.value?.trim()||'';
             const listen=document.getElementById('ig-listenInput')?.value?.trim()||'';
@@ -1000,8 +998,12 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1500);
         setTimeout(()=>{
             const modal=document.getElementById('ig-gameModal');
-            if(modal && modal.style.display!=='none' && this.tempoRestante>0){
-                this.renderDesafioAtual();
+            if(modal && modal.style.display!=='none'){
+                if(this.tempoRestante>0 || !this.tempoGlobalDefinido){
+                    this.renderDesafioAtual();
+                }else{
+                    this.fecharJogo();
+                }
             }
         }, 800);
     },
@@ -1016,8 +1018,10 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1800);
         setTimeout(()=>{
             const modal=document.getElementById('ig-gameModal');
-            if(modal && modal.style.display!=='none' && this.tempoRestante>0){
-                this.renderDesafioAtual();
+            if(modal && modal.style.display!=='none'){
+                if(this.tempoRestante>0 || !this.tempoGlobalDefinido){
+                    this.renderDesafioAtual();
+                }
             }
         }, 1200);
     },
@@ -1030,7 +1034,14 @@ Workspace.Ingles = {
     },
 
     renderDesafioAtual(){
-        if(this.tempoRestante<=0) return; this.currentAudioURL=null; this.desafioAtualObj=null;
+        // FIX: nunca sai sozinho, só se tempo realmente acabou e é chamado pelo timer
+        if(this.tempoRestante<=0 && this.tempoGlobalDefinido){
+            // Só fecha se tempo acabou de verdade, não durante jogo normal
+            if(this.tempoRestante<=0){
+                // mantém modal aberto com mensagem, não fecha automaticamente aqui
+            }
+        }
+        this.currentAudioURL=null; this.desafioAtualObj=null;
         const id=this.jogoAtual;
         if(id==='wordSpark') this.renderGameWordSpark();
         else if(id==='readAloud') this.renderGameReadAloud();
