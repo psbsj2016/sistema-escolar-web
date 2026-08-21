@@ -1030,16 +1030,23 @@ Workspace.Ingles = {
     },
 
     renderGameWordSpark(){
-        // FIX 3: ISOLAMENTO TOTAL - limpa qualquer estado de debate
         this.state._debateChat=[];
         this.state._debateTopicId=null;
         this.state._minimalTarget=null;
-
-        // FEITIÇO ISOLADO - não usa estado do Duelo
-
-        this.desafioAtualObj=this.obterItemInteligente(this.state.words,'word'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const w=this.desafioAtualObj; const srs=this.getSRS(w.id);
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo - vai pra 1 dia se acertar'}</div><div class="ig-big-phrase" style="font-size:32px">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:bold;color:#64748B">${Workspace.escapeHTML(w.translation)}</p><div class="ig-big-phrase">Crie uma frase com <b>${esc(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence..."></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:15px;border-radius:8px;margin-top:15px;cursor:pointer;font-weight:bold">Lançar Feitiço ✨</button></div>`.replaceAll('esc(', 'Workspace.escapeHTML(');
+        const colecaoWords = (this.state.words && this.state.words.length) ? this.state.words : this.defaults.words;
+        this.desafioAtualObj=this.obterItemInteligente(colecaoWords,'word'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const w=this.desafioAtualObj; 
+        const srs=this.getSRS(w.id);
+        document.getElementById('ig-modalBody').innerHTML=`
+            <div style="text-align:center">
+                <div style="font-size:11px;color:#94a3b8;background:#F1F5F9;padding:6px 10px;border-radius:20px;display:inline-block;margin-bottom:10px">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo'} • Feitiço puro isolado</div>
+                <div class="ig-big-phrase" style="font-size:38px;background:linear-gradient(180deg,#EEF2FF 0%,#E0E7FF 100%);border-color:#818cf8;color:#4338ca">${Workspace.escapeHTML(w.word)}</div>
+                <p style="font-weight:800;color:#64748B;margin:8px 0">Significado: ${Workspace.escapeHTML(w.translation||'')}</p>
+                <div class="ig-big-phrase" style="font-size:18px">Crie frase com <b style="color:#4F46E5">${Workspace.escapeHTML(w.word)}</b></div>
+                <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Although it was raining..." style="min-height:100px;margin-top:12px"></textarea>
+                <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:12px;margin-top:14px;cursor:pointer;font-weight:800">Lançar Feitiço ✨ +50 XP</button>
+            </div>`;
     },
     renderGameReadAloud(){
         this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
