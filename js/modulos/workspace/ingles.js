@@ -985,19 +985,25 @@ Workspace.Ingles = {
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; await this.saveDados();
         const srs=this.state.srs[this.desafioAtualObj?.id];
-        const body=document.getElementById('ig-modalBody');
-        // Toast de sucesso que não sai do jogo
+        // Inteligência: mostra XP sem interromper, continua no mesmo jogo
         const toast=document.createElement('div');
         toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:toastIn 0.4s ease';
         toast.innerHTML=`✅ +${bonus} XP • Próxima revisão em ${srs?.interval||1}d`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1500);
-        // Auto próximo conteúdo DENTRO do mesmo jogo
-        setTimeout(()=>{ if(document.getElementById('ig-gameModal').style.display!=='none') this.proximoDesafio(); }, 900);
+        // FIX: NUNCA remove, só traz próximo conteúdo do MESMO jogo
+        setTimeout(()=>{ 
+            const modal=document.getElementById('ig-gameModal');
+            if(modal && modal.style.display!=='none' && this.tempoRestante>0){
+                this.renderDesafioAtual(); // continua no mesmo jogo, sem ir pro hub
+            }
+        }, 700);
     },
 
 
     falhaGenerica: async function(){
+        // FIX: falha nunca remove, continua no mesmo jogo com próximo conteúdo (SRS traz de volta em 2 min)
+
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
         const body=document.getElementById('ig-modalBody');
         const toast=document.createElement('div');
@@ -1053,6 +1059,23 @@ Workspace.Ingles = {
         return null;
     },
     renderTelaFimDeJornada(){
+        // FIX DEFINITIVO: NUNCA empurra pro hub, NUNCA mostra Jornada Concluída, sempre continua no mesmo jogo
+        if(this.jogoAtual){
+            const colecao = this.getColecaoDoJogoAtual();
+            if(colecao && colecao.length){
+                const idsDoTipo = colecao.map(i=>i.id);
+                this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!idsDoTipo.includes(id));
+                const userK=`ws_ingles_user_${Workspace.usuario.id}`;
+                try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos)); }catch{}
+                this.renderDesafioAtual();
+                return;
+            }
+        }
+        // Fallback: se por algum motivo colecao vazia, tenta qualquer jogo
+        this.renderDesafioAtual();
+        return;
+        // código antigo abaixo nunca executa
+
         // FIX 1: TODOS OS JOGOS CONTINUAM - nunca empurra para local dos jogos
         if(this.jogoAtual){
             // Reseta concluídos e continua no mesmo jogo
