@@ -302,6 +302,12 @@ Workspace.Ingles = {
                 this.state.magoPhrases = Array.isArray(d.magoPhrases)&&d.magoPhrases.length?d.magoPhrases:[...this.defaults.magoPhrases];
                 this.state.magoConfig = (d.magoConfig&&typeof d.magoConfig==='object')?d.magoConfig:{...this.defaults.magoConfig};
                 this.state.srs = (d.srs&&typeof d.srs==='object')?d.srs:{};
+                // V6 gamificado
+                this.state.quests = Array.isArray(d.quests)&&d.quests.length?d.quests:[];
+                this.state.achievements = Array.isArray(d.achievements)?d.achievements:[];
+                this.state.season = (d.season&&typeof d.season==='object')?d.season:{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1, ativa:true};
+                this.state.lootTables = (d.lootTables&&typeof d.lootTables==='object')?d.lootTables:{};
+                this.state.levelCurve = Array.isArray(d.levelCurve)&&d.levelCurve.length?d.levelCurve:[0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
@@ -328,7 +334,8 @@ Workspace.Ingles = {
         }catch{}
         try{
             if(Workspace.usuario?.tipo==='Aluno'){
-                Workspace.api('/workspace/ingles/xp','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', nome:Workspace.usuario.nome||Workspace.usuario.login, xp:this.state.xp, streak:this.state.streak}).catch(()=>{});
+                const lvl = this.calcularLevel(this.state.xp).level;
+                Workspace.api('/workspace/ingles/xp','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', nome:Workspace.usuario.nome||Workspace.usuario.login, xp:this.state.xp, streak:this.state.streak, level:lvl, titulo:this.state.titulo, inventario:this.state.inventario, medalhas:this.state.medalhas, questsProgress:this.state.questsProgress}).catch(()=>{});
             }
             await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId:Workspace.usuario.escolaId||'DEFAULT',
@@ -392,6 +399,61 @@ Workspace.Ingles = {
     },
 
     falar: (text, lang='en-US', pitch=1, rate=0.95, isMago=false)=> VoiceService.falar(text,{lang,pitch,rate,isMago}),
+    calcularLevel(xpTotal){
+        const curve = this.state.levelCurve || [0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
+        let level=1, proximo=curve[1]||100;
+        for(let i=0;i<curve.length;i++){
+            if(xpTotal >= curve[i]){ level=i+1; proximo=curve[i+1]||curve[i]; }
+            else { proximo=curve[i]; break; }
+        }
+        const atualBase = curve[level-2] || 0;
+        const proxBase = curve[level-1] || curve[curve.length-1];
+        const progresso = proxBase>atualBase ? Math.min(100, Math.max(0, ((xpTotal - atualBase)/(proxBase - atualBase))*100)) : 100;
+        return { level, proximo, progresso, atualBase, proxBase, xpTotal };
+    },
+    verificarQuests(tipoJogo){
+        if(!this.state.quests?.length) return;
+        this.state.quests.forEach(q=>{
+            const deveContar = (q.texto||'').toLowerCase().includes(tipoJogo) || (q.id||'').includes(tipoJogo) || q.tipo==='diaria';
+            if(!deveContar) return;
+            const prog = this.state.questsProgress[q.id] || {atual:0, coletado:false};
+            if(prog.coletado) return;
+            prog.atual = (prog.atual||0)+1;
+            this.state.questsProgress[q.id]=prog;
+            if(prog.atual >= q.alvo){
+                this.completarQuest(q);
+            }
+            this.saveDados();
+        });
+    },
+    async completarQuest(quest){
+        const bonus = Math.floor((quest.recompensaXP||100)*(this.state.season?.xpMultiplier||1));
+        this.state.xp+=bonus;
+        this.state.questsProgress[quest.id].coletado=true;
+        await this.saveDados();
+        try{
+            await Workspace.api('/workspace/ingles/quests/completar','POST',{userId:Workspace.usuario.id, questId:quest.id, escolaId:Workspace.usuario.escolaId||'DEFAULT'});
+        }catch{}
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;padding:14px 24px;border-radius:14px;font-weight:800;z-index:1000002;box-shadow:0 8px 24px rgba(0,0,0,0.3);border:2px solid #fff;text-align:center';
+        toast.innerHTML=`🎯 Missão Completa: ${quest.texto||quest.id}<br/>+${bonus} XP Bônus!`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),3000);
+        this.renderQuestsPanel();
+    },
+    async tentarDesbloquearAchievement(condicaoTipo, qtdAtual){
+        const ach = this.state.achievements.find(a=>a.condicao?.tipo===condicaoTipo && qtdAtual >= (a.condicao?.qtd||999) && !this.state.medalhas.includes(a.id));
+        if(!ach) return;
+        this.state.medalhas.push(ach.id);
+        this.state.xp+= (ach.xpBonus||100);
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/achievements/desbloquear','POST',{userId:Workspace.usuario.id, achievementId:ach.id, escolaId:Workspace.usuario.escolaId||'DEFAULT'}); }catch{}
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:24px;border-radius:20px;font-weight:800;z-index:1000003;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:3px solid #d4af37;text-align:center;animation:popIn 0.5s ease';
+        toast.innerHTML=`<div style="font-size:50px">${ach.icone||'🏆'}</div><div style="font-family:Cinzel;font-size:18px;margin:10px 0">${ach.nome}</div><div style="font-size:13px;color:#fff">${ach.desc}</div><div style="margin-top:10px;background:#fde68a;color:#000;padding:6px 12px;border-radius:20px;display:inline-block">+${ach.xpBonus} XP</div>`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),4000);
+    },
     similaridade(a,b){
         const norm=s=>s.toLowerCase().trim().replace(/[^\w\s]/g,'');
         let nA=norm(a), nB=norm(b);
@@ -461,6 +523,7 @@ Workspace.Ingles = {
             #ws-ingles-container .ws-btn[style*="background:#10B981"], #ig-gameModal .ws-btn[style*="background:#10B981"]{color:#ffffff!important}
             #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
 
+            @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
               .ig-header{flex-direction:column;gap:14px;padding:12px 16px;position:relative}
@@ -480,6 +543,21 @@ Workspace.Ingles = {
     },
 
 
+    renderQuestsPanel(){
+        const panel=document.getElementById('ig-questsPanel');
+        const list=document.getElementById('ig-questsList');
+        const seasonBadge=document.getElementById('ig-seasonBadge');
+        if(!panel||!list) return;
+        if(!this.state.quests?.length){ panel.style.display='none'; return; }
+        panel.style.display='block';
+        if(seasonBadge) seasonBadge.textContent=`${this.state.season?.nome||'S1'} • x${this.state.season?.xpMultiplier||1}`;
+        list.innerHTML = this.state.quests.map(q=>{
+            const prog = this.state.questsProgress[q.id] || {atual:0, coletado:false};
+            const pct = Math.min(100, (prog.atual/q.alvo)*100);
+            const done = prog.atual >= q.alvo;
+            return `<div style="background:${done? (prog.coletado?'#D1FAE5':'#FEF3C7') : '#fff'};border:1.5px solid ${done?'#10B981':'#E2E8F0'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="font-size:22px">${q.icone||'🎯'}</div><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#0f172a">${q.texto||q.id}</div><div style="background:#E2E8F0;height:6px;border-radius:10px;margin-top:6px;overflow:hidden"><div style="background:${done?'#10B981':'#4F46E5'};height:100%;width:${pct}%;transition:width 0.4s"></div></div><div style="font-size:11px;color:#64748B;margin-top:2px">${prog.atual}/${q.alvo} • +${q.recompensaXP} XP</div></div><div style="font-size:12px;font-weight:800;color:${done? (prog.coletado?'#065f46':'#92400e') : '#64748B'}">${prog.coletado?'✅ Coletado': done? '🎁 Coletar' : ''}</div></div>`;
+        }).join('');
+    },
     construirHTML(){
         let container=document.getElementById('ws-ingles-container');
         if(!container){ container=document.createElement('div'); container.id='ws-ingles-container'; container.style.display='none'; const p=document.getElementById('ws-main-container'); if(p?.parentNode) p.parentNode.appendChild(container); }
@@ -492,7 +570,16 @@ Workspace.Ingles = {
                 <div class="ig-prep-layout" style="display:flex;gap:25px;align-items:center"><img src="/assets/mago_bau_ingles.png" class="ig-guardian-avatar" style="width:130px;mix-blend-mode:screen" /><div class="ig-balao-fala-static"><span style="color:#f1c40f">Mestre Mago:</span><br/>Quantos minutos vai treinar agora?</div></div>
                 <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
             </div>
-            <div id="ig-alunoView" style="display:none;padding:28px"><div class="ig-hub-banner"><img src="/assets/mago_bau_ingles.png" class="ig-hub-mago-img" alt="Mago" /><div id="ig-hub-mago-text" class="ig-balao-fala-hub" style="display:none"></div></div><div id="ig-gamesGrid" class="ig-games-grid"></div></div>
+            <div id="ig-alunoView" style="display:none;padding:28px">
+                <div class="ig-hub-banner"><img src="/assets/mago_bau_ingles.png" class="ig-hub-mago-img" alt="Mago" /><div id="ig-hub-mago-text" class="ig-balao-fala-hub" style="display:none"></div></div>
+                <div id="ig-xp-bar-container" style="background:#0F172A;border:2px solid #d4af37;border-radius:14px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,0.2)">
+                    <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0" id="ig-levelBadge">1</div>
+                    <div style="flex:1"><div style="display:flex;justify-content:space-between;color:#fde68a;font-family:VT323;font-size:16px"><span id="ig-levelText">Nível 1 • Aprendiz</span><span id="ig-xpText">0 / 100 XP</span></div><div style="background:rgba(255,255,255,0.15);height:10px;border-radius:20px;overflow:hidden;margin-top:6px"><div id="ig-xpProgress" style="background:linear-gradient(90deg,#fde68a,#f1c40f);height:100%;width:0%;transition:width 0.6s ease"></div></div></div>
+                    <div style="color:#fff;font-family:VT323;font-size:14px;text-align:center"><div>🔥</div><div id="ig-streakBadge">1</div></div>
+                </div>
+                <div id="ig-questsPanel" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px;display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🎯 Missões Diárias</h4><span style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px" id="ig-seasonBadge">S1 • x1</span></div><div id="ig-questsList" style="display:flex;flex-direction:column;gap:8px"></div></div>
+                <div id="ig-gamesGrid" class="ig-games-grid"></div>
+            </div>
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
             <div id="ig-professorView" style="display:none;min-height:70vh"><div class="ig-sidebar">
                 <button data-action="render-tab" data-tab="mago" class="ig-side-item">🧙 Mago IA</button>
@@ -633,6 +720,26 @@ Workspace.Ingles = {
     },
 
     renderizarVisualizacao(){
+        // V6: atualiza barra de XP e quests
+        try{
+            const lvlInfo=this.calcularLevel(this.state.xp);
+            const lvlBadge=document.getElementById('ig-levelBadge');
+            const lvlText=document.getElementById('ig-levelText');
+            const xpText=document.getElementById('ig-xpText');
+            const xpProg=document.getElementById('ig-xpProgress');
+            const streakBadge=document.getElementById('ig-streakBadge');
+            const xpCount=document.getElementById('ig-xpCount');
+            const streakCount=document.getElementById('ig-streakCount');
+            if(lvlBadge) lvlBadge.textContent=lvlInfo.level;
+            if(lvlText) lvlText.textContent=`Nível ${lvlInfo.level} • ${this.state.titulo||'Aprendiz'}`;
+            if(xpText) xpText.textContent=`${lvlInfo.xpTotal} / ${lvlInfo.proximo} XP`;
+            if(xpProg) xpProg.style.width=`${lvlInfo.progresso}%`;
+            if(streakBadge) streakBadge.textContent=this.state.streak;
+            if(xpCount) xpCount.textContent=this.state.xp;
+            if(streakCount) streakCount.textContent=this.state.streak;
+            this.renderQuestsPanel();
+        }catch{}
+
         const xpEl=document.getElementById('ig-xpCount'); if(xpEl) xpEl.textContent=this.state.xp;
         const stEl=document.getElementById('ig-streakCount'); if(stEl) stEl.textContent=this.state.streak;
         const chest=document.getElementById('ig-header-chest');
@@ -679,7 +786,13 @@ Workspace.Ingles = {
         }).join('');
     },
 
-    abrirBauMagico(minutos){
+    async abrirBauMagico(minutos){
+        // V6: busca season atual
+        try{
+            const res=await Workspace.api(`/workspace/ingles/season/atual?escolaId=${Workspace.usuario.escolaId||'DEFAULT'}`,'GET');
+            if(res?.success) this.state.season = res.season;
+        }catch{}
+
         if(ParticleEngine._exploding || this.tempoGlobalDefinido) return;
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
@@ -704,7 +817,40 @@ Workspace.Ingles = {
         },1500);
     },
     
-    encerrarSessaoBau(){
+    async encerrarSessaoBau(){
+        // V6 loot
+        if(this.xpGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
+            try{
+                const rar = this.xpGanhosNaSessao>300? 'lendario' : this.xpGanhosNaSessao>150? 'epico' : 'comum';
+                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.xpGanhosNaSessao});
+                if(res?.success && res?.recompensa){
+                    const loot=res.recompensa;
+                    const modalLoot=document.createElement('div');
+                    modalLoot.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000004';
+                    modalLoot.innerHTML=`<div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:4px solid ${rar==='lendario'?'#fde68a': rar==='epico'?'#a78bfa':'#94a3b8'};border-radius:20px;padding:28px;text-align:center;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"><div style="font-size:60px">${rar==='lendario'?'👑': rar==='epico'?'💎':'📦'}</div><div style="font-family:Cinzel;font-weight:900;font-size:18px;margin:10px 0;color:#0f172a">Baú ${rar.toUpperCase()}!</div><div style="font-size:14px;color:#334155">${loot.nome||loot.id}</div><div style="margin-top:12px;background:#0F172A;color:#fde68a;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block">${loot.tipo||'cosmetico'}</div><button id="btn-fechar-loot" style="display:block;width:100%;margin-top:16px;background:#4F46E5;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:800;cursor:pointer">Equipar e Continuar ✨</button></div>`;
+                    document.body.appendChild(modalLoot);
+                    modalLoot.querySelector('#btn-fechar-loot').onclick=()=>modalLoot.remove();
+                    setTimeout(()=>{ if(document.body.contains(modalLoot)) modalLoot.remove(); },5000);
+                }
+            }catch{}
+        }
+        // original abaixo
+        if(this.xpGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
+            try{
+                const rar = this.xpGanhosNaSessao>300? 'lendario' : this.xpGanhosNaSessao>150? 'epico' : 'comum';
+                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.xpGanhosNaSessao});
+                if(res?.success && res?.recompensa){
+                    const loot=res.recompensa;
+                    const modalLoot=document.createElement('div');
+                    modalLoot.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000004';
+                    modalLoot.innerHTML=`<div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:4px solid ${rar==='lendario'?'#fde68a': rar==='epico'?'#a78bfa':'#94a3b8'};border-radius:20px;padding:28px;text-align:center;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"><div style="font-size:60px">${rar==='lendario'?'👑': rar==='epico'?'💎':'📦'}</div><div style="font-family:Cinzel;font-weight:900;font-size:18px;margin:10px 0;color:#0f172a">Baú ${rar.toUpperCase()}!</div><div style="font-size:14px;color:#334155">${loot.nome||loot.id}</div><div style="margin-top:12px;background:#0F172A;color:#fde68a;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block">${loot.tipo||'cosmetico'}</div><button id="btn-fechar-loot" style="display:block;width:100%;margin-top:16px;background:#4F46E5;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:800;cursor:pointer">Equipar e Continuar ✨</button></div>`;
+                    document.body.appendChild(modalLoot);
+                    modalLoot.querySelector('#btn-fechar-loot').onclick=()=>modalLoot.remove();
+                    setTimeout(()=>{ if(document.body.contains(modalLoot)) modalLoot.remove(); },5000);
+                }
+            }catch{}
+        }
+
         TimerService.stop();
         this.tempoGlobalDefinido=false;
         this.sessaoEncerrada=false;
@@ -1004,8 +1150,15 @@ Workspace.Ingles = {
         if(this.recognition) try{ this.recognition.stop(); }catch{}
     },
     sucessoGenerico: async function(bonus){
+        // V6: multiplicador de season
+        const mult = this.state.season?.xpMultiplier || 1;
+        bonus = Math.floor(bonus * mult);
+
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; await this.saveDados();
+        // V6: verifica missões e achievements
+        try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
+        try{ this.renderizarVisualizacao(); }catch{}
         const srs=this.state.srs[this.desafioAtualObj?.id];
         const toast=document.createElement('div');
         toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
