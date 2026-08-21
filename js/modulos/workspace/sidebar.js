@@ -1309,11 +1309,11 @@ verFotoChat: () => {
         if (!ehAluno) {
             if (areaProfessor) {
                 areaProfessor.style.display = 'block';
-                document.getElementById('ws-lista-entregas').innerHTML = '<p style="font-size: 12px; color: #999; text-align: center;">A buscar trabalhos... ⏳</p>';
+                document.getElementById('ws-lista-entregas').innerHTML = '<p style="font-size: 12px; color: #999; text-align: center;">Bucando exercícios... ⏳</p>';
                 try {
                     const entregas = await Workspace.api(`/workspace/entregas/tarefa/${evento.id}`, 'GET');
                     if (!entregas || entregas.length === 0) {
-                        document.getElementById('ws-lista-entregas').innerHTML = '<div style="background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center;"><div style="font-size:24px; margin-bottom:5px;">📭</div><div style="font-size:13px; color:#7f8c8d;">Nenhum aluno entregou este trabalho ainda.</div></div>';
+                        document.getElementById('ws-lista-entregas').innerHTML = '<div style="background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center;"><div style="font-size:24px; margin-bottom:5px;">📭</div><div style="font-size:13px; color:#7f8c8d;">Nenhum aluno entregou este exercício ainda.</div></div>';
                     } else {
                         let htmlEntregas = '';
                         entregas.forEach(ent => {
