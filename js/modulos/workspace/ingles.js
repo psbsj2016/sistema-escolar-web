@@ -291,6 +291,11 @@ Workspace.Ingles = {
                 this.state.phrases = Array.isArray(d.phrases)&&d.phrases.length?d.phrases:[...this.defaults.phrases];
                 this.state.quizzes = Array.isArray(d.quizzes)&&d.quizzes.length?d.quizzes:[...this.defaults.quizzes];
                 this.state.pictures = Array.isArray(d.pictures)&&d.pictures.length?d.pictures:[...this.defaults.pictures];
+                this.state.wordPickers = Array.isArray(d.wordPickers)&&d.wordPickers.length?d.wordPickers:[...this.defaults.wordPickers];
+                this.state.minimalPairs = Array.isArray(d.minimalPairs)&&d.minimalPairs.length?d.minimalPairs:[...this.defaults.minimalPairs];
+                this.state.debates = Array.isArray(d.debates)&&d.debates.length?d.debates:[...this.defaults.debates];
+                this.state.roleplays = Array.isArray(d.roleplays)&&d.roleplays.length?d.roleplays:[...this.defaults.roleplays];
+                this.state.questions = Array.isArray(d.questions)&&d.questions.length?d.questions:[...this.defaults.questions];
                 this.state.submissions = Array.isArray(d.submissions)?d.submissions:[];
                 this.state.pool = Array.isArray(d.pool)?d.pool:[];
                 this.state.errosRetidos = Array.isArray(d.errosRetidos)?d.errosRetidos:[];
@@ -300,6 +305,8 @@ Workspace.Ingles = {
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
+                this.state.wordPickers=[...this.defaults.wordPickers]; this.state.minimalPairs=[...this.defaults.minimalPairs];
+                this.state.debates=[...this.defaults.debates]; this.state.roleplays=[...this.defaults.roleplays]; this.state.questions=[...this.defaults.questions];
                 this.state.submissions=[]; this.state.pool=[]; this.state.errosRetidos=[]; this.state.magoPhrases=[...this.defaults.magoPhrases];
                 this.state.magoConfig={...this.defaults.magoConfig}; this.state.srs={};
             }
@@ -328,6 +335,7 @@ Workspace.Ingles = {
             await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId:Workspace.usuario.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
+                wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos,
                 magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs
             });
@@ -1026,6 +1034,20 @@ Workspace.Ingles = {
             return;
         }
         if(this.tempoRestante>0) this.renderDesafioAtual(); else this.fecharJogo(); 
+    },
+    getColecaoDoJogoAtual(){
+        const id=this.jogoAtual;
+        if(id==='wordSpark') return (this.state.words&&this.state.words.length)?this.state.words:this.defaults.words;
+        if(id==='readAloud' || id==='listenType' || id==='sentenceShuffle') return (this.state.phrases&&this.state.phrases.length)?this.state.phrases:this.defaults.phrases;
+        if(id==='quiz') return (this.state.quizzes&&this.state.quizzes.length)?this.state.quizzes:this.defaults.quizzes;
+        if(id==='wordPicker') return (this.state.wordPickers&&this.state.wordPickers.length)?this.state.wordPickers:this.defaults.wordPickers;
+        if(id==='minimalPairs') return (this.state.minimalPairs&&this.state.minimalPairs.length)?this.state.minimalPairs:this.defaults.minimalPairs;
+        if(id==='picturePop') return this.state.pictures;
+        if(id==='answerQuest') return (this.state.questions&&this.state.questions.length)?this.state.questions:this.defaults.questions;
+        if(id==='contextRole') return (this.state.roleplays&&this.state.roleplays.length)?this.state.roleplays:this.defaults.roleplays;
+        if(id==='debateAI') return (this.state.debates&&this.state.debates.length)?this.state.debates:this.defaults.debates;
+        if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
+        return null;
     },
     renderTelaFimDeJornada(){
         // FIX 1: TODOS OS JOGOS CONTINUAM - nunca empurra para local dos jogos
