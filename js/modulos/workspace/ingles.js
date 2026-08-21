@@ -551,6 +551,9 @@ Workspace.Ingles = {
         const modal=document.getElementById('ig-modalBody');
         modal.addEventListener('click', async e=>{
             const b=e.target.closest('[data-action]'); if(!b) return;
+            if(b.dataset.action==='iniciar-jogo'){ e.preventDefault(); this.renderDesafioAtual(); return; }
+            // existing handler continues
+            e.target.closest('[data-action]'); if(!b) return;
             const cur=this.desafioAtualObj;
             const input=document.getElementById('ig-input')?.value?.trim()||'';
             const listen=document.getElementById('ig-listenInput')?.value?.trim()||'';
