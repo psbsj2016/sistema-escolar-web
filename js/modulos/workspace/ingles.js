@@ -279,7 +279,7 @@ Workspace.Ingles = {
         }
     },
     abrirBau(){ Workspace.navegarPara('ingles'); },
-    sincronizarTempoReal: async function(){ await this.loadDados(); const hub=document.getElementById('ig-alunoView'); if(hub && hub.style.display!=='none' && Workspace.usuario.tipo==='Aluno') this.iniciarFalaGuardiao(true); const tab=document.querySelector('.ig-side-item.active'); if(tab && Workspace.usuario.tipo!=='Aluno') this.renderProfessorTab(tab.dataset.tab); },
+    sincronizarTempoReal: async function(){ await this.loadDados(); const modal=document.getElementById('ig-gameModal'); if(modal && modal.style.display!=='none') return; const hub=document.getElementById('ig-alunoView'); if(hub && hub.style.display!=='none' && Workspace.usuario.tipo==='Aluno') this.iniciarFalaGuardiao(true); const tab=document.querySelector('.ig-side-item.active'); if(tab && Workspace.usuario.tipo!=='Aluno') this.renderProfessorTab(tab.dataset.tab); },
 
     loadDados: async function(){
         try{
@@ -727,6 +727,9 @@ Workspace.Ingles = {
     },
 
     iniciarFalaGuardiao(forcarRestart=false){
+        // FIX: nunca fala durante jogo, só no hub
+        const modal=document.getElementById('ig-gameModal');
+        if(modal && modal.style.display!=='none') return;
         if(this.digitandoAtivo && !forcarRestart) return; this.digitandoAtivo=true;
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
         const balao=document.getElementById('ig-hub-mago-text');
@@ -932,6 +935,11 @@ Workspace.Ingles = {
     aprovarEnvio: async function(id){ const s=this.state.submissions.find(x=>x.id===id); if(!s) return; s.status='approved'; this.state.pool.unshift({id:'pool_'+Date.now(), type:s.game, text:s.text, word:s.text, origin:'student', student:s.student, timestamp:Date.now()}); await this.saveDados(); this.renderProfessorTab('envios'); Workspace.mostrarAviso('Aprovado para Piscina Global!','success'); },
 
     abrirJogo(id){
+        // FIX: silencia mago imediatamente ao entrar no jogo - evita repetição bugada
+        try{ speechSynthesis.cancel(); }catch{}
+        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
+        this.digitandoAtivo=false;
+        const balao=document.getElementById('ig-hub-mago-text'); if(balao) balao.style.display='none';
         const game=this.defaults.games.find(g=>g.id===id); if(!game) return;
         if(id!=='debateAI'){
             this.state._debateChat=[];
@@ -978,7 +986,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
     },
-    fecharJogo(){ document.getElementById('ig-gameModal').style.display='none'; if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop(); },
+    fecharJogo(){ try{ speechSynthesis.cancel(); }catch{} if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; } this.digitandoAtivo=false; document.getElementById('ig-gameModal').style.display='none'; if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop(); },
 
 
     sucessoGenerico: async function(bonus){
