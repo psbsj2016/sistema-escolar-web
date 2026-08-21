@@ -913,8 +913,19 @@ Workspace.Ingles = {
 
     abrirJogo(id){
         const game=this.defaults.games.find(g=>g.id===id); if(!game) return;
-        this.jogoAtual=id; document.getElementById('ig-modalIcon').textContent=game.icon; document.getElementById('ig-modalTitle').textContent=game.title;
-        document.getElementById('ig-gameModal').style.display='flex'; this.currentAudioURL=null; this.renderDesafioAtual();
+        if(id!=='debateAI'){
+            this.state._debateChat=[];
+            this.state._debateTopicId=null;
+        }
+        if(id==='wordSpark'){
+            this.state._minimalTarget=null;
+        }
+        this.jogoAtual=id; 
+        const iconEl=document.getElementById('ig-modalIcon'); if(iconEl) iconEl.textContent=game.icon;
+        const titleEl=document.getElementById('ig-modalTitle'); if(titleEl) titleEl.textContent=game.title;
+        const modal=document.getElementById('ig-gameModal'); if(modal) modal.style.display='flex'; 
+        this.currentAudioURL=null; 
+        this.renderDesafioAtual();
     },
     abrirMiniHub(){
         if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop();
@@ -982,6 +993,8 @@ Workspace.Ingles = {
     },
 
     renderGameWordSpark(){
+        // FEITIÇO ISOLADO - não usa estado do Duelo
+
         this.desafioAtualObj=this.obterItemInteligente(this.state.words,'word'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const w=this.desafioAtualObj; const srs=this.getSRS(w.id);
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo - vai pra 1 dia se acertar'}</div><div class="ig-big-phrase" style="font-size:32px">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:bold;color:#64748B">${Workspace.escapeHTML(w.translation)}</p><div class="ig-big-phrase">Crie uma frase com <b>${esc(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence..."></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:15px;border-radius:8px;margin-top:15px;cursor:pointer;font-weight:bold">Lançar Feitiço ✨</button></div>`.replaceAll('esc(', 'Workspace.escapeHTML(');
