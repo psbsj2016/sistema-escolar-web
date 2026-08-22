@@ -243,7 +243,6 @@ Workspace.Ingles = {
             {id:'rp1', title:'✈ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
             {id:'rp2', title:'🍽 No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
         ],
-
         avatares:[
             {id:'mago_aprendiz', nome:'Mago Aprendiz', emoji:'🧙‍♂️', preco:0, raridade:'comum', desc:'Seu primeiro avatar, já equipado', bonus:'XP +0%'},
             {id:'mago_sombrio', nome:'Mago Sombrio', emoji:'🧙‍♀️', preco:500, raridade:'epico', desc:'Domina sombras e rouba 5% a mais', bonus:'Roubo +5%'},
@@ -272,7 +271,6 @@ Workspace.Ingles = {
             {id:'estatua_dragao', nome:'Estátua do Dragão', emoji:'🐲', preco:1000, prodCristal:30, prodXp:30, desc:'30 cristais + 30 XP/h + poder', tipo:'lendario'},
             {id:'portal_ilha', nome:'Portal da Ilha', emoji:'🌀', preco:800, prodCristal:0, prodXp:0, desc:'Permite invadir sem gastar varinha 1x', tipo:'portal'}
         ],
-
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
@@ -339,8 +337,6 @@ Workspace.Ingles = {
                 this.state.season = (d.season&&typeof d.season==='object')?d.season:{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1, ativa:true};
                 this.state.lootTables = (d.lootTables&&typeof d.lootTables==='object')?d.lootTables:{};
                 this.state.levelCurve = Array.isArray(d.levelCurve)&&d.levelCurve.length?d.levelCurve:[0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
-                this.state.avatarEquipado = d.avatarEquipado || localStorage.getItem(`ws_ingles_user_${Workspace.usuario.id}_avatar`) || 'mago_aprendiz';
-                this.state.ferramentaEquipada = localStorage.getItem(`ws_ingles_user_${Workspace.usuario.id}_ferramenta`) || null;
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
@@ -355,6 +351,9 @@ Workspace.Ingles = {
             try{ this.state.medalhas=JSON.parse(localStorage.getItem(`${userK}_medalhas`)||'[]'); }catch{ this.state.medalhas=[]; }
             this.state.streak=parseInt(localStorage.getItem(`${userK}_streak`)||'1');
             this.state.itensConcluidos=JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
+            this.state.avatarEquipado=localStorage.getItem(`${userK}_avatar`)||'mago_aprendiz';
+            this.state.ferramentaEquipada=localStorage.getItem(`${userK}_ferramenta`)||null;
+            try{ const ilhaLocal=JSON.parse(localStorage.getItem(`${userK}_ilha`)||'null'); if(ilhaLocal) this.state.ilha={...this.state.ilha, ...ilhaLocal}; }catch{}
             try{
                 const localSRS=JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
@@ -384,10 +383,7 @@ Workspace.Ingles = {
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos,
-                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs, avatarEquipado:this.state.avatarEquipado, ferramentaEquipada:this.state.ferramentaEquipada,
-                quests:this.state.quests, achievements:this.state.achievements, season:this.state.season,
-                lootTables:this.state.lootTables, levelCurve:this.state.levelCurve, titulos:this.state.titulos, badges:this.state.badges,
-                portalConfig:this.state.portalConfig
+                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs, avatarEquipado:this.state.avatarEquipado, ferramentaEquipada:this.state.ferramentaEquipada
             });
         }catch{}
     },
@@ -414,9 +410,6 @@ Workspace.Ingles = {
     marcarComoConcluido(itemId){
         if(!itemId) return;
         if(!this.state.itensConcluidos.includes(itemId)) this.state.itensConcluidos.push(itemId);
-        const jogoId = this.portalAtivo ? (this.state.portalJogoInterno || this.jogoAtual) : this.jogoAtual;
-        if(!this.state.sessaoUsadosPorJogo[jogoId]) this.state.sessaoUsadosPorJogo[jogoId]=[];
-        if(!this.state.sessaoUsadosPorJogo[jogoId].includes(itemId)) this.state.sessaoUsadosPorJogo[jogoId].push(itemId);
     },
 
     // SRS verdadeiro
@@ -623,57 +616,8 @@ Workspace.Ingles = {
         });
         modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
     },
-    equiparAvatar(avatarId){
-        this.state.avatarEquipado=avatarId;
-        this.saveDados();
-        Workspace.mostrarAviso(`Avatar equipado: ${avatarId}`,'success');
-        this.renderizarVisualizacao();
-    },
-    equiparFerramenta(ferrId){
-        this.state.ferramentaEquipada=ferrId;
-        this.saveDados();
-    },
-    async comprarAvatar(avatarId, preco){
-        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP! Jogue mais!`,'warning'); return; }
-        const ja = (this.state.inventario||[]).some(i=>i.id===avatarId && i.tipo==='avatar');
-        if(ja){ Workspace.mostrarAviso('Você já tem esse avatar!','warning'); return; }
-        const avatar = (this.defaults.avatares||[]).find(a=>a.id===avatarId);
-        if(!avatar) return;
-        this.state.xp -= preco;
-        this.state.inventario = this.state.inventario||[];
-        this.state.inventario.push({id:avatarId, nome:avatar.nome, emoji:avatar.emoji, tipo:'avatar', raridade:avatar.raridade, obtidoEm:new Date().toISOString(), preco});
-        this.state.avatarEquipado=avatarId;
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:avatarId, tipo:'avatar', preco, nome:avatar.nome}); }catch{}
-        this.tocarSom('level'); this.confete();
-        Workspace.mostrarAviso(`🧙 Avatar ${avatar.nome} comprado por ${preco} XP e equipado!`,'success');
-        this.renderizarVisualizacao();
-    },
-    async comprarFerramenta(ferrId, preco){
-        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
-        const ferr = (this.defaults.ferramentas||[]).find(f=>f.id===ferrId);
-        if(!ferr) return;
-        this.state.xp -= preco;
-        this.state.inventario.push({id:ferrId, nome:ferr.nome, emoji:ferr.emoji, tipo:'ferramenta', uso:ferr.uso, durabilidade:ferr.durabilidade, obtidoEm:new Date().toISOString(), preco});
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:ferrId, tipo:'ferramenta', preco, nome:ferr.nome}); }catch{}
-        Workspace.mostrarAviso(`🛠️ ${ferr.nome} comprada por ${preco} XP!`,'success');
-        this.renderizarVisualizacao();
-    },
-    async comprarDecoracao(decoId, preco){
-        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
-        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===decoId);
-        if(!deco) return;
-        this.state.xp -= preco;
-        this.state.inventario.push({id:decoId, nome:deco.nome, emoji:deco.emoji, tipo:deco.tipo||'decoracao', prodCristal:deco.prodCristal, prodXp:deco.prodXp, obtidoEm:new Date().toISOString(), preco});
-        // também adiciona cristais na ilha como recurso inicial
-        this.state.ilha = this.state.ilha||{ nivel:1, tamanho:4, cristais:100, layout:[] };
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:decoId, tipo:'decoracao', preco, nome:deco.nome}); }catch{}
-        Workspace.mostrarAviso(`🏝️ ${deco.nome} comprado! Coloque na sua ilha!`,'success');
-        this.renderizarVisualizacao();
-    },
-    equiparTitulo(titulo){
+
+    equiparAvatar(titulo){
         this.state.tituloEquipado=titulo;
         this.state.titulo=titulo;
         this.saveDados();
@@ -685,18 +629,22 @@ Workspace.Ingles = {
         Workspace.mostrarAviso(`Borda equipada: ${bordaId}`,'success');
     },
 
-    // ================= 🏝️ ILHA MÁGICA - MÉTODOS =================
+    // ================= 🏝️ ILHA MÁGICA - MÉTODOS COMPLETOS =================
     async abrirIlhaMagica(){
+        console.log('🏝️ Abrindo Ilha Mágica...');
         const modal = document.getElementById('ig-ilhaModal');
-        if(!modal) return;
+        if(!modal){ console.error('Modal ilha não encontrado'); return; }
         modal.style.display='block';
+        document.body.style.overflow='hidden';
         await this.carregarMinhaIlha();
         await this.carregarOutrasIlhas();
         this.renderIlha();
+        Workspace.mostrarAviso('🏝️ Bem-vindo à sua Ilha Mágica!','success');
     },
     fecharIlhaMagica(){
         const modal = document.getElementById('ig-ilhaModal');
         if(modal) modal.style.display='none';
+        document.body.style.overflow='';
     },
     async carregarMinhaIlha(){
         try{
@@ -704,11 +652,14 @@ Workspace.Ingles = {
             const res = await Workspace.api(`/workspace/ingles/ilha/minha?userId=${Workspace.usuario.id}&escolaId=${escolaId}`,'GET');
             if(res && res.success && res.ilha){
                 this.state.ilha = {...(this.state.ilha||{}), ...res.ilha};
+                if(!this.state.ilha.layout || !this.state.ilha.layout.length){
+                    const total = (this.state.ilha.tamanho||4)*(this.state.ilha.tamanho||4);
+                    this.state.ilha.layout = Array(total).fill(null);
+                }
             }
-            // coleta automática de produção offline
             this.coletarProducaoOffline();
         }catch(e){
-            // se não tem ilha, cria padrão
+            console.log('Criando ilha padrão', e);
             this.state.ilha = this.state.ilha||{ nivel:1, tamanho:4, cristais:100, layout:Array(16).fill(null), escudoAte:0, historicoInvasoes:[], ultimaColeta:Date.now() };
         }
         this.atualizarHeaderIlha();
@@ -720,14 +671,14 @@ Workspace.Ingles = {
             if(res && res.success){
                 this.state.ilhasOutras = res.ilhas||[];
             }
-        }catch{}
+        }catch(e){ console.error('Erro carregar outras ilhas', e); }
     },
     coletarProducaoOffline(){
         const ilha = this.state.ilha;
         if(!ilha || !ilha.ultimaColeta) { ilha.ultimaColeta = Date.now(); return; }
         const agora = Date.now();
         const horas = (agora - ilha.ultimaColeta)/ (1000*60*60);
-        if(horas < 0.05) return; // menos de 3 min não coleta
+        if(horas < 0.05) return;
         let totalCristais=0, totalXp=0;
         const layout = ilha.layout||[];
         layout.forEach(itemId=>{
@@ -738,7 +689,6 @@ Workspace.Ingles = {
                 totalXp += (deco.prodXp||0) * horas;
             }
         });
-        // bônus avatar
         const avatar = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado);
         if(avatar && avatar.id==='arquimago_dourado'){ totalCristais*=2; totalXp*=2; }
         if(avatar && avatar.id==='dragao_mestre'){ totalCristais*=3; totalXp*=3; }
@@ -746,7 +696,7 @@ Workspace.Ingles = {
         this.state.xp += Math.floor(totalXp);
         ilha.ultimaColeta = agora;
         if(totalCristais>0 || totalXp>0){
-            Workspace.mostrarAviso(`🏝️ Ilha produziu +${Math.floor(totalCristais)}💎 e +${Math.floor(totalXp)} XP offline!`,'success');
+            setTimeout(()=> Workspace.mostrarAviso(`🏝️ Ilha produziu +${Math.floor(totalCristais)}💎 e +${Math.floor(totalXp)} XP offline!`,'success'), 1000);
         }
     },
     atualizarHeaderIlha(){
@@ -761,7 +711,6 @@ Workspace.Ingles = {
         if(xpH) xpH.textContent = this.state.xp||0;
         if(nivelEl) nivelEl.textContent = this.state.ilha?.nivel||1;
         if(tamanhoEl) tamanhoEl.textContent = `${this.state.ilha?.tamanho||4}x${this.state.ilha?.tamanho||4}`;
-        // notificação se tem itens novos não colocados
         try{
             const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
             const emUso = {};
@@ -781,9 +730,8 @@ Workspace.Ingles = {
         const tamanho = ilha.tamanho||4;
         const gridEl = document.getElementById('ig-ilhaGrid');
         const statsEl = document.getElementById('ig-ilhaStats');
-        if(!gridEl) return;
+        if(!gridEl){ console.error('Grid ilha não encontrado'); return; }
         gridEl.style.gridTemplateColumns = `repeat(${tamanho},1fr)`;
-        // garante layout do tamanho
         const total = tamanho*tamanho;
         if(!ilha.layout || ilha.layout.length !== total){
             const novo = Array(total).fill(null);
@@ -797,10 +745,9 @@ Workspace.Ingles = {
                 return `<div class="ilha-celula vazia" data-idx="${idx}" data-action="ilha-celula-vazia" title="Vazio - clique para construir">➕</div>`;
             } else {
                 const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===itemId) || {emoji:'❓', nome:itemId};
-                return `<div class="ilha-celula" data-idx="${idx}" data-action="ilha-celula-cheia" title="${Workspace.escapeHTML(deco.nome)} - clique para remover"><div style="font-size:28px">${deco.emoji}</div><div style="position:absolute;bottom:2px;right:2px;font-size:8px;background:rgba(0,0,0,0.6);color:#fff;padding:1px 4px;border-radius:6px">${deco.prodCristal?`+${deco.prodCristal}💎`:''}</div></div>`;
+                return `<div class="ilha-celula" data-idx="${idx}" data-action="ilha-celula-cheia" title="${Workspace.escapeHTML(deco.nome)} - clique para remover"><div style="font-size:30px">${deco.emoji}</div><div style="position:absolute;bottom:3px;right:3px;font-size:8px;background:rgba(0,0,0,0.7);color:#fff;padding:2px 5px;border-radius:8px;font-weight:800">${deco.prodCristal?`+${deco.prodCristal}💎`:''} ${deco.prodXp?`+${deco.prodXp}XP`:''}</div></div>`;
             }
         }).join('');
-        // stats
         let prodCristal=0, prodXp=0;
         (ilha.layout||[]).forEach(id=>{
             const d=(this.defaults.decoracoesIlha||[]).find(x=>x.id===id);
@@ -811,14 +758,13 @@ Workspace.Ingles = {
             statsEl.innerHTML = `
                 <div style="display:flex;gap:12px;flex-wrap:wrap">
                     <span>💎 Cristais: <b>${ilha.cristais||0}</b></span>
-                    <span>📦 Itens na ilha: <b>${(ilha.layout||[]).filter(Boolean).length}/${total}</b></span>
+                    <span>📦 Itens: <b>${(ilha.layout||[]).filter(Boolean).length}/${total}</b></span>
                     <span>⚡ Produção: <b>${prodCristal}💎/h + ${prodXp} XP/h</b></span>
                     <span>🛡️ Escudo: <b style="color:${escudoAtivo?'#10B981':'#ef4444'}">${escudoAtivo?`Ativo até ${new Date(ilha.escudoAte).toLocaleTimeString()}`:'Desativado'}</b></span>
-                    <span>⚔️ Invasões: <b>${ilha.invasoesFeitas||0} feitas / ${ilha.invasoesRecebidas||0} sofridas</b></span>
+                    <span>⚔️ Invasões: <b>${ilha.invasoesFeitas||0} feitas</b></span>
                 </div>
             `;
         }
-        // abas
         this.renderIlhaTabConstruir();
         this.renderIlhaTabInvadir();
         this.renderIlhaTabHistorico();
@@ -827,56 +773,38 @@ Workspace.Ingles = {
     renderIlhaTabConstruir(){
         const el = document.getElementById('ig-ilhaTabConstruir');
         if(!el) return;
-        const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal','tipo'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
+        const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
         const estoque = {};
-        invDecor.forEach(item=>{
-            estoque[item.id] = (estoque[item.id]||0)+1;
-        });
+        invDecor.forEach(item=>{ estoque[item.id] = (estoque[item.id]||0)+1; });
         const emUso = {};
         (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
-        // itens disponiveis
-        const disponiveis = Object.entries(estoque).filter(([id,qtd])=> qtd - (emUso[id]||0) >0);
-        const totalDisponivel = disponiveis.reduce((s,[,qtd])=> s + qtd, 0) - Object.values(emUso).reduce((a,b)=>a+b,0);
-        
         el.innerHTML = `
             <div class="lojinha-mini">
                 <div class="lojinha-header">
                     <div class="lojinha-title">🎒 Mochila Mágica</div>
-                    <div style="background:#0ea5e9;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:900">${Object.keys(estoque).length} tipos • ${totalDisponivel>0? totalDisponivel : Object.values(estoque).reduce((a,b)=>a+b,0)} itens</div>
+                    <div style="background:#0ea5e9;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:900">${Object.keys(estoque).length} tipos</div>
                 </div>
                 <div style="font-size:10px;color:#92400e;background:#FFFBEB;border:1px solid #fde68a;border-radius:8px;padding:6px;margin-bottom:8px">
-                    💡 <b>Como construir:</b> Clique numa célula vazia da ilha (➕) e depois escolha item aqui. Ou clique no item para colocar automático!
+                    💡 Clique numa célula vazia ➕ da ilha e escolha item aqui, ou clique no item para colocar automático!
                 </div>
                 <div class="lojinha-grid">
                     ${Object.keys(estoque).length? Object.entries(estoque).map(([id,qtd])=>{
-                        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===id) || {emoji:'📦', nome:id, prodCristal:0, prodXp:0, desc:'Item da ilha'};
-                        const usado = emUso[id]||0;
-                        const disp = qtd - usado;
+                        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===id) || {emoji:'📦', nome:id, prodCristal:0, prodXp:0};
+                        const disp = qtd - (emUso[id]||0);
                         if(disp<=0) return '';
-                        return `<div class="lojinha-item" data-action="colocar-na-ilha" data-deco-id="${id}" title="${Workspace.escapeHTML(deco.desc||'')}">
+                        return `<div class="lojinha-item" data-action="colocar-na-ilha" data-deco-id="${id}">
                             <div class="lojinha-qtd">x${disp}</div>
                             <span class="lojinha-emoji">${deco.emoji}</span>
                             <div class="lojinha-nome">${Workspace.escapeHTML(deco.nome)}</div>
-                            <div class="lojinha-prod">${deco.prodCristal?`${deco.prodCristal}💎`:''} ${deco.prodXp?`${deco.prodXp}XP`:''} ${!deco.prodCristal && !deco.prodXp?'Decoração':''}</div>
+                            <div class="lojinha-prod">${deco.prodCristal?`${deco.prodCristal}💎`:''} ${deco.prodXp?`${deco.prodXp}XP`:''}</div>
                         </div>`
-                    }).join('') : `
-                        <div style="grid-column:1/-1;text-align:center;padding:20px 10px">
-                            <div style="font-size:32px">📭</div>
-                            <div style="font-size:11px;color:#94a3b8;margin:6px 0">Sua mochila está vazia!</div>
-                            <div style="font-size:10px;color:#64748B">Compre itens na lojinha com XP para construir</div>
-                        </div>
-                    `}
+                    }).join('') : `<div style="grid-column:1/-1;text-align:center;padding:20px"><div style="font-size:28px">📭</div><div style="font-size:11px;color:#94a3b8">Mochila vazia! Compre itens com XP no inventário</div></div>`}
                 </div>
-                ${Object.keys(estoque).length? `<button data-action="abrir-inventario" class="lojinha-construir-btn">🛍️ Loja de Itens • Comprar com XP</button>` : `<button data-action="abrir-inventario" class="lojinha-construir-btn" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000">🛍️ Ir para Loja Comprar Primeiro Item</button>`}
-                
-                <div style="margin-top:12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px">
-                    <div style="font-size:10px;font-weight:800;color:#0f172a;margin-bottom:6px">📦 Todos os itens adquiridos (${(this.state.inventario||[]).length})</div>
-                    <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:80px;overflow-y:auto">
-                        ${(this.state.inventario||[]).slice(0,30).map(it=>{
-                            const emoji = it.emoji || (this.defaults.decoracoesIlha||[]).find(d=>d.id===it.id)?.emoji || (this.defaults.avatares||[]).find(a=>a.id===it.id)?.emoji || (this.defaults.ferramentas||[]).find(f=>f.id===it.id)?.emoji || '📦';
-                            return `<span style="background:#F8FAFC;border:1px solid #e2e8f0;padding:3px 6px;border-radius:10px;font-size:10px" title="${Workspace.escapeHTML(it.nome||it.id)}">${emoji} ${Workspace.escapeHTML((it.nome||it.id).substring(0,12))}</span>`
-                        }).join('') || '<span style="font-size:10px;color:#94a3b8">Nada ainda</span>'}
-                        ${(this.state.inventario||[]).length>30? `<span style="font-size:10px;color:#64748B">+${(this.state.inventario||[]).length-30} mais...</span>`:''}
+                <button data-action="abrir-inventario" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:10px;border-radius:12px;font-weight:900;font-size:11px;cursor:pointer">🛍️ Loja • Comprar com XP</button>
+                <div style="margin-top:10px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px">
+                    <div style="font-size:10px;font-weight:800">📦 Inventário completo (${(this.state.inventario||[]).length})</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;max-height:70px;overflow-y:auto">
+                        ${(this.state.inventario||[]).slice(0,20).map(it=>`<span style="background:#F8FAFC;border:1px solid #e2e8f0;padding:2px 6px;border-radius:10px;font-size:10px">${it.emoji||'📦'} ${Workspace.escapeHTML((it.nome||it.id).substring(0,10))}</span>`).join('') || '<span style="font-size:10px;color:#94a3b8">Vazio</span>'}
                     </div>
                 </div>
             </div>
@@ -887,14 +815,11 @@ Workspace.Ingles = {
         if(!el) return;
         const outras = this.state.ilhasOutras||[];
         const temVarinha = (this.state.inventario||[]).some(i=>i.id==='varinha_roubo');
-        const ferramentaEquipada = this.state.ferramentaEquipada;
-        const escudoAtivo = this.state.ilha?.escudoAte && this.state.ilha.escudoAte > Date.now();
         el.innerHTML = `
             <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">⚔️ Invadir Outras Ilhas</h4>
             <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;padding:8px;font-size:10px;color:#fca5a5;margin-bottom:10px">
-                <b>Como roubar:</b> Clique em Invadir → Responda desafio em inglês em 30s. Se acertar, rouba 10% dos cristais (precisa Varinha 🪄). Se errar, perde 50 XP e ativa escudo inimigo. Cooldown 1h por ilha.
-                ${!temVarinha? '<br><span style="color:#fde68a">⚠️ Você precisa comprar Varinha de Roubo 🪄 no inventário!</span>':''}
-                ${escudoAtivo? '<br><span style="color:#10B981">🛡️ Seu escudo está ativo, você não pode ser roubado!</span>':''}
+                Roube 10% dos cristais respondendo inglês em 30s. Precisa 🪄 Varinha. Cooldown 1h.
+                ${!temVarinha? '<br><span style="color:#fde68a">⚠️ Compre Varinha de Roubo no inventário!</span>':''}
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">
                 ${outras.length? outras.map(ilha=>{
@@ -903,14 +828,13 @@ Workspace.Ingles = {
                     const emCooldown = ultimoRoubo && (Date.now() - ultimoRoubo.data) < 60*60*1000;
                     return `<div style="background:#fff;border:2px solid ${podeInvadir?'#e2e8f0':'#ef4444'};border-radius:12px;padding:10px;opacity:${podeInvadir && !emCooldown?1:0.6}">
                         <div style="display:flex;justify-content:space-between;align-items:center">
-                            <div><div style="font-weight:900;font-size:12px;color:#0f172a">${Workspace.escapeHTML(ilha.nome||'Ilha')} Nv.${ilha.nivel||1} ${!podeInvadir?'🛡️':''}</div><div style="font-size:10px;color:#64748B">💎 ${ilha.cristais||0} cristais • ${ilha.tamanho||4}x${ilha.tamanho||4} • ${(ilha.layout||[]).filter(Boolean).length} itens</div></div>
-                            <button data-action="invadir-ilha" data-alvo-id="${ilha.userId}" data-alvo-nome="${Workspace.escapeHTML(ilha.nome||'')}" style="background:${podeInvadir && !emCooldown? (temVarinha?'linear-gradient(135deg,#ef4444,#dc2626)':'#94a3b8') :'#94a3b8'};color:#fff;border:none;padding:6px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:${podeInvadir && !emCooldown && temVarinha?'pointer':'not-allowed'}" ${!podeInvadir || emCooldown || !temVarinha?'disabled':''}>${emCooldown?`⏳ ${Math.ceil((60*60*1000 - (Date.now()-ultimoRoubo.data))/60000)}min` : podeInvadir? '⚔️ Invadir':'🛡️ Protegida'}</button>
+                            <div><div style="font-weight:900;font-size:12px">${Workspace.escapeHTML(ilha.nome||'Ilha')} Nv.${ilha.nivel||1} ${!podeInvadir?'🛡️':''}</div><div style="font-size:10px;color:#64748B">💎 ${ilha.cristais||0} • ${ilha.tamanho||4}x${ilha.tamanho||4}</div></div>
+                            <button data-action="invadir-ilha" data-alvo-id="${ilha.userId}" data-alvo-nome="${Workspace.escapeHTML(ilha.nome||'')}" style="background:${podeInvadir && !emCooldown? (temVarinha?'linear-gradient(135deg,#ef4444,#dc2626)':'#94a3b8') :'#94a3b8'};color:#fff;border:none;padding:6px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:${podeInvadir && !emCooldown && temVarinha?'pointer':'not-allowed'}" ${!podeInvadir || emCooldown || !temVarinha?'disabled':''}>${emCooldown?`⏳ ${Math.ceil((60*60*1000 - (Date.now()-ultimoRoubo.data))/60000)}min` : podeInvadir? '⚔️ Invadir':'🛡️'}</button>
                         </div>
-                        ${!podeInvadir? `<div style="font-size:9px;color:#ef4444;margin-top:4px">Escudo ativo até ${new Date(ilha.escudoAte).toLocaleTimeString()}</div>`:''}
                     </div>`
-                }).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma outra ilha encontrada na sua escola. Convide amigos!</div>'}
+                }).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma outra ilha. Convide amigos!</div>'}
             </div>
-            <button data-action="atualizar-ilhas" style="width:100%;margin-top:10px;background:#0ea5e9;color:#fff;border:none;padding:8px;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer">🔄 Atualizar ilhas</button>
+            <button data-action="atualizar-ilhas" style="width:100%;margin-top:10px;background:#0ea5e9;color:#fff;border:none;padding:8px;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer">🔄 Atualizar</button>
         `;
     },
     renderIlhaTabHistorico(){
@@ -918,15 +842,9 @@ Workspace.Ingles = {
         if(!el) return;
         const hist = this.state.ilha?.historicoInvasoes||[];
         el.innerHTML = `
-            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">📜 Histórico de Invasões</h4>
+            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">📜 Histórico</h4>
             <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
-                ${hist.length? hist.slice().reverse().slice(0,20).map(h=>{
-                    const sucesso = h.sucesso;
-                    return `<div style="background:${sucesso?'#D1FAE5':'#FEE2E2'};border:1px solid ${sucesso?'#10B981':'#ef4444'};border-radius:8px;padding:8px;font-size:10px">
-                        <div style="font-weight:800;color:${sucesso?'#065f46':'#b91c1c'}">${sucesso?'✅ Roubou':'❌ Falhou'} ${h.tipo==='ataque'?'→':'←'} ${Workspace.escapeHTML(h.alvoNome||h.alvoId||'')} ${h.cristais?`• ${h.cristais}💎`:''}</div>
-                        <div style="color:#64748B">${new Date(h.data).toLocaleString()} • ${h.detalhe||''}</div>
-                    </div>`
-                }).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma invasão ainda. Seja o primeiro pirata! 🏴‍☠️</div>'}
+                ${hist.length? hist.slice().reverse().slice(0,20).map(h=>`<div style="background:${h.sucesso?'#D1FAE5':'#FEE2E2'};border:1px solid ${h.sucesso?'#10B981':'#ef4444'};border-radius:8px;padding:8px;font-size:10px"><div style="font-weight:800;color:${h.sucesso?'#065f46':'#b91c1c'}">${h.sucesso?'✅':'❌'} ${h.tipo==='ataque'?'→':'←'} ${Workspace.escapeHTML(h.alvoNome||'')} ${h.cristais?`• ${h.cristais}💎`:''}</div><div style="color:#64748B">${new Date(h.data).toLocaleString()} • ${h.detalhe||''}</div></div>`).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma invasão ainda</div>'}
             </div>
         `;
     },
@@ -935,14 +853,13 @@ Workspace.Ingles = {
         if(!ilha) return;
         const idxVazio = ilha.layout.findIndex(v=>!v);
         if(idxVazio===-1){ Workspace.mostrarAviso('Ilha cheia! Expanda!','warning'); return; }
-        // verifica estoque
         const estoqueCount = (this.state.inventario||[]).filter(i=>i.id===decoId).length;
         const emUso = ilha.layout.filter(id=>id===decoId).length;
-        if(estoqueCount <= emUso){ Workspace.mostrarAviso('Sem estoque desse item!','warning'); return; }
+        if(estoqueCount <= emUso){ Workspace.mostrarAviso('Sem estoque!','warning'); return; }
         ilha.layout[idxVazio]=decoId;
         await this.salvarIlha();
         this.renderIlha();
-        Workspace.mostrarAviso(`🏝️ ${decoId} colocado na ilha!`,'success');
+        Workspace.mostrarAviso(`🏝️ ${decoId} colocado!`,'success');
     },
     async removerDaIlha(idx){
         const ilha = this.state.ilha;
@@ -953,7 +870,7 @@ Workspace.Ingles = {
     },
     async expandirIlha(){
         const custo = 500 + ((this.state.ilha.tamanho||4)-4)*300;
-        if((this.state.ilha.cristais||0) < custo){ Workspace.mostrarAviso(`Precisa ${custo}💎 para expandir! Colete na ilha ou roube!`,'warning'); return; }
+        if((this.state.ilha.cristais||0) < custo){ Workspace.mostrarAviso(`Precisa ${custo}💎!`,'warning'); return; }
         this.state.ilha.cristais -= custo;
         this.state.ilha.tamanho = (this.state.ilha.tamanho||4)+1;
         this.state.ilha.nivel = (this.state.ilha.nivel||1)+1;
@@ -963,15 +880,13 @@ Workspace.Ingles = {
         this.state.ilha.layout = novoLayout;
         await this.salvarIlha();
         this.renderIlha();
-        Workspace.mostrarAviso(`🏝️ Ilha expandida para ${this.state.ilha.tamanho}x${this.state.ilha.tamanho}!`,'success');
+        Workspace.mostrarAviso(`🏝️ Expandida para ${this.state.ilha.tamanho}x${this.state.ilha.tamanho}!`,'success');
     },
     async coletarIlha(){
         const ilha = this.state.ilha;
         if(!ilha) return;
-        // verifica ferramenta picareta
         const picaretas = (this.state.inventario||[]).filter(i=>i.id==='picareta');
-        if(picaretas.length===0){ Workspace.mostrarAviso('Precisa de ⛏️ Picareta! Compre no inventário com XP!','warning'); return; }
-        // consome 1 picareta
+        if(picaretas.length===0){ Workspace.mostrarAviso('Precisa ⛏️ Picareta! Compre com XP!','warning'); return; }
         const idx = this.state.inventario.findIndex(i=>i.id==='picareta');
         if(idx!==-1) this.state.inventario.splice(idx,1);
         let total=0;
@@ -985,7 +900,7 @@ Workspace.Ingles = {
         await this.saveDados();
         await this.salvarIlha();
         this.renderIlha();
-        Workspace.mostrarAviso(`⛏️ Coletado +${total}💎 cristais! (Picareta consumida)`,'success');
+        Workspace.mostrarAviso(`⛏️ +${total}💎 coletados!`,'success');
     },
     async salvarIlha(){
         try{
@@ -995,27 +910,22 @@ Workspace.Ingles = {
         }catch(e){ console.error('salvar ilha',e); }
     },
     async invadirIlha(alvoId, alvoNome){
-        // verifica varinha
         const temVarinha = (this.state.inventario||[]).some(i=>i.id==='varinha_roubo');
-        if(!temVarinha){ Workspace.mostrarAviso('Precisa de Varinha de Roubo 🪄! Compre no inventário!','warning'); return; }
-        // verifica escudo próprio?
-        // inicia minigame
-        const desafio = this.obterItemInteligente(this.state.phrases.length? this.state.phrases : this.defaults.phrases, 'phrase');
-        if(!desafio){ Workspace.mostrarAviso('Sem desafio disponível','warning'); return; }
+        if(!temVarinha){ Workspace.mostrarAviso('Precisa Varinha 🪄!','warning'); return; }
+        const desafio = this.state.phrases?.[0] || {phrase:'Could you help me?'};
         const modal=document.createElement('div');
         modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000011;display:flex;align-items:center;justify-content:center;padding:20px';
         modal.innerHTML=`
-            <div style="background:linear-gradient(180deg,#1e1b4b,#0f0f23);border:3px solid #ef4444;border-radius:20px;max-width:500px;width:100%;padding:20px;text-align:center;box-shadow:0 0 40px rgba(239,68,68,0.4)">
+            <div style="background:linear-gradient(180deg,#1e1b4b,#0f0f23);border:3px solid #ef4444;border-radius:20px;max-width:500px;width:100%;padding:20px;text-align:center">
                 <div style="font-size:40px">⚔️</div>
-                <div style="color:#fca5a5;font-family:Cinzel;font-weight:900;font-size:18px">INVADINDO ${Workspace.escapeHTML(alvoNome||'Ilha Inimiga')}</div>
-                <div style="color:#fff;font-size:13px;margin:10px 0;background:rgba(255,255,255,0.1);padding:12px;border-radius:10px">Traduza em inglês para roubar 10% dos cristais!<br><b style="color:#fde68a">${Workspace.escapeHTML(desafio.phrase||desafio.text||'Hello world')}</b></div>
-                <div style="color:#94a3b8;font-size:11px">Você tem 30 segundos! Se errar, perde 50 XP!</div>
-                <input id="ig-invasaoInput" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:2px solid #ef4444;background:#0f172a;color:#fff;font-weight:700" placeholder="Sua tradução em inglês..." autofocus>
+                <div style="color:#fca5a5;font-family:Cinzel;font-weight:900;font-size:18px">INVADINDO ${Workspace.escapeHTML(alvoNome||'Ilha')}</div>
+                <div style="color:#fff;font-size:13px;margin:10px 0;background:rgba(255,255,255,0.1);padding:12px;border-radius:10px">Traduza: <b style="color:#fde68a">${Workspace.escapeHTML(desafio.phrase||'Hello')}</b></div>
+                <input id="ig-invasaoInput" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:2px solid #ef4444;background:#0f172a;color:#fff;font-weight:700" placeholder="Tradução..." autofocus>
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <button id="ig-invasaoEnviar" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:12px;border-radius:10px;font-weight:900;cursor:pointer">⚔️ Roubar!</button>
-                    <button id="ig-invasaoCancelar" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:12px 16px;border-radius:10px;cursor:pointer">✕ Cancelar</button>
+                    <button id="ig-invasaoCancelar" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:12px 16px;border-radius:10px;cursor:pointer">✕</button>
                 </div>
-                <div style="margin-top:10px;color:#fca5a5;font-size:12px;font-weight:800" id="ig-invasaoTimer">⏱️ 30s</div>
+                <div style="margin-top:10px;color:#fca5a5;font-size:12px" id="ig-invasaoTimer">⏱️ 30s</div>
             </div>
         `;
         document.body.appendChild(modal);
@@ -1023,17 +933,10 @@ Workspace.Ingles = {
         const timerEl=modal.querySelector('#ig-invasaoTimer');
         const timer=setInterval(()=>{ tempo--; if(timerEl) timerEl.textContent=`⏱️ ${tempo}s`; if(tempo<=0){ clearInterval(timer); modal.remove(); this.falhaInvasao(alvoId, alvoNome); } },1000);
         const input=modal.querySelector('#ig-invasaoInput');
-        const enviar=modal.querySelector('#ig-invasaoEnviar');
-        const cancelar=modal.querySelector('#ig-invasaoCancelar');
-        const finalizar=(sucesso)=>{
-            clearInterval(timer);
-            modal.remove();
-            if(sucesso) this.sucessoInvasao(alvoId, alvoNome);
-            else this.falhaInvasao(alvoId, alvoNome);
-        };
-        input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const txt=input.value.trim(); if(txt.length>3) finalizar(true); } });
-        enviar.onclick=()=>{ const txt=input.value.trim(); if(txt.length<3){ Workspace.mostrarAviso('Digite algo!','warning'); return; } finalizar(txt.length>5); };
-        cancelar.onclick=()=>{ clearInterval(timer); modal.remove(); };
+        const finalizar=(sucesso)=>{ clearInterval(timer); modal.remove(); if(sucesso) this.sucessoInvasao(alvoId, alvoNome); else this.falhaInvasao(alvoId, alvoNome); };
+        input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ finalizar(input.value.trim().length>3); } });
+        modal.querySelector('#ig-invasaoEnviar').onclick=()=> finalizar(input.value.trim().length>3);
+        modal.querySelector('#ig-invasaoCancelar').onclick=()=>{ clearInterval(timer); modal.remove(); };
         input.focus();
     },
     async sucessoInvasao(alvoId, alvoNome){
@@ -1043,18 +946,16 @@ Workspace.Ingles = {
                 const roubado = res.roubado||0;
                 this.state.ilha.cristais = (this.state.ilha.cristais||0)+roubado;
                 this.state.ilha.invasoesFeitas = (this.state.ilha.invasoesFeitas||0)+1;
-                // consome varinha
                 const idx = this.state.inventario.findIndex(i=>i.id==='varinha_roubo');
                 if(idx!==-1) this.state.inventario.splice(idx,1);
                 this.state.ilha.historicoInvasoes = this.state.ilha.historicoInvasoes||[];
-                this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:true, cristais:roubado, tipo:'ataque', detalhe:`Roubou ${roubado}💎 de ${alvoNome}`});
+                this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:true, cristais:roubado, tipo:'ataque', detalhe:`Roubou ${roubado}💎`});
                 await this.saveDados();
                 await this.salvarIlha();
                 this.renderIlha();
-                Workspace.mostrarAviso(`🏴‍☠️ Roubo bem sucedido! +${roubado}💎 cristais de ${alvoNome}!`,'success');
-                this.tocarSom('level'); this.confete();
+                Workspace.mostrarAviso(`🏴‍☠️ +${roubado}💎 de ${alvoNome}!`,'success');
             } else {
-                Workspace.mostrarAviso(res?.error||'Falha no roubo','error');
+                Workspace.mostrarAviso(res?.error||'Falha','error');
             }
         }catch(e){ Workspace.mostrarAviso('Erro ao invadir','error'); }
     },
@@ -1063,12 +964,54 @@ Workspace.Ingles = {
             await Workspace.api('/workspace/ingles/ilha/invadir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', alvoId, acao:'roubo', sucesso:false});
             this.state.xp = Math.max(0, this.state.xp - 50);
             this.state.ilha.historicoInvasoes = this.state.ilha.historicoInvasoes||[];
-            this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:false, cristais:0, tipo:'ataque', detalhe:`Falhou ao invadir ${alvoNome} - perdeu 50 XP`});
+            this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:false, cristais:0, tipo:'ataque', detalhe:`Falhou ${alvoNome} -50 XP`});
             await this.saveDados();
             await this.salvarIlha();
             this.renderIlha();
-            Workspace.mostrarAviso(`💥 Invasão falhou! -50 XP e escudo ativado na ilha inimiga!`,'error');
+            Workspace.mostrarAviso(`💥 Falhou! -50 XP`,'error');
         }catch{}
+    },
+    equiparAvatar(avatarId){
+        this.state.avatarEquipado=avatarId;
+        this.saveDados();
+        Workspace.mostrarAviso(`Avatar equipado: ${avatarId}`,'success');
+        this.renderizarVisualizacao();
+    },
+    async comprarAvatar(avatarId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
+        const ja = (this.state.inventario||[]).some(i=>i.id===avatarId && i.tipo==='avatar');
+        if(ja){ Workspace.mostrarAviso('Já tem esse avatar!','warning'); return; }
+        const avatar = (this.defaults.avatares||[]).find(a=>a.id===avatarId);
+        if(!avatar) return;
+        this.state.xp -= preco;
+        this.state.inventario = this.state.inventario||[];
+        this.state.inventario.push({id:avatarId, nome:avatar.nome, emoji:avatar.emoji, tipo:'avatar', raridade:avatar.raridade, obtidoEm:new Date().toISOString()});
+        this.state.avatarEquipado=avatarId;
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:avatarId, tipo:'avatar', preco, nome:avatar.nome}); }catch{}
+        Workspace.mostrarAviso(`🧙 ${avatar.nome} comprado por ${preco} XP!`,'success');
+        this.renderizarVisualizacao();
+    },
+    async comprarFerramenta(ferrId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
+        const ferr = (this.defaults.ferramentas||[]).find(f=>f.id===ferrId);
+        if(!ferr) return;
+        this.state.xp -= preco;
+        this.state.inventario.push({id:ferrId, nome:ferr.nome, emoji:ferr.emoji, tipo:'ferramenta', uso:ferr.uso, durabilidade:ferr.durabilidade, obtidoEm:new Date().toISOString()});
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:ferrId, tipo:'ferramenta', preco, nome:ferr.nome}); }catch{}
+        Workspace.mostrarAviso(`🛠️ ${ferr.nome} comprada!`,'success');
+    },
+    async comprarDecoracao(decoId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
+        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===decoId);
+        if(!deco) return;
+        this.state.xp -= preco;
+        this.state.inventario.push({id:decoId, nome:deco.nome, emoji:deco.emoji, tipo:deco.tipo||'decoracao', prodCristal:deco.prodCristal, prodXp:deco.prodXp, obtidoEm:new Date().toISOString()});
+        this.state.ilha = this.state.ilha||{ nivel:1, tamanho:4, cristais:100, layout:Array(16).fill(null) };
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:decoId, tipo:'decoracao', preco, nome:deco.nome}); }catch{}
+        Workspace.mostrarAviso(`🏝️ ${deco.nome} comprado! Vá na ilha colocar!`,'success');
     },
 
     // ================= PORTAL MÁGICO - JOGO ESPECIAL =================
@@ -1137,12 +1080,9 @@ Workspace.Ingles = {
             proximo=possiveis.filter(g=>g!==this.state.portalJogoInterno)[Math.floor(Math.random()*(possiveis.length-1))];
         }
         this.state.portalJogoInterno=proximo;
-        // Efeito portal sempre, rápido, sem parar
+        // Pequeno efeito entre desafios se não é primeiro
         if(this.portalStreak>0){
             await this.efeitoPortalTempo();
-        } else {
-            // primeira vez efeito mais rápido
-            await new Promise(r=>setTimeout(r,100));
         }
         this.efeitoExplosaoPortal();
         // Renderiza o jogo interno mas dentro do contexto portal
@@ -1212,7 +1152,7 @@ Workspace.Ingles = {
             this.portalTarget = 5 * this.portalRodada; // 5,10,15,20...
             this.portalStreak=0;
         }
-        setTimeout(()=>{ if(this.portalAtivo) this.renderDesafioPortal(); },600);
+        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },900);
     },
     async falhaPortal(){
         const perda=Math.floor(20 * (this.state.season?.xpMultiplier||1));
@@ -1228,7 +1168,7 @@ Workspace.Ingles = {
         toast.innerHTML=`💥 -${perda} XP • Streak zerado!`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1500);
-        setTimeout(()=>{ if(this.portalAtivo) this.renderDesafioPortal(); },700);
+        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },1100);
     },
     async magiaDoMagoBonus(){
         const bonusBase = 300 + (this.portalRodada * 100);
@@ -1247,7 +1187,7 @@ Workspace.Ingles = {
                 <div style="font-size:60px;margin:-20px 0 10px 0">✨🪄✨</div>
                 <div style="font-family:Cinzel;font-size:26px;font-weight:900;color:#fde68a;text-shadow:0 0 20px rgba(253,230,138,0.8)">MAGIA DO MAGO!</div>
                 <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': `${this.portalTarget-5} vitórias! Você é imbatível!`}</div>
-                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5);animation:shineBonus 1s ease infinite alternate">+${bonus} XP BÔNUS!</div><style>@keyframes shineBonus{0%{transform:scale(1) rotate(-2deg);box-shadow:0 0 20px rgba(253,230,138,0.5)}100%{transform:scale(1.1) rotate(2deg);box-shadow:0 0 40px rgba(253,230,138,0.9)}}</style>
+                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5)">+${bonus} XP BÔNUS!</div>
                 <div style="color:#94a3b8;font-size:12px;margin-top:12px">Próxima meta: ${5*(this.portalRodada+1)} vitórias seguidas</div>
             </div>
             <style>@keyframes floatMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}</style>`;
@@ -1396,10 +1336,10 @@ Workspace.Ingles = {
             #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
-
-            /* 🏝️ ILHA MÁGICA - ILHINHA VIVA COM PEIXINHOS E NUVENS */
-            #ig-ilhaBtn{position:absolute;top:8px;right:10px;z-index:10;cursor:pointer;background:none;border:none;padding:0;animation:floatIlha 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.3));overflow:visible}
-            @keyframes floatIlha{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+            /* 🏝️ ILHA MÁGICA - ILHINHA VIVA NO CANTO DIREITO DO MAGO */
+            #ig-alunoView{position:relative}
+            #ig-ilhaBtn{position:absolute;top:10px;right:12px;z-index:20;cursor:pointer;background:none;border:none;padding:0;animation:floatIlha 3s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(0,0,0,0.35));overflow:visible}
+            @keyframes floatIlha{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-7px) rotate(1deg)}}
             .ilhinha-wrapper{position:relative;width:130px;height:95px;overflow:visible}
             .ilhinha-base{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:92px;height:30px;background:radial-gradient(ellipse at center,#4ade80 0%,#22c55e 30%,#16a34a 60%,#15803d 100%);border-radius:50%;box-shadow:0 5px 0 #14532d, 0 10px 20px rgba(0,0,0,0.35);border:2.5px solid #14532d;z-index:3}
             .ilhinha-grama{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:44px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.25));z-index:4}
@@ -1407,75 +1347,48 @@ Workspace.Ingles = {
             @keyframes swayPalmeira{0%,100%{transform:translateX(-50%) rotate(-4deg)}50%{transform:translateX(-50%) rotate(4deg)}}
             .ilhinha-agua{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:125px;height:22px;background:radial-gradient(ellipse,#38bdf8 0%,#0ea5e9 40%,#0284c7 70%,transparent 80%);border-radius:50%;opacity:0.7;animation:waveIlha 2.2s ease-in-out infinite;z-index:2}
             @keyframes waveIlha{0%,100%{transform:translateX(-50%) scaleX(1) scaleY(1)}50%{transform:translateX(-50%) scaleX(1.15) scaleY(1.1)}}
-            
-            /* ☁️ NUVENS PASSANDO */
-            .ilhinha-nuvem{position:absolute;font-size:14px;opacity:0.8;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))}
+            .ilhinha-nuvem{position:absolute;font-size:14px;opacity:0.85;z-index:6;pointer-events:none}
             .ilhinha-nuvem.n1{top:12px;left:-20px;animation:nuvemPassa 12s linear infinite;font-size:16px}
             .ilhinha-nuvem.n2{top:28px;left:-30px;animation:nuvemPassa 15s linear infinite 2s;font-size:12px;opacity:0.6}
             .ilhinha-nuvem.n3{top:5px;left:-15px;animation:nuvemPassa 10s linear infinite 5s;font-size:10px;opacity:0.7}
-            @keyframes nuvemPassa{0%{transform:translateX(-20px) translateY(0);opacity:0}10%{opacity:0.8}90%{opacity:0.8}100%{transform:translateX(150px) translateY(-4px);opacity:0}}
-            
-            /* 🐟 PEIXINHOS PULANDO */
+            @keyframes nuvemPassa{0%{transform:translateX(-20px) translateY(0);opacity:0}10%{opacity:0.85}90%{opacity:0.85}100%{transform:translateX(150px) translateY(-4px);opacity:0}}
             .ilhinha-peixe{position:absolute;font-size:12px;z-index:1;pointer-events:none;opacity:0}
             .ilhinha-peixe.p1{bottom:2px;left:20%;animation:peixePula 4s ease-in-out infinite}
             .ilhinha-peixe.p2{bottom:0;left:60%;animation:peixePula 4.5s ease-in-out infinite 1.8s;font-size:10px}
             .ilhinha-peixe.p3{bottom:1px;left:40%;animation:peixePula 3.8s ease-in-out infinite 3s;font-size:11px}
-            @keyframes peixePula{
-                0%{transform:translateY(10px) translateX(0) rotate(0deg) scaleX(1);opacity:0}
-                15%{opacity:1;transform:translateY(0) translateX(0) rotate(0deg)}
-                25%{transform:translateY(-18px) translateX(6px) rotate(15deg) scaleX(1.1)}
-                35%{transform:translateY(-22px) translateX(10px) rotate(30deg) scaleX(1)}
-                45%{transform:translateY(-12px) translateX(14px) rotate(10deg)}
-                55%{transform:translateY(4px) translateX(16px) rotate(-10deg);opacity:1}
-                60%{opacity:0;transform:translateY(12px) translateX(18px) rotate(-20deg)}
-                100%{opacity:0;transform:translateY(12px) translateX(18px)}
-            }
-            /* Bolhas */
-            .ilhinha-bolha{position:absolute;bottom:4px;width:4px;height:4px;background:rgba(255,255,255,0.8);border-radius:50%;z-index:2;pointer-events:none}
+            @keyframes peixePula{0%{transform:translateY(10px) translateX(0) rotate(0deg);opacity:0}15%{opacity:1;transform:translateY(0)}25%{transform:translateY(-18px) translateX(6px) rotate(15deg)}35%{transform:translateY(-22px) translateX(10px) rotate(30deg)}45%{transform:translateY(-12px) translateX(14px) rotate(10deg)}55%{transform:translateY(4px) translateX(16px) rotate(-10deg);opacity:1}60%{opacity:0;transform:translateY(12px) translateX(18px) rotate(-20deg)}100%{opacity:0}}
+            .ilhinha-bolha{position:absolute;bottom:4px;width:4px;height:4px;background:rgba(255,255,255,0.85);border-radius:50%;z-index:2}
             .ilhinha-bolha.b1{left:25%;animation:bolhaSobe 3s ease-in-out infinite}
             .ilhinha-bolha.b2{left:55%;animation:bolhaSobe 2.5s ease-in-out infinite 0.8s;width:3px;height:3px}
             .ilhinha-bolha.b3{left:70%;animation:bolhaSobe 3.2s ease-in-out infinite 1.5s}
             @keyframes bolhaSobe{0%{transform:translateY(0) scale(1);opacity:0.8}100%{transform:translateY(-28px) scale(0);opacity:0}}
-            
-            /* Gaivota passando */
-            .ilhinha-gaivota{position:absolute;top:2px;left:-15px;font-size:11px;z-index:7;animation:gaivotaVoa 18s linear infinite;opacity:0.9}
-            @keyframes gaivotaVoa{0%{transform:translateX(-20px) translateY(2px)}15%{transform:translateX(30px) translateY(-2px)}30%{transform:translateX(60px) translateY(1px)}100%{transform:translateX(160px) translateY(0);opacity:0}}
-            
-            .ilhinha-label{position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a 0%,#fbbf24 50%,#d4af37 100%);color:#000;padding:4px 12px;border-radius:14px;font-weight:900;font-size:9px;letter-spacing:0.8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.8);border:1.5px solid #fff;z-index:8;animation:brilhoLabel 2s ease infinite}
-            @keyframes brilhoLabel{0%,100%{box-shadow:0 3px 8px rgba(0,0,0,0.25), 0 0 0 rgba(253,230,138,0)}50%{box-shadow:0 3px 8px rgba(0,0,0,0.25), 0 0 12px rgba(253,230,138,0.6)}}
-            .ilhinha-cristais{position:absolute;top:22px;right:2px;background:linear-gradient(180deg,#fff,#e0f2fe);color:#0284c7;padding:3px 7px;border-radius:12px;font-weight:900;font-size:9px;box-shadow:0 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 #fff;border:1.5px solid #0ea5e9;z-index:8;animation:brilhoCristal 2.5s ease infinite}
-            @keyframes brilhoCristal{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+            .ilhinha-gaivota{position:absolute;top:2px;left:-15px;font-size:11px;z-index:7;animation:gaivotaVoa 18s linear infinite}
+            @keyframes gaivotaVoa{0%{transform:translateX(-20px)}100%{transform:translateX(160px);opacity:0}}
+            .ilhinha-label{position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a 0%,#fbbf24 50%,#d4af37 100%);color:#000;padding:4px 12px;border-radius:14px;font-weight:900;font-size:9px;letter-spacing:0.8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,0.25);border:1.5px solid #fff;z-index:8;animation:brilhoLabel 2s ease infinite}
+            @keyframes brilhoLabel{0%,100%{box-shadow:0 3px 8px rgba(0,0,0,0.25)}50%{box-shadow:0 3px 8px rgba(0,0,0,0.25), 0 0 12px rgba(253,230,138,0.6)}}
+            .ilhinha-cristais{position:absolute;top:22px;right:2px;background:linear-gradient(180deg,#fff,#e0f2fe);color:#0284c7;padding:3px 7px;border-radius:12px;font-weight:900;font-size:9px;box-shadow:0 3px 8px rgba(0,0,0,0.2);border:1.5px solid #0ea5e9;z-index:8}
             .ilhinha-notif{position:absolute;top:18px;left:-6px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;animation:pulseNotif 1.2s ease infinite;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(239,68,68,0.4);z-index:9}
-            @keyframes pulseNotif{0%,100%{transform:scale(1);box-shadow:0 2px 6px rgba(239,68,68,0.4)}50%{transform:scale(1.25);box-shadow:0 4px 12px rgba(239,68,68,0.6)}}
+            @keyframes pulseNotif{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
             #ig-ilhaBtn:hover .ilhinha-wrapper{transform:scale(1.12);transition:0.3s cubic-bezier(0.34,1.56,0.64,1)}
-            #ig-ilhaBtn:hover .ilhinha-label{background:linear-gradient(135deg,#fff,#fde68a);transform:translateX(-50%) scale(1.05)}
-            #ig-ilhaBtn:hover .ilhinha-peixe{animation-duration:1.5s}
-            
-            /* Lojinha miniatura dentro da ilha */
-            .lojinha-mini{ background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%); border:2px solid #fde68a; border-radius:16px; padding:12px; box-shadow:0 4px 12px rgba(253,230,138,0.2) }
-            .lojinha-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:2px dashed #fde68a }
-            .lojinha-title{ font-family:Cinzel; font-weight:900; font-size:13px; color:#92400e }
-            .lojinha-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; max-height:280px; overflow-y:auto; padding:4px }
-            .lojinha-item{ background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:8px; text-align:center; cursor:pointer; transition:0.2s; position:relative }
-            .lojinha-item:hover{ border-color:#fde68a; transform:translateY(-2px) scale(1.02); box-shadow:0 6px 16px rgba(0,0,0,0.1) }
-            .lojinha-item.selecionado{ border-color:#0ea5e9; background:linear-gradient(180deg,#E0F2FE,#fff); box-shadow:0 0 0 3px rgba(14,165,233,0.2) }
-            .lojinha-item.vazio{ border-style:dashed; background:#f8fafc; opacity:0.7 }
-            .lojinha-emoji{ font-size:26px; display:block; margin-bottom:2px }
-            .lojinha-nome{ font-size:9px; font-weight:800; color:#0f172a; line-height:1.1; height:20px; overflow:hidden }
-            .lojinha-qtd{ position:absolute; top:4px; right:4px; background:#0ea5e9; color:#fff; font-size:8px; font-weight:900; padding:2px 5px; border-radius:10px }
-            .lojinha-prod{ font-size:7px; background:#D1FAE5; color:#065f46; padding:1px 4px; border-radius:6px; margin-top:2px; display:inline-block }
-            .lojinha-construir-btn{ width:100%; margin-top:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:10px; border-radius:12px; font-weight:900; font-size:11px; cursor:pointer; box-shadow:0 4px 8px rgba(34,197,94,0.3) }
-            .lojinha-construir-btn:disabled{ background:#94a3b8; cursor:not-allowed; box-shadow:none }
-
             #ig-ilhaModal{position:fixed;inset:0;background:linear-gradient(180deg,#0c4a6e 0%,#082f49 100%);z-index:1000010;display:none;overflow-y:auto}
             .ilha-grid{display:grid;gap:6px;background:rgba(255,255,255,0.1);padding:12px;border-radius:16px;border:2px solid #fde68a}
-            .ilha-celula{aspect-ratio:1;background:linear-gradient(180deg,#22c55e,#16a34a);border:2px solid #15803d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:0.2s;position:relative}
-            .ilha-celula:hover{transform:scale(1.05);border-color:#fde68a;box-shadow:0 0 12px rgba(253,230,138,0.5)}
-            .ilha-celula.vazia{background:linear-gradient(180deg,#4ade80,#22c55e);border-style:dashed}
-            .ilha-loja-item{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:0.2s}
-            .ilha-loja-item:hover{border-color:#0ea5e9;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.1)}
-            .ilha-loja-item.comprado{opacity:0.5;pointer-events:none;background:#f1f5f9}
-            .ilha-loja-item.equipado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 12px rgba(253,230,138,0.4)}
+            .ilha-celula{aspect-ratio:1;background:linear-gradient(180deg,#4ade80,#22c55e);border:2px solid #15803d;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;transition:0.2s;position:relative;min-height:60px}
+            .ilha-celula:hover{transform:scale(1.05);border-color:#fde68a;box-shadow:0 0 14px rgba(253,230,138,0.6)}
+            .ilha-celula.vazia{background:linear-gradient(180deg,#86efac,#4ade80);border-style:dashed;opacity:0.8}
+            .lojinha-mini{background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%);border:2px solid #fde68a;border-radius:16px;padding:12px;box-shadow:0 4px 12px rgba(253,230,138,0.2)}
+            .lojinha-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:2px dashed #fde68a}
+            .lojinha-title{font-family:Cinzel;font-weight:900;font-size:13px;color:#92400e}
+            .lojinha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:300px;overflow-y:auto;padding:4px}
+            .lojinha-item{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:8px;text-align:center;cursor:pointer;transition:0.2s;position:relative}
+            .lojinha-item:hover{border-color:#fde68a;transform:translateY(-2px) scale(1.02);box-shadow:0 6px 16px rgba(0,0,0,0.12)}
+            .lojinha-qtd{position:absolute;top:4px;right:4px;background:#0ea5e9;color:#fff;font-size:8px;font-weight:900;padding:2px 5px;border-radius:10px}
+            .lojinha-emoji{font-size:26px;display:block}
+            .lojinha-nome{font-size:9px;font-weight:800;color:#0f172a;line-height:1.1;height:20px;overflow:hidden;margin-top:2px}
+            .lojinha-prod{font-size:7px;background:#D1FAE5;color:#065f46;padding:1px 4px;border-radius:6px;margin-top:2px;display:inline-block}
+            @media(max-width:768px){
+                #ig-ilhaBtn{top:4px;right:4px;transform:scale(0.85)}
+                .ilhinha-wrapper{width:100px;height:80px}
+            }
 
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
@@ -1511,28 +1424,6 @@ Workspace.Ingles = {
     },
 
 
-    async carregarRankingAluno(){
-        const listEl=document.getElementById('ig-alunoRankingList');
-        if(!listEl) return;
-        try{
-            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
-            const res=await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
-            if(!res?.success){ listEl.innerHTML='<div style="color:#94a3b8;text-align:center;padding:10px">Sem dados</div>'; return; }
-            const ranking=res.ranking||[];
-            const meuId=Workspace.usuario.id;
-            listEl.innerHTML = ranking.slice(0,8).map((r,i)=>{
-                const isMe=r.userId===meuId;
-                const liga=r.liga|| (i<3?'ouro': i<10?'prata':'bronze');
-                return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isMe?'linear-gradient(90deg,#EEF2FF,#fff)':'#fff'};border:1.5px solid ${isMe?'#4F46E5':'#f1f5f9'};border-radius:12px"><div style="width:28px;height:28px;background:${liga==='ouro'?'#fde68a': liga==='prata'?'#e2e8f0':'#fed7aa'};border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0">${i+1}</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b style="font-size:12px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')} ${isMe?'(você)':''}</b><span style="background:#0F172A;color:#fde68a;padding:1px 6px;border-radius:10px;font-size:9px">${Workspace.escapeHTML(r.tituloEquipado||'Aprendiz')}</span></div><div style="font-size:10px;color:#64748B;margin-top:2px">⭐ ${r.xp} XP • Nv ${r.level||1} • 🔥 ${r.portalRecorde||0} portal</div></div><div style="font-size:10px;background:${liga==='ouro'?'#fde68a':'#f1f5f9'};padding:3px 6px;border-radius:10px;font-weight:800;text-transform:uppercase">${liga}</div></div>`;
-            }).join('') || '<div style="text-align:center;padding:10px;color:#94a3b8">Nenhum XP ainda</div>';
-            // mostra posição do aluno se não está no top 8
-            const minhaPos=ranking.findIndex(r=>r.userId===meuId);
-            if(minhaPos>=8){
-                const r=ranking[minhaPos];
-                listEl.innerHTML += `<div style="margin-top:8px;padding:10px 12px;background:linear-gradient(90deg,#FEF3C7,#fff);border:1.5px dashed #f59e0b;border-radius:12px;display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;background:#f59e0b;color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">${minhaPos+1}</div><div style="flex:1"><b style="font-size:12px">Sua posição</b><div style="font-size:10px;color:#64748B">⭐ ${r.xp} XP • Nv ${r.level||1}</div></div></div>`;
-            }
-        }catch(e){ listEl.innerHTML=`<div style="color:#e74c3c;text-align:center;padding:10px;font-size:11px">Erro: ${e.message}</div>`; }
-    },
     renderQuestsPanel(){
         const panel=document.getElementById('ig-questsPanel');
         const list=document.getElementById('ig-questsList');
@@ -1560,7 +1451,28 @@ Workspace.Ingles = {
                 <div class="ig-prep-layout" style="display:flex;gap:25px;align-items:center"><img src="/assets/mago_bau_ingles.png" class="ig-guardian-avatar" style="width:130px;mix-blend-mode:screen" /><div class="ig-balao-fala-static"><span style="color:#f1c40f">Mestre Mago:</span><br/>Quantos minutos vai treinar agora?</div></div>
                 <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
             </div>
-            <div id="ig-alunoView" style="display:none;padding:28px">
+            <div id="ig-alunoView" style="display:none;padding:28px;position:relative">
+                <button id="ig-ilhaBtn" data-action="abrir-ilha-magica" title="Clique para entrar na sua Ilha Mágica!">
+                    <div class="ilhinha-wrapper">
+                        <div class="ilhinha-nuvem n1">☁️</div>
+                        <div class="ilhinha-nuvem n2">☁️</div>
+                        <div class="ilhinha-nuvem n3">☁️</div>
+                        <div class="ilhinha-gaivota">🕊️</div>
+                        <div class="ilhinha-agua"></div>
+                        <div class="ilhinha-peixe p1">🐟</div>
+                        <div class="ilhinha-peixe p2">🐠</div>
+                        <div class="ilhinha-peixe p3">🐟</div>
+                        <div class="ilhinha-bolha b1"></div>
+                        <div class="ilhinha-bolha b2"></div>
+                        <div class="ilhinha-bolha b3"></div>
+                        <div class="ilhinha-base"></div>
+                        <div class="ilhinha-grama">🏝️</div>
+                        <div class="ilhinha-palmeira">🌴</div>
+                        <div class="ilhinha-label">ILHA MÁGICA</div>
+                        <div id="ig-ilhaCristais" class="ilhinha-cristais">0💎</div>
+                        <div id="ig-ilhaNotif" class="ilhinha-notif" style="display:none">!</div>
+                    </div>
+                </button>
                 <div class="ig-hub-banner"><img src="/assets/mago_bau_ingles.png" class="ig-hub-mago-img" alt="Mago" /><div id="ig-hub-mago-text" class="ig-balao-fala-hub" style="display:none"></div></div>
                 <div id="ig-xp-bar-container" style="background:#0F172A;border:2px solid #d4af37;border-radius:14px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 12px rgba(0,0,0,0.2)">
                     <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0" id="ig-levelBadge">1</div>
@@ -1569,7 +1481,6 @@ Workspace.Ingles = {
                     <button data-action="abrir-inventario" style="background:rgba(253,230,138,0.15);border:1.5px solid #fde68a;color:#fde68a;padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;font-size:12px">🎒 Inventário</button>
                 </div>
                 <div id="ig-questsPanel" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px;display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🎯 Missões Diárias</h4><span style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px" id="ig-seasonBadge">S1 • x1</span></div><div id="ig-questsList" style="display:flex;flex-direction:column;gap:8px"></div></div>
-                <div id="ig-alunoRanking" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🏆 Ranking da Turma</h4><button data-action="atualizar-ranking-aluno" style="background:#0F172A;color:#fde68a;border:1px solid #d4af37;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer">🔄 Atualizar</button></div><div id="ig-alunoRankingList" style="display:flex;flex-direction:column;gap:8px"><div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">Carregando ranking...</div></div></div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
@@ -1583,8 +1494,9 @@ Workspace.Ingles = {
                 <button data-action="render-tab" data-tab="imagens" class="ig-side-item">🖼 Imagens</button>
                 <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
                 <button data-action="render-tab" data-tab="algoritmo" class="ig-side-item">🧠 Algoritmo</button>
+                <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking</button>
             </div><div id="ig-tab-content" style="flex:1;padding:30px;background:#F8FAFC;overflow-y:auto"></div></div>
-
+            
             <div id="ig-ilhaModal">
                 <div style="background:linear-gradient(180deg,#082f49 0%,#0c4a6e 100%);min-height:100vh">
                     <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;border-bottom:3px solid #fde68a">
@@ -1600,8 +1512,8 @@ Workspace.Ingles = {
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:0">
                         <div style="flex:1;min-width:320px;padding:20px">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                                <h3 style="color:#fde68a;font-family:Cinzel;margin:0">🗺️ Sua Ilha Nv.<span id="ig-ilhaNivel">1</span> (<span id="ig-ilhaTamanho">4x4</span>)</h3>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+                                <h3 style="color:#fde68a;font-family:Cinzel;margin:0;font-size:14px">🗺️ Sua Ilha Nv.<span id="ig-ilhaNivel">1</span> (<span id="ig-ilhaTamanho">4x4</span>)</h3>
                                 <div style="display:flex;gap:6px">
                                     <button data-action="coletar-ilha" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">⛏️ Coletar Tudo</button>
                                     <button data-action="expandir-ilha" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">📏 Expandir (500💎)</button>
@@ -1609,8 +1521,11 @@ Workspace.Ingles = {
                             </div>
                             <div id="ig-ilhaGrid" class="ilha-grid" style="grid-template-columns:repeat(4,1fr)"></div>
                             <div id="ig-ilhaStats" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#fff;font-size:12px"></div>
+                            <div style="margin-top:14px;background:rgba(253,230,138,0.1);border:1px solid #fde68a;border-radius:12px;padding:10px;font-size:11px;color:#fde68a">
+                                💡 <b>Como navegar:</b> Clique nas células ➕ vazias para construir. Clique nas cheias para remover. Use sua mochila mágica ao lado para escolher itens!
+                            </div>
                         </div>
-                        <div style="width:360px;min-width:300px;background:rgba(0,0,0,0.2);padding:20px;border-left:2px solid rgba(253,230,138,0.2)">
+                        <div style="width:380px;min-width:320px;background:rgba(0,0,0,0.25);padding:20px;border-left:2px solid rgba(253,230,138,0.2)">
                             <div style="display:flex;gap:6px;margin-bottom:14px">
                                 <button data-action="ilha-tab" data-ilha-tab="construir" class="ilha-tab-btn active" style="flex:1;background:#fde68a;color:#000;border:none;padding:8px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">🔨 Construir</button>
                                 <button data-action="ilha-tab" data-ilha-tab="invadir" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">⚔️ Invadir</button>
@@ -1623,8 +1538,8 @@ Workspace.Ingles = {
                     </div>
                 </div>
             </div>
-
-            <div id="ig-gameModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
+            <div id="ig-gameModal"
+ style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
                 <div class="ws-card" style="width:90%;max-width:650px;background:#fffcf0;border:4px solid #d4af37;border-radius:8px;display:flex;flex-direction:column;max-height:90vh">
                     <div style="padding:15px 20px;border-bottom:2px dashed #d4af37;display:flex;justify-content:space-between;align-items:center"><div><span id="ig-modalIcon" style="font-size:28px"></span> <h2 id="ig-modalTitle" style="display:inline;margin:0;font-family:Cinzel"></h2></div><div style="display:flex;gap:15px"><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:8px 12px;border-radius:8px;cursor:pointer">🔄 Mudar</button><button data-action="fechar-jogo" style="background:transparent;border:none;font-size:35px;cursor:pointer;color:#e74c3c">×</button></div></div>
                     <div id="ig-modalBody" style="padding:30px;overflow-y:auto;flex:1"></div>
@@ -1675,37 +1590,12 @@ Workspace.Ingles = {
                 case 'coletar-ilha': this.coletarIlha(); break;
                 case 'expandir-ilha': this.expandirIlha(); break;
                 case 'atualizar-ilhas': this.carregarOutrasIlhas().then(()=>this.renderIlha()); break;
-
-                case 'atualizar-ranking': this.carregarRanking(); break;
-                case 'atualizar-ranking-aluno': this.carregarRankingAluno(); break;
-                case 'atualizar-ranking-aluno': this.carregarRankingAluno(); break;
-                case 'ilha-tab': {
-                    const tab = b.dataset.ilhaTab;
-                    const root = document.getElementById('ig-ilhaModal');
-                    if(!root) break;
-                    root.querySelectorAll('.ilha-tab-btn').forEach(btn=>{ btn.style.background='rgba(255,255,255,0.1)'; btn.style.color='#fff'; btn.classList.remove('active'); });
-                    b.style.background='#fde68a'; b.style.color='#000'; b.classList.add('active');
-                    root.querySelectorAll('[id^="ig-ilhaTab"]').forEach(t=>t.style.display='none');
-                    const target = document.getElementById(`ig-ilhaTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
-                    if(target) target.style.display='block';
-                    break;
-                }
                 case 'colocar-na-ilha': this.colocarNaIlha(b.dataset.decoId); break;
                 case 'ilha-celula-cheia': this.removerDaIlha(parseInt(b.dataset.idx)); break;
-                case 'ilha-celula-vazia': {
-                    // se tem item selecionado? por enquanto coloca primeiro disponivel
-                    const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
-                    if(!estoque.length){ Workspace.mostrarAviso('Sem itens! Compre no inventário!','warning'); break; }
-                    // pega primeiro que não está em uso total
-                    const emUso = {};
-                    (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
-                    const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) );
-                    if(disponivel) this.colocarNaIlha(disponivel.id);
-                    else Workspace.mostrarAviso('Todos itens já estão na ilha!','warning');
-                    break;
-                }
+                case 'ilha-celula-vazia': { const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id)); if(!estoque.length){ Workspace.mostrarAviso('Sem itens! Compre no inventário!','warning'); break; } const emUso = {}; (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; }); const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) ); if(disponivel) this.colocarNaIlha(disponivel.id); else Workspace.mostrarAviso('Todos itens já estão na ilha!','warning'); break; }
                 case 'invadir-ilha': this.invadirIlha(b.dataset.alvoId, b.dataset.alvoNome); break;
-
+                case 'ilha-tab': { const tab = b.dataset.ilhaTab; const root = document.getElementById('ig-ilhaModal'); if(!root) break; root.querySelectorAll('.ilha-tab-btn').forEach(btn=>{ btn.style.background='rgba(255,255,255,0.1)'; btn.style.color='#fff'; btn.classList.remove('active'); }); b.style.background='#fde68a'; b.style.color='#000'; b.classList.add('active'); root.querySelectorAll('[id^="ig-ilhaTab"]').forEach(t=>t.style.display='none'); const target = document.getElementById(`ig-ilhaTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`); if(target) target.style.display='block'; break; }
+                case 'atualizar-ranking': this.carregarRanking(); break;
             }
         });
         root.addEventListener('change', e=>{
@@ -1798,9 +1688,7 @@ Workspace.Ingles = {
     },
 
     renderizarVisualizacao(){
-        try{ const avatar = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado) || {emoji:'🧙‍♂️'}; const elMago = document.querySelector('.ig-hub-mago-img'); if(elMago) { /* mostra avatar no mago se quiser */ } const cristaisEl = document.getElementById('ig-ilhaCristais'); if(cristaisEl) cristaisEl.textContent = `${this.state.ilha?.cristais||0}💎`; }catch{}
-
-        try{ this.carregarRankingAluno(); }catch{}
+        // V6: atualiza barra de XP e quests
         try{
             const lvlInfo=this.calcularLevel(this.state.xp);
             // aplica borda equipada no header
@@ -1876,7 +1764,6 @@ Workspace.Ingles = {
             if(res?.success) this.state.season = res.season;
         }catch{}
 
-        this.state.sessaoUsadosPorJogo={}; // reseta inteligência por sessão
         if(ParticleEngine._exploding || this.tempoGlobalDefinido) return;
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
@@ -2019,52 +1906,37 @@ Workspace.Ingles = {
             }
             if(tabId==='quests'){
                 contentEl.innerHTML=`
-                    <div class="ig-card-prof">
-                        <div class="ig-card-header"><div><h3>🎯 Missões Diárias</h3><p>Configure missões que aparecem no hub do aluno. Recompensa com XP x season.</p></div></div>
-                        <div style="background:linear-gradient(180deg,#f8fafc,#fff);padding:18px;border-radius:14px;border:2px solid #e2e8f0;margin:16px 0">
-                            <div class="ig-prof-grid">
-                                <div style="grid-column:span 2"><label style="font-size:11px;font-weight:800;color:#0f172a">Texto da missão</label><input id="qTexto" class="ig-prof-input" placeholder="Ex: Crie 3 frases com Although" style="width:100%;margin-top:4px"></div>
-                                <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-prof-input" value="3" style="width:100%;margin-top:4px"></div>
-                                <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-prof-input" value="100" style="width:100%;margin-top:4px"></div>
-                                <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-prof-input" value="🎯" style="width:100%;margin-top:4px"></div>
-                                <div><label style="font-size:11px;font-weight:800">Tipo</label><select id="qTipo" class="ig-prof-input" style="width:100%;margin-top:4px"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select></div>
-                            </div>
-                            <button data-action="add-quest" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:12px 20px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:14px;width:100%">+ Adicionar Missão</button>
-                        </div>
-                        <h4 style="font-family:Cinzel;font-size:14px;margin:20px 0 10px 0">Missões Atuais (${this.state.quests.length})</h4>
-                        <div style="display:flex;flex-direction:column;gap:10px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1.5px solid #e2e8f0;border-left:4px solid #4F46E5;border-radius:12px;padding:14px"><div style="flex:1"><div style="font-weight:800;color:#0f172a;font-size:13px">${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</div><div style="font-size:11px;color:#64748B;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap"><span>🎯 Alvo: ${q.alvo}</span><span>⭐ +${q.recompensaXP} XP</span><span style="background:#EEF2FF;color:#4338ca;padding:2px 6px;border-radius:10px">${q.tipo}</span></div></div><button data-action="rem-quest" data-id="${q.id}" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:800;flex-shrink:0">✕</button></div>`).join('') || '<div style="text-align:center;padding:20px;color:#94a3b8">Nenhuma missão ainda. Crie a primeira!</div>'}</div>
-                    </div>`;
+                    <div class="ig-card"><h3>🎯 Missões Diárias (V6)</h3><p style="color:#64748B;font-size:13px">Crie missões que aparecem no hub do aluno. Recompensa com XP multiplicado pela season.</p>
+                    <div style="background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin:15px 0;display:grid;grid-template-columns:1fr 80px 80px 80px;gap:8px;align-items:end">
+                        <div><label style="font-size:11px;font-weight:800">Texto da missão</label><input id="qTexto" class="ig-input" placeholder="Ex: Crie 3 frases com Although"></div>
+                        <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-input" value="3"></div>
+                        <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-input" value="100"></div>
+                        <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-input" value="🎯"></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:20px"><select id="qTipo" class="ig-input" style="width:auto"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select><button data-action="add-quest" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">+ Adicionar Missão</button></div>
+                    <h4>Missões Atuais (${this.state.quests.length})</h4><div style="display:flex;flex-direction:column;gap:8px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1px solid #eee;border-left:4px solid #4F46E5"><div><b>${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</b> • Alvo: ${q.alvo} • +${q.recompensaXP} XP • ${q.tipo}</div><button data-action="rem-quest" data-id="${q.id}" style="background:#fdf2f2;border:1px solid #fadbd8;color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer">✕</button></div>`).join('')}</div></div>`;
                 return;
             }
             if(tabId==='loja'){
                 const loot = this.state.lootTables || {};
+                const allItems = [...(loot.comum||[]), ...(loot.epico||[]), ...(loot.lendario||[])];
                 contentEl.innerHTML=`
-                    <div class="ig-card-prof">
-                        <div class="ig-card-header"><div><h3>🛍 Loja do Mago - Loot Tables</h3><p>Itens que caem nos baús. Comum <150 XP, Épico 150-300, Lendário >300.</p></div></div>
-                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:16px">
-                            <div style="background:linear-gradient(180deg,#f8fafc,#fff);border:2px solid #94a3b8;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">📦 Comum (XP<150)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeComum" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
-                            <div style="background:linear-gradient(180deg,#f5f3ff,#fff);border:2px solid #a78bfa;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">💎 Épico (150-300 XP)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeEpico" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
-                            <div style="background:linear-gradient(180deg,#fffbeb,#fff);border:2px solid #fde68a;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">👑 Lendário (>300 XP)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeLendario" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
-                        </div>
-                    </div>`;
+                    <div class="ig-card"><h3>🛍 Loja do Mago - Loot Tables</h3><p style="color:#64748B;font-size:13px">Configure itens que caem nos baús. Raridade define chance.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+                        <div style="background:#f8fafc;border:2px solid #94a3b8;border-radius:12px;padding:12px"><h4>📦 Comum (XP<150)</h4>${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeComum" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                        <div style="background:#f5f3ff;border:2px solid #a78bfa;border-radius:12px;padding:12px"><h4>💎 Épico (XP 150-300)</h4>${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeEpico" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                        <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:12px;padding:12px"><h4>👑 Lendário (XP>300)</h4>${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeLendario" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                    </div></div>`;
                 return;
             }
             if(tabId==='season'){
                 const s=this.state.season||{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1};
                 contentEl.innerHTML=`
-                    <div class="ig-card-prof">
-                        <div class="ig-card-header"><div><h3>⚙️ Temporada</h3><p>Controle multiplicador XP e reset semanal</p></div></div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:22px;border-radius:16px;border:2px solid #d4af37;margin:16px 0;box-shadow:0 8px 24px rgba(0,0,0,0.2)">
-                            <div style="font-family:Cinzel;font-size:20px;font-weight:900">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div>
-                            <div style="color:#fff;margin-top:8px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap"><span>⚡ Multiplicador: x${s.xpMultiplier||1}</span><span>•</span><span>${s.ativa?'✅ Ativa':'❌ Inativa'}</span></div>
-                        </div>
-                        <div class="ig-prof-grid">
-                            <div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-prof-input" value="${Workspace.escapeHTML(s.nome||'')}" style="width:100%;margin-top:6px"></div>
-                            <div><label style="font-size:11px;font-weight:800">Multiplicador XP (ex: 1.5)</label><input id="seasonMult" type="number" step="0.1" class="ig-prof-input" value="${s.xpMultiplier||1}" style="width:100%;margin-top:6px"></div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px"><button data-action="salvar-season" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer">💾 Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer">🔄 Resetar Season</button></div>
-                        <p style="font-size:11px;color:#94a3b8;margin-top:12px;background:#f8fafc;padding:10px;border-radius:8px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p>
-                    </div>`;
+                    <div class="ig-card"><h3>🏆 Temporada Atual</h3>
+                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:20px;border-radius:12px;border:2px solid #d4af37;margin:16px 0"><div style="font-family:Cinzel;font-size:22px">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div><div style="color:#fff;margin-top:8px">Multiplicador XP: x${s.xpMultiplier||1} • Ativa: ${s.ativa?'Sim':'Não'}</div></div>
+                    <div style="display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:end"><div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${Workspace.escapeHTML(s.nome||'')}"></div><div><label style="font-size:11px;font-weight:800">Multiplicador</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div></div>
+                    <div style="display:flex;gap:10px;margin-top:12px"><button data-action="salvar-season" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">🔄 Resetar Season (zera XP semanal)</button></div>
+                    <p style="font-size:11px;color:#94a3b8;margin-top:12px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p></div>`;
                 return;
             }
         }
@@ -2343,8 +2215,7 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
     },
-    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null; this._portalHeader=null;
-        const btnMudar=document.querySelector('[data-action=abrir-mini-hub]'); if(btnMudar) btnMudar.style.display='block';
+    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null;
 
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
@@ -2382,10 +2253,10 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1500);
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none'){
+            if(m && m.style.display!=='none' && this.tempoRestante>0){
                 this.renderDesafioAtual();
             }
-        }, 400);
+        }, 700);
     },
     falhaGenerica: async function(){
         if(this.portalAtivo){ return this.falhaPortal(); }
@@ -2397,10 +2268,10 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1800);
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none'){
+            if(m && m.style.display!=='none' && this.tempoRestante>0){
                 this.renderDesafioAtual();
             }
-        }, 600);
+        }, 1200);
     },
     envioAoProfessor: async function(gameId, texto, bonus=20){
         if(!texto||texto.trim().length<2) return Workspace.mostrarAviso('Responda válido!','warning');
@@ -2437,9 +2308,13 @@ Workspace.Ingles = {
         }
     },
     renderTelaFimDeJornada(){
-        // INFINITO: nunca para, só reseta e continua
-        this.state.itensConcluidos = [];
-        try{ localStorage.setItem(`ws_ingles_user_${Workspace.usuario.id}_concluidos`, JSON.stringify([])); }catch{}
+        const colecao = this.getColecaoDoJogoAtual();
+        if(colecao && colecao.length){
+            const ids = colecao.map(i=>i.id);
+            this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!ids.includes(id));
+            const k=`ws_ingles_user_${Workspace.usuario.id}`;
+            try{ localStorage.setItem(k+'_concluidos', JSON.stringify(this.state.itensConcluidos)); }catch{}
+        }
         this.renderDesafioAtual();
     },
 
