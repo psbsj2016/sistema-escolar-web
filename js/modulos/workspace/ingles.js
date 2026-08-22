@@ -398,6 +398,43 @@ Workspace.Ingles = {
         return disponiveis[Math.floor(Math.random()*disponiveis.length)];
     },
 
+    tocarSom(tipo){
+        try{
+            const ctx = new (window.AudioContext||window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            if(tipo==='xp'){ osc.frequency.value=800; gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.3); osc.start(); osc.stop(ctx.currentTime+0.3); }
+            else if(tipo==='level'){ osc.frequency.value=600; osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime+0.5); gain.gain.setValueAtTime(0.4, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.6); osc.start(); osc.stop(ctx.currentTime+0.6); }
+            else if(tipo==='quest'){ osc.frequency.value=400; osc.frequency.linearRampToValueAtTime(900, ctx.currentTime+0.3); gain.gain.setValueAtTime(0.3, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime+0.3); }
+        }catch{}
+    },
+    confete(){
+        try{
+            const c=document.createElement('div');
+            c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:999999;overflow:hidden';
+            document.body.appendChild(c);
+            for(let i=0;i<30;i++){
+                const p=document.createElement('div');
+                p.style.cssText=`position:absolute;left:${Math.random()*100}%;top:-10px;width:8px;height:12px;background:hsl(${Math.random()*60+30},100%,50%);transform:rotate(${Math.random()*360}deg);animation:confettiFall ${1+Math.random()}s ease forwards`;
+                c.appendChild(p);
+            }
+            const style=document.createElement('style');
+            style.textContent='@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg)}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}';
+            document.head.appendChild(style);
+            setTimeout(()=>c.remove(),2000);
+        }catch{}
+    },
+    mostrarLevelUp(oldLevel, newLevel){
+        this.tocarSom('level');
+        this.confete();
+        const modal=document.createElement('div');
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000005;animation:popIn 0.4s ease';
+        modal.innerHTML=`<div style="background:linear-gradient(180deg,#0F172A 0%,#1E293B 100%);border:4px solid #fde68a;border-radius:24px;padding:32px;text-align:center;max-width:360px;box-shadow:0 0 60px rgba(253,230,138,0.4)"><div style="font-size:70px;animation:bounce 1s infinite">🎉</div><div style="font-family:Cinzel,serif;font-size:28px;font-weight:900;color:#fde68a;margin:10px 0">LEVEL UP!</div><div style="font-size:18px;color:#fff">Nível <span style="color:#fde68a;font-weight:900">${oldLevel}</span> → <span style="color:#fde68a;font-weight:900;font-size:24px">${newLevel}</span></div><div style="margin-top:12px;color:#94a3b8;font-size:13px">Você desbloqueou: ${newLevel>=3?'Borda Prata':''} ${newLevel>=5?'• Manto Azul':''} ${newLevel>=7?'• Título Arquimago':''}</div><button id="btn-fechar-levelup" style="margin-top:20px;width:100%;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:14px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer">Continuar Épico ⚔️</button></div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('#btn-fechar-levelup').onclick=()=>modal.remove();
+        setTimeout(()=>{ if(document.body.contains(modal)) modal.remove(); },4000);
+    },
     falar: (text, lang='en-US', pitch=1, rate=0.95, isMago=false)=> VoiceService.falar(text,{lang,pitch,rate,isMago}),
     calcularLevel(xpTotal){
         const curve = this.state.levelCurve || [0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
@@ -583,6 +620,9 @@ Workspace.Ingles = {
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
             <div id="ig-professorView" style="display:none;min-height:70vh"><div class="ig-sidebar">
                 <button data-action="render-tab" data-tab="mago" class="ig-side-item">🧙 Mago IA</button>
+                <button data-action="render-tab" data-tab="quests" class="ig-side-item">🎯 Missões</button>
+                <button data-action="render-tab" data-tab="loja" class="ig-side-item">🛍 Loja do Mago</button>
+                <button data-action="render-tab" data-tab="season" class="ig-side-item">🏆 Temporada</button>
                 <button data-action="render-tab" data-tab="biblioteca" class="ig-side-item active">📚 Biblioteca</button>
                 <button data-action="render-tab" data-tab="imagens" class="ig-side-item">🖼 Imagens</button>
                 <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
@@ -628,6 +668,12 @@ Workspace.Ingles = {
                 case 'rejeitar-envio': this.remItem('submissions', b.dataset.id); break;
                 case 'proximo-desafio': this.proximoDesafio(); break;
                 case 'testar-voz-mago': VoiceService.falar('Greetings, brave adventurer '+this.getNomeAlunoReal()+', your quest begins now!', {isMago:true}); break;
+                case 'add-quest': this.addQuest(); break;
+                case 'rem-quest': this.remQuest(b.dataset.id); break;
+                case 'add-loot': this.addLoot(b.dataset.rar); break;
+                case 'rem-loot': this.remLoot(b.dataset.rar, b.dataset.id); break;
+                case 'salvar-season': this.salvarSeason(); break;
+                case 'reset-season': this.resetSeason(); break;
             }
         });
         root.addEventListener('change', e=>{
@@ -920,8 +966,51 @@ Workspace.Ingles = {
         else { d.style.color='#e74c3c'; d.style.background='#fdf2f2'; }
     },
 
-    // ===================== PAINEL PROFESSOR COMPLETO - RESTAURADO =====================
+    // ===================== PAINEL PROFESSOR V25 - QUESTS, LOJA, SEASON =====================
     renderProfessorTab(tabId){
+        if(tabId==='quests' || tabId==='loja' || tabId==='season'){
+            localStorage.setItem('ws_ingles_aba_prof', tabId);
+            document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
+            const activeBtn=document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
+            if(activeBtn) activeBtn.classList.add('active');
+            const contentEl=document.getElementById('ig-tab-content');
+            if(tabId==='quests'){
+                contentEl.innerHTML=`
+                    <div class="ig-card"><h3>🎯 Missões Diárias (V6)</h3><p style="color:#64748B;font-size:13px">Crie missões que aparecem no hub do aluno. Recompensa com XP multiplicado pela season.</p>
+                    <div style="background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin:15px 0;display:grid;grid-template-columns:1fr 80px 80px 80px;gap:8px;align-items:end">
+                        <div><label style="font-size:11px;font-weight:800">Texto da missão</label><input id="qTexto" class="ig-input" placeholder="Ex: Crie 3 frases com Although"></div>
+                        <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-input" value="3"></div>
+                        <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-input" value="100"></div>
+                        <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-input" value="🎯"></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:20px"><select id="qTipo" class="ig-input" style="width:auto"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select><button data-action="add-quest" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">+ Adicionar Missão</button></div>
+                    <h4>Missões Atuais (${this.state.quests.length})</h4><div style="display:flex;flex-direction:column;gap:8px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1px solid #eee;border-left:4px solid #4F46E5"><div><b>${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</b> • Alvo: ${q.alvo} • +${q.recompensaXP} XP • ${q.tipo}</div><button data-action="rem-quest" data-id="${q.id}" style="background:#fdf2f2;border:1px solid #fadbd8;color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer">✕</button></div>`).join('')}</div></div>`;
+                return;
+            }
+            if(tabId==='loja'){
+                const loot = this.state.lootTables || {};
+                const allItems = [...(loot.comum||[]), ...(loot.epico||[]), ...(loot.lendario||[])];
+                contentEl.innerHTML=`
+                    <div class="ig-card"><h3>🛍 Loja do Mago - Loot Tables</h3><p style="color:#64748B;font-size:13px">Configure itens que caem nos baús. Raridade define chance.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+                        <div style="background:#f8fafc;border:2px solid #94a3b8;border-radius:12px;padding:12px"><h4>📦 Comum (XP<150)</h4>${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeComum" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                        <div style="background:#f5f3ff;border:2px solid #a78bfa;border-radius:12px;padding:12px"><h4>💎 Épico (XP 150-300)</h4>${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeEpico" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                        <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:12px;padding:12px"><h4>👑 Lendário (XP>300)</h4>${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeLendario" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
+                    </div></div>`;
+                return;
+            }
+            if(tabId==='season'){
+                const s=this.state.season||{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1};
+                contentEl.innerHTML=`
+                    <div class="ig-card"><h3>🏆 Temporada Atual</h3>
+                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:20px;border-radius:12px;border:2px solid #d4af37;margin:16px 0"><div style="font-family:Cinzel;font-size:22px">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div><div style="color:#fff;margin-top:8px">Multiplicador XP: x${s.xpMultiplier||1} • Ativa: ${s.ativa?'Sim':'Não'}</div></div>
+                    <div style="display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:end"><div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${Workspace.escapeHTML(s.nome||'')}"></div><div><label style="font-size:11px;font-weight:800">Multiplicador</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div></div>
+                    <div style="display:flex;gap:10px;margin-top:12px"><button data-action="salvar-season" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">🔄 Resetar Season (zera XP semanal)</button></div>
+                    <p style="font-size:11px;color:#94a3b8;margin-top:12px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p></div>`;
+                return;
+            }
+        }
+
         localStorage.setItem('ws_ingles_aba_prof', tabId);
         document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
         const activeBtn=document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
@@ -1078,6 +1167,39 @@ Workspace.Ingles = {
     addQuestion: async function(){ const text=document.getElementById('aqText')?.value.trim(); if(!text) return; this.state.questions.unshift({id:'aq'+Date.now(), text}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
     addDebate: async function(){ const topic=document.getElementById('dbTopic')?.value.trim(); const starter=document.getElementById('dbStarter')?.value.trim()||'What is your opinion?'; if(!topic) return; this.state.debates.unshift({id:'d'+Date.now(), topic, starter}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Duelo adicionado com IA!','success'); },
 
+    addQuest: async function(){
+        const texto=document.getElementById('qTexto')?.value.trim();
+        const alvo=parseInt(document.getElementById('qAlvo')?.value||'3');
+        const xp=parseInt(document.getElementById('qXP')?.value||'100');
+        const icone=document.getElementById('qIcone')?.value.trim()||'🎯';
+        const tipo=document.getElementById('qTipo')?.value||'diaria';
+        if(!texto) return Workspace.mostrarAviso('Digite texto da missão','warning');
+        this.state.quests.push({id:'q_'+Date.now(), texto, alvo, recompensaXP:xp, icone, tipo});
+        await this.saveDados(); this.renderProfessorTab('quests'); Workspace.mostrarAviso('Missão criada!','success');
+    },
+    remQuest: async function(id){ this.state.quests=this.state.quests.filter(q=>q.id!==id); await this.saveDados(); this.renderProfessorTab('quests'); },
+    addLoot: async function(rar){
+        const inputId = rar==='comum'? 'lootNomeComum' : rar==='epico'? 'lootNomeEpico' : 'lootNomeLendario';
+        const nome=document.getElementById(inputId)?.value.trim();
+        if(!nome) return;
+        if(!this.state.lootTables[rar]) this.state.lootTables[rar]=[];
+        this.state.lootTables[rar].push({id:'loot_'+Date.now(), nome, tipo:'cosmetico', chance: 50});
+        await this.saveDados(); this.renderProfessorTab('loja');
+    },
+    remLoot: async function(rar,id){ if(this.state.lootTables[rar]){ this.state.lootTables[rar]=this.state.lootTables[rar].filter(i=>i.id!==id); await this.saveDados(); this.renderProfessorTab('loja'); } },
+    salvarSeason: async function(){
+        const nome=document.getElementById('seasonNome')?.value.trim()||'Era dos Feitiços';
+        const mult=parseFloat(document.getElementById('seasonMult')?.value||'1');
+        this.state.season = {...this.state.season, nome, xpMultiplier:mult, id: this.state.season.id||'S1'};
+        await this.saveDados(); Workspace.mostrarAviso('Temporada salva!','success'); this.renderProfessorTab('season');
+    },
+    resetSeason: async function(){
+        if(!confirm('Resetar temporada? Isso zera XP semanal da escola e guarda histórico. Continuar?')) return;
+        try{
+            const res=await Workspace.api('/workspace/ingles/season/reset','POST',{escolaId:Workspace.usuario.escolaId||'DEFAULT', novaSeason:{id:'S'+Date.now(), nome:'Nova Era', xpMultiplier:1, ativa:true}});
+            if(res?.success){ Workspace.mostrarAviso('Season resetada!','success'); await this.loadDados(); this.renderProfessorTab('season'); }
+        }catch(e){ Workspace.mostrarAviso('Erro ao resetar','error'); }
+    },
     remItem: async function(key,id){ this.state[key]=this.state[key].filter(i=>i.id!==id); if(key==='magoPhrases'&&this.state.editingMagoId===id) this.state.editingMagoId=null; await this.saveDados(); const active=document.querySelector('.ig-side-item.active'); if(active) this.renderProfessorTab(active.dataset.tab); },
     aprovarEnvio: async function(id){ const s=this.state.submissions.find(x=>x.id===id); if(!s) return; s.status='approved'; this.state.pool.unshift({id:'pool_'+Date.now(), type:s.game, text:s.text, word:s.text, origin:'student', student:s.student, timestamp:Date.now()}); await this.saveDados(); this.renderProfessorTab('envios'); Workspace.mostrarAviso('Aprovado para Piscina Global!','success'); },
 
@@ -1150,15 +1272,22 @@ Workspace.Ingles = {
         if(this.recognition) try{ this.recognition.stop(); }catch{}
     },
     sucessoGenerico: async function(bonus){
-        // V6: multiplicador de season
         const mult = this.state.season?.xpMultiplier || 1;
         bonus = Math.floor(bonus * mult);
+        const oldLevelInfo = this.calcularLevel(this.state.xp);
 
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; await this.saveDados();
-        // V6: verifica missões e achievements
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; 
+        const newLevelInfo = this.calcularLevel(this.state.xp);
+        await this.saveDados();
         try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
         try{ this.renderizarVisualizacao(); }catch{}
+        // Level up?
+        if(newLevelInfo.level > oldLevelInfo.level){
+            this.mostrarLevelUp(oldLevelInfo.level, newLevelInfo.level);
+        }else{
+            this.tocarSom('xp');
+        }
         const srs=this.state.srs[this.desafioAtualObj?.id];
         const toast=document.createElement('div');
         toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
