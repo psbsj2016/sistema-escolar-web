@@ -344,7 +344,7 @@ Workspace.Ingles = {
         try{
             if(Workspace.usuario?.tipo==='Aluno'){
                 const lvl = this.calcularLevel(this.state.xp).level;
-                Workspace.api('/workspace/ingles/xp','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', nome:Workspace.usuario.nome||Workspace.usuario.login, xp:this.state.xp, streak:this.state.streak, level:lvl, titulo:this.state.titulo, inventario:this.state.inventario, medalhas:this.state.medalhas, questsProgress:this.state.questsProgress}).catch(()=>{});
+                Workspace.api('/workspace/ingles/xp','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', nome:Workspace.usuario.nome||Workspace.usuario.login, xp:this.state.xp, streak:this.state.streak, level:lvl, titulo:this.state.titulo, tituloEquipado:this.state.tituloEquipado, bordaEquipada:this.state.bordaEquipada, inventario:this.state.inventario, medalhas:this.state.medalhas, questsProgress:this.state.questsProgress, portalStreak:this.portalStreak||this.state.portalStreak||0, portalRodada:this.portalRodada||1, portalTarget:this.portalTarget||5, portalRecorde:Math.max(this.portalStreak||0, this.state.portalRecorde||0)}).catch(()=>{});
             }
             await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId:Workspace.usuario.escolaId||'DEFAULT',
@@ -616,10 +616,12 @@ Workspace.Ingles = {
     },
     async sucessoPortal(bonusBase){
         const mult=this.state.season?.xpMultiplier||1;
-        const bonus = Math.floor((bonusBase*1.5)*mult); // 50% mais XP no portal
-        this.portalStreak++;
+        const bonus = Math.floor((bonusBase*1.5)*mult);
+        this.portalStreak++; this.state.portalStreak=this.portalStreak;
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
         await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus}); }catch{}
+
         this.tocarSom('xp');
         // Toast
         const toast=document.createElement('div');
@@ -641,8 +643,10 @@ Workspace.Ingles = {
         const perda=Math.floor(20 * (this.state.season?.xpMultiplier||1));
         this.state.xp=Math.max(0, this.state.xp - perda);
         this.xpGanhosNaSessao=Math.max(0, this.xpGanhosNaSessao - perda);
-        this.portalStreak=0;
+        this.portalStreak=0; this.state.portalStreak=0;
         await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:0, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpPerda:perda}); }catch{}
+
         this.tocarSom('quest'); // som de erro
         const toast=document.createElement('div');
         toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
@@ -652,11 +656,13 @@ Workspace.Ingles = {
         setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },1100);
     },
     async magiaDoMagoBonus(){
-        const bonusBase = 300 + (this.portalRodada * 100); // 400,500,600...
+        const bonusBase = 300 + (this.portalRodada * 100);
         const mult=this.state.season?.xpMultiplier||1;
         const bonus=Math.floor(bonusBase*mult);
         this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
         await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus, evento:'magia'}); }catch{}
+
         this.tocarSom('level'); this.confete();
         const modal=document.createElement('div');
         modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000008;animation:popIn 0.5s ease';
