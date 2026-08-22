@@ -672,7 +672,7 @@ Workspace.Ingles = {
                 <div style="font-size:60px;margin:-20px 0 10px 0">✨🪄✨</div>
                 <div style="font-family:Cinzel;font-size:26px;font-weight:900;color:#fde68a;text-shadow:0 0 20px rgba(253,230,138,0.8)">MAGIA DO MAGO!</div>
                 <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': `${this.portalTarget-5} vitórias! Você é imbatível!`}</div>
-                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5)">+${bonus} XP BÔNUS!</div>
+                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5);animation:shineBonus 1s ease infinite alternate">+${bonus} XP BÔNUS!</div><style>@keyframes shineBonus{0%{transform:scale(1) rotate(-2deg);box-shadow:0 0 20px rgba(253,230,138,0.5)}100%{transform:scale(1.1) rotate(2deg);box-shadow:0 0 40px rgba(253,230,138,0.9)}}</style>
                 <div style="color:#94a3b8;font-size:12px;margin-top:12px">Próxima meta: ${5*(this.portalRodada+1)} vitórias seguidas</div>
             </div>
             <style>@keyframes floatMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}</style>`;
@@ -855,6 +855,28 @@ Workspace.Ingles = {
     },
 
 
+    async carregarRankingAluno(){
+        const listEl=document.getElementById('ig-alunoRankingList');
+        if(!listEl) return;
+        try{
+            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
+            const res=await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
+            if(!res?.success){ listEl.innerHTML='<div style="color:#94a3b8;text-align:center;padding:10px">Sem dados</div>'; return; }
+            const ranking=res.ranking||[];
+            const meuId=Workspace.usuario.id;
+            listEl.innerHTML = ranking.slice(0,8).map((r,i)=>{
+                const isMe=r.userId===meuId;
+                const liga=r.liga|| (i<3?'ouro': i<10?'prata':'bronze');
+                return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:${isMe?'linear-gradient(90deg,#EEF2FF,#fff)':'#fff'};border:1.5px solid ${isMe?'#4F46E5':'#f1f5f9'};border-radius:12px"><div style="width:28px;height:28px;background:${liga==='ouro'?'#fde68a': liga==='prata'?'#e2e8f0':'#fed7aa'};border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0">${i+1}</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b style="font-size:12px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')} ${isMe?'(você)':''}</b><span style="background:#0F172A;color:#fde68a;padding:1px 6px;border-radius:10px;font-size:9px">${Workspace.escapeHTML(r.tituloEquipado||'Aprendiz')}</span></div><div style="font-size:10px;color:#64748B;margin-top:2px">⭐ ${r.xp} XP • Nv ${r.level||1} • 🔥 ${r.portalRecorde||0} portal</div></div><div style="font-size:10px;background:${liga==='ouro'?'#fde68a':'#f1f5f9'};padding:3px 6px;border-radius:10px;font-weight:800;text-transform:uppercase">${liga}</div></div>`;
+            }).join('') || '<div style="text-align:center;padding:10px;color:#94a3b8">Nenhum XP ainda</div>';
+            // mostra posição do aluno se não está no top 8
+            const minhaPos=ranking.findIndex(r=>r.userId===meuId);
+            if(minhaPos>=8){
+                const r=ranking[minhaPos];
+                listEl.innerHTML += `<div style="margin-top:8px;padding:10px 12px;background:linear-gradient(90deg,#FEF3C7,#fff);border:1.5px dashed #f59e0b;border-radius:12px;display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;background:#f59e0b;color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px">${minhaPos+1}</div><div style="flex:1"><b style="font-size:12px">Sua posição</b><div style="font-size:10px;color:#64748B">⭐ ${r.xp} XP • Nv ${r.level||1}</div></div></div>`;
+            }
+        }catch(e){ listEl.innerHTML=`<div style="color:#e74c3c;text-align:center;padding:10px;font-size:11px">Erro: ${e.message}</div>`; }
+    },
     renderQuestsPanel(){
         const panel=document.getElementById('ig-questsPanel');
         const list=document.getElementById('ig-questsList');
@@ -891,6 +913,7 @@ Workspace.Ingles = {
                     <button data-action="abrir-inventario" style="background:rgba(253,230,138,0.15);border:1.5px solid #fde68a;color:#fde68a;padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;font-size:12px">🎒 Inventário</button>
                 </div>
                 <div id="ig-questsPanel" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px;display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🎯 Missões Diárias</h4><span style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px" id="ig-seasonBadge">S1 • x1</span></div><div id="ig-questsList" style="display:flex;flex-direction:column;gap:8px"></div></div>
+                <div id="ig-alunoRanking" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🏆 Ranking da Turma</h4><button data-action="atualizar-ranking-aluno" style="background:#0F172A;color:#fde68a;border:1px solid #d4af37;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;cursor:pointer">🔄 Atualizar</button></div><div id="ig-alunoRankingList" style="display:flex;flex-direction:column;gap:8px"><div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">Carregando ranking...</div></div></div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
             </div>
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
@@ -904,7 +927,6 @@ Workspace.Ingles = {
                 <button data-action="render-tab" data-tab="imagens" class="ig-side-item">🖼 Imagens</button>
                 <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
                 <button data-action="render-tab" data-tab="algoritmo" class="ig-side-item">🧠 Algoritmo</button>
-                <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking</button>
             </div><div id="ig-tab-content" style="flex:1;padding:30px;background:#F8FAFC;overflow-y:auto"></div></div>
             <div id="ig-gameModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
                 <div class="ws-card" style="width:90%;max-width:650px;background:#fffcf0;border:4px solid #d4af37;border-radius:8px;display:flex;flex-direction:column;max-height:90vh">
@@ -953,6 +975,7 @@ Workspace.Ingles = {
                 case 'reset-season': this.resetSeason(); break;
                 case 'abrir-inventario': this.abrirInventario(); break;
                 case 'atualizar-ranking': this.carregarRanking(); break;
+                case 'atualizar-ranking-aluno': this.carregarRankingAluno(); break;
             }
         });
         root.addEventListener('change', e=>{
@@ -1045,7 +1068,7 @@ Workspace.Ingles = {
     },
 
     renderizarVisualizacao(){
-        // V6: atualiza barra de XP e quests
+        try{ this.carregarRankingAluno(); }catch{}
         try{
             const lvlInfo=this.calcularLevel(this.state.xp);
             // aplica borda equipada no header
@@ -1263,37 +1286,52 @@ Workspace.Ingles = {
             }
             if(tabId==='quests'){
                 contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🎯 Missões Diárias (V6)</h3><p style="color:#64748B;font-size:13px">Crie missões que aparecem no hub do aluno. Recompensa com XP multiplicado pela season.</p>
-                    <div style="background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin:15px 0;display:grid;grid-template-columns:1fr 80px 80px 80px;gap:8px;align-items:end">
-                        <div><label style="font-size:11px;font-weight:800">Texto da missão</label><input id="qTexto" class="ig-input" placeholder="Ex: Crie 3 frases com Although"></div>
-                        <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-input" value="3"></div>
-                        <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-input" value="100"></div>
-                        <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-input" value="🎯"></div>
-                    </div>
-                    <div style="display:flex;gap:8px;margin-bottom:20px"><select id="qTipo" class="ig-input" style="width:auto"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select><button data-action="add-quest" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">+ Adicionar Missão</button></div>
-                    <h4>Missões Atuais (${this.state.quests.length})</h4><div style="display:flex;flex-direction:column;gap:8px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1px solid #eee;border-left:4px solid #4F46E5"><div><b>${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</b> • Alvo: ${q.alvo} • +${q.recompensaXP} XP • ${q.tipo}</div><button data-action="rem-quest" data-id="${q.id}" style="background:#fdf2f2;border:1px solid #fadbd8;color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer">✕</button></div>`).join('')}</div></div>`;
+                    <div class="ig-card-prof">
+                        <div class="ig-card-header"><div><h3>🎯 Missões Diárias</h3><p>Configure missões que aparecem no hub do aluno. Recompensa com XP x season.</p></div></div>
+                        <div style="background:linear-gradient(180deg,#f8fafc,#fff);padding:18px;border-radius:14px;border:2px solid #e2e8f0;margin:16px 0">
+                            <div class="ig-prof-grid">
+                                <div style="grid-column:span 2"><label style="font-size:11px;font-weight:800;color:#0f172a">Texto da missão</label><input id="qTexto" class="ig-prof-input" placeholder="Ex: Crie 3 frases com Although" style="width:100%;margin-top:4px"></div>
+                                <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-prof-input" value="3" style="width:100%;margin-top:4px"></div>
+                                <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-prof-input" value="100" style="width:100%;margin-top:4px"></div>
+                                <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-prof-input" value="🎯" style="width:100%;margin-top:4px"></div>
+                                <div><label style="font-size:11px;font-weight:800">Tipo</label><select id="qTipo" class="ig-prof-input" style="width:100%;margin-top:4px"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select></div>
+                            </div>
+                            <button data-action="add-quest" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:12px 20px;border-radius:12px;font-weight:800;cursor:pointer;margin-top:14px;width:100%">+ Adicionar Missão</button>
+                        </div>
+                        <h4 style="font-family:Cinzel;font-size:14px;margin:20px 0 10px 0">Missões Atuais (${this.state.quests.length})</h4>
+                        <div style="display:flex;flex-direction:column;gap:10px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1.5px solid #e2e8f0;border-left:4px solid #4F46E5;border-radius:12px;padding:14px"><div style="flex:1"><div style="font-weight:800;color:#0f172a;font-size:13px">${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</div><div style="font-size:11px;color:#64748B;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap"><span>🎯 Alvo: ${q.alvo}</span><span>⭐ +${q.recompensaXP} XP</span><span style="background:#EEF2FF;color:#4338ca;padding:2px 6px;border-radius:10px">${q.tipo}</span></div></div><button data-action="rem-quest" data-id="${q.id}" style="background:#fef2f2;border:1.5px solid #fecaca;color:#dc2626;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:800;flex-shrink:0">✕</button></div>`).join('') || '<div style="text-align:center;padding:20px;color:#94a3b8">Nenhuma missão ainda. Crie a primeira!</div>'}</div>
+                    </div>`;
                 return;
             }
             if(tabId==='loja'){
                 const loot = this.state.lootTables || {};
-                const allItems = [...(loot.comum||[]), ...(loot.epico||[]), ...(loot.lendario||[])];
                 contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🛍 Loja do Mago - Loot Tables</h3><p style="color:#64748B;font-size:13px">Configure itens que caem nos baús. Raridade define chance.</p>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
-                        <div style="background:#f8fafc;border:2px solid #94a3b8;border-radius:12px;padding:12px"><h4>📦 Comum (XP<150)</h4>${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeComum" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                        <div style="background:#f5f3ff;border:2px solid #a78bfa;border-radius:12px;padding:12px"><h4>💎 Épico (XP 150-300)</h4>${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeEpico" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                        <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:12px;padding:12px"><h4>👑 Lendário (XP>300)</h4>${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeLendario" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                    </div></div>`;
+                    <div class="ig-card-prof">
+                        <div class="ig-card-header"><div><h3>🛍 Loja do Mago - Loot Tables</h3><p>Itens que caem nos baús. Comum <150 XP, Épico 150-300, Lendário >300.</p></div></div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:16px">
+                            <div style="background:linear-gradient(180deg,#f8fafc,#fff);border:2px solid #94a3b8;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">📦 Comum (XP<150)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeComum" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
+                            <div style="background:linear-gradient(180deg,#f5f3ff,#fff);border:2px solid #a78bfa;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">💎 Épico (150-300 XP)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeEpico" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
+                            <div style="background:linear-gradient(180deg,#fffbeb,#fff);border:2px solid #fde68a;border-radius:16px;padding:16px"><h4 style="font-family:Cinzel;font-size:13px;margin:0 0 12px 0">👑 Lendário (>300 XP)</h4><div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">${Workspace.escapeHTML(i.nome)} <span style="color:#64748B">(${i.chance}%)</span></span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 8px;border-radius:8px;cursor:pointer;font-weight:800">✕</button></div>`).join('') || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:10px">Vazio</div>'}</div><div style="display:flex;gap:8px;margin-top:12px"><input id="lootNomeLendario" class="ig-prof-input" placeholder="Nome do item" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800">+</button></div></div>
+                        </div>
+                    </div>`;
                 return;
             }
             if(tabId==='season'){
                 const s=this.state.season||{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1};
                 contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🏆 Temporada Atual</h3>
-                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:20px;border-radius:12px;border:2px solid #d4af37;margin:16px 0"><div style="font-family:Cinzel;font-size:22px">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div><div style="color:#fff;margin-top:8px">Multiplicador XP: x${s.xpMultiplier||1} • Ativa: ${s.ativa?'Sim':'Não'}</div></div>
-                    <div style="display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:end"><div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${Workspace.escapeHTML(s.nome||'')}"></div><div><label style="font-size:11px;font-weight:800">Multiplicador</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div></div>
-                    <div style="display:flex;gap:10px;margin-top:12px"><button data-action="salvar-season" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">🔄 Resetar Season (zera XP semanal)</button></div>
-                    <p style="font-size:11px;color:#94a3b8;margin-top:12px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p></div>`;
+                    <div class="ig-card-prof">
+                        <div class="ig-card-header"><div><h3>⚙️ Temporada</h3><p>Controle multiplicador XP e reset semanal</p></div></div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:22px;border-radius:16px;border:2px solid #d4af37;margin:16px 0;box-shadow:0 8px 24px rgba(0,0,0,0.2)">
+                            <div style="font-family:Cinzel;font-size:20px;font-weight:900">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div>
+                            <div style="color:#fff;margin-top:8px;font-size:13px;display:flex;gap:12px;flex-wrap:wrap"><span>⚡ Multiplicador: x${s.xpMultiplier||1}</span><span>•</span><span>${s.ativa?'✅ Ativa':'❌ Inativa'}</span></div>
+                        </div>
+                        <div class="ig-prof-grid">
+                            <div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-prof-input" value="${Workspace.escapeHTML(s.nome||'')}" style="width:100%;margin-top:6px"></div>
+                            <div><label style="font-size:11px;font-weight:800">Multiplicador XP (ex: 1.5)</label><input id="seasonMult" type="number" step="0.1" class="ig-prof-input" value="${s.xpMultiplier||1}" style="width:100%;margin-top:6px"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px"><button data-action="salvar-season" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer">💾 Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:14px;border-radius:12px;font-weight:800;cursor:pointer">🔄 Resetar Season</button></div>
+                        <p style="font-size:11px;color:#94a3b8;margin-top:12px;background:#f8fafc;padding:10px;border-radius:8px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p>
+                    </div>`;
                 return;
             }
         }
@@ -1572,7 +1610,8 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
     },
-    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null;
+    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null; this._portalHeader=null;
+        const btnMudar=document.querySelector('[data-action=abrir-mini-hub]'); if(btnMudar) btnMudar.style.display='block';
 
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
