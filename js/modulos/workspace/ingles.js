@@ -316,6 +316,10 @@ Workspace.Ingles = {
             }
             const userK=`ws_ingles_user_${Workspace.usuario.id}`;
             this.state.xp=parseInt(localStorage.getItem(`${userK}_xp`)||'0');
+            this.state.tituloEquipado=localStorage.getItem(`${userK}_tituloEquipado`)||'Aprendiz';
+            this.state.bordaEquipada=localStorage.getItem(`${userK}_bordaEquipada`)||'';
+            try{ this.state.inventario=JSON.parse(localStorage.getItem(`${userK}_inventario`)||'[]'); }catch{ this.state.inventario=[]; }
+            try{ this.state.medalhas=JSON.parse(localStorage.getItem(`${userK}_medalhas`)||'[]'); }catch{ this.state.medalhas=[]; }
             this.state.streak=parseInt(localStorage.getItem(`${userK}_streak`)||'1');
             this.state.itensConcluidos=JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
             try{
@@ -329,6 +333,10 @@ Workspace.Ingles = {
         try{
             localStorage.setItem(`${userK}_xp`, String(this.state.xp));
             localStorage.setItem(`${userK}_streak`, String(this.state.streak));
+            localStorage.setItem(`${userK}_tituloEquipado`, this.state.tituloEquipado||'Aprendiz');
+            localStorage.setItem(`${userK}_bordaEquipada`, this.state.bordaEquipada||'');
+            localStorage.setItem(`${userK}_inventario`, JSON.stringify(this.state.inventario||[]));
+            localStorage.setItem(`${userK}_medalhas`, JSON.stringify(this.state.medalhas||[]));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
             localStorage.setItem(`${userK}_srs`, JSON.stringify(this.state.srs));
         }catch{}
@@ -434,6 +442,61 @@ Workspace.Ingles = {
         document.body.appendChild(modal);
         modal.querySelector('#btn-fechar-levelup').onclick=()=>modal.remove();
         setTimeout(()=>{ if(document.body.contains(modal)) modal.remove(); },4000);
+    },
+    abrirInventario(){
+        const inv = this.state.inventario||[];
+        const medalhas = this.state.medalhas||[];
+        const allAch = this.state.achievements||[];
+        const bordas = inv.filter(i=>i.tipo==='cosmetico' || i.id?.includes('borda'));
+        const titulos = inv.filter(i=>i.tipo==='titulo' || i.id?.includes('titulo')).map(i=>i.nome||i.id);
+        const skins = inv.filter(i=>i.tipo==='skin');
+        const modal=document.createElement('div');
+        modal.id='ig-inv-modal';
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000006;padding:20px';
+        modal.innerHTML=`
+            <div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:3px solid #d4af37;border-radius:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+                <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;border-radius:17px 17px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">
+                    <div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:18px">🎒 Inventário Épico</div>
+                    <button data-action="fechar-inventario" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer">✕</button>
+                </div>
+                <div style="padding:18px">
+                    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="background:#0F172A;color:#fde68a;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">Nível ${this.calcularLevel(this.state.xp).level}</span><span style="background:#EEF2FF;color:#4338ca;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${this.state.tituloEquipado}</span><span style="background:#FEF3C7;color:#92400e;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${inv.length} itens</span><span style="background:#D1FAE5;color:#065f46;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${medalhas.length} medalhas</span></div>
+                    
+                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">👑 Títulos (${titulos.length})</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${titulos.length? titulos.map(t=>`<button data-action="equipar-titulo" data-titulo="${Workspace.escapeHTML(t)}" style="background:${this.state.tituloEquipado===t?'#0F172A':'#fff'};color:${this.state.tituloEquipado===t?'#fde68a':'#0f172a'};border:2px solid ${this.state.tituloEquipado===t?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">${Workspace.escapeHTML(t)} ${this.state.tituloEquipado===t?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhum título ainda. Abra baús épicos!</span>'}</div>
+
+                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🖼 Bordas (${bordas.length})</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${bordas.length? bordas.map(b=>`<button data-action="equipar-borda" data-borda="${Workspace.escapeHTML(b.id||b.nome)}" style="background:${this.state.bordaEquipada===(b.id||b.nome)?'#0F172A':'#fff'};color:${this.state.bordaEquipada===(b.id||b.nome)?'#fde68a':'#0f172a'};border:2px solid ${this.state.bordaEquipada===(b.id||b.nome)?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer">${Workspace.escapeHTML(b.nome||b.id)} ${this.state.bordaEquipada===(b.id||b.nome)?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma borda ainda. Faça 150+ XP numa sessão!</span>'}</div>
+
+                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🎨 Skins (${skins.length})</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${skins.length? skins.map(s=>`<div style="background:#fff;border:1.5px solid #e2e8f0;padding:8px 12px;border-radius:10px;font-size:12px">🎭 ${Workspace.escapeHTML(s.nome||s.id)}</div>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma skin ainda.</span>'}</div>
+
+                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🏆 Medalhas (${medalhas.length})</h4>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">${allAch.map(a=>{ const tem=medalhas.includes(a.id); return `<div style="background:${tem?'#D1FAE5':'#f8fafc'};border:1.5px solid ${tem?'#10B981':'#e2e8f0'};border-radius:10px;padding:10px;text-align:center;opacity:${tem?1:0.5}"><div style="font-size:28px">${a.icone||'🏆'}</div><div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:4px">${Workspace.escapeHTML(a.nome)}</div><div style="font-size:10px;color:#64748B">${Workspace.escapeHTML(a.desc)}</div><div style="font-size:9px;margin-top:4px;color:${tem?'#065f46':'#94a3b8'}">${tem?'✅ Desbloqueada':'🔒 Bloqueada'}</div></div>`}).join('')}</div>
+
+                    <div style="margin-top:16px;background:#FFFBEB;border:1px solid #fde68a;border-radius:10px;padding:10px;font-size:11px;color:#92400E"><b>💡 Dica:</b> Equipe títulos e bordas para aparecerem no ranking! Faça sessões com +300 XP para baús lendários.</div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', (e)=>{
+            const b=e.target.closest('[data-action]');
+            if(!b) return;
+            if(b.dataset.action==='fechar-inventario'){ modal.remove(); return; }
+            if(b.dataset.action==='equipar-titulo'){ this.equiparTitulo(b.dataset.titulo); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
+            if(b.dataset.action==='equipar-borda'){ this.equiparBorda(b.dataset.borda); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
+        });
+        modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
+    },
+    equiparTitulo(titulo){
+        this.state.tituloEquipado=titulo;
+        this.state.titulo=titulo;
+        this.saveDados();
+        Workspace.mostrarAviso(`Título equipado: ${titulo}`,'success');
+    },
+    equiparBorda(bordaId){
+        this.state.bordaEquipada=bordaId;
+        this.saveDados();
+        Workspace.mostrarAviso(`Borda equipada: ${bordaId}`,'success');
     },
     falar: (text, lang='en-US', pitch=1, rate=0.95, isMago=false)=> VoiceService.falar(text,{lang,pitch,rate,isMago}),
     calcularLevel(xpTotal){
@@ -613,6 +676,7 @@ Workspace.Ingles = {
                     <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;flex-shrink:0" id="ig-levelBadge">1</div>
                     <div style="flex:1"><div style="display:flex;justify-content:space-between;color:#fde68a;font-family:VT323;font-size:16px"><span id="ig-levelText">Nível 1 • Aprendiz</span><span id="ig-xpText">0 / 100 XP</span></div><div style="background:rgba(255,255,255,0.15);height:10px;border-radius:20px;overflow:hidden;margin-top:6px"><div id="ig-xpProgress" style="background:linear-gradient(90deg,#fde68a,#f1c40f);height:100%;width:0%;transition:width 0.6s ease"></div></div></div>
                     <div style="color:#fff;font-family:VT323;font-size:14px;text-align:center"><div>🔥</div><div id="ig-streakBadge">1</div></div>
+                    <button data-action="abrir-inventario" style="background:rgba(253,230,138,0.15);border:1.5px solid #fde68a;color:#fde68a;padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;font-size:12px">🎒 Inventário</button>
                 </div>
                 <div id="ig-questsPanel" style="background:linear-gradient(180deg,#fff,#F8FAFC);border:2px solid #E2E8F0;border-radius:14px;padding:14px;margin-bottom:18px;display:none"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h4 style="margin:0;font-family:Cinzel;font-size:14px">🎯 Missões Diárias</h4><span style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px" id="ig-seasonBadge">S1 • x1</span></div><div id="ig-questsList" style="display:flex;flex-direction:column;gap:8px"></div></div>
                 <div id="ig-gamesGrid" class="ig-games-grid"></div>
@@ -674,6 +738,7 @@ Workspace.Ingles = {
                 case 'rem-loot': this.remLoot(b.dataset.rar, b.dataset.id); break;
                 case 'salvar-season': this.salvarSeason(); break;
                 case 'reset-season': this.resetSeason(); break;
+                case 'abrir-inventario': this.abrirInventario(); break;
             }
         });
         root.addEventListener('change', e=>{
@@ -769,6 +834,9 @@ Workspace.Ingles = {
         // V6: atualiza barra de XP e quests
         try{
             const lvlInfo=this.calcularLevel(this.state.xp);
+            // aplica borda equipada no header
+            try{ const hdr=document.querySelector('.ig-header'); if(hdr){ hdr.style.borderBottomColor=this.state.bordaEquipada?.includes('ouro')?'#fde68a': this.state.bordaEquipada?.includes('prata')?'#a8a29e': this.state.bordaEquipada?.includes('bronze')?'#d97706':'#d4af37'; hdr.style.boxShadow=this.state.bordaEquipada?.includes('ouro')?'0 0 20px rgba(253,230,138,0.5), 0 8px 32px rgba(0,0,0,0.4)':'0 8px 32px rgba(0,0,0,0.4)'; } }catch{}
+
             const lvlBadge=document.getElementById('ig-levelBadge');
             const lvlText=document.getElementById('ig-levelText');
             const xpText=document.getElementById('ig-xpText');
