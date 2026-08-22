@@ -1397,22 +1397,59 @@ Workspace.Ingles = {
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 
-            /* 🏝️ ILHA MÁGICA - ILHINHA NO CANTO DIREITO DO MAGO */
-            #ig-ilhaBtn{position:absolute;top:8px;right:10px;z-index:10;cursor:pointer;background:none;border:none;padding:0;animation:floatIlha 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.3))}
+            /* 🏝️ ILHA MÁGICA - ILHINHA VIVA COM PEIXINHOS E NUVENS */
+            #ig-ilhaBtn{position:absolute;top:8px;right:10px;z-index:10;cursor:pointer;background:none;border:none;padding:0;animation:floatIlha 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.3));overflow:visible}
             @keyframes floatIlha{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
-            .ilhinha-wrapper{position:relative;width:110px;height:90px}
-            .ilhinha-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:90px;height:28px;background:radial-gradient(ellipse at center,#22c55e 0%,#16a34a 40%,#15803d 100%);border-radius:50%;box-shadow:0 4px 0 #14532d, 0 8px 16px rgba(0,0,0,0.3);border:2px solid #14532d}
-            .ilhinha-grama{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
-            .ilhinha-palmeira{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-size:28px;animation:swayPalmeira 2.5s ease-in-out infinite}
-            @keyframes swayPalmeira{0%,100%{transform:translateX(-50%) rotate(-3deg)}50%{transform:translateX(-50%) rotate(3deg)}}
-            .ilhinha-agua{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:110px;height:18px;background:radial-gradient(ellipse,#0ea5e9 0%,#0284c7 60%,transparent 70%);border-radius:50%;opacity:0.6;animation:waveIlha 2s ease-in-out infinite}
-            @keyframes waveIlha{0%,100%{transform:translateX(-50%) scaleX(1)}50%{transform:translateX(-50%) scaleX(1.1)}}
-            .ilhinha-label{position:absolute;top:0;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:3px 10px;border-radius:12px;font-weight:900;font-size:9px;letter-spacing:0.5px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid #fff}
-            .ilhinha-cristais{position:absolute;top:22px;right:0;background:#fff;color:#0284c7;padding:2px 6px;border-radius:10px;font-weight:900;font-size:9px;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1.5px solid #0ea5e9}
-            .ilhinha-notif{position:absolute;top:20px;left:-4px;background:#ef4444;color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;animation:pulseNotif 1.5s ease infinite;border:2px solid #fff}
-            @keyframes pulseNotif{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
-            #ig-ilhaBtn:hover .ilhinha-wrapper{transform:scale(1.1);transition:0.3s}
-            #ig-ilhaBtn:hover .ilhinha-label{background:linear-gradient(135deg,#fff,#fde68a)}
+            .ilhinha-wrapper{position:relative;width:130px;height:95px;overflow:visible}
+            .ilhinha-base{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:92px;height:30px;background:radial-gradient(ellipse at center,#4ade80 0%,#22c55e 30%,#16a34a 60%,#15803d 100%);border-radius:50%;box-shadow:0 5px 0 #14532d, 0 10px 20px rgba(0,0,0,0.35);border:2.5px solid #14532d;z-index:3}
+            .ilhinha-grama{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:44px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.25));z-index:4}
+            .ilhinha-palmeira{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);font-size:30px;animation:swayPalmeira 2.5s ease-in-out infinite;z-index:5}
+            @keyframes swayPalmeira{0%,100%{transform:translateX(-50%) rotate(-4deg)}50%{transform:translateX(-50%) rotate(4deg)}}
+            .ilhinha-agua{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:125px;height:22px;background:radial-gradient(ellipse,#38bdf8 0%,#0ea5e9 40%,#0284c7 70%,transparent 80%);border-radius:50%;opacity:0.7;animation:waveIlha 2.2s ease-in-out infinite;z-index:2}
+            @keyframes waveIlha{0%,100%{transform:translateX(-50%) scaleX(1) scaleY(1)}50%{transform:translateX(-50%) scaleX(1.15) scaleY(1.1)}}
+            
+            /* ☁️ NUVENS PASSANDO */
+            .ilhinha-nuvem{position:absolute;font-size:14px;opacity:0.8;z-index:6;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))}
+            .ilhinha-nuvem.n1{top:12px;left:-20px;animation:nuvemPassa 12s linear infinite;font-size:16px}
+            .ilhinha-nuvem.n2{top:28px;left:-30px;animation:nuvemPassa 15s linear infinite 2s;font-size:12px;opacity:0.6}
+            .ilhinha-nuvem.n3{top:5px;left:-15px;animation:nuvemPassa 10s linear infinite 5s;font-size:10px;opacity:0.7}
+            @keyframes nuvemPassa{0%{transform:translateX(-20px) translateY(0);opacity:0}10%{opacity:0.8}90%{opacity:0.8}100%{transform:translateX(150px) translateY(-4px);opacity:0}}
+            
+            /* 🐟 PEIXINHOS PULANDO */
+            .ilhinha-peixe{position:absolute;font-size:12px;z-index:1;pointer-events:none;opacity:0}
+            .ilhinha-peixe.p1{bottom:2px;left:20%;animation:peixePula 4s ease-in-out infinite}
+            .ilhinha-peixe.p2{bottom:0;left:60%;animation:peixePula 4.5s ease-in-out infinite 1.8s;font-size:10px}
+            .ilhinha-peixe.p3{bottom:1px;left:40%;animation:peixePula 3.8s ease-in-out infinite 3s;font-size:11px}
+            @keyframes peixePula{
+                0%{transform:translateY(10px) translateX(0) rotate(0deg) scaleX(1);opacity:0}
+                15%{opacity:1;transform:translateY(0) translateX(0) rotate(0deg)}
+                25%{transform:translateY(-18px) translateX(6px) rotate(15deg) scaleX(1.1)}
+                35%{transform:translateY(-22px) translateX(10px) rotate(30deg) scaleX(1)}
+                45%{transform:translateY(-12px) translateX(14px) rotate(10deg)}
+                55%{transform:translateY(4px) translateX(16px) rotate(-10deg);opacity:1}
+                60%{opacity:0;transform:translateY(12px) translateX(18px) rotate(-20deg)}
+                100%{opacity:0;transform:translateY(12px) translateX(18px)}
+            }
+            /* Bolhas */
+            .ilhinha-bolha{position:absolute;bottom:4px;width:4px;height:4px;background:rgba(255,255,255,0.8);border-radius:50%;z-index:2;pointer-events:none}
+            .ilhinha-bolha.b1{left:25%;animation:bolhaSobe 3s ease-in-out infinite}
+            .ilhinha-bolha.b2{left:55%;animation:bolhaSobe 2.5s ease-in-out infinite 0.8s;width:3px;height:3px}
+            .ilhinha-bolha.b3{left:70%;animation:bolhaSobe 3.2s ease-in-out infinite 1.5s}
+            @keyframes bolhaSobe{0%{transform:translateY(0) scale(1);opacity:0.8}100%{transform:translateY(-28px) scale(0);opacity:0}}
+            
+            /* Gaivota passando */
+            .ilhinha-gaivota{position:absolute;top:2px;left:-15px;font-size:11px;z-index:7;animation:gaivotaVoa 18s linear infinite;opacity:0.9}
+            @keyframes gaivotaVoa{0%{transform:translateX(-20px) translateY(2px)}15%{transform:translateX(30px) translateY(-2px)}30%{transform:translateX(60px) translateY(1px)}100%{transform:translateX(160px) translateY(0);opacity:0}}
+            
+            .ilhinha-label{position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a 0%,#fbbf24 50%,#d4af37 100%);color:#000;padding:4px 12px;border-radius:14px;font-weight:900;font-size:9px;letter-spacing:0.8px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.8);border:1.5px solid #fff;z-index:8;animation:brilhoLabel 2s ease infinite}
+            @keyframes brilhoLabel{0%,100%{box-shadow:0 3px 8px rgba(0,0,0,0.25), 0 0 0 rgba(253,230,138,0)}50%{box-shadow:0 3px 8px rgba(0,0,0,0.25), 0 0 12px rgba(253,230,138,0.6)}}
+            .ilhinha-cristais{position:absolute;top:22px;right:2px;background:linear-gradient(180deg,#fff,#e0f2fe);color:#0284c7;padding:3px 7px;border-radius:12px;font-weight:900;font-size:9px;box-shadow:0 3px 8px rgba(0,0,0,0.2), inset 0 1px 0 #fff;border:1.5px solid #0ea5e9;z-index:8;animation:brilhoCristal 2.5s ease infinite}
+            @keyframes brilhoCristal{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+            .ilhinha-notif{position:absolute;top:18px;left:-6px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;animation:pulseNotif 1.2s ease infinite;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(239,68,68,0.4);z-index:9}
+            @keyframes pulseNotif{0%,100%{transform:scale(1);box-shadow:0 2px 6px rgba(239,68,68,0.4)}50%{transform:scale(1.25);box-shadow:0 4px 12px rgba(239,68,68,0.6)}}
+            #ig-ilhaBtn:hover .ilhinha-wrapper{transform:scale(1.12);transition:0.3s cubic-bezier(0.34,1.56,0.64,1)}
+            #ig-ilhaBtn:hover .ilhinha-label{background:linear-gradient(135deg,#fff,#fde68a);transform:translateX(-50%) scale(1.05)}
+            #ig-ilhaBtn:hover .ilhinha-peixe{animation-duration:1.5s}
             
             /* Lojinha miniatura dentro da ilha */
             .lojinha-mini{ background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%); border:2px solid #fde68a; border-radius:16px; padding:12px; box-shadow:0 4px 12px rgba(253,230,138,0.2) }
