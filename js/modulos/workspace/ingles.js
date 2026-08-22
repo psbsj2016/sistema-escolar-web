@@ -755,11 +755,26 @@ Workspace.Ingles = {
         const xpH = document.getElementById('ig-ilhaXpHeader');
         const nivelEl = document.getElementById('ig-ilhaNivel');
         const tamanhoEl = document.getElementById('ig-ilhaTamanho');
+        const notifEl = document.getElementById('ig-ilhaNotif');
         if(c) c.textContent = `${this.state.ilha?.cristais||0}💎`;
         if(c2) c2.textContent = this.state.ilha?.cristais||0;
         if(xpH) xpH.textContent = this.state.xp||0;
         if(nivelEl) nivelEl.textContent = this.state.ilha?.nivel||1;
         if(tamanhoEl) tamanhoEl.textContent = `${this.state.ilha?.tamanho||4}x${this.state.ilha?.tamanho||4}`;
+        // notificação se tem itens novos não colocados
+        try{
+            const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
+            const emUso = {};
+            (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
+            let disponivel = 0;
+            const map = {};
+            estoque.forEach(it=> map[it.id]=(map[it.id]||0)+1);
+            Object.entries(map).forEach(([id,qtd])=>{ disponivel += Math.max(0, qtd - (emUso[id]||0)); });
+            if(notifEl){
+                if(disponivel>0){ notifEl.style.display='flex'; notifEl.textContent = disponivel>9?'9+':disponivel; }
+                else notifEl.style.display='none';
+            }
+        }catch{}
     },
     renderIlha(){
         const ilha = this.state.ilha||{tamanho:4, layout:[], cristais:0, nivel:1};
@@ -813,31 +828,58 @@ Workspace.Ingles = {
         const el = document.getElementById('ig-ilhaTabConstruir');
         if(!el) return;
         const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal','tipo'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
-        // agrupa por id
         const estoque = {};
         invDecor.forEach(item=>{
             estoque[item.id] = (estoque[item.id]||0)+1;
         });
-        // remove os já usados na ilha do estoque visual (para não contar duplicado)
         const emUso = {};
         (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
+        // itens disponiveis
+        const disponiveis = Object.entries(estoque).filter(([id,qtd])=> qtd - (emUso[id]||0) >0);
+        const totalDisponivel = disponiveis.reduce((s,[,qtd])=> s + qtd, 0) - Object.values(emUso).reduce((a,b)=>a+b,0);
+        
         el.innerHTML = `
-            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">🔨 Seu estoque para construir</h4>
-            <div style="font-size:10px;color:#94a3b8;margin-bottom:8px">Clique numa célula vazia da ilha depois escolha item aqui, ou clique no item para colocar automaticamente na primeira vazia</div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-                ${Object.keys(estoque).length? Object.entries(estoque).map(([id,qtd])=>{
-                    const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===id) || {emoji:'📦', nome:id, prodCristal:0, prodXp:0};
-                    const disponivel = qtd - (emUso[id]||0);
-                    if(disponivel<=0) return '';
-                    return `<div class="ilha-loja-item" data-action="colocar-na-ilha" data-deco-id="${id}" style="position:relative">
-                        <div style="font-size:26px">${deco.emoji}</div>
-                        <div style="font-weight:800;font-size:11px">${Workspace.escapeHTML(deco.nome)}</div>
-                        <div style="font-size:9px;color:#64748B">${deco.prodCristal||0}💎/h + ${deco.prodXp||0} XP/h</div>
-                        <div style="position:absolute;top:4px;right:4px;background:#0ea5e9;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:900">x${disponivel}</div>
-                    </div>`
-                }).join('') : '<div style="color:#94a3b8;font-size:11px">Nenhum item de ilha no estoque. Compre no inventário com XP!</div>'}
+            <div class="lojinha-mini">
+                <div class="lojinha-header">
+                    <div class="lojinha-title">🎒 Mochila Mágica</div>
+                    <div style="background:#0ea5e9;color:#fff;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:900">${Object.keys(estoque).length} tipos • ${totalDisponivel>0? totalDisponivel : Object.values(estoque).reduce((a,b)=>a+b,0)} itens</div>
+                </div>
+                <div style="font-size:10px;color:#92400e;background:#FFFBEB;border:1px solid #fde68a;border-radius:8px;padding:6px;margin-bottom:8px">
+                    💡 <b>Como construir:</b> Clique numa célula vazia da ilha (➕) e depois escolha item aqui. Ou clique no item para colocar automático!
+                </div>
+                <div class="lojinha-grid">
+                    ${Object.keys(estoque).length? Object.entries(estoque).map(([id,qtd])=>{
+                        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===id) || {emoji:'📦', nome:id, prodCristal:0, prodXp:0, desc:'Item da ilha'};
+                        const usado = emUso[id]||0;
+                        const disp = qtd - usado;
+                        if(disp<=0) return '';
+                        return `<div class="lojinha-item" data-action="colocar-na-ilha" data-deco-id="${id}" title="${Workspace.escapeHTML(deco.desc||'')}">
+                            <div class="lojinha-qtd">x${disp}</div>
+                            <span class="lojinha-emoji">${deco.emoji}</span>
+                            <div class="lojinha-nome">${Workspace.escapeHTML(deco.nome)}</div>
+                            <div class="lojinha-prod">${deco.prodCristal?`${deco.prodCristal}💎`:''} ${deco.prodXp?`${deco.prodXp}XP`:''} ${!deco.prodCristal && !deco.prodXp?'Decoração':''}</div>
+                        </div>`
+                    }).join('') : `
+                        <div style="grid-column:1/-1;text-align:center;padding:20px 10px">
+                            <div style="font-size:32px">📭</div>
+                            <div style="font-size:11px;color:#94a3b8;margin:6px 0">Sua mochila está vazia!</div>
+                            <div style="font-size:10px;color:#64748B">Compre itens na lojinha com XP para construir</div>
+                        </div>
+                    `}
+                </div>
+                ${Object.keys(estoque).length? `<button data-action="abrir-inventario" class="lojinha-construir-btn">🛍️ Loja de Itens • Comprar com XP</button>` : `<button data-action="abrir-inventario" class="lojinha-construir-btn" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000">🛍️ Ir para Loja Comprar Primeiro Item</button>`}
+                
+                <div style="margin-top:12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px">
+                    <div style="font-size:10px;font-weight:800;color:#0f172a;margin-bottom:6px">📦 Todos os itens adquiridos (${(this.state.inventario||[]).length})</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:80px;overflow-y:auto">
+                        ${(this.state.inventario||[]).slice(0,30).map(it=>{
+                            const emoji = it.emoji || (this.defaults.decoracoesIlha||[]).find(d=>d.id===it.id)?.emoji || (this.defaults.avatares||[]).find(a=>a.id===it.id)?.emoji || (this.defaults.ferramentas||[]).find(f=>f.id===it.id)?.emoji || '📦';
+                            return `<span style="background:#F8FAFC;border:1px solid #e2e8f0;padding:3px 6px;border-radius:10px;font-size:10px" title="${Workspace.escapeHTML(it.nome||it.id)}">${emoji} ${Workspace.escapeHTML((it.nome||it.id).substring(0,12))}</span>`
+                        }).join('') || '<span style="font-size:10px;color:#94a3b8">Nada ainda</span>'}
+                        ${(this.state.inventario||[]).length>30? `<span style="font-size:10px;color:#64748B">+${(this.state.inventario||[]).length-30} mais...</span>`:''}
+                    </div>
+                </div>
             </div>
-            <button data-action="abrir-inventario" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:10px;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer">🛍️ Comprar mais com XP</button>
         `;
     },
     renderIlhaTabInvadir(){
@@ -1355,9 +1397,39 @@ Workspace.Ingles = {
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 
-            /* 🏝️ ILHA MÁGICA */
-            #ig-ilhaBtn{position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:2px solid #fde68a;padding:8px 14px;border-radius:20px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,0.4);z-index:5;animation:floatIlha 2s ease infinite}
-            @keyframes floatIlha{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+            /* 🏝️ ILHA MÁGICA - ILHINHA NO CANTO DIREITO DO MAGO */
+            #ig-ilhaBtn{position:absolute;top:8px;right:10px;z-index:10;cursor:pointer;background:none;border:none;padding:0;animation:floatIlha 3s ease-in-out infinite;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.3))}
+            @keyframes floatIlha{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+            .ilhinha-wrapper{position:relative;width:110px;height:90px}
+            .ilhinha-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:90px;height:28px;background:radial-gradient(ellipse at center,#22c55e 0%,#16a34a 40%,#15803d 100%);border-radius:50%;box-shadow:0 4px 0 #14532d, 0 8px 16px rgba(0,0,0,0.3);border:2px solid #14532d}
+            .ilhinha-grama{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:42px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2))}
+            .ilhinha-palmeira{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-size:28px;animation:swayPalmeira 2.5s ease-in-out infinite}
+            @keyframes swayPalmeira{0%,100%{transform:translateX(-50%) rotate(-3deg)}50%{transform:translateX(-50%) rotate(3deg)}}
+            .ilhinha-agua{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:110px;height:18px;background:radial-gradient(ellipse,#0ea5e9 0%,#0284c7 60%,transparent 70%);border-radius:50%;opacity:0.6;animation:waveIlha 2s ease-in-out infinite}
+            @keyframes waveIlha{0%,100%{transform:translateX(-50%) scaleX(1)}50%{transform:translateX(-50%) scaleX(1.1)}}
+            .ilhinha-label{position:absolute;top:0;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:3px 10px;border-radius:12px;font-weight:900;font-size:9px;letter-spacing:0.5px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1px solid #fff}
+            .ilhinha-cristais{position:absolute;top:22px;right:0;background:#fff;color:#0284c7;padding:2px 6px;border-radius:10px;font-weight:900;font-size:9px;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:1.5px solid #0ea5e9}
+            .ilhinha-notif{position:absolute;top:20px;left:-4px;background:#ef4444;color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;animation:pulseNotif 1.5s ease infinite;border:2px solid #fff}
+            @keyframes pulseNotif{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+            #ig-ilhaBtn:hover .ilhinha-wrapper{transform:scale(1.1);transition:0.3s}
+            #ig-ilhaBtn:hover .ilhinha-label{background:linear-gradient(135deg,#fff,#fde68a)}
+            
+            /* Lojinha miniatura dentro da ilha */
+            .lojinha-mini{ background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%); border:2px solid #fde68a; border-radius:16px; padding:12px; box-shadow:0 4px 12px rgba(253,230,138,0.2) }
+            .lojinha-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:2px dashed #fde68a }
+            .lojinha-title{ font-family:Cinzel; font-weight:900; font-size:13px; color:#92400e }
+            .lojinha-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; max-height:280px; overflow-y:auto; padding:4px }
+            .lojinha-item{ background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:8px; text-align:center; cursor:pointer; transition:0.2s; position:relative }
+            .lojinha-item:hover{ border-color:#fde68a; transform:translateY(-2px) scale(1.02); box-shadow:0 6px 16px rgba(0,0,0,0.1) }
+            .lojinha-item.selecionado{ border-color:#0ea5e9; background:linear-gradient(180deg,#E0F2FE,#fff); box-shadow:0 0 0 3px rgba(14,165,233,0.2) }
+            .lojinha-item.vazio{ border-style:dashed; background:#f8fafc; opacity:0.7 }
+            .lojinha-emoji{ font-size:26px; display:block; margin-bottom:2px }
+            .lojinha-nome{ font-size:9px; font-weight:800; color:#0f172a; line-height:1.1; height:20px; overflow:hidden }
+            .lojinha-qtd{ position:absolute; top:4px; right:4px; background:#0ea5e9; color:#fff; font-size:8px; font-weight:900; padding:2px 5px; border-radius:10px }
+            .lojinha-prod{ font-size:7px; background:#D1FAE5; color:#065f46; padding:1px 4px; border-radius:6px; margin-top:2px; display:inline-block }
+            .lojinha-construir-btn{ width:100%; margin-top:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; padding:10px; border-radius:12px; font-weight:900; font-size:11px; cursor:pointer; box-shadow:0 4px 8px rgba(34,197,94,0.3) }
+            .lojinha-construir-btn:disabled{ background:#94a3b8; cursor:not-allowed; box-shadow:none }
+
             #ig-ilhaModal{position:fixed;inset:0;background:linear-gradient(180deg,#0c4a6e 0%,#082f49 100%);z-index:1000010;display:none;overflow-y:auto}
             .ilha-grid{display:grid;gap:6px;background:rgba(255,255,255,0.1);padding:12px;border-radius:16px;border:2px solid #fde68a}
             .ilha-celula{aspect-ratio:1;background:linear-gradient(180deg,#22c55e,#16a34a);border:2px solid #15803d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:0.2s;position:relative}
