@@ -243,6 +243,36 @@ Workspace.Ingles = {
             {id:'rp1', title:'✈ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
             {id:'rp2', title:'🍽 No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
         ],
+
+        avatares:[
+            {id:'mago_aprendiz', nome:'Mago Aprendiz', emoji:'🧙‍♂️', preco:0, raridade:'comum', desc:'Seu primeiro avatar, já equipado', bonus:'XP +0%'},
+            {id:'mago_sombrio', nome:'Mago Sombrio', emoji:'🧙‍♀️', preco:500, raridade:'epico', desc:'Domina sombras e rouba 5% a mais', bonus:'Roubo +5%'},
+            {id:'arquimago_dourado', nome:'Arquimago Dourado', emoji:'🧙‍♂️✨', preco:1500, raridade:'lendario', desc:'Lenda viva, produção 2x', bonus:'Produção Ilha 2x'},
+            {id:'pirata_magico', nome:'Pirata Mágico', emoji:'🏴‍☠️', preco:800, raridade:'epico', desc:'Especialista em invadir ilhas', bonus:'Invadir sem cooldown 1x/dia'},
+            {id:'guerreira_elfica', nome:'Guerreira Élfica', emoji:'🧝‍♀️', preco:1000, raridade:'epico', desc:'Defesa da ilha +30%', bonus:'Defesa +30%'},
+            {id:'dragao_mestre', nome:'Mestre dos Dragões', emoji:'🐉', preco:2500, raridade:'lendario', desc:'Avatar supremo, tudo 3x', bonus:'Tudo 3x'},
+            {id:'alquimista', nome:'Alquimista', emoji:'🧪', preco:600, raridade:'raro', desc:'Transforma XP em cristais', bonus:'Conversão'},
+            {id:'feiticeira', nome:'Feiticeira do Tempo', emoji:'⏳', preco:1200, raridade:'lendario', desc:'Para escudos inimigos', bonus:'Quebra escudo'}
+        ],
+        ferramentas:[
+            {id:'picareta', nome:'Picareta Mágica', emoji:'⛏️', preco:200, desc:'Coleta 50 cristais na sua ilha', uso:'coleta', valorUso:50, durabilidade:5},
+            {id:'varinha_roubo', nome:'Varinha de Roubo', emoji:'🪄', preco:400, desc:'Rouba 10% dos cristais ao invadir (precisa ter)', uso:'roubo', valorUso:10, durabilidade:3},
+            {id:'rede', nome:'Rede de Captura', emoji:'🕸️', preco:300, desc:'Captura recursos raros na ilha', uso:'captura', valorUso:30, durabilidade:4},
+            {id:'escudo', nome:'Escudo da Ilha', emoji:'🛡️', preco:250, desc:'Protege contra roubo por 2h', uso:'defesa', valorUso:120, durabilidade:1},
+            {id:'chave_mestra', nome:'Chave Mestra', emoji:'🗝️', preco:600, desc:'Abre baús lendários na ilha', uso:'bau', valorUso:1, durabilidade:1},
+            {id:'bussola', nome:'Bússola Mágica', emoji:'🧭', preco:350, desc:'Encontra ilhas ricas para invadir', uso:'busca', valorUso:1, durabilidade:3},
+            {id:'pocao_xp', nome:'Poção de XP', emoji:'🧴', preco:150, desc:'Ganha 100 XP instantâneo', uso:'xp', valorUso:100, durabilidade:1}
+        ],
+        decoracoesIlha:[
+            {id:'cristal_azul', nome:'Cristal Azul', emoji:'🔷', preco:100, prodCristal:5, prodXp:0, desc:'Gera 5 cristais/hora', tipo:'recurso'},
+            {id:'arvore_magica', nome:'Árvore Mágica', emoji:'🌳✨', preco:150, prodCristal:0, prodXp:10, desc:'Gera 10 XP/hora', tipo:'recurso'},
+            {id:'torre_mago', nome:'Torre do Mago', emoji:'🗼', preco:500, prodCristal:10, prodXp:20, desc:'Defesa +20, 10 cristais + 20 XP/h', tipo:'defesa'},
+            {id:'bau_ilha', nome:'Baú da Ilha', emoji:'📦', preco:300, prodCristal:0, prodXp:0, desc:'Armazena 500 recursos', tipo:'armazen'},
+            {id:'fonte_magica', nome:'Fonte Mágica', emoji:'⛲', preco:400, prodCristal:15, prodXp:15, desc:'15 cristais + 15 XP/h', tipo:'recurso'},
+            {id:'estatua_dragao', nome:'Estátua do Dragão', emoji:'🐲', preco:1000, prodCristal:30, prodXp:30, desc:'30 cristais + 30 XP/h + poder', tipo:'lendario'},
+            {id:'portal_ilha', nome:'Portal da Ilha', emoji:'🌀', preco:800, prodCristal:0, prodXp:0, desc:'Permite invadir sem gastar varinha 1x', tipo:'portal'}
+        ],
+
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
@@ -309,6 +339,8 @@ Workspace.Ingles = {
                 this.state.season = (d.season&&typeof d.season==='object')?d.season:{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1, ativa:true};
                 this.state.lootTables = (d.lootTables&&typeof d.lootTables==='object')?d.lootTables:{};
                 this.state.levelCurve = Array.isArray(d.levelCurve)&&d.levelCurve.length?d.levelCurve:[0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
+                this.state.avatarEquipado = d.avatarEquipado || localStorage.getItem(`ws_ingles_user_${Workspace.usuario.id}_avatar`) || 'mago_aprendiz';
+                this.state.ferramentaEquipada = localStorage.getItem(`ws_ingles_user_${Workspace.usuario.id}_ferramenta`) || null;
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
@@ -340,6 +372,7 @@ Workspace.Ingles = {
             localStorage.setItem(`${userK}_medalhas`, JSON.stringify(this.state.medalhas||[]));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
             localStorage.setItem(`${userK}_srs`, JSON.stringify(this.state.srs));
+            try{ localStorage.setItem(`${userK}_avatar`, this.state.avatarEquipado||'mago_aprendiz'); localStorage.setItem(`${userK}_ferramenta`, this.state.ferramentaEquipada||''); localStorage.setItem(`${userK}_ilha`, JSON.stringify(this.state.ilha||{})); }catch{}
         }catch{}
         try{
             if(Workspace.usuario?.tipo==='Aluno'){
@@ -351,7 +384,7 @@ Workspace.Ingles = {
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos,
-                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs,
+                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs, avatarEquipado:this.state.avatarEquipado, ferramentaEquipada:this.state.ferramentaEquipada,
                 quests:this.state.quests, achievements:this.state.achievements, season:this.state.season,
                 lootTables:this.state.lootTables, levelCurve:this.state.levelCurve, titulos:this.state.titulos, badges:this.state.badges,
                 portalConfig:this.state.portalConfig
@@ -454,45 +487,191 @@ Workspace.Ingles = {
         const inv = this.state.inventario||[];
         const medalhas = this.state.medalhas||[];
         const allAch = this.state.achievements||[];
+        const xp = this.state.xp||0;
+        const avataresComprados = inv.filter(i=>i.tipo==='avatar').map(i=>i.id);
+        const ferramentasCompradas = inv.filter(i=>i.tipo==='ferramenta');
+        const decoracoes = inv.filter(i=>i.tipo==='decoracao' || i.tipo==='recurso' || i.tipo==='defesa');
         const bordas = inv.filter(i=>i.tipo==='cosmetico' || i.id?.includes('borda'));
         const titulos = inv.filter(i=>i.tipo==='titulo' || i.id?.includes('titulo')).map(i=>i.nome||i.id);
         const skins = inv.filter(i=>i.tipo==='skin');
+        
+        // Avatar shop
+        const lojaAvatares = this.defaults.avatares||[];
+        const lojaFerramentas = this.defaults.ferramentas||[];
+        const lojaDecoracoes = this.defaults.decoracoesIlha||[];
+        
         const modal=document.createElement('div');
         modal.id='ig-inv-modal';
-        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000006;padding:20px';
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000006;padding:12px';
         modal.innerHTML=`
-            <div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:3px solid #d4af37;border-radius:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
-                <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;border-radius:17px 17px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">
-                    <div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:18px">🎒 Inventário Épico</div>
-                    <button data-action="fechar-inventario" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer">✕</button>
+            <div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:3px solid #d4af37;border-radius:20px;max-width:720px;width:100%;max-height:94vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+                <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:14px 18px;border-radius:17px 17px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2">
+                    <div>
+                        <div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:18px">🎒 Inventário Épico • Ilha Mágica</div>
+                        <div style="color:#94a3b8;font-size:11px">XP é moeda! Gaste e volte aos jogos para farmar mais</div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <div style="background:#fde68a;color:#000;padding:6px 10px;border-radius:20px;font-weight:900;font-size:12px">⭐ ${xp} XP</div>
+                        <div style="background:#0ea5e9;color:#fff;padding:6px 10px;border-radius:20px;font-weight:800;font-size:12px">💎 ${this.state.ilha?.cristais||0}</div>
+                        <button data-action="fechar-inventario" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer">✕</button>
+                    </div>
                 </div>
-                <div style="padding:18px">
-                    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="background:#0F172A;color:#fde68a;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">Nível ${this.calcularLevel(this.state.xp).level}</span><span style="background:#EEF2FF;color:#4338ca;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${this.state.tituloEquipado}</span><span style="background:#FEF3C7;color:#92400e;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${inv.length} itens</span><span style="background:#D1FAE5;color:#065f46;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${medalhas.length} medalhas</span></div>
+                <div style="padding:16px">
+                    <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px">
+                        <button data-action="inv-tab" data-inv-tab="avatares" class="inv-tab active" style="background:#0F172A;color:#fde68a;border:2px solid #d4af37;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap">🧙 Avatares (${lojaAvatares.length})</button>
+                        <button data-action="inv-tab" data-inv-tab="ferramentas" class="inv-tab" style="background:#fff;color:#0f172a;border:2px solid #e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">🛠️ Ferramentas</button>
+                        <button data-action="inv-tab" data-inv-tab="ilha" class="inv-tab" style="background:#fff;color:#0f172a;border:2px solid #e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">🏝️ Ilha (${decoracoes.length})</button>
+                        <button data-action="inv-tab" data-inv-tab="equipados" class="inv-tab" style="background:#fff;color:#0f172a;border:2px solid #e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">👑 Equipados</button>
+                        <button data-action="inv-tab" data-inv-tab="medalhas" class="inv-tab" style="background:#fff;color:#0f172a;border:2px solid #e2e8f0;padding:8px 14px;border-radius:20px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">🏆 Medalhas</button>
+                    </div>
                     
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">👑 Títulos (${titulos.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${titulos.length? titulos.map(t=>`<button data-action="equipar-titulo" data-titulo="${Workspace.escapeHTML(t)}" style="background:${this.state.tituloEquipado===t?'#0F172A':'#fff'};color:${this.state.tituloEquipado===t?'#fde68a':'#0f172a'};border:2px solid ${this.state.tituloEquipado===t?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">${Workspace.escapeHTML(t)} ${this.state.tituloEquipado===t?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhum título ainda. Abra baús épicos!</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🖼 Bordas (${bordas.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${bordas.length? bordas.map(b=>`<button data-action="equipar-borda" data-borda="${Workspace.escapeHTML(b.id||b.nome)}" style="background:${this.state.bordaEquipada===(b.id||b.nome)?'#0F172A':'#fff'};color:${this.state.bordaEquipada===(b.id||b.nome)?'#fde68a':'#0f172a'};border:2px solid ${this.state.bordaEquipada===(b.id||b.nome)?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer">${Workspace.escapeHTML(b.nome||b.id)} ${this.state.bordaEquipada===(b.id||b.nome)?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma borda ainda. Faça 150+ XP numa sessão!</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🎨 Skins (${skins.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${skins.length? skins.map(s=>`<div style="background:#fff;border:1.5px solid #e2e8f0;padding:8px 12px;border-radius:10px;font-size:12px">🎭 ${Workspace.escapeHTML(s.nome||s.id)}</div>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma skin ainda.</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🏆 Medalhas (${medalhas.length})</h4>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">${allAch.map(a=>{ const tem=medalhas.includes(a.id); return `<div style="background:${tem?'#D1FAE5':'#f8fafc'};border:1.5px solid ${tem?'#10B981':'#e2e8f0'};border-radius:10px;padding:10px;text-align:center;opacity:${tem?1:0.5}"><div style="font-size:28px">${a.icone||'🏆'}</div><div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:4px">${Workspace.escapeHTML(a.nome)}</div><div style="font-size:10px;color:#64748B">${Workspace.escapeHTML(a.desc)}</div><div style="font-size:9px;margin-top:4px;color:${tem?'#065f46':'#94a3b8'}">${tem?'✅ Desbloqueada':'🔒 Bloqueada'}</div></div>`}).join('')}</div>
-
-                    <div style="margin-top:16px;background:#FFFBEB;border:1px solid #fde68a;border-radius:10px;padding:10px;font-size:11px;color:#92400E"><b>💡 Dica:</b> Equipe títulos e bordas para aparecerem no ranking! Faça sessões com +300 XP para baús lendários.</div>
+                    <div id="ig-inv-tab-avatares">
+                        <div style="background:#FFFBEB;border:1px solid #fde68a;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;color:#92400E"><b>💡 Como funciona:</b> Compre avatares com XP. Cada avatar tem bônus real na Ilha. Equipe e ele aparece no ranking e na ilha. XP gasto = precisa jogar mais!</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+                            ${lojaAvatares.map(av=>{
+                                const comprado = avataresComprados.includes(av.id) || av.preco===0;
+                                const equipado = this.state.avatarEquipado===av.id;
+                                const podeComprar = xp >= av.preco;
+                                return `<div class="ilha-loja-item ${comprado? (equipado?'equipado':'comprado'):''}" data-avatar-id="${av.id}" style="border:2px solid ${equipado?'#fde68a': comprado?'#10B981':'#e2e8f0'}">
+                                    <div style="font-size:40px">${av.emoji}</div>
+                                    <div style="font-weight:900;font-size:13px;color:#0f172a;margin:4px 0">${Workspace.escapeHTML(av.nome)}</div>
+                                    <div style="font-size:10px;color:#64748B;margin-bottom:4px">${Workspace.escapeHTML(av.desc)}</div>
+                                    <div style="background:#EEF2FF;color:#4338ca;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;display:inline-block;margin-bottom:6px">${av.bonus}</div>
+                                    <div style="margin-top:6px">
+                                        ${!comprado ? `<button data-action="comprar-avatar" data-avatar-id="${av.id}" data-preco="${av.preco}" style="width:100%;background:${podeComprar?'linear-gradient(135deg,#4F46E5,#3730A3)':'#94a3b8'};color:#fff;border:none;padding:8px;border-radius:8px;font-weight:800;font-size:12px;cursor:${podeComprar?'pointer':'not-allowed'}" ${!podeComprar?'disabled':''}>${podeComprar?`Comprar ${av.preco} XP`:`Falta ${av.preco-xp} XP`}</button>` : equipado? `<div style="background:#0F172A;color:#fde68a;padding:6px;border-radius:8px;font-weight:800;font-size:11px">✅ Equipado</div>` : `<button data-action="equipar-avatar" data-avatar-id="${av.id}" style="width:100%;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:8px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">Equipar</button>`}
+                                    </div>
+                                </div>`
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div id="ig-inv-tab-ferramentas" style="display:none">
+                        <div style="background:#E0F2FE;border:1px solid #0ea5e9;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;color:#0c4a6e"><b>🛠️ Ferramentas da Ilha:</b> Cada ferramenta tem uso real na ilha. Compre com XP e use para coletar, roubar e defender.</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
+                            ${lojaFerramentas.map(f=>{
+                                const qtd = ferramentasCompradas.filter(t=>t.id===f.id).length;
+                                const podeComprar = xp >= f.preco;
+                                return `<div class="ilha-loja-item">
+                                    <div style="font-size:32px">${f.emoji}</div>
+                                    <div style="font-weight:800;font-size:12px">${Workspace.escapeHTML(f.nome)} ${qtd?`<span style="background:#10B981;color:#fff;padding:1px 6px;border-radius:10px;font-size:10px">x${qtd}</span>`:''}</div>
+                                    <div style="font-size:10px;color:#64748B;margin:4px 0">${Workspace.escapeHTML(f.desc)}</div>
+                                    <div style="font-size:10px;background:#F1F5F9;padding:4px 6px;border-radius:6px;margin:4px 0">Uso: ${f.uso} • Durabilidade: ${f.durabilidade}</div>
+                                    <button data-action="comprar-ferramenta" data-ferr-id="${f.id}" data-preco="${f.preco}" style="width:100%;margin-top:6px;background:${podeComprar?'linear-gradient(135deg,#0ea5e9,#0284c7)':'#94a3b8'};color:#fff;border:none;padding:8px;border-radius:8px;font-weight:800;font-size:11px;cursor:${podeComprar?'pointer':'not-allowed'}" ${!podeComprar?'disabled':''}>${podeComprar?`Comprar ${f.preco} XP`:`Falta ${f.preco-xp} XP`}</button>
+                                </div>`
+                            }).join('')}
+                        </div>
+                        <h4 style="font-family:Cinzel;margin:16px 0 8px 0;font-size:13px">Seu arsenal (${ferramentasCompradas.length})</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px">${ferramentasCompradas.length? ferramentasCompradas.map(t=>`<span style="background:#fff;border:1.5px solid #0ea5e9;padding:6px 10px;border-radius:20px;font-size:11px">${t.emoji||'🛠️'} ${Workspace.escapeHTML(t.nome||t.id)} <button data-action="equipar-ferramenta" data-ferr-id="${t.id}" style="background:#0ea5e9;color:#fff;border:none;padding:2px 6px;border-radius:10px;margin-left:4px;cursor:pointer;font-size:10px">${this.state.ferramentaEquipada===t.id?'✅':'Equipar'}</button></span>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma ferramenta ainda.</span>'}</div>
+                    </div>
+                    
+                    <div id="ig-inv-tab-ilha" style="display:none">
+                        <div style="background:#D1FAE5;border:1px solid #10B981;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11px;color:#065f46"><b>🏝️ Construção:</b> Compre decorações com XP e coloque na sua ilha. Cada uma produz cristais ou XP por hora!</div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+                            ${lojaDecoracoes.map(d=>{
+                                const podeComprar = xp >= d.preco;
+                                return `<div class="ilha-loja-item">
+                                    <div style="font-size:28px">${d.emoji}</div>
+                                    <div style="font-weight:800;font-size:11px">${Workspace.escapeHTML(d.nome)}</div>
+                                    <div style="font-size:9px;color:#64748B">${Workspace.escapeHTML(d.desc)}</div>
+                                    <div style="font-size:9px;background:#F1F5F9;padding:3px 6px;border-radius:6px;margin:4px 0">💎 ${d.prodCristal||0}/h • ⭐ ${d.prodXp||0}/h</div>
+                                    <button data-action="comprar-decoracao" data-deco-id="${d.id}" data-preco="${d.preco}" style="width:100%;background:${podeComprar?'linear-gradient(135deg,#22c55e,#16a34a)':'#94a3b8'};color:#fff;border:none;padding:6px;border-radius:8px;font-weight:800;font-size:10px;cursor:${podeComprar?'pointer':'not-allowed'}" ${!podeComprar?'disabled':''}>${podeComprar?`${d.preco} XP`:`${d.preco-xp} XP falta`}</button>
+                                </div>`
+                            }).join('')}
+                        </div>
+                        <h4 style="font-family:Cinzel;margin:16px 0 8px 0;font-size:13px">Seu estoque ilha (${decoracoes.length})</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px">${decoracoes.length? decoracoes.map(d=>`<span style="background:#fff;border:1px solid #e2e8f0;padding:6px 10px;border-radius:20px;font-size:11px">${d.emoji||'🏝️'} ${Workspace.escapeHTML(d.nome||d.id)}</span>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhum item de ilha ainda. Compre acima!</span>'}</div>
+                    </div>
+                    
+                    <div id="ig-inv-tab-equipados" style="display:none">
+                        <h4 style="font-family:Cinzel;margin:8px 0;font-size:14px">👑 Títulos (${titulos.length})</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${titulos.length? titulos.map(t=>`<button data-action="equipar-titulo" data-titulo="${Workspace.escapeHTML(t)}" style="background:${this.state.tituloEquipado===t?'#0F172A':'#fff'};color:${this.state.tituloEquipado===t?'#fde68a':'#0f172a'};border:2px solid ${this.state.tituloEquipado===t?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">${Workspace.escapeHTML(t)} ${this.state.tituloEquipado===t?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhum título ainda.</span>'}</div>
+                        <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🖼 Bordas (${bordas.length})</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${bordas.length? bordas.map(b=>`<button data-action="equipar-borda" data-borda="${Workspace.escapeHTML(b.id||b.nome)}" style="background:${this.state.bordaEquipada===(b.id||b.nome)?'#0F172A':'#fff'};color:${this.state.bordaEquipada===(b.id||b.nome)?'#fde68a':'#0f172a'};border:2px solid ${this.state.bordaEquipada===(b.id||b.nome)?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer">${Workspace.escapeHTML(b.nome||b.id)} ${this.state.bordaEquipada===(b.id||b.nome)?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma borda.</span>'}</div>
+                        <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🎨 Avatar Atual</h4>
+                        <div style="background:#fff;border:2px solid #fde68a;border-radius:12px;padding:12px;text-align:center">
+                            ${(()=>{ const av = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado) || {emoji:'🧙‍♂️', nome:this.state.avatarEquipado}; return `<div style="font-size:48px">${av.emoji}</div><div style="font-weight:900">${Workspace.escapeHTML(av.nome)}</div><div style="font-size:11px;color:#64748B">${Workspace.escapeHTML(av.bonus||'')}</div>`; })()}
+                        </div>
+                    </div>
+                    
+                    <div id="ig-inv-tab-medalhas" style="display:none">
+                        <h4 style="font-family:Cinzel;margin:8px 0;font-size:14px">🏆 Medalhas (${medalhas.length})</h4>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">${allAch.map(a=>{ const tem=medalhas.includes(a.id); return `<div style="background:${tem?'#D1FAE5':'#f8fafc'};border:1.5px solid ${tem?'#10B981':'#e2e8f0'};border-radius:10px;padding:10px;text-align:center;opacity:${tem?1:0.5}"><div style="font-size:28px">${a.icone||'🏆'}</div><div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:4px">${Workspace.escapeHTML(a.nome)}</div><div style="font-size:10px;color:#64748B">${Workspace.escapeHTML(a.desc)}</div><div style="font-size:9px;margin-top:4px;color:${tem?'#065f46':'#94a3b8'}">${tem?'✅ Desbloqueada':'🔒 Bloqueada'}</div></div>`}).join('')}</div>
+                    </div>
                 </div>
             </div>`;
         document.body.appendChild(modal);
         modal.addEventListener('click', (e)=>{
             const b=e.target.closest('[data-action]');
             if(!b) return;
-            if(b.dataset.action==='fechar-inventario'){ modal.remove(); return; }
-            if(b.dataset.action==='equipar-titulo'){ this.equiparTitulo(b.dataset.titulo); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
-            if(b.dataset.action==='equipar-borda'){ this.equiparBorda(b.dataset.borda); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
+            const act=b.dataset.action;
+            if(act==='fechar-inventario'){ modal.remove(); return; }
+            if(act==='inv-tab'){
+                modal.querySelectorAll('.inv-tab').forEach(t=>{ t.classList.remove('active'); t.style.background='#fff'; t.style.color='#0f172a'; t.style.borderColor='#e2e8f0'; });
+                b.classList.add('active'); b.style.background='#0F172A'; b.style.color='#fde68a'; b.style.borderColor='#d4af37';
+                modal.querySelectorAll('[id^="ig-inv-tab-"]').forEach(tab=>tab.style.display='none');
+                const target = modal.querySelector(`#ig-inv-tab-${b.dataset.invTab}`);
+                if(target) target.style.display='block';
+                return;
+            }
+            if(act==='equipar-titulo'){ this.equiparTitulo(b.dataset.titulo); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
+            if(act==='equipar-borda'){ this.equiparBorda(b.dataset.borda); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
+            if(act==='comprar-avatar'){ this.comprarAvatar(b.dataset.avatarId, parseInt(b.dataset.preco)); modal.remove(); setTimeout(()=>this.abrirInventario(), 600); return; }
+            if(act==='equipar-avatar'){ this.equiparAvatar(b.dataset.avatarId); modal.remove(); this.abrirInventario(); return; }
+            if(act==='comprar-ferramenta'){ this.comprarFerramenta(b.dataset.ferrId, parseInt(b.dataset.preco)); modal.remove(); setTimeout(()=>this.abrirInventario(), 600); return; }
+            if(act==='equipar-ferramenta'){ this.equiparFerramenta(b.dataset.ferrId); Workspace.mostrarAviso('Ferramenta equipada!','success'); modal.remove(); this.abrirInventario(); return; }
+            if(act==='comprar-decoracao'){ this.comprarDecoracao(b.dataset.decoId, parseInt(b.dataset.preco)); modal.remove(); setTimeout(()=>this.abrirInventario(), 600); return; }
         });
         modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
+    },
+    equiparAvatar(avatarId){
+        this.state.avatarEquipado=avatarId;
+        this.saveDados();
+        Workspace.mostrarAviso(`Avatar equipado: ${avatarId}`,'success');
+        this.renderizarVisualizacao();
+    },
+    equiparFerramenta(ferrId){
+        this.state.ferramentaEquipada=ferrId;
+        this.saveDados();
+    },
+    async comprarAvatar(avatarId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP! Jogue mais!`,'warning'); return; }
+        const ja = (this.state.inventario||[]).some(i=>i.id===avatarId && i.tipo==='avatar');
+        if(ja){ Workspace.mostrarAviso('Você já tem esse avatar!','warning'); return; }
+        const avatar = (this.defaults.avatares||[]).find(a=>a.id===avatarId);
+        if(!avatar) return;
+        this.state.xp -= preco;
+        this.state.inventario = this.state.inventario||[];
+        this.state.inventario.push({id:avatarId, nome:avatar.nome, emoji:avatar.emoji, tipo:'avatar', raridade:avatar.raridade, obtidoEm:new Date().toISOString(), preco});
+        this.state.avatarEquipado=avatarId;
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:avatarId, tipo:'avatar', preco, nome:avatar.nome}); }catch{}
+        this.tocarSom('level'); this.confete();
+        Workspace.mostrarAviso(`🧙 Avatar ${avatar.nome} comprado por ${preco} XP e equipado!`,'success');
+        this.renderizarVisualizacao();
+    },
+    async comprarFerramenta(ferrId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
+        const ferr = (this.defaults.ferramentas||[]).find(f=>f.id===ferrId);
+        if(!ferr) return;
+        this.state.xp -= preco;
+        this.state.inventario.push({id:ferrId, nome:ferr.nome, emoji:ferr.emoji, tipo:'ferramenta', uso:ferr.uso, durabilidade:ferr.durabilidade, obtidoEm:new Date().toISOString(), preco});
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:ferrId, tipo:'ferramenta', preco, nome:ferr.nome}); }catch{}
+        Workspace.mostrarAviso(`🛠️ ${ferr.nome} comprada por ${preco} XP!`,'success');
+        this.renderizarVisualizacao();
+    },
+    async comprarDecoracao(decoId, preco){
+        if(this.state.xp < preco){ Workspace.mostrarAviso(`Falta ${preco - this.state.xp} XP!`,'warning'); return; }
+        const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===decoId);
+        if(!deco) return;
+        this.state.xp -= preco;
+        this.state.inventario.push({id:decoId, nome:deco.nome, emoji:deco.emoji, tipo:deco.tipo||'decoracao', prodCristal:deco.prodCristal, prodXp:deco.prodXp, obtidoEm:new Date().toISOString(), preco});
+        // também adiciona cristais na ilha como recurso inicial
+        this.state.ilha = this.state.ilha||{ nivel:1, tamanho:4, cristais:100, layout:[] };
+        await this.saveDados();
+        try{ await Workspace.api('/workspace/ingles/loja/comprar','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', itemId:decoId, tipo:'decoracao', preco, nome:deco.nome}); }catch{}
+        Workspace.mostrarAviso(`🏝️ ${deco.nome} comprado! Coloque na sua ilha!`,'success');
+        this.renderizarVisualizacao();
     },
     equiparTitulo(titulo){
         this.state.tituloEquipado=titulo;
@@ -505,6 +684,351 @@ Workspace.Ingles = {
         this.saveDados();
         Workspace.mostrarAviso(`Borda equipada: ${bordaId}`,'success');
     },
+
+    // ================= 🏝️ ILHA MÁGICA - MÉTODOS =================
+    async abrirIlhaMagica(){
+        const modal = document.getElementById('ig-ilhaModal');
+        if(!modal) return;
+        modal.style.display='block';
+        await this.carregarMinhaIlha();
+        await this.carregarOutrasIlhas();
+        this.renderIlha();
+    },
+    fecharIlhaMagica(){
+        const modal = document.getElementById('ig-ilhaModal');
+        if(modal) modal.style.display='none';
+    },
+    async carregarMinhaIlha(){
+        try{
+            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
+            const res = await Workspace.api(`/workspace/ingles/ilha/minha?userId=${Workspace.usuario.id}&escolaId=${escolaId}`,'GET');
+            if(res && res.success && res.ilha){
+                this.state.ilha = {...(this.state.ilha||{}), ...res.ilha};
+            }
+            // coleta automática de produção offline
+            this.coletarProducaoOffline();
+        }catch(e){
+            // se não tem ilha, cria padrão
+            this.state.ilha = this.state.ilha||{ nivel:1, tamanho:4, cristais:100, layout:Array(16).fill(null), escudoAte:0, historicoInvasoes:[], ultimaColeta:Date.now() };
+        }
+        this.atualizarHeaderIlha();
+    },
+    async carregarOutrasIlhas(){
+        try{
+            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
+            const res = await Workspace.api(`/workspace/ingles/ilhas?escolaId=${escolaId}&excluir=${Workspace.usuario.id}`,'GET');
+            if(res && res.success){
+                this.state.ilhasOutras = res.ilhas||[];
+            }
+        }catch{}
+    },
+    coletarProducaoOffline(){
+        const ilha = this.state.ilha;
+        if(!ilha || !ilha.ultimaColeta) { ilha.ultimaColeta = Date.now(); return; }
+        const agora = Date.now();
+        const horas = (agora - ilha.ultimaColeta)/ (1000*60*60);
+        if(horas < 0.05) return; // menos de 3 min não coleta
+        let totalCristais=0, totalXp=0;
+        const layout = ilha.layout||[];
+        layout.forEach(itemId=>{
+            if(!itemId) return;
+            const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===itemId);
+            if(deco){
+                totalCristais += (deco.prodCristal||0) * horas;
+                totalXp += (deco.prodXp||0) * horas;
+            }
+        });
+        // bônus avatar
+        const avatar = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado);
+        if(avatar && avatar.id==='arquimago_dourado'){ totalCristais*=2; totalXp*=2; }
+        if(avatar && avatar.id==='dragao_mestre'){ totalCristais*=3; totalXp*=3; }
+        ilha.cristais = (ilha.cristais||0) + Math.floor(totalCristais);
+        this.state.xp += Math.floor(totalXp);
+        ilha.ultimaColeta = agora;
+        if(totalCristais>0 || totalXp>0){
+            Workspace.mostrarAviso(`🏝️ Ilha produziu +${Math.floor(totalCristais)}💎 e +${Math.floor(totalXp)} XP offline!`,'success');
+        }
+    },
+    atualizarHeaderIlha(){
+        const c = document.getElementById('ig-ilhaCristais');
+        const c2 = document.getElementById('ig-ilhaCristaisHeader');
+        const xpH = document.getElementById('ig-ilhaXpHeader');
+        const nivelEl = document.getElementById('ig-ilhaNivel');
+        const tamanhoEl = document.getElementById('ig-ilhaTamanho');
+        if(c) c.textContent = `${this.state.ilha?.cristais||0}💎`;
+        if(c2) c2.textContent = this.state.ilha?.cristais||0;
+        if(xpH) xpH.textContent = this.state.xp||0;
+        if(nivelEl) nivelEl.textContent = this.state.ilha?.nivel||1;
+        if(tamanhoEl) tamanhoEl.textContent = `${this.state.ilha?.tamanho||4}x${this.state.ilha?.tamanho||4}`;
+    },
+    renderIlha(){
+        const ilha = this.state.ilha||{tamanho:4, layout:[], cristais:0, nivel:1};
+        const tamanho = ilha.tamanho||4;
+        const gridEl = document.getElementById('ig-ilhaGrid');
+        const statsEl = document.getElementById('ig-ilhaStats');
+        if(!gridEl) return;
+        gridEl.style.gridTemplateColumns = `repeat(${tamanho},1fr)`;
+        // garante layout do tamanho
+        const total = tamanho*tamanho;
+        if(!ilha.layout || ilha.layout.length !== total){
+            const novo = Array(total).fill(null);
+            if(ilha.layout){
+                for(let i=0;i<Math.min(ilha.layout.length, total);i++) novo[i]=ilha.layout[i];
+            }
+            ilha.layout = novo;
+        }
+        gridEl.innerHTML = ilha.layout.map((itemId, idx)=>{
+            if(!itemId){
+                return `<div class="ilha-celula vazia" data-idx="${idx}" data-action="ilha-celula-vazia" title="Vazio - clique para construir">➕</div>`;
+            } else {
+                const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===itemId) || {emoji:'❓', nome:itemId};
+                return `<div class="ilha-celula" data-idx="${idx}" data-action="ilha-celula-cheia" title="${Workspace.escapeHTML(deco.nome)} - clique para remover"><div style="font-size:28px">${deco.emoji}</div><div style="position:absolute;bottom:2px;right:2px;font-size:8px;background:rgba(0,0,0,0.6);color:#fff;padding:1px 4px;border-radius:6px">${deco.prodCristal?`+${deco.prodCristal}💎`:''}</div></div>`;
+            }
+        }).join('');
+        // stats
+        let prodCristal=0, prodXp=0;
+        (ilha.layout||[]).forEach(id=>{
+            const d=(this.defaults.decoracoesIlha||[]).find(x=>x.id===id);
+            if(d){ prodCristal+=d.prodCristal||0; prodXp+=d.prodXp||0; }
+        });
+        const escudoAtivo = ilha.escudoAte && ilha.escudoAte > Date.now();
+        if(statsEl){
+            statsEl.innerHTML = `
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                    <span>💎 Cristais: <b>${ilha.cristais||0}</b></span>
+                    <span>📦 Itens na ilha: <b>${(ilha.layout||[]).filter(Boolean).length}/${total}</b></span>
+                    <span>⚡ Produção: <b>${prodCristal}💎/h + ${prodXp} XP/h</b></span>
+                    <span>🛡️ Escudo: <b style="color:${escudoAtivo?'#10B981':'#ef4444'}">${escudoAtivo?`Ativo até ${new Date(ilha.escudoAte).toLocaleTimeString()}`:'Desativado'}</b></span>
+                    <span>⚔️ Invasões: <b>${ilha.invasoesFeitas||0} feitas / ${ilha.invasoesRecebidas||0} sofridas</b></span>
+                </div>
+            `;
+        }
+        // abas
+        this.renderIlhaTabConstruir();
+        this.renderIlhaTabInvadir();
+        this.renderIlhaTabHistorico();
+        this.atualizarHeaderIlha();
+    },
+    renderIlhaTabConstruir(){
+        const el = document.getElementById('ig-ilhaTabConstruir');
+        if(!el) return;
+        const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal','tipo'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
+        // agrupa por id
+        const estoque = {};
+        invDecor.forEach(item=>{
+            estoque[item.id] = (estoque[item.id]||0)+1;
+        });
+        // remove os já usados na ilha do estoque visual (para não contar duplicado)
+        const emUso = {};
+        (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
+        el.innerHTML = `
+            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">🔨 Seu estoque para construir</h4>
+            <div style="font-size:10px;color:#94a3b8;margin-bottom:8px">Clique numa célula vazia da ilha depois escolha item aqui, ou clique no item para colocar automaticamente na primeira vazia</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                ${Object.keys(estoque).length? Object.entries(estoque).map(([id,qtd])=>{
+                    const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===id) || {emoji:'📦', nome:id, prodCristal:0, prodXp:0};
+                    const disponivel = qtd - (emUso[id]||0);
+                    if(disponivel<=0) return '';
+                    return `<div class="ilha-loja-item" data-action="colocar-na-ilha" data-deco-id="${id}" style="position:relative">
+                        <div style="font-size:26px">${deco.emoji}</div>
+                        <div style="font-weight:800;font-size:11px">${Workspace.escapeHTML(deco.nome)}</div>
+                        <div style="font-size:9px;color:#64748B">${deco.prodCristal||0}💎/h + ${deco.prodXp||0} XP/h</div>
+                        <div style="position:absolute;top:4px;right:4px;background:#0ea5e9;color:#fff;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:900">x${disponivel}</div>
+                    </div>`
+                }).join('') : '<div style="color:#94a3b8;font-size:11px">Nenhum item de ilha no estoque. Compre no inventário com XP!</div>'}
+            </div>
+            <button data-action="abrir-inventario" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:10px;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer">🛍️ Comprar mais com XP</button>
+        `;
+    },
+    renderIlhaTabInvadir(){
+        const el = document.getElementById('ig-ilhaTabInvadir');
+        if(!el) return;
+        const outras = this.state.ilhasOutras||[];
+        const temVarinha = (this.state.inventario||[]).some(i=>i.id==='varinha_roubo');
+        const ferramentaEquipada = this.state.ferramentaEquipada;
+        const escudoAtivo = this.state.ilha?.escudoAte && this.state.ilha.escudoAte > Date.now();
+        el.innerHTML = `
+            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">⚔️ Invadir Outras Ilhas</h4>
+            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;padding:8px;font-size:10px;color:#fca5a5;margin-bottom:10px">
+                <b>Como roubar:</b> Clique em Invadir → Responda desafio em inglês em 30s. Se acertar, rouba 10% dos cristais (precisa Varinha 🪄). Se errar, perde 50 XP e ativa escudo inimigo. Cooldown 1h por ilha.
+                ${!temVarinha? '<br><span style="color:#fde68a">⚠️ Você precisa comprar Varinha de Roubo 🪄 no inventário!</span>':''}
+                ${escudoAtivo? '<br><span style="color:#10B981">🛡️ Seu escudo está ativo, você não pode ser roubado!</span>':''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto">
+                ${outras.length? outras.map(ilha=>{
+                    const podeInvadir = !ilha.escudoAte || ilha.escudoAte < Date.now();
+                    const ultimoRoubo = (this.state.ilha.historicoInvasoes||[]).find(h=>h.alvoId===ilha.userId);
+                    const emCooldown = ultimoRoubo && (Date.now() - ultimoRoubo.data) < 60*60*1000;
+                    return `<div style="background:#fff;border:2px solid ${podeInvadir?'#e2e8f0':'#ef4444'};border-radius:12px;padding:10px;opacity:${podeInvadir && !emCooldown?1:0.6}">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div><div style="font-weight:900;font-size:12px;color:#0f172a">${Workspace.escapeHTML(ilha.nome||'Ilha')} Nv.${ilha.nivel||1} ${!podeInvadir?'🛡️':''}</div><div style="font-size:10px;color:#64748B">💎 ${ilha.cristais||0} cristais • ${ilha.tamanho||4}x${ilha.tamanho||4} • ${(ilha.layout||[]).filter(Boolean).length} itens</div></div>
+                            <button data-action="invadir-ilha" data-alvo-id="${ilha.userId}" data-alvo-nome="${Workspace.escapeHTML(ilha.nome||'')}" style="background:${podeInvadir && !emCooldown? (temVarinha?'linear-gradient(135deg,#ef4444,#dc2626)':'#94a3b8') :'#94a3b8'};color:#fff;border:none;padding:6px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:${podeInvadir && !emCooldown && temVarinha?'pointer':'not-allowed'}" ${!podeInvadir || emCooldown || !temVarinha?'disabled':''}>${emCooldown?`⏳ ${Math.ceil((60*60*1000 - (Date.now()-ultimoRoubo.data))/60000)}min` : podeInvadir? '⚔️ Invadir':'🛡️ Protegida'}</button>
+                        </div>
+                        ${!podeInvadir? `<div style="font-size:9px;color:#ef4444;margin-top:4px">Escudo ativo até ${new Date(ilha.escudoAte).toLocaleTimeString()}</div>`:''}
+                    </div>`
+                }).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma outra ilha encontrada na sua escola. Convide amigos!</div>'}
+            </div>
+            <button data-action="atualizar-ilhas" style="width:100%;margin-top:10px;background:#0ea5e9;color:#fff;border:none;padding:8px;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer">🔄 Atualizar ilhas</button>
+        `;
+    },
+    renderIlhaTabHistorico(){
+        const el = document.getElementById('ig-ilhaTabHistorico');
+        if(!el) return;
+        const hist = this.state.ilha?.historicoInvasoes||[];
+        el.innerHTML = `
+            <h4 style="color:#fde68a;font-family:Cinzel;font-size:13px;margin:0 0 8px 0">📜 Histórico de Invasões</h4>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto">
+                ${hist.length? hist.slice().reverse().slice(0,20).map(h=>{
+                    const sucesso = h.sucesso;
+                    return `<div style="background:${sucesso?'#D1FAE5':'#FEE2E2'};border:1px solid ${sucesso?'#10B981':'#ef4444'};border-radius:8px;padding:8px;font-size:10px">
+                        <div style="font-weight:800;color:${sucesso?'#065f46':'#b91c1c'}">${sucesso?'✅ Roubou':'❌ Falhou'} ${h.tipo==='ataque'?'→':'←'} ${Workspace.escapeHTML(h.alvoNome||h.alvoId||'')} ${h.cristais?`• ${h.cristais}💎`:''}</div>
+                        <div style="color:#64748B">${new Date(h.data).toLocaleString()} • ${h.detalhe||''}</div>
+                    </div>`
+                }).join('') : '<div style="color:#94a3b8;font-size:11px;text-align:center;padding:20px">Nenhuma invasão ainda. Seja o primeiro pirata! 🏴‍☠️</div>'}
+            </div>
+        `;
+    },
+    async colocarNaIlha(decoId){
+        const ilha = this.state.ilha;
+        if(!ilha) return;
+        const idxVazio = ilha.layout.findIndex(v=>!v);
+        if(idxVazio===-1){ Workspace.mostrarAviso('Ilha cheia! Expanda!','warning'); return; }
+        // verifica estoque
+        const estoqueCount = (this.state.inventario||[]).filter(i=>i.id===decoId).length;
+        const emUso = ilha.layout.filter(id=>id===decoId).length;
+        if(estoqueCount <= emUso){ Workspace.mostrarAviso('Sem estoque desse item!','warning'); return; }
+        ilha.layout[idxVazio]=decoId;
+        await this.salvarIlha();
+        this.renderIlha();
+        Workspace.mostrarAviso(`🏝️ ${decoId} colocado na ilha!`,'success');
+    },
+    async removerDaIlha(idx){
+        const ilha = this.state.ilha;
+        if(!ilha || !ilha.layout[idx]) return;
+        ilha.layout[idx]=null;
+        await this.salvarIlha();
+        this.renderIlha();
+    },
+    async expandirIlha(){
+        const custo = 500 + ((this.state.ilha.tamanho||4)-4)*300;
+        if((this.state.ilha.cristais||0) < custo){ Workspace.mostrarAviso(`Precisa ${custo}💎 para expandir! Colete na ilha ou roube!`,'warning'); return; }
+        this.state.ilha.cristais -= custo;
+        this.state.ilha.tamanho = (this.state.ilha.tamanho||4)+1;
+        this.state.ilha.nivel = (this.state.ilha.nivel||1)+1;
+        const novoTotal = this.state.ilha.tamanho*this.state.ilha.tamanho;
+        const novoLayout = Array(novoTotal).fill(null);
+        for(let i=0;i<Math.min(this.state.ilha.layout.length, novoTotal);i++) novoLayout[i]=this.state.ilha.layout[i];
+        this.state.ilha.layout = novoLayout;
+        await this.salvarIlha();
+        this.renderIlha();
+        Workspace.mostrarAviso(`🏝️ Ilha expandida para ${this.state.ilha.tamanho}x${this.state.ilha.tamanho}!`,'success');
+    },
+    async coletarIlha(){
+        const ilha = this.state.ilha;
+        if(!ilha) return;
+        // verifica ferramenta picareta
+        const picaretas = (this.state.inventario||[]).filter(i=>i.id==='picareta');
+        if(picaretas.length===0){ Workspace.mostrarAviso('Precisa de ⛏️ Picareta! Compre no inventário com XP!','warning'); return; }
+        // consome 1 picareta
+        const idx = this.state.inventario.findIndex(i=>i.id==='picareta');
+        if(idx!==-1) this.state.inventario.splice(idx,1);
+        let total=0;
+        (ilha.layout||[]).forEach(id=>{
+            const d=(this.defaults.decoracoesIlha||[]).find(x=>x.id===id);
+            if(d) total+= (d.prodCristal||0)*2 + 10;
+        });
+        total = Math.max(20, total);
+        ilha.cristais = (ilha.cristais||0)+total;
+        ilha.ultimaColeta = Date.now();
+        await this.saveDados();
+        await this.salvarIlha();
+        this.renderIlha();
+        Workspace.mostrarAviso(`⛏️ Coletado +${total}💎 cristais! (Picareta consumida)`,'success');
+    },
+    async salvarIlha(){
+        try{
+            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
+            await Workspace.api('/workspace/ingles/ilha/salvar','POST',{userId:Workspace.usuario.id, escolaId, nome:Workspace.usuario.nome||Workspace.usuario.login, ilha:this.state.ilha, avatarEquipado:this.state.avatarEquipado});
+            this.atualizarHeaderIlha();
+        }catch(e){ console.error('salvar ilha',e); }
+    },
+    async invadirIlha(alvoId, alvoNome){
+        // verifica varinha
+        const temVarinha = (this.state.inventario||[]).some(i=>i.id==='varinha_roubo');
+        if(!temVarinha){ Workspace.mostrarAviso('Precisa de Varinha de Roubo 🪄! Compre no inventário!','warning'); return; }
+        // verifica escudo próprio?
+        // inicia minigame
+        const desafio = this.obterItemInteligente(this.state.phrases.length? this.state.phrases : this.defaults.phrases, 'phrase');
+        if(!desafio){ Workspace.mostrarAviso('Sem desafio disponível','warning'); return; }
+        const modal=document.createElement('div');
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:1000011;display:flex;align-items:center;justify-content:center;padding:20px';
+        modal.innerHTML=`
+            <div style="background:linear-gradient(180deg,#1e1b4b,#0f0f23);border:3px solid #ef4444;border-radius:20px;max-width:500px;width:100%;padding:20px;text-align:center;box-shadow:0 0 40px rgba(239,68,68,0.4)">
+                <div style="font-size:40px">⚔️</div>
+                <div style="color:#fca5a5;font-family:Cinzel;font-weight:900;font-size:18px">INVADINDO ${Workspace.escapeHTML(alvoNome||'Ilha Inimiga')}</div>
+                <div style="color:#fff;font-size:13px;margin:10px 0;background:rgba(255,255,255,0.1);padding:12px;border-radius:10px">Traduza em inglês para roubar 10% dos cristais!<br><b style="color:#fde68a">${Workspace.escapeHTML(desafio.phrase||desafio.text||'Hello world')}</b></div>
+                <div style="color:#94a3b8;font-size:11px">Você tem 30 segundos! Se errar, perde 50 XP!</div>
+                <input id="ig-invasaoInput" style="width:100%;margin-top:12px;padding:12px;border-radius:10px;border:2px solid #ef4444;background:#0f172a;color:#fff;font-weight:700" placeholder="Sua tradução em inglês..." autofocus>
+                <div style="display:flex;gap:8px;margin-top:12px">
+                    <button id="ig-invasaoEnviar" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:12px;border-radius:10px;font-weight:900;cursor:pointer">⚔️ Roubar!</button>
+                    <button id="ig-invasaoCancelar" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:12px 16px;border-radius:10px;cursor:pointer">✕ Cancelar</button>
+                </div>
+                <div style="margin-top:10px;color:#fca5a5;font-size:12px;font-weight:800" id="ig-invasaoTimer">⏱️ 30s</div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        let tempo=30;
+        const timerEl=modal.querySelector('#ig-invasaoTimer');
+        const timer=setInterval(()=>{ tempo--; if(timerEl) timerEl.textContent=`⏱️ ${tempo}s`; if(tempo<=0){ clearInterval(timer); modal.remove(); this.falhaInvasao(alvoId, alvoNome); } },1000);
+        const input=modal.querySelector('#ig-invasaoInput');
+        const enviar=modal.querySelector('#ig-invasaoEnviar');
+        const cancelar=modal.querySelector('#ig-invasaoCancelar');
+        const finalizar=(sucesso)=>{
+            clearInterval(timer);
+            modal.remove();
+            if(sucesso) this.sucessoInvasao(alvoId, alvoNome);
+            else this.falhaInvasao(alvoId, alvoNome);
+        };
+        input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const txt=input.value.trim(); if(txt.length>3) finalizar(true); } });
+        enviar.onclick=()=>{ const txt=input.value.trim(); if(txt.length<3){ Workspace.mostrarAviso('Digite algo!','warning'); return; } finalizar(txt.length>5); };
+        cancelar.onclick=()=>{ clearInterval(timer); modal.remove(); };
+        input.focus();
+    },
+    async sucessoInvasao(alvoId, alvoNome){
+        try{
+            const res = await Workspace.api('/workspace/ingles/ilha/invadir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', alvoId, acao:'roubo', sucesso:true});
+            if(res && res.success){
+                const roubado = res.roubado||0;
+                this.state.ilha.cristais = (this.state.ilha.cristais||0)+roubado;
+                this.state.ilha.invasoesFeitas = (this.state.ilha.invasoesFeitas||0)+1;
+                // consome varinha
+                const idx = this.state.inventario.findIndex(i=>i.id==='varinha_roubo');
+                if(idx!==-1) this.state.inventario.splice(idx,1);
+                this.state.ilha.historicoInvasoes = this.state.ilha.historicoInvasoes||[];
+                this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:true, cristais:roubado, tipo:'ataque', detalhe:`Roubou ${roubado}💎 de ${alvoNome}`});
+                await this.saveDados();
+                await this.salvarIlha();
+                this.renderIlha();
+                Workspace.mostrarAviso(`🏴‍☠️ Roubo bem sucedido! +${roubado}💎 cristais de ${alvoNome}!`,'success');
+                this.tocarSom('level'); this.confete();
+            } else {
+                Workspace.mostrarAviso(res?.error||'Falha no roubo','error');
+            }
+        }catch(e){ Workspace.mostrarAviso('Erro ao invadir','error'); }
+    },
+    async falhaInvasao(alvoId, alvoNome){
+        try{
+            await Workspace.api('/workspace/ingles/ilha/invadir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', alvoId, acao:'roubo', sucesso:false});
+            this.state.xp = Math.max(0, this.state.xp - 50);
+            this.state.ilha.historicoInvasoes = this.state.ilha.historicoInvasoes||[];
+            this.state.ilha.historicoInvasoes.push({alvoId, alvoNome, data:Date.now(), sucesso:false, cristais:0, tipo:'ataque', detalhe:`Falhou ao invadir ${alvoNome} - perdeu 50 XP`});
+            await this.saveDados();
+            await this.salvarIlha();
+            this.renderIlha();
+            Workspace.mostrarAviso(`💥 Invasão falhou! -50 XP e escudo ativado na ilha inimiga!`,'error');
+        }catch{}
+    },
+
     // ================= PORTAL MÁGICO - JOGO ESPECIAL =================
     efeitoPortalTempo(){
         return new Promise(resolve=>{
@@ -830,6 +1354,20 @@ Workspace.Ingles = {
             #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+
+            /* 🏝️ ILHA MÁGICA */
+            #ig-ilhaBtn{position:absolute;top:12px;right:12px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border:2px solid #fde68a;padding:8px 14px;border-radius:20px;font-weight:900;font-size:12px;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,0.4);z-index:5;animation:floatIlha 2s ease infinite}
+            @keyframes floatIlha{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+            #ig-ilhaModal{position:fixed;inset:0;background:linear-gradient(180deg,#0c4a6e 0%,#082f49 100%);z-index:1000010;display:none;overflow-y:auto}
+            .ilha-grid{display:grid;gap:6px;background:rgba(255,255,255,0.1);padding:12px;border-radius:16px;border:2px solid #fde68a}
+            .ilha-celula{aspect-ratio:1;background:linear-gradient(180deg,#22c55e,#16a34a);border:2px solid #15803d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:0.2s;position:relative}
+            .ilha-celula:hover{transform:scale(1.05);border-color:#fde68a;box-shadow:0 0 12px rgba(253,230,138,0.5)}
+            .ilha-celula.vazia{background:linear-gradient(180deg,#4ade80,#22c55e);border-style:dashed}
+            .ilha-loja-item{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:0.2s}
+            .ilha-loja-item:hover{border-color:#0ea5e9;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.1)}
+            .ilha-loja-item.comprado{opacity:0.5;pointer-events:none;background:#f1f5f9}
+            .ilha-loja-item.equipado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 12px rgba(253,230,138,0.4)}
+
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
               .ig-header{flex-direction:column;gap:12px;padding:14px 16px;position:relative}
@@ -937,6 +1475,46 @@ Workspace.Ingles = {
                 <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
                 <button data-action="render-tab" data-tab="algoritmo" class="ig-side-item">🧠 Algoritmo</button>
             </div><div id="ig-tab-content" style="flex:1;padding:30px;background:#F8FAFC;overflow-y:auto"></div></div>
+
+            <div id="ig-ilhaModal">
+                <div style="background:linear-gradient(180deg,#082f49 0%,#0c4a6e 100%);min-height:100vh">
+                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;border-bottom:3px solid #fde68a">
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <div style="font-size:32px">🏝️</div>
+                            <div><div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:20px">Ilha Mágica</div><div style="color:#94a3b8;font-size:11px">Seu mundo • Expanda • Invada • Roube</div></div>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <div style="background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:20px;color:#fff;font-weight:800;font-size:12px">💎 <span id="ig-ilhaCristaisHeader">0</span> cristais</div>
+                            <div style="background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:20px;color:#fde68a;font-weight:800;font-size:12px">⭐ <span id="ig-ilhaXpHeader">0</span> XP</div>
+                            <button data-action="fechar-ilha-magica" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px">✕</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0">
+                        <div style="flex:1;min-width:320px;padding:20px">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                                <h3 style="color:#fde68a;font-family:Cinzel;margin:0">🗺️ Sua Ilha Nv.<span id="ig-ilhaNivel">1</span> (<span id="ig-ilhaTamanho">4x4</span>)</h3>
+                                <div style="display:flex;gap:6px">
+                                    <button data-action="coletar-ilha" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">⛏️ Coletar Tudo</button>
+                                    <button data-action="expandir-ilha" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">📏 Expandir (500💎)</button>
+                                </div>
+                            </div>
+                            <div id="ig-ilhaGrid" class="ilha-grid" style="grid-template-columns:repeat(4,1fr)"></div>
+                            <div id="ig-ilhaStats" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#fff;font-size:12px"></div>
+                        </div>
+                        <div style="width:360px;min-width:300px;background:rgba(0,0,0,0.2);padding:20px;border-left:2px solid rgba(253,230,138,0.2)">
+                            <div style="display:flex;gap:6px;margin-bottom:14px">
+                                <button data-action="ilha-tab" data-ilha-tab="construir" class="ilha-tab-btn active" style="flex:1;background:#fde68a;color:#000;border:none;padding:8px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">🔨 Construir</button>
+                                <button data-action="ilha-tab" data-ilha-tab="invadir" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">⚔️ Invadir</button>
+                                <button data-action="ilha-tab" data-ilha-tab="historico" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">📜 Histórico</button>
+                            </div>
+                            <div id="ig-ilhaTabConstruir"></div>
+                            <div id="ig-ilhaTabInvadir" style="display:none"></div>
+                            <div id="ig-ilhaTabHistorico" style="display:none"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="ig-gameModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
                 <div class="ws-card" style="width:90%;max-width:650px;background:#fffcf0;border:4px solid #d4af37;border-radius:8px;display:flex;flex-direction:column;max-height:90vh">
                     <div style="padding:15px 20px;border-bottom:2px dashed #d4af37;display:flex;justify-content:space-between;align-items:center"><div><span id="ig-modalIcon" style="font-size:28px"></span> <h2 id="ig-modalTitle" style="display:inline;margin:0;font-family:Cinzel"></h2></div><div style="display:flex;gap:15px"><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:8px 12px;border-radius:8px;cursor:pointer">🔄 Mudar</button><button data-action="fechar-jogo" style="background:transparent;border:none;font-size:35px;cursor:pointer;color:#e74c3c">×</button></div></div>
@@ -983,8 +1561,42 @@ Workspace.Ingles = {
                 case 'salvar-season': this.salvarSeason(); break;
                 case 'reset-season': this.resetSeason(); break;
                 case 'abrir-inventario': this.abrirInventario(); break;
+                case 'abrir-ilha-magica': this.abrirIlhaMagica(); break;
+                case 'fechar-ilha-magica': this.fecharIlhaMagica(); break;
+                case 'coletar-ilha': this.coletarIlha(); break;
+                case 'expandir-ilha': this.expandirIlha(); break;
+                case 'atualizar-ilhas': this.carregarOutrasIlhas().then(()=>this.renderIlha()); break;
+
                 case 'atualizar-ranking': this.carregarRanking(); break;
                 case 'atualizar-ranking-aluno': this.carregarRankingAluno(); break;
+                case 'atualizar-ranking-aluno': this.carregarRankingAluno(); break;
+                case 'ilha-tab': {
+                    const tab = b.dataset.ilhaTab;
+                    const root = document.getElementById('ig-ilhaModal');
+                    if(!root) break;
+                    root.querySelectorAll('.ilha-tab-btn').forEach(btn=>{ btn.style.background='rgba(255,255,255,0.1)'; btn.style.color='#fff'; btn.classList.remove('active'); });
+                    b.style.background='#fde68a'; b.style.color='#000'; b.classList.add('active');
+                    root.querySelectorAll('[id^="ig-ilhaTab"]').forEach(t=>t.style.display='none');
+                    const target = document.getElementById(`ig-ilhaTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
+                    if(target) target.style.display='block';
+                    break;
+                }
+                case 'colocar-na-ilha': this.colocarNaIlha(b.dataset.decoId); break;
+                case 'ilha-celula-cheia': this.removerDaIlha(parseInt(b.dataset.idx)); break;
+                case 'ilha-celula-vazia': {
+                    // se tem item selecionado? por enquanto coloca primeiro disponivel
+                    const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
+                    if(!estoque.length){ Workspace.mostrarAviso('Sem itens! Compre no inventário!','warning'); break; }
+                    // pega primeiro que não está em uso total
+                    const emUso = {};
+                    (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
+                    const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) );
+                    if(disponivel) this.colocarNaIlha(disponivel.id);
+                    else Workspace.mostrarAviso('Todos itens já estão na ilha!','warning');
+                    break;
+                }
+                case 'invadir-ilha': this.invadirIlha(b.dataset.alvoId, b.dataset.alvoNome); break;
+
             }
         });
         root.addEventListener('change', e=>{
@@ -1077,6 +1689,8 @@ Workspace.Ingles = {
     },
 
     renderizarVisualizacao(){
+        try{ const avatar = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado) || {emoji:'🧙‍♂️'}; const elMago = document.querySelector('.ig-hub-mago-img'); if(elMago) { /* mostra avatar no mago se quiser */ } const cristaisEl = document.getElementById('ig-ilhaCristais'); if(cristaisEl) cristaisEl.textContent = `${this.state.ilha?.cristais||0}💎`; }catch{}
+
         try{ this.carregarRankingAluno(); }catch{}
         try{
             const lvlInfo=this.calcularLevel(this.state.xp);
