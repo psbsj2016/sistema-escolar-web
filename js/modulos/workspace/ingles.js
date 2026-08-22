@@ -607,11 +607,25 @@ Workspace.Ingles = {
             .ig-input,.ig-textarea{background:#ffffff;color:#0f172a;border:2.5px solid #cbd5e1;border-radius:12px;font-weight:600;font-size:15px;width:100%;padding:12px 15px;box-sizing:border-box}
             .ig-input:focus,.ig-textarea:focus{border-color:#4f46e5;outline:none;box-shadow:0 0 0 4px rgba(79,70,229,0.12)}
             .ig-input::placeholder,.ig-textarea::placeholder{color:#64748b;opacity:1}
-            .ig-card{background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:22px;margin-bottom:18px}
-            .ig-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#0f172a;font-weight:500}
-            .ig-sidebar{width:250px;background:#fff;border-right:1px solid #E2E8F0;padding:20px;display:flex;flex-direction:column;gap:5px;flex-shrink:0}
-            .ig-side-item{background:transparent;border:none;padding:12px 15px;border-radius:10px;text-align:left;font-weight:bold;color:#64748B;cursor:pointer;transition:0.2s;white-space:nowrap}
-            .ig-side-item.active{background:#0F172A;color:#fff}
+            .ig-card{background:#ffffff;border:1.5px solid #e2e8f0;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 4px 20px rgba(15,23,42,0.04)}
+            .ig-card-prof{background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border:2px solid #e2e8f0;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 8px 24px rgba(15,23,42,0.06);transition:0.2s}
+            .ig-card-prof:hover{border-color:#cbd5e1;box-shadow:0 12px 32px rgba(15,23,42,0.08)}
+            .ig-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f1f5f9}
+            .ig-card-header h3{font-family:Cinzel,serif;font-size:18px;font-weight:800;color:#0f172a;margin:0}
+            .ig-card-header p{font-size:12px;color:#64748b;margin:4px 0 0 0}
+            .ig-list-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:8px;background:#fff;color:#0f172a;font-weight:500;transition:0.2s}
+            .ig-list-item:hover{border-color:#e2e8f0;background:#f8fafc}
+            .ig-sidebar{width:270px;background:linear-gradient(180deg,#0F172A 0%,#1E293B 100%);padding:20px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;border-right:3px solid #d4af37;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
+            .ig-side-item{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:13px 16px;border-radius:12px;text-align:left;font-weight:700;color:#94a3b8;cursor:pointer;transition:0.2s;white-space:nowrap;display:flex;align-items:center;gap:10px;font-size:13px}
+            .ig-side-item:hover{background:rgba(255,255,255,0.12);color:#f8fafc;transform:translateX(3px)}
+            .ig-side-item.active{background:linear-gradient(135deg,#fde68a 0%,#d4af37 100%);color:#000;border-color:#fde68a;box-shadow:0 4px 12px rgba(253,230,138,0.3);font-weight:800}
+            .ig-prof-input{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-weight:600;transition:0.2s}
+            .ig-prof-input:focus{border-color:#4f46e5;box-shadow:0 0 0 4px rgba(79,70,229,0.1);outline:none}
+            .ig-prof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+            .ig-rank-item{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:2px solid #f1f5f9;border-radius:14px;margin-bottom:8px;transition:0.2s}
+            .ig-rank-item.ouro{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%);box-shadow:0 4px 12px rgba(253,230,138,0.2)}
+            .ig-rank-item.prata{border-color:#cbd5e1;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%)}
+            .ig-rank-item.bronze{border-color:#d97706;background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%)}
             #ig-professorView{display:flex;min-height:70vh}
             #ig-tab-content{flex:1;padding:28px;background:#F8FAFC;overflow-y:auto}
             /* FIX BOTÕES - APENAS DENTRO DO BAÚ DO INGLÊS, NÃO AFETA OUTROS WORKSPACES */
@@ -626,17 +640,32 @@ Workspace.Ingles = {
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
-              .ig-header{flex-direction:column;gap:14px;padding:12px 16px;position:relative}
-              .ig-bau-topo{width:92px!important}
-              .ig-title-text h2{font-size:24px}
-              .ig-games-grid{grid-template-columns:1fr;padding:0 16px 30px 16px}
-              .ig-hub-banner{flex-direction:column;text-align:center;padding:14px}
+              .ig-header{flex-direction:column;gap:12px;padding:14px 16px;position:relative}
+              .ig-bau-topo{width:72px!important}
+              .ig-title-text h2{font-size:22px;text-align:center}
+              .ig-title-text p{text-align:center}
+              .ig-rpg-hud{width:100%;justify-content:space-between;padding:8px 10px}
+              .ig-hud-stat{font-size:16px;padding:6px 10px}
+              .ig-games-grid{grid-template-columns:1fr;padding:0 14px 24px 14px;gap:14px}
+              .ig-game-card{padding:18px}
+              .ig-hub-banner{flex-direction:column;text-align:center;padding:16px 14px;margin:0 14px 16px 14px}
+              .ig-hub-mago-img{width:90px!important}
+              #ig-xp-bar-container{margin:0 14px 16px 14px!important;flex-wrap:wrap;gap:10px;padding:12px!important}
+              #ig-xp-bar-container #ig-levelBadge{width:40px;height:40px;font-size:16px}
+              #ig-questsPanel{margin:0 14px 16px 14px!important}
               #ig-professorView{flex-direction:column}
-              .ig-sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:8px;padding:12px;border-right:none;border-bottom:2px solid #E2E8F0;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-              .ig-side-item{flex-shrink:0;padding:10px 14px;font-size:13px}
-              #ig-tab-content{padding:16px}
-              .ig-guardian-container{padding:20px 16px;min-height:60vh}
-              .ig-balao-fala-static{font-size:18px}
+              .ig-sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:8px;padding:12px;border-right:none;border-bottom:3px solid #d4af37;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+              .ig-sidebar::-webkit-scrollbar{display:none}
+              .ig-side-item{flex-shrink:0;padding:11px 16px;font-size:12px;border-radius:20px;white-space:nowrap}
+              #ig-tab-content{padding:14px;background:#F1F5F9}
+              .ig-card-prof{padding:18px;border-radius:16px}
+              .ig-prof-grid{grid-template-columns:1fr}
+              .ig-guardian-container{padding:20px 14px;min-height:60vh}
+              .ig-balao-fala-static{font-size:17px;padding:14px}
+              .ig-opcoes-tempo{flex-direction:column}
+              #ig-gameModal > div{width:95%!important;max-height:92vh!important;margin:10px}
+              #ig-modalBody{max-height:70vh;overflow-y:auto}
+              .ig-rank-item{padding:12px;gap:10px}
             }
         `;
         document.head.appendChild(style);
@@ -683,10 +712,11 @@ Workspace.Ingles = {
             </div>
             <div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
             <div id="ig-professorView" style="display:none;min-height:70vh"><div class="ig-sidebar">
+                <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking & Ligas</button>
                 <button data-action="render-tab" data-tab="mago" class="ig-side-item">🧙 Mago IA</button>
                 <button data-action="render-tab" data-tab="quests" class="ig-side-item">🎯 Missões</button>
                 <button data-action="render-tab" data-tab="loja" class="ig-side-item">🛍 Loja do Mago</button>
-                <button data-action="render-tab" data-tab="season" class="ig-side-item">🏆 Temporada</button>
+                <button data-action="render-tab" data-tab="season" class="ig-side-item">⚙️ Temporada</button>
                 <button data-action="render-tab" data-tab="biblioteca" class="ig-side-item active">📚 Biblioteca</button>
                 <button data-action="render-tab" data-tab="imagens" class="ig-side-item">🖼 Imagens</button>
                 <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
@@ -739,6 +769,7 @@ Workspace.Ingles = {
                 case 'salvar-season': this.salvarSeason(); break;
                 case 'reset-season': this.resetSeason(); break;
                 case 'abrir-inventario': this.abrirInventario(); break;
+                case 'atualizar-ranking': this.carregarRanking(); break;
             }
         });
         root.addEventListener('change', e=>{
@@ -1042,6 +1073,11 @@ Workspace.Ingles = {
             const activeBtn=document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
             if(activeBtn) activeBtn.classList.add('active');
             const contentEl=document.getElementById('ig-tab-content');
+            if(tabId==='ranking'){
+                contentEl.innerHTML=`<div class="ig-card-prof"><div class="ig-card-header"><div><h3>🏆 Ranking & Ligas</h3><p>Ligas: Ouro (top 3), Prata (4-10), Bronze (11-20). Mostra títulos e bordas equipadas.</p></div><button data-action="atualizar-ranking" style="background:#0F172A;color:#fde68a;border:1px solid #d4af37;padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer">🔄 Atualizar</button></div><div id="ig-ranking-loading" style="text-align:center;padding:30px;color:#64748B">Carregando ranking épico...</div><div id="ig-ranking-list"></div></div>`;
+                this.carregarRanking();
+                return;
+            }
             if(tabId==='quests'){
                 contentEl.innerHTML=`
                     <div class="ig-card"><h3>🎯 Missões Diárias (V6)</h3><p style="color:#64748B;font-size:13px">Crie missões que aparecem no hub do aluno. Recompensa com XP multiplicado pela season.</p>
@@ -1260,6 +1296,30 @@ Workspace.Ingles = {
         const mult=parseFloat(document.getElementById('seasonMult')?.value||'1');
         this.state.season = {...this.state.season, nome, xpMultiplier:mult, id: this.state.season.id||'S1'};
         await this.saveDados(); Workspace.mostrarAviso('Temporada salva!','success'); this.renderProfessorTab('season');
+    },
+    carregarRanking: async function(){
+        const listEl=document.getElementById('ig-ranking-list');
+        const loadEl=document.getElementById('ig-ranking-loading');
+        if(!listEl) return;
+        try{
+            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
+            const res=await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
+            if(!res?.success){ if(loadEl) loadEl.textContent='Erro ao carregar'; return; }
+            const ranking=res.ranking||[];
+            if(loadEl) loadEl.style.display='none';
+            if(!ranking.length){ listEl.innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8">Nenhum XP ainda. Alunos precisam jogar!</div>'; return; }
+            listEl.innerHTML = ranking.map((r,i)=>{
+                const liga=r.liga|| (i<3?'ouro': i<10?'prata': i<20?'bronze':'aprendiz');
+                const medalha=i===0?'🥇': i===1?'🥈': i===2?'🥇': '';
+                const borda=r.bordaEquipada||'';
+                const bordaStyle = borda.includes('ouro')? 'border-color:#fde68a;box-shadow:0 0 10px rgba(253,230,138,0.3)' : borda.includes('prata')? 'border-color:#94a3b8' : borda.includes('bronze')? 'border-color:#d97706' : '';
+                return `<div class="ig-rank-item ${liga}" style="${bordaStyle}">
+                    <div style="width:36px;height:36px;background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'};border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0">${medalha|| (i+1)}</div>
+                    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="color:#0f172a;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')}</b><span style="background:#0F172A;color:#fde68a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">${Workspace.escapeHTML(r.tituloEquipado||r.titulo||'Aprendiz')}</span><span style="font-size:10px;background:${liga==='ouro'?'#fde68a': liga==='prata'?'#e2e8f0':'#ffedd5'};color:#000;padding:2px 6px;border-radius:10px;font-weight:700;text-transform:uppercase">${liga}</span></div><div style="display:flex;gap:8px;margin-top:4px;font-size:11px;color:#64748B"><span>⭐ ${r.xp||0} XP</span><span>📶 Nível ${r.level||1}</span><span>🔥 ${r.streak||1}d</span><span>🎒 ${(r.inventario||[]).length} itens</span></div></div>
+                    <div style="text-align:right;flex-shrink:0"><div style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px;font-weight:700">${(r.medalhas||[]).length} 🏆</div></div>
+                </div>`;
+            }).join('');
+        }catch(e){ if(loadEl) loadEl.textContent='Erro: '+e.message; }
     },
     resetSeason: async function(){
         if(!confirm('Resetar temporada? Isso zera XP semanal da escola e guarda histórico. Continuar?')) return;
