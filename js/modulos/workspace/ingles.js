@@ -639,7 +639,9 @@ Workspace.Ingles = {
         await this.carregarMinhaIlha();
         await this.carregarOutrasIlhas();
         this.renderIlha();
-        Workspace.mostrarAviso('🏝️ Bem-vindo à sua Ilha Mágica!','success');
+        this.initAvatarIlha();
+        this.renderMundoRealista();
+        Workspace.mostrarAviso('🏝️ Bem-vindo à sua Ilha Mágica! Use WASD ou joystick para mover o avatar!','success');
     },
     fecharIlhaMagica(){
         const modal = document.getElementById('ig-ilhaModal');
@@ -770,7 +772,191 @@ Workspace.Ingles = {
         this.renderIlhaTabHistorico();
         this.atualizarHeaderIlha();
     },
-    renderIlhaTabConstruir(){
+
+    // ================= 🎮 AVATAR E MOVIMENTAÇÃO ILHA REALISTA =================
+    initAvatarIlha(){
+        this.avatarPos = this.avatarPos||{x:1, y:1};
+        this.modoIlha = this.modoIlha||'construir'; // construir ou explorar
+        this.bindControlesIlha();
+        this.renderMundoRealista();
+    },
+    bindControlesIlha(){
+        if(this._controlesBind) return;
+        this._controlesBind = true;
+        // Teclado desktop
+        document.addEventListener('keydown', (e)=>{
+            const modal = document.getElementById('ig-ilhaModal');
+            if(!modal || modal.style.display==='none') return;
+            const key = e.key.toLowerCase();
+            if(['w','arrowup'].includes(key)){ e.preventDefault(); this.moverAvatar(0,-1); this.ativarTecla('up'); }
+            if(['s','arrowdown'].includes(key)){ e.preventDefault(); this.moverAvatar(0,1); this.ativarTecla('down'); }
+            if(['a','arrowleft'].includes(key)){ e.preventDefault(); this.moverAvatar(-1,0); this.ativarTecla('left'); }
+            if(['d','arrowright'].includes(key)){ e.preventDefault(); this.moverAvatar(1,0); this.ativarTecla('right'); }
+            if(key==='e' || key===' '){ e.preventDefault(); this.acaoIlha(); }
+        });
+        // Joystick touch
+        const joystick = document.getElementById('ig-joystick');
+        if(joystick){
+            joystick.addEventListener('touchstart', (e)=>{
+                const btn = e.target.closest('[data-move]');
+                if(btn){ e.preventDefault(); this.moverAvatarPorDir(btn.dataset.move); }
+            });
+            joystick.addEventListener('mousedown', (e)=>{
+                const btn = e.target.closest('[data-move]');
+                if(btn){ e.preventDefault(); this.moverAvatarPorDir(btn.dataset.move); }
+            });
+        }
+        // Desktop controls
+        document.addEventListener('click', (e)=>{
+            const btn = e.target.closest('[data-move]');
+            const modal = document.getElementById('ig-ilhaModal');
+            if(!btn || !modal || modal.style.display==='none') return;
+            if(btn.closest('#ig-joystick') || btn.closest('#ig-desktopControls')){
+                this.moverAvatarPorDir(btn.dataset.move);
+            }
+        });
+    },
+    ativarTecla(dir){
+        const keys = document.querySelectorAll(`.wasd-key[data-move="${dir}"]`);
+        keys.forEach(k=>{ k.classList.add('ativo'); setTimeout(()=>k.classList.remove('ativo'), 150); });
+    },
+    moverAvatarPorDir(dir){
+        if(dir==='up') this.moverAvatar(0,-1);
+        if(dir==='down') this.moverAvatar(0,1);
+        if(dir==='left') this.moverAvatar(-1,0);
+        if(dir==='right') this.moverAvatar(1,0);
+    },
+    moverAvatar(dx, dy){
+        const tamanho = this.state.ilha?.tamanho||4;
+        let novoX = (this.avatarPos?.x||1) + dx;
+        let novoY = (this.avatarPos?.y||1) + dy;
+        // limites
+        novoX = Math.max(0, Math.min(tamanho-1, novoX));
+        novoY = Math.max(0, Math.min(tamanho-1, novoY));
+        this.avatarPos = {x:novoX, y:novoY};
+        this.atualizarPosAvatar();
+        // verifica se tem objeto na posição
+        const idx = novoY * tamanho + novoX;
+        const itemId = this.state.ilha?.layout?.[idx];
+        if(itemId){
+            const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===itemId);
+            if(deco){
+                Workspace.mostrarAviso(`📍 ${deco.emoji} ${deco.nome} - ${deco.prodCristal?`+${deco.prodCristal}💎/h`:''} ${deco.prodXp?`+${deco.prodXp} XP/h`:''}`, 'info');
+            }
+        }
+        // salva posição
+        try{ localStorage.setItem(`ws_ilha_avatar_${Workspace.usuario.id}`, JSON.stringify(this.avatarPos)); }catch{}
+    },
+    atualizarPosAvatar(){
+        const avatarEl = document.getElementById('ig-ilhaAvatar');
+        const worldEl = document.getElementById('ig-ilhaGameWorld');
+        if(!avatarEl || !worldEl) return;
+        const tamanho = this.state.ilha?.tamanho||4;
+        const tileSize = worldEl.clientWidth / tamanho;
+        const x = this.avatarPos.x * tileSize + tileSize/2 - 22;
+        const y = this.avatarPos.y * tileSize + tileSize/2 - 22;
+        avatarEl.style.left = x + 'px';
+        avatarEl.style.top = y + 'px';
+        // atualiza emoji do avatar equipado
+        const avatarData = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado);
+        const emojiEl = document.getElementById('ig-avatarEmoji');
+        if(emojiEl && avatarData) emojiEl.textContent = avatarData.emoji;
+    },
+    renderMundoRealista(){
+        const worldEl = document.getElementById('ig-ilhaGameWorld');
+        const tilesEl = document.getElementById('ig-ilhaTiles');
+        if(!worldEl || !tilesEl) return;
+        const ilha = this.state.ilha||{tamanho:4, layout:[]};
+        const tamanho = ilha.tamanho||4;
+        const total = tamanho*tamanho;
+        if(!ilha.layout || ilha.layout.length!==total){
+            ilha.layout = Array(total).fill(null);
+        }
+        // carrega posição salva
+        try{
+            const salvo = JSON.parse(localStorage.getItem(`ws_ilha_avatar_${Workspace.usuario.id}`)||'null');
+            if(salvo) this.avatarPos = salvo;
+        }catch{}
+        if(!this.avatarPos) this.avatarPos = {x:Math.floor(tamanho/2), y:Math.floor(tamanho/2)};
+        
+        const tileSize = worldEl.clientWidth / tamanho;
+        tilesEl.innerHTML = '';
+        // cria tiles com grama/areia/agua nas bordas
+        for(let y=0; y<tamanho; y++){
+            for(let x=0; x<tamanho; x++){
+                const idx = y*tamanho + x;
+                const itemId = ilha.layout[idx];
+                const isBorda = x===0 || y===0 || x===tamanho-1 || y===tamanho-1;
+                const tile = document.createElement('div');
+                tile.className = `ilha-tile ${isBorda?'areia':'grama'}`;
+                tile.style.left = (x*tileSize) + 'px';
+                tile.style.top = (y*tileSize) + 'px';
+                tile.style.width = tileSize + 'px';
+                tile.style.height = tileSize + 'px';
+                tile.dataset.idx = idx;
+                tile.dataset.action = itemId ? 'ilha-celula-cheia' : 'ilha-celula-vazia';
+                
+                if(itemId){
+                    const deco = (this.defaults.decoracoesIlha||[]).find(d=>d.id===itemId) || {emoji:'📦'};
+                    tile.innerHTML = `<div style="font-size:${tileSize*0.5}px">${deco.emoji}</div>`;
+                } else {
+                    if(!isBorda && Math.random()<0.15){
+                        // detalhes grama
+                        tile.innerHTML = `<div style="font-size:${tileSize*0.25}px;opacity:0.4">${['🌿','🍀','🌱'][Math.floor(Math.random()*3)]}</div>`;
+                    }
+                }
+                tilesEl.appendChild(tile);
+            }
+        }
+        // objetos extras (decorações soltas)
+        this.atualizarPosAvatar();
+        // mostra/oculta controles por device
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const joy = document.getElementById('ig-joystick');
+        const desk = document.getElementById('ig-desktopControls');
+        if(joy) joy.style.display = isMobile ? 'block' : 'none';
+        if(desk) desk.style.display = isMobile ? 'none' : 'flex';
+    },
+    acaoIlha(){
+        const tamanho = this.state.ilha?.tamanho||4;
+        const idx = this.avatarPos.y * tamanho + this.avatarPos.x;
+        const itemId = this.state.ilha.layout[idx];
+        if(itemId){
+            // se tem item, coleta ou remove
+            this.coletarIlha();
+        } else {
+            // se vazio, tenta construir com primeiro item disponivel
+            const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
+            const emUso = {};
+            (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; });
+            const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) );
+            if(disponivel){
+                this.state.ilha.layout[idx]=disponivel.id;
+                this.salvarIlha();
+                this.renderMundoRealista();
+                this.renderIlha();
+                Workspace.mostrarAviso(`🏝️ ${disponivel.id} construído aqui!`,'success');
+            } else {
+                Workspace.mostrarAviso('Sem itens na mochila! Compre na loja com XP','warning');
+            }
+        }
+    },
+    alternarModoIlha(){
+        this.modoIlha = this.modoIlha==='construir' ? 'explorar' : 'construir';
+        const btn = document.getElementById('ig-modoIlhaBtn');
+        const grid = document.getElementById('ig-ilhaGrid');
+        const gameWorld = document.getElementById('ig-ilhaGameWorld');
+        if(btn) btn.textContent = this.modoIlha==='explorar' ? '🔨 Construir' : '🎮 Explorar';
+        if(grid) grid.style.display = this.modoIlha==='construir' ? 'grid' : 'none';
+        if(gameWorld) gameWorld.style.display = this.modoIlha==='explorar' ? 'block' : 'block'; // sempre mostra mundo agora
+        if(this.modoIlha==='explorar'){
+            this.renderMundoRealista();
+        } else {
+            this.renderIlha();
+        }
+    },
+
+        renderIlhaTabConstruir(){
         const el = document.getElementById('ig-ilhaTabConstruir');
         if(!el) return;
         const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
@@ -1385,10 +1571,120 @@ Workspace.Ingles = {
             .lojinha-emoji{font-size:26px;display:block}
             .lojinha-nome{font-size:9px;font-weight:800;color:#0f172a;line-height:1.1;height:20px;overflow:hidden;margin-top:2px}
             .lojinha-prod{font-size:7px;background:#D1FAE5;color:#065f46;padding:1px 4px;border-radius:6px;margin-top:2px;display:inline-block}
+                        /* 📱 INVENTÁRIO LOJA MINIATURA MOBILE */
+            .inv-shop-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px!important}
+            .inv-shop-card{padding:10px 8px!important;border-radius:14px!important}
+            .inv-shop-card .inv-shop-emoji{font-size:28px!important}
+            .inv-shop-card .inv-shop-nome{font-size:11px!important;height:24px!important}
+            .inv-shop-card .inv-shop-preco{font-size:10px!important;padding:4px 8px!important}
+            .lojinha-grid{grid-template-columns:repeat(2,1fr)!important;gap:6px!important;max-height:260px!important}
+            .lojinha-item{padding:6px!important;border-radius:10px!important}
+            .lojinha-emoji{font-size:22px!important}
+            .lojinha-nome{font-size:8px!important;height:18px!important}
+
+            /* 🎮 ILHA REALISTA - ESTILO JOGUINHO COM AVATAR */
+            #ig-ilhaGameWorld{position:relative;width:100%;height:420px;background:radial-gradient(ellipse at center,#4ade80 0%,#22c55e 20%,#16a34a 50%,#15803d 80%,#0e7490 100%);border-radius:16px;overflow:hidden;border:3px solid #fde68a;box-shadow:inset 0 0 30px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2);margin-bottom:12px}
+            .ilha-tile{position:absolute;width:60px;height:60px;background-size:cover;display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;transition:0.2s;border:1px solid rgba(0,0,0,0.05)}
+            .ilha-tile.grama{background:linear-gradient(135deg,#4ade80,#22c55e)}
+            .ilha-tile.areia{background:linear-gradient(135deg,#fde68a,#fbbf24)}
+            .ilha-tile.agua{background:linear-gradient(135deg,#38bdf8,#0ea5e9);animation:aguaBrilho 3s ease infinite}
+            @keyframes aguaBrilho{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+            .ilha-tile:hover{filter:brightness(1.2);transform:scale(1.05);z-index:2}
+            #ig-ilhaAvatar{position:absolute;width:44px;height:44px;z-index:10;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.4));display:flex;align-items:center;justify-content:center;font-size:36px}
+            #ig-ilhaAvatar .avatar-sombra{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:8px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(2px)}
+            .ilha-objeto{position:absolute;font-size:28px;z-index:5;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.3));transition:0.2s;cursor:pointer}
+            .ilha-objeto:hover{transform:scale(1.15) translateY(-2px)}
+            
+            /* 🕹️ CONTROLES MOBILE - JOYSTICK */
+            #ig-joystick{position:absolute;bottom:12px;left:12px;width:120px;height:120px;z-index:20;display:none}
+            .joy-base{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.2);border-radius:50%;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(4px)}
+            .joy-btn{position:absolute;width:36px;height:36px;background:rgba(255,255,255,0.9);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;cursor:pointer;user-select:none;transition:0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+            .joy-btn:active{transform:scale(0.9);background:#fde68a}
+            .joy-up{top:4px;left:50%;transform:translateX(-50%)}
+            .joy-down{bottom:4px;left:50%;transform:translateX(-50%)}
+            .joy-left{left:4px;top:50%;transform:translateY(-50%)}
+            .joy-right{right:4px;top:50%;transform:translateY(-50%)}
+            .joy-center{top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:linear-gradient(135deg,#fde68a,#d4af37);font-size:12px}
+            
+            /* ⌨️ CONTROLES DESKTOP */
+            #ig-desktopControls{position:absolute;bottom:12px;right:12px;z-index:20;display:flex;gap:6px;flex-direction:column;align-items:center}
+            .wasd-row{display:flex;gap:6px}
+            .wasd-key{width:36px;height:36px;background:rgba(15,23,42,0.9);color:#fde68a;border:2px solid #fde68a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;cursor:pointer;transition:0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+            .wasd-key:hover{background:#fde68a;color:#000;transform:translateY(-1px)}
+            .wasd-key:active{transform:scale(0.92)}
+            .wasd-key.ativo{background:#fde68a;color:#000;box-shadow:0 0 12px rgba(253,230,138,0.6)}
+            #ig-actionBtn{margin-top:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:2px solid #fff;padding:8px 16px;border-radius:20px;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,0.3)}
+            
+            /* Inventário estilo loja */
+            .inv-shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+            .inv-shop-card{background:linear-gradient(180deg,#fff 0%,#F8FAFC 100%);border:2px solid #e2e8f0;border-radius:16px;padding:12px;text-align:center;cursor:pointer;transition:0.2s;position:relative;overflow:hidden}
+            .inv-shop-card:hover{border-color:#fde68a;transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
+            .inv-shop-card.comprado{opacity:0.6;background:#f1f5f9}
+            .inv-shop-card.equipado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 0 3px rgba(253,230,138,0.3)}
+            .inv-shop-emoji{font-size:36px;display:block;margin-bottom:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))}
+            .inv-shop-nome{font-weight:900;font-size:12px;color:#0f172a;line-height:1.2;height:28px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+            .inv-shop-desc{font-size:9px;color:#64748B;margin:4px 0;height:24px;overflow:hidden;line-height:1.1}
+            .inv-shop-bonus{font-size:8px;background:#EEF2FF;color:#4338ca;padding:2px 6px;border-radius:10px;font-weight:800;display:inline-block;margin:2px 0}
+            .inv-shop-preco{margin-top:6px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:6px 10px;border-radius:20px;font-weight:900;font-size:11px;display:inline-block;cursor:pointer;transition:0.2s}
+            .inv-shop-preco:hover{transform:scale(1.05)}
+            .inv-shop-preco.barato{background:linear-gradient(135deg,#22c55e,#16a34a)}
+            .inv-shop-preco.caro{background:#94a3b8;cursor:not-allowed}
+            .inv-shop-qtd{position:absolute;top:6px;right:6px;background:#0ea5e9;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+
             @media(max-width:768px){
                 #ig-ilhaBtn{top:4px;right:4px;transform:scale(0.85)}
                 .ilhinha-wrapper{width:100px;height:80px}
             }
+
+
+            /* 🎮 ILHA REALISTA - ESTILO JOGUINHO COM AVATAR */
+            #ig-ilhaGameWorld{position:relative;width:100%;height:420px;background:radial-gradient(ellipse at center,#4ade80 0%,#22c55e 20%,#16a34a 50%,#15803d 80%,#0e7490 100%);border-radius:16px;overflow:hidden;border:3px solid #fde68a;box-shadow:inset 0 0 30px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.2);margin-bottom:12px}
+            .ilha-tile{position:absolute;width:60px;height:60px;background-size:cover;display:flex;align-items:center;justify-content:center;font-size:32px;cursor:pointer;transition:0.2s;border:1px solid rgba(0,0,0,0.05)}
+            .ilha-tile.grama{background:linear-gradient(135deg,#4ade80,#22c55e)}
+            .ilha-tile.areia{background:linear-gradient(135deg,#fde68a,#fbbf24)}
+            .ilha-tile.agua{background:linear-gradient(135deg,#38bdf8,#0ea5e9);animation:aguaBrilho 3s ease infinite}
+            @keyframes aguaBrilho{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+            .ilha-tile:hover{filter:brightness(1.2);transform:scale(1.05);z-index:2}
+            #ig-ilhaAvatar{position:absolute;width:44px;height:44px;z-index:10;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.4));display:flex;align-items:center;justify-content:center;font-size:36px}
+            #ig-ilhaAvatar .avatar-sombra{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:28px;height:8px;background:rgba(0,0,0,0.3);border-radius:50%;filter:blur(2px)}
+            .ilha-objeto{position:absolute;font-size:28px;z-index:5;filter:drop-shadow(0 3px 4px rgba(0,0,0,0.3));transition:0.2s;cursor:pointer}
+            .ilha-objeto:hover{transform:scale(1.15) translateY(-2px)}
+            
+            /* 🕹️ CONTROLES MOBILE - JOYSTICK */
+            #ig-joystick{position:absolute;bottom:12px;left:12px;width:120px;height:120px;z-index:20;display:none}
+            .joy-base{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.2);border-radius:50%;border:2px solid rgba(255,255,255,0.3);backdrop-filter:blur(4px)}
+            .joy-btn{position:absolute;width:36px;height:36px;background:rgba(255,255,255,0.9);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;cursor:pointer;user-select:none;transition:0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
+            .joy-btn:active{transform:scale(0.9);background:#fde68a}
+            .joy-up{top:4px;left:50%;transform:translateX(-50%)}
+            .joy-down{bottom:4px;left:50%;transform:translateX(-50%)}
+            .joy-left{left:4px;top:50%;transform:translateY(-50%)}
+            .joy-right{right:4px;top:50%;transform:translateY(-50%)}
+            .joy-center{top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:linear-gradient(135deg,#fde68a,#d4af37);font-size:12px}
+            
+            /* ⌨️ CONTROLES DESKTOP */
+            #ig-desktopControls{position:absolute;bottom:12px;right:12px;z-index:20;display:flex;gap:6px;flex-direction:column;align-items:center}
+            .wasd-row{display:flex;gap:6px}
+            .wasd-key{width:36px;height:36px;background:rgba(15,23,42,0.9);color:#fde68a;border:2px solid #fde68a;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;cursor:pointer;transition:0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+            .wasd-key:hover{background:#fde68a;color:#000;transform:translateY(-1px)}
+            .wasd-key:active{transform:scale(0.92)}
+            .wasd-key.ativo{background:#fde68a;color:#000;box-shadow:0 0 12px rgba(253,230,138,0.6)}
+            #ig-actionBtn{margin-top:6px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:2px solid #fff;padding:8px 16px;border-radius:20px;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,0.3)}
+            
+            /* Inventário estilo loja */
+            .inv-shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+            .inv-shop-card{background:linear-gradient(180deg,#fff 0%,#F8FAFC 100%);border:2px solid #e2e8f0;border-radius:16px;padding:12px;text-align:center;cursor:pointer;transition:0.2s;position:relative;overflow:hidden}
+            .inv-shop-card:hover{border-color:#fde68a;transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
+            .inv-shop-card.comprado{opacity:0.6;background:#f1f5f9}
+            .inv-shop-card.equipado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 0 3px rgba(253,230,138,0.3)}
+            .inv-shop-emoji{font-size:36px;display:block;margin-bottom:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))}
+            .inv-shop-nome{font-weight:900;font-size:12px;color:#0f172a;line-height:1.2;height:28px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+            .inv-shop-desc{font-size:9px;color:#64748B;margin:4px 0;height:24px;overflow:hidden;line-height:1.1}
+            .inv-shop-bonus{font-size:8px;background:#EEF2FF;color:#4338ca;padding:2px 6px;border-radius:10px;font-weight:800;display:inline-block;margin:2px 0}
+            .inv-shop-preco{margin-top:6px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:6px 10px;border-radius:20px;font-weight:900;font-size:11px;display:inline-block;cursor:pointer;transition:0.2s}
+            .inv-shop-preco:hover{transform:scale(1.05)}
+            .inv-shop-preco.barato{background:linear-gradient(135deg,#22c55e,#16a34a)}
+            .inv-shop-preco.caro{background:#94a3b8;cursor:not-allowed}
+            .inv-shop-qtd{position:absolute;top:6px;right:6px;background:#0ea5e9;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
 
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
@@ -1497,39 +1793,66 @@ Workspace.Ingles = {
                 <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking</button>
             </div><div id="ig-tab-content" style="flex:1;padding:30px;background:#F8FAFC;overflow-y:auto"></div></div>
             
-            <div id="ig-ilhaModal">
+                        <div id="ig-ilhaModal">
                 <div style="background:linear-gradient(180deg,#082f49 0%,#0c4a6e 100%);min-height:100vh">
-                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;border-bottom:3px solid #fde68a">
+                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:30;border-bottom:3px solid #fde68a">
                         <div style="display:flex;align-items:center;gap:12px">
-                            <div style="font-size:32px">🏝️</div>
-                            <div><div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:20px">Ilha Mágica</div><div style="color:#94a3b8;font-size:11px">Seu mundo • Expanda • Invada • Roube</div></div>
+                            <div style="font-size:28px">🏝️</div>
+                            <div><div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:18px">Ilha Mágica</div><div style="color:#94a3b8;font-size:10px">Mundo realista • Avatar • Construa seu império</div></div>
                         </div>
-                        <div style="display:flex;gap:8px;align-items:center">
-                            <div style="background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:20px;color:#fff;font-weight:800;font-size:12px">💎 <span id="ig-ilhaCristaisHeader">0</span> cristais</div>
-                            <div style="background:rgba(255,255,255,0.1);padding:8px 12px;border-radius:20px;color:#fde68a;font-weight:800;font-size:12px">⭐ <span id="ig-ilhaXpHeader">0</span> XP</div>
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <div style="background:rgba(255,255,255,0.1);padding:6px 10px;border-radius:20px;color:#fff;font-weight:800;font-size:11px">💎 <span id="ig-ilhaCristaisHeader">0</span></div>
+                            <div style="background:rgba(255,255,255,0.1);padding:6px 10px;border-radius:20px;color:#fde68a;font-weight:800;font-size:11px">⭐ <span id="ig-ilhaXpHeader">0</span></div>
                             <button data-action="fechar-ilha-magica" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:18px">✕</button>
                         </div>
                     </div>
+                    
                     <div style="display:flex;flex-wrap:wrap;gap:0">
-                        <div style="flex:1;min-width:320px;padding:20px">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-                                <h3 style="color:#fde68a;font-family:Cinzel;margin:0;font-size:14px">🗺️ Sua Ilha Nv.<span id="ig-ilhaNivel">1</span> (<span id="ig-ilhaTamanho">4x4</span>)</h3>
+                        <!-- 🎮 MUNDO REALISTA COM AVATAR -->
+                        <div style="flex:1;min-width:360px;padding:16px">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+                                <h3 style="color:#fde68a;font-family:Cinzel;margin:0;font-size:13px">🗺️ Ilha Nv.<span id="ig-ilhaNivel">1</span> (<span id="ig-ilhaTamanho">4x4</span>) • Use WASD ou joystick</h3>
                                 <div style="display:flex;gap:6px">
-                                    <button data-action="coletar-ilha" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">⛏️ Coletar Tudo</button>
-                                    <button data-action="expandir-ilha" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:8px 14px;border-radius:20px;font-weight:800;font-size:12px;cursor:pointer">📏 Expandir (500💎)</button>
+                                    <button data-action="coletar-ilha" style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;padding:7px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">⛏️ Coletar</button>
+                                    <button data-action="expandir-ilha" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:7px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">📏 Expandir</button>
+                                    <button data-action="alternar-modo-ilha" id="ig-modoIlhaBtn" style="background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid #fde68a;padding:7px 12px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">🎮 Explorar</button>
                                 </div>
                             </div>
-                            <div id="ig-ilhaGrid" class="ilha-grid" style="grid-template-columns:repeat(4,1fr)"></div>
-                            <div id="ig-ilhaStats" style="margin-top:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#fff;font-size:12px"></div>
-                            <div style="margin-top:14px;background:rgba(253,230,138,0.1);border:1px solid #fde68a;border-radius:12px;padding:10px;font-size:11px;color:#fde68a">
-                                💡 <b>Como navegar:</b> Clique nas células ➕ vazias para construir. Clique nas cheias para remover. Use sua mochila mágica ao lado para escolher itens!
+                            
+                            <!-- MUNDO JOGO -->
+                            <div id="ig-ilhaGameWorld">
+                                <div id="ig-ilhaTiles"></div>
+                                <div id="ig-ilhaAvatar"><div class="avatar-sombra"></div><span id="ig-avatarEmoji">🧙‍♂️</span></div>
+                                
+                                <!-- 🕹️ Joystick Mobile -->
+                                <div id="ig-joystick">
+                                    <div class="joy-base"></div>
+                                    <div class="joy-btn joy-up" data-move="up">▲</div>
+                                    <div class="joy-btn joy-down" data-move="down">▼</div>
+                                    <div class="joy-btn joy-left" data-move="left">◀</div>
+                                    <div class="joy-btn joy-right" data-move="right">▶</div>
+                                    <div class="joy-btn joy-center" data-action="acao-ilha">⚡</div>
+                                </div>
+                                
+                                <!-- ⌨️ Controles Desktop -->
+                                <div id="ig-desktopControls">
+                                    <div class="wasd-row"><div class="wasd-key" data-move="up">W</div></div>
+                                    <div class="wasd-row"><div class="wasd-key" data-move="left">A</div><div class="wasd-key" data-move="down">S</div><div class="wasd-key" data-move="right">D</div></div>
+                                    <button id="ig-actionBtn" data-action="acao-ilha">⚡ Ação (E)</button>
+                                </div>
                             </div>
+                            
+                            <div id="ig-ilhaStats" style="margin-top:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:10px;color:#fff;font-size:11px"></div>
+                            
+                            <div id="ig-ilhaGrid" class="ilha-grid" style="grid-template-columns:repeat(4,1fr);margin-top:12px;display:none"></div>
                         </div>
-                        <div style="width:380px;min-width:320px;background:rgba(0,0,0,0.25);padding:20px;border-left:2px solid rgba(253,230,138,0.2)">
-                            <div style="display:flex;gap:6px;margin-bottom:14px">
+                        
+                        <!-- 🎒 LOJINHA MINIATURA -->
+                        <div style="width:380px;min-width:320px;background:rgba(0,0,0,0.3);padding:16px;border-left:2px solid rgba(253,230,138,0.25);max-height:100vh;overflow-y:auto">
+                            <div style="display:flex;gap:6px;margin-bottom:12px">
                                 <button data-action="ilha-tab" data-ilha-tab="construir" class="ilha-tab-btn active" style="flex:1;background:#fde68a;color:#000;border:none;padding:8px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">🔨 Construir</button>
-                                <button data-action="ilha-tab" data-ilha-tab="invadir" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">⚔️ Invadir</button>
-                                <button data-action="ilha-tab" data-ilha-tab="historico" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">📜 Histórico</button>
+                                <button data-action="ilha-tab" data-ilha-tab="invadir" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.12);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">⚔️ Invadir</button>
+                                <button data-action="ilha-tab" data-ilha-tab="historico" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.12);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">📜 Histórico</button>
                             </div>
                             <div id="ig-ilhaTabConstruir"></div>
                             <div id="ig-ilhaTabInvadir" style="display:none"></div>
@@ -1539,6 +1862,7 @@ Workspace.Ingles = {
                 </div>
             </div>
             <div id="ig-gameModal"
+
  style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
                 <div class="ws-card" style="width:90%;max-width:650px;background:#fffcf0;border:4px solid #d4af37;border-radius:8px;display:flex;flex-direction:column;max-height:90vh">
                     <div style="padding:15px 20px;border-bottom:2px dashed #d4af37;display:flex;justify-content:space-between;align-items:center"><div><span id="ig-modalIcon" style="font-size:28px"></span> <h2 id="ig-modalTitle" style="display:inline;margin:0;font-family:Cinzel"></h2></div><div style="display:flex;gap:15px"><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:8px 12px;border-radius:8px;cursor:pointer">🔄 Mudar</button><button data-action="fechar-jogo" style="background:transparent;border:none;font-size:35px;cursor:pointer;color:#e74c3c">×</button></div></div>
@@ -1589,7 +1913,9 @@ Workspace.Ingles = {
                 case 'fechar-ilha-magica': this.fecharIlhaMagica(); break;
                 case 'coletar-ilha': this.coletarIlha(); break;
                 case 'expandir-ilha': this.expandirIlha(); break;
-                case 'atualizar-ilhas': this.carregarOutrasIlhas().then(()=>this.renderIlha()); break;
+                case 'atualizar-ilhas': this.carregarOutrasIlhas().then(()=>{ this.renderIlha(); this.renderMundoRealista(); }); break;
+                case 'alternar-modo-ilha': this.alternarModoIlha(); break;
+                case 'acao-ilha': this.acaoIlha(); break;
                 case 'colocar-na-ilha': this.colocarNaIlha(b.dataset.decoId); break;
                 case 'ilha-celula-cheia': this.removerDaIlha(parseInt(b.dataset.idx)); break;
                 case 'ilha-celula-vazia': { const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id)); if(!estoque.length){ Workspace.mostrarAviso('Sem itens! Compre no inventário!','warning'); break; } const emUso = {}; (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; }); const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) ); if(disponivel) this.colocarNaIlha(disponivel.id); else Workspace.mostrarAviso('Todos itens já estão na ilha!','warning'); break; }
