@@ -255,7 +255,8 @@ Workspace.Ingles = {
             {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma a identidade.', icon:'🎭', color:'#CCFBF1', level:'B1-C1'},
             {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debate denso.', icon:'⚔', color:'#E0F2FE', level:'B2-C1'},
             {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie sons.', icon:'♊', color:'#FFEDD5', level:'B1-C1'},
-            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Invoque o nome da relíquia.', icon:'👁🗨', color:'#DCFCE7', level:'A1-B1'}
+            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Invoque o nome da relíquia.', icon:'👁🗨', color:'#DCFCE7', level:'A1-B1'},
+            {id:'portalMagico', title:'🌀 Portal Mágico', desc:'Viaje no tempo entre desafios! 5 vitórias = magia do mago + XP bônus!', icon:'🌀', color:'#E0E7FF', level:'A1-C1'}
         ]
     },
 
@@ -497,6 +498,182 @@ Workspace.Ingles = {
         this.state.bordaEquipada=bordaId;
         this.saveDados();
         Workspace.mostrarAviso(`Borda equipada: ${bordaId}`,'success');
+    },
+    // ================= PORTAL MÁGICO - JOGO ESPECIAL =================
+    efeitoPortalTempo(){
+        return new Promise(resolve=>{
+            const overlay=document.createElement('div');
+            overlay.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at center,#1e1b4b 0%,#0f0f23 40%,#000 100%);z-index:1000007;display:flex;align-items:center;justify-content:center;overflow:hidden';
+            overlay.innerHTML=`
+                <div style="position:absolute;inset:0">
+                    <div style="position:absolute;top:50%;left:50%;width:2px;height:2px;background:#fff;box-shadow:0 0 10px #fff, ${Array.from({length:40},()=>`${(Math.random()-0.5)*200}vw ${(Math.random()-0.5)*200}vh 0 1px #fff`).join(',')};animation:warpStars 0.8s linear"></div>
+                    <div style="position:absolute;top:50%;left:50%;width:200vmax;height:200vmax;background:conic-gradient(from 0deg,#fde68a,#8b5cf6,#4f46e5,#fde68a);border-radius:50%;transform:translate(-50%,-50%) scale(0);animation:portalExpand 0.8s ease-out forwards;opacity:0.8"></div>
+                </div>
+                <div style="position:relative;z-index:2;text-align:center;color:#fde68a;font-family:Cinzel;font-weight:900">
+                    <div style="font-size:60px;animation:spin 0.6s linear infinite">🌀</div>
+                    <div style="font-size:18px;margin-top:12px;letter-spacing:3px;animation:pulse 0.4s ease infinite">VIAJANDO NO TEMPO...</div>
+                </div>
+                <style>@keyframes portalExpand{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(180deg)}}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}@keyframes warpStars{0%{transform:translate(-50%,-50%) scale(0)}100%{transform:translate(-50%,-50%) scale(2)}}</style>
+            `;
+            document.body.appendChild(overlay);
+            try{
+                const ctx=new (window.AudioContext||window.webkitAudioContext)();
+                const osc=ctx.createOscillator(); const gain=ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(200, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime+0.7);
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.8);
+                osc.start(); osc.stop(ctx.currentTime+0.8);
+            }catch{}
+            setTimeout(()=>{ overlay.style.transition='opacity 0.3s'; overlay.style.opacity='0'; setTimeout(()=>{ overlay.remove(); resolve(); },300); },800);
+        });
+    },
+    efeitoExplosaoPortal(){
+        const expl=document.createElement('div');
+        expl.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;background:radial-gradient(circle,#fde68a,#f59e0b);border-radius:50%;z-index:1000007;pointer-events:none;animation:explodePortal 0.6s ease-out forwards';
+        const style=document.createElement('style');
+        style.textContent='@keyframes explodePortal{0%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(15);opacity:0.8;box-shadow:0 0 40px #fde68a, 0 0 80px #8b5cf6}100%{transform:translate(-50%,-50%) scale(30);opacity:0}}';
+        document.head.appendChild(style);
+        document.body.appendChild(expl);
+        try{
+            const ctx=new (window.AudioContext||window.webkitAudioContext)();
+            const osc=ctx.createOscillator(); const gain=ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime+0.4);
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.5);
+            osc.start(); osc.stop(ctx.currentTime+0.5);
+        }catch{}
+        setTimeout(()=>expl.remove(),600);
+    },
+    async renderGamePortalMagico(){
+        this.portalAtivo=true;
+        if(!this.portalRodada) { this.portalRodada=1; this.portalTarget=5; this.portalStreak=0; }
+        // Efeito inicial se primeira vez
+        if(this.portalStreak===0 && this.portalRodada===1){
+            await this.efeitoPortalTempo();
+        }
+        this.renderDesafioPortal();
+    },
+    async renderDesafioPortal(){
+        // Escolhe jogo aleatório diferente do anterior
+        const possiveis=this.state.portalJogosPossiveis||['wordSpark','quiz','wordPicker','picturePop'];
+        let proximo=possiveis[Math.floor(Math.random()*possiveis.length)];
+        if(proximo===this.state.portalJogoInterno && possiveis.length>1){
+            proximo=possiveis.filter(g=>g!==this.state.portalJogoInterno)[Math.floor(Math.random()*(possiveis.length-1))];
+        }
+        this.state.portalJogoInterno=proximo;
+        // Pequeno efeito entre desafios se não é primeiro
+        if(this.portalStreak>0){
+            await this.efeitoPortalTempo();
+        }
+        this.efeitoExplosaoPortal();
+        // Renderiza o jogo interno mas dentro do contexto portal
+        setTimeout(()=>{
+            const body=document.getElementById('ig-modalBody');
+            if(!body) return;
+            // Adiciona header do portal
+            const headerPortal=`
+                <div style="background:linear-gradient(135deg,#0f0f23 0%,#1e1b4b 50%,#312e81 100%);border:2px solid #fde68a;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 20px rgba(253,230,138,0.2)">
+                    <div style="display:flex;align-items:center;gap:10px"><div style="font-size:24px;animation:spin 2s linear infinite">🌀</div><div><div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:13px;letter-spacing:1px">PORTAL MÁGICO • RODADA ${this.portalRodada}</div><div style="color:#cbd5e1;font-size:11px">Meta: ${this.portalTarget} vitórias seguidas • Jogo: ${proximo}</div></div></div>
+                    <div style="text-align:right"><div style="background:rgba(253,230,138,0.15);border:1px solid #fde68a;color:#fde68a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">🔥 ${this.portalStreak}/${this.portalTarget}</div><div style="font-size:10px;color:#94a3b8;margin-top:4px">${this.portalStreak>=this.portalTarget*0.8?'Quase lá!':''}</div></div>
+                </div>`;
+            // Salva header pra injetar após render do jogo interno
+            this._portalHeader=headerPortal;
+            // Chama render do jogo interno
+            this.jogoAtual=proximo; // temporário pra usar lógica de obterItem
+            this.renderDesafioAtualInternoPortal();
+        },300);
+    },
+    renderDesafioAtualInternoPortal(){
+        this.currentAudioURL=null; this.desafioAtualObj=null; const isPortal=true;
+        const id=this.state.portalJogoInterno;
+        if(id==='wordSpark') this.renderGameWordSpark(true);
+        else if(id==='readAloud') this.renderGameReadAloud(true);
+        else if(id==='listenType') this.renderGameListenType(true);
+        else if(id==='quiz') this.renderGameQuiz(true);
+        else if(id==='wordPicker') this.renderGameWordPicker(true);
+        else if(id==='sentenceShuffle') this.renderGameSentenceShuffle(true);
+        else if(id==='answerQuest') this.renderGameAnswerQuest(true);
+        else if(id==='questionMaker') this.renderGameQuestionMaker(true);
+        else if(id==='contextRole') this.renderGameContextRole(true);
+        else if(id==='debateAI') this.renderGameDebateAI(true);
+        else if(id==='minimalPairs') this.renderGameMinimalPairs(true);
+        else if(id==='picturePop') this.renderGamePicturePop(true);
+        else this.renderGameWordSpark(true);
+    },
+    injetarHeaderPortalSeNecessario(){
+        try{
+            if(this.portalAtivo && this._portalHeader){
+                const body=document.getElementById('ig-modalBody');
+                if(body && !body.innerHTML.includes('PORTAL MÁGICO')){
+                    body.innerHTML = this._portalHeader + body.innerHTML;
+                }
+            }
+        }catch{}
+    },
+    async sucessoPortal(bonusBase){
+        const mult=this.state.season?.xpMultiplier||1;
+        const bonus = Math.floor((bonusBase*1.5)*mult); // 50% mais XP no portal
+        this.portalStreak++;
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
+        await this.saveDados();
+        this.tocarSom('xp');
+        // Toast
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;border:2px solid #fde68a';
+        toast.innerHTML=`🌀 +${bonus} XP • Streak ${this.portalStreak}/${this.portalTarget} 🔥`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),1200);
+
+        // Verifica se completou rodada
+        if(this.portalStreak >= this.portalTarget){
+            await this.magiaDoMagoBonus();
+            this.portalRodada++;
+            this.portalTarget = 5 * this.portalRodada; // 5,10,15,20...
+            this.portalStreak=0;
+        }
+        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },900);
+    },
+    async falhaPortal(){
+        const perda=Math.floor(20 * (this.state.season?.xpMultiplier||1));
+        this.state.xp=Math.max(0, this.state.xp - perda);
+        this.xpGanhosNaSessao=Math.max(0, this.xpGanhosNaSessao - perda);
+        this.portalStreak=0;
+        await this.saveDados();
+        this.tocarSom('quest'); // som de erro
+        const toast=document.createElement('div');
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
+        toast.innerHTML=`💥 -${perda} XP • Streak zerado!`;
+        document.body.appendChild(toast);
+        setTimeout(()=>toast.remove(),1500);
+        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },1100);
+    },
+    async magiaDoMagoBonus(){
+        const bonusBase = 300 + (this.portalRodada * 100); // 400,500,600...
+        const mult=this.state.season?.xpMultiplier||1;
+        const bonus=Math.floor(bonusBase*mult);
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
+        await this.saveDados();
+        this.tocarSom('level'); this.confete();
+        const modal=document.createElement('div');
+        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000008;animation:popIn 0.5s ease';
+        modal.innerHTML=`
+            <div style="text-align:center;max-width:400px;padding:20px">
+                <img src="/assets/mago_bau_ingles.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 30px #fde68a);animation:floatMago 1.5s ease infinite" onerror="this.style.display='none'"/>
+                <div style="font-size:60px;margin:-20px 0 10px 0">✨🪄✨</div>
+                <div style="font-family:Cinzel;font-size:26px;font-weight:900;color:#fde68a;text-shadow:0 0 20px rgba(253,230,138,0.8)">MAGIA DO MAGO!</div>
+                <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': `${this.portalTarget-5} vitórias! Você é imbatível!`}</div>
+                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5)">+${bonus} XP BÔNUS!</div>
+                <div style="color:#94a3b8;font-size:12px;margin-top:12px">Próxima meta: ${5*(this.portalRodada+1)} vitórias seguidas</div>
+            </div>
+            <style>@keyframes floatMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}</style>`;
+        document.body.appendChild(modal);
+        setTimeout(()=>{ modal.style.transition='opacity 0.4s'; modal.style.opacity='0'; setTimeout(()=>modal.remove(),400); },2800);
+        // espera modal fechar
+        await new Promise(r=>setTimeout(r,3000));
     },
     falar: (text, lang='en-US', pitch=1, rate=0.95, isMago=false)=> VoiceService.falar(text,{lang,pitch,rate,isMago}),
     calcularLevel(xpTotal){
@@ -1389,7 +1566,8 @@ Workspace.Ingles = {
         document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
     },
-    fecharJogo(){
+    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null;
+
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
         this.digitandoAtivo=false;
@@ -1400,6 +1578,8 @@ Workspace.Ingles = {
         if(this.recognition) try{ this.recognition.stop(); }catch{}
     },
     sucessoGenerico: async function(bonus){
+        if(this.portalAtivo){ return this.sucessoPortal(bonus); }
+
         const mult = this.state.season?.xpMultiplier || 1;
         bonus = Math.floor(bonus * mult);
         const oldLevelInfo = this.calcularLevel(this.state.xp);
@@ -1430,6 +1610,7 @@ Workspace.Ingles = {
         }, 700);
     },
     falhaGenerica: async function(){
+        if(this.portalAtivo){ return this.falhaPortal(); }
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
         const toast=document.createElement('div');
         toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
@@ -1450,7 +1631,7 @@ Workspace.Ingles = {
         this.sucessoGenerico(bonus);
     },
     renderDesafioAtual(){
-        this.currentAudioURL=null; this.desafioAtualObj=null;
+        this.currentAudioURL=null; this.desafioAtualObj=null; if(this.portalAtivo){ this.renderDesafioAtualInternoPortal(); return; }
         const id=this.jogoAtual;
         if(id==='wordSpark') this.renderGameWordSpark();
         else if(id==='readAloud') this.renderGameReadAloud();
@@ -1464,8 +1645,12 @@ Workspace.Ingles = {
         else if(id==='debateAI') this.renderGameDebateAI();
         else if(id==='minimalPairs') this.renderGameMinimalPairs();
         else if(id==='picturePop') this.renderGamePicturePop();
+        else if(id==='portalMagico') this.renderGamePortalMagico();
+        // injeta header portal se necessário
+        setTimeout(()=>this.injetarHeaderPortalSeNecessario(),100);
     },
     proximoDesafio(){
+        if(this.portalAtivo){ this.renderDesafioPortal(); return; }
         if(this.jogoAtual==='debateAI'){ this.renderGameDebateAI(); return; }
         if(this.tempoRestante>0){
             this.renderDesafioAtual();
@@ -1484,7 +1669,7 @@ Workspace.Ingles = {
         this.renderDesafioAtual();
     },
 
-    renderGameWordSpark(){
+    renderGameWordSpark(isPortal=false){
         this.state._debateChat=[]; this.state._debateTopicId=null; this.state._minimalTarget=null;
         const colecaoWords = (this.state.words && this.state.words.length) ? this.state.words : this.defaults.words;
         this.desafioAtualObj=this.obterItemInteligente(colecaoWords,'word'); 
@@ -1493,48 +1678,48 @@ Workspace.Ingles = {
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8;background:#F1F5F9;padding:6px 10px;border-radius:20px;display:inline-block;margin-bottom:10px">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo'} • Feitiço puro isolado</div><div class="ig-big-phrase" style="font-size:38px;background:linear-gradient(180deg,#EEF2FF 0%,#E0E7FF 100%);border-color:#818cf8;color:#4338ca">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:800;color:#64748B;margin:8px 0">Significado: ${Workspace.escapeHTML(w.translation||'')}</p><div class="ig-big-phrase" style="font-size:18px">Crie frase com <b style="color:#4F46E5">${Workspace.escapeHTML(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Although it was raining..." style="min-height:100px;margin-top:12px"></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:12px;margin-top:14px;cursor:pointer;font-weight:800">Lançar Feitiço ✨ +50 XP</button></div>`;
     
     },
-    renderGameReadAloud(){
+    renderGameReadAloud(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const p=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase">${Workspace.escapeHTML(p.phrase)}</div><div style="text-align:center;margin:15px 0"><button data-action="falar-frase" class="ws-btn" style="background:#0F172A;color:#fff;border-radius:30px;padding:10px 20px;border:none;cursor:pointer">🔊 Ouvir Oráculo</button></div><div style="text-align:center;background:#F8FAFC;padding:20px;border-radius:12px;border:1px solid #E2E8F0"><p style="font-weight:bold">Sua vez:</p><button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;width:100%;border-radius:30px;padding:12px;border:none;font-weight:bold;cursor:pointer">🎤 Iniciar Sopro</button><div id="ig-speechResult" style="margin-top:15px"></div></div>`;
     },
-    renderGameListenType(){
+    renderGameListenType(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:60px">🦉</div><h3>Escute e transcreva</h3><button data-action="falar-frase" class="ws-btn" style="background:#4F46E5;color:#fff;border-radius:30px;padding:10px 30px;border:none;cursor:pointer">🔊 Tocar Ecos</button><input id="ig-listenInput" class="ig-input" placeholder="Transcreve..." style="margin-top:20px;text-align:center;font-weight:bold"><button data-action="verificar-listen" class="ws-btn" style="width:100%;background:#10B981;color:#fff;margin-top:15px;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold">Desvendar</button></div>`;
     },
-    renderGameQuiz(){
+    renderGameQuiz(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente(this.state.quizzes,'quiz'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel">${Workspace.escapeHTML(q.question)}</div><div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:15px;border-radius:8px;cursor:pointer;text-align:left">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
     },
-    renderGameWordPicker(){
+    renderGameWordPicker(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente((this.state.wordPickers&&this.state.wordPickers.length?this.state.wordPickers:this.defaults.wordPickers),'picker'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const s=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="color:#4F46E5">${Workspace.escapeHTML(s.text)}</div><div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:12px 25px;border-radius:30px;cursor:pointer;font-weight:bold">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
     },
-    renderGameSentenceShuffle(){
+    renderGameSentenceShuffle(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const phrase=this.desafioAtualObj; const task=['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><span style="background:#0F172A;color:#fff;padding:8px 15px;border-radius:20px;font-size:12px">${task}</span></div><div class="ig-big-phrase" style="margin-top:15px">${Workspace.escapeHTML(phrase.phrase)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua frase aqui..."></textarea><button data-action="verificar-envio" data-game="sentenceShuffle" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Submeter 🔀</button>`;
     },
-    renderGameAnswerQuest(){
+    renderGameAnswerQuest(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente((this.state.questions&&this.state.questions.length?this.state.questions:this.defaults.questions),'question'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="background:#FEF3C7;border-color:#d4af37;color:#92400E;font-family:Cinzel">❓ ${Workspace.escapeHTML(q.text)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..."></textarea><button data-action="verificar-envio" data-game="answerQuest" data-bonus="50" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(180deg,#d4af37,#996515);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Enviar para o Mestre 🚀</button>`;
     },
-    renderGameQuestionMaker(){
+    renderGameQuestionMaker(isPortal=false){
         const poolAnswers=this.state.pool.filter(p=>p.type==='answerQuest').map(p=>({id:p.id, text:p.text}));
         this.desafioAtualObj=poolAnswers.length?this.obterItemInteligente(poolAnswers,'qmaker'):null;
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const a=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<p style="color:#64748B;font-size:13px;text-align:center;font-weight:bold">Um aventureiro respondeu:</p><div class="ig-big-phrase" style="background:#EEF2FF;color:#4F46E5;font-style:italic">💬 "${Workspace.escapeHTML(a.text)}"</div><p style="margin-top:16px;font-weight:600;text-align:center">Que pergunta gerou esta resposta?</p><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you...?"></textarea><button data-action="verificar-envio" data-game="questionMaker" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Verificar no Espelho 🔮</button>`;
     },
-    renderGameContextRole(){
+    renderGameContextRole(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente((this.state.roleplays&&this.state.roleplays.length?this.state.roleplays:this.defaults.roleplays),'roleplay'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const c=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel;text-align:left">${Workspace.escapeHTML(c.title)}<br><br><span style="font-size:14px;color:#64748B">${Workspace.escapeHTML(c.prompt)}</span></div><p style="font-size:12px;background:#FEF3C7;color:#92400E;padding:12px;border-radius:8px;font-weight:bold">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p><textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?"></textarea><button data-action="verificar-envio" data-game="contextRole" data-bonus="60" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Assumir Papel 🎭</button>`;
     },
-    renderGameDebateAI(){
+    renderGameDebateAI(isPortal=false){
         if(!this.state._debateChat) this.state._debateChat=[];
         if(!this.desafioAtualObj || this.state._debateTopicId !== (this.desafioAtualObj?.id)){
             this.desafioAtualObj=this.obterItemInteligente((this.state.debates&&this.state.debates.length?this.state.debates:this.defaults.debates),'debate');
@@ -1630,13 +1815,13 @@ Workspace.Ingles = {
         };
         return {text: fallbacks[intelEscolhida] || fallbacks['Mago IA'], inteligencia: intelEscolhida};
     },
-    renderGameMinimalPairs(){
+    renderGameMinimalPairs(isPortal=false){
 
         this.desafioAtualObj=this.obterItemInteligente((this.state.minimalPairs&&this.state.minimalPairs.length?this.state.minimalPairs:this.defaults.minimalPairs),'minimal'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const pair=this.desafioAtualObj; const target=Math.random()>0.5?pair.a:pair.b; this.state._minimalTarget=target;
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><h3 style="font-family:Cinzel">👄 Sussurros Gêmeos</h3><div style="background:#0F172A;padding:20px;border-radius:16px;margin-top:20px"><button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 30px;border-radius:30px;border:2px solid #fff;cursor:pointer">🎧 Ouvir Sussurro</button><div style="display:flex;gap:10px;justify-content:center;margin-top:20px"><button data-action="verificar-minimal" data-choice="${pair.a}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.a}</button><button data-action="verificar-minimal" data-choice="${pair.b}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.b}</button></div></div></div>`;
     },
-    renderGamePicturePop(){
+    renderGamePicturePop(isPortal=false){
         this.desafioAtualObj=this.obterItemInteligente(this.state.pictures,'picture'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const pic=this.desafioAtualObj;
         document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="width:150px;height:150px;border-radius:24px;background:#F8FAFC;border:4px solid #d4af37;display:flex;align-items:center;justify-content:center;margin:20px auto;font-size:80px">${pic.emoji}</div><div style="background:#0F172A;padding:20px;border-radius:16px;border:2px solid #333"><p style="color:#fff;font-weight:bold">Fale o nome:</p><button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;width:100%;border-radius:30px;padding:12px;border:none;font-weight:bold;cursor:pointer">🎤 Falar Nome</button><div id="ig-speechResult" style="margin-top:15px"></div><input id="ig-input" class="ig-input" placeholder="Ou digita..." style="margin-top:15px;text-align:center"><button data-action="verificar-picture-text" class="ws-btn" style="width:100%;background:#fff;color:#0F172A;margin-top:10px;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold">Verificar Visão</button></div></div>`;
