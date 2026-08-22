@@ -565,9 +565,12 @@ Workspace.Ingles = {
             proximo=possiveis.filter(g=>g!==this.state.portalJogoInterno)[Math.floor(Math.random()*(possiveis.length-1))];
         }
         this.state.portalJogoInterno=proximo;
-        // Pequeno efeito entre desafios se não é primeiro
+        // Efeito portal sempre, rápido, sem parar
         if(this.portalStreak>0){
             await this.efeitoPortalTempo();
+        } else {
+            // primeira vez efeito mais rápido
+            await new Promise(r=>setTimeout(r,100));
         }
         this.efeitoExplosaoPortal();
         // Renderiza o jogo interno mas dentro do contexto portal
@@ -637,7 +640,7 @@ Workspace.Ingles = {
             this.portalTarget = 5 * this.portalRodada; // 5,10,15,20...
             this.portalStreak=0;
         }
-        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },900);
+        setTimeout(()=>{ if(this.portalAtivo) this.renderDesafioPortal(); },600);
     },
     async falhaPortal(){
         const perda=Math.floor(20 * (this.state.season?.xpMultiplier||1));
@@ -653,7 +656,7 @@ Workspace.Ingles = {
         toast.innerHTML=`💥 -${perda} XP • Streak zerado!`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1500);
-        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },1100);
+        setTimeout(()=>{ if(this.portalAtivo) this.renderDesafioPortal(); },700);
     },
     async magiaDoMagoBonus(){
         const bonusBase = 300 + (this.portalRodada * 100);
@@ -1649,10 +1652,10 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1500);
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none' && this.tempoRestante>0){
+            if(m && m.style.display!=='none'){
                 this.renderDesafioAtual();
             }
-        }, 700);
+        }, 400);
     },
     falhaGenerica: async function(){
         if(this.portalAtivo){ return this.falhaPortal(); }
@@ -1664,10 +1667,10 @@ Workspace.Ingles = {
         setTimeout(()=>toast.remove(),1800);
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none' && this.tempoRestante>0){
+            if(m && m.style.display!=='none'){
                 this.renderDesafioAtual();
             }
-        }, 1200);
+        }, 600);
     },
     envioAoProfessor: async function(gameId, texto, bonus=20){
         if(!texto||texto.trim().length<2) return Workspace.mostrarAviso('Responda válido!','warning');
@@ -1704,13 +1707,9 @@ Workspace.Ingles = {
         }
     },
     renderTelaFimDeJornada(){
-        const colecao = this.getColecaoDoJogoAtual();
-        if(colecao && colecao.length){
-            const ids = colecao.map(i=>i.id);
-            this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!ids.includes(id));
-            const k=`ws_ingles_user_${Workspace.usuario.id}`;
-            try{ localStorage.setItem(k+'_concluidos', JSON.stringify(this.state.itensConcluidos)); }catch{}
-        }
+        // INFINITO: nunca para, só reseta e continua
+        this.state.itensConcluidos = [];
+        try{ localStorage.setItem(`ws_ingles_user_${Workspace.usuario.id}_concluidos`, JSON.stringify([])); }catch{}
         this.renderDesafioAtual();
     },
 
