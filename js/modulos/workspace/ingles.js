@@ -351,7 +351,10 @@ Workspace.Ingles = {
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos,
-                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs
+                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs,
+                quests:this.state.quests, achievements:this.state.achievements, season:this.state.season,
+                lootTables:this.state.lootTables, levelCurve:this.state.levelCurve, titulos:this.state.titulos, badges:this.state.badges,
+                portalConfig:this.state.portalConfig
             });
         }catch{}
     },
@@ -378,6 +381,9 @@ Workspace.Ingles = {
     marcarComoConcluido(itemId){
         if(!itemId) return;
         if(!this.state.itensConcluidos.includes(itemId)) this.state.itensConcluidos.push(itemId);
+        const jogoId = this.portalAtivo ? (this.state.portalJogoInterno || this.jogoAtual) : this.jogoAtual;
+        if(!this.state.sessaoUsadosPorJogo[jogoId]) this.state.sessaoUsadosPorJogo[jogoId]=[];
+        if(!this.state.sessaoUsadosPorJogo[jogoId].includes(itemId)) this.state.sessaoUsadosPorJogo[jogoId].push(itemId);
     },
 
     // SRS verdadeiro
@@ -1147,6 +1153,7 @@ Workspace.Ingles = {
             if(res?.success) this.state.season = res.season;
         }catch{}
 
+        this.state.sessaoUsadosPorJogo={}; // reseta inteligência por sessão
         if(ParticleEngine._exploding || this.tempoGlobalDefinido) return;
         try{ speechSynthesis.cancel(); }catch{}
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
