@@ -902,24 +902,24 @@
     </section>
 
 
- <!-- 🧰 BAÚ DAS MEMÓRIAS -->
-<section id="ws-bau-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
-    <div class="ws-card">
-        <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🧰 Baú das Memórias</span></h3>
-        
-        <!-- Abas de Navegação -->
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 15px; margin-bottom: 20px;">
+   <!-- 🧰 BAÚ DAS MEMÓRIAS -->
+    <section id="ws-bau-container" style="display: none; max-width: 1000px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+        <div class="ws-card">
+            <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px; display: flex; justify-content: space-between; align-items: center;"><span>🧰 Baú das Memórias</span></h3>
             
-            <button id="tab-bau-meu" class="ws-btn" style="background: #2c3e50; color: white; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: none; cursor: pointer;" onclick="Workspace.Bau.mudarAba('meu')">Meu Baú</button>
-            
-            <button id="tab-bau-inst" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: 1px solid transparent; cursor: pointer;" onclick="Workspace.Bau.mudarAba('inst')">Baú dos Livros</button>
-            
-            <!-- 🚀 CORRIGIDO: chama mudarAba('ingles') pro deslize preto + abrirBau() pra navegar -->
-            <button id="tab-bau-ingles" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 6px;" onclick="Workspace.Bau.mudarAba('ingles'); Workspace.Ingles.abrirBau()">
-                <span style="font-size: 14px;">🏴☠</span> Baú do Inglês
-            </button>
+   <!-- Abas de Navegação -->
+<div style="display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 15px; margin-bottom: 20px;">
+    
+    <button id="tab-bau-meu" class="ws-btn" style="background: #2c3e50; color: white; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: none; cursor: pointer;" onclick="Workspace.Bau.mudarAba('meu')">Meu Baú</button>
+    
+    <button id="tab-bau-inst" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: 1px solid transparent; cursor: pointer;" onclick="Workspace.Bau.mudarAba('inst')">Baú dos Livros</button>
+    
+    <!-- 🚀 Botão corrigido: Estrutura idêntica ao Baú dos Livros e ação apontada para a função correta -->
+    <button id="tab-bau-ingles" class="ws-btn" style="background: transparent; color: #7f8c8d; padding: 8px 15px; font-size: 13px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; display: flex; align-items: center; gap: 6px;" onclick="Workspace.Ingles.abrirBau()">
+        <span style="font-size: 14px;">🏴‍☠️</span> Baú do Inglês
+    </button>
 
-        </div>
+</div>
 
             <!-- CONTEÚDO: MEU BAÚ -->
             <div id="ws-bau-meu-conteudo" style="display: block; animation: fadeIn 0.3s ease;">
