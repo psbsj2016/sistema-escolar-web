@@ -1334,7 +1334,7 @@ Workspace.Ingles = {
             const restante = bau.terminaEm - agora;
             if(restante<=0){
                 bau.aberto = true;
-                this.abrirBau(bau);
+                this.abrirBauPremio(bau);
             }
         });
         // atualiza UI se estiver na aba construir
@@ -1351,7 +1351,8 @@ Workspace.Ingles = {
         this.saveDados();
         Workspace.mostrarAviso(`📦 ${tipo.nome} criado! Abre em ${Math.floor(tipo.tempo/60)}min`,'success');
     },
-    abrirBau(bau){
+    abrirBau(){ Workspace.navegarPara('ingles'); },
+    abrirBauPremio(bau){
         if(!bau || !bau.tipoId){ console.warn('bau sem tipoId', bau); return; }
         const tipo = (this.defaults.bausTipos||[]).find(b=>b.id===bau.tipoId);
         if(!tipo) return;
