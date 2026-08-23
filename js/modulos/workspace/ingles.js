@@ -1329,7 +1329,8 @@ Workspace.Ingles = {
     atualizarBaus(){
         const agora = Date.now();
         (this.state.bausAbertura||[]).forEach((bau, idx)=>{
-            if(bau.aberto) return;
+            if(!bau || bau.aberto) return;
+            if(!bau.tipoId) return;
             const restante = bau.terminaEm - agora;
             if(restante<=0){
                 bau.aberto = true;
@@ -1351,6 +1352,7 @@ Workspace.Ingles = {
         Workspace.mostrarAviso(`📦 ${tipo.nome} criado! Abre em ${Math.floor(tipo.tempo/60)}min`,'success');
     },
     abrirBau(bau){
+        if(!bau || !bau.tipoId){ console.warn('bau sem tipoId', bau); return; }
         const tipo = (this.defaults.bausTipos||[]).find(b=>b.id===bau.tipoId);
         if(!tipo) return;
         const recomp = tipo.recompensa;
@@ -1795,7 +1797,7 @@ Workspace.Ingles = {
                 if(body){
                     body.innerHTML = `
                         <div style="text-align:center;margin-bottom:16px">
-                            <img src="/assets/ilha/casa_aprender.png" style="width:120px" onerror="this.style.display='none'">
+                            <img src="/assets/mago_bau_ingles.png" style="width:120px" onerror="this.style.display='none'">
                             <h2 style="font-family:Cinzel;color:#0F172A;margin:8px 0">📚 Casa do Aprender</h2>
                             <p style="color:#64748B;font-size:12px">Escolha um jogo para ganhar Coins e XP</p>
                         </div>
@@ -1897,7 +1899,7 @@ Workspace.Ingles = {
         if(body){
             body.innerHTML = `
                 <div style="text-align:center;margin-bottom:16px">
-                    <img src="/assets/ilha/bau_tesouros.png" style="width:100px" onerror="this.style.display='none'">
+                    <img src="/assets/mago_bau_ingles.png" style="width:100px" onerror="this.style.display='none'">
                     <h2 style="font-family:Cinzel">💰 Tesouros</h2>
                     <p style="color:#64748B;font-size:12px">Acompanhe suas moedas - Coins podem ser roubadas, Diamantes não!</p>
                 </div>
@@ -1950,7 +1952,7 @@ Workspace.Ingles = {
         if(body){
             body.innerHTML = `
                 <div style="text-align:center;margin-bottom:16px">
-                    <img src="/assets/ilha/observatorio_missoes.png" style="width:100px" onerror="this.style.display='none'">
+                    <img src="/assets/mago_bau_ingles.png" style="width:100px" onerror="this.style.display='none'">
                     <h2 style="font-family:Cinzel">📜 Missões</h2>
                     <p style="color:#64748B;font-size:12px">Complete tarefas para ganhar Coins - Professor posta missões aqui!</p>
                 </div>
@@ -2711,10 +2713,10 @@ Workspace.Ingles = {
                     </div>
                     <div style="pointer-events:auto;display:flex;gap:8px;align-items:center;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #334155;border-radius:20px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(139,92,246,0.2);padding:4px 8px;border-radius:12px;border:1px solid #8b5cf6">
-                            <img src="/assets/ilha/diamante.png" style="width:20px;height:20px" onerror="this.outerHTML='💎'"><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubDiamante">250</span>
+                            <img src="/assets/mago_bau_ingles.png" style="width:20px;height:20px" onerror="this.outerHTML='💎'"><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubDiamante">250</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(251,191,36,0.2);padding:4px 8px;border-radius:12px;border:1px solid #fbbf24">
-                            <img src="/assets/ilha/coin_ouro.png" style="width:20px;height:20px" onerror="this.outerHTML='🪙'"><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubCoins">1.480</span>
+                            <img src="/assets/mago_bau_ingles.png" style="width:20px;height:20px" onerror="this.outerHTML='🪙'"><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubCoins">1.480</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.2);padding:4px 8px;border-radius:12px;border:1px solid #22c55e">
                             <span style="font-size:16px">⚡</span><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubEnergiaTop">5</span>
@@ -2740,17 +2742,17 @@ Workspace.Ingles = {
                 </div>
 
                 <!-- MAIN ISLAND MAP - Fundo com imagem real -->
-                <div style="position:relative;width:100%;height:100vh;min-height:700px;background-image:url('/assets/ilha/hub_fundo_oceano.jpg');background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center">
-                    <img src="/assets/ilha/hub_fundo_oceano.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" onerror="this.style.display='none'">
+                <div style="position:relative;width:100%;height:100vh;min-height:700px;background-image:url('/assets/mago_bau_ingles.png');background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center">
+                    <img src="/assets/mago_bau_ingles.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0" onerror="this.style.display='none'">
                     
                     <!-- Logo Central -->
                     <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);z-index:10;text-align:center;pointer-events:none">
-                        <img src="/assets/ilha/logo_ilha_magica.png" style="width:260px;max-width:70vw;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.4))" onerror="this.outerHTML='<div style=\'font-family:Cinzel;font-weight:900;font-size:32px;color:#fff;text-shadow:0 4px 0 #000, 0 0 20px rgba(0,0,0,0.8);line-height:0.9\'><div style=\'color:#93c5fd\'>ILHA</div><div style=\'color:#fde68a\'>MÁGICA</div><div style=\'background:#7c3aed;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;margin-top:4px;display:inline-block\'>APRENDA • JOGUE • EVOLUA</div></div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:260px;max-width:70vw;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.4))" onerror="this.outerHTML='<div style=\'font-family:Cinzel;font-weight:900;font-size:32px;color:#fff;text-shadow:0 4px 0 #000, 0 0 20px rgba(0,0,0,0.8);line-height:0.9\'><div style=\'color:#93c5fd\'>ILHA</div><div style=\'color:#fde68a\'>MÁGICA</div><div style=\'background:#7c3aed;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;margin-top:4px;display:inline-block\'>APRENDA • JOGUE • EVOLUA</div></div>'">
                     </div>
 
                     <!-- ILHA ESQUERDA TOPO - APRENDER -->
                     <div data-action="abrir-aprender" style="position:absolute;left:18%;top:28%;z-index:12;cursor:pointer;transition:0.3s" class="ilha-predio" data-predio="aprender">
-                        <img src="/assets/ilha/casa_aprender.png" style="width:160px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:80px\'>🏫</div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:160px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:80px\'>🏫</div>'">
                         <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #38bdf8;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);min-width:140px">
                             <div style="background:#0ea5e9;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">📚</div>
                             <div><div style="color:#fff;font-weight:900;font-size:11px">APRENDER</div><div style="color:#94a3b8;font-size:9px">Lições e desafios</div></div>
@@ -2759,7 +2761,7 @@ Workspace.Ingles = {
 
                     <!-- ILHA DIREITA TOPO - MISSOES / OBSERVATORIO -->
                     <div data-action="abrir-missoes" style="position:absolute;right:18%;top:26%;z-index:12;cursor:pointer" class="ilha-predio" data-predio="missoes">
-                        <img src="/assets/ilha/observatorio_missoes.png" style="width:140px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:80px\'>🔭</div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:140px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:80px\'>🔭</div>'">
                         <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fbbf24;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);min-width:130px">
                             <div style="background:#f59e0b;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">📜</div>
                             <div><div style="color:#fff;font-weight:900;font-size:11px">MISSÕES</div><div style="color:#94a3b8;font-size:9px">Tarefas diárias</div></div>
@@ -2768,12 +2770,12 @@ Workspace.Ingles = {
 
                     <!-- CENTRO - CASTELO -->
                     <div data-action="abrir-conquistas" style="position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:11;cursor:pointer" class="ilha-predio">
-                        <img src="/assets/ilha/castelo_magico.png" style="width:220px;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.4))" onerror="this.outerHTML='<div style=\'font-size:100px\'>🏰</div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:220px;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.4))" onerror="this.outerHTML='<div style=\'font-size:100px\'>🏰</div>'">
                     </div>
 
                     <!-- ESQUERDA BAIXO - TESOUROS -->
                     <div data-action="abrir-tesouros" style="position:absolute;left:16%;top:58%;z-index:12;cursor:pointer" class="ilha-predio">
-                        <img src="/assets/ilha/bau_tesouros.png" style="width:130px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.src='/assets/mago_bau_ingles.png';this.style.width='100px'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:130px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.src='/assets/mago_bau_ingles.png';this.style.width='100px'">
                         <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #a855f7;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
                             <div style="background:#7c3aed;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🔒</div>
                             <div><div style="color:#fff;font-weight:900;font-size:11px">TESOUROS</div><div style="color:#94a3b8;font-size:9px">Colete e descubra</div></div>
@@ -2782,7 +2784,7 @@ Workspace.Ingles = {
 
                     <!-- CENTRO BAIXO - ARENA JOGAR -->
                     <div data-action="abrir-jogar" style="position:absolute;left:50%;top:62%;transform:translateX(-50%);z-index:12;cursor:pointer" class="ilha-predio">
-                        <img src="/assets/ilha/arena_jogar.png" style="width:170px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:70px\'>🏟️</div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:170px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:70px\'>🏟️</div>'">
                         <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22c55e;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);min-width:120px;justify-content:center">
                             <div style="background:#16a34a;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🎮</div>
                             <div><div style="color:#fff;font-weight:900;font-size:11px">JOGAR</div><div style="color:#94a3b8;font-size:9px">Mini games</div></div>
@@ -2791,7 +2793,7 @@ Workspace.Ingles = {
 
                     <!-- DIREITA BAIXO - LOJA -->
                     <div data-action="abrir-loja" style="position:absolute;right:16%;top:60%;z-index:12;cursor:pointer" class="ilha-predio">
-                        <img src="/assets/ilha/loja_ilha.png" style="width:150px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:70px\'>🏪</div>'">
+                        <img src="/assets/mago_bau_ingles.png" style="width:150px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))" onerror="this.outerHTML='<div style=\'font-size:70px\'>🏪</div>'">
                         <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #f97316;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
                             <div style="background:#ea580c;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🛒</div>
                             <div><div style="color:#fff;font-weight:900;font-size:11px">LOJA</div><div style="color:#94a3b8;font-size:9px">Itens e melhorias</div></div>
