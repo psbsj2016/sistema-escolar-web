@@ -271,6 +271,49 @@ Workspace.Ingles = {
             {id:'estatua_dragao', nome:'Estátua do Dragão', emoji:'🐲', preco:1000, prodCristal:30, prodXp:30, desc:'30 cristais + 30 XP/h + poder', tipo:'lendario'},
             {id:'portal_ilha', nome:'Portal da Ilha', emoji:'🌀', preco:800, prodCristal:0, prodXp:0, desc:'Permite invadir sem gastar varinha 1x', tipo:'portal'}
         ],
+
+        pets:[
+            {id:'dragao_bebe', nome:'Dragão Bebê', emoji:'🐲', preco:800, bonus:'+15% cristais', raridade:'epico', ovoTempo:3600, desc:'Choca em 1h, produz cristais'},
+            {id:'coruja_sabia', nome:'Coruja Sábia', emoji:'🦉', preco:500, bonus:'+20% XP', raridade:'raro', ovoTempo:1800, desc:'+20% XP nos jogos'},
+            {id:'gato_magico', nome:'Gato Mágico', emoji:'🐱', preco:400, bonus:'+10% roubo', raridade:'raro', ovoTempo:1800, desc:'Rouba 10% a mais'},
+            {id:'lobo_espírito', nome:'Lobo Espírito', emoji:'🐺', preco:1200, bonus:'Defesa +25%', raridade:'lendario', ovoTempo:7200, desc:'Protege ilha'},
+            {id:'fada', nome:'Fada Brilhante', emoji:'🧚', preco:1500, bonus:'Produção 2x', raridade:'lendario', ovoTempo:7200, desc:'Dobra produção'}
+        ],
+        bausTipos:[
+            {id:'bau_comum', nome:'Baú Comum', emoji:'📦', tempo:300, preco:0, recompensa:{cristais:50, xp:100, chanceRaro:10}, desc:'Abre em 5 min'},
+            {id:'bau_epico', nome:'Baú Épico', emoji:'🎁', tempo:7200, preco:300, recompensa:{cristais:300, xp:500, chanceRaro:50}, desc:'Abre em 2h'},
+            {id:'bau_lendario', nome:'Baú Lendário', emoji:'👑', tempo:28800, preco:800, recompensa:{cristais:1000, xp:1500, chanceRaro:90}, desc:'Abre em 8h, item garantido'}
+        ],
+        classes:[
+            {id:'mago', nome:'Mago', emoji:'🧙‍♂️', desc:'+30% XP nos jogos', bonus:{xp:30, cristais:0, roubo:0, defesa:0, velocidade:0}, cor:'#8b5cf6'},
+            {id:'pirata', nome:'Pirata', emoji:'🏴‍☠️', desc:'+30% roubo, invadir sem varinha 1x/dia', bonus:{xp:0, cristais:0, roubo:30, defesa:0, velocidade:10}, cor:'#ef4444'},
+            {id:'construtor', nome:'Construtor', emoji:'🔨', desc:'-20% custo construção, +20% cristais', bonus:{xp:0, cristais:20, roubo:0, defesa:10, velocidade:0}, cor:'#22c55e'}
+        ],
+        skillsTree:[
+            {id:'inteligencia', nome:'Inteligência', emoji:'🧠', desc:'+5% XP por nível', max:10, bonusPorNivel:5, tipo:'xp'},
+            {id:'forca', nome:'Força', emoji:'💪', desc:'+5% defesa por nível', max:10, bonusPorNivel:5, tipo:'defesa'},
+            {id:'agilidade', nome:'Agilidade', emoji:'⚡', desc:'+5% velocidade movimento', max:10, bonusPorNivel:5, tipo:'velocidade'},
+            {id:'sorte', nome:'Sorte', emoji:'🍀', desc:'+3% chance item raro', max:10, bonusPorNivel:3, tipo:'sorte'},
+            {id:'carisma', nome:'Carisma', emoji:'🤝', desc:'+5% cristais produção', max:10, bonusPorNivel:5, tipo:'cristais'}
+        ],
+        receitasCraft:[
+            {id:'pocao_cristal', nome:'Poção de Cristal', emoji:'🧪', ingredientes:{cristal_azul:3, arvore_magica:1}, resultado:{id:'pocao_cristal', qtd:1, valor:500}, desc:'3🔷+1🌳=500💎'},
+            {id:'torre_nv2', nome:'Torre Nv2', emoji:'🏰', ingredientes:{torre_mago:1, cristal_azul:5, bau_ilha:1}, resultado:{id:'torre_mago_nv2', qtd:1, valor:1200}, desc:'Torre +5 cristais → Torre Nv2 20💎/h'},
+            {id:'varinha_suprema', nome:'Varinha Suprema', emoji:'🪄✨', ingredientes:{varinha_roubo:2, cristal_azul:10, estatua_dragao:1}, resultado:{id:'varinha_roubo_suprema', qtd:1, valor:2000}, desc:'Rouba 20% em vez de 10%'},
+            {id:'ovo_dragao', nome:'Ovo de Dragão', emoji:'🥚', ingredientes:{cristal_azul:20, arvore_magica:10, fonte_magica:2}, resultado:{id:'dragao_bebe', qtd:1, valor:0}, desc:'Choca dragão bebê'}
+        ],
+        climas:[
+            {id:'sol', nome:'Ensolarado', emoji:'☀️', bonus:{cristais:0, xp:0}, desc:'Normal'},
+            {id:'chuva', nome:'Chuva Mágica', emoji:'🌧️', bonus:{cristais:50, xp:0}, duracao:1800, desc:'+50% cristais 30min'},
+            {id:'tempestade', nome:'Tempestade', emoji:'⛈️', bonus:{cristais:-20, xp:0}, duracao:1200, desc:'-20% produção, risco destruir'},
+            {id:'arco_iris', nome:'Arco-Íris', emoji:'🌈', bonus:{cristais:100, xp:100}, duracao:900, desc:'+100% tudo 15min - RARO!'}
+        ],
+        mercadorItens:[
+            {id:'mapa_tesouro', nome:'Mapa do Tesouro', emoji:'🗺️', preco:400, raridade:'epico', desc:'Revela tesouro enterrado'},
+            {id:'escudo_divino', nome:'Escudo Divino', emoji:'🛡️✨', preco:600, raridade:'lendario', desc:'Protege 12h'},
+            {id:'chave_arco_iris', nome:'Chave Arco-Íris', emoji:'🌈🗝️', preco:1000, raridade:'lendario', desc:'Abre baú lendário instantâneo'}
+        ],
+
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
@@ -641,7 +684,12 @@ Workspace.Ingles = {
         this.renderIlha();
         this.initAvatarIlha();
         this.renderMundoRealista();
-        Workspace.mostrarAviso('🏝️ Bem-vindo à sua Ilha Mágica! Use WASD ou joystick para mover o avatar!','success');
+        this.initEnergia();
+        this.initClima();
+        this.initMercador();
+        this.initPets();
+        this.initBaus();
+        Workspace.mostrarAviso('🏝️ Ilha Mágica completa! Energia, pets, clima e baús ativos!','success');
     },
     fecharIlhaMagica(){
         const modal = document.getElementById('ig-ilhaModal');
@@ -861,6 +909,12 @@ Workspace.Ingles = {
         const avatarData = (this.defaults.avatares||[]).find(a=>a.id===this.state.avatarEquipado);
         const emojiEl = document.getElementById('ig-avatarEmoji');
         if(emojiEl && avatarData) emojiEl.textContent = avatarData.emoji;
+        const petFollowEl = document.getElementById('ig-petFollow');
+        const petData = (this.defaults.pets||[]).find(p=>p.id===this.state.petEquipado);
+        if(petFollowEl){
+            if(petData){ petFollowEl.textContent = petData.emoji; petFollowEl.style.display='block'; }
+            else petFollowEl.style.display='none';
+        }
     },
     renderMundoRealista(){
         const worldEl = document.getElementById('ig-ilhaGameWorld');
@@ -956,7 +1010,8 @@ Workspace.Ingles = {
         }
     },
 
-        renderIlhaTabConstruir(){
+    
+    renderIlhaTabConstruir(){
         const el = document.getElementById('ig-ilhaTabConstruir');
         if(!el) return;
         const invDecor = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id));
@@ -995,8 +1050,52 @@ Workspace.Ingles = {
                 </div>
             </div>
         `;
+        // Render baús e extras dentro da mesma aba
+        setTimeout(()=>{
+            const extraEl = document.getElementById('ig-ilhaExtras');
+            if(extraEl){
+                extraEl.innerHTML = `
+                    <div style="margin-top:12px">
+                        <div style="display:flex;gap:6px;margin-bottom:8px">
+                            <button data-action="ilha-extra-tab" data-extra="pets" class="extra-tab active" style="flex:1;background:#fde68a;color:#000;border:none;padding:6px;border-radius:12px;font-size:10px;font-weight:800;cursor:pointer">🐾 Pets</button>
+                            <button data-action="ilha-extra-tab" data-extra="craft" class="extra-tab" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:6px;border-radius:12px;font-size:10px;cursor:pointer">🔨 Craft</button>
+                            <button data-action="ilha-extra-tab" data-extra="skills" class="extra-tab" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:6px;border-radius:12px;font-size:10px;cursor:pointer">🌳 Skills</button>
+                            <button data-action="ilha-extra-tab" data-extra="mapa" class="extra-tab" style="flex:1;background:rgba(255,255,255,0.1);color:#fff;border:none;padding:6px;border-radius:12px;font-size:10px;cursor:pointer">🗺️ Mapa</button>
+                        </div>
+                        <div id="ig-extra-pets"></div>
+                        <div id="ig-extra-craft" style="display:none"><div id="ig-craftList"></div></div>
+                        <div id="ig-extra-skills" style="display:none"><div id="ig-skillTree"></div></div>
+                        <div id="ig-extra-mapa" style="display:none"><div id="ig-mapaMundi"></div><div style="font-size:10px;color:#94a3b8;margin-top:6px">🌫️ Névoa custa 100💎 para explorar, pode ter tesouro!</div></div>
+                    </div>
+                `;
+                const petsEl = document.getElementById('ig-extra-pets');
+                if(petsEl){
+                    petsEl.innerHTML = `
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+                            ${(this.defaults.pets||[]).map(pet=>{
+                                const tem = (this.state.petsInventario||[]).some(p=>p.id===pet.id);
+                                const equipado = this.state.petEquipado===pet.id;
+                                const ovoChocando = (this.state.ovosChocando||[]).find(o=>o.petId===pet.id && !o.chocado);
+                                return `<div style="background:${equipado?'#FFFBEB':'#fff'};border:2px solid ${equipado?'#fde68a':'#e2e8f0'};border-radius:12px;padding:8px;text-align:center">
+                                    <div style="font-size:24px">${ovoChocando?'<div class=\"pet-ovo\">🥚</div>':pet.emoji}</div>
+                                    <div style="font-weight:800;font-size:10px">${Workspace.escapeHTML(pet.nome)}</div>
+                                    <div style="font-size:8px;color:#64748B">${Workspace.escapeHTML(pet.bonus)}</div>
+                                    ${ovoChocando?`<div style="font-size:8px;color:#f59e0b">⏱️ ${Math.ceil((ovoChocando.chocaEm-Date.now())/60000)}min</div>` : tem ? (equipado?`<div style="background:#0F172A;color:#fde68a;padding:4px;border-radius:8px;font-size:9px;margin-top:4px">✅ Equipado</div>`:`<button data-action="equipar-pet" data-pet-id="${pet.id}" style="width:100%;margin-top:4px;background:#10B981;color:#fff;border:none;padding:4px;border-radius:8px;font-size:9px;cursor:pointer">Equipar</button>`) : `<button data-action="chocar-ovo" data-pet-id="${pet.id}" style="width:100%;margin-top:4px;background:${this.state.xp>=pet.preco?'#4F46E5':'#94a3b8'};color:#fff;border:none;padding:4px;border-radius:8px;font-size:9px;cursor:pointer">${pet.preco} XP - Chocar</button>`}
+                                </div>`;
+                            }).join('')}
+                        </div>
+                        <div id="ig-bausContainer" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px"></div>
+                    `;
+                }
+                this.renderBausUI();
+                this.renderCraft();
+                this.renderSkillTree();
+                this.renderMapaMundi();
+            }
+        }, 100);
     },
-    renderIlhaTabInvadir(){
+
+        renderIlhaTabInvadir(){
         const el = document.getElementById('ig-ilhaTabInvadir');
         if(!el) return;
         const outras = this.state.ilhasOutras||[];
@@ -1157,6 +1256,489 @@ Workspace.Ingles = {
             Workspace.mostrarAviso(`💥 Falhou! -50 XP`,'error');
         }catch{}
     },
+
+    // ================= 🔋 ENERGIA - LOOP VICIANTE =================
+    initEnergia(){
+        if(this._energiaInterval) clearInterval(this._energiaInterval);
+        this._energiaInterval = setInterval(()=>{
+            const agora = Date.now();
+            const diff = agora - (this.state.ultimaRegenEnergia||agora);
+            const regenPorMin = 1; // 1 energia por 5 min = 12 por hora, mas para teste 1 por min
+            const ganho = Math.floor(diff / (60*1000)) * regenPorMin;
+            if(ganho>0 && this.state.energia < this.state.energiaMax){
+                this.state.energia = Math.min(this.state.energiaMax, this.state.energia + ganho);
+                this.state.ultimaRegenEnergia = agora;
+                this.atualizarEnergiaUI();
+                this.saveDados();
+            }
+        }, 30000);
+        this.atualizarEnergiaUI();
+    },
+    atualizarEnergiaUI(){
+        const el = document.getElementById('ig-energiaBar');
+        if(!el){
+            // cria barra de energia
+            const world = document.getElementById('ig-ilhaGameWorld');
+            if(world){
+                const bar = document.createElement('div');
+                bar.id = 'ig-energiaBar';
+                bar.innerHTML = `<span class="energia-coracao">⚡</span><div class="energia-fill"><div id="ig-energiaProgress" class="energia-progress" style="width:${(this.state.energia/this.state.energiaMax)*100}%"></div></div><span style="color:#fff;font-weight:900;font-size:11px" id="ig-energiaText">${this.state.energia}/${this.state.energiaMax}</span>`;
+                world.appendChild(bar);
+            }
+        } else {
+            const prog = document.getElementById('ig-energiaProgress');
+            const txt = document.getElementById('ig-energiaText');
+            if(prog) prog.style.width = `${(this.state.energia/this.state.energiaMax)*100}%`;
+            if(txt) txt.textContent = `${this.state.energia}/${this.state.energiaMax}`;
+        }
+    },
+    consumirEnergia(qtd){
+        if(this.state.energia < qtd){
+            Workspace.mostrarAviso(`Sem energia! ⚡ ${this.state.energia}/${this.state.energiaMax}. Jogue jogos de inglês para recarregar!`,'warning');
+            return false;
+        }
+        this.state.energia -= qtd;
+        this.atualizarEnergiaUI();
+        this.saveDados();
+        this.salvarIlha();
+        return true;
+    },
+    ganharEnergia(qtd){
+        this.state.energia = Math.min(this.state.energiaMax, this.state.energia + qtd);
+        this.atualizarEnergiaUI();
+        this.saveDados();
+    },
+
+    // ================= 📦 BAÚS COM TIMER =================
+    initBaus(){
+        if(this._bauInterval) clearInterval(this._bauInterval);
+        this._bauInterval = setInterval(()=>{ this.atualizarBaus(); }, 1000);
+    },
+    atualizarBaus(){
+        const agora = Date.now();
+        (this.state.bausAbertura||[]).forEach((bau, idx)=>{
+            if(bau.aberto) return;
+            const restante = bau.terminaEm - agora;
+            if(restante<=0){
+                bau.aberto = true;
+                this.abrirBau(bau);
+            }
+        });
+        // atualiza UI se estiver na aba construir
+        if(document.getElementById('ig-ilhaTabConstruir')?.style.display!=='none'){
+            this.renderBausUI();
+        }
+    },
+    criarBau(tipoId){
+        const tipo = (this.defaults.bausTipos||[]).find(b=>b.id===tipoId);
+        if(!tipo) return;
+        const bau = {id:tipoId+Date.now(), tipoId, emoji:tipo.emoji, nome:tipo.nome, terminaEm:Date.now()+tipo.tempo*1000, aberto:false, criadoEm:Date.now()};
+        this.state.bausAbertura = this.state.bausAbertura||[];
+        this.state.bausAbertura.push(bau);
+        this.saveDados();
+        Workspace.mostrarAviso(`📦 ${tipo.nome} criado! Abre em ${Math.floor(tipo.tempo/60)}min`,'success');
+    },
+    abrirBau(bau){
+        const tipo = (this.defaults.bausTipos||[]).find(b=>b.id===bau.tipoId);
+        if(!tipo) return;
+        const recomp = tipo.recompensa;
+        this.state.ilha.cristais = (this.state.ilha.cristais||0) + recomp.cristais;
+        this.state.xp += recomp.xp;
+        // chance item raro
+        if(Math.random()*100 < recomp.chanceRaro){
+            const itens = this.defaults.decoracoesIlha||[];
+            const raro = itens[Math.floor(Math.random()*itens.length)];
+            if(raro){
+                this.state.inventario.push({id:raro.id, nome:raro.nome, emoji:raro.emoji, tipo:'decoracao', obtidoEm:new Date().toISOString()});
+                Workspace.mostrarAviso(`✨ Item raro no baú: ${raro.emoji} ${raro.nome}!`,'success');
+            }
+        }
+        this.efeitoColeta(200, 200, `+${recomp.cristais}💎 +${recomp.xp}XP`);
+        this.saveDados();
+        this.salvarIlha();
+        Workspace.mostrarAviso(`🎉 Baú aberto! +${recomp.cristais}💎 +${recomp.xp} XP!`,'success');
+    },
+    renderBausUI(){
+        // adiciona na aba construir se houver baús
+        const el = document.getElementById('ig-bausContainer');
+        if(!el) return;
+        const agora = Date.now();
+        el.innerHTML = (this.state.bausAbertura||[]).map(bau=>{
+            const restante = Math.max(0, bau.terminaEm - agora);
+            const pct = bau.aberto ? 100 : 100 - (restante / ((this.defaults.bausTipos||[]).find(t=>t.id===bau.tipoId)?.tempo*1000||1))*100;
+            const min = Math.floor(restante/60000);
+            const seg = Math.floor((restante%60000)/1000);
+            return `<div class="bau-card">
+                <div class="bau-timer" style="width:${pct}%"></div>
+                <div style="font-size:24px">${bau.emoji}</div>
+                <div style="font-size:10px;font-weight:800">${bau.nome}</div>
+                <div style="font-size:9px;color:#92400e">${bau.aberto?'✅ Aberto!':`⏱️ ${min}m ${seg}s`}</div>
+                ${bau.aberto?`<button data-action="remover-bau" data-bau-id="${bau.id}" style="background:#10B981;color:#fff;border:none;padding:4px 8px;border-radius:10px;font-size:9px;margin-top:4px;cursor:pointer">Coletar</button>`:''}
+            </div>`;
+        }).join('') || '<div style="font-size:10px;color:#94a3b8;text-align:center;padding:10px">Nenhum baú. Ganhe baús jogando!</div>';
+    },
+
+    // ================= 🐾 PETS =================
+    initPets(){
+        // pet segue avatar
+        if(this._petInterval) clearInterval(this._petInterval);
+        this._petInterval = setInterval(()=>{ this.atualizarPetPos(); this.atualizarOvos(); }, 500);
+    },
+    atualizarPetPos(){
+        const petEl = document.getElementById('ig-petFollow');
+        const avatarEl = document.getElementById('ig-ilhaAvatar');
+        if(!petEl || !avatarEl) return;
+        const avatarRect = avatarEl.getBoundingClientRect();
+        const worldRect = document.getElementById('ig-ilhaGameWorld')?.getBoundingClientRect();
+        if(!worldRect) return;
+        // pet fica atrás do avatar com delay
+        const targetX = parseInt(avatarEl.style.left||0) - 30;
+        const targetY = parseInt(avatarEl.style.top||0) + 10;
+        petEl.style.left = targetX + 'px';
+        petEl.style.top = targetY + 'px';
+    },
+    atualizarOvos(){
+        const agora = Date.now();
+        (this.state.ovosChocando||[]).forEach((ovo, idx)=>{
+            if(ovo.chocaEm <= agora && !ovo.chocado){
+                ovo.chocado = true;
+                const pet = (this.defaults.pets||[]).find(p=>p.id===ovo.petId);
+                if(pet){
+                    this.state.petsInventario = this.state.petsInventario||[];
+                    this.state.petsInventario.push({id:pet.id, nome:pet.nome, emoji:pet.emoji, bonus:pet.bonus, obtidoEm:new Date().toISOString()});
+                    this.state.petEquipado = pet.id;
+                    Workspace.mostrarAviso(`🥚✨ Ovo chocou! ${pet.emoji} ${pet.nome} nasceu!`,'success');
+                    this.efeitoColeta(200, 200, pet.emoji);
+                }
+            }
+        });
+    },
+    chocarOvo(petId){
+        const pet = (this.defaults.pets||[]).find(p=>p.id===petId);
+        if(!pet) return;
+        if(this.state.xp < pet.preco){ Workspace.mostrarAviso(`Falta ${pet.preco - this.state.xp} XP!`,'warning'); return; }
+        this.state.xp -= pet.preco;
+        this.state.ovosChocando = this.state.ovosChocando||[];
+        this.state.ovosChocando.push({id:petId+Date.now(), petId, chocaEm:Date.now()+pet.ovoTempo*1000, chocado:false});
+        this.saveDados();
+        Workspace.mostrarAviso(`🥚 Ovo de ${pet.nome} chocando! ${Math.floor(pet.ovoTempo/60)}min`,'success');
+    },
+    equiparPet(petId){
+        this.state.petEquipado = petId;
+        this.saveDados();
+        this.renderMundoRealista();
+        const pet = (this.defaults.pets||[]).find(p=>p.id===petId);
+        if(pet) Workspace.mostrarAviso(`🐾 ${pet.nome} equipado! ${pet.bonus}`,'success');
+    },
+
+    // ================= 🌤️ CLIMA DINÂMICO =================
+    initClima(){
+        if(this._climaInterval) clearInterval(this._climaInterval);
+        this._climaInterval = setInterval(()=>{ this.atualizarClima(); }, 60000);
+        // chance inicial
+        if(Math.random()<0.3) this.mudarClima();
+        this.atualizarClimaUI();
+    },
+    atualizarClima(){
+        const agora = Date.now();
+        if(this.state.climaAte && this.state.climaAte < agora){
+            this.state.climaAtual = {id:'sol', nome:'Ensolarado', emoji:'☀️', bonus:{cristais:0}};
+            this.state.climaAte = 0;
+            this.atualizarClimaUI();
+        }
+        // chance de mudar a cada minuto
+        if(!this.state.climaAte && Math.random()<0.05){
+            this.mudarClima();
+        }
+    },
+    mudarClima(){
+        const climas = this.defaults.climas||[];
+        const possiveis = climas.filter(c=>c.id!=='sol');
+        const escolhido = possiveis[Math.floor(Math.random()*possiveis.length)] || climas[0];
+        if(!escolhido) return;
+        this.state.climaAtual = escolhido;
+        this.state.climaAte = Date.now() + (escolhido.duracao||1800)*1000;
+        this.atualizarClimaUI();
+        Workspace.mostrarAviso(`${escolhido.emoji} Clima: ${escolhido.nome}! ${escolhido.desc}`,'info');
+    },
+    atualizarClimaUI(){
+        let widget = document.getElementById('ig-climaWidget');
+        const world = document.getElementById('ig-ilhaGameWorld');
+        if(!world) return;
+        if(!widget){
+            widget = document.createElement('div');
+            widget.id = 'ig-climaWidget';
+            world.appendChild(widget);
+        }
+        const clima = this.state.climaAtual||{emoji:'☀️', nome:'Ensolarado'};
+        const restante = this.state.climaAte ? Math.max(0, this.state.climaAte - Date.now()) : 0;
+        const min = Math.floor(restante/60000);
+        widget.innerHTML = `${clima.emoji} ${clima.nome} ${restante?`(${min}m)`:''}`;
+        widget.style.display = clima.id==='sol' ? 'none' : 'flex';
+    },
+
+    // ================= 🧙‍♂️ MERCADOR MISTERIOSO =================
+    initMercador(){
+        if(this._mercadorInterval) clearInterval(this._mercadorInterval);
+        this._mercadorInterval = setInterval(()=>{ this.verificarMercador(); }, 60000);
+        // chance inicial
+        if(Math.random()<0.2) this.ativarMercador();
+    },
+    verificarMercador(){
+        const agora = Date.now();
+        if(this.state.mercadorAtivo && this.state.mercadorAte < agora){
+            this.state.mercadorAtivo = false;
+            this.state.mercadorAte = 0;
+            const popup = document.getElementById('ig-mercadorPopup');
+            if(popup) popup.style.display='none';
+        }
+        if(!this.state.mercadorAtivo && Math.random()<0.03){
+            this.ativarMercador();
+        }
+    },
+    ativarMercador(){
+        this.state.mercadorAtivo = true;
+        this.state.mercadorAte = Date.now() + 10*60*1000;
+        const itens = this.defaults.mercadorItens||[];
+        const item = itens[Math.floor(Math.random()*itens.length)];
+        this.state.mercadorItem = item;
+        this.mostrarMercador();
+        Workspace.mostrarAviso(`🧙‍♂️ Mercador Misterioso apareceu! ${item?.emoji} ${item?.nome} por tempo limitado!`,'success');
+    },
+    mostrarMercador(){
+        let popup = document.getElementById('ig-mercadorPopup');
+        const world = document.getElementById('ig-ilhaGameWorld');
+        if(!world) return;
+        if(!popup){
+            popup = document.createElement('div');
+            popup.id = 'ig-mercadorPopup';
+            world.appendChild(popup);
+        }
+        const item = this.state.mercadorItem;
+        if(!item) return;
+        const restante = Math.max(0, this.state.mercadorAte - Date.now());
+        const min = Math.floor(restante/60000);
+        popup.innerHTML = `
+            <div style="text-align:center">
+                <div style="font-size:32px">🧙‍♂️</div>
+                <div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:14px">Mercador Misterioso</div>
+                <div style="font-size:10px;color:#94a3b8;margin:4px 0">Só por ${min}min!</div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:12px;padding:10px;margin:10px 0">
+                    <div style="font-size:28px">${item.emoji}</div>
+                    <div style="font-weight:900;color:#fff;font-size:12px">${item.nome}</div>
+                    <div style="font-size:10px;color:#94a3b8">${item.desc}</div>
+                    <div style="margin-top:8px;background:#fde68a;color:#000;padding:6px 12px;border-radius:20px;font-weight:900;font-size:11px;display:inline-block">${item.preco}💎</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button data-action="comprar-mercador" style="flex:1;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:8px;border-radius:10px;font-weight:900;font-size:11px;cursor:pointer">Comprar</button>
+                    <button data-action="fechar-mercador" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:8px 12px;border-radius:10px;cursor:pointer">✕</button>
+                </div>
+            </div>
+        `;
+        popup.style.display='block';
+    },
+    comprarMercador(){
+        const item = this.state.mercadorItem;
+        if(!item) return;
+        if((this.state.ilha.cristais||0) < item.preco){ Workspace.mostrarAviso(`Falta ${item.preco - this.state.ilha.cristais}💎!`,'warning'); return; }
+        this.state.ilha.cristais -= item.preco;
+        this.state.inventario.push({id:item.id, nome:item.nome, emoji:item.emoji, tipo:'raro', obtidoEm:new Date().toISOString()});
+        this.state.mercadorAtivo = false;
+        document.getElementById('ig-mercadorPopup').style.display='none';
+        this.saveDados();
+        this.salvarIlha();
+        Workspace.mostrarAviso(`✨ ${item.nome} comprado do mercador!`,'success');
+    },
+
+    // ================= 🌳 SKILL TREE =================
+    renderSkillTree(){
+        const el = document.getElementById('ig-skillTree');
+        if(!el) return;
+        const pontos = this.state.skillPoints||0;
+        el.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <h4 style="color:#fde68a;font-family:Cinzel;margin:0;font-size:13px">🌳 Árvore de Habilidades</h4>
+                <div style="background:#8b5cf6;color:#fff;padding:4px 10px;border-radius:20px;font-weight:900;font-size:11px">⭐ ${pontos} pontos</div>
+            </div>
+            <div class="skill-tree">
+                ${(this.defaults.skillsTree||[]).map(skill=>{
+                    const nivel = this.state.skills?.[skill.id]||0;
+                    const max = skill.max||10;
+                    const pct = (nivel/max)*100;
+                    return `<div class="skill-node ${nivel>=max?'maxado':''}" data-action="upar-skill" data-skill-id="${skill.id}">
+                        <div class="skill-nivel">${nivel}/${max}</div>
+                        <div style="font-size:24px">${skill.emoji}</div>
+                        <div style="font-weight:800;font-size:11px">${skill.nome}</div>
+                        <div style="font-size:9px;color:#64748B">${skill.desc}</div>
+                        <div style="background:#e2e8f0;height:4px;border-radius:10px;margin-top:6px;overflow:hidden"><div style="width:${pct}%;height:100%;background:#8b5cf6;transition:width 0.3s"></div></div>
+                        ${nivel<max?`<button style="margin-top:6px;background:${pontos>0?'#8b5cf6':'#94a3b8'};color:#fff;border:none;padding:4px 8px;border-radius:10px;font-size:9px;font-weight:800;cursor:${pontos>0?'pointer':'not-allowed'}" ${pontos>0?'':'disabled'}>⬆️ Upar (1⭐)</button>`: '<div style="font-size:9px;color:#10B981;font-weight:800;margin-top:4px">✅ MAX</div>'}
+                    </div>`
+                }).join('')}
+            </div>
+        `;
+    },
+    uparSkill(skillId){
+        if((this.state.skillPoints||0)<=0){ Workspace.mostrarAviso('Sem pontos! Suba de nível da ilha!','warning'); return; }
+        const skill = (this.defaults.skillsTree||[]).find(s=>s.id===skillId);
+        if(!skill) return;
+        const nivelAtual = this.state.skills?.[skillId]||0;
+        if(nivelAtual >= skill.max){ Workspace.mostrarAviso('Já está no máximo!','warning'); return; }
+        this.state.skills[skillId] = nivelAtual+1;
+        this.state.skillPoints -=1;
+        this.saveDados();
+        this.renderSkillTree();
+        Workspace.mostrarAviso(`🌳 ${skill.nome} Nv${nivelAtual+1}! +${skill.bonusPorNivel}% ${skill.tipo}`,'success');
+    },
+
+    // ================= 🔨 CRAFT =================
+    renderCraft(){
+        const el = document.getElementById('ig-craftList');
+        if(!el) return;
+        el.innerHTML = (this.defaults.receitasCraft||[]).map(rec=>{
+            // verifica se tem ingredientes
+            let pode = true;
+            const tem = {};
+            (this.state.inventario||[]).forEach(it=>{ tem[it.id]=(tem[it.id]||0)+1; });
+            // desconta em uso na ilha
+            (this.state.ilha.layout||[]).forEach(id=>{ if(id && tem[id]) tem[id]--; });
+            Object.entries(rec.ingredientes||{}).forEach(([id,qtd])=>{
+                if((tem[id]||0) < qtd) pode=false;
+            });
+            return `<div class="receita-card ${pode?'pode-craftar':''}" data-action="craftar" data-receita-id="${rec.id}">
+                <div style="font-size:28px">${rec.emoji}</div>
+                <div style="flex:1">
+                    <div style="font-weight:800;font-size:11px">${rec.nome}</div>
+                    <div style="font-size:9px;color:#64748B">${rec.desc}</div>
+                    <div style="font-size:9px;margin-top:4px">${Object.entries(rec.ingredientes||{}).map(([id,qtd])=>`${qtd}x ${id}`).join(' + ')} → ${rec.resultado.qtd}x ${rec.resultado.id}</div>
+                </div>
+                <div style="background:${pode?'#22c55e':'#94a3b8'};color:#fff;padding:6px 10px;border-radius:20px;font-weight:800;font-size:10px">${pode?'🔨 Craftar':'Falta itens'}</div>
+            </div>`
+        }).join('');
+    },
+    craftar(receitaId){
+        const rec = (this.defaults.receitasCraft||[]).find(r=>r.id===receitaId);
+        if(!rec) return;
+        // verifica
+        const tem = {};
+        const inventario = this.state.inventario||[];
+        inventario.forEach(it=>{ tem[it.id]=(tem[it.id]||0)+1; });
+        (this.state.ilha.layout||[]).forEach(id=>{ if(id && tem[id]) tem[id]--; });
+        let pode=true;
+        Object.entries(rec.ingredientes||{}).forEach(([id,qtd])=>{
+            if((tem[id]||0) < qtd) pode=false;
+        });
+        if(!pode){ Workspace.mostrarAviso('Falta ingredientes!','warning'); return; }
+        // consome
+        Object.entries(rec.ingredientes||{}).forEach(([id,qtd])=>{
+            let restante=qtd;
+            for(let i=inventario.length-1; i>=0 && restante>0; i--){
+                if(inventario[i].id===id){
+                    inventario.splice(i,1);
+                    restante--;
+                }
+            }
+        });
+        // adiciona resultado
+        for(let i=0;i<rec.resultado.qtd;i++){
+            const resId = rec.resultado.id;
+            // procura dados do resultado
+            let dados = (this.defaults.decoracoesIlha||[]).find(d=>d.id===resId) || (this.defaults.pets||[]).find(p=>p.id===resId) || {id:resId, nome:resId, emoji:rec.emoji};
+            this.state.inventario.push({id:dados.id, nome:dados.nome, emoji:dados.emoji, tipo:'craft', obtidoEm:new Date().toISOString()});
+        }
+        this.saveDados();
+        this.renderCraft();
+        this.renderIlhaTabConstruir();
+        Workspace.mostrarAviso(`🔨 Craftou ${rec.emoji} ${rec.nome}!`,'success');
+        this.efeitoColeta(200,200,rec.emoji);
+    },
+
+    // ================= 🗺️ MAPA MUNDI =================
+    renderMapaMundi(){
+        const el = document.getElementById('ig-mapaMundi');
+        if(!el) return;
+        const tamanho = 6;
+        const total = tamanho*tamanho;
+        const explorado = this.state.mapaExplorado||{};
+        el.innerHTML = Array(total).fill(null).map((_, idx)=>{
+            const x = idx % tamanho;
+            const y = Math.floor(idx / tamanho);
+            const key = `${x},${y}`;
+            const isExplorado = explorado[key];
+            const isTesouro = (this.state.tesourosEnterrados||[]).some(t=>t.x===x && t.y===y);
+            const isCentro = x===Math.floor(tamanho/2) && y===Math.floor(tamanho/2);
+            if(isCentro){
+                return `<div class="mapa-celula explorada" title="Sua ilha">🏝️</div>`;
+            }
+            if(!isExplorado){
+                return `<div class="mapa-celula nevoa" data-action="explorar-mapa" data-x="${x}" data-y="${y}" title="Névoa - clique para explorar 100💎">🌫️</div>`;
+            }
+            if(isTesouro){
+                return `<div class="mapa-celula tesouro" data-action="cavar-tesouro" data-x="${x}" data-y="${y}" title="Tesouro!">💰</div>`;
+            }
+            return `<div class="mapa-celula explorada" title="Explorado">🌿</div>`;
+        }).join('');
+    },
+    explorarMapa(x,y){
+        const custo = 100;
+        if((this.state.ilha.cristais||0) < custo){ Workspace.mostrarAviso(`Precisa ${custo}💎 para explorar!`,'warning'); return; }
+        this.state.ilha.cristais -= custo;
+        const key = `${x},${y}`;
+        this.state.mapaExplorado = this.state.mapaExplorado||{};
+        this.state.mapaExplorado[key] = true;
+        // chance tesouro
+        if(Math.random()<0.3){
+            this.state.tesourosEnterrados = this.state.tesourosEnterrados||[];
+            this.state.tesourosEnterrados.push({x,y, cristais:200+Math.floor(Math.random()*300)});
+            Workspace.mostrarAviso(`🗺️ Explorado! Tesouro encontrado! 💰`,'success');
+        } else {
+            Workspace.mostrarAviso(`🗺️ Área ${x},${y} explorada!`,'success');
+        }
+        this.saveDados();
+        this.salvarIlha();
+        this.renderMapaMundi();
+        this.atualizarHeaderIlha();
+    },
+    cavarTesouro(x,y){
+        const tesouro = (this.state.tesourosEnterrados||[]).find(t=>t.x===x && t.y===y);
+        if(!tesouro) return;
+        const temPicareta = (this.state.inventario||[]).some(i=>i.id==='picareta');
+        if(!temPicareta){ Workspace.mostrarAviso('Precisa ⛏️ Picareta!','warning'); return; }
+        // consome picareta
+        const idx = this.state.inventario.findIndex(i=>i.id==='picareta');
+        if(idx!==-1) this.state.inventario.splice(idx,1);
+        this.state.ilha.cristais += tesouro.cristais;
+        this.state.tesourosEnterrados = this.state.tesourosEnterrados.filter(t=>!(t.x===x && t.y===y));
+        this.saveDados();
+        this.salvarIlha();
+        this.renderMapaMundi();
+        this.atualizarHeaderIlha();
+        Workspace.mostrarAviso(`💰 Tesouro cavado! +${tesouro.cristais}💎!`,'success');
+        this.efeitoColeta(200,200,`+${tesouro.cristais}💎`);
+    },
+
+    // ================= ✨ JUICY FEEDBACK =================
+    efeitoColeta(x,y,text){
+        const el = document.createElement('div');
+        el.className = 'coleta-particula';
+        el.style.left = x+'px';
+        el.style.top = y+'px';
+        el.style.setProperty('--tx', (Math.random()*100-50)+'px');
+        el.style.setProperty('--ty', (Math.random()*-100-50)+'px');
+        el.textContent = text||'💎';
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(), 800);
+        // confete se for grande
+        if(text && text.includes('💎') && parseInt(text)>100){
+            this.confete();
+        }
+    },
+    efeitoDanoTela(){
+        const overlay = document.createElement('div');
+        overlay.style.cssText='position:fixed;inset:0;background:rgba(239,68,68,0.3);pointer-events:none;z-index:9999;animation:danoTela 0.4s ease';
+        document.body.appendChild(overlay);
+        setTimeout(()=>overlay.remove(), 400);
+    },
+
     equiparAvatar(avatarId){
         this.state.avatarEquipado=avatarId;
         this.saveDados();
@@ -1319,7 +1901,7 @@ Workspace.Ingles = {
         const mult=this.state.season?.xpMultiplier||1;
         const bonus = Math.floor((bonusBase*1.5)*mult);
         this.portalStreak++; this.state.portalStreak=this.portalStreak;
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; this.ganharEnergia(2);
         await this.saveDados();
         try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus}); }catch{}
 
@@ -1360,7 +1942,7 @@ Workspace.Ingles = {
         const bonusBase = 300 + (this.portalRodada * 100);
         const mult=this.state.season?.xpMultiplier||1;
         const bonus=Math.floor(bonusBase*mult);
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; this.ganharEnergia(2);
         await this.saveDados();
         try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus, evento:'magia'}); }catch{}
 
@@ -1631,6 +2213,55 @@ Workspace.Ingles = {
             .inv-shop-preco.caro{background:#94a3b8;cursor:not-allowed}
             .inv-shop-qtd{position:absolute;top:6px;right:6px;background:#0ea5e9;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
 
+
+            /* 🔋 ENERGIA */
+            #ig-energiaBar{position:absolute;top:10px;left:12px;background:rgba(0,0,0,0.7);border:2px solid #fde68a;border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:6px;z-index:25;backdrop-filter:blur(4px)}
+            .energia-coracao{font-size:14px;animation:pulsoEnergia 1.5s ease infinite}
+            @keyframes pulsoEnergia{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+            .energia-fill{width:60px;height:8px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden}
+            .energia-progress{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width 0.5s ease}
+            
+            /* 📦 BAÚS COM TIMER */
+            .bau-card{background:linear-gradient(180deg,#fff,#FEF3C7);border:2px solid #fbbf24;border-radius:12px;padding:10px;text-align:center;position:relative;overflow:hidden}
+            .bau-timer{position:absolute;top:0;left:0;height:4px;background:linear-gradient(90deg,#fbbf24,#d97706);transition:width 1s linear}
+            .bau-abrir-btn{background:linear-gradient(135deg,#fbbf24,#d97706);color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:900;font-size:10px;cursor:pointer;margin-top:6px}
+            
+            /* 🐾 PETS */
+            .pet-follow{position:absolute;font-size:20px;z-index:9;transition:all 0.5s ease;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))}
+            .pet-ovo{background:radial-gradient(ellipse,#fff,#e2e8f0);border:2px dashed #94a3b8;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;width:40px;height:50px;display:flex;align-items:center;justify-content:center;font-size:20px;animation:ovoPulsa 1.5s ease infinite}
+            @keyframes ovoPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+            
+            /* 🌤️ CLIMA */
+            #ig-climaWidget{position:absolute;top:50px;left:12px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:6px;z-index:24;color:#fff;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
+            
+            /* 🧙‍♂️ MERCADOR */
+            #ig-mercadorPopup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#1e1b4b,#0f0f23);border:3px solid #fde68a;border-radius:20px;padding:16px;z-index:40;box-shadow:0 0 40px rgba(253,230,138,0.4);animation:popIn 0.4s ease;display:none;max-width:340px;width:90%}
+            
+            /* 🌳 ÁRVORE DE HABILIDADES */
+            .skill-tree{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+            .skill-node{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:0.2s;position:relative}
+            .skill-node:hover{border-color:#8b5cf6;transform:translateY(-2px)}
+            .skill-node.maxado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 0 3px rgba(253,230,138,0.3)}
+            .skill-nivel{position:absolute;top:4px;right:4px;background:#8b5cf6;color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:900}
+            
+            /* 🔨 CRAFT */
+            .receita-card{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:0.2s}
+            .receita-card:hover{border-color:#22c55e;transform:translateX(2px)}
+            .receita-card.pode-craftar{border-color:#22c55e;background:#D1FAE5}
+            
+            /* 🗺️ MAPA MUNDI */
+            #ig-mapaMundi{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:rgba(0,0,0,0.3);padding:8px;border-radius:12px;border:2px solid #0ea5e9}
+            .mapa-celula{aspect-ratio:1;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:0.2s;position:relative}
+            .mapa-celula.nevoa{background:#0f172a;filter:blur(1px);border:1px dashed #334155}
+            .mapa-celula.explorada{background:linear-gradient(135deg,#22c55e,#16a34a)}
+            .mapa-celula.tesouro{background:linear-gradient(135deg,#fde68a,#d4af37);animation:tesouroBrilho 1.5s ease infinite}
+            @keyframes tesouroBrilho{0%,100%{box-shadow:0 0 0 rgba(253,230,138,0)}50%{box-shadow:0 0 16px rgba(253,230,138,0.8)}}
+            
+            /* ✨ JUICY FEEDBACK */
+            @keyframes coletaVoando{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx), var(--ty)) scale(0);opacity:0}}
+            .coleta-particula{position:fixed;font-size:18px;pointer-events:none;z-index:9999;animation:coletaVoando 0.8s ease-out forwards}
+            @keyframes danoTela{0%{background:rgba(239,68,68,0)}50%{background:rgba(239,68,68,0.3)}100%{background:rgba(239,68,68,0)}}
+
             @media(max-width:768px){
                 #ig-ilhaBtn{top:4px;right:4px;transform:scale(0.85)}
                 .ilhinha-wrapper{width:100px;height:80px}
@@ -1685,6 +2316,55 @@ Workspace.Ingles = {
             .inv-shop-preco.barato{background:linear-gradient(135deg,#22c55e,#16a34a)}
             .inv-shop-preco.caro{background:#94a3b8;cursor:not-allowed}
             .inv-shop-qtd{position:absolute;top:6px;right:6px;background:#0ea5e9;color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:10px;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+
+
+            /* 🔋 ENERGIA */
+            #ig-energiaBar{position:absolute;top:10px;left:12px;background:rgba(0,0,0,0.7);border:2px solid #fde68a;border-radius:20px;padding:4px 10px;display:flex;align-items:center;gap:6px;z-index:25;backdrop-filter:blur(4px)}
+            .energia-coracao{font-size:14px;animation:pulsoEnergia 1.5s ease infinite}
+            @keyframes pulsoEnergia{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+            .energia-fill{width:60px;height:8px;background:rgba(255,255,255,0.2);border-radius:10px;overflow:hidden}
+            .energia-progress{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width 0.5s ease}
+            
+            /* 📦 BAÚS COM TIMER */
+            .bau-card{background:linear-gradient(180deg,#fff,#FEF3C7);border:2px solid #fbbf24;border-radius:12px;padding:10px;text-align:center;position:relative;overflow:hidden}
+            .bau-timer{position:absolute;top:0;left:0;height:4px;background:linear-gradient(90deg,#fbbf24,#d97706);transition:width 1s linear}
+            .bau-abrir-btn{background:linear-gradient(135deg,#fbbf24,#d97706);color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:900;font-size:10px;cursor:pointer;margin-top:6px}
+            
+            /* 🐾 PETS */
+            .pet-follow{position:absolute;font-size:20px;z-index:9;transition:all 0.5s ease;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))}
+            .pet-ovo{background:radial-gradient(ellipse,#fff,#e2e8f0);border:2px dashed #94a3b8;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;width:40px;height:50px;display:flex;align-items:center;justify-content:center;font-size:20px;animation:ovoPulsa 1.5s ease infinite}
+            @keyframes ovoPulsa{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+            
+            /* 🌤️ CLIMA */
+            #ig-climaWidget{position:absolute;top:50px;left:12px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:6px;z-index:24;color:#fff;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
+            
+            /* 🧙‍♂️ MERCADOR */
+            #ig-mercadorPopup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#1e1b4b,#0f0f23);border:3px solid #fde68a;border-radius:20px;padding:16px;z-index:40;box-shadow:0 0 40px rgba(253,230,138,0.4);animation:popIn 0.4s ease;display:none;max-width:340px;width:90%}
+            
+            /* 🌳 ÁRVORE DE HABILIDADES */
+            .skill-tree{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+            .skill-node{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;text-align:center;cursor:pointer;transition:0.2s;position:relative}
+            .skill-node:hover{border-color:#8b5cf6;transform:translateY(-2px)}
+            .skill-node.maxado{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB,#fff);box-shadow:0 0 0 3px rgba(253,230,138,0.3)}
+            .skill-nivel{position:absolute;top:4px;right:4px;background:#8b5cf6;color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:900}
+            
+            /* 🔨 CRAFT */
+            .receita-card{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:0.2s}
+            .receita-card:hover{border-color:#22c55e;transform:translateX(2px)}
+            .receita-card.pode-craftar{border-color:#22c55e;background:#D1FAE5}
+            
+            /* 🗺️ MAPA MUNDI */
+            #ig-mapaMundi{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;background:rgba(0,0,0,0.3);padding:8px;border-radius:12px;border:2px solid #0ea5e9}
+            .mapa-celula{aspect-ratio:1;background:#1e293b;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:0.2s;position:relative}
+            .mapa-celula.nevoa{background:#0f172a;filter:blur(1px);border:1px dashed #334155}
+            .mapa-celula.explorada{background:linear-gradient(135deg,#22c55e,#16a34a)}
+            .mapa-celula.tesouro{background:linear-gradient(135deg,#fde68a,#d4af37);animation:tesouroBrilho 1.5s ease infinite}
+            @keyframes tesouroBrilho{0%,100%{box-shadow:0 0 0 rgba(253,230,138,0)}50%{box-shadow:0 0 16px rgba(253,230,138,0.8)}}
+            
+            /* ✨ JUICY FEEDBACK */
+            @keyframes coletaVoando{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx), var(--ty)) scale(0);opacity:0}}
+            .coleta-particula{position:fixed;font-size:18px;pointer-events:none;z-index:9999;animation:coletaVoando 0.8s ease-out forwards}
+            @keyframes danoTela{0%{background:rgba(239,68,68,0)}50%{background:rgba(239,68,68,0.3)}100%{background:rgba(239,68,68,0)}}
 
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
@@ -1822,7 +2502,7 @@ Workspace.Ingles = {
                             <!-- MUNDO JOGO -->
                             <div id="ig-ilhaGameWorld">
                                 <div id="ig-ilhaTiles"></div>
-                                <div id="ig-ilhaAvatar"><div class="avatar-sombra"></div><span id="ig-avatarEmoji">🧙‍♂️</span></div>
+                                <div id="ig-ilhaAvatar"><div class="avatar-sombra"></div><span id="ig-avatarEmoji">🧙‍♂️</span></div><div id="ig-petFollow" class="pet-follow">🐾</div>
                                 
                                 <!-- 🕹️ Joystick Mobile -->
                                 <div id="ig-joystick">
@@ -1854,7 +2534,7 @@ Workspace.Ingles = {
                                 <button data-action="ilha-tab" data-ilha-tab="invadir" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.12);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">⚔️ Invadir</button>
                                 <button data-action="ilha-tab" data-ilha-tab="historico" class="ilha-tab-btn" style="flex:1;background:rgba(255,255,255,0.12);color:#fff;border:none;padding:8px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">📜 Histórico</button>
                             </div>
-                            <div id="ig-ilhaTabConstruir"></div>
+                            <div id="ig-ilhaTabConstruir"></div><div id="ig-ilhaExtras"></div>
                             <div id="ig-ilhaTabInvadir" style="display:none"></div>
                             <div id="ig-ilhaTabHistorico" style="display:none"></div>
                         </div>
@@ -1920,6 +2600,28 @@ Workspace.Ingles = {
                 case 'ilha-celula-cheia': this.removerDaIlha(parseInt(b.dataset.idx)); break;
                 case 'ilha-celula-vazia': { const estoque = (this.state.inventario||[]).filter(i=>['decoracao','recurso','defesa','armazen','lendario','portal'].includes(i.tipo) || (this.defaults.decoracoesIlha||[]).some(d=>d.id===i.id)); if(!estoque.length){ Workspace.mostrarAviso('Sem itens! Compre no inventário!','warning'); break; } const emUso = {}; (this.state.ilha.layout||[]).forEach(id=>{ if(id) emUso[id]=(emUso[id]||0)+1; }); const disponivel = estoque.find(it=> (estoque.filter(x=>x.id===it.id).length > (emUso[it.id]||0)) ); if(disponivel) this.colocarNaIlha(disponivel.id); else Workspace.mostrarAviso('Todos itens já estão na ilha!','warning'); break; }
                 case 'invadir-ilha': this.invadirIlha(b.dataset.alvoId, b.dataset.alvoNome); break;
+                case 'ilha-extra-tab': {
+                    const extra = b.dataset.extra;
+                    const parent = b.closest('#ig-ilhaExtras') || document;
+                    parent.querySelectorAll('.extra-tab').forEach(btn=>{ btn.style.background='rgba(255,255,255,0.1)'; btn.style.color='#fff'; });
+                    b.style.background='#fde68a'; b.style.color='#000';
+                    const container = document.getElementById('ig-ilhaExtras');
+                    if(container){
+                        container.querySelectorAll('[id^="ig-extra-"]').forEach(el=>el.style.display='none');
+                        const target = document.getElementById(`ig-extra-${extra}`);
+                        if(target) target.style.display='block';
+                    }
+                    break;
+                }
+                case 'chocar-ovo': this.chocarOvo(b.dataset.petId); setTimeout(()=>this.renderIlhaTabConstruir(), 500); break;
+                case 'equipar-pet': this.equiparPet(b.dataset.petId); this.renderIlhaTabConstruir(); break;
+                case 'upar-skill': this.uparSkill(b.dataset.skillId); break;
+                case 'craftar': this.craftar(b.dataset.receitaId); break;
+                case 'explorar-mapa': this.explorarMapa(parseInt(b.dataset.x), parseInt(b.dataset.y)); break;
+                case 'cavar-tesouro': this.cavarTesouro(parseInt(b.dataset.x), parseInt(b.dataset.y)); break;
+                case 'comprar-mercador': this.comprarMercador(); break;
+                case 'fechar-mercador': document.getElementById('ig-mercadorPopup').style.display='none'; break;
+                case 'remover-bau': { this.state.bausAbertura = (this.state.bausAbertura||[]).filter(bau=>bau.id!==b.dataset.bauId); this.saveDados(); this.renderBausUI(); break; }
                 case 'ilha-tab': { const tab = b.dataset.ilhaTab; const root = document.getElementById('ig-ilhaModal'); if(!root) break; root.querySelectorAll('.ilha-tab-btn').forEach(btn=>{ btn.style.background='rgba(255,255,255,0.1)'; btn.style.color='#fff'; btn.classList.remove('active'); }); b.style.background='#fde68a'; b.style.color='#000'; b.classList.add('active'); root.querySelectorAll('[id^="ig-ilhaTab"]').forEach(t=>t.style.display='none'); const target = document.getElementById(`ig-ilhaTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`); if(target) target.style.display='block'; break; }
                 case 'atualizar-ranking': this.carregarRanking(); break;
             }
@@ -2560,7 +3262,7 @@ Workspace.Ingles = {
         const oldLevelInfo = this.calcularLevel(this.state.xp);
 
         if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; 
+        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; this.ganharEnergia(2); 
         const newLevelInfo = this.calcularLevel(this.state.xp);
         await this.saveDados();
         try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
