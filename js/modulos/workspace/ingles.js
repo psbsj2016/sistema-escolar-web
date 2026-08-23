@@ -1,3 +1,12 @@
+// ==================== 🏝️ ILHA MÁGICA - V40 COMPLETO FINAL ====================
+// PARTE 1: HUB PRINCIPAL (imagem 1) - Tela ao abrir Baú do Inglês
+// PARTE 2: ECONOMIA NOVA - Bronze/Prata/Ouro + Diamantes + Pedras + Energia
+// PARTE 3: CAMPO DE CRIAÇÃO (imagem 2) - Construção com avatar + joystick
+// PARTE 4: LOJA, TESOUROS, MISSÕES (ligada ao professor), CONQUISTAS
+// PARTE 5: INVASÃO/SAQUE + GUERRA VIA JOGOS DE INGLÊS
+// Organizado sem quebrar nada existente - todos jogos, voz mago, portal mantidos
+// Imagens em /public/assets/ilha/ com fallback emoji se não existir
+
 // js/modulos/workspace/ingles.js - V3 FINAL (A+B+C + Painel Professor Completo + Voz Mago Mobile Grave)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
