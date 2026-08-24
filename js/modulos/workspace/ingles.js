@@ -186,7 +186,7 @@ const SRSService = {
 
 Workspace.Ingles = {
     state: {
-        xp:0, streak:1, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
+        xp:0, streak:1, avatarEquipado:null, inventario:[], coins:{bronze:150, prata:20, ouro:2}, diamantes:250, energia:5, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], magoPhrases:[], srs:{},
         magoConfig:{ vozAtiva:true, modoExibicao:'aleatorio' },
         _minimalTarget:null, editingMagoId:null
@@ -257,6 +257,13 @@ Workspace.Ingles = {
             {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie sons.', icon:'♊', color:'#FFEDD5', level:'B1-C1'},
             {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Invoque o nome da relíquia.', icon:'👁🗨', color:'#DCFCE7', level:'A1-B1'},
             {id:'portalMagico', title:'🌀 Portal Mágico', desc:'Viaje no tempo entre desafios! 5 vitórias = magia do mago + XP bônus!', icon:'🌀', color:'#E0E7FF', level:'A1-C1'}
+        ],
+        avatares:[
+            {id:'av1', nome:'Aprendiz', emoji:'🧙‍♂️', preco:0, desc:'Primeiro avatar grátis', raridade:'comum', bonus:'+5% XP'},
+            {id:'av2', nome:'Guerreiro', emoji:'⚔️', preco:100, desc:'Corajoso', raridade:'raro', bonus:'+10% Coins'},
+            {id:'av3', nome:'Maga', emoji:'🧝‍♀️', preco:200, desc:'Sábia', raridade:'epico', bonus:'+15% XP'},
+            {id:'av4', nome:'Arqueiro', emoji:'🏹', preco:300, desc:'Preciso', raridade:'epico', bonus:'+20% Coins'},
+            {id:'av5', nome:'Dragão', emoji:'🐉', preco:500, desc:'Lendário', raridade:'lendario', bonus:'+30% Tudo'}
         ]
     },
 
@@ -822,6 +829,16 @@ Workspace.Ingles = {
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
             
+
+            /* 📱 MOBILE SEM SCROLL - 100vh */
+            @media(max-width:768px){
+                #ig-alunoView{ height:100dvh !important; min-height:100dvh !important; max-height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
+                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ flex:1 !important; height:auto !important; min-height:0 !important; padding-bottom:70px !important; display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; align-content:center !important; justify-items:center !important; }
+                .ilha-predio{ width:100% !important; max-width:160px !important; position:relative !important; left:auto !important; top:auto !important; right:auto !important; transform:none !important; }
+            }
+
+            /* 📱 HUB ILHA RESPONSIVO - MOBILE/TABLET - ATUALIZADO */
+            #ig-alunoView > div[style*="position:absolute;top:0;left:0;right:0"]{ position:fixed !important; background:rgba(15,23,42,0.95); backdrop-filter:blur(8px); border-bottom:2px solid #fde68a; }
             /* 📱 HUB ILHA RESPONSIVO - MOBILE/TABLET */
             @media(max-width:1024px){
                 #ig-alunoView{ min-height:100vh; overflow-y:auto; }
@@ -904,83 +921,81 @@ Workspace.Ingles = {
         let container=document.getElementById('ws-ingles-container');
         if(!container){ container=document.createElement('div'); container.id='ws-ingles-container'; container.style.display='none'; const p=document.getElementById('ws-main-container'); if(p?.parentNode) p.parentNode.appendChild(container); }
         container.innerHTML=`
-            <div class="ig-header">
-                <div class="ig-title"><img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" class="ig-bau-topo" /><div class="ig-title-text"><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div></div>
+            <div class="ig-header" id="ig-header-principal" style="transition:all 0.4s ease">
+                <div class="ig-title"><img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" class="ig-bau-topo" style="transition:all 0.4s ease" /><div class="ig-title-text"><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div></div>
                 <div class="ig-rpg-hud"><div id="ig-global-timer-display" class="ig-global-timer">00:00</div><div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div><div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div></div>
             </div>
             <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none">
                 <div class="ig-prep-layout" style="display:flex;gap:25px;align-items:center"><img src="/assets/mago_bau_ingles.png" class="ig-guardian-avatar" style="width:130px;mix-blend-mode:screen" /><div class="ig-balao-fala-static"><span style="color:#f1c40f">Mestre Mago:</span><br/>Quantos minutos vai treinar agora?</div></div>
                 <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
             </div>
-            <div id="ig-alunoView" style="display:none;position:relative;width:100%;min-height:100vh;overflow:hidden;background:linear-gradient(180deg,#87CEEB 0%,#1E90FF 40%,#0c4a6e 100%)">
-                <!-- TOP BAR -->
-                <div style="position:absolute;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;pointer-events:none">
-                    <div style="pointer-events:auto;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#0F172A 0%,#1E293B 100%);border:2px solid #fde68a;border-radius:20px;padding:8px 14px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
-                        <img src="/assets/mago_bau_ingles.png" style="width:48px;height:48px;border-radius:50%;border:2px solid #fde68a;object-fit:cover;background:#fff">
-                        <div>
-                            <div style="color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;gap:6px"><span id="ig-hubNome">Explorador</span> <span style="background:#fde68a;color:#000;padding:2px 6px;border-radius:10px;font-size:9px">Nv.<span id="ig-hubNivel">1</span></span></div>
-                            <div style="background:rgba(255,255,255,0.2);width:120px;height:8px;border-radius:10px;overflow:hidden;margin:4px 0"><div id="ig-hubXpBar" style="height:100%;background:linear-gradient(90deg,#fde68a,#fbbf24);width:10%;transition:width 0.6s"></div></div>
-                            <div style="color:#94a3b8;font-size:9px"><span id="ig-hubXpTexto">0 / 100 XP</span></div>
+                        <div id="ig-alunoView" style="display:none;position:relative;width:100%;min-height:100vh;overflow:hidden;background:linear-gradient(180deg,#87CEEB 0%,#1E90FF 40%,#0c4a6e 100%)">
+                <!-- TOP BAR NOVO - Sequencia e Bonus no topo -->
+                <div style="position:absolute;top:0;left:0;right:0;z-index:25;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;pointer-events:none;gap:8px;flex-wrap:wrap">
+                    <div style="pointer-events:auto;display:flex;gap:10px;align-items:center">
+                        <!-- Sequencia -->
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fde68a;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
+                            <div style="text-align:center"><div style="color:#94a3b8;font-size:8px;font-weight:800;letter-spacing:0.5px">SEQUÊNCIA</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:18px">🔥</span><span style="color:#fff;font-weight:900;font-size:16px" id="ig-hubStreak">1</span><span style="color:#94a3b8;font-size:9px">dias</span></div></div>
+                            <div style="width:1px;height:32px;background:rgba(255,255,255,0.1)"></div>
+                            <div style="text-align:center"><div style="color:#94a3b8;font-size:8px;font-weight:800">BÔNUS</div><div style="font-size:20px;margin:1px 0">🎁</div><button data-action="coletar-bonus" style="background:#22c55e;color:#fff;border:none;padding:3px 8px;border-radius:8px;font-weight:900;font-size:8px;cursor:pointer">COLETAR</button></div>
+                        </div>
+                        <!-- Moedas no topo agora (no lugar do XP) -->
+                        <div style="pointer-events:auto;display:flex;gap:6px;align-items:center;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #334155;border-radius:14px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
+                            <div style="display:flex;align-items:center;gap:4px;background:rgba(251,191,36,0.2);padding:4px 8px;border-radius:10px;border:1px solid #fbbf24"><span style="font-size:12px">🪙</span><span style="color:#fff;font-weight:900;font-size:11px" id="ig-hubCoins">150</span></div>
+                            <div style="display:flex;align-items:center;gap:4px;background:rgba(139,92,246,0.2);padding:4px 8px;border-radius:10px;border:1px solid #8b5cf6"><span style="font-size:12px">💎</span><span style="color:#fff;font-weight:900;font-size:11px" id="ig-hubDiamante">250</span></div>
+                            <div style="display:flex;align-items:center;gap:4px;background:rgba(34,197,94,0.2);padding:4px 8px;border-radius:10px;border:1px solid #22c55e"><span style="font-size:12px">⚡</span><span style="color:#fff;font-weight:900;font-size:11px" id="ig-hubEnergiaTop">5</span></div>
                         </div>
                     </div>
-                    <div style="pointer-events:auto;display:flex;gap:8px;align-items:center;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #334155;border-radius:20px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
-                        <div style="display:flex;align-items:center;gap:6px;background:rgba(139,92,246,0.2);padding:4px 8px;border-radius:12px;border:1px solid #8b5cf6"><span>💎</span><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubDiamante">250</span></div>
-                        <div style="display:flex;align-items:center;gap:6px;background:rgba(251,191,36,0.2);padding:4px 8px;border-radius:12px;border:1px solid #fbbf24"><span>🪙</span><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubCoins">150</span></div>
-                        <div style="display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.2);padding:4px 8px;border-radius:12px;border:1px solid #22c55e"><span>⚡</span><span style="color:#fff;font-weight:900;font-size:12px" id="ig-hubEnergiaTop">5</span></div>
+                    <!-- Avatar e nivel pequeno no topo direito -->
+                    <div style="pointer-events:auto;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fde68a;border-radius:14px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
+                        <img src="/assets/mago_bau_ingles.png" style="width:32px;height:32px;border-radius:50%;border:2px solid #fde68a;object-fit:cover;background:#fff">
+                        <div><div style="color:#fff;font-weight:900;font-size:11px;display:flex;align-items:center;gap:4px"><span id="ig-hubNome">Explorador</span> <span style="background:#fde68a;color:#000;padding:1px 5px;border-radius:8px;font-size:8px">Nv.<span id="ig-hubNivel">1</span></span></div><div style="background:rgba(255,255,255,0.2);width:80px;height:6px;border-radius:8px;overflow:hidden;margin-top:2px"><div id="ig-hubXpBar" style="height:100%;background:linear-gradient(90deg,#fde68a,#fbbf24);width:10%;transition:width 0.6s"></div></div></div>
                     </div>
                 </div>
-                <!-- RIGHT BUTTONS -->
-                <div style="position:absolute;top:70px;right:12px;z-index:20;display:flex;flex-direction:column;gap:12px">
-                    <button data-action="abrir-recompensas" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:56px;height:56px;background:linear-gradient(135deg,#1E293B,#0F172A);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px">🎁</div><span style="background:#0F172A;color:#fff;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:800">Recompensas</span></button>
-                    <button data-action="abrir-conquistas" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:56px;height:56px;background:linear-gradient(135deg,#1E293B,#0F172A);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px">🏆</div><span style="background:#0F172A;color:#fff;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:800">Conquistas</span></button>
+                <!-- RIGHT BUTTONS - menores -->
+                <div style="position:absolute;top:70px;right:10px;z-index:20;display:flex;flex-direction:column;gap:8px">
+                    <button data-action="abrir-recompensas" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:44px;height:44px;background:linear-gradient(135deg,#1E293B,#0F172A);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px">🎁</div><span style="background:#0F172A;color:#fff;padding:2px 6px;border-radius:8px;font-size:8px;font-weight:800">Recompensas</span></button>
+                    <button data-action="abrir-conquistas" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:44px;height:44px;background:linear-gradient(135deg,#1E293B,#0F172A);border:2px solid #fde68a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px">🏆</div><span style="background:#0F172A;color:#fff;padding:2px 6px;border-radius:8px;font-size:8px;font-weight:800">Conquistas</span></button>
                 </div>
-                <!-- MAIN MAP -->
-                <div style="position:relative;width:100%;height:100vh;min-height:700px;display:flex;align-items:center;justify-content:center">
-                    <div style="position:absolute;top:12%;left:50%;transform:translateX(-50%);z-index:10;text-align:center;pointer-events:none">
-                        <div style="font-family:Cinzel;font-weight:900;font-size:32px;color:#fff;text-shadow:0 4px 0 #000, 0 0 20px rgba(0,0,0,0.8);line-height:0.9"><div style="color:#93c5fd">ILHA</div><div style="color:#fde68a">MÁGICA</div><div style="background:#7c3aed;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;margin-top:4px;display:inline-block">APRENDA • JOGUE • EVOLUA</div></div>
+                <!-- MAIN MAP - com padding top pra não ficar atrás do topo -->
+                <div style="position:relative;width:100%;height:100vh;min-height:700px;display:flex;align-items:center;justify-content:center;padding-top:60px;box-sizing:border-box">
+                    <div style="position:absolute;top:10%;left:50%;transform:translateX(-50%);z-index:10;text-align:center;pointer-events:none">
+                        <div style="font-family:Cinzel;font-weight:900;font-size:28px;color:#fff;text-shadow:0 3px 0 #000, 0 0 16px rgba(0,0,0,0.8);line-height:0.9"><div style="color:#93c5fd">ILHA</div><div style="color:#fde68a">MÁGICA</div><div style="background:#7c3aed;color:#fff;padding:3px 10px;border-radius:14px;font-size:10px;margin-top:3px;display:inline-block">APRENDA • JOGUE • EVOLUA</div></div>
                     </div>
                     <!-- APRENDER -->
-                    <div data-action="abrir-aprender" style="position:absolute;left:18%;top:28%;z-index:12;cursor:pointer;transition:0.2s" class="ilha-predio">
-                        <div style="font-size:80px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))">🏫</div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #38bdf8;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#0ea5e9;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">📚</div><div><div style="color:#fff;font-weight:900;font-size:11px">APRENDER</div><div style="color:#94a3b8;font-size:9px">Lições e desafios</div></div></div>
+                    <div data-action="abrir-aprender" style="position:absolute;left:18%;top:24%;z-index:12;cursor:pointer;transition:0.2s" class="ilha-predio">
+                        <div style="font-size:70px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))">🏫</div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #38bdf8;border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:6px;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#0ea5e9;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">📚</div><div><div style="color:#fff;font-weight:900;font-size:10px">APRENDER</div><div style="color:#94a3b8;font-size:8px">Lições e desafios</div></div></div>
                     </div>
                     <!-- MISSOES -->
-                    <div data-action="abrir-missoes" style="position:absolute;right:18%;top:26%;z-index:12;cursor:pointer" class="ilha-predio">
-                        <div style="font-size:80px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))">🔭</div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fbbf24;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#f59e0b;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">📜</div><div><div style="color:#fff;font-weight:900;font-size:11px">MISSÕES</div><div style="color:#94a3b8;font-size:9px">Tarefas diárias</div></div></div>
+                    <div data-action="abrir-missoes" style="position:absolute;right:18%;top:22%;z-index:12;cursor:pointer" class="ilha-predio">
+                        <div style="font-size:70px;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.3))">🔭</div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fbbf24;border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:6px;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#f59e0b;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">📜</div><div><div style="color:#fff;font-weight:900;font-size:10px">MISSÕES</div><div style="color:#94a3b8;font-size:8px">Tarefas diárias</div></div></div>
                     </div>
                     <!-- CASTELO -->
-                    <div data-action="abrir-conquistas" style="position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:11;cursor:pointer" class="ilha-predio">
-                        <div style="font-size:100px;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.4))">🏰</div>
+                    <div data-action="abrir-conquistas" style="position:absolute;left:50%;top:36%;transform:translateX(-50%);z-index:11;cursor:pointer" class="ilha-predio">
+                        <div style="font-size:90px;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.4))">🏰</div>
                     </div>
                     <!-- TESOUROS -->
-                    <div data-action="abrir-tesouros" style="position:absolute;left:16%;top:58%;z-index:12;cursor:pointer" class="ilha-predio">
-                        <div style="font-size:70px">💰</div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #a855f7;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#7c3aed;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🔒</div><div><div style="color:#fff;font-weight:900;font-size:11px">TESOUROS</div><div style="color:#94a3b8;font-size:9px">Colete e descubra</div></div></div>
+                    <div data-action="abrir-tesouros" style="position:absolute;left:16%;top:56%;z-index:12;cursor:pointer" class="ilha-predio">
+                        <div style="font-size:60px">💰</div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #a855f7;border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:6px;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#7c3aed;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🔒</div><div><div style="color:#fff;font-weight:900;font-size:10px">TESOUROS</div><div style="color:#94a3b8;font-size:8px">Colete e descubra</div></div></div>
                     </div>
                     <!-- JOGAR -->
-                    <div data-action="abrir-jogar" style="position:absolute;left:50%;top:62%;transform:translateX(-50%);z-index:12;cursor:pointer" class="ilha-predio">
-                        <div style="font-size:70px">🏟️</div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22c55e;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#16a34a;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🎮</div><div><div style="color:#fff;font-weight:900;font-size:11px">JOGAR</div><div style="color:#94a3b8;font-size:9px">Mini games</div></div></div>
+                    <div data-action="abrir-jogar" style="position:absolute;left:50%;top:60%;transform:translateX(-50%);z-index:12;cursor:pointer" class="ilha-predio">
+                        <div style="font-size:60px">🏟️</div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #22c55e;border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:6px;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#16a34a;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🎮</div><div><div style="color:#fff;font-weight:900;font-size:10px">JOGAR</div><div style="color:#94a3b8;font-size:8px">Mini games</div></div></div>
                     </div>
                     <!-- LOJA -->
-                    <div data-action="abrir-loja" style="position:absolute;right:16%;top:60%;z-index:12;cursor:pointer" class="ilha-predio">
-                        <div style="font-size:70px">🏪</div>
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #f97316;border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-top:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#ea580c;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center">🛒</div><div><div style="color:#fff;font-weight:900;font-size:11px">LOJA</div><div style="color:#94a3b8;font-size:9px">Itens e melhorias</div></div></div>
+                    <div data-action="abrir-loja" style="position:absolute;right:16%;top:58%;z-index:12;cursor:pointer" class="ilha-predio">
+                        <div style="font-size:60px">🏪</div>
+                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #f97316;border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:6px;margin-top:4px;box-shadow:0 4px 12px rgba(0,0,0,0.3)"><div style="background:#ea580c;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px">🛒</div><div><div style="color:#fff;font-weight:900;font-size:10px">LOJA</div><div style="color:#94a3b8;font-size:8px">Itens e melhorias</div></div></div>
                     </div>
-                    <div style="position:absolute;bottom:16px;left:16px;z-index:20;display:flex;gap:12px">
-                        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border:2px solid #fde68a;border-radius:16px;padding:10px 14px;display:flex;gap:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
-                            <div style="text-align:center"><div style="color:#94a3b8;font-size:9px;font-weight:800">Sequência</div><div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:20px">🔥</span><span style="color:#fff;font-weight:900;font-size:18px" id="ig-hubStreak">1</span></div><div style="color:#94a3b8;font-size:9px">dias</div></div>
-                            <div style="width:1px;background:rgba(255,255,255,0.1)"></div>
-                            <div style="text-align:center"><div style="color:#94a3b8;font-size:9px;font-weight:800">BÔNUS DIÁRIO</div><div style="font-size:28px;margin:2px 0">🎁</div><button data-action="coletar-bonus" style="background:#22c55e;color:#fff;border:none;padding:4px 12px;border-radius:10px;font-weight:900;font-size:9px;cursor:pointer">COLETAR</button></div>
-                        </div>
-                    </div>
-                    <div style="position:absolute;bottom:16px;right:16px;z-index:20">
-                        <div data-action="continuar-jornada" style="background:linear-gradient(135deg,#FEF3C7,#fde68a);border:3px solid #92400e;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,0.3);transform:rotate(-1deg)">
-                            <div><div style="color:#92400e;font-size:10px;font-weight:800">Continue sua</div><div style="color:#000;font-weight:900;font-size:16px;font-family:Cinzel">JORNADA!</div></div>
-                            <div style="width:44px;height:44px;background:#fff;border:2px solid #92400e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px">🧭</div>
-                        </div>
-                    </div>
+                </div>
+                <!-- BOTÃO JORNADA FLUTUANTE PEQUENO -->
+                <div data-action="continuar-jornada" style="position:fixed;bottom:16px;right:16px;z-index:30;background:linear-gradient(135deg,#FEF3C7,#fde68a);border:2px solid #92400e;border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);opacity:0.9;transition:0.2s">
+                    <div style="width:28px;height:28px;background:#fff;border:1.5px solid #92400e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px">🧭</div>
+                    <div><div style="color:#92400e;font-size:7px;font-weight:800;line-height:1">Continue sua</div><div style="color:#000;font-weight:900;font-size:11px;font-family:Cinzel;line-height:1">JORNADA!</div></div>
                 </div>
                 <div style="display:none"><div id="ig-gamesGrid" class="ig-games-grid"></div><div id="ig-questsPanel"></div><div id="ig-xp-bar-container"></div></div>
             </div>
@@ -1041,7 +1056,7 @@ Workspace.Ingles = {
         var body = document.getElementById('ig-modalBody');
         if(body){
             var htmlGrid = grid ? grid.innerHTML : '<div>Carregando jogos...</div>';
-            body.innerHTML = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:60px">📚</div><h2 style="font-family:Cinzel;color:#0F172A;margin:8px 0">Casa do Aprender</h2><p style="color:#64748B;font-size:12px">Escolha um jogo para ganhar Coins e XP</p></div><div class="ig-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">'+htmlGrid+'</div>';
+            body.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:36px">📚</div><div><h2 style="font-family:Cinzel;color:#0F172A;margin:0;font-size:18px">Casa do Aprender</h2><p style="color:#64748B;font-size:11px;margin:2px 0 0 0">Ganhe Coins jogando!</p></div></div><div style="display:flex;gap:6px"><div style="background:#FEF3C7;border:1px solid #fbbf24;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:800">🪙 <span id="ig-modalCoins">'+(this.state.coins.ouro||0)+' Ouro</span></div><div style="background:#EDE9FE;border:1px solid #8b5cf6;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:800">💎 '+(this.state.diamantes||0)+'</div></div></div><div class="ig-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">'+htmlGrid+'</div><div style="margin-top:12px;background:#F0FDF4;border:1px solid #bbf7d0;border-radius:10px;padding:8px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px"><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">⏱️ TEMPO</div><div style="font-weight:900;font-size:14px" id="ig-gameTempo">'+Math.floor(this.tempoRestante/60)+':'+String(this.tempoRestante%60).padStart(2,'0')+'</div></div><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">🪙 GANHO</div><div style="font-weight:900;font-size:14px;color:#d97706" id="ig-gameCoinsGanho">0 Bronze</div></div></div><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">⭐ XP SESSÃO</div><div style="font-weight:900;font-size:12px" id="ig-gameXpSessao">'+(this.xpGanhosNaSessao||0)+' XP</div></div></div>';
             document.getElementById('ig-modalTitle').textContent='APRENDER - Lições e Desafios';
             document.getElementById('ig-modalIcon').textContent='📚';
         }
@@ -1354,6 +1369,7 @@ Workspace.Ingles = {
         if(modal) modal.style.display='none';
         if(!isAluno){
             if(profView) profView.style.display='flex';
+            var hdr = document.getElementById('ig-header-principal'); if(hdr) hdr.style.display='flex';
             if(alunoView) alunoView.style.display='none';
             if(guardian) guardian.style.display='none';
             if(timeout) timeout.style.display='none';
@@ -1367,11 +1383,17 @@ Workspace.Ingles = {
             if(alunoView) alunoView.style.display='none';
             if(timeout) timeout.style.display='none';
             if(this.sessaoEncerrada){
-                if(timeout){ timeout.style.display='flex'; const xpEl2=document.getElementById('ig-timeout-xp'); if(xpEl2) xpEl2.innerText=`+${this.xpGanhosNaSessao} XP ⭐`; }
+                if(timeout){ timeout.style.display='flex'; const xpEl2=document.getElementById('ig-timeout-xp'); if(xpEl2) xpEl2.innerText=`+${this.xpGanhosNaSessao} XP ⭐`; var hdr3=document.getElementById('ig-header-principal'); if(hdr3) hdr3.style.display='flex'; }
             }else if(!this.tempoGlobalDefinido){
-                if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; }
+                if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; var hdr2=document.getElementById('ig-header-principal'); if(hdr2) hdr2.style.display='flex'; }
             }else{
-                if(alunoView){ alunoView.style.display='block'; this.renderAlunoGrid(); }
+                if(alunoView){ 
+                    alunoView.style.display='block'; 
+                    this.renderAlunoGrid(); 
+                    // Esconde header Baú do Inglês só dentro da Ilha Mágica, mas mantém efeito do baú abrindo
+                    var headerPrincipal = document.getElementById('ig-header-principal');
+                    if(headerPrincipal) headerPrincipal.style.display='none';
+                }
             }
         }
     },
