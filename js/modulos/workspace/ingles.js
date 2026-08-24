@@ -821,6 +821,36 @@ Workspace.Ingles = {
             #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
 
             @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+            
+            /* 📱 HUB ILHA RESPONSIVO - MOBILE/TABLET */
+            @media(max-width:1024px){
+                #ig-alunoView{ min-height:100vh; overflow-y:auto; }
+                #ig-alunoView > div[style*="position:absolute;top:0"]{ flex-wrap:wrap; gap:8px; padding:8px 10px !important; }
+                #ig-alunoView > div[style*="position:absolute;top:70px;right"]{ top:80px !important; flex-direction:row !important; right:8px !important; gap:8px !important; }
+                #ig-alunoView > div[style*="position:absolute;top:70px;right"] button div{ width:44px !important; height:44px !important; font-size:20px !important; }
+                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ height:auto !important; min-height:auto !important; display:flex !important; flex-direction:column !important; align-items:center !important; padding:140px 12px 100px 12px !important; gap:16px !important; }
+                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"] > div[style*="position:absolute;top:12%"]{ position:relative !important; top:auto !important; left:auto !important; transform:none !important; margin-bottom:8px; }
+                .ilha-predio{ position:relative !important; left:auto !important; top:auto !important; right:auto !important; transform:none !important; width:90% !important; max-width:320px; display:flex !important; align-items:center !important; gap:12px !important; background:linear-gradient(135deg,#0F172A,#1E293B) !important; border:2px solid #334155 !important; border-radius:16px !important; padding:12px !important; }
+                .ilha-predio > div:first-child{ font-size:48px !important; }
+                #ig-alunoView > div[style*="position:absolute;bottom:16px;left:16px"]{ position:relative !important; bottom:auto !important; left:auto !important; width:90% !important; max-width:320px; }
+                #ig-alunoView > div[style*="position:absolute;bottom:16px;right:16px"]{ position:relative !important; bottom:auto !important; right:auto !important; width:90% !important; max-width:320px; }
+            }
+            @media(max-width:480px){
+                #ig-alunoView{ padding:0 !important; }
+                #ig-alunoView > div[style*="position:absolute;top:0"] > div{ padding:6px 10px !important; }
+                #ig-alunoView > div[style*="position:absolute;top:0"] #ig-hubNome{ font-size:11px !important; }
+                #ig-alunoView > div[style*="position:absolute;top:0"] #ig-hubXpTexto{ font-size:8px !important; }
+                .ilha-predio{ padding:10px !important; }
+                .ilha-predio > div:first-child{ font-size:36px !important; }
+                #ig-gameModal > div{ width:98% !important; margin:4px !important; max-height:96vh !important; }
+            }
+            /* 🖥️ TELAS GRANDES */
+            @media(min-width:1440px){
+                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ max-width:1400px; margin:0 auto; }
+                .ilha-predio{ transform:scale(1.1); }
+                .ilha-predio:hover{ transform:scale(1.15) !important; }
+            }
+
             @media(max-width:768px){
               #ws-ingles-container{min-height:100vh;border-radius:0}
               .ig-header{flex-direction:column;gap:12px;padding:14px 16px;position:relative}
@@ -1161,6 +1191,39 @@ Workspace.Ingles = {
                 case 'rem-loot': this.remLoot(b.dataset.rar, b.dataset.id); break;
                 case 'salvar-season': this.salvarSeason(); break;
                 case 'reset-season': this.resetSeason(); break;
+                case 'abrir-aprender': this.abrirAprender(); break;
+                case 'abrir-jogar': this.abrirJogarIlha(); break;
+                case 'abrir-loja': this.abrirLojaIlha(); break;
+                case 'abrir-tesouros': this.abrirTesouros(); break;
+                case 'abrir-missoes': this.abrirMissoesIlha(); break;
+                case 'abrir-conquistas': this.abrirConquistas(); break;
+                case 'abrir-recompensas': this.abrirRecompensas(); break;
+                case 'coletar-bonus': this.coletarBonusDiario(); break;
+                case 'continuar-jornada': this.continuarJornada(); break;
+                case 'abrir-construir': Workspace.mostrarAviso('🚧 Campo de construção em breve - Parte 3!','info'); break;
+                case 'invadir-ilha': this.invadirIlha(b.dataset.alvo); break;
+                case 'loja-tab': this.renderLojaTab(b.dataset.loja); break;
+                case 'comprar-item': {
+                    var id=b.dataset.itemId, tipo=b.dataset.tipo, preco=parseInt(b.dataset.preco), moeda=b.dataset.moeda;
+                    if(moeda==='diamante'){
+                        if((this.state.diamantes||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (this.state.diamantes||0))+' 💎!','warning'); break; }
+                        this.state.diamantes-=preco;
+                        this.state.inventario=this.state.inventario||[];
+                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'diamante', protegido:true});
+                        this.saveDados(); this.atualizarHubV2();
+                        Workspace.mostrarAviso('✨ '+id+' comprado por '+preco+' 💎! Protegido!','success');
+                    } else {
+                        var coins=this.state.coins||{ouro:0};
+                        if((coins.ouro||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (coins.ouro||0))+' ouro!','warning'); break; }
+                        coins.ouro-=preco; this.state.coins=coins;
+                        this.state.inventario=this.state.inventario||[];
+                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'ouro', protegido:false});
+                        this.saveDados(); this.atualizarHubV2();
+                        Workspace.mostrarAviso('🪙 '+id+' comprado por '+preco+' ouro! Pode ser roubado!','success');
+                    }
+                    this.renderLojaTab('avatares');
+                    break;
+                }
                 case 'abrir-inventario': this.abrirInventario(); break;
                 case 'atualizar-ranking': this.carregarRanking(); break;
             }
