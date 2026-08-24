@@ -186,7 +186,7 @@ const SRSService = {
 
 Workspace.Ingles = {
     state: {
-        xp:0, streak:1, coins:{bronze:150, prata:20, ouro:2}, diamantes:250, energia:5, energiaMax:10, ilhasOutras:[], words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
+        xp:0, streak:1, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], magoPhrases:[], srs:{},
         magoConfig:{ vozAtiva:true, modoExibicao:'aleatorio' },
         _minimalTarget:null, editingMagoId:null
@@ -671,7 +671,7 @@ Workspace.Ingles = {
                 <img src="/assets/mago_bau_ingles.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 30px #fde68a);animation:floatMago 1.5s ease infinite" onerror="this.style.display='none'"/>
                 <div style="font-size:60px;margin:-20px 0 10px 0">✨🪄✨</div>
                 <div style="font-family:Cinzel;font-size:26px;font-weight:900;color:#fde68a;text-shadow:0 0 20px rgba(253,230,138,0.8)">MAGIA DO MAGO!</div>
-                <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': `${this.portalTarget-5} vitórias! Você é imbatível!`}</div>
+                <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': (this.portalTarget-5)+' vitórias! Você é imbatível!'}</div>
                 <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5)">+${bonus} XP BÔNUS!</div>
                 <div style="color:#94a3b8;font-size:12px;margin-top:12px">Próxima meta: ${5*(this.portalRodada+1)} vitórias seguidas</div>
             </div>
@@ -975,8 +975,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-
-    // ================= 🏝️ HUB V2 - ORGANIZADO =================
+// ================= 🏝️ HUB V2 - ORGANIZADO =================
     atualizarHubV2(){
         var stats = this.state;
         var elNivel = document.getElementById('ig-hubNivel');
@@ -1124,6 +1123,7 @@ Workspace.Ingles = {
         this.saveDados(); this.atualizarHubV2();
     },
 
+
     bindEvents(){
         const root=document.getElementById('ws-ingles-container');
         if(!root || root._bound) return; root._bound=true;
@@ -1161,39 +1161,6 @@ Workspace.Ingles = {
                 case 'rem-loot': this.remLoot(b.dataset.rar, b.dataset.id); break;
                 case 'salvar-season': this.salvarSeason(); break;
                 case 'reset-season': this.resetSeason(); break;
-                case 'abrir-aprender': this.abrirAprender(); break;
-                case 'abrir-jogar': this.abrirJogarIlha(); break;
-                case 'abrir-loja': this.abrirLojaIlha(); break;
-                case 'abrir-tesouros': this.abrirTesouros(); break;
-                case 'abrir-missoes': this.abrirMissoesIlha(); break;
-                case 'abrir-conquistas': this.abrirConquistas(); break;
-                case 'abrir-recompensas': this.abrirRecompensas(); break;
-                case 'coletar-bonus': this.coletarBonusDiario(); break;
-                case 'continuar-jornada': this.continuarJornada(); break;
-                case 'abrir-construir': Workspace.mostrarAviso('🚧 Campo de construção em breve - Parte 3!','info'); break;
-                case 'invadir-ilha': this.invadirIlha(b.dataset.alvo); break;
-                case 'loja-tab': this.renderLojaTab(b.dataset.loja); break;
-                case 'comprar-item': {
-                    var id=b.dataset.itemId, tipo=b.dataset.tipo, preco=parseInt(b.dataset.preco), moeda=b.dataset.moeda;
-                    if(moeda==='diamante'){
-                        if((this.state.diamantes||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (this.state.diamantes||0))+' 💎!','warning'); break; }
-                        this.state.diamantes-=preco;
-                        this.state.inventario=this.state.inventario||[];
-                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'diamante', protegido:true});
-                        this.saveDados(); this.atualizarHubV2();
-                        Workspace.mostrarAviso('✨ '+id+' comprado por '+preco+' 💎! Protegido!','success');
-                    } else {
-                        var coins=this.state.coins||{ouro:0};
-                        if((coins.ouro||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (coins.ouro||0))+' ouro!','warning'); break; }
-                        coins.ouro-=preco; this.state.coins=coins;
-                        this.state.inventario=this.state.inventario||[];
-                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'ouro', protegido:false});
-                        this.saveDados(); this.atualizarHubV2();
-                        Workspace.mostrarAviso('🪙 '+id+' comprado por '+preco+' ouro! Pode ser roubado!','success');
-                    }
-                    this.renderLojaTab('avatares');
-                    break;
-                }
                 case 'abrir-inventario': this.abrirInventario(); break;
                 case 'atualizar-ranking': this.carregarRanking(); break;
             }
@@ -1382,7 +1349,7 @@ Workspace.Ingles = {
                 const userK=`ws_ingles_user_${Workspace.usuario.id}`;
                 this.state.itensConcluidos=[]; try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify([])); }catch{}
                 this.iniciarTimerGlobal(minutos*60);
-                this.renderizarVisualizacao(); this.atualizarHubV2();
+                this.renderizarVisualizacao();
                 setTimeout(()=>this.iniciarFalaGuardiao(),500);
             },1000);
         },1500);
