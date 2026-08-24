@@ -846,6 +846,14 @@ Workspace.Ingles = {
             }
 
 
+
+            /* ⏱ Timer conta do tempo preenchido no inicio */
+            #ig-timerTop{ font-variant-numeric:tabular-nums; }
+            /* Barra recursos abaixo do WorkSpace */
+            #ig-topBarRecursos{ top:0 !important; position:sticky !important; }
+            /* Recompensas/Conquistas lado a lado, não abaixo do titulo */
+            #ig-botoesTopRight{ flex-direction:row !important; }
+
             /* 🎯 FIX CONTEUDO ABAIXO BARRA WORKSPACE */
             #ws-ingles-container{ padding-top:0 !important; margin-top:0 !important; position:relative; z-index:1; }
             /* 📱 CELULAR - mantem como esta */
@@ -987,12 +995,14 @@ Workspace.Ingles = {
                         <div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span style="color:#fff;font-weight:900;font-size:13px">CONTA</span><span style="background:#fde68a;color:#000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900">Nv. <span id="ig-hubNivel">1</span></span></div><div style="background:rgba(0,0,0,0.5);height:8px;border-radius:10px;overflow:hidden;margin:6px 0 4px 0;border:1px solid rgba(255,255,255,0.1);width:120px"><div id="ig-hubXpBar" style="height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:35%;transition:width 0.6s"></div></div><div style="color:#fff;font-size:11px;font-weight:700"><span id="ig-hubXpTexto">350</span> / 1.000 XP</div></div>
                         <div style="display:none"><span id="ig-hubNome">Explorador</span><span id="ig-hubStreak">1</span></div>
                     </div>
-                    <div id="ig-tituloIlha" style="position:absolute;top:20px;left:24px;z-index:15;text-align:left">
-                        <div style="font-family:Cinzel,serif;font-weight:900;line-height:0.9;text-shadow:0 3px 0 #000, 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(253,230,138,0.3)"><div style="color:#fde68a;font-size:13px;letter-spacing:3px;display:flex;align-items:center;gap:6px;text-shadow:0 0 10px rgba(253,230,138,0.8)"><span>✨</span> ILHA <span>✨</span></div><div style="background:linear-gradient(180deg,#FFFBEB 0%,#fde68a 20%,#fbbf24 50%,#f59e0b 80%,#d97706 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:48px;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 15px rgba(251,191,36,0.6));letter-spacing:1px">MÁGICA</div><div style="background:linear-gradient(90deg,#7c3aed,#4f46e5);color:#fff;padding:5px 14px;border-radius:12px;font-size:11px;letter-spacing:1.5px;display:inline-block;margin-top:6px;border:1px solid rgba(255,255,255,0.3);box-shadow:0 2px 10px rgba(124,58,237,0.4)">APRENDA • JOGUE • EVOLUA</div></div>
-                    </div>
-                    <div id="ig-botoesTopRight" style="position:absolute;top:140px;right:16px;z-index:20;display:flex;gap:10px">
+                    <div style="position:absolute;top:16px;left:16px;right:16px;z-index:15;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+                        <div id="ig-tituloIlha" style="text-align:left">
+                            <div style="font-family:Cinzel,serif;font-weight:900;line-height:0.9;text-shadow:0 3px 0 #000, 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(253,230,138,0.5)"><div style="color:#fde68a;font-size:12px;letter-spacing:3px;display:flex;align-items:center;gap:6px;text-shadow:0 0 12px rgba(253,230,138,1)"><span>✨</span> ILHA <span>✨</span></div><div style="background:linear-gradient(180deg,#FFFFFF 0%,#FFFBEB 10%,#fde68a 25%,#fbbf24 50%,#f59e0b 75%,#d97706 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:48px;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 20px rgba(251,191,36,0.8));letter-spacing:1px;font-weight:900">MÁGICA</div><div style="background:linear-gradient(90deg,#7c3aed,#4f46e5);color:#fff;padding:5px 14px;border-radius:12px;font-size:11px;letter-spacing:1.5px;display:inline-block;margin-top:6px;border:1px solid rgba(255,255,255,0.3);box-shadow:0 2px 10px rgba(124,58,237,0.4)">APRENDA • JOGUE • EVOLUA</div></div>
+                        </div>
+                        <div id="ig-botoesTopRight" style="display:flex;gap:10px;align-items:flex-start">
                         <button data-action="abrir-recompensas" style="background:linear-gradient(135deg,rgba(30,58,138,0.9),rgba(30,64,175,0.9));border:1.5px solid #3b82f6;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(8px)"><div style="width:36px;height:36px;background:linear-gradient(135deg,#fde68a,#d97706);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🏆</div><span style="color:#fff;font-size:9px;font-weight:800">Recompensas</span></button>
                         <button data-action="abrir-conquistas" style="background:linear-gradient(135deg,rgba(30,58,138,0.9),rgba(30,64,175,0.9));border:1.5px solid #ef4444;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(8px)"><div style="width:36px;height:36px;background:linear-gradient(135deg,#fde68a,#ef4444);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div><span style="color:#fff;font-size:9px;font-weight:800">Conquistas</span></button>
+                        </div>
                     </div>
                     <div id="ig-cardsContainer" style="position:absolute;bottom:100px;left:16px;right:16px;z-index:15;display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px">
                         <div data-action="abrir-aprender" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(20,40,100,0.9),rgba(10,25,70,0.9));border:2px solid #3b82f6;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px">🏫</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">APRENDER</div><div style="color:#93c5fd;font-size:10px;margin-top:2px">Lições e desafios</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
@@ -1551,8 +1561,14 @@ Workspace.Ingles = {
     },
     iniciarTimerGlobal(segundos){
         const display=document.getElementById('ig-global-timer-display'); if(display) display.style.display='flex';
+        const topTimer=document.getElementById('ig-timerTop'); 
         TimerService.start(segundos, (rest)=>{
             this.tempoRestante=rest; this.atualizarDisplayTimerGlobal();
+            // Atualiza timer no topo da Ilha também (contagem regressiva do tempo que aluno colocou)
+            if(topTimer){
+                var m=Math.floor(rest/60), s=rest%60;
+                topTimer.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+            }
         }, ()=>{
             this.sessaoEncerrada=true; this.fecharJogo(); this.renderizarVisualizacao();
         });
