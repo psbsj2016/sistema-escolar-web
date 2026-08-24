@@ -856,21 +856,117 @@ Workspace.Ingles = {
 
             /* 🎯 FIX CONTEUDO ABAIXO BARRA WORKSPACE */
             #ws-ingles-container{ padding-top:0 !important; margin-top:0 !important; position:relative; z-index:1; }
-            /* 📱 CELULAR - mantem como esta */
+            /* 📱 CELULAR - FIX PILULAS E NAVEGACAO */
             @media(max-width:768px){
-                #ig-topBarRecursos{ padding:6px 8px !important; gap:4px !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch; }
+                /* Pilulas abaixo da barra WorkSpace, não escondida */
+                #ig-topBarRecursos{ 
+                    position:sticky !important; 
+                    top:56px !important; /* abaixo da barra WorkSpace (56px altura) */
+                    z-index:20 !important;
+                    padding:8px 10px !important; 
+                    gap:6px !important; 
+                    overflow-x:auto !important; 
+                    -webkit-overflow-scrolling:touch; 
+                    background:rgba(10,14,42,0.98) !important;
+                    margin-top:0 !important;
+                }
                 #ig-topBarRecursos::-webkit-scrollbar{ display:none; }
-                #ig-topBarRecursos > div{ flex-shrink:0 !important; }
-                #ig-mainIlha{ min-height:100dvh !important; }
-                #ig-cardConta{ position:relative !important; top:auto !important; right:auto !important; margin:10px 12px !important; }
-                #ig-tituloIlha{ position:relative !important; top:auto !important; left:auto !important; text-align:left !important; margin:10px 14px !important; }
-                #ig-tituloIlha div div:nth-child(2){ font-size:36px !important; background:linear-gradient(180deg,#FFFBEB 0%,#fde68a 30%,#fbbf24 60%,#d97706 100%) !important; -webkit-background-clip:text !important; -webkit-text-fill-color:transparent !important; }
-                #ig-botoesTopRight{ position:relative !important; top:auto !important; right:auto !important; justify-content:flex-start !important; margin:0 14px 12px 14px !important; }
-                #ig-cardsContainer{ position:relative !important; bottom:auto !important; left:auto !important; right:auto !important; flex-direction:column !important; overflow:visible !important; padding:0 12px 20px 12px !important; }
-                #ig-cardsContainer .ilha-card{ min-width:100% !important; flex-direction:row !important; padding:12px !important; }
+                #ig-topBarRecursos > div{ flex-shrink:0 !important; white-space:nowrap !important; }
+                /* Main sem absolute, tudo em fluxo normal */
+                #ig-mainIlha{ 
+                    min-height:auto !important; 
+                    height:auto !important;
+                    position:relative !important;
+                    display:flex !important;
+                    flex-direction:column !important;
+                    gap:0 !important;
+                    padding-bottom:100px !important;
+                    overflow:visible !important;
+                }
+                #ig-cardConta{ 
+                    position:relative !important; 
+                    top:auto !important; 
+                    right:auto !important; 
+                    left:auto !important;
+                    margin:12px 12px 8px 12px !important; 
+                    order:1;
+                }
+                #ig-tituloIlha{ 
+                    position:relative !important; 
+                    top:auto !important; 
+                    left:auto !important; 
+                    right:auto !important;
+                    text-align:left !important; 
+                    margin:8px 14px !important; 
+                    order:2;
+                }
+                #ig-tituloIlha div div:nth-child(2){ 
+                    font-size:38px !important; 
+                    background:linear-gradient(180deg,#FFFBEB 0%,#fde68a 30%,#fbbf24 60%,#d97706 100%) !important; 
+                    -webkit-background-clip:text !important; 
+                    -webkit-text-fill-color:transparent !important; 
+                }
+                #ig-botoesTopRight{ 
+                    position:relative !important; 
+                    top:auto !important; 
+                    right:auto !important; 
+                    left:auto !important;
+                    justify-content:flex-start !important; 
+                    margin:0 14px 14px 14px !important; 
+                    order:3;
+                    display:flex !important;
+                    flex-direction:row !important;
+                    gap:10px !important;
+                }
+                #ig-cardsContainer{ 
+                    position:relative !important; 
+                    bottom:auto !important; 
+                    left:auto !important; 
+                    right:auto !important; 
+                    top:auto !important;
+                    flex-direction:column !important; 
+                    overflow:visible !important; 
+                    padding:0 12px 20px 12px !important; 
+                    order:4;
+                    display:flex !important;
+                    gap:12px !important;
+                }
+                #ig-cardsContainer .ilha-card{ 
+                    min-width:100% !important; 
+                    width:100% !important;
+                    flex-direction:row !important; 
+                    padding:12px !important; 
+                    position:relative !important;
+                    left:auto !important;
+                    top:auto !important;
+                    right:auto !important;
+                    bottom:auto !important;
+                    transform:none !important;
+                }
                 #ig-cardsContainer .ilha-card > div:first-child{ width:56px !important; height:48px !important; }
                 #ig-missoesDiarias{ display:none !important; }
+                #ig-alunoView div[data-action="continuar-jornada"]{ 
+                    position:fixed !important; 
+                    bottom:20px !important; 
+                    left:50% !important; 
+                    right:auto !important;
+                    transform:translateX(-50%) !important; 
+                    width:90% !important; 
+                    max-width:320px;
+                    z-index:25 !important;
+                }
+                /* Titulo e conta não por cima da ilha */
+                #ig-mainIlha > div{ position:relative !important; z-index:2; }
             }
+
+            /* 💻 DESKTOP - barra abaixo WorkSpace */
+            @media(min-width:769px){
+                #ig-topBarRecursos{ top:0 !important; }
+            }
+            /* WorkSpace bar height compensation */
+            #ws-ingles-container{ padding-top:0 !important; }
+            #ig-alunoView{ margin-top:0 !important; padding-top:0 !important; }
+
             /* 💻 DESKTOP - como na imagem */
             @media(min-width:769px){
                 #ig-alunoView{ max-width:100% !important; }
@@ -980,7 +1076,7 @@ Workspace.Ingles = {
                 <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
             </div>
                                                 <div id="ig-alunoView" style="display:none;position:relative;width:100%;min-height:100vh;background:linear-gradient(180deg,#0a0e2a 0%,#1a237e 30%,#0d47a1 60%,#0f172a 100%);padding-top:0;box-sizing:border-box;overflow-y:auto">
-                <!-- BARRA RECURSOS - NOVA ORDEM: timer, diamante, coin, energia, bonus -->
+                <!-- BARRA RECURSOS - ABAIXO DA BARRA WORKSPACE -->
                 <div style="position:sticky;top:0;z-index:30;background:rgba(10,14,42,0.98);backdrop-filter:blur(12px);border-bottom:2px solid rgba(255,255,255,0.1);padding:8px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center" id="ig-topBarRecursos">
                     <div style="display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.5);border:1.5px solid #fbbf24;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0"><span style="font-size:14px">⏱️</span><span style="color:#fde68a;font-weight:900;font-size:12px" id="ig-timerTop">03:45</span></div>
                     <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);border:1.5px solid #3b82f6;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0"><span style="font-size:18px">💎</span><span style="color:#fff;font-weight:900;font-size:13px" id="ig-hubDiamante">250</span><button style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-weight:900;font-size:12px;cursor:pointer;margin-left:4px">+</button></div>
