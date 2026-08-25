@@ -856,12 +856,12 @@ Workspace.Ingles = {
 
             /* 🎯 FIX CONTEUDO ABAIXO BARRA WORKSPACE */
             #ws-ingles-container{ padding-top:0 !important; margin-top:0 !important; position:relative; z-index:1; }
-            /* 📱 CELULAR - FIX PILULAS E NAVEGACAO */
+            /* 📱 CELULAR - FIX PILULAS E NAVEGACAO - ILHA SÓ APÓS BAÚ */
             @media(max-width:768px){
                 /* Pilulas abaixo da barra WorkSpace, não escondida */
                 #ig-topBarRecursos{ 
                     position:sticky !important; 
-                    top:56px !important; /* abaixo da barra WorkSpace (56px altura) */
+                    top:56px !important;
                     z-index:20 !important;
                     padding:8px 10px !important; 
                     gap:6px !important; 
@@ -872,7 +872,30 @@ Workspace.Ingles = {
                 }
                 #ig-topBarRecursos::-webkit-scrollbar{ display:none; }
                 #ig-topBarRecursos > div{ flex-shrink:0 !important; white-space:nowrap !important; }
-                /* Main sem absolute, tudo em fluxo normal */
+                /* Guardian screen deve cobrir tudo até baú brilhar */
+                #ig-guardian-screen{
+                    position:fixed !important;
+                    inset:0 !important;
+                    z-index:100 !important;
+                    background:linear-gradient(180deg,#0a0e2a 0%,#1a237e 50%,#0f172a 100%) !important;
+                    display:flex !important;
+                    flex-direction:column !important;
+                    align-items:center !important;
+                    justify-content:center !important;
+                    padding:20px !important;
+                }
+                #ig-guardian-screen[style*="display: none"]{ display:none !important; }
+                /* Ilha só aparece após baú - respeita display:none */
+                #ig-alunoView[style*="display: none"]{ display:none !important; }
+                #ig-alunoView[style*="display: block"]{
+                    display:flex !important;
+                    flex-direction:column !important;
+                    min-height:100dvh !important;
+                    height:auto !important;
+                    position:relative !important;
+                    overflow:visible !important;
+                }
+                /* Main sem absolute */
                 #ig-mainIlha{ 
                     min-height:auto !important; 
                     height:auto !important;
@@ -1551,9 +1574,11 @@ Workspace.Ingles = {
         const chest=document.getElementById('ig-header-chest');
         if(chest) chest.classList.add('chest-shake');
         const magoScr=document.getElementById('ig-guardian-screen');
+        const alunoViewTemp=document.getElementById('ig-alunoView');
+        if(alunoViewTemp) alunoViewTemp.style.display='none'; // Garante ilha escondida durante efeito
         if(magoScr) magoScr.style.opacity='0';
         setTimeout(()=>{
-            if(magoScr) magoScr.style.display='none';
+            if(magoScr) { magoScr.style.display='none'; magoScr.style.opacity='0'; }
             if(chest){ chest.classList.remove('chest-shake'); chest.classList.add('chest-explode'); chest.src='/assets/bau_roxo_pixel_aberto.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel_aberto.png'; }; }
             const rect=chest?.getBoundingClientRect()||{left:innerWidth/2, top:50, width:0, height:0};
             ParticleEngine.explode(rect.left+rect.width/2, rect.top+rect.height/2);
