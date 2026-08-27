@@ -189,21 +189,27 @@ Workspace.Ingles = {
         }
     },
 
-    abrirBau(){ 
+   abrirBau(){ 
         this.loadDados().then(() => {
             this.renderAlunoGrid();
             this.atualizarHUD();
             
             const isProfessor = Workspace.usuario?.tipo !== 'Aluno';
+            const btnProf = document.getElementById('btnProfessor');
+            const btnAluno = document.getElementById('btnAluno');
+            
             if(isProfessor) {
-                document.getElementById('btnProfessor').classList.add('active');
-                document.getElementById('btnAluno').classList.remove('active');
+                if(btnProf) { btnProf.style.display = 'inline-block'; btnProf.classList.add('active'); }
+                if(btnAluno) btnAluno.classList.remove('active');
+                
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
                 this.renderProfessorTab('biblioteca');
             } else {
-                document.getElementById('btnAluno').classList.add('active');
-                document.getElementById('btnProfessor').classList.remove('active');
+                // 🚀 FIX: Esconder totalmente a opção "Professor" para Alunos
+                if(btnProf) btnProf.style.display = 'none';
+                if(btnAluno) btnAluno.classList.add('active');
+                
                 document.getElementById('alunoView').classList.remove('hidden');
                 document.getElementById('professorView').classList.add('hidden');
             }
@@ -403,21 +409,25 @@ Workspace.Ingles = {
             /* Toast */
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-            /* Professor Sidebar */
-            #professorView { display: flex; gap: 20px; min-height: 60vh; }
-            .sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; }
-            .side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; }
-            .side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; }
-            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; }
+         /* Professor Sidebar & Layout Responsivo */
+            #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
+            .sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+            .side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
+            .side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; } /* min-width: 0 impede vazamento em telas pequenas */
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
 
             @media (max-width: 768px) {
-                #professorView { flex-direction: column; }
-                .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
-                .side-item { flex-shrink: 0; }
+                #professorView { flex-direction: column; gap: 12px; }
+                /* 🚀 FIX: Menu mobile estilo abas com scroll horizontal escondendo a barra */
+                .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+                .sidebar::-webkit-scrollbar { display: none; } 
+                .side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                
                 .bau-header { flex-direction: column; }
                 .bau-actions { width: 100%; justify-content: space-between; }
+                .content { padding: 16px; }
             }
         `;
         document.head.appendChild(style);
@@ -457,11 +467,11 @@ Workspace.Ingles = {
                 </div>
 
                 <main id="app">
-                    <section id="professorView" class="view hidden">
+                   <section id="professorView" class="view hidden">
                         <aside class="sidebar">
-                            <button class="side-item active" data-tab="biblioteca">📚 Biblioteca</button>
-                            <button class="side-item" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
-                            <button class="side-item" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
+                            <button class="side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
                         </aside>
                         <div class="content">
                             <div id="tab-biblioteca" class="tab-panel active"></div>
