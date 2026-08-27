@@ -4,16 +4,18 @@ if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
-// ===================== VOICE SERVICE - MÚLTIPLAS VOZES FEMININAS =====================
+// ===================== VOICE SERVICE - VOZES FEMININAS NEURAIS =====================
 const VoiceService = (() => {
     let cacheMago = null, resolver = null;
-    let femalePool = []; // Guardará TODAS as vozes femininas de alta qualidade encontradas
+    let femalePool = []; 
     const ready = new Promise(r => resolver = r);
 
     // Bloqueio rigoroso de vozes masculinas e robóticas
     const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred','bot'];
     
+    // Prioridade máxima para vozes neurais (Online) super realistas
     const SCORE_NORMAL = [
+        {k:'microsoft jenny online', s:1500}, {k:'microsoft aria online', s:1400}, 
         {k:'samantha', s:1000}, {k:'google uk english female', s:980}, {k:'google us english female', s:950},
         {k:'aria', s:900}, {k:'jenny', s:890}, {k:'zira', s:850}, {k:'karen', s:800}, {k:'victoria', s:790}
     ];
@@ -24,7 +26,7 @@ const VoiceService = (() => {
             const en = vs.filter(v => v.lang.toLowerCase().startsWith('en'));
             const pool = en.filter(v => {
                 const id = (v.name+' '+v.voiceURI).toLowerCase();
-                if (id.includes('female') || id.includes('samantha') || id.includes('aria')) return true;
+                if (id.includes('female') || id.includes('samantha') || id.includes('aria') || id.includes('jenny')) return true;
                 if (/\bmale\b/.test(id)) return false; 
                 return !MALE_BLOCK.some(m => id.includes(m));
             });
@@ -33,13 +35,14 @@ const VoiceService = (() => {
                 const id=(v.name+' '+v.voiceURI).toLowerCase();
                 let sc=100; 
                 SCORE_NORMAL.forEach(o=>{ if(id.includes(o.k)) sc=o.s; });
+                if(id.includes('online') || id.includes('neural')) sc+=300; // Impulso de qualidade IA
                 if(id.includes('female')) sc+=200;
                 if(v.localService) sc+=80;
                 if(v.default) sc+=50;
                 return {v, sc, id};
             }).sort((a,b)=>b.sc-a.sc);
 
-            femalePool = scored.map(x => x.v); // Guarda todas as vozes ordenadas por qualidade
+            femalePool = scored.map(x => x.v); 
             cacheMago = femalePool.find(v => v.name.toLowerCase().includes('uk') || v.name.toLowerCase().includes('samantha')) || femalePool[0];
             if(resolver) resolver(true);
         }
@@ -63,14 +66,18 @@ const VoiceService = (() => {
             const u = new SpeechSynthesisUtterance(text);
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             
-            let vozSelecionada = femalePool[0]; // Voz padrão
+            let vozSelecionada = femalePool[0]; // Voz padrão super realista
             
-            // 🚀 INTELIGÊNCIA DE VOZ: Cada jogo recebe uma locutora diferente da nossa pool!
+            // 🚀 INTELIGÊNCIA: Voz única para cada jogo baseado num Hash
             const currentJogo = window.Workspace?.Ingles?.jogoAtual;
             if(!isMago && currentJogo && femalePool.length > 0) {
-                // Cria um número único baseado no nome do jogo para escolher a voz
-                const hash = currentJogo.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                vozSelecionada = femalePool[hash % femalePool.length];
+                let hash = 0;
+                for (let i = 0; i < currentJogo.length; i++) {
+                    hash = currentJogo.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                // Alterna apenas entre as 4 melhores vozes para não perder qualidade
+                const index = Math.abs(hash) % Math.min(femalePool.length, 4); 
+                vozSelecionada = femalePool[index];
             } else if (isMago) {
                 vozSelecionada = cacheMago;
             }
@@ -368,7 +375,7 @@ Workspace.Ingles = {
         if(!this.state.itensConcluidos.includes(itemId)) this.state.itensConcluidos.push(itemId);
     },
 
-    obterItemInteligente(listaPadrao, tipoConteudo){
+   obterItemInteligente(listaPadrao, tipoConteudo){
         if(!Array.isArray(listaPadrao) || !listaPadrao.length) return null;
         const now=Date.now();
         let concluidos=this.state.itensConcluidos||[];
@@ -396,15 +403,14 @@ Workspace.Ingles = {
         
         const disponiveis=listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // 🚀 O SEGREDO DO TREINO INFINITO:
-        // Se as perguntas disponíveis acabaram, removemos apenas as perguntas deste jogo específico do histórico 
-        // de concluídos. Assim o aluno pode continuar a jogar com o conteúdo reciclado!
+        // 🚀 O SEGREDO DO TREINO INFINITO: 
+        // Se as perguntas inéditas/vencidas acabaram, removemos apenas as perguntas deste jogo do histórico de concluídos.
+        // Assim, o aluno não é expulso e o jogo reinicia o ciclo!
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
             this.saveDados(); 
             
-            // Retorna um item aleatório da lista inteira agora que ela foi desbloqueada
             return listaPadrao[Math.floor(Math.random() * listaPadrao.length)];
         }
         
@@ -2161,7 +2167,7 @@ Workspace.Ingles = {
         if(this.recognition) try{ this.recognition.stop(); }catch{}
     },
     
-   sucessoGenerico: async function(bonus){
+  sucessoGenerico: async function(bonus){
         if(this.portalAtivo){ return this.sucessoPortal(bonus); } 
 
         const mult = this.state.season?.xpMultiplier || 1;
@@ -2178,7 +2184,6 @@ Workspace.Ingles = {
         await this.saveDados();
         try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
         
-        // 🚀 Correção da Expulsão: Atualiza APENAS o HUD visual do topo sem fechar o modal
         try{ this.atualizarHubV2(); }catch{} 
         
         this.tocarSom('xp'); 
@@ -2193,10 +2198,10 @@ Workspace.Ingles = {
         const coinDisplay = document.getElementById('ig-gameCoinsGanho');
         if(coinDisplay) coinDisplay.innerText = `+${this.coinsGanhosNaSessao} BZ`;
 
-        // 🚀 LOOP INFINITO: Passa para o próximo desafio mantendo o utilizador no jogo!
+        // 🚀 FIM DA EXPULSÃO: Removido o bloqueio do cronómetro. O loop é infinito!
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none' && this.tempoRestante>0){
+            if(m && m.style.display!=='none'){
                 this.renderDesafioAtual();
             }
         }, 1200); 
@@ -2211,10 +2216,10 @@ Workspace.Ingles = {
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1800);
         
-        // 🚀 LOOP INFINITO (Falha): Volta a tentar sem expulsar
+        // 🚀 FIM DA EXPULSÃO (Erro): Volta a tentar sem expulsar o aluno
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none' && this.tempoRestante>0){
+            if(m && m.style.display!=='none'){
                 this.renderDesafioAtual();
             }
         }, 1200);
