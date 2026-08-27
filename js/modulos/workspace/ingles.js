@@ -1200,19 +1200,78 @@ Workspace.Ingles = {
         if(elDiamante) elDiamante.textContent = stats.diamantes||250;
         if(elEnergiaTop) elEnergiaTop.textContent = stats.energia||5;
     },
+
     abrirAprender(){
-        var grid = document.getElementById('ig-gamesGrid');
         var modal = document.getElementById('ig-gameModal');
         if(!modal) return;
         modal.style.display='flex';
+        
+        // 🚀 EXPANDIR TELA NO DESKTOP: Deixa o modal mais largo para a galeria
+        var cardModal = modal.querySelector('.ws-card');
+        if(cardModal) cardModal.style.maxWidth = '900px';
+
         var body = document.getElementById('ig-modalBody');
         if(body){
-            var htmlGrid = grid ? grid.innerHTML : '<div>Carregando jogos...</div>';
-            body.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div style="font-size:36px">📚</div><div><h2 style="font-family:Cinzel;color:#0F172A;margin:0;font-size:18px">Casa do Aprender</h2><p style="color:#64748B;font-size:11px;margin:2px 0 0 0">Ganhe Coins jogando!</p></div></div><div style="display:flex;gap:6px"><div style="background:#FEF3C7;border:1px solid #fbbf24;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:800">🪙 <span id="ig-modalCoins">'+(this.state.coins.ouro||0)+' Ouro</span></div><div style="background:#EDE9FE;border:1px solid #8b5cf6;padding:4px 8px;border-radius:10px;font-size:11px;font-weight:800">💎 '+(this.state.diamantes||0)+'</div></div></div><div class="ig-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">'+htmlGrid+'</div><div style="margin-top:12px;background:#F0FDF4;border:1px solid #bbf7d0;border-radius:10px;padding:8px;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:12px"><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">⏱️ TEMPO</div><div style="font-weight:900;font-size:14px" id="ig-gameTempo">'+Math.floor(this.tempoRestante/60)+':'+String(this.tempoRestante%60).padStart(2,'0')+'</div></div><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">🪙 GANHO</div><div style="font-weight:900;font-size:14px;color:#d97706" id="ig-gameCoinsGanho">0 Bronze</div></div></div><div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:800">⭐ XP SESSÃO</div><div style="font-weight:900;font-size:12px" id="ig-gameXpSessao">'+(this.xpGanhosNaSessao||0)+' XP</div></div></div>';
-            document.getElementById('ig-modalTitle').textContent='APRENDER - Lições e Desafios';
+            // 🚀 MAPEAR JOGOS: Cria mini-cards exclusivos para a galeria, sem descrições longas
+            var htmlGrid = this.defaults.games.map(g => {
+                var vencidos = Object.values(this.state.srs).filter(s => s.tipo === g.id && s.due <= Date.now()).length;
+                return `
+                <div data-action="abrir-jogo" data-game-id="${g.id}" class="ig-galeria-card">
+                    <div class="ig-galeria-icon" style="background:${g.color}">${g.icon}</div>
+                    <div class="ig-galeria-title">${g.title}</div>
+                    ${vencidos ? `<div class="ig-galeria-badge">🔥 ${vencidos}</div>` : ''}
+                </div>`;
+            }).join('');
+
+            body.innerHTML = `
+            <style>
+                .ig-galeria-grid { display: grid; gap: 12px; margin-top: 20px; }
+                .ig-galeria-card { background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+                .ig-galeria-card:hover { transform: translateY(-4px); border-color: #d4af37; box-shadow: 0 8px 20px rgba(212,175,55,0.25); background: #fffcf0; }
+                .ig-galeria-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 10px; box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1); }
+                .ig-galeria-title { font-size: 12px; font-weight: 900; color: #0F172A; line-height: 1.2; font-family: 'Cinzel', serif; }
+                .ig-galeria-badge { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 900; padding: 3px 7px; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+
+                /* 📱 MOBILE: Exatamente 3 por linha sem scroll! */
+                @media (max-width: 600px) {
+                    .ig-galeria-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+                    .ig-galeria-card { padding: 10px 4px; border-radius: 12px; }
+                    .ig-galeria-icon { width: 40px; height: 40px; font-size: 20px; margin-bottom: 6px; }
+                    .ig-galeria-title { font-size: 10px; letter-spacing: -0.5px; }
+                }
+                
+                /* 💻 DESKTOP: Ampliado e responsivo */
+                @media (min-width: 601px) {
+                    .ig-galeria-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+                }
+            </style>
+            
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="font-size:40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">📚</div>
+                    <div><h2 style="font-family:Cinzel, serif;color:#0F172A;margin:0;font-size:20px;font-weight:900;">Casa do Aprender</h2><p style="color:#64748B;font-size:12px;margin:2px 0 0 0;font-weight:600;">Treine e ganhe Coins!</p></div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <div style="background:#FEF3C7;border:2px solid #fbbf24;padding:6px 10px;border-radius:12px;font-size:12px;font-weight:900;color:#92400e;">🪙 <span id="ig-modalCoins">${this.state.coins.ouro||0} Ouro</span></div>
+                    <div style="background:#EDE9FE;border:2px solid #8b5cf6;padding:6px 10px;border-radius:12px;font-size:12px;font-weight:900;color:#4c1d95;">💎 ${this.state.diamantes||0}</div>
+                </div>
+            </div>
+            
+            <div class="ig-galeria-grid">${htmlGrid}</div>
+            
+            <div style="margin-top:20px;background:#F0FDF4;border:2px solid #bbf7d0;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex;gap:20px">
+                    <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;">⏱️ TEMPO</div><div style="font-weight:900;font-size:18px;color:#166534;" id="ig-gameTempo">${Math.floor(this.tempoRestante/60)}:${String(this.tempoRestante%60).padStart(2,'0')}</div></div>
+                    <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;">🪙 GANHO</div><div style="font-weight:900;font-size:18px;color:#d97706;" id="ig-gameCoinsGanho">0 BZ</div></div>
+                </div>
+                <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;margin-bottom:2px;">⭐ XP SESSÃO</div><div style="font-weight:900;font-size:14px;background:#22c55e;color:#fff;padding:4px 10px;border-radius:12px;box-shadow:0 2px 6px rgba(34,197,94,0.4);" id="ig-gameXpSessao">+${this.xpGanhosNaSessao||0} XP</div></div>
+            </div>`;
+            
+            document.getElementById('ig-modalTitle').textContent='APRENDER - Galeria de Jogos';
             document.getElementById('ig-modalIcon').textContent='📚';
         }
     },
+    
     abrirJogarIlha(){
         // Abre campo de criação - imagem 2
         var modal = document.getElementById('ig-gameModal');
@@ -1980,10 +2039,19 @@ Workspace.Ingles = {
         this.jogoAtual=id;
         const iconEl=document.getElementById('ig-modalIcon'); if(iconEl) iconEl.textContent=game.icon;
         const titleEl=document.getElementById('ig-modalTitle'); if(titleEl) titleEl.textContent=game.title;
-        const modal=document.getElementById('ig-gameModal'); if(modal) modal.style.display='flex';
+        const modal=document.getElementById('ig-gameModal'); 
+        
+        if(modal) {
+            modal.style.display='flex';
+            // 🚀 RESET DO MODAL: Retorna ao tamanho padrão para os jogos não ficarem esticados
+            var cardModal = modal.querySelector('.ws-card');
+            if(cardModal) cardModal.style.maxWidth = '650px';
+        }
+        
         this.currentAudioURL=null;
         this.renderGameCapa();
-    },
+    },    
+
     getColecaoDoJogoAtual(){
         const id=this.jogoAtual;
         if(id==='wordSpark') return (this.state.words&&this.state.words.length)?this.state.words:this.defaults.words;
