@@ -1114,26 +1114,19 @@ Workspace.Ingles = {
                📱 FIX 2: OTIMIZAÇÃO DE ESPAÇO NO MOBILE (TÍTULO E BOTÕES) 
                ========================================================== */
             @media (max-width: 768px) {
-                /* Ajuste do Modal para a altura da barra mobile */
                 #ig-gameModal { top: 56px !important; } 
                 #ig-gameModal > .ws-card { height: calc(100vh - 56px) !important; max-height: calc(100vh - 56px) !important; }
                 
-                /* Força o Título e os Botões a ficarem na mesma linha horizontal */
-                #ig-cardConta + div {
-                    flex-wrap: nowrap !important;
-                    align-items: center !important;
-                    gap: 8px !important;
-                    padding: 0 12px !important;
-                    margin-top: -5px !important;
-                }
+                #ig-cardConta + div { flex-wrap: nowrap !important; align-items: center !important; gap: 8px !important; padding: 0 12px !important; margin-top: -5px !important; }
                 
-                /* Encolhimento do Título da Ilha Mágica */
-                #ig-tituloIlha { margin: 0 !important; flex: 1; }
-                #ig-tituloIlha > div > div:nth-child(1) { font-size: 9px !important; } /* ✨ ILHA ✨ */
-                #ig-tituloIlha > div > div:nth-child(2) { font-size: 22px !important; letter-spacing: 0 !important; } /* MÁGICA */
-                #ig-tituloIlha > div > div:nth-child(3) { font-size: 7px !important; padding: 3px 6px !important; margin-top: 3px !important; white-space: nowrap !important; } /* APRENDA JOGUE EVOLUA */
+                /* 🚀 FIX: Afasta o título do Avatar e impede o corte das letras de baixo */
+                #ig-tituloIlha { margin-left: 20px !important; margin-top: 6px !important; padding-bottom: 8px !important; flex: 1; }
+                #ig-tituloIlha > div { line-height: 1.15 !important; }
                 
-                /* Encolhimento dos Botões Laterais (Recompensas / Conquistas) */
+                #ig-tituloIlha > div > div:nth-child(1) { font-size: 9px !important; } 
+                #ig-tituloIlha > div > div:nth-child(2) { font-size: 20px !important; letter-spacing: 0 !important; } 
+                #ig-tituloIlha > div > div:nth-child(3) { font-size: 7px !important; padding: 3px 6px !important; margin-top: 3px !important; white-space: nowrap !important; } 
+                
                 #ig-botoesTopRight { margin: 0 !important; flex-direction: row !important; gap: 6px !important; }
                 #ig-botoesTopRight button { padding: 6px 8px !important; border-radius: 10px !important; gap: 2px !important;}
                 #ig-botoesTopRight button div { width: 22px !important; height: 22px !important; font-size: 12px !important; }
@@ -1335,12 +1328,14 @@ Workspace.Ingles = {
             
             <div style="margin-top:20px;background:#F0FDF4;border:2px solid #bbf7d0;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,0.02);">
                 <div style="display:flex;gap:20px">
+                   // Final da string do innerHTML do abrirAprender()
+            <div style="margin-top:20px;background:#F0FDF4;border:2px solid #bbf7d0;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex;gap:20px">
                     <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;">⏱️ TEMPO</div><div style="font-weight:900;font-size:18px;color:#166534;" id="ig-gameTempo">${Math.floor(this.tempoRestante/60)}:${String(this.tempoRestante%60).padStart(2,'0')}</div></div>
-                    <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;">🪙 GANHO</div><div style="font-weight:900;font-size:18px;color:#d97706;" id="ig-gameCoinsGanho">0 BZ</div></div>
                 </div>
-                <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;margin-bottom:2px;">⭐ XP SESSÃO</div><div style="font-weight:900;font-size:14px;background:#22c55e;color:#fff;padding:4px 10px;border-radius:12px;box-shadow:0 2px 6px rgba(34,197,94,0.4);" id="ig-gameXpSessao">+${this.xpGanhosNaSessao||0} XP</div></div>
+                <div style="text-align:center"><div style="font-size:10px;color:#92400e;font-weight:900;letter-spacing:1px;margin-bottom:2px;">🪙 MOEDAS SESSÃO</div><div style="font-weight:900;font-size:16px;background:linear-gradient(135deg,#fde68a,#d97706);color:#000;padding:4px 12px;border-radius:12px;box-shadow:0 2px 6px rgba(217,119,6,0.4);" id="ig-gameCoinsGanho">+${this.coinsGanhosNaSessao||0} BZ</div></div>
             </div>`;
-            
+
             document.getElementById('ig-modalTitle').textContent='APRENDER - Galeria de Jogos';
             document.getElementById('ig-modalIcon').textContent='📚';
         }
@@ -1717,7 +1712,7 @@ Workspace.Ingles = {
             ParticleEngine.explode(rect.left+rect.width/2, rect.top+rect.height/2);
             try{ const a=new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a.volume=0.9; a.play().catch(()=>{}); }catch{}
             setTimeout(()=>{
-                this.tempoGlobalDefinido=true; this.xpGanhosNaSessao=0;
+                this.tempoGlobalDefinido=true; this.xpGanhosNaSessao=0; this.coinsGanhosNaSessao=0;
                 const userK=`ws_ingles_user_${Workspace.usuario.id}`;
                 this.state.itensConcluidos=[]; try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify([])); }catch{}
                 this.iniciarTimerGlobal(minutos*60);
@@ -1728,27 +1723,11 @@ Workspace.Ingles = {
     },
     
     async encerrarSessaoBau(){
-        // V6 loot
-        if(this.xpGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
+        // 🚀 O LOOT AGORA BASEIA-SE NAS MOEDAS GANHAS!
+        if(this.coinsGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
             try{
-                const rar = this.xpGanhosNaSessao>300? 'lendario' : this.xpGanhosNaSessao>150? 'epico' : 'comum';
-                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.xpGanhosNaSessao});
-                if(res?.success && res?.recompensa){
-                    const loot=res.recompensa;
-                    const modalLoot=document.createElement('div');
-                    modalLoot.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000004';
-                    modalLoot.innerHTML=`<div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:4px solid ${rar==='lendario'?'#fde68a': rar==='epico'?'#a78bfa':'#94a3b8'};border-radius:20px;padding:28px;text-align:center;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"><div style="font-size:60px">${rar==='lendario'?'👑': rar==='epico'?'💎':'📦'}</div><div style="font-family:Cinzel;font-weight:900;font-size:18px;margin:10px 0;color:#0f172a">Baú ${rar.toUpperCase()}!</div><div style="font-size:14px;color:#334155">${loot.nome||loot.id}</div><div style="margin-top:12px;background:#0F172A;color:#fde68a;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block">${loot.tipo||'cosmetico'}</div><button id="btn-fechar-loot" style="display:block;width:100%;margin-top:16px;background:#4F46E5;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:800;cursor:pointer">Equipar e Continuar ✨</button></div>`;
-                    document.body.appendChild(modalLoot);
-                    modalLoot.querySelector('#btn-fechar-loot').onclick=()=>modalLoot.remove();
-                    setTimeout(()=>{ if(document.body.contains(modalLoot)) modalLoot.remove(); },5000);
-                }
-            }catch{}
-        }
-        // original abaixo
-        if(this.xpGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
-            try{
-                const rar = this.xpGanhosNaSessao>300? 'lendario' : this.xpGanhosNaSessao>150? 'epico' : 'comum';
-                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.xpGanhosNaSessao});
+                const rar = this.coinsGanhosNaSessao>300? 'lendario' : this.coinsGanhosNaSessao>150? 'epico' : 'comum';
+                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.coinsGanhosNaSessao});
                 if(res?.success && res?.recompensa){
                     const loot=res.recompensa;
                     const modalLoot=document.createElement('div');
@@ -1767,17 +1746,21 @@ Workspace.Ingles = {
         this.bauDestrancado=false;
         this.tempoRestante=0;
         this.digitandoAtivo=false;
+        
         if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
         const chest=document.getElementById('ig-header-chest');
         if(chest){ chest.classList.remove('chest-shake','chest-explode'); chest.style.transform='scale(1)'; chest.src='/assets/bau_roxo_pixel.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel.png'; }; }
+        
         document.getElementById('ig-gameModal').style.display='none';
         document.getElementById('ig-timeout-screen').style.display='none';
         document.getElementById('ig-alunoView').style.display='none';
+        
         const guardian=document.getElementById('ig-guardian-screen');
         if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; const inp=document.getElementById('ig-tempo-escolhido'); if(inp) inp.value=''; }
+        
         this.renderizarVisualizacao();
         Workspace.mostrarAviso('Sessão guardada! Escolha novo tempo para voltar a jogar.','success');
-    },
+    },    
 
     iniciarFalaGuardiao(forcarRestart=false){
         const modal=document.getElementById('ig-gameModal');
@@ -2147,7 +2130,7 @@ Workspace.Ingles = {
         const como = intro ? intro.como : game.desc;
         const objetivo = intro ? intro.objetivo : 'Treine inglês de forma épica.';
         const dica = intro ? intro.dica : 'Foque e divirta-se!';
-        const xp = intro ? intro.xp : '+50 XP';
+        const xp = intro ? intro.xp : '+50 BZ 🪙';
         const totalItens = (()=>{ const c=this.getColecaoDoJogoAtual(); return c?c.length:0; })();
         document.getElementById('ig-modalBody').innerHTML=`
             <div style="text-align:center;padding:10px 0">
@@ -2158,7 +2141,7 @@ Workspace.Ingles = {
                     <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#4F46E5;letter-spacing:1px;margin-bottom:4px">📖 COMO FUNCIONA</div><div style="font-size:14px;color:#0f172a;line-height:1.5">${como}</div></div>
                     <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#059669;letter-spacing:1px;margin-bottom:4px">🎯 OBJETIVO</div><div style="font-size:13px;color:#334155;line-height:1.5">${objetivo}</div></div>
                     <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#d97706;letter-spacing:1px;margin-bottom:4px">💡 DICA DO MAGO</div><div style="font-size:13px;color:#334155;line-height:1.5;background:#FFFBEB;border:1px solid #fde68a;padding:10px;border-radius:10px">${dica}</div></div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span style="background:#EEF2FF;color:#4338ca;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800;border:1px solid #c7d2fe">⭐ ${xp}</span><span style="background:#F1F5F9;color:#475569;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">⏱ Só acaba no X, Mudar ou tempo</span><span style="background:#D1FAE5;color:#065f46;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">♾️ Treino infinito</span></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span style="background:#FFFBEB;color:#d97706;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fde68a">${xp}</span><span style="background:#F1F5F9;color:#475569;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">⏱ Só acaba no X, Mudar ou tempo</span><span style="background:#D1FAE5;color:#065f46;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">♾️ Treino infinito</span></div>
                 </div>
                 <button data-action="iniciar-jogo" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:14px;margin-top:18px;cursor:pointer;font-weight:800;font-size:16px;box-shadow:0 6px 0 #312e81, 0 8px 24px rgba(79,70,229,0.3)">▶ Iniciar Treino Épico</button>
             </div>
@@ -2180,31 +2163,39 @@ Workspace.Ingles = {
         if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop();
         if(this.recognition) try{ this.recognition.stop(); }catch{}
     },
+    
     sucessoGenerico: async function(bonus){
-        if(this.portalAtivo){ return this.sucessoPortal(bonus); }
+        if(this.portalAtivo){ return this.sucessoPortal(bonus); } // O Portal continua a dar XP!
 
         const mult = this.state.season?.xpMultiplier || 1;
-        bonus = Math.floor(bonus * mult);
-        const oldLevelInfo = this.calcularLevel(this.state.xp);
+        const bonusCoins = Math.floor(bonus * mult);
 
-        if(this.desafioAtualObj?.id){ this.marcarComoConcluido(this.desafioAtualObj.id); this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); }
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus; 
-        const newLevelInfo = this.calcularLevel(this.state.xp);
+        if(this.desafioAtualObj?.id){ 
+            this.marcarComoConcluido(this.desafioAtualObj.id); 
+            this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
+        }
+        
+        // 🪙 O SEGREDO: Em vez de XP, damos moedas (Bronze)
+        this.ganharCoins('bronze', bonusCoins);
+        this.coinsGanhosNaSessao = (this.coinsGanhosNaSessao || 0) + bonusCoins; 
+        
         await this.saveDados();
         try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
-        try{ this.renderizarVisualizacao(); }catch{}
-        // Level up?
-        if(newLevelInfo.level > oldLevelInfo.level){
-            this.mostrarLevelUp(oldLevelInfo.level, newLevelInfo.level);
-        }else{
-            this.tocarSom('xp');
-        }
+        try{ this.renderizarVisualizacao(); this.atualizarHubV2(); }catch{}
+        
+        this.tocarSom('xp'); 
+        
         const srs=this.state.srs[this.desafioAtualObj?.id];
         const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#10B981,#059669);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
-        toast.innerHTML=`✅ +${bonus} XP • Próxima em ${srs?.interval||1}d`;
+        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d97706,#92400e);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 4px 10px rgba(0,0,0,0.3);border:2px solid #fde68a;';
+        toast.innerHTML=`🪙 +${bonusCoins} Bronze • Próxima em ${srs?.interval||1}d`;
         document.body.appendChild(toast);
         setTimeout(()=>toast.remove(),1500);
+
+        // Atualiza a interface da Galeria (Aprender) ao vivo
+        const coinDisplay = document.getElementById('ig-gameCoinsGanho');
+        if(coinDisplay) coinDisplay.innerText = `+${this.coinsGanhosNaSessao} BZ`;
+
         setTimeout(()=>{
             const m=document.getElementById('ig-gameModal');
             if(m && m.style.display!=='none' && this.tempoRestante>0){
@@ -2212,6 +2203,7 @@ Workspace.Ingles = {
             }
         }, 700);
     },
+
     falhaGenerica: async function(){
         if(this.portalAtivo){ return this.falhaPortal(); }
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
@@ -2278,7 +2270,7 @@ Workspace.Ingles = {
         this.desafioAtualObj=this.obterItemInteligente(colecaoWords,'word'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const w=this.desafioAtualObj; const srs=this.getSRS(w.id);
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8;background:#F1F5F9;padding:6px 10px;border-radius:20px;display:inline-block;margin-bottom:10px">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo'} • Feitiço puro isolado</div><div class="ig-big-phrase" style="font-size:38px;background:linear-gradient(180deg,#EEF2FF 0%,#E0E7FF 100%);border-color:#818cf8;color:#4338ca">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:800;color:#64748B;margin:8px 0">Significado: ${Workspace.escapeHTML(w.translation||'')}</p><div class="ig-big-phrase" style="font-size:18px">Crie frase com <b style="color:#4F46E5">${Workspace.escapeHTML(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Although it was raining..." style="min-height:100px;margin-top:12px"></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:12px;margin-top:14px;cursor:pointer;font-weight:800">Lançar Feitiço ✨ +50 XP</button></div>`;
+        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8;background:#F1F5F9;padding:6px 10px;border-radius:20px;display:inline-block;margin-bottom:10px">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo'} • Feitiço puro isolado</div><div class="ig-big-phrase" style="font-size:38px;background:linear-gradient(180deg,#EEF2FF 0%,#E0E7FF 100%);border-color:#818cf8;color:#4338ca">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:800;color:#64748B;margin:8px 0">Significado: ${Workspace.escapeHTML(w.translation||'')}</p><div class="ig-big-phrase" style="font-size:18px">Crie frase com <b style="color:#4F46E5">${Workspace.escapeHTML(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Although it was raining..." style="min-height:100px;margin-top:12px"></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:12px;margin-top:14px;cursor:pointer;font-weight:800">Lançar Feitiço ✨ +50 coins</button></div>`;
     
     },
     renderGameReadAloud(isPortal=false){
