@@ -1,10 +1,10 @@
-// js/modulos/workspace/ingles.js - V4 (Layout Direto + Loop Infinito + Vozes Neurais + Apenas Coins)
+// js/modulos/workspace/ingles.js - V5 FINAL (Acesso Direto, Loop Infinito, Apenas Coins, HTML Limpo)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
-// ===================== VOICE SERVICE - VOZES FEMININAS NEURAIS =====================
+// ===================== VOICE SERVICE - VOZES NEURAIS & ÚNICAS =====================
 const VoiceService = (() => {
     let cacheMago = null, resolver = null;
     let femalePool = []; 
@@ -12,7 +12,6 @@ const VoiceService = (() => {
 
     const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred','bot'];
     
-    // Prioridade MÁXIMA para vozes neurais e online
     const SCORE_NORMAL = [
         {k:'online', s:2000}, {k:'natural', s:1900}, {k:'microsoft jenny', s:1800}, {k:'microsoft aria', s:1700},
         {k:'samantha', s:1000}, {k:'google uk english female', s:980}, {k:'google us english female', s:950},
@@ -67,7 +66,7 @@ const VoiceService = (() => {
             
             let vozSelecionada = femalePool[0]; 
             
-            // INTELIGÊNCIA: Locutora diferente por jogo (Hash algorithm)
+            // INTELIGÊNCIA: Locutora diferente por minijogo
             const currentJogo = window.Workspace?.Ingles?.jogoAtual;
             if(!isMago && currentJogo && femalePool.length > 0) {
                 let hash = 0;
@@ -97,6 +96,7 @@ const VoiceService = (() => {
     };
 })();
 
+// ===================== MOTOR SRS (ESPAÇAMENTO) =====================
 const SRSService = {
     calc(success, entry){
         const now=Date.now();
@@ -176,17 +176,37 @@ Workspace.Ingles = {
             const orig=Workspace.navegarPara;
             Workspace.navegarPara=(tela,hist)=>{
                 const c=document.getElementById('ws-ingles-container');
-                if(c) c.style.display=(tela==='ingles')?'block':'none';
+                if(c) {
+                    if(tela==='ingles') {
+                        c.style.display='block';
+                        this.abrirBau(); // Carrega os dados instantaneamente ao abrir a tab
+                    } else {
+                        c.style.display='none';
+                    }
+                }
                 orig(tela,hist);
             }; this.navConfigurada=true;
         }
     },
 
     abrirBau(){ 
-        Workspace.navegarPara('ingles'); 
         this.loadDados().then(() => {
             this.renderAlunoGrid();
             this.atualizarHUD();
+            
+            const isProfessor = Workspace.usuario?.tipo !== 'Aluno';
+            if(isProfessor) {
+                document.getElementById('btnProfessor').classList.add('active');
+                document.getElementById('btnAluno').classList.remove('active');
+                document.getElementById('professorView').classList.remove('hidden');
+                document.getElementById('alunoView').classList.add('hidden');
+                this.renderProfessorTab('biblioteca');
+            } else {
+                document.getElementById('btnAluno').classList.add('active');
+                document.getElementById('btnProfessor').classList.remove('active');
+                document.getElementById('alunoView').classList.remove('hidden');
+                document.getElementById('professorView').classList.add('hidden');
+            }
         });
     },
 
@@ -297,7 +317,7 @@ Workspace.Ingles = {
         
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // 🚀 LIMPEZA DA MEMÓRIA (LOOP INFINITO)
+        // 🚀 LOOP INFINITO (Limpeza de Memória local)
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
@@ -375,7 +395,7 @@ Workspace.Ingles = {
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
             .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 16px; width: 100%; padding: 14px; box-sizing: border-box; outline: none; transition: 0.2s; }
             .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
-            .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; }
+            .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; cursor: pointer;}
             .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
             
             .hidden { display: none !important; }
@@ -497,7 +517,6 @@ Workspace.Ingles = {
     ganharCoins(tipo, qtd){
         this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0};
         this.state.coins[tipo] = (this.state.coins[tipo]||0) + qtd;
-        // Lógica de conversão
         if(this.state.coins.bronze >= 100){ 
             let c = Math.floor(this.state.coins.bronze/100); 
             this.state.coins.bronze -= c*100; 
@@ -539,7 +558,7 @@ Workspace.Ingles = {
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
 
-            // Lógica de Respostas Internas dos Jogos
+            // Lógica de Respostas Internas
             const cur = this.desafioAtualObj;
             const input = document.getElementById('ig-input')?.value?.trim()||'';
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
@@ -593,7 +612,7 @@ Workspace.Ingles = {
                 
                 this.state._debateChat.push({role:'user', text:texto});
                 this.ganharCoins('bronze', 15);
-                this.renderGameDebateAI(); // Mostra a mensagem do user
+                this.renderGameDebateAI(); 
                 
                 setTimeout(() => {
                     const poolTexts = this.state.pool.filter(p=>p.text).slice(0,3).map(p=>p.text.substring(0,60)).join(' | ');
@@ -608,7 +627,6 @@ Workspace.Ingles = {
                 }, 1500);
             }
             
-            // Ações do Professor
             if(a === 'render-tab') this.renderProfessorTab(b.dataset.tab);
             if(a === 'add-word') { const w=document.getElementById('nwWord').value; const t=document.getElementById('nwTrans').value; if(w){ this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
             if(a === 'add-phrase') { const p=document.getElementById('nwPhrase').value; if(p){ this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
@@ -654,7 +672,7 @@ Workspace.Ingles = {
         this.renderAlunoGrid();
     },
 
-    // 🚀 LÓGICA DO LOOP INFINITO - O SEGREDO ESTÁ AQUI
+    // 🚀 LÓGICA DO LOOP INFINITO PURO
     sucessoGenerico: async function(bonusBase){
         if(this.desafioAtualObj?.id){ 
             this.marcarComoConcluido(this.desafioAtualObj.id); 
@@ -667,7 +685,7 @@ Workspace.Ingles = {
         const srs = this.state.srs[this.desafioAtualObj?.id];
         this.mostrarAvisoLocal(`🪙 +${bonusBase} Bronze! Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
 
-        // Loop sem bloqueios - Avança direto para a próxima após 1.2 segundos
+        // Avança de imediato SEM VALIDAÇÕES de tempo
         setTimeout(() => {
             const modal = document.getElementById('gameModal');
             if(modal && !modal.classList.contains('hidden')){
@@ -727,16 +745,14 @@ Workspace.Ingles = {
             return;
         }
 
-        // Limpa a memória só deste jogo para reiniciar a roleta
         const ids = colecao.map(i=>i.id);
         this.state.itensConcluidos = (this.state.itensConcluidos||[]).filter(id=>!ids.includes(id));
         this.saveDados();
         
-        // Retoma imediatamente sem bloquear a tela
         this.renderDesafioAtual();
     },
 
-    // ========= TELAS DOS JOGOS (Mapeadas para #modalBody) =========
+    // ========= TELAS DOS JOGOS =========
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
         const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
