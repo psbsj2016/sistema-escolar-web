@@ -1066,6 +1066,80 @@ Workspace.Ingles = {
               #ig-modalBody{max-height:70vh;overflow-y:auto}
               .ig-rank-item{padding:12px;gap:10px}
             }
+   
+              /* ==========================================================
+               🚀 FIX 1: MODAIS EM TELA CHEIA ABAIXO DA BARRA WORKSPACE 
+               ========================================================== */
+            #ig-gameModal {
+                top: 65px !important; 
+                bottom: 0 !important;
+                align-items: flex-start !important; 
+                background: rgba(15,23,42,0.95) !important;
+            }
+            #ig-gameModal > .ws-card {
+                width: 100% !important; 
+                max-width: 100% !important; 
+                height: calc(100vh - 65px) !important; 
+                max-height: calc(100vh - 65px) !important; 
+                border-radius: 0 !important; 
+                border: none !important; 
+                margin: 0 !important;
+            }
+            /* Cabeçalho Premium do Modal */
+            #ig-gameModal .ws-card > div:first-child {
+                background: linear-gradient(135deg, #0F172A, #1E293B) !important;
+                border-bottom: 2px solid #d4af37 !important;
+                padding: 12px 25px !important;
+            }
+            #ig-gameModal .ws-card > div:first-child h2 { color: #fde68a !important; font-size: 20px !important; letter-spacing: 1px !important; }
+            #ig-gameModal .ws-card > div:first-child span#ig-modalIcon { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+            
+            /* Botão "X" de Fechar Modernizado */
+            #ig-gameModal .ws-card > div:first-child button[data-action="fechar-jogo"] {
+                background: rgba(239, 68, 68, 0.15) !important;
+                width: 40px !important;
+                height: 40px !important;
+                border-radius: 10px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                color: #ef4444 !important;
+                transition: 0.2s !important;
+            }
+            #ig-gameModal .ws-card > div:first-child button[data-action="fechar-jogo"]:hover { 
+                background: #ef4444 !important; color: #fff !important; transform: scale(1.05); 
+            }
+
+            /* ==========================================================
+               📱 FIX 2: OTIMIZAÇÃO DE ESPAÇO NO MOBILE (TÍTULO E BOTÕES) 
+               ========================================================== */
+            @media (max-width: 768px) {
+                /* Ajuste do Modal para a altura da barra mobile */
+                #ig-gameModal { top: 56px !important; } 
+                #ig-gameModal > .ws-card { height: calc(100vh - 56px) !important; max-height: calc(100vh - 56px) !important; }
+                
+                /* Força o Título e os Botões a ficarem na mesma linha horizontal */
+                #ig-cardConta + div {
+                    flex-wrap: nowrap !important;
+                    align-items: center !important;
+                    gap: 8px !important;
+                    padding: 0 12px !important;
+                    margin-top: -5px !important;
+                }
+                
+                /* Encolhimento do Título da Ilha Mágica */
+                #ig-tituloIlha { margin: 0 !important; flex: 1; }
+                #ig-tituloIlha > div > div:nth-child(1) { font-size: 9px !important; } /* ✨ ILHA ✨ */
+                #ig-tituloIlha > div > div:nth-child(2) { font-size: 22px !important; letter-spacing: 0 !important; } /* MÁGICA */
+                #ig-tituloIlha > div > div:nth-child(3) { font-size: 7px !important; padding: 3px 6px !important; margin-top: 3px !important; white-space: nowrap !important; } /* APRENDA JOGUE EVOLUA */
+                
+                /* Encolhimento dos Botões Laterais (Recompensas / Conquistas) */
+                #ig-botoesTopRight { margin: 0 !important; flex-direction: row !important; gap: 6px !important; }
+                #ig-botoesTopRight button { padding: 6px 8px !important; border-radius: 10px !important; gap: 2px !important;}
+                #ig-botoesTopRight button div { width: 22px !important; height: 22px !important; font-size: 12px !important; }
+                #ig-botoesTopRight button span { font-size: 7px !important; }
+            }
+
         `;
         document.head.appendChild(style);
     },
