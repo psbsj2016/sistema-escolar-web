@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V7 FINAL (Isolamento CSS, Sync de Base de Dados, Loop Infinito)
+// js/modulos/workspace/ingles.js - V8 FINAL (Blindagem de CSS Global, Sync de DB Seguro e Loop Infinito)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -198,20 +198,18 @@ Workspace.Ingles = {
             const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
             const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
             
-            // Log para garantires que os dados estão a chegar do servidor
-            // console.log("Dados recebidos da Base de Dados:", res?.dados);
-
             if(res && res.success && res.dados){
                 const d = res.dados;
-                this.state.words = Array.isArray(d.words) && d.words.length ? d.words : [...this.defaults.words];
-                this.state.phrases = Array.isArray(d.phrases) && d.phrases.length ? d.phrases : [...this.defaults.phrases];
-                this.state.quizzes = Array.isArray(d.quizzes) && d.quizzes.length ? d.quizzes : [...this.defaults.quizzes];
-                this.state.pictures = Array.isArray(d.pictures) && d.pictures.length ? d.pictures : [...this.defaults.pictures];
-                this.state.wordPickers = Array.isArray(d.wordPickers) && d.wordPickers.length ? d.wordPickers : [...this.defaults.wordPickers];
-                this.state.minimalPairs = Array.isArray(d.minimalPairs) && d.minimalPairs.length ? d.minimalPairs : [...this.defaults.minimalPairs];
-                this.state.debates = Array.isArray(d.debates) && d.debates.length ? d.debates : [...this.defaults.debates];
-                this.state.roleplays = Array.isArray(d.roleplays) && d.roleplays.length ? d.roleplays : [...this.defaults.roleplays];
-                this.state.questions = Array.isArray(d.questions) && d.questions.length ? d.questions : [...this.defaults.questions];
+                // Previne a sobreposição por defaults se a base de dados já tiver os itens corretos
+                this.state.words = (Array.isArray(d.words) && d.words.length > 0) ? d.words : [...this.defaults.words];
+                this.state.phrases = (Array.isArray(d.phrases) && d.phrases.length > 0) ? d.phrases : [...this.defaults.phrases];
+                this.state.quizzes = (Array.isArray(d.quizzes) && d.quizzes.length > 0) ? d.quizzes : [...this.defaults.quizzes];
+                this.state.pictures = (Array.isArray(d.pictures) && d.pictures.length > 0) ? d.pictures : [...this.defaults.pictures];
+                this.state.wordPickers = (Array.isArray(d.wordPickers) && d.wordPickers.length > 0) ? d.wordPickers : [...this.defaults.wordPickers];
+                this.state.minimalPairs = (Array.isArray(d.minimalPairs) && d.minimalPairs.length > 0) ? d.minimalPairs : [...this.defaults.minimalPairs];
+                this.state.debates = (Array.isArray(d.debates) && d.debates.length > 0) ? d.debates : [...this.defaults.debates];
+                this.state.roleplays = (Array.isArray(d.roleplays) && d.roleplays.length > 0) ? d.roleplays : [...this.defaults.roleplays];
+                this.state.questions = (Array.isArray(d.questions) && d.questions.length > 0) ? d.questions : [...this.defaults.questions];
                 this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
                 this.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 this.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
@@ -234,7 +232,9 @@ Workspace.Ingles = {
                 const localSRS = JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
             }catch{}
-        }catch(e){ console.error('loadDados erro',e); }
+        }catch(e){ 
+            console.error('Erro de conexão ao ler Banco de Dados:', e); 
+        }
     },
 
     async saveDados(){
@@ -247,14 +247,21 @@ Workspace.Ingles = {
         }catch{}
         
         try{
-            await Workspace.api('/workspace/ingles/dados','PUT',{
+            const res = await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId: Workspace.usuario?.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs,
                 magoPhrases:this.state.magoPhrases, quests:this.state.quests, lootTables:this.state.lootTables, season:this.state.season
             });
-        }catch{}
+            if(!res || !res.success) {
+                console.error("Falha silenciosa ao guardar na Base de Dados.", res);
+                this.mostrarAvisoLocal("Falha ao salvar na nuvem.", "error");
+            }
+        }catch(e){
+            console.error("Erro CRÍTICO no SaveDados:", e);
+            this.mostrarAvisoLocal("Erro de conexão ao salvar.", "error");
+        }
     },
 
     getSRS(id){ return this.state.srs[id] || null; },
@@ -309,6 +316,7 @@ Workspace.Ingles = {
         
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
+        // LOOP INFINITO
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
@@ -396,7 +404,7 @@ Workspace.Ingles = {
             
             /* 🚀 Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
             #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
-            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
             .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
             .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
             .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
@@ -409,7 +417,6 @@ Workspace.Ingles = {
 
             @media (max-width: 768px) {
                 #professorView { flex-direction: column; gap: 12px; }
-                /* Menu mobile estilo abas com scroll horizontal */
                 .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
                 .ig-sidebar::-webkit-scrollbar { display: none; } 
                 .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
@@ -457,7 +464,7 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <aside class="ig-sidebar">
+                        <div class="ig-sidebar">
                             <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
@@ -467,7 +474,7 @@ Workspace.Ingles = {
                             <button class="ig-side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
-                        </aside>
+                        </div>
                         <div class="content">
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
@@ -680,12 +687,14 @@ Workspace.Ingles = {
                     this.state.phrases.unshift({id:'p'+Date.now(), phrase:p, level:'A2'}); 
                     await this.saveDados(); 
                     this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
                 } 
             }
             if(a === 'remover-item') { 
                 this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); 
                 await this.saveDados(); 
                 this.renderProfessorTab(document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca'); 
+                this.mostrarAvisoLocal('Removido!','success'); 
             }
         });
         
