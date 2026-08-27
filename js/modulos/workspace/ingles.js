@@ -13,9 +13,9 @@ const VoiceService = (() => {
     // Bloqueio rigoroso de vozes masculinas e robóticas
     const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred','bot'];
     
-    // Prioridade máxima para vozes neurais (Online) super realistas
+    // 🚀 Prioridade MÁXIMA para vozes neurais e online (As mais realistas do navegador)
     const SCORE_NORMAL = [
-        {k:'microsoft jenny online', s:1500}, {k:'microsoft aria online', s:1400}, 
+        {k:'online', s:2000}, {k:'natural', s:1900}, {k:'microsoft jenny', s:1800}, {k:'microsoft aria', s:1700},
         {k:'samantha', s:1000}, {k:'google uk english female', s:980}, {k:'google us english female', s:950},
         {k:'aria', s:900}, {k:'jenny', s:890}, {k:'zira', s:850}, {k:'karen', s:800}, {k:'victoria', s:790}
     ];
@@ -34,8 +34,7 @@ const VoiceService = (() => {
             const scored = (pool.length ? pool : en).map(v=>{
                 const id=(v.name+' '+v.voiceURI).toLowerCase();
                 let sc=100; 
-                SCORE_NORMAL.forEach(o=>{ if(id.includes(o.k)) sc=o.s; });
-                if(id.includes('online') || id.includes('neural')) sc+=300; // Impulso de qualidade IA
+                SCORE_NORMAL.forEach(o=>{ if(id.includes(o.k)) sc+=o.s; });
                 if(id.includes('female')) sc+=200;
                 if(v.localService) sc+=80;
                 if(v.default) sc+=50;
@@ -43,7 +42,8 @@ const VoiceService = (() => {
             }).sort((a,b)=>b.sc-a.sc);
 
             femalePool = scored.map(x => x.v); 
-            cacheMago = femalePool.find(v => v.name.toLowerCase().includes('uk') || v.name.toLowerCase().includes('samantha')) || femalePool[0];
+            // O Oráculo (Mago) fica sempre com a voz de maior qualidade
+            cacheMago = femalePool[0];
             if(resolver) resolver(true);
         }
     };
@@ -66,16 +66,16 @@ const VoiceService = (() => {
             const u = new SpeechSynthesisUtterance(text);
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             
-            let vozSelecionada = femalePool[0]; // Voz padrão super realista
+            let vozSelecionada = femalePool[0]; 
             
-            // 🚀 INTELIGÊNCIA: Voz única para cada jogo baseado num Hash
+            // 🚀 INTELIGÊNCIA: Locutora diferente e consistente para cada minijogo!
             const currentJogo = window.Workspace?.Ingles?.jogoAtual;
             if(!isMago && currentJogo && femalePool.length > 0) {
                 let hash = 0;
                 for (let i = 0; i < currentJogo.length; i++) {
                     hash = currentJogo.charCodeAt(i) + ((hash << 5) - hash);
                 }
-                // Alterna apenas entre as 4 melhores vozes para não perder qualidade
+                // Escolhe entre as 4 melhores vozes para manter o alto realismo
                 const index = Math.abs(hash) % Math.min(femalePool.length, 4); 
                 vozSelecionada = femalePool[index];
             } else if (isMago) {
@@ -85,11 +85,11 @@ const VoiceService = (() => {
             if(vozSelecionada){
                 u.voice = vozSelecionada; 
                 u.lang = vozSelecionada.lang;
-                u.pitch = isMago ? 0.85 : 1.0; 
+                u.pitch = isMago ? 0.90 : 1.0; 
                 u.rate = isMago ? 0.90 : rate;
             } else {
                 u.lang = isMobile ? 'en-GB' : 'en-US';
-                u.pitch = isMago ? 0.85 : 1.0;
+                u.pitch = isMago ? 0.90 : 1.0;
                 u.rate = isMago ? 0.90 : rate;
             }
             u.volume = 1;
@@ -2250,23 +2250,35 @@ Workspace.Ingles = {
         // injeta header portal se necessário
         setTimeout(()=>this.injetarHeaderPortalSeNecessario(),100);
     },
-    proximoDesafio(){
+   proximoDesafio(){
         if(this.portalAtivo){ this.renderDesafioPortal(); return; }
         if(this.jogoAtual==='debateAI'){ this.renderGameDebateAI(); return; }
-        if(this.tempoRestante>0){
-            this.renderDesafioAtual();
-        }else{
-            this.fecharJogo();
-        }
+        
+        // 🚀 CORREÇÃO DA EXPULSÃO: O jogo não fecha mais quando o aluno avança livremente
+        this.renderDesafioAtual();
     },
+    
     renderTelaFimDeJornada(){
         const colecao = this.getColecaoDoJogoAtual();
-        if(colecao && colecao.length){
-            const ids = colecao.map(i=>i.id);
-            this.state.itensConcluidos = this.state.itensConcluidos.filter(id=>!ids.includes(id));
-            const k=`ws_ingles_user_${Workspace.usuario.id}`;
-            try{ localStorage.setItem(k+'_concluidos', JSON.stringify(this.state.itensConcluidos)); }catch{}
+        
+        // 🚀 SEGURANÇA: Se o professor nunca adicionou conteúdo, avisa em vez de quebrar a tela
+        if(!colecao || colecao.length === 0){
+            document.getElementById('ig-modalBody').innerHTML = `
+                <div style="text-align:center;padding:50px 20px;">
+                    <div style="font-size:60px;margin-bottom:15px">📜</div>
+                    <h2 style="font-family:'Cinzel', serif;color:#0F172A;">Área Vazia</h2>
+                    <p style="color:#64748B;">O Mestre ainda não adicionou magia nesta área. Tente outro jogo!</p>
+                </div>`;
+            return;
         }
+
+        // 🚀 LOOP INFINITO: O Aluno concluiu as novidades! Limpamos o histórico só DESTE jogo para a roleta continuar
+        const ids = colecao.map(i=>i.id);
+        this.state.itensConcluidos = (this.state.itensConcluidos||[]).filter(id=>!ids.includes(id));
+        const k=`ws_ingles_user_${Workspace.usuario.id}`;
+        try{ localStorage.setItem(k+'_concluidos', JSON.stringify(this.state.itensConcluidos)); }catch{}
+        
+        // Carrega o próximo desafio reciclado instantaneamente
         this.renderDesafioAtual();
     },
 
