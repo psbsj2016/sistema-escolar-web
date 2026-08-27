@@ -4,45 +4,46 @@ if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
-// ===================== VOICE SERVICE - MASCULINA BONITA E GRAVE =====================
+// ===================== VOICE SERVICE - FEMININA REALISTA =====================
 const VoiceService = (() => {
     let cacheNormal = null, cacheMago = null, resolver = null;
     const ready = new Promise(r => resolver = r);
 
-    const FEMALE_BLOCK = ['female','samantha','zira','karen','victoria','tessa','moira','siri','veena','fiona','susan','heather','jenny','aria','emma','michelle','linda','karen','tessa'];
+    // Bloqueamos vozes masculinas para focar apenas nas femininas
+    const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred'];
     
-    // PC tem David ótimo. Mobile precisa de Alex (iOS) e Google UK Male (Android) - os mais graves e naturais
+    // Prioridade para as vozes femininas mais realistas e humanas do mercado
     const SCORE_NORMAL = [
-        {k:'david', s:1000}, {k:'alex', s:950}, {k:'daniel', s:900}, 
-        {k:'google uk english male', s:880}, {k:'mark', s:850}, {k:'arthur', s:800}, {k:'oliver', s:790}, {k:'aaron', s:780}
-    ];
-    const SCORE_MAGO = [ // Mago quer grave e encorpado
-        {k:'david', s:1000}, {k:'alex', s:990}, // Alex no iPhone é MUITO grave e bonito
-        {k:'daniel', s:950}, {k:'google uk english male', s:930}, 
-        {k:'arthur', s:900}, {k:'oliver', s:890}, {k:'mark', s:850}, {k:'guy', s:800}
+        {k:'samantha', s:1000}, // iOS/Mac - Excelente e natural
+        {k:'google uk english female', s:980}, // Android - Sotaque muito claro
+        {k:'google us english female', s:950}, // Android
+        {k:'aria', s:900}, // Windows/Edge - Neural e humana
+        {k:'jenny', s:890}, // Windows
+        {k:'zira', s:850}, // Windows (Fallback robusto)
+        {k:'karen', s:800},
+        {k:'victoria', s:790},
+        {k:'female', s:500}
     ];
 
     const pick = (voices, isMago) => {
         const en = voices.filter(v => v.lang.toLowerCase().startsWith('en'));
         if(!en.length) return null;
-        const pool = en.filter(v => !FEMALE_BLOCK.some(f => (v.name+v.voiceURI).toLowerCase().includes(f)));
-        const base = pool.length ? pool : en;
-        const map = isMago ? SCORE_MAGO : SCORE_NORMAL;
         
-        // [MOBILE] Prioriza voz local (offline) que é mais natural e grave no celular
+        // Remove qualquer voz que tenha nome masculino
+        const pool = en.filter(v => !MALE_BLOCK.some(m => (v.name+v.voiceURI).toLowerCase().includes(m)));
+        const base = pool.length ? pool : en;
+        const map = SCORE_NORMAL; 
+        
         const scored = base.map(v=>{
             const id=(v.name+' '+v.voiceURI).toLowerCase();
             let sc=100; 
             map.forEach(o=>{ if(id.includes(o.k)) sc=o.s; });
-            if(id.includes('male') && !id.includes('female')) sc+=200;
-            // bônus pra voz local no mobile - soa mais bonita
+            if(id.includes('female') && !id.includes('male')) sc+=200;
             if(v.localService) sc+=80;
             if(v.default) sc+=50;
             return {v, sc, id};
         }).sort((a,b)=>b.sc-a.sc);
 
-        // Log pra debug no celular
-        // console.log('Voices rank:', scored.slice(0,5).map(x=>`${x.v.name} (${x.sc})`));
         return scored[0]?.v || null;
     };
 
@@ -66,43 +67,33 @@ const VoiceService = (() => {
         falar: async (text, {rate=0.95, isMago=false}={})=>{
             if(!('speechSynthesis' in window)) return;
             await ready; 
-            // Força reload de vozes no gesto do usuário (crucial pro celular)
+            
             const freshVoices = window.speechSynthesis.getVoices();
             if(freshVoices.length && !cacheNormal){
                 cacheNormal = pick(freshVoices, false);
                 cacheMago = pick(freshVoices, true) || cacheNormal;
             }
             window.speechSynthesis.cancel();
+            
             const u = new SpeechSynthesisUtterance(text);
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
             const voz = isMago ? (cacheMago || cacheNormal) : cacheNormal;
 
             if(voz){
                 u.voice = voz; 
                 u.lang = voz.lang;
+                // Ajustes de tom para a voz ficar humana e agradável
                 if(isMago){
-                    // MAGO: Grave e bonito
-                    if(isIOS){
-                        // iOS Alex fica perfeito grave com 0.75
-                        u.pitch = 0.75; u.rate = 0.88;
-                    } else if(isMobile){
-                        // Android Google UK Male fica lindo grave com 0.7
-                        u.pitch = 0.70; u.rate = 0.88;
-                    } else {
-                        // PC David já é grave natural
-                        u.pitch = 0.80; u.rate = 0.85;
-                    }
+                    u.pitch = 0.85; // Tom de "Oráculo", ligeiramente mais grave e sereno
+                    u.rate = 0.90;
                 }else{
-                    // NORMAL: Masculina natural
-                    u.pitch = isMobile ? 0.85 : 0.92;
+                    u.pitch = 1.0;  // Tom natural para as lições
                     u.rate = rate;
                 }
             }else{
-                // Fallback absoluto - força grave na marra
                 u.lang = isMobile ? 'en-GB' : 'en-US';
-                u.pitch = isMago ? 0.30 : 0.45;
-                u.rate = isMago ? 0.85 : rate;
+                u.pitch = isMago ? 0.85 : 1.0;
+                u.rate = isMago ? 0.90 : rate;
             }
             u.volume = 1;
             window.speechSynthesis.speak(u);
@@ -387,32 +378,49 @@ Workspace.Ingles = {
         if(!this.state.itensConcluidos.includes(itemId)) this.state.itensConcluidos.push(itemId);
     },
 
-    // SRS verdadeiro
     obterItemInteligente(listaPadrao, tipoConteudo){
         if(!Array.isArray(listaPadrao) || !listaPadrao.length) return null;
         const now=Date.now();
-        const concluidos=this.state.itensConcluidos||[];
+        let concluidos=this.state.itensConcluidos||[];
+        
         const comSRS=listaPadrao.map(item=>{
             const srs=this.state.srs[item.id];
             return {item, srs, isDue: srs ? srs.due <= now : false, isNew: !srs || srs.repetitions===0};
         });
+        
         const vencidos=comSRS.filter(e=>e.srs && e.isDue).sort((a,b)=>a.srs.due - b.srs.due);
         if(vencidos.length){
             if(Math.random()<0.8) return vencidos[0].item;
             return vencidos[Math.floor(Math.random()*Math.min(3,vencidos.length))].item;
         }
+        
         const retidos=this.state.errosRetidos.filter(e=>e._tipoDefeito===tipoConteudo && !concluidos.includes(e.id));
         if(retidos.length && Math.random()<0.6){
             return retidos[Math.floor(Math.random()*retidos.length)];
         }
+        
         const novos=comSRS.filter(e=>e.isNew && !concluidos.includes(e.item.id));
         if(novos.length){
             return novos[Math.floor(Math.random()*novos.length)].item;
         }
+        
         const disponiveis=listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
-        if(!disponiveis.length) return null;
+        
+        // 🚀 O SEGREDO DO TREINO INFINITO:
+        // Se os disponíveis acabaram, o aluno já respondeu a TODOS os itens do professor para este jogo.
+        // Em vez de o expulsar, nós "esquecemos" que ele concluiu apenas os itens deste jogo para que o rodízio recomece do zero!
+        if(!disponiveis.length) {
+            const idsDesteJogo = listaPadrao.map(i => i.id);
+            // Filtra e remove os itens deste jogo da lista de bloqueio
+            this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
+            this.saveDados();
+            
+            // Retorna um item aleatório da lista original para recomeçar o ciclo suavemente
+            return listaPadrao[Math.floor(Math.random() * listaPadrao.length)];
+        }
+        
         return disponiveis[Math.floor(Math.random()*disponiveis.length)];
-    },
+    },   
 
     tocarSom(tipo){
         try{
