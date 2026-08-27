@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V3 FINAL (A+B+C + Painel Professor Completo + Voz Mago Mobile Grave)
+// js/modulos/workspace/ingles.js - V4 (Layout Direto + Loop Infinito + Vozes Neurais + Apenas Coins)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -10,10 +10,9 @@ const VoiceService = (() => {
     let femalePool = []; 
     const ready = new Promise(r => resolver = r);
 
-    // Bloqueio rigoroso de vozes masculinas e robóticas
     const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred','bot'];
     
-    // 🚀 Prioridade MÁXIMA para vozes neurais e online (As mais realistas do navegador)
+    // Prioridade MÁXIMA para vozes neurais e online
     const SCORE_NORMAL = [
         {k:'online', s:2000}, {k:'natural', s:1900}, {k:'microsoft jenny', s:1800}, {k:'microsoft aria', s:1700},
         {k:'samantha', s:1000}, {k:'google uk english female', s:980}, {k:'google us english female', s:950},
@@ -35,6 +34,7 @@ const VoiceService = (() => {
                 const id=(v.name+' '+v.voiceURI).toLowerCase();
                 let sc=100; 
                 SCORE_NORMAL.forEach(o=>{ if(id.includes(o.k)) sc+=o.s; });
+                if(id.includes('online') || id.includes('neural') || id.includes('natural')) sc+=300; 
                 if(id.includes('female')) sc+=200;
                 if(v.localService) sc+=80;
                 if(v.default) sc+=50;
@@ -42,8 +42,7 @@ const VoiceService = (() => {
             }).sort((a,b)=>b.sc-a.sc);
 
             femalePool = scored.map(x => x.v); 
-            // O Oráculo (Mago) fica sempre com a voz de maior qualidade
-            cacheMago = femalePool[0];
+            cacheMago = femalePool[0]; 
             if(resolver) resolver(true);
         }
     };
@@ -68,14 +67,13 @@ const VoiceService = (() => {
             
             let vozSelecionada = femalePool[0]; 
             
-            // 🚀 INTELIGÊNCIA: Locutora diferente e consistente para cada minijogo!
+            // INTELIGÊNCIA: Locutora diferente por jogo (Hash algorithm)
             const currentJogo = window.Workspace?.Ingles?.jogoAtual;
             if(!isMago && currentJogo && femalePool.length > 0) {
                 let hash = 0;
                 for (let i = 0; i < currentJogo.length; i++) {
                     hash = currentJogo.charCodeAt(i) + ((hash << 5) - hash);
                 }
-                // Escolhe entre as 4 melhores vozes para manter o alto realismo
                 const index = Math.abs(hash) % Math.min(femalePool.length, 4); 
                 vozSelecionada = femalePool[index];
             } else if (isMago) {
@@ -99,62 +97,6 @@ const VoiceService = (() => {
     };
 })();
 
-const TimerService = {
-    _id:null, remaining:0, _paused:false,
-    start(sec, onTick, onEnd){
-        this.stop(); this.remaining=sec; this._paused=false;
-        onTick(this.remaining);
-        this._id = setInterval(()=>{
-            if(this._paused) return;
-            this.remaining--; onTick(this.remaining);
-            if(this.remaining<=0){ this.stop(); onEnd&&onEnd(); }
-        },1000);
-    },
-    pause(){ this._paused=true; }, resume(){ this._paused=false; },
-    stop(){ if(this._id){ clearInterval(this._id); this._id=null; } }
-};
-
-const ParticleEngine = {
-    _exploding:false,
-    explode(x,y){
-        if(this._exploding) return; this._exploding=true;
-        const flash=document.createElement('div');
-        flash.style.cssText='position:fixed;inset:0;background:white;z-index:9999999;opacity:0.85;pointer-events:none;transition:opacity 0.6s;';
-        document.body.appendChild(flash);
-        requestAnimationFrame(()=>flash.style.opacity='0');
-        setTimeout(()=>flash.remove(),700);
-        const wave=document.createElement('div');
-        wave.style.cssText=`position:fixed;left:${x}px;top:${y}px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 80px 40px #f1c40f,inset 0 0 30px #fff;z-index:9999998;pointer-events:none;transform:translate(-50%,-50%);animation:shockwave 1.2s ease-out forwards;`;
-        document.body.appendChild(wave); setTimeout(()=>wave.remove(),1200);
-        const frag=document.createDocumentFragment();
-        const forca=Math.min(window.innerWidth*0.9, 1200);
-        const cores=['#ffeb3b','#e67e22','#c0392b','#ff9800'];
-        for(let i=0;i<60;i++){
-            const el=document.createElement('div'); el.className='ig-fireball';
-            const ang=Math.random()*Math.PI*2, vel=300+Math.random()*forca;
-            el.style.left=x+'px'; el.style.top=y+'px';
-            el.style.setProperty('--tx', Math.cos(ang)*vel+'px');
-            el.style.setProperty('--ty', Math.sin(ang)*vel+'px');
-            el.style.background=cores[i%4]; const s=15+Math.random()*25; el.style.width=s+'px'; el.style.height=s+'px';
-            frag.appendChild(el);
-        }
-        for(let i=0;i<100;i++){
-            const el=document.createElement('div'); el.className='ig-sparkle';
-            const ang=Math.random()*Math.PI*2, vel=200+Math.random()*forca*1.2;
-            el.style.left=x+'px'; el.style.top=y+'px';
-            el.style.setProperty('--tx', Math.cos(ang)*vel+'px');
-            el.style.setProperty('--ty', Math.sin(ang)*vel+'px');
-            el.style.background='#fff'; const s=5+Math.random()*10; el.style.width=s+'px'; el.style.height=s+'px';
-            frag.appendChild(el);
-        }
-        document.body.appendChild(frag);
-        setTimeout(()=>{
-            document.querySelectorAll('.ig-fireball,.ig-sparkle').forEach(e=>e.remove());
-            this._exploding=false;
-        },2600);
-    }
-};
-
 const SRSService = {
     calc(success, entry){
         const now=Date.now();
@@ -174,89 +116,62 @@ const SRSService = {
 
 Workspace.Ingles = {
     state: {
-        xp:0, streak:1, avatarEquipado:null, inventario:[], coins:{bronze:150, prata:20, ouro:2}, diamantes:250, energia:5, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
-        errosRetidos:[], itensConcluidos:[], magoPhrases:[], srs:{},
-        magoConfig:{ vozAtiva:true, modoExibicao:'aleatorio' },
-        _minimalTarget:null, editingMagoId:null
+        streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
+        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null
     },
-    mediaRecorder:null, audioChunks:[], currentAudioURL:null, audioBlob:null, streamMicrofone:null, recognition:null,
-    bauDestrancado:false, tempoGlobalDefinido:false, sessaoEncerrada:false, jogoAtual:null, tempoRestante:0, xpGanhosNaSessao:0, desafioAtualObj:null, digitandoAtivo:false, magoIntervalTimer:null, sseListenerConfigurado:false,
+    recognition:null, jogoAtual:null, desafioAtualObj:null,
 
     defaults: {
-        magoConfig:{ vozAtiva:true, modoExibicao:'aleatorio' },
-        magoPhrases:[
-            {id:'m1', text:'Let us go! (citarAluno)'},
-            {id:'m2', text:'Welcome again, brave (citarAluno)!'},
-            {id:'m3', text:'Choose one, young wizard!'}
-        ],
         words:[
-            {id:'w1', word:'Although', translation:'Embora', level:'B2', example:'Although it was raining, we went out.', context:'Concessão'},
-            {id:'w2', word:'Beneath', translation:'Abaixo de', level:'B1', example:'The keys were beneath the book.', context:'Preposição'},
-            {id:'w3', word:'Achieve', translation:'Alcançar', level:'B1', example:'You can achieve anything with focus.', context:'Verbo'},
-            {id:'w4', word:'Whisper', translation:'Sussurrar', level:'B2', example:'She whispered a secret.', context:'Verbo'}
+            {id:'w1', word:'Although', translation:'Embora', level:'B2'},
+            {id:'w2', word:'Beneath', translation:'Abaixo de', level:'B1'}
         ],
         phrases:[
-            {id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2', focus:'Politeness'},
-            {id:'p2', phrase:'If I had more time, I would travel the world.', translation:'Se eu tivesse mais tempo, viajaria o mundo.', level:'B2', focus:'Second Conditional'},
-            {id:'p3', phrase:'She has been learning English for three years.', translation:'Ela está aprendendo inglês há três anos.', level:'B1', focus:'Present Perfect Continuous'}
+            {id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2'},
+            {id:'p2', phrase:'If I had more time, I would travel the world.', translation:'Se eu tivesse mais tempo, viajaria o mundo.', level:'B2'}
         ],
         quizzes:[
-            {id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year','I have went to London last year'], correct:1, explanation:'Use past simple with finished time.', level:'B1'},
-            {id:'q2', question:'Fill: I _____ here since 2019.', options:['live','am living','have lived','lived'], correct:2, explanation:'Present perfect with since.', level:'B1'}
+            {id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year'], correct:1, level:'B1'}
         ],
         pictures:[
-            {id:'pic1', word:'apple', translation:'maçã', emoji:'🍎', category:'Food'},
-            {id:'pic2', word:'bicycle', translation:'bicicleta', emoji:'🚲', category:'Transport'},
-            {id:'pic3', word:'laptop', translation:'notebook', emoji:'💻', category:'Tech'},
-            {id:'pic4', word:'umbrella', translation:'guarda-chuva', emoji:'☂', category:'Objects'}
+            {id:'pic1', word:'apple', translation:'maçã', emoji:'🍎', category:'Food'}
         ],
         minimalPairs:[
-            {id:'mp1', a:'ship', b:'sheep', ipaA:'/ʃɪp/', ipaB:'/ʃiːp/', sentenceA:'The ship is big.', sentenceB:'The sheep is white.'},
-            {id:'mp2', a:'beach', b:'bitch', ipaA:'/biːtʃ/', ipaB:'/bɪtʃ/', sentenceA:'Let\'s go to the beach.', sentenceB:'That word is offensive.'}
+            {id:'mp1', a:'ship', b:'sheep'}
         ],
         debates:[
-            {id:'d1', topic:'Social media does more harm than good', stance:'Do you agree?', starter:'Social media connects us, but also increases anxiety. What is your opinion?'},
-            {id:'d2', topic:'AI will replace teachers', stance:'You defend teachers', starter:'AI can give exercises, but can it motivate a student?'}
+            {id:'d1', topic:'Social media does more harm than good', starter:'Social media connects us, but also increases anxiety. What is your opinion?'}
         ],
         wordPickers:[
-            {id:'wp1', text:'I have _____ my keys. Have you seen them?', options:['lost','lose','loosed'], correct:0},
-            {id:'wp2', text:'She is _____ than her sister.', options:['tall','taller','tallest'], correct:1}
+            {id:'wp1', text:'I have _____ my keys.', options:['lost','lose'], correct:0}
         ],
         questions:[
-            {id:'aq1', text:'What did you do last weekend?'},
-            {id:'aq2', text:'Describe your dream house.'},
-            {id:'aq3', text:'If you could live anywhere, where would you live?'}
+            {id:'aq1', text:'What did you do last weekend?'}
         ],
         roleplays:[
-            {id:'rp1', title:'✈ No Aeroporto', prompt:'You are at check-in. The attendant says: "Can I see your passport and ticket?"', tip:'Use: Here you are'},
-            {id:'rp2', title:'🍽 No Restaurante', prompt:'Waiter: "Are you ready to order?"', tip:'Use: I would like...'}
+            {id:'rp1', title:'✈ No Aeroporto', prompt:'Attendant: Can I see your passport?', tip:'Use: Here you are'}
         ],
         games:[
-            {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Invoque uma frase com a palavra-chave.', icon:'🪄', color:'#E0E7FF', level:'B1-B2'},
-            {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone e a IA avaliará.', icon:'🐉', color:'#D1FAE5', level:'A2-C1'},
-            {id:'listenType', title:'🦉 Ecos da Coruja', desc:'Escute o áudio e transcreva.', icon:'🦉', color:'#FEF3C7', level:'A2-B1'},
-            {id:'quiz', title:'👁 Enigma da Esfinge', desc:'Responda corretamente.', icon:'👁', color:'#FEE2E2', level:'A1-B2'},
-            {id:'wordPicker', title:'🧪 Poção Sintática', desc:'Escolha o ingrediente certo.', icon:'🧪', color:'#E0E7FF', level:'A2-B1'},
-            {id:'sentenceShuffle', title:'🌀 Labirinto Ilusório', desc:'Transforme as frases.', icon:'🌀', color:'#D1FAE5', level:'B1-B2'},
-            {id:'answerQuest', title:'📜 Pergaminho do Herói', desc:'Responda abertamente.', icon:'📜', color:'#FEF3C7', level:'B1-C1'},
-            {id:'questionMaker', title:'🔮 Espelho do Oráculo', desc:'Formule a pergunta.', icon:'🔮', color:'#F5D0FE', level:'B1-B2'},
-            {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma a identidade.', icon:'🎭', color:'#CCFBF1', level:'B1-C1'},
-            {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debate denso.', icon:'⚔', color:'#E0F2FE', level:'B2-C1'},
-            {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie sons.', icon:'♊', color:'#FFEDD5', level:'B1-C1'},
-            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Invoque o nome da relíquia.', icon:'👁🗨', color:'#DCFCE7', level:'A1-B1'},
-            {id:'portalMagico', title:'🌀 Portal Mágico', desc:'Viaje no tempo entre desafios! 5 vitórias = magia do mago + XP bônus!', icon:'🌀', color:'#E0E7FF', level:'A1-C1'}
-        ],
-        avatares:[
-            {id:'av1', nome:'Aprendiz', emoji:'🧙‍♂️', preco:0, desc:'Primeiro avatar grátis', raridade:'comum', bonus:'+5% XP'},
-            {id:'av2', nome:'Guerreiro', emoji:'⚔️', preco:100, desc:'Corajoso', raridade:'raro', bonus:'+10% Coins'},
-            {id:'av3', nome:'Maga', emoji:'🧝‍♀️', preco:200, desc:'Sábia', raridade:'epico', bonus:'+15% XP'},
-            {id:'av4', nome:'Arqueiro', emoji:'🏹', preco:300, desc:'Preciso', raridade:'epico', bonus:'+20% Coins'},
-            {id:'av5', nome:'Dragão', emoji:'🐉', preco:500, desc:'Lendário', raridade:'lendario', bonus:'+30% Tudo'}
+            {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Crie uma frase com a palavra.', icon:'🪄', color:'#E0E7FF'},
+            {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone.', icon:'🐉', color:'#D1FAE5'},
+            {id:'listenType', title:'🦉 Ecos da Coruja', desc:'Escute e transcreva.', icon:'🦉', color:'#FEF3C7'},
+            {id:'quiz', title:'👁 Enigma da Esfinge', desc:'Responda corretamente.', icon:'👁', color:'#FEE2E2'},
+            {id:'wordPicker', title:'🧪 Poção Sintática', desc:'Escolha a palavra certa.', icon:'🧪', color:'#E0E7FF'},
+            {id:'sentenceShuffle', title:'🌀 Labirinto Ilusório', desc:'Transforme frases.', icon:'🌀', color:'#D1FAE5'},
+            {id:'answerQuest', title:'📜 Pergaminho do Herói', desc:'Responda abertamente.', icon:'📜', color:'#FEF3C7'},
+            {id:'questionMaker', title:'🔮 Espelho do Oráculo', desc:'Crie a pergunta.', icon:'🔮', color:'#F5D0FE'},
+            {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma o papel.', icon:'🎭', color:'#CCFBF1'},
+            {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debata com a IA.', icon:'⚔', color:'#E0F2FE'},
+            {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie os sons.', icon:'♊', color:'#FFEDD5'},
+            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale o que vê.', icon:'👁🗨', color:'#DCFCE7'}
         ]
     },
 
     init(){
-        this.injetarCSS(); this.construirHTML(); this.bindEvents();
+        this.injetarCSS(); 
+        this.construirHTML(); 
+        this.bindEvents();
+        
         if(typeof Workspace.navegarPara==='function' && !this.navConfigurada){
             const orig=Workspace.navegarPara;
             Workspace.navegarPara=(tela,hist)=>{
@@ -265,109 +180,88 @@ Workspace.Ingles = {
                 orig(tela,hist);
             }; this.navConfigurada=true;
         }
-        if(!this.sseListenerConfigurado && Workspace.usuario){
-            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
-            try{
-                const evt=new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
-                evt.onmessage=(ev)=>{ try{ const d=JSON.parse(ev.data); if(d.type==='BAU_INGLES_UPDATE') this.sincronizarTempoReal(); }catch{} };
-                this.sseListenerConfigurado=true;
-            }catch{}
-        }
     },
-    abrirBau(){ Workspace.navegarPara('ingles'); },
-    sincronizarTempoReal: async function(){ const modal=document.getElementById('ig-gameModal'); if(modal && modal.style.display!=='none') return; await this.loadDados(); const hub=document.getElementById('ig-alunoView'); if(hub && hub.style.display!=='none' && Workspace.usuario.tipo==='Aluno' && !this.digitandoAtivo) this.iniciarFalaGuardiao(false); const tab=document.querySelector('.ig-side-item.active'); if(tab && Workspace.usuario.tipo!=='Aluno') this.renderProfessorTab(tab.dataset.tab); },
 
-    loadDados: async function(){
+    abrirBau(){ 
+        Workspace.navegarPara('ingles'); 
+        this.loadDados().then(() => {
+            this.renderAlunoGrid();
+            this.atualizarHUD();
+        });
+    },
+
+    async loadDados(){
         try{
-            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
-            const res=await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
+            const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+            const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
             if(res && res.success && res.dados){
-                const d=res.dados;
-                this.state.words = Array.isArray(d.words)&&d.words.length?d.words:[...this.defaults.words];
-                this.state.phrases = Array.isArray(d.phrases)&&d.phrases.length?d.phrases:[...this.defaults.phrases];
-                this.state.quizzes = Array.isArray(d.quizzes)&&d.quizzes.length?d.quizzes:[...this.defaults.quizzes];
-                this.state.pictures = Array.isArray(d.pictures)&&d.pictures.length?d.pictures:[...this.defaults.pictures];
-                this.state.wordPickers = Array.isArray(d.wordPickers)&&d.wordPickers.length?d.wordPickers:[...this.defaults.wordPickers];
-                this.state.minimalPairs = Array.isArray(d.minimalPairs)&&d.minimalPairs.length?d.minimalPairs:[...this.defaults.minimalPairs];
-                this.state.debates = Array.isArray(d.debates)&&d.debates.length?d.debates:[...this.defaults.debates];
-                this.state.roleplays = Array.isArray(d.roleplays)&&d.roleplays.length?d.roleplays:[...this.defaults.roleplays];
-                this.state.questions = Array.isArray(d.questions)&&d.questions.length?d.questions:[...this.defaults.questions];
-                this.state.submissions = Array.isArray(d.submissions)?d.submissions:[];
-                this.state.pool = Array.isArray(d.pool)?d.pool:[];
-                this.state.errosRetidos = Array.isArray(d.errosRetidos)?d.errosRetidos:[];
-                this.state.magoPhrases = Array.isArray(d.magoPhrases)&&d.magoPhrases.length?d.magoPhrases:[...this.defaults.magoPhrases];
-                this.state.magoConfig = (d.magoConfig&&typeof d.magoConfig==='object')?d.magoConfig:{...this.defaults.magoConfig};
-                this.state.srs = (d.srs&&typeof d.srs==='object')?d.srs:{};
-                // V6 gamificado
-                this.state.quests = Array.isArray(d.quests)&&d.quests.length?d.quests:[];
-                this.state.achievements = Array.isArray(d.achievements)?d.achievements:[];
-                this.state.season = (d.season&&typeof d.season==='object')?d.season:{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1, ativa:true};
-                this.state.lootTables = (d.lootTables&&typeof d.lootTables==='object')?d.lootTables:{};
-                this.state.levelCurve = Array.isArray(d.levelCurve)&&d.levelCurve.length?d.levelCurve:[0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
+                const d = res.dados;
+                this.state.words = Array.isArray(d.words) && d.words.length ? d.words : [...this.defaults.words];
+                this.state.phrases = Array.isArray(d.phrases) && d.phrases.length ? d.phrases : [...this.defaults.phrases];
+                this.state.quizzes = Array.isArray(d.quizzes) && d.quizzes.length ? d.quizzes : [...this.defaults.quizzes];
+                this.state.pictures = Array.isArray(d.pictures) && d.pictures.length ? d.pictures : [...this.defaults.pictures];
+                this.state.wordPickers = Array.isArray(d.wordPickers) && d.wordPickers.length ? d.wordPickers : [...this.defaults.wordPickers];
+                this.state.minimalPairs = Array.isArray(d.minimalPairs) && d.minimalPairs.length ? d.minimalPairs : [...this.defaults.minimalPairs];
+                this.state.debates = Array.isArray(d.debates) && d.debates.length ? d.debates : [...this.defaults.debates];
+                this.state.roleplays = Array.isArray(d.roleplays) && d.roleplays.length ? d.roleplays : [...this.defaults.roleplays];
+                this.state.questions = Array.isArray(d.questions) && d.questions.length ? d.questions : [...this.defaults.questions];
+                this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
+                this.state.pool = Array.isArray(d.pool) ? d.pool : [];
+                this.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
+                this.state.srs = (d.srs && typeof d.srs==='object') ? d.srs : {};
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
-                this.state.submissions=[]; this.state.pool=[]; this.state.errosRetidos=[]; this.state.magoPhrases=[...this.defaults.magoPhrases];
-                this.state.magoConfig={...this.defaults.magoConfig}; this.state.srs={};
+                this.state.srs={};
             }
-            const userK=`ws_ingles_user_${Workspace.usuario.id}`;
-            this.state.xp=parseInt(localStorage.getItem(`${userK}_xp`)||'0');
-            this.state.tituloEquipado=localStorage.getItem(`${userK}_tituloEquipado`)||'Aprendiz';
-            this.state.bordaEquipada=localStorage.getItem(`${userK}_bordaEquipada`)||'';
-            try{ this.state.inventario=JSON.parse(localStorage.getItem(`${userK}_inventario`)||'[]'); }catch{ this.state.inventario=[]; }
-            try{ this.state.medalhas=JSON.parse(localStorage.getItem(`${userK}_medalhas`)||'[]'); }catch{ this.state.medalhas=[]; }
-            this.state.streak=parseInt(localStorage.getItem(`${userK}_streak`)||'1');
-            this.state.itensConcluidos=JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
+            
+            const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
+            try{ this.state.coins = JSON.parse(localStorage.getItem(`${userK}_coins`)||'{"bronze":0,"prata":0,"ouro":0}'); }catch{ this.state.coins={bronze:0,prata:0,ouro:0}; }
+            this.state.streak = parseInt(localStorage.getItem(`${userK}_streak`)||'1');
+            this.state.itensConcluidos = JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
             try{
-                const localSRS=JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
+                const localSRS = JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
             }catch{}
-        }catch(e){ console.error('loadDados',e); }
+        }catch(e){ console.error('loadDados erro',e); }
     },
-    saveDados: async function(){
-        const userK=`ws_ingles_user_${Workspace.usuario.id}`;
+
+    async saveDados(){
+        const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
         try{
-            localStorage.setItem(`${userK}_xp`, String(this.state.xp));
+            localStorage.setItem(`${userK}_coins`, JSON.stringify(this.state.coins));
             localStorage.setItem(`${userK}_streak`, String(this.state.streak));
-            localStorage.setItem(`${userK}_tituloEquipado`, this.state.tituloEquipado||'Aprendiz');
-            localStorage.setItem(`${userK}_bordaEquipada`, this.state.bordaEquipada||'');
-            localStorage.setItem(`${userK}_inventario`, JSON.stringify(this.state.inventario||[]));
-            localStorage.setItem(`${userK}_medalhas`, JSON.stringify(this.state.medalhas||[]));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
             localStorage.setItem(`${userK}_srs`, JSON.stringify(this.state.srs));
         }catch{}
+        
         try{
-            if(Workspace.usuario?.tipo==='Aluno'){
-                const lvl = this.calcularLevel(this.state.xp).level;
-                Workspace.api('/workspace/ingles/xp','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', nome:Workspace.usuario.nome||Workspace.usuario.login, xp:this.state.xp, streak:this.state.streak, level:lvl, titulo:this.state.titulo, tituloEquipado:this.state.tituloEquipado, bordaEquipada:this.state.bordaEquipada, inventario:this.state.inventario, medalhas:this.state.medalhas, questsProgress:this.state.questsProgress, portalStreak:this.portalStreak||this.state.portalStreak||0, portalRodada:this.portalRodada||1, portalTarget:this.portalTarget||5, portalRecorde:Math.max(this.portalStreak||0, this.state.portalRecorde||0)}).catch(()=>{});
-            }
             await Workspace.api('/workspace/ingles/dados','PUT',{
-                escolaId:Workspace.usuario.escolaId||'DEFAULT',
+                escolaId: Workspace.usuario?.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
-                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos,
-                magoPhrases:this.state.magoPhrases, magoConfig:this.state.magoConfig, srs:this.state.srs
+                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs
             });
         }catch{}
     },
 
     getSRS(id){ return this.state.srs[id] || null; },
     updateSRS(id, tipo, success){
-        const prev=this.state.srs[id] || {ease:2.5, interval:0, repetitions:0, lapses:0, due:0, tipo};
-        const next=SRSService.calc(success, prev);
-        next.tipo=tipo; next.id=id;
-        this.state.srs[id]=next;
+        const prev = this.state.srs[id] || {ease:2.5, interval:0, repetitions:0, lapses:0, due:0, tipo};
+        const next = SRSService.calc(success, prev);
+        next.tipo = tipo; next.id = id;
+        this.state.srs[id] = next;
         this.saveDados();
         return next;
     },
     registrarErro(itemOriginal, tipoConteudo){
         if(!itemOriginal?.id) return;
-        const ja=this.state.errosRetidos.find(e=>e.id===itemOriginal.id);
+        const ja = this.state.errosRetidos.find(e=>e.id===itemOriginal.id);
         if(!ja) this.state.errosRetidos.push({...itemOriginal, _tipoDefeito:tipoConteudo});
         this.updateSRS(itemOriginal.id, tipoConteudo, false);
     },
     superarErro(itemId){
-        const idx=this.state.errosRetidos.findIndex(e=>e.id===itemId);
+        const idx = this.state.errosRetidos.findIndex(e=>e.id===itemId);
         if(idx!==-1) this.state.errosRetidos.splice(idx,1);
     },
     marcarComoConcluido(itemId){
@@ -375,42 +269,39 @@ Workspace.Ingles = {
         if(!this.state.itensConcluidos.includes(itemId)) this.state.itensConcluidos.push(itemId);
     },
 
-   obterItemInteligente(listaPadrao, tipoConteudo){
+    obterItemInteligente(listaPadrao, tipoConteudo){
         if(!Array.isArray(listaPadrao) || !listaPadrao.length) return null;
-        const now=Date.now();
-        let concluidos=this.state.itensConcluidos||[];
+        const now = Date.now();
+        let concluidos = this.state.itensConcluidos || [];
         
-        const comSRS=listaPadrao.map(item=>{
-            const srs=this.state.srs[item.id];
+        const comSRS = listaPadrao.map(item=>{
+            const srs = this.state.srs[item.id];
             return {item, srs, isDue: srs ? srs.due <= now : false, isNew: !srs || srs.repetitions===0};
         });
         
-        const vencidos=comSRS.filter(e=>e.srs && e.isDue).sort((a,b)=>a.srs.due - b.srs.due);
+        const vencidos = comSRS.filter(e=>e.srs && e.isDue).sort((a,b)=>a.srs.due - b.srs.due);
         if(vencidos.length){
             if(Math.random()<0.8) return vencidos[0].item;
             return vencidos[Math.floor(Math.random()*Math.min(3,vencidos.length))].item;
         }
         
-        const retidos=this.state.errosRetidos.filter(e=>e._tipoDefeito===tipoConteudo && !concluidos.includes(e.id));
+        const retidos = this.state.errosRetidos.filter(e=>e._tipoDefeito===tipoConteudo && !concluidos.includes(e.id));
         if(retidos.length && Math.random()<0.6){
             return retidos[Math.floor(Math.random()*retidos.length)];
         }
         
-        const novos=comSRS.filter(e=>e.isNew && !concluidos.includes(e.item.id));
+        const novos = comSRS.filter(e=>e.isNew && !concluidos.includes(e.item.id));
         if(novos.length){
             return novos[Math.floor(Math.random()*novos.length)].item;
         }
         
-        const disponiveis=listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
+        const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // 🚀 O SEGREDO DO TREINO INFINITO: 
-        // Se as perguntas inéditas/vencidas acabaram, removemos apenas as perguntas deste jogo do histórico de concluídos.
-        // Assim, o aluno não é expulso e o jogo reinicia o ciclo!
+        // 🚀 LIMPEZA DA MEMÓRIA (LOOP INFINITO)
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
             this.saveDados(); 
-            
             return listaPadrao[Math.floor(Math.random() * listaPadrao.length)];
         }
         
@@ -423,1699 +314,384 @@ Workspace.Ingles = {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.connect(gain); gain.connect(ctx.destination);
-            if(tipo==='xp'){ osc.frequency.value=800; gain.gain.setValueAtTime(0.3, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.3); osc.start(); osc.stop(ctx.currentTime+0.3); }
-            else if(tipo==='level'){ osc.frequency.value=600; osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime+0.5); gain.gain.setValueAtTime(0.4, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.6); osc.start(); osc.stop(ctx.currentTime+0.6); }
-            else if(tipo==='quest'){ osc.frequency.value=400; osc.frequency.linearRampToValueAtTime(900, ctx.currentTime+0.3); gain.gain.setValueAtTime(0.3, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime+0.3); }
-        }catch{}
-    },
-    confete(){
-        try{
-            const c=document.createElement('div');
-            c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:999999;overflow:hidden';
-            document.body.appendChild(c);
-            for(let i=0;i<30;i++){
-                const p=document.createElement('div');
-                p.style.cssText=`position:absolute;left:${Math.random()*100}%;top:-10px;width:8px;height:12px;background:hsl(${Math.random()*60+30},100%,50%);transform:rotate(${Math.random()*360}deg);animation:confettiFall ${1+Math.random()}s ease forwards`;
-                c.appendChild(p);
-            }
-            const style=document.createElement('style');
-            style.textContent='@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg)}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}';
-            document.head.appendChild(style);
-            setTimeout(()=>c.remove(),2000);
-        }catch{}
-    },
-    mostrarLevelUp(oldLevel, newLevel){
-        this.tocarSom('level');
-        this.confete();
-        const modal=document.createElement('div');
-        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000005;animation:popIn 0.4s ease';
-        modal.innerHTML=`<div style="background:linear-gradient(180deg,#0F172A 0%,#1E293B 100%);border:4px solid #fde68a;border-radius:24px;padding:32px;text-align:center;max-width:360px;box-shadow:0 0 60px rgba(253,230,138,0.4)"><div style="font-size:70px;animation:bounce 1s infinite">🎉</div><div style="font-family:Cinzel,serif;font-size:28px;font-weight:900;color:#fde68a;margin:10px 0">LEVEL UP!</div><div style="font-size:18px;color:#fff">Nível <span style="color:#fde68a;font-weight:900">${oldLevel}</span> → <span style="color:#fde68a;font-weight:900;font-size:24px">${newLevel}</span></div><div style="margin-top:12px;color:#94a3b8;font-size:13px">Você desbloqueou: ${newLevel>=3?'Borda Prata':''} ${newLevel>=5?'• Manto Azul':''} ${newLevel>=7?'• Título Arquimago':''}</div><button id="btn-fechar-levelup" style="margin-top:20px;width:100%;background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:14px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer">Continuar Épico ⚔️</button></div>`;
-        document.body.appendChild(modal);
-        modal.querySelector('#btn-fechar-levelup').onclick=()=>modal.remove();
-        setTimeout(()=>{ if(document.body.contains(modal)) modal.remove(); },4000);
-    },
-    abrirInventario(){
-        const inv = this.state.inventario||[];
-        const medalhas = this.state.medalhas||[];
-        const allAch = this.state.achievements||[];
-        const bordas = inv.filter(i=>i.tipo==='cosmetico' || i.id?.includes('borda'));
-        const titulos = inv.filter(i=>i.tipo==='titulo' || i.id?.includes('titulo')).map(i=>i.nome||i.id);
-        const skins = inv.filter(i=>i.tipo==='skin');
-        const modal=document.createElement('div');
-        modal.id='ig-inv-modal';
-        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000006;padding:20px';
-        modal.innerHTML=`
-            <div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:3px solid #d4af37;border-radius:20px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
-                <div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 20px;border-radius:17px 17px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">
-                    <div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:18px">🎒 Inventário Épico</div>
-                    <button data-action="fechar-inventario" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer">✕</button>
-                </div>
-                <div style="padding:18px">
-                    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap"><span style="background:#0F172A;color:#fde68a;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">Nível ${this.calcularLevel(this.state.xp).level}</span><span style="background:#EEF2FF;color:#4338ca;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${this.state.tituloEquipado}</span><span style="background:#FEF3C7;color:#92400e;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${inv.length} itens</span><span style="background:#D1FAE5;color:#065f46;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:800">${medalhas.length} medalhas</span></div>
-                    
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">👑 Títulos (${titulos.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${titulos.length? titulos.map(t=>`<button data-action="equipar-titulo" data-titulo="${Workspace.escapeHTML(t)}" style="background:${this.state.tituloEquipado===t?'#0F172A':'#fff'};color:${this.state.tituloEquipado===t?'#fde68a':'#0f172a'};border:2px solid ${this.state.tituloEquipado===t?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer">${Workspace.escapeHTML(t)} ${this.state.tituloEquipado===t?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhum título ainda. Abra baús épicos!</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🖼 Bordas (${bordas.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${bordas.length? bordas.map(b=>`<button data-action="equipar-borda" data-borda="${Workspace.escapeHTML(b.id||b.nome)}" style="background:${this.state.bordaEquipada===(b.id||b.nome)?'#0F172A':'#fff'};color:${this.state.bordaEquipada===(b.id||b.nome)?'#fde68a':'#0f172a'};border:2px solid ${this.state.bordaEquipada===(b.id||b.nome)?'#d4af37':'#e2e8f0'};padding:8px 14px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer">${Workspace.escapeHTML(b.nome||b.id)} ${this.state.bordaEquipada===(b.id||b.nome)?'✅':''}</button>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma borda ainda. Faça 150+ XP numa sessão!</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🎨 Skins (${skins.length})</h4>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">${skins.length? skins.map(s=>`<div style="background:#fff;border:1.5px solid #e2e8f0;padding:8px 12px;border-radius:10px;font-size:12px">🎭 ${Workspace.escapeHTML(s.nome||s.id)}</div>`).join('') : '<span style="color:#94a3b8;font-size:12px">Nenhuma skin ainda.</span>'}</div>
-
-                    <h4 style="font-family:Cinzel;margin:12px 0 8px 0;font-size:14px">🏆 Medalhas (${medalhas.length})</h4>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px">${allAch.map(a=>{ const tem=medalhas.includes(a.id); return `<div style="background:${tem?'#D1FAE5':'#f8fafc'};border:1.5px solid ${tem?'#10B981':'#e2e8f0'};border-radius:10px;padding:10px;text-align:center;opacity:${tem?1:0.5}"><div style="font-size:28px">${a.icone||'🏆'}</div><div style="font-size:11px;font-weight:800;color:#0f172a;margin-top:4px">${Workspace.escapeHTML(a.nome)}</div><div style="font-size:10px;color:#64748B">${Workspace.escapeHTML(a.desc)}</div><div style="font-size:9px;margin-top:4px;color:${tem?'#065f46':'#94a3b8'}">${tem?'✅ Desbloqueada':'🔒 Bloqueada'}</div></div>`}).join('')}</div>
-
-                    <div style="margin-top:16px;background:#FFFBEB;border:1px solid #fde68a;border-radius:10px;padding:10px;font-size:11px;color:#92400E"><b>💡 Dica:</b> Equipe títulos e bordas para aparecerem no ranking! Faça sessões com +300 XP para baús lendários.</div>
-                </div>
-            </div>`;
-        document.body.appendChild(modal);
-        modal.addEventListener('click', (e)=>{
-            const b=e.target.closest('[data-action]');
-            if(!b) return;
-            if(b.dataset.action==='fechar-inventario'){ modal.remove(); return; }
-            if(b.dataset.action==='equipar-titulo'){ this.equiparTitulo(b.dataset.titulo); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
-            if(b.dataset.action==='equipar-borda'){ this.equiparBorda(b.dataset.borda); modal.remove(); this.abrirInventario(); this.renderizarVisualizacao(); return; }
-        });
-        modal.addEventListener('click', (e)=>{ if(e.target===modal) modal.remove(); });
-    },
-    equiparTitulo(titulo){
-        this.state.tituloEquipado=titulo;
-        this.state.titulo=titulo;
-        this.saveDados();
-        Workspace.mostrarAviso(`Título equipado: ${titulo}`,'success');
-    },
-    equiparBorda(bordaId){
-        this.state.bordaEquipada=bordaId;
-        this.saveDados();
-        Workspace.mostrarAviso(`Borda equipada: ${bordaId}`,'success');
-    },
-    // ================= PORTAL MÁGICO - JOGO ESPECIAL =================
-    efeitoPortalTempo(){
-        return new Promise(resolve=>{
-            const overlay=document.createElement('div');
-            overlay.style.cssText='position:fixed;inset:0;background:radial-gradient(circle at center,#1e1b4b 0%,#0f0f23 40%,#000 100%);z-index:1000007;display:flex;align-items:center;justify-content:center;overflow:hidden';
-            overlay.innerHTML=`
-                <div style="position:absolute;inset:0">
-                    <div style="position:absolute;top:50%;left:50%;width:2px;height:2px;background:#fff;box-shadow:0 0 10px #fff, ${Array.from({length:40},()=>`${(Math.random()-0.5)*200}vw ${(Math.random()-0.5)*200}vh 0 1px #fff`).join(',')};animation:warpStars 0.8s linear"></div>
-                    <div style="position:absolute;top:50%;left:50%;width:200vmax;height:200vmax;background:conic-gradient(from 0deg,#fde68a,#8b5cf6,#4f46e5,#fde68a);border-radius:50%;transform:translate(-50%,-50%) scale(0);animation:portalExpand 0.8s ease-out forwards;opacity:0.8"></div>
-                </div>
-                <div style="position:relative;z-index:2;text-align:center;color:#fde68a;font-family:Cinzel;font-weight:900">
-                    <div style="font-size:60px;animation:spin 0.6s linear infinite">🌀</div>
-                    <div style="font-size:18px;margin-top:12px;letter-spacing:3px;animation:pulse 0.4s ease infinite">VIAJANDO NO TEMPO...</div>
-                </div>
-                <style>@keyframes portalExpand{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(180deg)}}@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}@keyframes warpStars{0%{transform:translate(-50%,-50%) scale(0)}100%{transform:translate(-50%,-50%) scale(2)}}</style>
-            `;
-            document.body.appendChild(overlay);
-            try{
-                const ctx=new (window.AudioContext||window.webkitAudioContext)();
-                const osc=ctx.createOscillator(); const gain=ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.frequency.setValueAtTime(200, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime+0.7);
-                gain.gain.setValueAtTime(0.4, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.8);
-                osc.start(); osc.stop(ctx.currentTime+0.8);
-            }catch{}
-            setTimeout(()=>{ overlay.style.transition='opacity 0.3s'; overlay.style.opacity='0'; setTimeout(()=>{ overlay.remove(); resolve(); },300); },800);
-        });
-    },
-    efeitoExplosaoPortal(){
-        const expl=document.createElement('div');
-        expl.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;background:radial-gradient(circle,#fde68a,#f59e0b);border-radius:50%;z-index:1000007;pointer-events:none;animation:explodePortal 0.6s ease-out forwards';
-        const style=document.createElement('style');
-        style.textContent='@keyframes explodePortal{0%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(15);opacity:0.8;box-shadow:0 0 40px #fde68a, 0 0 80px #8b5cf6}100%{transform:translate(-50%,-50%) scale(30);opacity:0}}';
-        document.head.appendChild(style);
-        document.body.appendChild(expl);
-        try{
-            const ctx=new (window.AudioContext||window.webkitAudioContext)();
-            const osc=ctx.createOscillator(); const gain=ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime+0.4);
-            gain.gain.setValueAtTime(0.5, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.5);
-            osc.start(); osc.stop(ctx.currentTime+0.5);
-        }catch{}
-        setTimeout(()=>expl.remove(),600);
-    },
-    async renderGamePortalMagico(){
-        this.portalAtivo=true;
-        if(!this.portalRodada) { this.portalRodada=1; this.portalTarget=5; this.portalStreak=0; }
-        // Efeito inicial se primeira vez
-        if(this.portalStreak===0 && this.portalRodada===1){
-            await this.efeitoPortalTempo();
-        }
-        this.renderDesafioPortal();
-    },
-    async renderDesafioPortal(){
-        // Escolhe jogo aleatório diferente do anterior
-        const possiveis=this.state.portalJogosPossiveis||['wordSpark','quiz','wordPicker','picturePop'];
-        let proximo=possiveis[Math.floor(Math.random()*possiveis.length)];
-        if(proximo===this.state.portalJogoInterno && possiveis.length>1){
-            proximo=possiveis.filter(g=>g!==this.state.portalJogoInterno)[Math.floor(Math.random()*(possiveis.length-1))];
-        }
-        this.state.portalJogoInterno=proximo;
-        // Pequeno efeito entre desafios se não é primeiro
-        if(this.portalStreak>0){
-            await this.efeitoPortalTempo();
-        }
-        this.efeitoExplosaoPortal();
-        // Renderiza o jogo interno mas dentro do contexto portal
-        setTimeout(()=>{
-            const body=document.getElementById('ig-modalBody');
-            if(!body) return;
-            // Adiciona header do portal
-            const headerPortal=`
-                <div style="background:linear-gradient(135deg,#0f0f23 0%,#1e1b4b 50%,#312e81 100%);border:2px solid #fde68a;border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 0 20px rgba(253,230,138,0.2)">
-                    <div style="display:flex;align-items:center;gap:10px"><div style="font-size:24px;animation:spin 2s linear infinite">🌀</div><div><div style="color:#fde68a;font-family:Cinzel;font-weight:900;font-size:13px;letter-spacing:1px">PORTAL MÁGICO • RODADA ${this.portalRodada}</div><div style="color:#cbd5e1;font-size:11px">Meta: ${this.portalTarget} vitórias seguidas • Jogo: ${proximo}</div></div></div>
-                    <div style="text-align:right"><div style="background:rgba(253,230,138,0.15);border:1px solid #fde68a;color:#fde68a;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:800">🔥 ${this.portalStreak}/${this.portalTarget}</div><div style="font-size:10px;color:#94a3b8;margin-top:4px">${this.portalStreak>=this.portalTarget*0.8?'Quase lá!':''}</div></div>
-                </div>`;
-            // Salva header pra injetar após render do jogo interno
-            this._portalHeader=headerPortal;
-            // Chama render do jogo interno
-            this.jogoAtual=proximo; // temporário pra usar lógica de obterItem
-            this.renderDesafioAtualInternoPortal();
-        },300);
-    },
-    renderDesafioAtualInternoPortal(){
-        this.currentAudioURL=null; this.desafioAtualObj=null; const isPortal=true;
-        const id=this.state.portalJogoInterno;
-        if(id==='wordSpark') this.renderGameWordSpark(true);
-        else if(id==='readAloud') this.renderGameReadAloud(true);
-        else if(id==='listenType') this.renderGameListenType(true);
-        else if(id==='quiz') this.renderGameQuiz(true);
-        else if(id==='wordPicker') this.renderGameWordPicker(true);
-        else if(id==='sentenceShuffle') this.renderGameSentenceShuffle(true);
-        else if(id==='answerQuest') this.renderGameAnswerQuest(true);
-        else if(id==='questionMaker') this.renderGameQuestionMaker(true);
-        else if(id==='contextRole') this.renderGameContextRole(true);
-        else if(id==='debateAI') this.renderGameDebateAI(true);
-        else if(id==='minimalPairs') this.renderGameMinimalPairs(true);
-        else if(id==='picturePop') this.renderGamePicturePop(true);
-        else this.renderGameWordSpark(true);
-    },
-    injetarHeaderPortalSeNecessario(){
-        try{
-            if(this.portalAtivo && this._portalHeader){
-                const body=document.getElementById('ig-modalBody');
-                if(body && !body.innerHTML.includes('PORTAL MÁGICO')){
-                    body.innerHTML = this._portalHeader + body.innerHTML;
-                }
+            if(tipo==='coin'){ 
+                osc.frequency.value=800; gain.gain.setValueAtTime(0.3, ctx.currentTime); 
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+0.3); 
+                osc.start(); osc.stop(ctx.currentTime+0.3); 
             }
         }catch{}
     },
-    async sucessoPortal(bonusBase){
-        const mult=this.state.season?.xpMultiplier||1;
-        const bonus = Math.floor((bonusBase*1.5)*mult);
-        this.portalStreak++; this.state.portalStreak=this.portalStreak;
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus}); }catch{}
 
-        this.tocarSom('xp');
-        // Toast
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;border:2px solid #fde68a';
-        toast.innerHTML=`🌀 +${bonus} XP • Streak ${this.portalStreak}/${this.portalTarget} 🔥`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),1200);
-
-        // Verifica se completou rodada
-        if(this.portalStreak >= this.portalTarget){
-            await this.magiaDoMagoBonus();
-            this.portalRodada++;
-            this.portalTarget = 5 * this.portalRodada; // 5,10,15,20...
-            this.portalStreak=0;
-        }
-        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },900);
-    },
-    async falhaPortal(){
-        const perda=Math.floor(20 * (this.state.season?.xpMultiplier||1));
-        this.state.xp=Math.max(0, this.state.xp - perda);
-        this.xpGanhosNaSessao=Math.max(0, this.xpGanhosNaSessao - perda);
-        this.portalStreak=0; this.state.portalStreak=0;
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:0, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpPerda:perda}); }catch{}
-
-        this.tocarSom('quest'); // som de erro
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
-        toast.innerHTML=`💥 -${perda} XP • Streak zerado!`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),1500);
-        setTimeout(()=>{ if(this.portalAtivo && this.tempoRestante>0) this.renderDesafioPortal(); },1100);
-    },
-    async magiaDoMagoBonus(){
-        const bonusBase = 300 + (this.portalRodada * 100);
-        const mult=this.state.season?.xpMultiplier||1;
-        const bonus=Math.floor(bonusBase*mult);
-        this.state.xp+=bonus; this.xpGanhosNaSessao+=bonus;
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/portal/progresso','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', portalStreak:this.portalStreak, portalRodada:this.portalRodada, portalTarget:this.portalTarget, xpGanho:bonus, evento:'magia'}); }catch{}
-
-        this.tocarSom('level'); this.confete();
-        const modal=document.createElement('div');
-        modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:1000008;animation:popIn 0.5s ease';
-        modal.innerHTML=`
-            <div style="text-align:center;max-width:400px;padding:20px">
-                <img src="/assets/mago_bau_ingles.png" style="width:180px;height:180px;object-fit:contain;filter:drop-shadow(0 0 30px #fde68a);animation:floatMago 1.5s ease infinite" onerror="this.style.display='none'"/>
-                <div style="font-size:60px;margin:-20px 0 10px 0">✨🪄✨</div>
-                <div style="font-family:Cinzel;font-size:26px;font-weight:900;color:#fde68a;text-shadow:0 0 20px rgba(253,230,138,0.8)">MAGIA DO MAGO!</div>
-                <div style="color:#fff;font-size:16px;margin-top:10px">${this.portalRodada===1?'5 vitórias seguidas! Incrível!': this.portalRodada===2?'10 vitórias! Lendário!': (this.portalTarget-5)+' vitórias! Você é imbatível!'}</div>
-                <div style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;padding:14px 24px;border-radius:30px;font-weight:900;font-size:22px;margin-top:16px;display:inline-block;box-shadow:0 0 30px rgba(253,230,138,0.5)">+${bonus} XP BÔNUS!</div>
-                <div style="color:#94a3b8;font-size:12px;margin-top:12px">Próxima meta: ${5*(this.portalRodada+1)} vitórias seguidas</div>
-            </div>
-            <style>@keyframes floatMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}</style>`;
-        document.body.appendChild(modal);
-        setTimeout(()=>{ modal.style.transition='opacity 0.4s'; modal.style.opacity='0'; setTimeout(()=>modal.remove(),400); },2800);
-        // espera modal fechar
-        await new Promise(r=>setTimeout(r,3000));
-    },
-    falar: (text, lang='en-US', pitch=1, rate=0.95, isMago=false)=> VoiceService.falar(text,{lang,pitch,rate,isMago}),
-    calcularLevel(xpTotal){
-        const curve = this.state.levelCurve || [0,100,250,450,700,1000,1400,1900,2500,3200,4000,5000,6200];
-        let level=1, proximo=curve[1]||100;
-        for(let i=0;i<curve.length;i++){
-            if(xpTotal >= curve[i]){ level=i+1; proximo=curve[i+1]||curve[i]; }
-            else { proximo=curve[i]; break; }
-        }
-        const atualBase = curve[level-2] || 0;
-        const proxBase = curve[level-1] || curve[curve.length-1];
-        const progresso = proxBase>atualBase ? Math.min(100, Math.max(0, ((xpTotal - atualBase)/(proxBase - atualBase))*100)) : 100;
-        return { level, proximo, progresso, atualBase, proxBase, xpTotal };
-    },
-    verificarQuests(tipoJogo){
-        if(!this.state.quests?.length) return;
-        this.state.quests.forEach(q=>{
-            const deveContar = (q.texto||'').toLowerCase().includes(tipoJogo) || (q.id||'').includes(tipoJogo) || q.tipo==='diaria';
-            if(!deveContar) return;
-            const prog = this.state.questsProgress[q.id] || {atual:0, coletado:false};
-            if(prog.coletado) return;
-            prog.atual = (prog.atual||0)+1;
-            this.state.questsProgress[q.id]=prog;
-            if(prog.atual >= q.alvo){
-                this.completarQuest(q);
-            }
-            this.saveDados();
-        });
-    },
-    async completarQuest(quest){
-        const bonus = Math.floor((quest.recompensaXP||100)*(this.state.season?.xpMultiplier||1));
-        this.state.xp+=bonus;
-        this.state.questsProgress[quest.id].coletado=true;
-        await this.saveDados();
-        try{
-            await Workspace.api('/workspace/ingles/quests/completar','POST',{userId:Workspace.usuario.id, questId:quest.id, escolaId:Workspace.usuario.escolaId||'DEFAULT'});
-        }catch{}
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8B5CF6,#6D28D9);color:#fff;padding:14px 24px;border-radius:14px;font-weight:800;z-index:1000002;box-shadow:0 8px 24px rgba(0,0,0,0.3);border:2px solid #fff;text-align:center';
-        toast.innerHTML=`🎯 Missão Completa: ${quest.texto||quest.id}<br/>+${bonus} XP Bônus!`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),3000);
-        this.renderQuestsPanel();
-    },
-    async tentarDesbloquearAchievement(condicaoTipo, qtdAtual){
-        const ach = this.state.achievements.find(a=>a.condicao?.tipo===condicaoTipo && qtdAtual >= (a.condicao?.qtd||999) && !this.state.medalhas.includes(a.id));
-        if(!ach) return;
-        this.state.medalhas.push(ach.id);
-        this.state.xp+= (ach.xpBonus||100);
-        await this.saveDados();
-        try{ await Workspace.api('/workspace/ingles/achievements/desbloquear','POST',{userId:Workspace.usuario.id, achievementId:ach.id, escolaId:Workspace.usuario.escolaId||'DEFAULT'}); }catch{}
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:24px;border-radius:20px;font-weight:800;z-index:1000003;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:3px solid #d4af37;text-align:center;animation:popIn 0.5s ease';
-        toast.innerHTML=`<div style="font-size:50px">${ach.icone||'🏆'}</div><div style="font-family:Cinzel;font-size:18px;margin:10px 0">${ach.nome}</div><div style="font-size:13px;color:#fff">${ach.desc}</div><div style="margin-top:10px;background:#fde68a;color:#000;padding:6px 12px;border-radius:20px;display:inline-block">+${ach.xpBonus} XP</div>`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),4000);
-    },
     similaridade(a,b){
-        const norm=s=>s.toLowerCase().trim().replace(/[^\w\s]/g,'');
-        let nA=norm(a), nB=norm(b);
+        const norm = s=>s.toLowerCase().trim().replace(/[^\w\s]/g,'');
+        let nA = norm(a), nB = norm(b);
         if(nA===nB) return 1;
         if(nB.includes(nA)||nA.includes(nB)) return 0.9;
         return nA.split(' ').some(w=>nB.includes(w))?0.6:0;
     },
 
-    
     injetarCSS(){
         if(document.getElementById('ws-ingles-css')) return;
-        if(!document.querySelector('link[data-ig-font]')){
-            const l=document.createElement('link'); l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=VT323&display=swap'; l.setAttribute('data-ig-font','1'); document.head.appendChild(l);
-        }
-        const style=document.createElement('style'); style.id='ws-ingles-css';
-        style.textContent=`
-            #ws-ingles-container{background:linear-gradient(180deg,#F8FAFC 0%,#EEF2FF 100%);border-radius:20px;overflow:visible;min-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(15,23,42,0.08);border:1px solid #E2E8F0}
-            .ig-header{background:linear-gradient(135deg,#0f0f23 0%,#1a1a2e 40%,#1e1b4b 100%);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d4af37;position:relative;top:0;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
-            .ig-title{display:flex;align-items:center;gap:18px}
-            .ig-bau-topo{width:72px;filter:drop-shadow(0 0 14px rgba(241,196,15,0.8)) drop-shadow(0 4px 12px rgba(0,0,0,0.5));transition:0.3s}
-            .ig-title-text h2{font-family:'Cinzel',serif;font-size:30px;font-weight:900;margin:0;background:linear-gradient(90deg,#fde68a 0%,#f1c40f 25%,#fde68a 50%,#d4af37 75%,#fde68a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(2px 2px 0px #000) drop-shadow(0 0 20px rgba(241,196,15,0.35));background-size:200% auto;animation:shineGold 4s linear infinite}
-            @keyframes shineGold{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-            .ig-title-text p{margin:3px 0 0 0;font-size:11px;color:#f8fafc;font-family:'VT323',monospace;text-transform:uppercase;letter-spacing:3px;opacity:0.95;text-shadow:0 1px 0 #000}
-            .ig-rpg-hud{display:flex;gap:10px;background:rgba(0,0,0,0.6);padding:8px 14px;border-radius:14px;border:1.5px solid rgba(212,175,55,0.5)}
-            .ig-hud-stat{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.25);color:#fff;font-family:'VT323',monospace;font-size:18px}
-            .ig-hud-stat span{color:#fde68a;font-size:22px}
-            .ig-global-timer{font-family:'VT323',monospace;font-size:22px;color:#ff4757;display:none;align-items:center;letter-spacing:2px;background:rgba(239,68,68,0.15);padding:5px 12px;border-radius:8px;border:1.5px dashed #ef4444}
-            .ig-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:0 0 30px 0}
-            .ig-game-card{background:linear-gradient(180deg,#ffffff 0%,#fffcf0 100%);border:2px solid #eab308;border-radius:16px;padding:22px;cursor:pointer;transition:0.3s;box-shadow:0 4px 0 #d4af37, 0 8px 24px rgba(0,0,0,0.06)}
-            .ig-game-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 8px 0 #d4af37, 0 16px 32px rgba(212,175,55,0.25)}
-            .ig-game-card h3{font-family:'Cinzel',serif;color:#0f172a;font-size:17px;font-weight:800;margin:12px 0 8px 0}
-            .ig-game-card p{color:#334155;font-size:13.5px;font-weight:500;margin:0 0 12px 0}
-            .ig-top{display:flex;justify-content:space-between;align-items:center}
-            .ig-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px}
-            .ig-badge{font-size:11px;font-weight:800;padding:5px 10px;border-radius:20px;border:1px solid}
-            .ig-badge-level{background:#0f172a;color:#fde68a;border-color:#d4af37}
-            .chest-shake{animation:chestShake 0.4s infinite} @keyframes chestShake{0%,100%{transform:translate(1px,-2px) rotate(-5deg)}50%{transform:translate(-1px,2px) rotate(5deg)}}
-            .chest-explode{animation:chestExplode 1.2s forwards;z-index:9999999!important} @keyframes chestExplode{0%{transform:scale(1)}20%{transform:scale(3.5) translateY(20px);filter:brightness(2.5)}100%{transform:scale(1)}}
-            @keyframes shockwave{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-50%) scale(400);opacity:0}}
-            .ig-fireball{position:fixed;border-radius:50%;pointer-events:none;z-index:9999999;animation:shootParticle 1.5s forwards}
-            .ig-sparkle{position:fixed;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);pointer-events:none;z-index:9999999;animation:shootParticle 2s forwards}
-            @keyframes shootParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
-            .ig-guardian-container{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;background:radial-gradient(ellipse at 30% 20%, #2a1a4a 0%, #1a0b2e 25%, #0f0f23 60%, #000 100%);border-radius:0 0 20px 20px;border:4px solid #1e1b4b;border-top:none;padding:32px 24px}
-            .ig-guardian-avatar{width:92px;animation:flutuarMago 3.5s ease-in-out infinite;filter:drop-shadow(0 0 28px rgba(142,68,173,0.9))}
-            @keyframes flutuarMago{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-            .ig-balao-fala-static{background:linear-gradient(180deg,#0f172a 0%,#020617 100%);padding:20px 22px;border-radius:14px;border:2.5px solid #f1c40f;color:#fff;font-family:'VT323',monospace;font-size:22px;flex:1;box-shadow:0 8px 24px rgba(0,0,0,0.6);position:relative}
-            .ig-hub-banner{display:flex;align-items:center;gap:18px;padding:18px 22px;background:linear-gradient(135deg, #0f0f23 0%, #1a1a2e 30%, #1e1b4b 70%, #0f172a 100%);border:2px solid #d4af37;border-radius:18px;margin:0 0 26px 0;box-shadow:0 12px 32px rgba(0,0,0,0.4)}
-            .ig-hub-mago-img{width:68px;animation:flutuarMago 3.5s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(142,68,173,0.9));flex-shrink:0}
-            .ig-balao-fala-hub{background:linear-gradient(180deg, #0f172a 0%, #020617 100%);color:#f8fafc;padding:14px 18px;border-radius:14px;border:2px solid #f1c40f;font-family:'VT323',monospace;font-size:20px;flex:1;position:relative}
-            .ig-big-phrase{background:#ffffff;border:2.5px solid #cbd5e1;color:#0f172a;font-weight:800;font-size:22px;text-align:center;padding:22px;border-radius:16px;margin:16px 0;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-            .ig-input,.ig-textarea{background:#ffffff;color:#0f172a;border:2.5px solid #cbd5e1;border-radius:12px;font-weight:600;font-size:15px;width:100%;padding:12px 15px;box-sizing:border-box}
-            .ig-input:focus,.ig-textarea:focus{border-color:#4f46e5;outline:none;box-shadow:0 0 0 4px rgba(79,70,229,0.12)}
-            .ig-input::placeholder,.ig-textarea::placeholder{color:#64748b;opacity:1}
-            .ig-card{background:#ffffff;border:1.5px solid #e2e8f0;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 4px 20px rgba(15,23,42,0.04)}
-            .ig-card-prof{background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border:2px solid #e2e8f0;border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 8px 24px rgba(15,23,42,0.06);transition:0.2s}
-            .ig-card-prof:hover{border-color:#cbd5e1;box-shadow:0 12px 32px rgba(15,23,42,0.08)}
-            .ig-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f1f5f9}
-            .ig-card-header h3{font-family:Cinzel,serif;font-size:18px;font-weight:800;color:#0f172a;margin:0}
-            .ig-card-header p{font-size:12px;color:#64748b;margin:4px 0 0 0}
-            .ig-list-item{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:8px;background:#fff;color:#0f172a;font-weight:500;transition:0.2s}
-            .ig-list-item:hover{border-color:#e2e8f0;background:#f8fafc}
-            .ig-sidebar{width:270px;background:linear-gradient(180deg,#0F172A 0%,#1E293B 100%);padding:20px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;border-right:3px solid #d4af37;box-shadow:4px 0 20px rgba(0,0,0,0.15)}
-            .ig-side-item{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);padding:13px 16px;border-radius:12px;text-align:left;font-weight:700;color:#94a3b8;cursor:pointer;transition:0.2s;white-space:nowrap;display:flex;align-items:center;gap:10px;font-size:13px}
-            .ig-side-item:hover{background:rgba(255,255,255,0.12);color:#f8fafc;transform:translateX(3px)}
-            .ig-side-item.active{background:linear-gradient(135deg,#fde68a 0%,#d4af37 100%);color:#000;border-color:#fde68a;box-shadow:0 4px 12px rgba(253,230,138,0.3);font-weight:800}
-            .ig-prof-input{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;font-weight:600;transition:0.2s}
-            .ig-prof-input:focus{border-color:#4f46e5;box-shadow:0 0 0 4px rgba(79,70,229,0.1);outline:none}
-            .ig-prof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-            .ig-rank-item{display:flex;align-items:center;gap:12px;padding:14px;background:#fff;border:2px solid #f1f5f9;border-radius:14px;margin-bottom:8px;transition:0.2s}
-            .ig-rank-item.ouro{border-color:#fde68a;background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%);box-shadow:0 4px 12px rgba(253,230,138,0.2)}
-            .ig-rank-item.prata{border-color:#cbd5e1;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%)}
-            .ig-rank-item.bronze{border-color:#d97706;background:linear-gradient(180deg,#FFFBEB 0%,#fff 100%)}
-            #ig-professorView{display:flex;min-height:70vh}
-            #ig-tab-content{flex:1;padding:28px;background:#F8FAFC;overflow-y:auto}
-            /* FIX BOTÕES - APENAS DENTRO DO BAÚ DO INGLÊS, NÃO AFETA OUTROS WORKSPACES */
-            #ws-ingles-container .ws-btn, #ig-gameModal .ws-btn{font-weight:800!important}
-            #ws-ingles-container .ws-btn[style*="background:#fff"], #ig-gameModal .ws-btn[style*="background:#fff"]{color:#0f172a!important;border:2px solid #cbd5e1!important}
-            #ws-ingles-container .ws-btn[style*="background:#ffffff"], #ig-gameModal .ws-btn[style*="background:#ffffff"]{color:#0f172a!important}
-            #ws-ingles-container .ws-btn[style*="background:#0f172a"], #ig-gameModal .ws-btn[style*="background:#0f172a"]{color:#fde68a!important}
-            #ws-ingles-container .ws-btn[style*="background:#4F46E5"], #ig-gameModal .ws-btn[style*="background:#4F46E5"]{color:#ffffff!important}
-            #ws-ingles-container .ws-btn[style*="background:#10B981"], #ig-gameModal .ws-btn[style*="background:#10B981"]{color:#ffffff!important}
-            #ws-ingles-container .ig-game-card .ws-btn, #ig-gameModal .ig-game-card .ws-btn{background:#fff!important;color:#0f172a!important;border:2px solid #e2e8f0!important}
-
-            @keyframes popIn{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+        const style = document.createElement('style'); style.id = 'ws-ingles-css';
+        style.textContent = `
+            #ws-ingles-container { background: #f8fafc; min-height: 80vh; font-family: 'Inter', sans-serif; }
+            #bau-do-ingles-module { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .bau-header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+            .bau-title { display: flex; align-items: center; gap: 16px; }
+            .bau-icon { font-size: 40px; background: #FEF3C7; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 2px solid #F59E0B; }
+            .bau-title h2 { margin: 0; font-size: 22px; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+            .bau-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748B; font-weight: 500; }
+            .bau-actions { display: flex; align-items: center; gap: 16px; }
+            .xp-badge { display: flex; gap: 10px; background: #F1F5F9; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; color: #334155; }
+            .xp-badge b { color: #0F172A; }
+            .toggle-wrap { display: flex; background: #E2E8F0; padding: 4px; border-radius: 12px; }
+            .toggle-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; color: #64748B; cursor: pointer; transition: 0.2s; font-size: 13px; }
+            .toggle-btn.active { background: #fff; color: #0F172A; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
             
-
-
-            /* 🎯 FIX: Conteúdo abaixo da barra do workspace, não sob ela */
-            #ws-ingles-container{ padding-top:0 !important; margin-top:0 !important; position:relative; z-index:1; }
-            #ws-ingles-container .ig-header{ position:relative !important; z-index:2; }
-            #ig-alunoView{ position:relative !important; z-index:1; margin-top:0 !important; }
-            /* 📱 MOBILE = DESKTOP igual imagem */
-            @media(max-width:768px){
-                #ig-alunoView{ padding-bottom:90px !important; }
-                .ilha-card{ padding:10px !important; }
-                .ilha-card > div:first-child{ width:48px !important; height:48px !important; font-size:28px !important; }
-            }
-            @media(min-width:769px){
-                #ig-alunoView{ max-width:480px; margin:0 auto !important; background:linear-gradient(180deg,#1a1a4a 0%,#0f0f3a 20%,#1e3a8a 50%,#0f172a 100%) !important; min-height:100vh; box-shadow:0 0 40px rgba(0,0,0,0.5); }
-            }
-
-
-
-            /* ⏱ Timer conta do tempo preenchido no inicio */
-            #ig-timerTop{ font-variant-numeric:tabular-nums; }
-            /* Barra recursos abaixo do WorkSpace */
-            #ig-topBarRecursos{ top:0 !important; position:sticky !important; }
-            /* Recompensas/Conquistas lado a lado, não abaixo do titulo */
-            #ig-botoesTopRight{ flex-direction:row !important; }
-
-            /* 🎯 FIX CONTEUDO ABAIXO BARRA WORKSPACE */
-            #ws-ingles-container{ padding-top:0 !important; margin-top:0 !important; position:relative; z-index:1; }
-            /* 📱 CELULAR - FIX PILULAS E NAVEGACAO - ILHA SÓ APÓS BAÚ */
-            @media(max-width:768px){
-                /* Pilulas abaixo da barra WorkSpace, não escondida */
-                #ig-topBarRecursos{ 
-                    position:sticky !important; 
-                    top:56px !important;
-                    z-index:20 !important;
-                    padding:8px 10px !important; 
-                    gap:6px !important; 
-                    overflow-x:auto !important; 
-                    -webkit-overflow-scrolling:touch; 
-                    background:rgba(10,14,42,0.98) !important;
-                    margin-top:0 !important;
-                }
-                #ig-topBarRecursos::-webkit-scrollbar{ display:none; }
-                #ig-topBarRecursos > div{ flex-shrink:0 !important; white-space:nowrap !important; }
-                /* Guardian screen deve cobrir tudo até baú brilhar */
-                #ig-guardian-screen{
-                    position:fixed !important;
-                    inset:0 !important;
-                    z-index:100 !important;
-                    background:linear-gradient(180deg,#0a0e2a 0%,#1a237e 50%,#0f172a 100%) !important;
-                    display:flex !important;
-                    flex-direction:column !important;
-                    align-items:center !important;
-                    justify-content:center !important;
-                    padding:20px !important;
-                }
-                #ig-guardian-screen[style*="display: none"]{ display:none !important; }
-                /* Ilha só aparece após baú - respeita display:none */
-                #ig-alunoView[style*="display: none"]{ display:none !important; }
-                #ig-alunoView[style*="display: block"]{
-                    display:flex !important;
-                    flex-direction:column !important;
-                    min-height:100dvh !important;
-                    height:auto !important;
-                    position:relative !important;
-                    overflow:visible !important;
-                }
-                /* Main sem absolute */
-                #ig-mainIlha{ 
-                    min-height:auto !important; 
-                    height:auto !important;
-                    position:relative !important;
-                    display:flex !important;
-                    flex-direction:column !important;
-                    gap:0 !important;
-                    padding-bottom:100px !important;
-                    overflow:visible !important;
-                }
-                #ig-cardConta{ 
-                    position:relative !important; 
-                    top:auto !important; 
-                    right:auto !important; 
-                    left:auto !important;
-                    margin:12px 12px 8px 12px !important; 
-                    order:1;
-                }
-                #ig-tituloIlha{ 
-                    position:relative !important; 
-                    top:auto !important; 
-                    left:auto !important; 
-                    right:auto !important;
-                    text-align:left !important; 
-                    margin:8px 14px !important; 
-                    order:2;
-                }
-                #ig-tituloIlha div div:nth-child(2){ 
-                    font-size:38px !important; 
-                    background:linear-gradient(180deg,#FFFBEB 0%,#fde68a 30%,#fbbf24 60%,#d97706 100%) !important; 
-                    -webkit-background-clip:text !important; 
-                    -webkit-text-fill-color:transparent !important; 
-                }
-                #ig-botoesTopRight{ 
-                    position:relative !important; 
-                    top:auto !important; 
-                    right:auto !important; 
-                    left:auto !important;
-                    justify-content:flex-start !important; 
-                    margin:0 14px 14px 14px !important; 
-                    order:3;
-                    display:flex !important;
-                    flex-direction:row !important;
-                    gap:10px !important;
-                }
-                #ig-cardsContainer{ 
-                    position:relative !important; 
-                    bottom:auto !important; 
-                    left:auto !important; 
-                    right:auto !important; 
-                    top:auto !important;
-                    flex-direction:column !important; 
-                    overflow:visible !important; 
-                    padding:0 12px 20px 12px !important; 
-                    order:4;
-                    display:flex !important;
-                    gap:12px !important;
-                }
-                #ig-cardsContainer .ilha-card{ 
-                    min-width:100% !important; 
-                    width:100% !important;
-                    flex-direction:row !important; 
-                    padding:12px !important; 
-                    position:relative !important;
-                    left:auto !important;
-                    top:auto !important;
-                    right:auto !important;
-                    bottom:auto !important;
-                    transform:none !important;
-                }
-                #ig-cardsContainer .ilha-card > div:first-child{ width:56px !important; height:48px !important; }
-                #ig-missoesDiarias{ display:none !important; }
-                #ig-alunoView div[data-action="continuar-jornada"]{ 
-                    position:fixed !important; 
-                    bottom:20px !important; 
-                    left:50% !important; 
-                    right:auto !important;
-                    transform:translateX(-50%) !important; 
-                    width:90% !important; 
-                    max-width:320px;
-                    z-index:25 !important;
-                }
-                /* Titulo e conta não por cima da ilha */
-                #ig-mainIlha > div{ position:relative !important; z-index:2; }
-            }
-
-            /* 💻 DESKTOP - barra abaixo WorkSpace */
-            @media(min-width:769px){
-                #ig-topBarRecursos{ top:0 !important; }
-            }
-            /* WorkSpace bar height compensation */
-            #ws-ingles-container{ padding-top:0 !important; }
-            #ig-alunoView{ margin-top:0 !important; padding-top:0 !important; }
-
-            /* 💻 DESKTOP - como na imagem */
-            @media(min-width:769px){
-                #ig-alunoView{ max-width:100% !important; }
-                #ig-mainIlha{ min-height:calc(100vh - 50px); background:linear-gradient(rgba(10,14,42,0.4), rgba(10,14,42,0.6)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200') center/cover; }
-                #ig-cardsContainer{ bottom:80px !important; left:16px !important; right:300px !important; }
-                #ig-missoesDiarias{ display:block !important; }
-                #ig-tituloIlha{ left:24px !important; top:20px !important; }
-            }
-
-            /* 📱 MOBILE SEM SCROLL - 100vh */
-            @media(max-width:768px){
-                #ig-alunoView{ height:100dvh !important; min-height:100dvh !important; max-height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
-                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ flex:1 !important; height:auto !important; min-height:0 !important; padding-bottom:70px !important; display:grid !important; grid-template-columns:1fr 1fr !important; gap:10px !important; align-content:center !important; justify-items:center !important; }
-                .ilha-predio{ width:100% !important; max-width:160px !important; position:relative !important; left:auto !important; top:auto !important; right:auto !important; transform:none !important; }
-            }
-
-            /* 📱 HUB ILHA RESPONSIVO - MOBILE/TABLET - ATUALIZADO */
-            #ig-alunoView > div[style*="position:absolute;top:0;left:0;right:0"]{ position:fixed !important; background:rgba(15,23,42,0.95); backdrop-filter:blur(8px); border-bottom:2px solid #fde68a; }
-            /* 📱 HUB ILHA RESPONSIVO - MOBILE/TABLET */
-            @media(max-width:1024px){
-                #ig-alunoView{ min-height:100vh; overflow-y:auto; }
-                #ig-alunoView > div[style*="position:absolute;top:0"]{ flex-wrap:wrap; gap:8px; padding:8px 10px !important; }
-                #ig-alunoView > div[style*="position:absolute;top:70px;right"]{ top:80px !important; flex-direction:row !important; right:8px !important; gap:8px !important; }
-                #ig-alunoView > div[style*="position:absolute;top:70px;right"] button div{ width:44px !important; height:44px !important; font-size:20px !important; }
-                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ height:auto !important; min-height:auto !important; display:flex !important; flex-direction:column !important; align-items:center !important; padding:140px 12px 100px 12px !important; gap:16px !important; }
-                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"] > div[style*="position:absolute;top:12%"]{ position:relative !important; top:auto !important; left:auto !important; transform:none !important; margin-bottom:8px; }
-                .ilha-predio{ position:relative !important; left:auto !important; top:auto !important; right:auto !important; transform:none !important; width:90% !important; max-width:320px; display:flex !important; align-items:center !important; gap:12px !important; background:linear-gradient(135deg,#0F172A,#1E293B) !important; border:2px solid #334155 !important; border-radius:16px !important; padding:12px !important; }
-                .ilha-predio > div:first-child{ font-size:48px !important; }
-                #ig-alunoView > div[style*="position:absolute;bottom:16px;left:16px"]{ position:relative !important; bottom:auto !important; left:auto !important; width:90% !important; max-width:320px; }
-                #ig-alunoView > div[style*="position:absolute;bottom:16px;right:16px"]{ position:relative !important; bottom:auto !important; right:auto !important; width:90% !important; max-width:320px; }
-            }
-            @media(max-width:480px){
-                #ig-alunoView{ padding:0 !important; }
-                #ig-alunoView > div[style*="position:absolute;top:0"] > div{ padding:6px 10px !important; }
-                #ig-alunoView > div[style*="position:absolute;top:0"] #ig-hubNome{ font-size:11px !important; }
-                #ig-alunoView > div[style*="position:absolute;top:0"] #ig-hubXpTexto{ font-size:8px !important; }
-                .ilha-predio{ padding:10px !important; }
-                .ilha-predio > div:first-child{ font-size:36px !important; }
-                #ig-gameModal > div{ width:98% !important; margin:4px !important; max-height:96vh !important; }
-            }
-            /* 🖥️ TELAS GRANDES */
-            @media(min-width:1440px){
-                #ig-alunoView > div[style*="position:relative;width:100%;height:100vh"]{ max-width:1400px; margin:0 auto; }
-                .ilha-predio{ transform:scale(1.1); }
-                .ilha-predio:hover{ transform:scale(1.15) !important; }
-            }
-
-            @media(max-width:768px){
-              #ws-ingles-container{min-height:100vh;border-radius:0}
-              .ig-header{flex-direction:column;gap:12px;padding:14px 16px;position:relative}
-              .ig-bau-topo{width:72px!important}
-              .ig-title-text h2{font-size:22px;text-align:center}
-              .ig-title-text p{text-align:center}
-              .ig-rpg-hud{width:100%;justify-content:space-between;padding:8px 10px}
-              .ig-hud-stat{font-size:16px;padding:6px 10px}
-              .ig-games-grid{grid-template-columns:1fr;padding:0 14px 24px 14px;gap:14px}
-              .ig-game-card{padding:18px}
-              .ig-hub-banner{flex-direction:column;text-align:center;padding:16px 14px;margin:0 14px 16px 14px}
-              .ig-hub-mago-img{width:90px!important}
-              #ig-xp-bar-container{margin:0 14px 16px 14px!important;flex-wrap:wrap;gap:10px;padding:12px!important}
-              #ig-xp-bar-container #ig-levelBadge{width:40px;height:40px;font-size:16px}
-              #ig-questsPanel{margin:0 14px 16px 14px!important}
-              #ig-professorView{flex-direction:column}
-              .ig-sidebar{width:100%;flex-direction:row;overflow-x:auto;gap:8px;padding:12px;border-right:none;border-bottom:3px solid #d4af37;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-              .ig-sidebar::-webkit-scrollbar{display:none}
-              .ig-side-item{flex-shrink:0;padding:11px 16px;font-size:12px;border-radius:20px;white-space:nowrap}
-              #ig-tab-content{padding:14px;background:#F1F5F9}
-              .ig-card-prof{padding:18px;border-radius:16px}
-              .ig-prof-grid{grid-template-columns:1fr}
-              .ig-guardian-container{padding:20px 14px;min-height:60vh}
-              .ig-balao-fala-static{font-size:17px;padding:14px}
-              .ig-opcoes-tempo{flex-direction:column}
-              #ig-gameModal > div{width:95%!important;max-height:92vh!important;margin:10px}
-              #ig-modalBody{max-height:70vh;overflow-y:auto}
-              .ig-rank-item{padding:12px;gap:10px}
-            }
-   
-              /* ==========================================================
-               🚀 FIX 1: MODAIS EM TELA CHEIA ABAIXO DA BARRA WORKSPACE 
-               ========================================================== */
-            #ig-gameModal {
-                top: 65px !important; 
-                bottom: 0 !important;
-                align-items: flex-start !important; 
-                background: rgba(15,23,42,0.95) !important;
-            }
-            #ig-gameModal > .ws-card {
-                width: 100% !important; 
-                max-width: 100% !important; 
-                height: calc(100vh - 65px) !important; 
-                max-height: calc(100vh - 65px) !important; 
-                border-radius: 0 !important; 
-                border: none !important; 
-                margin: 0 !important;
-            }
-            /* Cabeçalho Premium do Modal */
-            #ig-gameModal .ws-card > div:first-child {
-                background: linear-gradient(135deg, #0F172A, #1E293B) !important;
-                border-bottom: 2px solid #d4af37 !important;
-                padding: 12px 25px !important;
-            }
-            #ig-gameModal .ws-card > div:first-child h2 { color: #fde68a !important; font-size: 20px !important; letter-spacing: 1px !important; }
-            #ig-gameModal .ws-card > div:first-child span#ig-modalIcon { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+            .welcome { text-align: center; margin-bottom: 30px; }
+            .welcome h1 { font-family: 'Plus Jakarta Sans', sans-serif; color: #0F172A; margin: 0 0 8px 0; font-size: 28px; }
+            .welcome p { color: #475569; max-width: 600px; margin: 0 auto; line-height: 1.5; font-size: 15px; }
             
-            /* Botão "X" de Fechar Modernizado */
-            #ig-gameModal .ws-card > div:first-child button[data-action="fechar-jogo"] {
-                background: rgba(239, 68, 68, 0.15) !important;
-                width: 40px !important;
-                height: 40px !important;
-                border-radius: 10px !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                color: #ef4444 !important;
-                transition: 0.2s !important;
-            }
-            #ig-gameModal .ws-card > div:first-child button[data-action="fechar-jogo"]:hover { 
-                background: #ef4444 !important; color: #fff !important; transform: scale(1.05); 
-            }
+            .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+            .ig-game-card { background: #fff; border: 2px solid #E2E8F0; border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.2s; }
+            .ig-game-card:hover { border-color: #4F46E5; transform: translateY(-4px); box-shadow: 0 10px 25px rgba(79,70,229,0.1); }
+            .ig-game-card .ig-top { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: flex-start; }
+            .ig-game-card .ig-icon { font-size: 32px; width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+            .ig-game-card h3 { margin: 0 0 6px 0; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
+            .ig-game-card p { margin: 0; color: #64748B; font-size: 13px; line-height: 1.4; }
+            
+            /* Modal Styles */
+            .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); display: flex; align-items: center; justify-content: center; z-index: 100000; backdrop-filter: blur(5px); }
+            .modal.hidden { display: none !important; }
+            .modal-content { background: #fff; width: 95%; max-width: 650px; border-radius: 20px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #E2E8F0; }
+            .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+            .modal-title { display: flex; align-items: center; gap: 12px; }
+            .modal-title h2 { margin: 0; font-size: 18px; color: #0F172A; font-weight: 800; }
+            .close-btn { background: #FEE2E2; border: none; width: 32px; height: 32px; border-radius: 8px; color: #EF4444; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+            .close-btn:hover { background: #EF4444; color: #fff; }
+            .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+            
+            /* Game Inner Elements */
+            .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
+            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 16px; width: 100%; padding: 14px; box-sizing: border-box; outline: none; transition: 0.2s; }
+            .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+            .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; }
+            .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+            
+            .hidden { display: none !important; }
+            
+            /* Toast */
+            .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
+            
+            /* Professor Sidebar */
+            #professorView { display: flex; gap: 20px; min-height: 60vh; }
+            .sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; }
+            .side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; }
+            .side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; }
+            .tab-panel { display: none; }
+            .tab-panel.active { display: block; }
 
-            /* ==========================================================
-               📱 FIX 2: OTIMIZAÇÃO DE ESPAÇO NO MOBILE (TÍTULO E BOTÕES) 
-               ========================================================== */
             @media (max-width: 768px) {
-                #ig-gameModal { top: 56px !important; } 
-                #ig-gameModal > .ws-card { height: calc(100vh - 56px) !important; max-height: calc(100vh - 56px) !important; }
-                
-                #ig-cardConta + div { flex-wrap: nowrap !important; align-items: center !important; gap: 8px !important; padding: 0 12px !important; margin-top: -5px !important; }
-                
-                /* 🚀 FIX: Afasta o título do Avatar e impede o corte das letras de baixo */
-                #ig-tituloIlha { margin-left: 20px !important; margin-top: 6px !important; padding-bottom: 8px !important; flex: 1; }
-                #ig-tituloIlha > div { line-height: 1.15 !important; }
-                
-                #ig-tituloIlha > div > div:nth-child(1) { font-size: 9px !important; } 
-                #ig-tituloIlha > div > div:nth-child(2) { font-size: 20px !important; letter-spacing: 0 !important; } 
-                #ig-tituloIlha > div > div:nth-child(3) { font-size: 7px !important; padding: 3px 6px !important; margin-top: 3px !important; white-space: nowrap !important; } 
-                
-                #ig-botoesTopRight { margin: 0 !important; flex-direction: row !important; gap: 6px !important; }
-                #ig-botoesTopRight button { padding: 6px 8px !important; border-radius: 10px !important; gap: 2px !important;}
-                #ig-botoesTopRight button div { width: 22px !important; height: 22px !important; font-size: 12px !important; }
-                #ig-botoesTopRight button span { font-size: 7px !important; }
+                #professorView { flex-direction: column; }
+                .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+                .side-item { flex-shrink: 0; }
+                .bau-header { flex-direction: column; }
+                .bau-actions { width: 100%; justify-content: space-between; }
             }
-
         `;
         document.head.appendChild(style);
     },
 
-
-    renderQuestsPanel(){
-        const panel=document.getElementById('ig-questsPanel');
-        const list=document.getElementById('ig-questsList');
-        const seasonBadge=document.getElementById('ig-seasonBadge');
-        if(!panel||!list) return;
-        if(!this.state.quests?.length){ panel.style.display='none'; return; }
-        panel.style.display='block';
-        if(seasonBadge) seasonBadge.textContent=`${this.state.season?.nome||'S1'} • x${this.state.season?.xpMultiplier||1}`;
-        list.innerHTML = this.state.quests.map(q=>{
-            const prog = this.state.questsProgress[q.id] || {atual:0, coletado:false};
-            const pct = Math.min(100, (prog.atual/q.alvo)*100);
-            const done = prog.atual >= q.alvo;
-            return `<div style="background:${done? (prog.coletado?'#D1FAE5':'#FEF3C7') : '#fff'};border:1.5px solid ${done?'#10B981':'#E2E8F0'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="font-size:22px">${q.icone||'🎯'}</div><div style="flex:1"><div style="font-size:13px;font-weight:700;color:#0f172a">${q.texto||q.id}</div><div style="background:#E2E8F0;height:6px;border-radius:10px;margin-top:6px;overflow:hidden"><div style="background:${done?'#10B981':'#4F46E5'};height:100%;width:${pct}%;transition:width 0.4s"></div></div><div style="font-size:11px;color:#64748B;margin-top:2px">${prog.atual}/${q.alvo} • +${q.recompensaXP} XP</div></div><div style="font-size:12px;font-weight:800;color:${done? (prog.coletado?'#065f46':'#92400e') : '#64748B'}">${prog.coletado?'✅ Coletado': done? '🎁 Coletar' : ''}</div></div>`;
-        }).join('');
-    },
     construirHTML(){
-        let container=document.getElementById('ws-ingles-container');
-        if(!container){ container=document.createElement('div'); container.id='ws-ingles-container'; container.style.display='none'; const p=document.getElementById('ws-main-container'); if(p?.parentNode) p.parentNode.appendChild(container); }
-        container.innerHTML=`
-            <div class="ig-header" id="ig-header-principal" style="transition:all 0.4s ease">
-                <div class="ig-title"><img id="ig-header-chest" src="/assets/bau_roxo_pixel.png" class="ig-bau-topo" style="transition:all 0.4s ease" /><div class="ig-title-text"><h2>Baú do Inglês</h2><p>Treinamento Épico Adaptativo</p></div></div>
-                <div class="ig-rpg-hud"><div id="ig-global-timer-display" class="ig-global-timer">00:00</div><div class="ig-hud-stat">🔥 <span id="ig-streakCount">1</span> Dias</div><div class="ig-hud-stat">⭐ <span id="ig-xpCount">0</span> XP</div></div>
-            </div>
-            <div id="ig-guardian-screen" class="ig-guardian-container" style="display:none">
-                <div class="ig-prep-layout" style="display:flex;gap:25px;align-items:center"><img src="/assets/mago_bau_ingles.png" class="ig-guardian-avatar" style="width:130px;mix-blend-mode:screen" /><div class="ig-balao-fala-static"><span style="color:#f1c40f">Mestre Mago:</span><br/>Quantos minutos vai treinar agora?</div></div>
-                <div class="ig-opcoes-tempo" style="display:flex;gap:15px;margin-top:20px"><div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.8);padding:5px 10px;border-radius:8px;border:2px solid #f1c40f;flex:1;justify-content:center"><input type="number" id="ig-tempo-escolhido" placeholder="15" min="1" max="120" style="width:50px;border:none;background:transparent;color:#f1c40f;font-size:26px;text-align:center;outline:none"><span style="color:#fff">MIN</span></div><button data-action="aceitar-tempo" class="ws-btn" style="flex:1;background:linear-gradient(#d4af37,#996515);color:#fff;border:2px solid #fff;padding:10px 15px;border-radius:8px;cursor:pointer">Aceitar ⚔</button></div>
-            </div>
-                                                <div id="ig-alunoView" style="display:none;position:relative;width:100%;min-height:100vh;background:linear-gradient(180deg,#0a0e2a 0%,#1a237e 30%,#0d47a1 60%,#0f172a 100%);padding-top:0;box-sizing:border-box;overflow-y:auto">
-                <!-- BARRA RECURSOS - ABAIXO DA BARRA WORKSPACE -->
-                <div style="position:sticky;top:0;z-index:30;background:rgba(10,14,42,0.98);backdrop-filter:blur(12px);border-bottom:2px solid rgba(255,255,255,0.1);padding:8px 10px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;align-items:center" id="ig-topBarRecursos">
-                    <div style="display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.5);border:1.5px solid #fbbf24;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0"><span style="font-size:14px">⏱️</span><span style="color:#fde68a;font-weight:900;font-size:12px" id="ig-timerTop">03:45</span></div>
-                    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);border:1.5px solid #3b82f6;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0"><span style="font-size:18px">💎</span><span style="color:#fff;font-weight:900;font-size:13px" id="ig-hubDiamante">250</span><button style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-weight:900;font-size:12px;cursor:pointer;margin-left:4px">+</button></div>
-                    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);border:1.5px solid #fbbf24;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0"><span style="font-size:18px">🪙</span><span style="color:#fff;font-weight:900;font-size:13px" id="ig-hubCoins">1.280</span><button style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-weight:900;font-size:12px;cursor:pointer;margin-left:4px">+</button></div>
-                    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);border:1.5px solid #22c55e;border-radius:20px;padding:6px 10px;white-space:nowrap;flex-shrink:0;position:relative"><span style="font-size:18px">⚡</span><span style="color:#fff;font-weight:900;font-size:13px" id="ig-hubEnergiaTop">85/100</span><button style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-weight:900;font-size:12px;cursor:pointer;margin-left:4px">+</button></div>
-                    <div style="display:flex;align-items:center;gap:6px;background:rgba(0,0,0,0.4);border:1.5px solid #a855f7;border-radius:20px;padding:6px 12px;white-space:nowrap;flex-shrink:0;position:relative;min-width:max-content"><span style="font-size:18px">🎁</span><span style="color:#fff;font-size:11px;font-weight:700">Bônus diário</span><span style="position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center">1</span></div>
-                </div>
-                <!-- CONTEUDO PRINCIPAL -->
-                <div id="ig-mainIlha" style="position:relative;min-height:calc(100vh - 60px);background:linear-gradient(180deg,#1e3a8a 0%,#0f172a 100%)">
-                    <div id="ig-cardConta" style="position:absolute;top:16px;right:16px;z-index:20;background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(30,41,59,0.95));border:1.5px solid #3b82f6;border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,0.4);backdrop-filter:blur(8px)">
-                        <img src="/assets/mago_bau_ingles.png" style="width:48px;height:48px;border-radius:50%;border:2px solid #fde68a;object-fit:cover;background:#fff;flex-shrink:0">
-                        <div style="flex:1"><div style="display:flex;align-items:center;gap:8px"><span style="color:#fff;font-weight:900;font-size:13px">CONTA</span><span style="background:#fde68a;color:#000;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900">Nv. <span id="ig-hubNivel">1</span></span></div><div style="background:rgba(0,0,0,0.5);height:8px;border-radius:10px;overflow:hidden;margin:6px 0 4px 0;border:1px solid rgba(255,255,255,0.1);width:120px"><div id="ig-hubXpBar" style="height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:35%;transition:width 0.6s"></div></div><div style="color:#fff;font-size:11px;font-weight:700"><span id="ig-hubXpTexto">350</span> / 1.000 XP</div></div>
-                        <div style="display:none"><span id="ig-hubNome">Explorador</span><span id="ig-hubStreak">1</span></div>
-                    </div>
-                    <div style="position:absolute;top:16px;left:16px;right:16px;z-index:15;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-                        <div id="ig-tituloIlha" style="text-align:left">
-                            <div style="font-family:Cinzel,serif;font-weight:900;line-height:0.9;text-shadow:0 3px 0 #000, 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(253,230,138,0.5)"><div style="color:#fde68a;font-size:12px;letter-spacing:3px;display:flex;align-items:center;gap:6px;text-shadow:0 0 12px rgba(253,230,138,1)"><span>✨</span> ILHA <span>✨</span></div><div style="background:linear-gradient(180deg,#FFFFFF 0%,#FFFBEB 10%,#fde68a 25%,#fbbf24 50%,#f59e0b 75%,#d97706 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:48px;filter:drop-shadow(0 3px 0 #000) drop-shadow(0 0 20px rgba(251,191,36,0.8));letter-spacing:1px;font-weight:900">MÁGICA</div><div style="background:linear-gradient(90deg,#7c3aed,#4f46e5);color:#fff;padding:5px 14px;border-radius:12px;font-size:11px;letter-spacing:1.5px;display:inline-block;margin-top:6px;border:1px solid rgba(255,255,255,0.3);box-shadow:0 2px 10px rgba(124,58,237,0.4)">APRENDA • JOGUE • EVOLUA</div></div>
-                        </div>
-                        <div id="ig-botoesTopRight" style="display:flex;gap:10px;align-items:flex-start">
-                        <button data-action="abrir-recompensas" style="background:linear-gradient(135deg,rgba(30,58,138,0.9),rgba(30,64,175,0.9));border:1.5px solid #3b82f6;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(8px)"><div style="width:36px;height:36px;background:linear-gradient(135deg,#fde68a,#d97706);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🏆</div><span style="color:#fff;font-size:9px;font-weight:800">Recompensas</span></button>
-                        <button data-action="abrir-conquistas" style="background:linear-gradient(135deg,rgba(30,58,138,0.9),rgba(30,64,175,0.9));border:1.5px solid #ef4444;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(8px)"><div style="width:36px;height:36px;background:linear-gradient(135deg,#fde68a,#ef4444);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🎯</div><span style="color:#fff;font-size:9px;font-weight:800">Conquistas</span></button>
-                        </div>
-                    </div>
-                    <div id="ig-cardsContainer" style="position:absolute;bottom:100px;left:16px;right:16px;z-index:15;display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:8px">
-                        <div data-action="abrir-aprender" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(20,40,100,0.9),rgba(10,25,70,0.9));border:2px solid #3b82f6;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px">🏫</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">APRENDER</div><div style="color:#93c5fd;font-size:10px;margin-top:2px">Lições e desafios</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
-                        <div data-action="abrir-missoes" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(80,30,10,0.9),rgba(50,20,5,0.9));border:2px solid #f97316;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px">🔭</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">MISSÕES</div><div style="color:#fdba74;font-size:10px;margin-top:2px">Tarefas diárias</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
-                        <div data-action="abrir-tesouros" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(60,20,100,0.9),rgba(40,10,70,0.9));border:2px solid #a855f7;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px">💎</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">TESOUROS</div><div style="color:#c4b5fd;font-size:10px;margin-top:2px">Colete e descubra</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
-                        <div data-action="abrir-jogar" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(10,60,30,0.9),rgba(5,40,20,0.9));border:2px solid #22c55e;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px">🏰</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">JOGAR</div><div style="color:#86efac;font-size:10px;margin-top:2px">Mini games</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
-                        <div data-action="abrir-loja" class="ilha-card" style="min-width:160px;flex:1;background:linear-gradient(180deg,rgba(80,30,10,0.9),rgba(60,20,5,0.9));border:2px solid #f97316;border-radius:16px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,0.4)"><div style="width:80px;height:60px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:32px">🏪</div><div style="text-align:center"><div style="color:#fff;font-weight:900;font-size:14px">LOJA</div><div style="color:#fdba74;font-size:10px;margin-top:2px">Itens e melhorias</div></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:4px">❯</div></div>
-                    </div>
-                    <div data-action="continuar-jornada" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;background:linear-gradient(135deg,#fde68a 0%,#fbbf24 50%,#d97706 100%);border:2px solid #92400e;border-radius:28px;padding:12px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 8px 24px rgba(251,191,36,0.5)">
-                        <div style="width:48px;height:48px;background:#fff;border:2px solid #92400e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px">🧭</div>
-                        <div><div style="color:#92400e;font-size:12px;font-weight:800;line-height:1">Continue sua</div><div style="color:#000;font-weight:900;font-size:20px;font-family:Cinzel,serif;line-height:1">JORNADA!</div></div>
-                        <div style="width:32px;height:32px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-size:16px">❯</div>
-                    </div>
-                    <div id="ig-missoesDiarias" style="position:absolute;top:220px;right:16px;z-index:15;width:260px;background:linear-gradient(180deg,rgba(15,23,42,0.95),rgba(10,15,35,0.95));border:1.5px solid #334155;border-radius:16px;padding:14px;backdrop-filter:blur(12px);box-shadow:0 6px 20px rgba(0,0,0,0.4);display:none">
-                        <div style="color:#fff;font-weight:900;font-size:12px;letter-spacing:1px;text-align:center;margin-bottom:12px">MISSÕES DIÁRIAS</div>
-                        <div style="display:flex;flex-direction:column;gap:10px">
-                            <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px">📖</div><div style="flex:1"><div style="color:#fff;font-size:11px">Complete 3 lições</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;background:rgba(0,0,0,0.5);height:6px;border-radius:6px;overflow:hidden"><div style="width:66%;height:100%;background:#3b82f6"></div></div><span style="color:#93c5fd;font-size:10px">2/3</span><span style="background:#1e3a8a;color:#93c5fd;padding:2px 6px;border-radius:6px;font-size:8px">XP 50</span></div></div></div>
-                            <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px">🎯</div><div style="flex:1"><div style="color:#fff;font-size:11px">Acertar 10 questões</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;background:rgba(0,0,0,0.5);height:6px;border-radius:6px;overflow:hidden"><div style="width:60%;height:100%;background:#3b82f6"></div></div><span style="color:#93c5fd;font-size:10px">6/10</span><span style="background:#1e3a8a;color:#93c5fd;padding:2px 6px;border-radius:6px;font-size:8px">XP 50</span></div></div></div>
-                            <div style="display:flex;gap:10px;align-items:center"><div style="width:28px;height:28px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px">🪙</div><div style="flex:1"><div style="color:#fff;font-size:11px">Jogar 1 mini game</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;background:rgba(0,0,0,0.5);height:6px;border-radius:6px;overflow:hidden"><div style="width:100%;height:100%;background:#22c55e"></div></div><span style="color:#22c55e">✓</span><span style="background:#14532d;color:#86efac;padding:2px 6px;border-radius:6px;font-size:8px">XP 50</span></div></div></div>
-                        </div>
-                        <button style="width:100%;margin-top:12px;background:#1e293b;color:#fff;border:1px solid #334155;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between">Ver todas <span>❯</span></button>
-                    </div>
-                </div>
-                <div style="display:none"><div id="ig-gamesGrid" class="ig-games-grid"></div><div id="ig-questsPanel"></div><div id="ig-xp-bar-container"></div></div>
-            </div>
-
-            </div>
-
-            </div>
-<div id="ig-timeout-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh"><h1 style="font-family:Cinzel">O tempo esgotou!</h1><div id="ig-timeout-xp" style="font-size:42px;color:#f1c40f">+0 XP</div><button data-action="encerrar-sessao" class="ws-btn" style="background:#d4af37;color:#fff;padding:12px 35px;border-radius:4px;border:2px solid #fff;cursor:pointer">Guardar e Sair</button></div>
-            <div id="ig-professorView" style="display:none;min-height:70vh"><div class="ig-sidebar">
-                <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking & Ligas</button>
-                <button data-action="render-tab" data-tab="mago" class="ig-side-item">🧙 Mago IA</button>
-                <button data-action="render-tab" data-tab="quests" class="ig-side-item">🎯 Missões</button>
-                <button data-action="render-tab" data-tab="loja" class="ig-side-item">🛍 Loja do Mago</button>
-                <button data-action="render-tab" data-tab="season" class="ig-side-item">⚙️ Temporada</button>
-                <button data-action="render-tab" data-tab="biblioteca" class="ig-side-item active">📚 Biblioteca</button>
-                <button data-action="render-tab" data-tab="imagens" class="ig-side-item">🖼 Imagens</button>
-                <button data-action="render-tab" data-tab="envios" class="ig-side-item">📥 Envios <span id="ig-pendingCount" style="background:#F59E0B;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px">0</span></button>
-                <button data-action="render-tab" data-tab="algoritmo" class="ig-side-item">🧠 Algoritmo</button>
-                <button data-action="render-tab" data-tab="ranking" class="ig-side-item">🏆 Ranking</button>
-            </div><div id="ig-tab-content" style="flex:1;padding:30px;background:#F8FAFC;overflow-y:auto"></div></div>
-            <div id="ig-gameModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:1000000;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
-                <div class="ws-card" style="width:90%;max-width:650px;background:#fffcf0;border:4px solid #d4af37;border-radius:8px;display:flex;flex-direction:column;max-height:90vh">
-                    <div style="padding:15px 20px;border-bottom:2px dashed #d4af37;display:flex;justify-content:space-between;align-items:center"><div><span id="ig-modalIcon" style="font-size:28px"></span> <h2 id="ig-modalTitle" style="display:inline;margin:0;font-family:Cinzel"></h2></div><div style="display:flex;gap:15px"><button data-action="abrir-mini-hub" style="background:#0F172A;color:#fff;border:2px solid #d4af37;padding:8px 12px;border-radius:8px;cursor:pointer">🔄 Mudar</button><button data-action="fechar-jogo" style="background:transparent;border:none;font-size:35px;cursor:pointer;color:#e74c3c">×</button></div></div>
-                    <div id="ig-modalBody" style="padding:30px;overflow-y:auto;flex:1"></div>
-                </div>
-            </div>`;
-    },
-
-// ================= 🏝️ HUB V2 - ORGANIZADO =================
-    atualizarHubV2(){
-        var stats = this.state;
-        var elNivel = document.getElementById('ig-hubNivel');
-        var elXpBar = document.getElementById('ig-hubXpBar');
-        var elXpTexto = document.getElementById('ig-hubXpTexto');
-        var elNome = document.getElementById('ig-hubNome');
-        var elStreak = document.getElementById('ig-hubStreak');
-        var elCoins = document.getElementById('ig-hubCoins');
-        var elDiamante = document.getElementById('ig-hubDiamante');
-        var elEnergiaTop = document.getElementById('ig-hubEnergiaTop');
-        if(elNivel) elNivel.textContent = stats.level||1;
-        if(elNome) elNome.textContent = (Workspace.usuario && Workspace.usuario.nome ? Workspace.usuario.nome.split(' ')[0] : 'Explorador');
-        var xpAtual = stats.xp||0;
-        var nivel = stats.level||1;
-        var curve = this.defaults.levelCurve||[0,100,250,450,700,1000,1400,1900,2500,3200,4000];
-        var xpProx = curve[nivel]||1000;
-        var xpAnt = curve[nivel-1]||0;
-        var pct = ((xpAtual - xpAnt)/(xpProx - xpAnt))*100;
-        if(elXpBar) elXpBar.style.width = Math.min(100, Math.max(0, pct))+'%';
-        if(elXpTexto) elXpTexto.textContent = xpAtual+' / '+xpProx+' XP';
-        if(elStreak) elStreak.textContent = stats.streak||1;
-        var coins = stats.coins||{bronze:150, prata:20, ouro:2};
-        var total = (coins.ouro||0)*10000 + (coins.prata||0)*100 + (coins.bronze||0);
-        if(elCoins) elCoins.textContent = total>=1000 ? (total/1000).toFixed(1)+'k' : total;
-        if(elDiamante) elDiamante.textContent = stats.diamantes||250;
-        if(elEnergiaTop) elEnergiaTop.textContent = stats.energia||5;
-    },
-
-    abrirAprender(){
-        var modal = document.getElementById('ig-gameModal');
-        if(!modal) return;
-        modal.style.display='flex';
+        let container = document.getElementById('ws-ingles-container');
+        if(!container){ 
+            container = document.createElement('div'); 
+            container.id = 'ws-ingles-container'; 
+            container.style.display = 'none'; 
+            const p = document.getElementById('ws-main-container'); 
+            if(p && p.parentNode) p.parentNode.appendChild(container); 
+            else document.body.appendChild(container);
+        }
         
-        // 🚀 EXPANDIR TELA NO DESKTOP: Deixa o modal mais largo para a galeria
-        var cardModal = modal.querySelector('.ws-card');
-        if(cardModal) cardModal.style.maxWidth = '900px';
-
-        var body = document.getElementById('ig-modalBody');
-        if(body){
-            // 🚀 MAPEAR JOGOS: Cria mini-cards exclusivos para a galeria, sem descrições longas
-            var htmlGrid = this.defaults.games.map(g => {
-                var vencidos = Object.values(this.state.srs).filter(s => s.tipo === g.id && s.due <= Date.now()).length;
-                return `
-                <div data-action="abrir-jogo" data-game-id="${g.id}" class="ig-galeria-card">
-                    <div class="ig-galeria-icon" style="background:${g.color}">${g.icon}</div>
-                    <div class="ig-galeria-title">${g.title}</div>
-                    ${vencidos ? `<div class="ig-galeria-badge">🔥 ${vencidos}</div>` : ''}
-                </div>`;
-            }).join('');
-
-            body.innerHTML = `
-            <style>
-                .ig-galeria-grid { display: grid; gap: 12px; margin-top: 20px; }
-                .ig-galeria-card { background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-                .ig-galeria-card:hover { transform: translateY(-4px); border-color: #d4af37; box-shadow: 0 8px 20px rgba(212,175,55,0.25); background: #fffcf0; }
-                .ig-galeria-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 10px; box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1); }
-                .ig-galeria-title { font-size: 12px; font-weight: 900; color: #0F172A; line-height: 1.2; font-family: 'Cinzel', serif; }
-                .ig-galeria-badge { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 900; padding: 3px 7px; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-
-                /* 📱 MOBILE: Exatamente 3 por linha sem scroll! */
-                @media (max-width: 600px) {
-                    .ig-galeria-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-                    .ig-galeria-card { padding: 10px 4px; border-radius: 12px; }
-                    .ig-galeria-icon { width: 40px; height: 40px; font-size: 20px; margin-bottom: 6px; }
-                    .ig-galeria-title { font-size: 10px; letter-spacing: -0.5px; }
-                }
-                
-                /* 💻 DESKTOP: Ampliado e responsivo */
-                @media (min-width: 601px) {
-                    .ig-galeria-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-                }
-            </style>
-            
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="font-size:40px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">📚</div>
-                    <div><h2 style="font-family:Cinzel, serif;color:#0F172A;margin:0;font-size:20px;font-weight:900;">Casa do Aprender</h2><p style="color:#64748B;font-size:12px;margin:2px 0 0 0;font-weight:600;">Treine e ganhe Coins!</p></div>
+        container.innerHTML = `
+            <div id="bau-do-ingles-module">
+                <div class="bau-header">
+                    <div class="bau-title">
+                        <div class="bau-icon">🏴‍☠️</div>
+                        <div>
+                            <h2>Baú do Inglês</h2>
+                            <p>12 jogos • O seu treino contínuo e inteligente</p>
+                        </div>
+                    </div>
+                    <div class="bau-actions">
+                        <div class="xp-badge" id="xpBadge">
+                            <span>🔥 <b id="streakCount">1</b> dias</span>
+                            <span>🪙 <b id="coinsCount">0</b> BZ</span>
+                        </div>
+                        <div class="toggle-wrap">
+                            <button id="btnProfessor" class="toggle-btn" data-action="toggle-prof">👨‍🏫 Professor</button>
+                            <button id="btnAluno" class="toggle-btn active" data-action="toggle-aluno">🎓 Aluno</button>
+                        </div>
+                    </div>
                 </div>
-                <div style="display:flex;gap:8px">
-                    <div style="background:#FEF3C7;border:2px solid #fbbf24;padding:6px 10px;border-radius:12px;font-size:12px;font-weight:900;color:#92400e;">🪙 <span id="ig-modalCoins">${this.state.coins.ouro||0} Ouro</span></div>
-                    <div style="background:#EDE9FE;border:2px solid #8b5cf6;padding:6px 10px;border-radius:12px;font-size:12px;font-weight:900;color:#4c1d95;">💎 ${this.state.diamantes||0}</div>
+
+                <main id="app">
+                    <section id="professorView" class="view hidden">
+                        <aside class="sidebar">
+                            <button class="side-item active" data-tab="biblioteca">📚 Biblioteca</button>
+                            <button class="side-item" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="side-item" data-tab="imagens">🖼️ Figuras</button>
+                        </aside>
+                        <div class="content">
+                            <div id="tab-biblioteca" class="tab-panel active"></div>
+                            <div id="tab-envios" class="tab-panel"></div>
+                            <div id="tab-imagens" class="tab-panel"></div>
+                        </div>
+                    </section>
+
+                    <section id="alunoView" class="view">
+                        <div class="welcome">
+                            <h1>Baú do Inglês aberto! 🗝️</h1>
+                            <p>Escolha um treino. Jogue sem parar, acumule Moedas de Bronze e deixe o algoritmo guiar a sua memória.</p>
+                        </div>
+                        <div class="games-grid" id="gamesGrid"></div>
+                    </section>
+                </main>
+            </div>
+
+            <!-- GAME MODAL -->
+            <div id="gameModal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div class="modal-title">
+                            <span id="modalIcon" style="font-size:24px;"></span>
+                            <h2 id="modalTitle"></h2>
+                        </div>
+                        <button data-action="fechar-jogo" class="close-btn">✕</button>
+                    </div>
+                    <div id="modalBody" class="modal-body"></div>
                 </div>
             </div>
-            
-            <div class="ig-galeria-grid">${htmlGrid}</div>
-            
-            <div style="margin-top:20px;background:#F0FDF4;border:2px solid #bbf7d0;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,0.02);">
-                <div style="display:flex;gap:20px">
-                   // Final da string do innerHTML do abrirAprender()
-            <div style="margin-top:20px;background:#F0FDF4;border:2px solid #bbf7d0;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 10px rgba(0,0,0,0.02);">
-                <div style="display:flex;gap:20px">
-                    <div style="text-align:center"><div style="font-size:10px;color:#065f46;font-weight:900;letter-spacing:1px;">⏱️ TEMPO</div><div style="font-weight:900;font-size:18px;color:#166534;" id="ig-gameTempo">${Math.floor(this.tempoRestante/60)}:${String(this.tempoRestante%60).padStart(2,'0')}</div></div>
-                </div>
-                <div style="text-align:center"><div style="font-size:10px;color:#92400e;font-weight:900;letter-spacing:1px;margin-bottom:2px;">🪙 MOEDAS SESSÃO</div><div style="font-weight:900;font-size:16px;background:linear-gradient(135deg,#fde68a,#d97706);color:#000;padding:4px 12px;border-radius:12px;box-shadow:0 2px 6px rgba(217,119,6,0.4);" id="ig-gameCoinsGanho">+${this.coinsGanhosNaSessao||0} BZ</div></div>
-            </div>`;
 
-            document.getElementById('ig-modalTitle').textContent='APRENDER - Galeria de Jogos';
-            document.getElementById('ig-modalIcon').textContent='📚';
-        }
+            <div id="toast" class="toast hidden"></div>
+        `;
     },
-    
-    abrirJogarIlha(){
-        // Abre campo de criação - imagem 2
-        var modal = document.getElementById('ig-gameModal');
-        if(!modal) return;
-        modal.style.display='flex';
-        var body = document.getElementById('ig-modalBody');
-        if(body){
-            body.innerHTML = '<div style="text-align:center"><div style="font-size:40px">🌴</div><h2 style="font-family:Cinzel">Este é seu campo de criação!</h2><p style="color:#64748B;font-size:12px">Use sua imaginação para construir sua ilha mágica</p><div style="background:radial-gradient(ellipse at center,#4ade80 0%,#22c55e 30%,#16a34a 60%,#0e7490 100%);height:300px;border-radius:20px;border:3px solid #fde68a;margin:16px 0;display:flex;align-items:center;justify-content:center;position:relative"><div style="font-size:50px">🏝️</div><div style="position:absolute;bottom:10px;right:10px;background:#fff;padding:6px 10px;border-radius:12px;font-size:10px">🌴 Palmeiras • 🪨 Pedras • ⛵ Cais</div></div><button data-action="abrir-construir" style="background:linear-gradient(135deg,#fde68a,#d4af37);color:#000;border:none;padding:12px 24px;border-radius:20px;font-weight:900;cursor:pointer">🔨 Construir</button><div style="margin-top:16px;background:#FEF2F2;border:1px solid #ef4444;border-radius:10px;padding:10px"><div style="font-weight:900;color:#b91c1c">⚔️ Invadir e Saquear</div><div style="font-size:11px;color:#7f1d1d;margin-top:4px">Escolha uma ilha abaixo para saquear apenas itens de Coins (Diamantes são protegidos)</div><div id="ig-listaInvasao" style="margin-top:8px;display:flex;flex-direction:column;gap:6px"></div></div></div>';
-            document.getElementById('ig-modalTitle').textContent='JOGAR - Campo de Criação';
-            document.getElementById('ig-modalIcon').textContent='🎮';
-            // Lista ilhas para invadir
-            var lista = document.getElementById('ig-listaInvasao');
-            if(lista){
-                var outras = this.state.ilhasOutras||[{nome:'Ilha do João', nivel:3, cristais:200, coins:{ouro:1, prata:10, bronze:50}, userId:'1'},{nome:'Ilha da Maria', nivel:5, cristais:500, coins:{ouro:3, prata:20, bronze:100}, userId:'2'}];
-                var h = '';
-                outras.forEach(function(ilha){
-                    h += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:800;font-size:11px">'+ilha.nome+' Nv.'+ilha.nivel+'</div><div style="font-size:10px;color:#64748B">🪙 '+(ilha.coins.ouro||0)+' Ouro • 💎 0 (protegido)</div></div><button data-action="invadir-ilha" data-alvo="'+ilha.userId+'" style="background:#ef4444;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:10px;font-weight:800;cursor:pointer">Saquear</button></div>';
-                });
-                lista.innerHTML = h;
-            }
-        }
+
+    atualizarHUD(){
+        const bzEl = document.getElementById('coinsCount');
+        const stEl = document.getElementById('streakCount');
+        if(bzEl) bzEl.textContent = this.state.coins?.bronze || 0;
+        if(stEl) stEl.textContent = this.state.streak || 1;
     },
-    abrirLojaIlha(){
-        var modal = document.getElementById('ig-gameModal');
-        if(!modal) return;
-        modal.style.display='flex';
-        var body = document.getElementById('ig-modalBody');
-        var coins = this.state.coins||{bronze:150, prata:20, ouro:2};
-        var diamantes = this.state.diamantes||250;
-        if(body){
-            body.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px"><h2 style="font-family:Cinzel;margin:0">🛍️ Loja da Ilha</h2><div style="display:flex;gap:8px"><div style="background:#FEF3C7;border:2px solid #fbbf24;padding:6px 10px;border-radius:12px;font-weight:900;font-size:12px">🪙 '+coins.ouro+' Ouro | '+coins.prata+' Prata | '+coins.bronze+' Bronze</div><div style="background:#EDE9FE;border:2px solid #8b5cf6;padding:6px 10px;border-radius:12px;font-weight:900;font-size:12px">💎 '+diamantes+'</div></div></div><div style="display:flex;gap:6px;margin-bottom:12px"><button data-action="loja-tab" data-loja="avatares" style="background:#fde68a;color:#000;border:none;padding:8px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">🧙 Avatares</button><button data-action="loja-tab" data-loja="ferramentas" style="background:#e2e8f0;color:#000;border:none;padding:8px 12px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">🛠️ Ferramentas</button><button data-action="loja-tab" data-loja="animais" style="background:#e2e8f0;color:#000;border:none;padding:8px 12px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">🐾 Animais</button><button data-action="loja-tab" data-loja="decoracoes" style="background:#e2e8f0;color:#000;border:none;padding:8px 12px;border-radius:20px;font-weight:700;font-size:11px;cursor:pointer">🌳 Decorações</button><button data-action="loja-tab" data-loja="magicos" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;padding:8px 12px;border-radius:20px;font-weight:800;font-size:11px;cursor:pointer">✨ Mágicos (💎)</button></div><div id="ig-lojaConteudo"></div><div style="margin-top:12px;background:#FFFBEB;border:1px solid #fde68a;border-radius:10px;padding:8px;font-size:10px;color:#92400e">💡 Itens de Coins (bronze/prata/ouro) podem ser roubados em invasões. Itens de Diamante são protegidos e nunca são roubados!</div>';
-            document.getElementById('ig-modalTitle').textContent='LOJA - Itens e Melhorias';
-            document.getElementById('ig-modalIcon').textContent='🛒';
-            this.renderLojaTab('avatares');
-        }
+
+    mostrarAvisoLocal(msg, tipo='success'){
+        const toast = document.getElementById('toast');
+        if(!toast) return;
+        toast.innerHTML = msg;
+        toast.style.background = tipo==='success' ? '#10B981' : (tipo==='error'?'#EF4444':'#F59E0B');
+        toast.classList.remove('hidden');
+        setTimeout(()=>toast.classList.add('hidden'), 2000);
     },
-    renderLojaTab(tipo){
-        var el = document.getElementById('ig-lojaConteudo');
-        if(!el) return;
-        if(tipo==='avatares'){
-            var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">';
-            var avatares = this.defaults.avatares||[];
-            for(var i=0;i<avatares.length;i++){
-                var av = avatares[i];
-                var precoOuro = Math.floor(av.preco/100);
-                var tem = false;
-                for(var j=0;j<(this.state.inventario||[]).length;j++){ if(this.state.inventario[j].id===av.id) tem=true; }
-                var btn = tem ? '<span style="background:#10B981;color:#fff;padding:4px 8px;border-radius:10px;font-size:10px">✅ Possui</span>' : '<button data-action="comprar-item" data-item-id="'+av.id+'" data-tipo="avatar" data-preco="'+precoOuro+'" data-moeda="ouro" style="background:linear-gradient(135deg,#fbbf24,#d97706);color:#000;border:none;padding:6px 12px;border-radius:20px;font-weight:900;font-size:10px;cursor:pointer">'+precoOuro+' Ouro 🪙</button>';
-                html += '<div style="background:'+(tem?'#f1f5f9':'#fff')+';border:2px solid '+(tem?'#94a3b8':'#e2e8f0')+';border-radius:14px;padding:10px;text-align:center"><div style="font-size:36px">'+(av.emoji||'🧙')+'</div><div style="font-weight:900;font-size:11px">'+av.nome+'</div><div style="font-size:9px;color:#64748B;margin:4px 0">'+(av.desc||'')+'</div><div style="margin-top:6px">'+btn+'</div></div>';
-            }
-            html += '</div>';
-            el.innerHTML = html;
-        } else if(tipo==='magicos'){
-            var itens = [{id:'vara_magica', nome:'Vara Mágica', emoji:'🪄', preco:50, desc:'Rouba +10%'},{id:'anel_magico', nome:'Anel Mágico', emoji:'💍', preco:80, desc:'Defesa +20%'},{id:'po_magico', nome:'Pó Mágico', emoji:'✨', preco:30, desc:'+100 XP'},{id:'capa_invisivel', nome:'Capa Invisibilidade', emoji:'🧥', preco:120, desc:'Invisível 2h'},{id:'chapeu_magico', nome:'Chapéu Mágico', emoji:'🎩', preco:100, desc:'Produção 2x 1h'},{id:'energia_batalha', nome:'Energia Batalha', emoji:'⚡', preco:20, desc:'+10 energia'}];
-            var html2 = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">';
-            for(var k=0;k<itens.length;k++){
-                var it = itens[k];
-                html2 += '<div style="background:linear-gradient(180deg,#F5F3FF,#fff);border:2px solid #8b5cf6;border-radius:14px;padding:10px;text-align:center"><div style="font-size:36px">'+it.emoji+'</div><div style="font-weight:900;font-size:11px">'+it.nome+'</div><div style="font-size:9px;color:#64748B">'+it.desc+'</div><button data-action="comprar-item" data-item-id="'+it.id+'" data-tipo="magico" data-preco="'+it.preco+'" data-moeda="diamante" style="margin-top:6px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;padding:6px 12px;border-radius:20px;font-weight:900;font-size:10px;cursor:pointer">'+it.preco+' 💎</button><div style="font-size:8px;color:#8b5cf6;margin-top:4px">🔒 Protegido</div></div>';
-            }
-            html2 += '</div>';
-            el.innerHTML = html2;
-        } else {
-            el.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8"><div style="font-size:32px">🚧</div><div>Em breve - '+tipo+'</div></div>';
-        }
-    },
-    abrirTesouros(){
-        var modal = document.getElementById('ig-gameModal');
-        if(!modal) return;
-        modal.style.display='flex';
-        var body = document.getElementById('ig-modalBody');
-        var coins = this.state.coins||{bronze:150, prata:20, ouro:1};
-        var diamantes = this.state.diamantes||250;
-        if(body){
-            body.innerHTML = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:60px">💰</div><h2 style="font-family:Cinzel">Tesouros</h2><p style="color:#64748B;font-size:12px">Coins podem ser roubadas, Diamantes não!</p></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px"><div style="background:linear-gradient(135deg,#FEF3C7,#fde68a);border:2px solid #d97706;border-radius:14px;padding:12px;text-align:center"><div style="font-size:28px">🥉</div><div style="font-weight:900;font-size:12px">Bronze</div><div style="font-size:20px;font-weight:900">'+(coins.bronze||0)+'</div><div style="font-size:9px;color:#92400e">Comum</div></div><div style="background:linear-gradient(135deg,#E5E7EB,#d1d5db);border:2px solid #6b7280;border-radius:14px;padding:12px;text-align:center"><div style="font-size:28px">🥈</div><div style="font-weight:900;font-size:12px">Prata</div><div style="font-size:20px;font-weight:900">'+(coins.prata||0)+'</div><div style="font-size:9px;color:#4b5563">Raro</div></div><div style="background:linear-gradient(135deg,#FEF3C7,#fbbf24);border:2px solid #f59e0b;border-radius:14px;padding:12px;text-align:center"><div style="font-size:28px">🥇</div><div style="font-weight:900;font-size:12px">Ouro</div><div style="font-size:20px;font-weight:900">'+(coins.ouro||0)+'</div><div style="font-size:9px;color:#92400e">Épico</div></div></div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"><div style="background:linear-gradient(135deg,#EDE9FE,#ddd6fe);border:2px solid #8b5cf6;border-radius:14px;padding:12px;text-align:center"><div style="font-size:28px">💎</div><div style="font-weight:900">Diamantes</div><div style="font-size:20px;font-weight:900">'+diamantes+'</div><div style="font-size:9px;color:#6d28d9">Nunca roubado 🔒</div></div><div style="background:linear-gradient(135deg,#D1FAE5,#a7f3d0);border:2px solid #10b981;border-radius:14px;padding:12px;text-align:center"><div style="font-size:28px">⚡</div><div style="font-weight:900">Energia</div><div style="font-size:20px;font-weight:900">'+(this.state.energia||5)+'</div><div style="font-size:9px;color:#065f46">Batalhas</div></div></div>';
-            document.getElementById('ig-modalTitle').textContent='TESOUROS';
-        }
-    },
-    abrirMissoesIlha(){
-        var modal = document.getElementById('ig-gameModal');
-        if(!modal) return;
-        modal.style.display='flex';
-        var body = document.getElementById('ig-modalBody');
-        if(body){
-            body.innerHTML = '<div style="text-align:center;margin-bottom:16px"><div style="font-size:60px">📜</div><h2 style="font-family:Cinzel">Missões</h2><p style="color:#64748B;font-size:12px">Professor posta missões aqui - complete nos jogos!</p></div><div id="ig-questsListHub"></div><div style="margin-top:16px;background:#EFF6FF;border:2px solid #3b82f6;border-radius:12px;padding:12px"><div style="font-weight:900;color:#1e40af;font-size:12px">👨‍🏫 Para Professores:</div><div style="font-size:11px;color:#1e3a8a;margin-top:4px">Painel Professor → Missões → Criar. Ex: Treine 5x WordPicker = 50 prata. Aparece aqui!</div></div>';
-            document.getElementById('ig-modalTitle').textContent='MISSÕES';
-            var src = document.getElementById('ig-questsList');
-            var dst = document.getElementById('ig-questsListHub');
-            if(src && dst) dst.innerHTML = src.innerHTML;
-        }
-    },
-    coletarBonusDiario(){
-        this.state.coins = this.state.coins||{bronze:0, prata:0, ouro:0};
-        this.state.coins.bronze = (this.state.coins.bronze||0)+50;
-        this.state.diamantes = (this.state.diamantes||0)+5;
-        this.saveDados();
-        this.atualizarHubV2();
-        Workspace.mostrarAviso('🎁 Bônus! +50 Bronze +5 💎','success');
-    },
-    continuarJornada(){ this.abrirJogarIlha(); },
+
     ganharCoins(tipo, qtd){
-        this.state.coins = this.state.coins||{bronze:0, prata:0, ouro:0};
-        this.state.coins[tipo] = (this.state.coins[tipo]||0)+qtd;
-        if(this.state.coins.bronze>=100){ var c=Math.floor(this.state.coins.bronze/100); this.state.coins.bronze-=c*100; this.state.coins.prata=(this.state.coins.prata||0)+c; }
-        if(this.state.coins.prata>=100){ var c2=Math.floor(this.state.coins.prata/100); this.state.coins.prata-=c2*100; this.state.coins.ouro=(this.state.coins.ouro||0)+c2; }
-        this.saveDados(); this.atualizarHubV2();
+        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0};
+        this.state.coins[tipo] = (this.state.coins[tipo]||0) + qtd;
+        // Lógica de conversão
+        if(this.state.coins.bronze >= 100){ 
+            let c = Math.floor(this.state.coins.bronze/100); 
+            this.state.coins.bronze -= c*100; 
+            this.state.coins.prata = (this.state.coins.prata||0) + c; 
+        }
+        if(this.state.coins.prata >= 100){ 
+            let c2 = Math.floor(this.state.coins.prata/100); 
+            this.state.coins.prata -= c2*100; 
+            this.state.coins.ouro = (this.state.coins.ouro||0) + c2; 
+        }
+        this.atualizarHUD();
+        this.saveDados();
     },
-
 
     bindEvents(){
-        const root=document.getElementById('ws-ingles-container');
+        const root = document.getElementById('ws-ingles-container');
         if(!root || root._bound) return; root._bound=true;
+        
         root.addEventListener('click', async e=>{
-            const b=e.target.closest('[data-action]'); if(!b) return;
-            const a=b.dataset.action;
-            switch(a){
-                case 'aceitar-tempo':{
-                    const campo=document.getElementById('ig-tempo-escolhido'); const m=parseInt(campo.value)||0;
-                    if(m<=0){ Workspace.mostrarAviso('Digite um tempo válido!','warning'); campo.focus(); return; }
-                    // Força load de vozes no gesto do usuário (crucial pro mobile ficar bonito)
-                    window.speechSynthesis.getVoices();
-                    this.abrirBauMagico(m); break;
-                }
-                case 'encerrar-sessao': this.encerrarSessaoBau(); break;
-                case 'abrir-mini-hub': this.abrirMiniHub(); break;
-                case 'fechar-jogo': this.fecharJogo(); break;
-                case 'abrir-jogo': this.abrirJogo(b.dataset.gameId); break;
-                case 'render-tab': this.renderProfessorTab(b.dataset.tab); break;
-                case 'inserir-variavel-mago': this.inserirVariavelMago(); break;
-                case 'salvar-mago-phrase': this.handleSalvarMago(); break;
-                case 'editar-mago-phrase': this.editarMagoPhrase(b.dataset.id); break;
-                case 'remover-item': this.remItem(b.dataset.key, b.dataset.id); break;
-                case 'add-word': this.addWord(); break;
-                case 'add-phrase': this.addPhrase(); break;
-                case 'add-quiz': this.addQuiz(); break;
-                case 'add-pic': this.addPic(); break;
-                case 'aprovar-envio': this.aprovarEnvio(b.dataset.id); break;
-                case 'rejeitar-envio': this.remItem('submissions', b.dataset.id); break;
-                case 'proximo-desafio': this.proximoDesafio(); break;
-                case 'testar-voz-mago': VoiceService.falar('Greetings, brave adventurer '+this.getNomeAlunoReal()+', your quest begins now!', {isMago:true}); break;
-                case 'add-quest': this.addQuest(); break;
-                case 'rem-quest': this.remQuest(b.dataset.id); break;
-                case 'add-loot': this.addLoot(b.dataset.rar); break;
-                case 'rem-loot': this.remLoot(b.dataset.rar, b.dataset.id); break;
-                case 'salvar-season': this.salvarSeason(); break;
-                case 'reset-season': this.resetSeason(); break;
-                case 'abrir-aprender': this.abrirAprender(); break;
-                case 'abrir-jogar': this.abrirJogarIlha(); break;
-                case 'abrir-loja': this.abrirLojaIlha(); break;
-                case 'abrir-tesouros': this.abrirTesouros(); break;
-                case 'abrir-missoes': this.abrirMissoesIlha(); break;
-                case 'abrir-conquistas': this.abrirConquistas(); break;
-                case 'abrir-recompensas': this.abrirRecompensas(); break;
-                case 'coletar-bonus': this.coletarBonusDiario(); break;
-                case 'continuar-jornada': this.continuarJornada(); break;
-                case 'abrir-construir': Workspace.mostrarAviso('🚧 Campo de construção em breve - Parte 3!','info'); break;
-                case 'invadir-ilha': this.invadirIlha(b.dataset.alvo); break;
-                case 'loja-tab': this.renderLojaTab(b.dataset.loja); break;
-                case 'comprar-item': {
-                    var id=b.dataset.itemId, tipo=b.dataset.tipo, preco=parseInt(b.dataset.preco), moeda=b.dataset.moeda;
-                    if(moeda==='diamante'){
-                        if((this.state.diamantes||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (this.state.diamantes||0))+' 💎!','warning'); break; }
-                        this.state.diamantes-=preco;
-                        this.state.inventario=this.state.inventario||[];
-                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'diamante', protegido:true});
-                        this.saveDados(); this.atualizarHubV2();
-                        Workspace.mostrarAviso('✨ '+id+' comprado por '+preco+' 💎! Protegido!','success');
-                    } else {
-                        var coins=this.state.coins||{ouro:0};
-                        if((coins.ouro||0)<preco){ Workspace.mostrarAviso('Falta '+(preco - (coins.ouro||0))+' ouro!','warning'); break; }
-                        coins.ouro-=preco; this.state.coins=coins;
-                        this.state.inventario=this.state.inventario||[];
-                        this.state.inventario.push({id:id, nome:id, tipo:tipo, moeda:'ouro', protegido:false});
-                        this.saveDados(); this.atualizarHubV2();
-                        Workspace.mostrarAviso('🪙 '+id+' comprado por '+preco+' ouro! Pode ser roubado!','success');
-                    }
-                    this.renderLojaTab('avatares');
-                    break;
-                }
-                case 'abrir-inventario': this.abrirInventario(); break;
-                case 'atualizar-ranking': this.carregarRanking(); break;
+            const b = e.target.closest('[data-action]'); if(!b) return;
+            const a = b.dataset.action;
+            
+            if(a === 'toggle-prof') {
+                if(Workspace.usuario?.tipo === 'Aluno') { this.mostrarAvisoLocal('Apenas para Mestres!','error'); return; }
+                document.getElementById('btnProfessor').classList.add('active');
+                document.getElementById('btnAluno').classList.remove('active');
+                document.getElementById('professorView').classList.remove('hidden');
+                document.getElementById('alunoView').classList.add('hidden');
+                this.renderProfessorTab('biblioteca');
             }
-        });
-        root.addEventListener('change', e=>{
-            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') this.atualizarConfigMago();
-        });
-        const modal=document.getElementById('ig-modalBody');
-        modal.addEventListener('click', async e=>{
-            const b=e.target.closest('[data-action]'); if(!b) return;
-            if(b.dataset.action==='iniciar-jogo'){ e.preventDefault(); this.renderDesafioAtual(); return; }
+            if(a === 'toggle-aluno') {
+                document.getElementById('btnAluno').classList.add('active');
+                document.getElementById('btnProfessor').classList.remove('active');
+                document.getElementById('alunoView').classList.remove('hidden');
+                document.getElementById('professorView').classList.add('hidden');
+            }
 
-            const cur=this.desafioAtualObj;
-            const input=document.getElementById('ig-input')?.value?.trim()||'';
-            const listen=document.getElementById('ig-listenInput')?.value?.trim()||'';
-            if(b.dataset.action==='falar-frase'){
+            if(a === 'fechar-jogo') this.fecharJogo();
+            if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
+            if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
+
+            // Lógica de Respostas Internas dos Jogos
+            const cur = this.desafioAtualObj;
+            const input = document.getElementById('ig-input')?.value?.trim()||'';
+            const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
+            
+            if(a === 'falar-frase'){
                 if(cur?.phrase) VoiceService.falar(cur.phrase, {isMago:false});
                 else if(cur?.word) VoiceService.falar(cur.word);
                 else if(b.dataset.text) VoiceService.falar(b.dataset.text);
             }
-            if(b.dataset.action==='iniciar-voz'){
-                const esperado=cur?.word||cur?.phrase||this.state._minimalTarget;
+            if(a === 'iniciar-voz'){
+                const esperado = cur?.word||cur?.phrase||this.state._minimalTarget;
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
             }
-            if(b.dataset.action==='verificar-wordSpark'){
+            if(a === 'verificar-wordSpark'){
                 if(!input.toLowerCase().includes((cur.word||'').toLowerCase())){ this.registrarErro(cur,'word'); this.falhaGenerica(); }
-                else { this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.envioAoProfessor('wordSpark', input, 50); }
+                else { this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
             }
-            if(b.dataset.action==='verificar-listen'){
-                const sim=this.similaridade(listen, cur.phrase);
+            if(a === 'verificar-listen'){
+                const sim = this.similaridade(listen, cur.phrase);
                 if(sim>=0.9){ this.updateSRS(cur.id,'phrase',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
                 else { this.registrarErro(cur,'phrase'); this.falhaGenerica(); }
             }
-            if(b.dataset.action==='verificar-quiz'){
-                const idx=parseInt(b.dataset.index);
+            if(a === 'verificar-quiz'){
+                const idx = parseInt(b.dataset.index);
                 if(idx===cur.correct){ this.updateSRS(cur.id,'quiz',true); this.superarErro(cur.id); this.sucessoGenerico(30); }
                 else { this.registrarErro(cur,'quiz'); this.falhaGenerica(); }
             }
-            if(b.dataset.action==='verificar-minimal'){
+            if(a === 'verificar-minimal'){
                 if(b.dataset.choice===this.state._minimalTarget){ this.updateSRS(cur.id,'minimal',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'minimal'); this.falhaGenerica(); }
             }
-            if(b.dataset.action==='verificar-picker'){
-                const idx=parseInt(b.dataset.index);
+            if(a === 'verificar-picker'){
+                const idx = parseInt(b.dataset.index);
                 if(idx===cur.correct){ this.updateSRS(cur.id,'picker',true); this.superarErro(cur.id); this.sucessoGenerico(20); }
                 else { this.registrarErro(cur,'picker'); this.falhaGenerica(); }
             }
-            if(b.dataset.action==='verificar-picture-text'){
-                const sim=this.similaridade(input, cur.word);
+            if(a === 'verificar-picture-text'){
+                const sim = this.similaridade(input, cur.word);
                 if(sim>=0.9){ this.updateSRS(cur.id,'picture',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
-
-            if(b.dataset.action==='verificar-envio'){
-                if(input.length<2) return Workspace.mostrarAviso('Responda válido','warning');
-                if(b.dataset.game==='questionMaker' && (!input.includes('?') || input.split(' ').length<3)) return Workspace.mostrarAviso('Pergunta precisa ter ? e 3 palavras','error');
-                this.envioAoProfessor(b.dataset.game, input, parseInt(b.dataset.bonus||'50'));
+            if(a === 'verificar-envio'){
+                if(input.length<2) return this.mostrarAvisoLocal('Responda válido','error');
+                this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:b.dataset.game, text:input, status:'pending'});
+                if(cur?.id) this.updateSRS(cur.id, b.dataset.game, true);
+                this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
             }
-            if(b.dataset.action==='verificar-debate'){
-                const texto=document.getElementById('ig-input')?.value?.trim()||'';
-                if(texto.length<3) return Workspace.mostrarAviso('Escreva seu argumento','warning');
-                const topic=this.desafioAtualObj;
-                // Add user message
+            if(a === 'verificar-debate'){
+                const texto = document.getElementById('ig-input')?.value?.trim()||'';
+                if(texto.length<3) return this.mostrarAvisoLocal('Escreva o seu argumento','error');
+                
                 this.state._debateChat.push({role:'user', text:texto});
-                // XP for participation
-                this.state.xp+=15; this.xpGanhosNaSessao+=15; await this.saveDados();
-                // Show typing
-                const typing=document.getElementById('ig-debate-typing');
-                if(typing) typing.style.display='block';
-                // Generate AI response after delay
-                setTimeout(()=>{
-                    const aiResp=this.gerarContraArgumentoIA(topic, texto, this.state._debateChat.length);
-                    this.state._debateChat.push({role:'ai', text:aiResp});
+                this.ganharCoins('bronze', 15);
+                this.renderGameDebateAI(); // Mostra a mensagem do user
+                
+                setTimeout(() => {
+                    const poolTexts = this.state.pool.filter(p=>p.text).slice(0,3).map(p=>p.text.substring(0,60)).join(' | ');
+                    const respIAs = [
+                        `Interesting point. But what if we consider that "${texto.substring(0,30)}..." might have side effects?`,
+                        `I disagree. Other students mentioned: "${poolTexts}". How do you defend your stance against that?`,
+                        `Very well articulated. But tell me, how would you apply that in a real-world scenario?`
+                    ];
+                    this.state._debateChat.push({role:'ai', text: respIAs[Math.floor(Math.random()*respIAs.length)], inteligencia: 'Mago IA'});
                     this.renderGameDebateAI();
-                    // Auto scroll
-                    const inputEl=document.getElementById('ig-input'); if(inputEl) inputEl.value='';
-                    // Bonus XP after 3 exchanges
-                    if(this.state._debateChat.filter(m=>m.role==='user').length>=3){
-                        this.state.xp+=60; this.xpGanhosNaSessao+=60; this.saveDados();
-                        const toast=document.createElement('div');
-                        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d4af37,#996515);color:#000;padding:10px 18px;border-radius:20px;font-weight:800;z-index:1000001';
-                        toast.innerHTML='⚔ Duelo épico! +60 XP bônus';
-                        document.body.appendChild(toast); setTimeout(()=>toast.remove(),2000);
-                    }
-                }, 1200 + Math.random()*800);
-                // Clear input immediately and re-render to show user message
-                document.getElementById('ig-input').value='';
-                this.renderGameDebateAI();
+                    document.getElementById('ig-input').value = '';
+                }, 1500);
             }
-
+            
+            // Ações do Professor
+            if(a === 'render-tab') this.renderProfessorTab(b.dataset.tab);
+            if(a === 'add-word') { const w=document.getElementById('nwWord').value; const t=document.getElementById('nwTrans').value; if(w){ this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
+            if(a === 'add-phrase') { const p=document.getElementById('nwPhrase').value; if(p){ this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
+            if(a === 'remover-item') { this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); this.saveDados(); this.renderProfessorTab('biblioteca'); }
         });
     },
 
-    renderizarVisualizacao(){
-        // V6: atualiza barra de XP e quests
-        try{
-            const lvlInfo=this.calcularLevel(this.state.xp);
-            // aplica borda equipada no header
-            try{ const hdr=document.querySelector('.ig-header'); if(hdr){ hdr.style.borderBottomColor=this.state.bordaEquipada?.includes('ouro')?'#fde68a': this.state.bordaEquipada?.includes('prata')?'#a8a29e': this.state.bordaEquipada?.includes('bronze')?'#d97706':'#d4af37'; hdr.style.boxShadow=this.state.bordaEquipada?.includes('ouro')?'0 0 20px rgba(253,230,138,0.5), 0 8px 32px rgba(0,0,0,0.4)':'0 8px 32px rgba(0,0,0,0.4)'; } }catch{}
-
-            const lvlBadge=document.getElementById('ig-levelBadge');
-            const lvlText=document.getElementById('ig-levelText');
-            const xpText=document.getElementById('ig-xpText');
-            const xpProg=document.getElementById('ig-xpProgress');
-            const streakBadge=document.getElementById('ig-streakBadge');
-            const xpCount=document.getElementById('ig-xpCount');
-            const streakCount=document.getElementById('ig-streakCount');
-            if(lvlBadge) lvlBadge.textContent=lvlInfo.level;
-            if(lvlText) lvlText.textContent=`Nível ${lvlInfo.level} • ${this.state.titulo||'Aprendiz'}`;
-            if(xpText) xpText.textContent=`${lvlInfo.xpTotal} / ${lvlInfo.proximo} XP`;
-            if(xpProg) xpProg.style.width=`${lvlInfo.progresso}%`;
-            if(streakBadge) streakBadge.textContent=this.state.streak;
-            if(xpCount) xpCount.textContent=this.state.xp;
-            if(streakCount) streakCount.textContent=this.state.streak;
-            this.renderQuestsPanel();
-        }catch{}
-
-        const xpEl=document.getElementById('ig-xpCount'); if(xpEl) xpEl.textContent=this.state.xp;
-        const stEl=document.getElementById('ig-streakCount'); if(stEl) stEl.textContent=this.state.streak;
-        const chest=document.getElementById('ig-header-chest');
-        if(chest){ chest.classList.remove('chest-shake','chest-explode'); chest.style.transform='scale(1)'; chest.src='/assets/bau_roxo_pixel.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel.png'; }; }
-        const isAluno=Workspace.usuario.tipo==='Aluno';
-        const guardian=document.getElementById('ig-guardian-screen');
-        const alunoView=document.getElementById('ig-alunoView');
-        const profView=document.getElementById('ig-professorView');
-        const timeout=document.getElementById('ig-timeout-screen');
-        const modal=document.getElementById('ig-gameModal');
-        if(modal) modal.style.display='none';
-        if(!isAluno){
-            if(profView) profView.style.display='flex';
-            var hdr = document.getElementById('ig-header-principal'); if(hdr) hdr.style.display='flex';
-            if(alunoView) alunoView.style.display='none';
-            if(guardian) guardian.style.display='none';
-            if(timeout) timeout.style.display='none';
-            const aba=localStorage.getItem('ws_ingles_aba_prof')||'biblioteca';
-            this.renderProfessorTab(aba);
-            const pend=document.getElementById('ig-pendingCount');
-            if(pend) pend.textContent=this.state.submissions.filter(s=>s.status==='pending').length;
-        }else{
-            if(profView) profView.style.display='none';
-            if(guardian) guardian.style.display='none';
-            if(alunoView) alunoView.style.display='none';
-            if(timeout) timeout.style.display='none';
-            if(this.sessaoEncerrada){
-                if(timeout){ timeout.style.display='flex'; const xpEl2=document.getElementById('ig-timeout-xp'); if(xpEl2) xpEl2.innerText=`+${this.xpGanhosNaSessao} XP ⭐`; var hdr3=document.getElementById('ig-header-principal'); if(hdr3) hdr3.style.display='flex'; }
-            }else if(!this.tempoGlobalDefinido){
-                if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; var hdr2=document.getElementById('ig-header-principal'); if(hdr2) hdr2.style.display='flex'; }
-            }else{
-                if(alunoView){ 
-                    alunoView.style.display='block'; 
-                    this.renderAlunoGrid(); 
-                    // Esconde header Baú do Inglês só dentro da Ilha Mágica, mas mantém efeito do baú abrindo
-                    var headerPrincipal = document.getElementById('ig-header-principal');
-                    if(headerPrincipal) headerPrincipal.style.display='none';
-                }
-            }
-        }
-    },
     renderAlunoGrid(){
-        const grid=document.getElementById('ig-gamesGrid'); if(!grid) return;
-        grid.innerHTML=this.defaults.games.map(g=>{
-            const vencidos=Object.values(this.state.srs).filter(s=>s.tipo===g.id && s.due<=Date.now()).length;
-            return `<div class="ig-game-card" data-action="abrir-jogo" data-game-id="${g.id}">
-                <div class="ig-top" style="display:flex;justify-content:space-between;margin-bottom:15px"><div class="ig-icon" style="background:${g.color};width:50px;height:50px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:28px">${g.icon}</div><span class="ig-badge" style="background:#1a1a2e;color:#f1c40f;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:bold">${g.level}</span></div>
-                <h3 style="font-family:Cinzel">${g.title} ${vencidos?'🔥':''}</h3><p style="color:#64748B;font-size:13px">${g.desc}</p>
-                <div style="margin-top:10px;display:flex;gap:8px;align-items:center"><span style="background:#F1F5F9;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold">⭐ +${['picturePop','minimalPairs','debateAI'].includes(g.id)?'75':'50'} XP</span> ${vencidos?`<span style="font-size:11px;color:#e74c3c;font-weight:bold">${vencidos} pra revisar</span>`:''}</div>
+        const grid = document.getElementById('gamesGrid'); if(!grid) return;
+        grid.innerHTML = this.defaults.games.map(g=>{
+            const vencidos = Object.values(this.state.srs).filter(s=>s.tipo===g.id && s.due<=Date.now()).length;
+            return `
+            <div class="ig-game-card" data-action="abrir-jogo" data-game-id="${g.id}">
+                <div class="ig-top">
+                    <div class="ig-icon" style="background:${g.color}30; color:${g.color.replace('E0E7FF','#4F46E5').replace('FEF3C7','#D97706').replace('D1FAE5','#059669')}">${g.icon}</div>
+                </div>
+                <h3>${g.title} ${vencidos?'🔥':''}</h3>
+                <p>${g.desc}</p>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                    <span style="background:#F1F5F9; color:#475569; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">🪙 +${['picturePop','minimalPairs'].includes(g.id)?'75':'50'} BZ</span>
+                    ${vencidos ? `<span style="color:#EF4444; font-size:11px; font-weight:700;">${vencidos} para revisar</span>` : ''}
+                </div>
             </div>`;
         }).join('');
     },
 
-    async abrirBauMagico(minutos){
-        // V6: busca season atual
-        try{
-            const res=await Workspace.api(`/workspace/ingles/season/atual?escolaId=${Workspace.usuario.escolaId||'DEFAULT'}`,'GET');
-            if(res?.success) this.state.season = res.season;
-        }catch{}
-
-        if(ParticleEngine._exploding || this.tempoGlobalDefinido) return;
-        try{ speechSynthesis.cancel(); }catch{}
-        if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
-        const chest=document.getElementById('ig-header-chest');
-        if(chest) chest.classList.add('chest-shake');
-        const magoScr=document.getElementById('ig-guardian-screen');
-        const alunoViewTemp=document.getElementById('ig-alunoView');
-        if(alunoViewTemp) alunoViewTemp.style.display='none'; // Garante ilha escondida durante efeito
-        if(magoScr) magoScr.style.opacity='0';
-        setTimeout(()=>{
-            if(magoScr) { magoScr.style.display='none'; magoScr.style.opacity='0'; }
-            if(chest){ chest.classList.remove('chest-shake'); chest.classList.add('chest-explode'); chest.src='/assets/bau_roxo_pixel_aberto.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel_aberto.png'; }; }
-            const rect=chest?.getBoundingClientRect()||{left:innerWidth/2, top:50, width:0, height:0};
-            ParticleEngine.explode(rect.left+rect.width/2, rect.top+rect.height/2);
-            try{ const a=new Audio('https://actions.google.com/sounds/v1/weapons/large_explosion.ogg'); a.volume=0.9; a.play().catch(()=>{}); }catch{}
-            setTimeout(()=>{
-                this.tempoGlobalDefinido=true; this.xpGanhosNaSessao=0; this.coinsGanhosNaSessao=0;
-                const userK=`ws_ingles_user_${Workspace.usuario.id}`;
-                this.state.itensConcluidos=[]; try{ localStorage.setItem(`${userK}_concluidos`, JSON.stringify([])); }catch{}
-                this.iniciarTimerGlobal(minutos*60);
-                this.renderizarVisualizacao();
-                setTimeout(()=>this.iniciarFalaGuardiao(),500);
-            },1000);
-        },1500);
-    },
-    
-    async encerrarSessaoBau(){
-        // 🚀 O LOOT AGORA BASEIA-SE NAS MOEDAS GANHAS!
-        if(this.coinsGanhosNaSessao>0 && Workspace.usuario?.tipo==='Aluno'){
-            try{
-                const rar = this.coinsGanhosNaSessao>300? 'lendario' : this.coinsGanhosNaSessao>150? 'epico' : 'comum';
-                const res=await Workspace.api('/workspace/ingles/recompensa/abrir','POST',{userId:Workspace.usuario.id, escolaId:Workspace.usuario.escolaId||'DEFAULT', raridade:rar, xpSessao:this.coinsGanhosNaSessao});
-                if(res?.success && res?.recompensa){
-                    const loot=res.recompensa;
-                    const modalLoot=document.createElement('div');
-                    modalLoot.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000004';
-                    modalLoot.innerHTML=`<div style="background:linear-gradient(180deg,#fff,#F8FAFC);border:4px solid ${rar==='lendario'?'#fde68a': rar==='epico'?'#a78bfa':'#94a3b8'};border-radius:20px;padding:28px;text-align:center;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"><div style="font-size:60px">${rar==='lendario'?'👑': rar==='epico'?'💎':'📦'}</div><div style="font-family:Cinzel;font-weight:900;font-size:18px;margin:10px 0;color:#0f172a">Baú ${rar.toUpperCase()}!</div><div style="font-size:14px;color:#334155">${loot.nome||loot.id}</div><div style="margin-top:12px;background:#0F172A;color:#fde68a;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:800;display:inline-block">${loot.tipo||'cosmetico'}</div><button id="btn-fechar-loot" style="display:block;width:100%;margin-top:16px;background:#4F46E5;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:800;cursor:pointer">Equipar e Continuar ✨</button></div>`;
-                    document.body.appendChild(modalLoot);
-                    modalLoot.querySelector('#btn-fechar-loot').onclick=()=>modalLoot.remove();
-                    setTimeout(()=>{ if(document.body.contains(modalLoot)) modalLoot.remove(); },5000);
-                }
-            }catch{}
-        }
-
-        TimerService.stop();
-        this.tempoGlobalDefinido=false;
-        this.sessaoEncerrada=false;
-        this.bauDestrancado=false;
-        this.tempoRestante=0;
-        this.digitandoAtivo=false;
-        
-        if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
-        const chest=document.getElementById('ig-header-chest');
-        if(chest){ chest.classList.remove('chest-shake','chest-explode'); chest.style.transform='scale(1)'; chest.src='/assets/bau_roxo_pixel.png'; chest.onerror=function(){ this.src='/public/assets/bau_roxo_pixel.png'; }; }
-        
-        document.getElementById('ig-gameModal').style.display='none';
-        document.getElementById('ig-timeout-screen').style.display='none';
-        document.getElementById('ig-alunoView').style.display='none';
-        
-        const guardian=document.getElementById('ig-guardian-screen');
-        if(guardian){ guardian.style.display='flex'; guardian.style.opacity='1'; const inp=document.getElementById('ig-tempo-escolhido'); if(inp) inp.value=''; }
-        
-        this.renderizarVisualizacao();
-        Workspace.mostrarAviso('Sessão guardada! Escolha novo tempo para voltar a jogar.','success');
-    },    
-
-    iniciarFalaGuardiao(forcarRestart=false){
-        const modal=document.getElementById('ig-gameModal');
-        if(modal && modal.style.display!=='none') return;
-        const agora=Date.now();
-        if(this._ultimoFalaGuardiao && (agora - this._ultimoFalaGuardiao < 1500) && !forcarRestart) return;
-        this._ultimoFalaGuardiao=agora;
-        try{ speechSynthesis.cancel(); }catch{}
-        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
-        if(this.digitandoAtivo && !forcarRestart) return; this.digitandoAtivo=true;
-        if(this.magoIntervalTimer) clearInterval(this.magoIntervalTimer);
-        const balao=document.getElementById('ig-hub-mago-text');
-        if(!balao) return; balao.style.display='block'; balao.innerHTML='';
-        const config=this.state.magoConfig||this.defaults.magoConfig;
-        const frases=this.state.magoPhrases.length?this.state.magoPhrases:this.defaults.magoPhrases;
-        let fraseBruta='';
-        if(config.modoExibicao==='sequencial'){
-            const userK=`ws_mago_acessos_${Workspace.usuario?.id||'default'}`;
-            let acessos=parseInt(localStorage.getItem(userK)||'0'); fraseBruta=frases[acessos%frases.length].text;
-            if(!forcarRestart) localStorage.setItem(userK, acessos+1);
-        }else if(config.modoExibicao==='fixa'){ fraseBruta=frases[0].text; }
-        else { fraseBruta=frases[Math.floor(Math.random()*frases.length)].text; }
-        const nomeCompleto=Workspace.usuario?.nome||Workspace.usuario?.login||'Aventureiro';
-        let primeiro=nomeCompleto.split(' ')[0];
-        if(primeiro.toLowerCase()==='teste') primeiro=Workspace.usuario.tipo==='Aluno'?'Aventureiro':'Professor';
-        const regex=/(?:\(citarAluno\)|citarAluno|\$\{aluno\.nome\}|\{\{aluno\.nome\}\})/gi;
-        const fraseAudio=fraseBruta.replace(regex, primeiro);
-        const fraseVisual=fraseBruta.replace(regex, primeiro.toUpperCase());
-        if(config.vozAtiva) VoiceService.falar(fraseAudio,{isMago:true}); else try{speechSynthesis.cancel()}catch{}
-        let i=0, html='';
-        this.magoIntervalTimer=setInterval(()=>{
-            html+=fraseVisual.charAt(i); balao.innerText=html; i++;
-            if(i>=fraseVisual.length){ clearInterval(this.magoIntervalTimer); this.digitandoAtivo=false; }
-        },35);
-    },
-    iniciarTimerGlobal(segundos){
-        const display=document.getElementById('ig-global-timer-display'); if(display) display.style.display='flex';
-        const topTimer=document.getElementById('ig-timerTop'); 
-        TimerService.start(segundos, (rest)=>{
-            this.tempoRestante=rest; this.atualizarDisplayTimerGlobal();
-            // Atualiza timer no topo da Ilha também (contagem regressiva do tempo que aluno colocou)
-            if(topTimer){
-                var m=Math.floor(rest/60), s=rest%60;
-                topTimer.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-            }
-        }, ()=>{
-            this.sessaoEncerrada=true; this.fecharJogo(); this.renderizarVisualizacao();
-        });
-    },
-    atualizarDisplayTimerGlobal(){
-        const d=document.getElementById('ig-global-timer-display'); if(!d) return;
-        const m=Math.floor(this.tempoRestante/60).toString().padStart(2,'0');
-        const s=(this.tempoRestante%60).toString().padStart(2,'0');
-        d.innerText=`⏱ ${m}:${s}`;
-        if(this.tempoRestante<30 && this.tempoRestante>0){ d.style.color='white'; d.style.background='#e74c3c'; }
-        else { d.style.color='#e74c3c'; d.style.background='#fdf2f2'; }
-    },
-
-    // ===================== PAINEL PROFESSOR V25 - QUESTS, LOJA, SEASON =====================
-    renderProfessorTab(tabId){
-        if(tabId==='quests' || tabId==='loja' || tabId==='season'){
-            localStorage.setItem('ws_ingles_aba_prof', tabId);
-            document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
-            const activeBtn=document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
-            if(activeBtn) activeBtn.classList.add('active');
-            const contentEl=document.getElementById('ig-tab-content');
-            if(tabId==='ranking'){
-                contentEl.innerHTML=`<div class="ig-card-prof"><div class="ig-card-header"><div><h3>🏆 Ranking & Ligas</h3><p>Ligas: Ouro (top 3), Prata (4-10), Bronze (11-20). Mostra títulos e bordas equipadas.</p></div><button data-action="atualizar-ranking" style="background:#0F172A;color:#fde68a;border:1px solid #d4af37;padding:8px 14px;border-radius:10px;font-weight:800;cursor:pointer">🔄 Atualizar</button></div><div id="ig-ranking-loading" style="text-align:center;padding:30px;color:#64748B">Carregando ranking épico...</div><div id="ig-ranking-list"></div></div>`;
-                this.carregarRanking();
-                return;
-            }
-            if(tabId==='quests'){
-                contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🎯 Missões Diárias (V6)</h3><p style="color:#64748B;font-size:13px">Crie missões que aparecem no hub do aluno. Recompensa com XP multiplicado pela season.</p>
-                    <div style="background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin:15px 0;display:grid;grid-template-columns:1fr 80px 80px 80px;gap:8px;align-items:end">
-                        <div><label style="font-size:11px;font-weight:800">Texto da missão</label><input id="qTexto" class="ig-input" placeholder="Ex: Crie 3 frases com Although"></div>
-                        <div><label style="font-size:11px;font-weight:800">Alvo</label><input id="qAlvo" type="number" class="ig-input" value="3"></div>
-                        <div><label style="font-size:11px;font-weight:800">XP</label><input id="qXP" type="number" class="ig-input" value="100"></div>
-                        <div><label style="font-size:11px;font-weight:800">Ícone</label><input id="qIcone" class="ig-input" value="🎯"></div>
-                    </div>
-                    <div style="display:flex;gap:8px;margin-bottom:20px"><select id="qTipo" class="ig-input" style="width:auto"><option value="diaria">Diária</option><option value="semanal">Semanal</option><option value="especial">Especial</option></select><button data-action="add-quest" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">+ Adicionar Missão</button></div>
-                    <h4>Missões Atuais (${this.state.quests.length})</h4><div style="display:flex;flex-direction:column;gap:8px">${this.state.quests.map(q=>`<div class="ig-list-item" style="background:#fff;border:1px solid #eee;border-left:4px solid #4F46E5"><div><b>${q.icone||'🎯'} ${Workspace.escapeHTML(q.texto||q.id)}</b> • Alvo: ${q.alvo} • +${q.recompensaXP} XP • ${q.tipo}</div><button data-action="rem-quest" data-id="${q.id}" style="background:#fdf2f2;border:1px solid #fadbd8;color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer">✕</button></div>`).join('')}</div></div>`;
-                return;
-            }
-            if(tabId==='loja'){
-                const loot = this.state.lootTables || {};
-                const allItems = [...(loot.comum||[]), ...(loot.epico||[]), ...(loot.lendario||[])];
-                contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🛍 Loja do Mago - Loot Tables</h3><p style="color:#64748B;font-size:13px">Configure itens que caem nos baús. Raridade define chance.</p>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
-                        <div style="background:#f8fafc;border:2px solid #94a3b8;border-radius:12px;padding:12px"><h4>📦 Comum (XP<150)</h4>${(loot.comum||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeComum" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="comum" style="background:#64748B;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                        <div style="background:#f5f3ff;border:2px solid #a78bfa;border-radius:12px;padding:12px"><h4>💎 Épico (XP 150-300)</h4>${(loot.epico||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeEpico" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="epico" style="background:#8b5cf6;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                        <div style="background:#fffbeb;border:2px solid #fde68a;border-radius:12px;padding:12px"><h4>👑 Lendário (XP>300)</h4>${(loot.lendario||[]).map(i=>`<div style="background:#fff;padding:8px;border-radius:8px;margin:6px 0;display:flex;justify-content:space-between"><span>${Workspace.escapeHTML(i.nome)} (${i.chance}%)</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:#e74c3c;border:none;background:none;cursor:pointer">✕</button></div>`).join('')}<div style="display:flex;gap:4px;margin-top:8px"><input id="lootNomeLendario" class="ig-input" placeholder="Nome" style="flex:1"><button data-action="add-loot" data-rar="lendario" style="background:#d97706;color:#fff;border:none;padding:6px 10px;border-radius:6px;cursor:pointer">+</button></div></div>
-                    </div></div>`;
-                return;
-            }
-            if(tabId==='season'){
-                const s=this.state.season||{id:'S1', nome:'Era dos Feitiços', xpMultiplier:1};
-                contentEl.innerHTML=`
-                    <div class="ig-card"><h3>🏆 Temporada Atual</h3>
-                    <div style="background:linear-gradient(135deg,#0F172A,#1E293B);color:#fde68a;padding:20px;border-radius:12px;border:2px solid #d4af37;margin:16px 0"><div style="font-family:Cinzel;font-size:22px">${Workspace.escapeHTML(s.nome||'S1')} • ${s.id}</div><div style="color:#fff;margin-top:8px">Multiplicador XP: x${s.xpMultiplier||1} • Ativa: ${s.ativa?'Sim':'Não'}</div></div>
-                    <div style="display:grid;grid-template-columns:1fr 100px;gap:10px;align-items:end"><div><label style="font-size:11px;font-weight:800">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${Workspace.escapeHTML(s.nome||'')}"></div><div><label style="font-size:11px;font-weight:800">Multiplicador</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div></div>
-                    <div style="display:flex;gap:10px;margin-top:12px"><button data-action="salvar-season" class="ws-btn" style="background:#4F46E5;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">Salvar Temporada</button><button data-action="reset-season" class="ws-btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:800;cursor:pointer">🔄 Resetar Season (zera XP semanal)</button></div>
-                    <p style="font-size:11px;color:#94a3b8;margin-top:12px">Reset guarda histórico em workspace_ingles_historico e zera XP da escola, mantendo medalhas e inventário.</p></div>`;
-                return;
-            }
-        }
-
-        localStorage.setItem('ws_ingles_aba_prof', tabId);
-        document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
-        const activeBtn=document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
-        if(activeBtn) activeBtn.classList.add('active');
-        const content=document.getElementById('ig-tab-content');
-        const state=this.state; const configMago=state.magoConfig||this.defaults.magoConfig;
-        const esc=Workspace.escapeHTML;
-
-        if(tabId==='mago'){
-            content.innerHTML=`
-                <div class="ig-card">
-                    <h3>🧙 Inteligência do Guardião (Mago IA)</h3>
-                    <p style="color:#64748B;font-size:13px">Configure o comportamento e crie falas. Use (citarAluno) para citar nome.</p>
-                    <div style="background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:20px;display:flex;gap:20px;flex-wrap:wrap;align-items:center">
-                        <label style="display:flex;gap:8px;font-weight:bold;cursor:pointer"><input type="checkbox" id="mago-voz-toggle" ${configMago.vozAtiva?'checked':''}> 🔊 Voz do Mago</label>
-                        <select id="mago-modo-select" class="ig-input" style="width:auto"><option value="aleatorio" ${configMago.modoExibicao==='aleatorio'?'selected':''}>🎲 Aleatório</option><option value="sequencial" ${configMago.modoExibicao==='sequencial'?'selected':''}>🔢 Sequencial</option><option value="fixa" ${configMago.modoExibicao==='fixa'?'selected':''}>📌 Fixa (1ª)</option></select>
-                        <button data-action="testar-voz-mago" style="background:#1a1a2e;color:#f1c40f;border:2px solid #d4af37;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:bold">🔊 Testar voz grave no celular</button>
-                    </div>
-                    <div style="background:#fff;padding:15px;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:20px">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><label style="font-size:13px;font-weight:bold">Nova Fala do Mago:</label><button data-action="inserir-variavel-mago" style="background:#8e44ad;color:#fff;border:none;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;cursor:pointer">+ Inserir (citarAluno)</button></div>
-                        <div style="display:flex;gap:10px"><input id="nwMago" class="ig-input" placeholder="Ex: Bravo, (citarAluno)! Sua magia está forte!"><button data-action="salvar-mago-phrase" id="btn-salvar-mago" style="background:#4F46E5;color:#fff;border:none;padding:10px 15px;border-radius:8px;font-weight:bold;cursor:pointer">${state.editingMagoId?'Atualizar':'Salvar'}</button></div>
-                        <p style="font-size:11px;color:#94a3b8;margin-top:8px">Dica mobile: Voz Alex (iPhone) e Google UK Male (Android) são as mais graves e bonitas. Testamos pitch 0.70 no mobile e 0.80 no PC.</p>
-                    </div>
-                    <h4 style="margin:0 0 10px 0">Lista de Falas (${state.magoPhrases.length}) - arraste para reordenar</h4>
-                    <div id="ws-mago-lista-falas" style="max-height:400px;overflow-y:auto">${state.magoPhrases.map((m,i)=>`<div class="ig-list-item" draggable="true" data-id="${m.id}" style="background:#fff;border:1px solid #eee;border-left:4px solid #4F46E5;border-radius:8px;margin-bottom:8px;cursor:grab"><div style="display:flex;align-items:center;gap:10px;flex:1"><span style="font-weight:900;color:#cbd5e1;width:25px">${i+1}.</span><span style="color:#94a3b8">↕</span><div style="font-weight:600;color:#2c3e50;font-size:13px;flex:1">${esc(m.text)}</div></div><div style="display:flex;gap:8px"><button data-action="editar-mago-phrase" data-id="${m.id}" style="background:#fff8e1;border:1px solid #fdebd0;border-radius:6px;color:#f39c12;cursor:pointer;padding:4px 8px">✏ Editar</button><button data-action="remover-item" data-key="magoPhrases" data-id="${m.id}" style="background:#fdf2f2;border:1px solid #fadbd8;border-radius:6px;color:#e74c3c;cursor:pointer;padding:4px 8px">✕</button></div></div>`).join('')}</div>
-                </div>`;
-            const lista=document.getElementById('ws-mago-lista-falas');
-            if(lista){
-                lista.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', e.target.closest('[data-id]')?.dataset.id); e.target.style.opacity='0.5'; });
-                lista.addEventListener('dragover', e=>{ e.preventDefault(); e.target.closest('.ig-list-item')?.style.setProperty('border-top','3px solid #4F46E5'); });
-                lista.addEventListener('dragleave', e=>{ e.target.closest('.ig-list-item')?.style.setProperty('border-top','1px solid #eee'); });
-                lista.addEventListener('drop', async e=>{
-                    e.preventDefault(); const dragged=e.dataTransfer.getData('text/plain'); const target=e.target.closest('[data-id]')?.dataset.id;
-                    if(dragged&&target&&dragged!==target){
-                        const arr=Workspace.Ingles.state.magoPhrases; const i1=arr.findIndex(x=>x.id===dragged); const i2=arr.findIndex(x=>x.id===target);
-                        if(i1>-1&&i2>-1){ const [it]=arr.splice(i1,1); arr.splice(i2,0,it); await Workspace.Ingles.saveDados(); Workspace.Ingles.renderProfessorTab('mago'); }
-                    }
-                });
-                lista.addEventListener('dragend', e=>{ e.target.style.opacity='1'; document.querySelectorAll('.ig-list-item').forEach(n=>n.style.borderTop='1px solid #eee'); });
-            }
-        }else if(tabId==='biblioteca'){
-            content.innerHTML=`
-                <div class="ig-card"><h3>📚 Biblioteca do Algoritmo - Poderosa</h3><p style="color:#64748B;font-size:13px">Tudo que você adicionar aqui alimenta instantaneamente os jogos dos alunos. SRS cuida da revisão.</p></div>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
-                    <div class="ig-card" style="flex:1;min-width:320px"><h3>Palavras Raiz (${state.words.length})</h3><div style="display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap"><input id="nwWord" class="ig-input" style="flex:2" placeholder="Inglês (ex: resilient)"><input id="nwTrans" class="ig-input" style="flex:1" placeholder="Tradução"><button data-action="add-word" style="background:#4F46E5;color:#fff;border:none;padding:10px 15px;border-radius:8px;cursor:pointer;font-weight:bold">Add</button></div><div style="max-height:300px;overflow-y:auto">${state.words.map(w=>`<div class="ig-list-item"><span><b>${esc(w.word)}</b> - ${esc(w.translation)} <small style="color:#94a3b8">[${w.level||'B1'}]</small></span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:#e74c3c;background:transparent;border:none;cursor:pointer;font-weight:bold">✕</button></div>`).join('')}</div></div>
-                    <div class="ig-card" style="flex:1;min-width:320px"><h3>Frases (${state.phrases.length})</h3><div style="display:flex;gap:10px;margin-bottom:15px"><textarea id="nwPhrase" class="ig-textarea" style="min-height:45px;flex:1" placeholder="Nova frase em inglês..."></textarea><button data-action="add-phrase" style="background:#4F46E5;color:#fff;border:none;padding:10px 15px;border-radius:8px;cursor:pointer;font-weight:bold">Add</button></div><div style="max-height:300px;overflow-y:auto">${state.phrases.map(p=>`<div class="ig-list-item"><span style="font-size:13px">${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:#e74c3c;background:transparent;border:none;cursor:pointer">✕</button></div>`).join('')}</div></div>
-                </div>
-                <div class="ig-card" style="margin-top:20px"><h3>Quizzes (${state.quizzes.length})</h3><div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap"><input id="qQuestion" class="ig-input" style="flex:2;min-width:200px" placeholder="Pergunta"><input id="qOpt1" class="ig-input" style="flex:1;min-width:120px" placeholder="Opção 1 (errada)"><input id="qOpt2" class="ig-input" style="flex:1;min-width:120px" placeholder="Opção 2 (correta)"><button data-action="add-quiz" style="background:#4F46E5;color:#fff;border:none;padding:10px 15px;border-radius:8px;cursor:pointer;font-weight:bold">Add Quiz</button></div><div style="max-height:250px;overflow-y:auto">${state.quizzes.map(q=>`<div class="ig-list-item"><span><b>${esc(q.question)}</b> | Correta: ${esc(q.options[q.correct])}</span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" style="color:#e74c3c;background:transparent;border:none;cursor:pointer">✕</button></div>`).join('')}</div></div>
-                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:20px">
-                    <div class="ig-card" style="flex:1;min-width:300px"><h3>WordPickers (${this.defaults.wordPickers.length}) - Poção Sintática</h3><p style="font-size:12px;color:#64748B">Edição rápida: esses vêm do código, mas você pode alimentar via Envios → Piscina</p><div>${this.defaults.wordPickers.map(s=>`<div class="ig-list-item"><span>${esc(s.text)}</span></div>`).join('')}</div></div>
-                    <div class="ig-card" style="flex:1;min-width:300px"><h3>Perguntas Abertas (${this.defaults.questions.length})</h3><div>${this.defaults.questions.map(q=>`<div class="ig-list-item"><span>${esc(q.text)}</span></div>`).join('')}</div></div>
-                </div>`;
-        }else if(tabId==='imagens'){
-            content.innerHTML=`
-                <div class="ig-card"><h3>🖼 Banco de Figuras (PicturePop) - Alimenta Visão do Alquimista</h3><div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px"><input id="picWord" class="ig-input" style="flex:2;min-width:150px" placeholder="Palavra inglês (watermelon)"><input id="picTrans" class="ig-input" style="flex:2;min-width:150px" placeholder="Tradução"><input id="picEmoji" class="ig-input" style="flex:1;min-width:80px" placeholder="Emoji 🍉"><button data-action="add-pic" style="background:#4F46E5;color:#fff;border:none;padding:10px 15px;border-radius:8px;cursor:pointer;font-weight:bold">Add Imagem</button></div></div>
-                <div style="display:flex;flex-wrap:wrap;gap:15px">${state.pictures.map(p=>`<div class="ig-card" style="width:160px;text-align:center;padding:15px;display:flex;flex-direction:column;align-items:center"><div style="font-size:48px;margin-bottom:10px">${p.emoji}</div><b style="color:#1E293B">${esc(p.word)}</b><small style="color:#64748B">${esc(p.translation||'')}</small><button data-action="remover-item" data-key="pictures" data-id="${p.id}" style="background:#F1F5F9;color:#EF4444;width:100%;border:none;padding:8px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;margin-top:10px">Remover</button></div>`).join('')}</div>`;
-        }else if(tabId==='envios'){
-            const pendentes=state.submissions.filter(s=>s.status==='pending');
-            document.getElementById('ig-pendingCount').textContent=pendentes.length;
-            if(!pendentes.length){
-                content.innerHTML=`<div class="ig-card" style="text-align:center;padding:40px;color:#999"><div style="font-size:40px;margin-bottom:10px">☕</div>Nenhum desafio aberto pendente. Quando aluno envia resposta aberta, aparece aqui pra você aprovar e alimentar a Piscina Global.</div>
-                <div class="ig-card"><h3>🌊 Piscina Global (${state.pool.length} itens)</h3><p style="font-size:12px;color:#64748B">Respostas aprovadas dos alunos que alimentam Espelho do Oráculo e outros jogos.</p><div style="max-height:300px;overflow-y:auto">${state.pool.slice(0,50).map(p=>`<div class="ig-list-item"><span><b>${esc(p.student||'Aluno')}</b>: ${esc(p.text).substring(0,120)}</span><small style="color:#94a3b8">${p.type}</small></div>`).join('')}</div></div>`;
-            }else{
-                content.innerHTML=`<div class="ig-card" style="border-left:4px solid #F59E0B"><h3>📥 Forja do Algoritmo - Envios para Aprovar</h3><p style="font-size:13px;color:#666">Aprove respostas boas para alimentar a Piscina Global. Elas virarão conteúdo automático nos jogos de Pergunta, Debate e Roleplay. Isso faz a inteligência crescer sozinha.</p></div>`+pendentes.slice().reverse().map(s=>`
-                    <div class="ig-card">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="background:#FEF3C7;color:#92400E;padding:4px 8px;border-radius:12px;font-size:11px;font-weight:bold">Aguardando Avaliação</span><span style="font-size:12px;color:#999"><b>${esc(s.student)}</b> • ${esc(s.game)} • ${new Date(s.timestamp).toLocaleString()}</span></div>
-                        <p style="font-size:15px;color:#2c3e50;background:#f4f6f7;padding:12px;border-radius:8px;white-space:pre-wrap">${esc(s.text)}</p>
-                        ${s.audioURL?`<audio controls src="${s.audioURL}" style="width:100%;margin-top:10px"></audio>`:''}
-                        <div style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap"><button data-action="aprovar-envio" data-id="${s.id}" style="background:#10B981;border:none;padding:10px;border-radius:8px;cursor:pointer;color:#fff;flex:1;font-weight:bold">✅ Aprovar para Piscina Global</button><button data-action="rejeitar-envio" data-id="${s.id}" style="background:#e74c3c;border:none;padding:10px;border-radius:8px;cursor:pointer;color:#fff;font-weight:bold">🗑 Rejeitar</button></div>
-                    </div>
-                `).join('')+`<div class="ig-card"><h3>🌊 Piscina Global (${state.pool.length})</h3><div style="max-height:200px;overflow-y:auto">${state.pool.slice(0,20).map(p=>`<div class="ig-list-item"><span>${esc(p.text).substring(0,100)}</span></div>`).join('')}</div></div>`;
-            }
-        }else if(tabId==='algoritmo'){
-            const totalProf=state.words.length+state.phrases.length+state.quizzes.length+state.pictures.length;
-            const totalSRS=Object.keys(state.srs).length;
-            const vencidos=Object.values(state.srs).filter(s=>s.due<=Date.now()).length;
-            const taxaAcerto = totalSRS ? Math.round(Object.values(state.srs).filter(s=>s.repetitions>0).length/totalSRS*100) : 0;
-            content.innerHTML=`
-                <div class="ig-card"><h3>🧠 Inteligência do Baú - SRS + Algoritmo</h3><p style="color:#64748B;font-size:14px;line-height:1.5">Erros voltam em 2 min. Acertos: 1 dia → 6 dias → interval * ease. A Piscina Global alimenta jogos automaticamente.</p>
-                    <div style="display:flex;gap:15px;margin-top:20px;flex-wrap:wrap">
-                        <div style="flex:1;background:#EEF2FF;border:1px solid #4F46E5;padding:20px;border-radius:12px;text-align:center;min-width:150px"><div style="font-size:30px;font-weight:900;color:#4F46E5">${totalProf}</div><div style="font-size:12px;font-weight:bold">Sementes do Prof</div></div>
-                        <div style="flex:1;background:#FEE2E2;border:1px solid #EF4444;padding:20px;border-radius:12px;text-align:center;min-width:150px"><div style="font-size:30px;font-weight:900;color:#EF4444">${state.errosRetidos.length}</div><div style="font-size:12px;font-weight:bold">Erros Retidos (memória curta)</div></div>
-                        <div style="flex:1;background:#D1FAE5;border:1px solid #10B981;padding:20px;border-radius:12px;text-align:center;min-width:150px"><div style="font-size:30px;font-weight:900;color:#10B981">${totalSRS}</div><div style="font-size:12px;font-weight:bold">Itens no SRS</div></div>
-                        <div style="flex:1;background:#FEF3C7;border:1px solid #F59E0B;padding:20px;border-radius:12px;text-align:center;min-width:150px"><div style="font-size:30px;font-weight:900;color:#D97706">${vencidos}</div><div style="font-size:12px;font-weight:bold">Vencidos pra revisar agora</div></div>
-                    </div>
-                    <div style="margin-top:20px;background:#f8fafc;padding:15px;border-radius:8px;border:1px solid #e2e8f0"><h4>📊 Detalhe SRS</h4><p style="font-size:13px">Taxa de aprendizado: ${taxaAcerto}% • Piscina Global: ${state.pool.length} respostas de alunos • Envios pendentes: ${state.submissions.filter(s=>s.status==='pending').length}</p><div style="max-height:250px;overflow-y:auto;margin-top:10px">${Object.entries(state.srs).slice(0,30).map(([id, s])=>`<div class="ig-list-item"><span><b>${id}</b> - Int ${s.interval}d | Ease ${s.ease.toFixed(2)} | Rep ${s.repetitions} | ${s.due<=Date.now()?'🔴 VENCIDO':'🟢 '+new Date(s.due).toLocaleDateString()}</span></div>`).join('')}</div></div>
-                </div>`;
-        }else if(tabId==='ranking'){
-            content.innerHTML=`<div style="text-align:center;padding:50px;color:#94a3b8"><div style="font-size:40px;margin-bottom:15px;animation:pulse 1s infinite">🏆</div>A carregar o Pódio...</div>`;
-            Workspace.api(`/workspace/ingles/ranking?escolaId=${Workspace.usuario.escolaId}`,'GET').then(res=>{
-                if(res && res.success && res.ranking?.length){
-                    let html=`<div class="ig-card" style="border-left:4px solid #F59E0B;background:#FFFBEB"><h3>🏆 Pódio da Escola (Leaderboard) - XP + SRS</h3><p style="font-size:12px;color:#64748B">Ranking considera XP ganho e itens dominados no SRS.</p></div>`;
-                    res.ranking.forEach((aluno, idx)=>{
-                        let medalha=`<div style="font-size:16px;font-weight:900;color:#94a3b8;width:40px;text-align:center">${idx+1}º</div>`;
-                        if(idx===0) medalha=`<div style="font-size:30px;width:40px;text-align:center">🥇</div>`;
-                        if(idx===1) medalha=`<div style="font-size:26px;width:40px;text-align:center">🥈</div>`;
-                        if(idx===2) medalha=`<div style="font-size:22px;width:40px;text-align:center">🥉</div>`;
-                        html+=`<div style="background:#fff;border:1px solid #E2E8F0;padding:15px 20px;border-radius:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:20px">${medalha}<div style="border:2px solid #E2E8F0;border-radius:50%;padding:2px">${window.Workspace.renderizarAvatar?window.Workspace.renderizarAvatar(aluno.nome,45):'👤'}</div><strong style="color:#1E293B">${Workspace.escapeHTML(aluno.nome)}</strong></div><div style="display:flex;gap:12px;align-items:center"><div style="background:#E0E7FF;color:#4F46E5;padding:6px 15px;border-radius:30px;font-weight:900;font-size:14px;border:1px solid #C7D2FE">⭐ ${aluno.xp} XP</div></div></div>`;
-                    });
-                    content.innerHTML=html;
-                }else content.innerHTML=`<div class="ig-card" style="text-align:center;padding:50px">A corrida ainda não começou! Alunos precisam ganhar XP.</div>`;
-            }).catch(()=>{ content.innerHTML=`<div class="ig-card" style="text-align:center;padding:50px;color:#e74c3c">Erro ao carregar ranking.</div>`; });
-        }
-    },
-
-    atualizarConfigMago: async function(){
-        const voz=document.getElementById('mago-voz-toggle')?.checked;
-        const modo=document.getElementById('mago-modo-select')?.value;
-        if(voz===undefined||!modo) return;
-        this.state.magoConfig={vozAtiva:voz, modoExibicao:modo};
-        await this.saveDados(); Workspace.mostrarAviso('Configuração de comportamento atualizada!','success');
-    },
-    inserirVariavelMago(){
-        const input=document.getElementById('nwMago'); if(!input) return;
-        const s=input.selectionStart, e=input.selectionEnd, v='(citarAluno)';
-        input.value=input.value.substring(0,s)+v+input.value.substring(e); input.focus(); input.selectionStart=input.selectionEnd=s+v.length;
-    },
-    getNomeAlunoReal(){
-        const nomeCompleto=Workspace.usuario?.nome||Workspace.usuario?.login||'Aventureiro';
-        let primeiro=nomeCompleto.split(' ')[0];
-        if(primeiro.toLowerCase()==='teste') primeiro=Workspace.usuario.tipo==='Aluno'?'Aventureiro':'Professor';
-        return primeiro;
-    },
-    handleSalvarMago: async function(){
-        const input=document.getElementById('nwMago'); const text=input.value.trim();
-        if(!text) return Workspace.mostrarAviso('Escreva a fala do Mago!','warning');
-        if(this.state.editingMagoId){
-            const ph=this.state.magoPhrases.find(m=>m.id===this.state.editingMagoId);
-            if(ph) ph.text=text; this.state.editingMagoId=null;
-        }else{
-            this.state.magoPhrases.unshift({id:'mago_'+Date.now(), text});
-        }
-        input.value=''; const btn=document.getElementById('btn-salvar-mago'); if(btn) btn.innerText='Salvar';
-        await this.saveDados(); this.renderProfessorTab('mago'); Workspace.mostrarAviso('Fala ensinada ao Mago! 🧙','success');
-    },
-    editarMagoPhrase(id){
-        const ph=this.state.magoPhrases.find(m=>m.id===id); if(!ph) return;
-        const input=document.getElementById('nwMago'); input.value=ph.text; input.focus();
-        this.state.editingMagoId=id; const btn=document.getElementById('btn-salvar-mago'); if(btn){ btn.innerText='Atualizar Fala'; btn.style.background='#f39c12'; }
-    },
-    addWord: async function(){ const w=document.getElementById('nwWord').value.trim(), t=document.getElementById('nwTrans').value.trim(); if(!w) return Workspace.mostrarAviso('Digite a palavra','warning'); this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Palavra adicionada!','success'); },
-    addPhrase: async function(){ const p=document.getElementById('nwPhrase').value.trim(); if(!p) return; this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
-    addQuiz: async function(){
-        const q=document.getElementById('qQuestion'); const qVal=q?.value.trim();
-        const o1=document.getElementById('qOpt1')?.value.trim(); const o2=document.getElementById('qOpt2')?.value.trim();
-        if(!qVal||!o1||!o2) return Workspace.mostrarAviso('Preencha pergunta e 2 opções','warning');
-        this.state.quizzes.unshift({id:'q'+Date.now(), question:qVal, options:[o1,o2], correct:1, explanation:'Professor', level:'B1'}); await this.saveDados(); this.renderProfessorTab('biblioteca');
-    },
-
-    addPic: async function(){ const w=document.getElementById('picWord')?.value.trim()||''; if(!w) return; const tr=document.getElementById('picTrans')?.value.trim()||''; const em=document.getElementById('picEmoji')?.value.trim()||'🖼'; this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em, category:'Professor'}); await this.saveDados(); this.renderProfessorTab('imagens'); },
-    addWordPicker: async function(){ const text=document.getElementById('wpText')?.value.trim(); const o1=document.getElementById('wpOpt1')?.value.trim(); const o2=document.getElementById('wpOpt2')?.value.trim(); const o3=document.getElementById('wpOpt3')?.value.trim(); const correct=parseInt(document.getElementById('wpCorrect')?.value||'0'); if(!text||!o1) return Workspace.mostrarAviso('Preencha texto e opções','warning'); const opts=[o1,o2,o3].filter(Boolean); this.state.wordPickers.unshift({id:'wp'+Date.now(), text, options:opts, correct}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Poção adicionada!','success'); },
-    addMinimal: async function(){ const a=document.getElementById('mpA')?.value.trim(); const b=document.getElementById('mpB')?.value.trim(); if(!a||!b) return; this.state.minimalPairs.unshift({id:'mp'+Date.now(), a, b}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
-    addRoleplay: async function(){ const title=document.getElementById('rpTitle')?.value.trim(); const prompt=document.getElementById('rpPrompt')?.value.trim(); const tip=document.getElementById('rpTip')?.value.trim()||'Use inglês natural'; if(!title||!prompt) return; this.state.roleplays.unshift({id:'rp'+Date.now(), title, prompt, tip}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
-    addQuestion: async function(){ const text=document.getElementById('aqText')?.value.trim(); if(!text) return; this.state.questions.unshift({id:'aq'+Date.now(), text}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
-    addDebate: async function(){ const topic=document.getElementById('dbTopic')?.value.trim(); const starter=document.getElementById('dbStarter')?.value.trim()||'What is your opinion?'; if(!topic) return; this.state.debates.unshift({id:'d'+Date.now(), topic, starter}); await this.saveDados(); this.renderProfessorTab('biblioteca'); Workspace.mostrarAviso('Duelo adicionado com IA!','success'); },
-
-    addQuest: async function(){
-        const texto=document.getElementById('qTexto')?.value.trim();
-        const alvo=parseInt(document.getElementById('qAlvo')?.value||'3');
-        const xp=parseInt(document.getElementById('qXP')?.value||'100');
-        const icone=document.getElementById('qIcone')?.value.trim()||'🎯';
-        const tipo=document.getElementById('qTipo')?.value||'diaria';
-        if(!texto) return Workspace.mostrarAviso('Digite texto da missão','warning');
-        this.state.quests.push({id:'q_'+Date.now(), texto, alvo, recompensaXP:xp, icone, tipo});
-        await this.saveDados(); this.renderProfessorTab('quests'); Workspace.mostrarAviso('Missão criada!','success');
-    },
-    remQuest: async function(id){ this.state.quests=this.state.quests.filter(q=>q.id!==id); await this.saveDados(); this.renderProfessorTab('quests'); },
-    addLoot: async function(rar){
-        const inputId = rar==='comum'? 'lootNomeComum' : rar==='epico'? 'lootNomeEpico' : 'lootNomeLendario';
-        const nome=document.getElementById(inputId)?.value.trim();
-        if(!nome) return;
-        if(!this.state.lootTables[rar]) this.state.lootTables[rar]=[];
-        this.state.lootTables[rar].push({id:'loot_'+Date.now(), nome, tipo:'cosmetico', chance: 50});
-        await this.saveDados(); this.renderProfessorTab('loja');
-    },
-    remLoot: async function(rar,id){ if(this.state.lootTables[rar]){ this.state.lootTables[rar]=this.state.lootTables[rar].filter(i=>i.id!==id); await this.saveDados(); this.renderProfessorTab('loja'); } },
-    salvarSeason: async function(){
-        const nome=document.getElementById('seasonNome')?.value.trim()||'Era dos Feitiços';
-        const mult=parseFloat(document.getElementById('seasonMult')?.value||'1');
-        this.state.season = {...this.state.season, nome, xpMultiplier:mult, id: this.state.season.id||'S1'};
-        await this.saveDados(); Workspace.mostrarAviso('Temporada salva!','success'); this.renderProfessorTab('season');
-    },
-    carregarRanking: async function(){
-        const listEl=document.getElementById('ig-ranking-list');
-        const loadEl=document.getElementById('ig-ranking-loading');
-        if(!listEl) return;
-        try{
-            const escolaId=Workspace.usuario.escolaId||'DEFAULT';
-            const res=await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
-            if(!res?.success){ if(loadEl) loadEl.textContent='Erro ao carregar'; return; }
-            const ranking=res.ranking||[];
-            if(loadEl) loadEl.style.display='none';
-            if(!ranking.length){ listEl.innerHTML='<div style="text-align:center;padding:20px;color:#94a3b8">Nenhum XP ainda. Alunos precisam jogar!</div>'; return; }
-            listEl.innerHTML = ranking.map((r,i)=>{
-                const liga=r.liga|| (i<3?'ouro': i<10?'prata': i<20?'bronze':'aprendiz');
-                const medalha=i===0?'🥇': i===1?'🥈': i===2?'🥇': '';
-                const borda=r.bordaEquipada||'';
-                const bordaStyle = borda.includes('ouro')? 'border-color:#fde68a;box-shadow:0 0 10px rgba(253,230,138,0.3)' : borda.includes('prata')? 'border-color:#94a3b8' : borda.includes('bronze')? 'border-color:#d97706' : '';
-                return `<div class="ig-rank-item ${liga}" style="${bordaStyle}">
-                    <div style="width:36px;height:36px;background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'};border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0">${medalha|| (i+1)}</div>
-                    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="color:#0f172a;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')}</b><span style="background:#0F172A;color:#fde68a;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">${Workspace.escapeHTML(r.tituloEquipado||r.titulo||'Aprendiz')}</span><span style="font-size:10px;background:${liga==='ouro'?'#fde68a': liga==='prata'?'#e2e8f0':'#ffedd5'};color:#000;padding:2px 6px;border-radius:10px;font-weight:700;text-transform:uppercase">${liga}</span></div><div style="display:flex;gap:8px;margin-top:4px;font-size:11px;color:#64748B"><span>⭐ ${r.xp||0} XP</span><span>📶 Nível ${r.level||1}</span><span>🔥 ${r.streak||1}d</span><span>🎒 ${(r.inventario||[]).length} itens</span></div></div>
-                    <div style="text-align:right;flex-shrink:0"><div style="font-size:11px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px;font-weight:700">${(r.medalhas||[]).length} 🏆</div></div>
-                </div>`;
-            }).join('');
-        }catch(e){ if(loadEl) loadEl.textContent='Erro: '+e.message; }
-    },
-    resetSeason: async function(){
-        if(!confirm('Resetar temporada? Isso zera XP semanal da escola e guarda histórico. Continuar?')) return;
-        try{
-            const res=await Workspace.api('/workspace/ingles/season/reset','POST',{escolaId:Workspace.usuario.escolaId||'DEFAULT', novaSeason:{id:'S'+Date.now(), nome:'Nova Era', xpMultiplier:1, ativa:true}});
-            if(res?.success){ Workspace.mostrarAviso('Season resetada!','success'); await this.loadDados(); this.renderProfessorTab('season'); }
-        }catch(e){ Workspace.mostrarAviso('Erro ao resetar','error'); }
-    },
-    remItem: async function(key,id){ this.state[key]=this.state[key].filter(i=>i.id!==id); if(key==='magoPhrases'&&this.state.editingMagoId===id) this.state.editingMagoId=null; await this.saveDados(); const active=document.querySelector('.ig-side-item.active'); if(active) this.renderProfessorTab(active.dataset.tab); },
-    aprovarEnvio: async function(id){ const s=this.state.submissions.find(x=>x.id===id); if(!s) return; s.status='approved'; this.state.pool.unshift({id:'pool_'+Date.now(), type:s.game, text:s.text, word:s.text, origin:'student', student:s.student, timestamp:Date.now()}); await this.saveDados(); this.renderProfessorTab('envios'); Workspace.mostrarAviso('Aprovado para Piscina Global!','success'); },
-
     abrirJogo(id){
         try{ speechSynthesis.cancel(); }catch{}
-        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
-        this.digitandoAtivo=false;
-        const balao=document.getElementById('ig-hub-mago-text'); if(balao) balao.style.display='none';
-        const game=this.defaults.games.find(g=>g.id===id); if(!game) return;
-        if(id!=='debateAI'){ this.state._debateChat=[]; this.state._debateTopicId=null; }
-        if(id==='wordSpark'){ this.state._minimalTarget=null; }
-        this.jogoAtual=id;
-        const iconEl=document.getElementById('ig-modalIcon'); if(iconEl) iconEl.textContent=game.icon;
-        const titleEl=document.getElementById('ig-modalTitle'); if(titleEl) titleEl.textContent=game.title;
-        const modal=document.getElementById('ig-gameModal'); 
+        this.jogoAtual = id;
+        const game = this.defaults.games.find(g=>g.id===id); if(!game) return;
+        if(id !== 'debateAI') { this.state._debateChat=[]; }
         
-        if(modal) {
-            modal.style.display='flex';
-            // 🚀 RESET DO MODAL: Retorna ao tamanho padrão para os jogos não ficarem esticados
-            var cardModal = modal.querySelector('.ws-card');
-            if(cardModal) cardModal.style.maxWidth = '650px';
+        document.getElementById('modalIcon').textContent = game.icon;
+        document.getElementById('modalTitle').textContent = game.title;
+        document.getElementById('gameModal').classList.remove('hidden');
+        
+        this.renderGameCapa();
+    },
+
+    fecharJogo(){
+        try{ speechSynthesis.cancel(); }catch{}
+        document.getElementById('gameModal').classList.add('hidden');
+        this.renderAlunoGrid();
+    },
+
+    // 🚀 LÓGICA DO LOOP INFINITO - O SEGREDO ESTÁ AQUI
+    sucessoGenerico: async function(bonusBase){
+        if(this.desafioAtualObj?.id){ 
+            this.marcarComoConcluido(this.desafioAtualObj.id); 
+            this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
         }
         
-        this.currentAudioURL=null;
-        this.renderGameCapa();
-    },    
+        this.ganharCoins('bronze', bonusBase);
+        this.tocarSom('coin'); 
+        
+        const srs = this.state.srs[this.desafioAtualObj?.id];
+        this.mostrarAvisoLocal(`🪙 +${bonusBase} Bronze! Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
+
+        // Loop sem bloqueios - Avança direto para a próxima após 1.2 segundos
+        setTimeout(() => {
+            const modal = document.getElementById('gameModal');
+            if(modal && !modal.classList.contains('hidden')){
+                this.renderDesafioAtual();
+            }
+        }, 1200); 
+    },
+    
+    falhaGenerica: async function(){
+        if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
+        this.mostrarAvisoLocal(`❌ Erro guardado para revisão. Voltará em breve!`, 'error');
+        
+        setTimeout(() => {
+            const modal = document.getElementById('gameModal');
+            if(modal && !modal.classList.contains('hidden')){
+                this.renderDesafioAtual();
+            }
+        }, 1500);
+    },
 
     getColecaoDoJogoAtual(){
         const id=this.jogoAtual;
         if(id==='wordSpark') return (this.state.words&&this.state.words.length)?this.state.words:this.defaults.words;
-        if(id==='readAloud' || id==='listenType' || id==='sentenceShuffle') return (this.state.phrases&&this.state.phrases.length)?this.state.phrases:this.defaults.phrases;
+        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return (this.state.phrases&&this.state.phrases.length)?this.state.phrases:this.defaults.phrases;
         if(id==='quiz') return (this.state.quizzes&&this.state.quizzes.length)?this.state.quizzes:this.defaults.quizzes;
         if(id==='wordPicker') return (this.state.wordPickers&&this.state.wordPickers.length)?this.state.wordPickers:this.defaults.wordPickers;
         if(id==='minimalPairs') return (this.state.minimalPairs&&this.state.minimalPairs.length)?this.state.minimalPairs:this.defaults.minimalPairs;
@@ -2126,114 +702,10 @@ Workspace.Ingles = {
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
         return null;
     },
-    renderGameCapa(){
-        const game=this.defaults.games.find(g=>g.id===this.jogoAtual);
-        if(!game) return;
-        const intro = this.defaults.intros ? this.defaults.intros[this.jogoAtual] : null;
-        const como = intro ? intro.como : game.desc;
-        const objetivo = intro ? intro.objetivo : 'Treine inglês de forma épica.';
-        const dica = intro ? intro.dica : 'Foque e divirta-se!';
-        const xp = intro ? intro.xp : '+50 BZ 🪙';
-        const totalItens = (()=>{ const c=this.getColecaoDoJogoAtual(); return c?c.length:0; })();
-        document.getElementById('ig-modalBody').innerHTML=`
-            <div style="text-align:center;padding:10px 0">
-                <div style="width:84px;height:84px;border-radius:20px;background:${game.color};display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 14px auto;box-shadow:0 8px 24px rgba(0,0,0,0.15);border:3px solid #fff">${game.icon}</div>
-                <h2 style="font-family:Cinzel,serif;color:#0f172a;margin:0;font-size:22px">${game.title}</h2>
-                <span style="background:#0f172a;color:#fde68a;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;margin-top:8px;display:inline-block;border:1px solid #d4af37">${game.level} • ${totalItens} desafios • SRS ativo</span>
-                <div style="text-align:left;background:linear-gradient(180deg,#ffffff 0%,#F8FAFC 100%);border:2px solid #E2E8F0;border-radius:16px;padding:18px;margin-top:18px">
-                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#4F46E5;letter-spacing:1px;margin-bottom:4px">📖 COMO FUNCIONA</div><div style="font-size:14px;color:#0f172a;line-height:1.5">${como}</div></div>
-                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#059669;letter-spacing:1px;margin-bottom:4px">🎯 OBJETIVO</div><div style="font-size:13px;color:#334155;line-height:1.5">${objetivo}</div></div>
-                    <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#d97706;letter-spacing:1px;margin-bottom:4px">💡 DICA DO MAGO</div><div style="font-size:13px;color:#334155;line-height:1.5;background:#FFFBEB;border:1px solid #fde68a;padding:10px;border-radius:10px">${dica}</div></div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><span style="background:#FFFBEB;color:#d97706;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:900;border:1px solid #fde68a">${xp}</span><span style="background:#F1F5F9;color:#475569;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">⏱ Só acaba no X, Mudar ou tempo</span><span style="background:#D1FAE5;color:#065f46;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:600">♾️ Treino infinito</span></div>
-                </div>
-                <button data-action="iniciar-jogo" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:14px;margin-top:18px;cursor:pointer;font-weight:800;font-size:16px;box-shadow:0 6px 0 #312e81, 0 8px 24px rgba(79,70,229,0.3)">▶ Iniciar Treino Épico</button>
-            </div>
-        `;
-    },
-    abrirMiniHub(){
-        if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop(); if(this.recognition) this.recognition.stop();
-        document.getElementById('ig-modalIcon').textContent='🗺'; document.getElementById('ig-modalTitle').textContent='Mapa de Missões';
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;margin-bottom:20px"><p style="color:#64748B;font-weight:bold">A magia não para. Escolha sua próxima missão!</p></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">${this.defaults.games.map(g=>`<div data-action="abrir-jogo" data-game-id="${g.id}" style="background:${g.color};padding:15px;border-radius:12px;cursor:pointer;border:2px solid rgba(0,0,0,0.05);display:flex;flex-direction:column;align-items:center;gap:10px"><div style="font-size:32px;background:rgba(255,255,255,0.6);width:55px;height:55px;border-radius:12px;display:flex;align-items:center;justify-content:center">${g.icon}</div><h4 style="margin:0;font-size:13px">${g.title}</h4><div style="font-size:10px;background:rgba(255,255,255,0.6);padding:2px 8px;border-radius:4px">${g.level}</div></div>`).join('')}</div>`;
-    },
-    fecharJogo(){ this.portalAtivo=false; this.state.portalJogoInterno=null;
 
-        try{ speechSynthesis.cancel(); }catch{}
-        if(this.magoIntervalTimer){ clearInterval(this.magoIntervalTimer); this.magoIntervalTimer=null; }
-        this.digitandoAtivo=false;
-        this._ultimoFalaGuardiao=0;
-        const modal=document.getElementById('ig-gameModal');
-        if(modal) modal.style.display='none';
-        if(this.mediaRecorder?.state==='recording') this.mediaRecorder.stop();
-        if(this.recognition) try{ this.recognition.stop(); }catch{}
-    },
-    
-  sucessoGenerico: async function(bonus){
-        if(this.portalAtivo){ return this.sucessoPortal(bonus); } 
-
-        const mult = this.state.season?.xpMultiplier || 1;
-        const bonusCoins = Math.floor(bonus * mult);
-
-        if(this.desafioAtualObj?.id){ 
-            this.marcarComoConcluido(this.desafioAtualObj.id); 
-            this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
-        }
-        
-        this.ganharCoins('bronze', bonusCoins);
-        this.coinsGanhosNaSessao = (this.coinsGanhosNaSessao || 0) + bonusCoins; 
-        
-        await this.saveDados();
-        try{ this.verificarQuests(this.jogoAtual); this.tentarDesbloquearAchievement(this.jogoAtual, this.state.itensConcluidos.length); }catch{}
-        
-        try{ this.atualizarHubV2(); }catch{} 
-        
-        this.tocarSom('xp'); 
-        
-        const srs=this.state.srs[this.desafioAtualObj?.id];
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#d97706,#92400e);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001;box-shadow:0 4px 10px rgba(0,0,0,0.3);border:2px solid #fde68a;';
-        toast.innerHTML=`🪙 +${bonusCoins} BZ • Próxima em ${srs?.interval||1}d`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),1500);
-
-        const coinDisplay = document.getElementById('ig-gameCoinsGanho');
-        if(coinDisplay) coinDisplay.innerText = `+${this.coinsGanhosNaSessao} BZ`;
-
-        // 🚀 FIM DA EXPULSÃO: Removido o bloqueio do cronómetro. O loop é infinito!
-        setTimeout(()=>{
-            const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none'){
-                this.renderDesafioAtual();
-            }
-        }, 1200); 
-    },
-    
-    falhaGenerica: async function(){
-        if(this.portalAtivo){ return this.falhaPortal(); }
-        if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
-        const toast=document.createElement('div');
-        toast.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#EF4444,#B91C1C);color:#fff;padding:12px 22px;border-radius:30px;font-weight:800;z-index:1000001';
-        toast.innerHTML=`❌ Erro guardado • Volta em 2 min`;
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),1800);
-        
-        // 🚀 FIM DA EXPULSÃO (Erro): Volta a tentar sem expulsar o aluno
-        setTimeout(()=>{
-            const m=document.getElementById('ig-gameModal');
-            if(m && m.style.display!=='none'){
-                this.renderDesafioAtual();
-            }
-        }, 1200);
-    },
-
-    envioAoProfessor: async function(gameId, texto, bonus=20){
-        if(!texto||texto.trim().length<2) return Workspace.mostrarAviso('Responda válido!','warning');
-        this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario.nome, game:gameId, text:texto, audioURL:this.currentAudioURL||'', status:'pending', timestamp:Date.now()});
-        if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, gameId, true);
-        this.sucessoGenerico(bonus);
-    },
     renderDesafioAtual(){
-        this.currentAudioURL=null; this.desafioAtualObj=null; if(this.portalAtivo){ this.renderDesafioAtualInternoPortal(); return; }
-        const id=this.jogoAtual;
+        this.desafioAtualObj = null;
+        const id = this.jogoAtual;
         if(id==='wordSpark') this.renderGameWordSpark();
         else if(id==='readAloud') this.renderGameReadAloud();
         else if(id==='listenType') this.renderGameListenType();
@@ -2246,214 +718,324 @@ Workspace.Ingles = {
         else if(id==='debateAI') this.renderGameDebateAI();
         else if(id==='minimalPairs') this.renderGameMinimalPairs();
         else if(id==='picturePop') this.renderGamePicturePop();
-        else if(id==='portalMagico') this.renderGamePortalMagico();
-        // injeta header portal se necessário
-        setTimeout(()=>this.injetarHeaderPortalSeNecessario(),100);
     },
-   proximoDesafio(){
-        if(this.portalAtivo){ this.renderDesafioPortal(); return; }
-        if(this.jogoAtual==='debateAI'){ this.renderGameDebateAI(); return; }
-        
-        // 🚀 CORREÇÃO DA EXPULSÃO: O jogo não fecha mais quando o aluno avança livremente
-        this.renderDesafioAtual();
-    },
-    
+
     renderTelaFimDeJornada(){
         const colecao = this.getColecaoDoJogoAtual();
-        
-        // 🚀 SEGURANÇA: Se o professor nunca adicionou conteúdo, avisa em vez de quebrar a tela
         if(!colecao || colecao.length === 0){
-            document.getElementById('ig-modalBody').innerHTML = `
-                <div style="text-align:center;padding:50px 20px;">
-                    <div style="font-size:60px;margin-bottom:15px">📜</div>
-                    <h2 style="font-family:'Cinzel', serif;color:#0F172A;">Área Vazia</h2>
-                    <p style="color:#64748B;">O Mestre ainda não adicionou magia nesta área. Tente outro jogo!</p>
-                </div>`;
+            document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:40px;"><h3 style="color:#64748B;">Ainda não há conteúdo criado para este jogo.</h3></div>`;
             return;
         }
 
-        // 🚀 LOOP INFINITO: O Aluno concluiu as novidades! Limpamos o histórico só DESTE jogo para a roleta continuar
+        // Limpa a memória só deste jogo para reiniciar a roleta
         const ids = colecao.map(i=>i.id);
         this.state.itensConcluidos = (this.state.itensConcluidos||[]).filter(id=>!ids.includes(id));
-        const k=`ws_ingles_user_${Workspace.usuario.id}`;
-        try{ localStorage.setItem(k+'_concluidos', JSON.stringify(this.state.itensConcluidos)); }catch{}
+        this.saveDados();
         
-        // Carrega o próximo desafio reciclado instantaneamente
+        // Retoma imediatamente sem bloquear a tela
         this.renderDesafioAtual();
     },
 
-    renderGameWordSpark(isPortal=false){
-        this.state._debateChat=[]; this.state._debateTopicId=null; this.state._minimalTarget=null;
-        const colecaoWords = (this.state.words && this.state.words.length) ? this.state.words : this.defaults.words;
-        this.desafioAtualObj=this.obterItemInteligente(colecaoWords,'word'); 
+    // ========= TELAS DOS JOGOS (Mapeadas para #modalBody) =========
+    renderGameCapa(){
+        const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
+        const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center; padding:20px 0;">
+                <div style="font-size:60px; margin-bottom:16px;">${game.icon}</div>
+                <h2 style="font-family:'Plus Jakarta Sans'; color:#0F172A; margin:0 0 8px 0;">${game.title}</h2>
+                <p style="color:#64748B; font-size:15px; margin:0 0 20px 0;">${game.desc}</p>
+                <div style="display:inline-flex; gap:10px; background:#F8FAFC; padding:10px 16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:24px;">
+                    <span style="font-weight:700; font-size:13px; color:#475569;">📦 ${totalItens} Desafios (SRS)</span>
+                    <span style="font-weight:700; font-size:13px; color:#D97706;">🪙 Recompensa Contínua</span>
+                </div>
+                <button data-action="iniciar-jogo" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; border:none; padding:16px; border-radius:12px; font-size:16px; cursor:pointer;">Começar Treino Infinito ▶</button>
+            </div>
+        `;
+    },
+
+    renderGameWordSpark(){
+        const col = (this.state.words?.length) ? this.state.words : this.defaults.words;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'word'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const w=this.desafioAtualObj; const srs=this.getSRS(w.id);
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="font-size:11px;color:#94a3b8;background:#F1F5F9;padding:6px 10px;border-radius:20px;display:inline-block;margin-bottom:10px">SRS: ${srs?`Int ${srs.interval}d | Ease ${srs.ease.toFixed(2)} | Rep ${srs.repetitions}`:'Novo'} • Feitiço puro isolado</div><div class="ig-big-phrase" style="font-size:38px;background:linear-gradient(180deg,#EEF2FF 0%,#E0E7FF 100%);border-color:#818cf8;color:#4338ca">${Workspace.escapeHTML(w.word)}</div><p style="font-weight:800;color:#64748B;margin:8px 0">Significado: ${Workspace.escapeHTML(w.translation||'')}</p><div class="ig-big-phrase" style="font-size:18px">Crie frase com <b style="color:#4F46E5">${Workspace.escapeHTML(w.word)}</b></div><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Although it was raining..." style="min-height:100px;margin-top:12px"></textarea><button data-action="verificar-wordSpark" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;padding:16px;border-radius:12px;margin-top:14px;cursor:pointer;font-weight:800">Lançar Feitiço ✨ +50 coins</button></div>`;
-    
+        const w = this.desafioAtualObj;
+        
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center;">
+                <div class="ig-big-phrase" style="font-size:32px; color:#4F46E5;">${Workspace.escapeHTML(w.word)}</div>
+                <p style="font-weight:700; color:#64748B;">Tradução: ${Workspace.escapeHTML(w.translation||'')}</p>
+                <p style="font-weight:600; margin-top:20px;">Crie uma frase usando esta palavra:</p>
+                <textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence here..." style="min-height:100px; margin-top:10px;"></textarea>
+                <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; border:none; padding:16px; border-radius:12px; margin-top:16px; cursor:pointer;">Lançar Feitiço ✨</button>
+            </div>`;
     },
-    renderGameReadAloud(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const p=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase">${Workspace.escapeHTML(p.phrase)}</div><div style="text-align:center;margin:15px 0"><button data-action="falar-frase" class="ws-btn" style="background:#0F172A;color:#fff;border-radius:30px;padding:10px 20px;border:none;cursor:pointer">🔊 Ouvir Oráculo</button></div><div style="text-align:center;background:#F8FAFC;padding:20px;border-radius:12px;border:1px solid #E2E8F0"><p style="font-weight:bold">Sua vez:</p><button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;width:100%;border-radius:30px;padding:12px;border:none;font-weight:bold;cursor:pointer">🎤 Iniciar Sopro</button><div id="ig-speechResult" style="margin-top:15px"></div></div>`;
-    },
-    renderGameListenType(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:60px">🦉</div><h3>Escute e transcreva</h3><button data-action="falar-frase" class="ws-btn" style="background:#4F46E5;color:#fff;border-radius:30px;padding:10px 30px;border:none;cursor:pointer">🔊 Tocar Ecos</button><input id="ig-listenInput" class="ig-input" placeholder="Transcreve..." style="margin-top:20px;text-align:center;font-weight:bold"><button data-action="verificar-listen" class="ws-btn" style="width:100%;background:#10B981;color:#fff;margin-top:15px;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold">Desvendar</button></div>`;
-    },
-    renderGameQuiz(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente(this.state.quizzes,'quiz'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const q=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel">${Workspace.escapeHTML(q.question)}</div><div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:15px;border-radius:8px;cursor:pointer;text-align:left">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
-    },
-    renderGameWordPicker(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente((this.state.wordPickers&&this.state.wordPickers.length?this.state.wordPickers:this.defaults.wordPickers),'picker'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const s=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="color:#4F46E5">${Workspace.escapeHTML(s.text)}</div><div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap">${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff;border:2px solid #E2E8F0;padding:12px 25px;border-radius:30px;cursor:pointer;font-weight:bold">${Workspace.escapeHTML(o)}</button>`).join('')}</div>`;
-    },
-    renderGameSentenceShuffle(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente(this.state.phrases,'phrase'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const phrase=this.desafioAtualObj; const task=['Transforme numa Pergunta','Transforme numa Negativa'][Math.floor(Math.random()*2)];
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><span style="background:#0F172A;color:#fff;padding:8px 15px;border-radius:20px;font-size:12px">${task}</span></div><div class="ig-big-phrase" style="margin-top:15px">${Workspace.escapeHTML(phrase.phrase)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua frase aqui..."></textarea><button data-action="verificar-envio" data-game="sentenceShuffle" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Submeter 🔀</button>`;
-    },
-    renderGameAnswerQuest(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente((this.state.questions&&this.state.questions.length?this.state.questions:this.defaults.questions),'question'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const q=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="background:#FEF3C7;border-color:#d4af37;color:#92400E;font-family:Cinzel">❓ ${Workspace.escapeHTML(q.text)}</div><textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..."></textarea><button data-action="verificar-envio" data-game="answerQuest" data-bonus="50" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(180deg,#d4af37,#996515);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Enviar para o Mestre 🚀</button>`;
-    },
-    renderGameQuestionMaker(isPortal=false){
-        const poolAnswers=this.state.pool.filter(p=>p.type==='answerQuest').map(p=>({id:p.id, text:p.text}));
-        this.desafioAtualObj=poolAnswers.length?this.obterItemInteligente(poolAnswers,'qmaker'):null;
+
+    renderGameReadAloud(){
+        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const a=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<p style="color:#64748B;font-size:13px;text-align:center;font-weight:bold">Um aventureiro respondeu:</p><div class="ig-big-phrase" style="background:#EEF2FF;color:#4F46E5;font-style:italic">💬 "${Workspace.escapeHTML(a.text)}"</div><p style="margin-top:16px;font-weight:600;text-align:center">Que pergunta gerou esta resposta?</p><textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you...?"></textarea><button data-action="verificar-envio" data-game="questionMaker" data-bonus="50" class="ws-btn" style="width:100%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;margin-top:15px;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Verificar no Espelho 🔮</button>`;
+        const p = this.desafioAtualObj;
+        document.getElementById('modalBody').innerHTML=`
+            <div class="ig-big-phrase">${Workspace.escapeHTML(p.phrase)}</div>
+            <div style="text-align:center; margin:15px 0;">
+                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir</button>
+            </div>
+            <div style="background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0; text-align:center;">
+                <p style="font-weight:600; margin:0 0 10px 0;">Sua vez de ler:</p>
+                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:#10B981; color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar</button>
+                <div id="ig-speechResult" style="margin-top:15px; font-weight:600;"></div>
+            </div>`;
     },
-    renderGameContextRole(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente((this.state.roleplays&&this.state.roleplays.length?this.state.roleplays:this.defaults.roleplays),'roleplay'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const c=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div class="ig-big-phrase" style="font-family:Cinzel;text-align:left">${Workspace.escapeHTML(c.title)}<br><br><span style="font-size:14px;color:#64748B">${Workspace.escapeHTML(c.prompt)}</span></div><p style="font-size:12px;background:#FEF3C7;color:#92400E;padding:12px;border-radius:8px;font-weight:bold">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p><textarea id="ig-input" class="ig-textarea" placeholder="O que dizes?"></textarea><button data-action="verificar-envio" data-game="contextRole" data-bonus="60" class="ws-btn" style="width:100%;margin-top:15px;background:linear-gradient(135deg,#10B981,#059669);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-weight:bold">Assumir Papel 🎭</button>`;
+
+    renderGameListenType(){
+        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center;">
+                <div style="font-size:48px; margin-bottom:10px;">🦉</div>
+                <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 30px; border-radius:20px; border:none; cursor:pointer; margin-bottom:20px;">🔊 Tocar Áudio</button>
+                <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;">
+                <button data-action="verificar-listen" class="ws-btn" style="width:100%; background:#10B981; color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Desvendar Mistério</button>
+            </div>`;
     },
-    renderGameDebateAI(isPortal=false){
+
+    renderGameQuiz(){
+        this.desafioAtualObj = this.obterItemInteligente(this.state.quizzes, 'quiz'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const q = this.desafioAtualObj;
+        document.getElementById('modalBody').innerHTML=`
+            <div class="ig-big-phrase" style="font-size:22px;">${Workspace.escapeHTML(q.question)}</div>
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
+                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px;">${Workspace.escapeHTML(o)}</button>`).join('')}
+            </div>`;
+    },
+
+    renderGameWordPicker(){
+        const col = (this.state.wordPickers?.length) ? this.state.wordPickers : this.defaults.wordPickers;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'picker'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const s = this.desafioAtualObj;
+        document.getElementById('modalBody').innerHTML=`
+            <div class="ig-big-phrase" style="color:#4F46E5;">${Workspace.escapeHTML(s.text)}</div>
+            <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
+                ${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px;">${Workspace.escapeHTML(o)}</button>`).join('')}
+            </div>`;
+    },
+
+    renderGameSentenceShuffle(){
+        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const phrase = this.desafioAtualObj; 
+        const task = ['Transforme em Pergunta','Transforme em Negativa'][Math.floor(Math.random()*2)];
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700;">${task}</span></div>
+            <div class="ig-big-phrase">${Workspace.escapeHTML(phrase.phrase)}</div>
+            <textarea id="ig-input" class="ig-textarea" placeholder="Sua nova frase aqui..." style="min-height:80px;"></textarea>
+            <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter</button>`;
+    },
+
+    renderGameAnswerQuest(){
+        const col = (this.state.questions?.length) ? this.state.questions : this.defaults.questions;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'question'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        document.getElementById('modalBody').innerHTML=`
+            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${Workspace.escapeHTML(this.desafioAtualObj.text)}</div>
+            <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..." style="min-height:100px;"></textarea>
+            <button data-action="verificar-envio" data-game="answerQuest" class="ws-btn" style="width:100%; margin-top:16px; background:#D97706; color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Enviar Resposta</button>`;
+    },
+
+    renderGameQuestionMaker(){
+        const pool = this.state.pool.filter(p=>p.type==='answerQuest');
+        this.desafioAtualObj = pool.length ? this.obterItemInteligente(pool, 'qmaker') : null;
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        document.getElementById('modalBody').innerHTML=`
+            <p style="color:#64748B; font-weight:700; text-align:center;">Alguém respondeu isto:</p>
+            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${Workspace.escapeHTML(this.desafioAtualObj.text)}"</div>
+            <p style="text-align:center; font-weight:600; margin-top:20px;">Qual pergunta em inglês gerou essa resposta?</p>
+            <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
+            <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
+    },
+
+    renderGameContextRole(){
+        const col = (this.state.roleplays?.length) ? this.state.roleplays : this.defaults.roleplays;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'roleplay'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const c = this.desafioAtualObj;
+        document.getElementById('modalBody').innerHTML=`
+            <div class="ig-big-phrase" style="text-align:left;">
+                <div style="font-size:18px; font-weight:800; margin-bottom:8px;">${Workspace.escapeHTML(c.title)}</div>
+                <div style="font-size:16px; color:#475569; font-weight:500;">${Workspace.escapeHTML(c.prompt)}</div>
+            </div>
+            <p style="font-size:13px; background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:700;">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p>
+            <textarea id="ig-input" class="ig-textarea" placeholder="O que você responderia em inglês?..." style="min-height:80px;"></textarea>
+            <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; margin-top:16px; background:#10B981; color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Atuar e Enviar</button>`;
+    },
+
+    renderGameDebateAI(){
+        const col = (this.state.debates?.length) ? this.state.debates : this.defaults.debates;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'debate');
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        
         if(!this.state._debateChat) this.state._debateChat=[];
-        if(!this.desafioAtualObj || this.state._debateTopicId !== (this.desafioAtualObj?.id)){
-            this.desafioAtualObj=this.obterItemInteligente((this.state.debates&&this.state.debates.length?this.state.debates:this.defaults.debates),'debate');
-            if(!this.desafioAtualObj){
-                this.desafioAtualObj={id:'temp_'+Date.now(), topic:'Is technology making us less human?', starter:'Technology connects us, but are we losing real connection?'};
-            }
-            this.state._debateTopicId=this.desafioAtualObj.id;
-            if(this.state._debateChat.length===0){
-                this.state._debateChat=[{role:'ai', text: this.desafioAtualObj.starter, source:'professor', inteligencia:'Mago Sábio'}];
-            }
+        if(this.state._debateChat.length === 0){
+            this.state._debateChat = [{role:'ai', text: this.desafioAtualObj.starter}];
         }
-        const topic=this.desafioAtualObj;
-        const poolRelacionado = this.state.pool.filter(p=>p.type==='debateAI' || p.type==='answerQuest').slice(0,2);
-        const inteligencias = {
-            'Mago Sábio': {emoji:'🧙‍♂️', color:'#4F46E5', desc:'Socrático'},
-            'Mago Rebelde': {emoji:'😈', color:'#dc2626', desc:'Advogado do Diabo'},
-            'Mago Coletivo': {emoji:'🧠', color:'#d97706', desc:'Coletivo'},
-            'Mago Gramático': {emoji:'📝', color:'#059669', desc:'Correção'},
-            'Mago IA': {emoji:'🤖', color:'#0f172a', desc:'Contra'}
-        };
-        const chatHtml=this.state._debateChat.map(m=>{
-            const isUser=m.role==='user';
-            const intel = inteligencias[m.inteligencia||'Mago IA'] || inteligencias['Mago IA'];
-            if(isUser){
-                return `<div style="display:flex;gap:10px;margin-bottom:14px;justify-content:flex-end"><div style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 16px;border-radius:18px 18px 4px 18px;max-width:78%;box-shadow:0 4px 12px rgba(79,70,229,0.25)"><div style="font-size:10px;opacity:0.8;letter-spacing:1px">VOCÊ</div><div style="font-size:14px;margin-top:4px;line-height:1.5;word-break:break-word">${Workspace.escapeHTML(m.text)}</div></div><div style="width:36px;height:36px;border-radius:50%;background:#E0E7FF;border:2px solid #818cf8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🧑‍🎓</div></div>`;
+        
+        const chatHtml = this.state._debateChat.map(m=>{
+            if(m.role==='user'){
+                return `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;"><div style="background:#4F46E5; color:#fff; padding:12px 16px; border-radius:16px 16px 4px 16px; max-width:80%; font-size:14px;">${Workspace.escapeHTML(m.text)}</div></div>`;
             }else{
-                return `<div style="display:flex;gap:10px;margin-bottom:14px"><div style="width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid ${intel.color};display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0"><img src="/assets/mago_bau_ingles.png" style="width:28px;height:28px;object-fit:cover" onerror="this.style.display='none'"><span style="font-size:16px">${intel.emoji}</span></div><div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:4px 18px 18px 18px;padding:12px 14px;max-width:78%;box-shadow:0 2px 12px rgba(0,0,0,0.06)"><div style="display:flex;align-items:center;gap:6px"><b style="font-size:10px;color:${intel.color}">${(m.inteligencia||'Mago IA').toUpperCase()}</b><span style="font-size:9px;background:${intel.color}15;color:${intel.color};padding:2px 6px;border-radius:10px">${intel.desc}</span></div><div style="font-size:14px;color:#0f172a;margin-top:6px;line-height:1.5;word-break:break-word">${Workspace.escapeHTML(m.text)}</div>${m.grammar?`<div style="margin-top:8px;background:#FFFBEB;border:1px solid #fde68a;border-radius:8px;padding:8px;font-size:11px;color:#92400E">💡 ${Workspace.escapeHTML(m.grammar)}</div>`:''}</div></div>`;
+                return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px;">🤖 MAGO IA</div>${Workspace.escapeHTML(m.text)}</div></div>`;
             }
         }).join('');
-        const coletivoHtml = poolRelacionado.length ? `<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:1.5px solid #f59e0b;border-radius:12px;padding:12px 14px;margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:#92400E;margin-bottom:8px">🧠 COLETIVO • ${this.state.pool.length} debates</div>${poolRelacionado.map(p=>`<div style="font-size:12px;background:#fff;padding:8px 10px;border-radius:8px;margin-bottom:6px;border-left:3px solid #f59e0b">${Workspace.escapeHTML(p.text.substring(0,110))}...</div>`).join('')}</div>` : '';
-        document.getElementById('ig-modalBody').innerHTML=`
-            <div style="background:linear-gradient(135deg,#0f0f23 0%,#1e1b4b 100%);padding:14px 18px;border-radius:14px;margin-bottom:14px;border:2px solid #d4af37">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <img src="/assets/mago_bau_ingles.png" style="width:48px;height:48px;border-radius:50%;border:2px solid #d4af37" />
-                    <div style="flex:1"><div style="color:#fde68a;font-family:Cinzel,serif;font-weight:800;font-size:15px">⚔ ${Workspace.escapeHTML(topic.topic)} <span style="background:#d4af37;color:#000;font-size:9px;padding:2px 6px;border-radius:10px">CHAT AO VIVO</span></div><div style="color:#cbd5e1;font-size:11px;margin-top:2px">4 inteligências • ${this.state._debateChat.filter(m=>m.role==='user').length} trocas • Treino infinito</div></div>
-                </div>
+
+        document.getElementById('modalBody').innerHTML=`
+            <div style="background:#F8FAFC; padding:16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:16px;">
+                <div style="font-weight:800; color:#0F172A; font-size:15px;">⚔️ Tópico: ${Workspace.escapeHTML(this.desafioAtualObj.topic)}</div>
             </div>
-            ${coletivoHtml}
-            <div id="ig-debate-chat" style="display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;padding:14px;background:linear-gradient(180deg,#F8FAFC 0%,#F1F5F9 100%);border:2px solid #E2E8F0;border-radius:16px;margin-bottom:14px">${chatHtml}<div id="ig-debate-typing" style="display:none"><div style="display:flex;gap:10px;margin-bottom:14px"><div style="width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid #4F46E5;display:flex;align-items:center;justify-content:center"><img src="/assets/mago_bau_ingles.png" style="width:28px;height:28px" /></div><div style="background:#fff;border:1.5px solid #E2E8F0;border-radius:4px 18px 18px 18px;padding:12px 16px"><div style="display:flex;gap:4px"><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite"></span><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite 0.2s"></span><span style="width:8px;height:8px;background:#4F46E5;border-radius:50%;animation:bounce 1.4s infinite 0.4s"></span></div><div style="font-size:10px;color:#64748B;margin-top:6px">Mago consultando 4 inteligências + Pollinations...</div></div></div></div>
-            <div style="background:#fff;border:2px solid #E2E8F0;border-radius:14px;padding:10px;display:flex;gap:10px;align-items:flex-end"><textarea id="ig-input" class="ig-textarea" placeholder="Argumente em inglês..." style="min-height:70px;flex:1;border:none;box-shadow:none;resize:none" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); document.querySelector('[data-action=verificar-debate]')?.click();}"></textarea><button data-action="verificar-debate" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;width:48px;height:48px;border-radius:12px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0">➤</button></div>
-            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span style="font-size:10px;background:#EEF2FF;color:#4338ca;padding:4px 8px;border-radius:20px">🧙‍♂️ Sábio</span><span style="font-size:10px;background:#FEE2E2;color:#dc2626;padding:4px 8px;border-radius:20px">😈 Rebelde</span><span style="font-size:10px;background:#FFFBEB;color:#d97706;padding:4px 8px;border-radius:20px">🧠 Coletivo</span><span style="font-size:10px;background:#D1FAE5;color:#059669;padding:4px 8px;border-radius:20px">📝 Gramático</span></div><style>@keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}</style>
-        `;
-        const chatDiv=document.getElementById('ig-debate-chat');
-        if(chatDiv) chatDiv.scrollTop=chatDiv.scrollHeight;
+            <div id="ig-debate-chat" style="height:250px; overflow-y:auto; padding:10px; margin-bottom:16px;">${chatHtml}</div>
+            <div style="display:flex; gap:10px;">
+                <textarea id="ig-input" class="ig-textarea" placeholder="Escreva seu argumento..." style="flex:1; min-height:50px; border-radius:12px;"></textarea>
+                <button data-action="verificar-debate" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:12px; padding:0 20px; font-size:20px; cursor:pointer;">➤</button>
+            </div>`;
+        const div = document.getElementById('ig-debate-chat');
+        if(div) div.scrollTop = div.scrollHeight;
     },
 
-    async checarGramaticaIngles(texto){
-        try{
-            const params = new URLSearchParams();
-            params.append('language','en-US');
-            params.append('text', texto);
-            const res = await fetch('https://api.languagetool.org/v2/check', {method:'POST', body:params});
-            if(res.ok){
-                const data = await res.json();
-                if(data.matches && data.matches.length>0){
-                    const first = data.matches[0];
-                    return first.message + (first.replacements && first.replacements[0] ? ` → "${first.replacements[0].value}"` : '');
-                }
-            }
-        }catch(e){}
-        return null;
+    renderGameMinimalPairs(){
+        const col = (this.state.minimalPairs?.length) ? this.state.minimalPairs : this.defaults.minimalPairs;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'minimal'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        
+        const pair = this.desafioAtualObj; 
+        const target = Math.random()>0.5 ? pair.a : pair.b; 
+        this.state._minimalTarget = target;
+        
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center; padding:20px 0;">
+                <div style="font-size:48px; margin-bottom:16px;">👄</div>
+                <button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:#4F46E5; color:#fff; padding:16px 40px; border-radius:30px; border:none; cursor:pointer; font-size:16px;">🎧 Ouvir Palavra</button>
+                <div style="display:flex; gap:16px; justify-content:center; margin-top:30px;">
+                    <button data-action="verificar-minimal" data-choice="${pair.a}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${pair.a}</button>
+                    <button data-action="verificar-minimal" data-choice="${pair.b}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${pair.b}</button>
+                </div>
+            </div>`;
     },
-    async gerarContraArgumentoIA(topic, userText, historico){
-        const poolTexts = this.state.pool.filter(p=>p.text).slice(0,5).map(p=>p.text.substring(0,100)).join(' | ');
-        const inteligenciasPool = ['Mago Sábio','Mago Rebelde','Mago Coletivo','Mago IA'];
-        const intelEscolhida = inteligenciasPool[historico % inteligenciasPool.length];
-        let promptBase = '';
-        if(intelEscolhida==='Mago Sábio'){
-            promptBase = `You are Mago Sábio, Socratic tutor. Ask deep Socratic question. Topic: "${topic.topic}". Student: "${userText}". B2, concise.`;
-        }else if(intelEscolhida==='Mago Rebelde'){
-            promptBase = `You are Mago Rebelde, Devil's Advocate. Strongly counter-argue. Topic: "${topic.topic}". Student: "${userText}". Collective: "${poolTexts}". Be provocative, 2 sentences, B2.`;
-        }else if(intelEscolhida==='Mago Coletivo'){
-            promptBase = `You are Mago Coletivo, collective intelligence. Topic: "${topic.topic}". Student: "${userText}". Others said: "${poolTexts}". Synthesize and challenge. B2, 2 sentences.`;
-        }else{
-            promptBase = `You are Mago IA, debate opponent. Topic: "${topic.topic}". Professor: "${topic.starter||''}". Student: "${userText}". Collective: "${poolTexts}". Counter-argument, B2, 2-3 sentences, with question.`;
-        }
-        try{
-            const controller = new AbortController();
-            const timeout = setTimeout(()=>controller.abort(), 7000);
-            const res = await fetch('https://text.pollinations.ai/' + encodeURIComponent(promptBase), { signal: controller.signal });
-            clearTimeout(timeout);
-            if(res.ok){
-                let txt = await res.text();
-                txt = txt.trim().replace(/^["']|["']$/g,'').substring(0,400);
-                if(txt.length>20) return {text: txt, inteligencia: intelEscolhida};
-            }
-        }catch(e){}
-        const fallbacks={
-            'Mago Sábio': `If "${userText.substring(0,50)}..." is true, what would happen if everyone thought like you? What hidden assumptions are there?`,
-            'Mago Rebelde': `You defend "${userText.substring(0,40)}...", but ${this.state.pool.length} students argued differently: "${poolTexts.substring(0,80)}...". How do you respond?`,
-            'Mago Coletivo': `Collective intelligence: ${this.state.pool.length} debates. Some said "${poolTexts.substring(0,100)}...". Where do you stand?`,
-            'Mago IA': `Valid, but long-term impact? Can you give concrete example for "${userText.substring(0,30)}..."?`
-        };
-        return {text: fallbacks[intelEscolhida] || fallbacks['Mago IA'], inteligencia: intelEscolhida};
-    },
-    renderGameMinimalPairs(isPortal=false){
 
-        this.desafioAtualObj=this.obterItemInteligente((this.state.minimalPairs&&this.state.minimalPairs.length?this.state.minimalPairs:this.defaults.minimalPairs),'minimal'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const pair=this.desafioAtualObj; const target=Math.random()>0.5?pair.a:pair.b; this.state._minimalTarget=target;
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><h3 style="font-family:Cinzel">👄 Sussurros Gêmeos</h3><div style="background:#0F172A;padding:20px;border-radius:16px;margin-top:20px"><button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;padding:12px 30px;border-radius:30px;border:2px solid #fff;cursor:pointer">🎧 Ouvir Sussurro</button><div style="display:flex;gap:10px;justify-content:center;margin-top:20px"><button data-action="verificar-minimal" data-choice="${pair.a}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.a}</button><button data-action="verificar-minimal" data-choice="${pair.b}" class="ws-btn" style="background:#fff;padding:12px 30px;border-radius:8px;cursor:pointer;font-weight:bold">${pair.b}</button></div></div></div>`;
+    renderGamePicturePop(){
+        const col = (this.state.pictures?.length) ? this.state.pictures : this.defaults.pictures;
+        this.desafioAtualObj = this.obterItemInteligente(col, 'picture'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const pic = this.desafioAtualObj;
+        
+        document.getElementById('modalBody').innerHTML=`
+            <div style="text-align:center;">
+                <div style="width:160px; height:160px; border-radius:30px; background:#F8FAFC; border:4px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:80px; box-shadow:0 10px 20px rgba(0,0,0,0.05);">${pic.emoji}</div>
+                <div style="background:#fff; border:2px solid #E2E8F0; padding:24px; border-radius:20px;">
+                    <button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:#10B981; color:#fff; width:100%; border-radius:16px; padding:16px; border:none; font-size:16px; cursor:pointer;">🎤 Falar o Nome em Inglês</button>
+                    <div id="ig-speechResult" style="margin-top:16px; font-weight:700;"></div>
+                    <div style="margin:20px 0; border-top:2px dashed #E2E8F0;"></div>
+                    <input id="ig-input" class="ig-input" placeholder="Ou digite a palavra..." style="text-align:center;">
+                    <button data-action="verificar-picture-text" class="ws-btn" style="width:100%; background:#F1F5F9; color:#0F172A; margin-top:12px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Verificar</button>
+                </div>
+            </div>`;
     },
-    renderGamePicturePop(isPortal=false){
-        this.desafioAtualObj=this.obterItemInteligente(this.state.pictures,'picture'); if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
-        const pic=this.desafioAtualObj;
-        document.getElementById('ig-modalBody').innerHTML=`<div style="text-align:center"><div style="width:150px;height:150px;border-radius:24px;background:#F8FAFC;border:4px solid #d4af37;display:flex;align-items:center;justify-content:center;margin:20px auto;font-size:80px">${pic.emoji}</div><div style="background:#0F172A;padding:20px;border-radius:16px;border:2px solid #333"><p style="color:#fff;font-weight:bold">Fale o nome:</p><button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:linear-gradient(135deg,#10B981,#059669);color:#fff;width:100%;border-radius:30px;padding:12px;border:none;font-weight:bold;cursor:pointer">🎤 Falar Nome</button><div id="ig-speechResult" style="margin-top:15px"></div><input id="ig-input" class="ig-input" placeholder="Ou digita..." style="margin-top:15px;text-align:center"><button data-action="verificar-picture-text" class="ws-btn" style="width:100%;background:#fff;color:#0F172A;margin-top:10px;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold">Verificar Visão</button></div></div>`;
-    },
+
     iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo){
-        const btn=document.getElementById('ig-modalBody').querySelector('[data-action="iniciar-voz"]');
-        const resEl=document.getElementById('ig-speechResult');
-        if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ Workspace.mostrarAviso('Navegador sem voz','warning'); return; }
-        const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-        this.recognition=new SR(); this.recognition.lang='en-US'; this.recognition.interimResults=false; this.recognition.maxAlternatives=1;
+        const btn = document.getElementById('modalBody').querySelector('[data-action="iniciar-voz"]');
+        const resEl = document.getElementById('ig-speechResult');
+        if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ this.mostrarAvisoLocal('Navegador não suporta voz','error'); return; }
+        
+        const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+        this.recognition = new SR(); this.recognition.lang='en-US'; this.recognition.interimResults=false; this.recognition.maxAlternatives=1;
+        
         if(btn){ btn.innerText='🎧 Escutando...'; btn.style.background='#F59E0B'; }
         this.recognition.start();
+        
         this.recognition.onresult=(e)=>{
-            const falado=e.results[0][0].transcript;
-            if(btn){ btn.style.background='#0F172A'; btn.innerText=`Lido: "${falado}"`; }
-            const sim=this.similaridade(falado, esperado);
-            if(sim>=0.75){ if(resEl) resEl.innerHTML=`<div style="background:#D1FAE5;color:#065F46;padding:10px;border-radius:8px;font-weight:bold">✅ Perfeito!</div>`; if(itemObj) this.updateSRS(itemObj.id, tipoConteudo, true); this.superarErro(itemObj?.id); this.sucessoGenerico(75); }
-            else { if(resEl) resEl.innerHTML=`<div style="background:#FEE2E2;color:#B91C1C;padding:10px;border-radius:8px">❌ Entendi: "${falado}"</div>`; if(itemObj) this.registrarErro(itemObj, tipoConteudo); this.falhaGenerica(); }
+            const falado = e.results[0][0].transcript;
+            if(btn){ btn.style.background='#10B981'; btn.innerText=`Lido: "${falado}"`; }
+            
+            const sim = this.similaridade(falado, esperado);
+            if(sim>=0.75){ 
+                if(resEl) resEl.innerHTML=`<span style="color:#059669;">✅ Excelente!</span>`; 
+                if(itemObj) this.updateSRS(itemObj.id, tipoConteudo, true); 
+                this.superarErro(itemObj?.id); 
+                this.sucessoGenerico(75); 
+            } else { 
+                if(resEl) resEl.innerHTML=`<span style="color:#DC2626;">❌ Ouvi: "${falado}"</span>`; 
+                if(itemObj) this.registrarErro(itemObj, tipoConteudo); 
+                this.falhaGenerica(); 
+            }
         };
-        this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; } Workspace.mostrarAviso('Não ouvi','error'); };
+        this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; } };
+    },
+
+    renderProfessorTab(tabId){
+        document.querySelectorAll('.side-item').forEach(b=>b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.side-item[data-tab="${tabId}"]`);
+        if(activeBtn) activeBtn.classList.add('active');
+        
+        document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+        const panel = document.getElementById(`tab-${tabId}`);
+        if(panel) panel.classList.add('active');
+
+        const esc = Workspace.escapeHTML;
+
+        if(tabId === 'biblioteca'){
+            document.getElementById('tab-biblioteca').innerHTML=`
+                <h3 style="margin-top:0;">📚 Biblioteca de Conteúdo (Algoritmo SRS)</h3>
+                <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Tudo que você adicionar aqui alimenta os jogos dos alunos. O algoritmo controla a repetição e fixação automaticamente.</p>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:16px; border-radius:12px;">
+                        <h4 style="margin-top:0;">Vocabulário (${this.state.words.length})</h4>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
+                            <input id="nwWord" class="ig-input" placeholder="Palavra">
+                            <input id="nwTrans" class="ig-input" placeholder="Tradução">
+                            <button data-action="add-word" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:0 16px;">+</button>
+                        </div>
+                        <div style="max-height:200px; overflow-y:auto; font-size:13px;">
+                            ${this.state.words.map(w=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(w.word)}</b> - ${esc(w.translation)}</span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:16px; border-radius:12px;">
+                        <h4 style="margin-top:0;">Frases e Expressões (${this.state.phrases.length})</h4>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
+                            <input id="nwPhrase" class="ig-input" placeholder="Frase em inglês">
+                            <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:0 16px;">+</button>
+                        </div>
+                        <div style="max-height:200px; overflow-y:auto; font-size:13px;">
+                            ${this.state.phrases.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        else if (tabId === 'envios'){
+            const pendentes = this.state.submissions.filter(s=>s.status==='pending');
+            document.getElementById('pendingCount').textContent = pendentes.length;
+            document.getElementById('tab-envios').innerHTML=`
+                <h3 style="margin-top:0;">📥 Envios e Construção do Algoritmo</h3>
+                <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Respostas dos alunos alimentam a "Piscina Global", criando perguntas e debates dinâmicos.</p>
+                ${pendentes.length===0 ? '<p style="color:#94a3b8; padding:20px; text-align:center;">Nenhum envio pendente. Vá descansar, professor!</p>' : 
+                pendentes.map(s=>`
+                    <div style="background:#fff; border:1px solid #E2E8F0; border-left:4px solid #F59E0B; padding:16px; border-radius:8px; margin-bottom:12px;">
+                        <div style="font-size:12px; color:#64748B; margin-bottom:8px;"><b>${esc(s.student)}</b> • Jogo: ${esc(s.game)}</div>
+                        <div style="font-size:15px; color:#0F172A; margin-bottom:12px;">${esc(s.text)}</div>
+                        <div style="display:flex; gap:10px;">
+                            <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn" style="background:#10B981; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">✅ Aprovar para a Piscina</button>
+                            <button data-action="rejeitar-envio" data-id="${s.id}" class="ws-btn" style="background:#FEE2E2; color:#EF4444; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">🗑 Rejeitar</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        else {
+            const panel = document.getElementById(`tab-${tabId}`);
+            if(panel) panel.innerHTML = `<div style="padding:40px;text-align:center;color:#64748B;">Seção ${tabId} em desenvolvimento...</div>`;
+        }
     }
 };
+
+setTimeout(()=> Workspace.Ingles.init(), 100);
