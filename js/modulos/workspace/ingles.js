@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V6 FINAL (Área do Professor Completa, Loop Infinito, Responsividade Total)
+// js/modulos/workspace/ingles.js - V7 FINAL (Isolamento CSS, Sync de Base de Dados, Loop Infinito)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -197,6 +197,10 @@ Workspace.Ingles = {
         try{
             const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
             const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
+            
+            // Log para garantires que os dados estão a chegar do servidor
+            // console.log("Dados recebidos da Base de Dados:", res?.dados);
+
             if(res && res.success && res.dados){
                 const d = res.dados;
                 this.state.words = Array.isArray(d.words) && d.words.length ? d.words : [...this.defaults.words];
@@ -305,7 +309,6 @@ Workspace.Ingles = {
         
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // 🚀 LOOP INFINITO
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
@@ -391,12 +394,12 @@ Workspace.Ingles = {
             /* Toast */
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-            /* Professor Sidebar & Layout Responsivo OTIMIZADO */
+            /* 🚀 Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
             #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
-            .sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-            .side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
-            .side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
-            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } /* min-width 0 é essencial para não quebrar layout */
+            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
+            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
             
@@ -406,10 +409,10 @@ Workspace.Ingles = {
 
             @media (max-width: 768px) {
                 #professorView { flex-direction: column; gap: 12px; }
-                /* 🚀 Menu mobile estilo abas com scroll horizontal escondendo a barra */
-                .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-                .sidebar::-webkit-scrollbar { display: none; } 
-                .side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                /* Menu mobile estilo abas com scroll horizontal */
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+                .ig-sidebar::-webkit-scrollbar { display: none; } 
+                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
                 
                 .bau-header { flex-direction: column; }
                 .bau-actions { width: 100%; justify-content: space-between; }
@@ -454,16 +457,16 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <aside class="sidebar">
-                            <button class="side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
-                            <button class="side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
-                            <button class="side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
-                            <button class="side-item" data-action="render-tab" data-tab="mago">🧙 Mago IA</button>
-                            <button class="side-item" data-action="render-tab" data-tab="quests">🎯 Missões</button>
-                            <button class="side-item" data-action="render-tab" data-tab="loja">🛍 Loja / Loot</button>
-                            <button class="side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
-                            <button class="side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
-                            <button class="side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
+                        <aside class="ig-sidebar">
+                            <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="mago">🧙 Mago IA</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="quests">🎯 Missões</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="loja">🛍 Loja / Loot</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
                         </aside>
                         <div class="content">
                             <div id="tab-biblioteca" class="tab-panel active"></div>
@@ -539,93 +542,10 @@ Workspace.Ingles = {
         this.saveDados();
     },
 
-    // ======== MÉTODOS RESTAURADOS PARA O PROFESSOR ========
-    atualizarConfigMago: async function(){
-        const voz=document.getElementById('mago-voz-toggle')?.checked;
-        const modo=document.getElementById('mago-modo-select')?.value;
-        if(voz===undefined||!modo) return;
-        this.state.magoConfig={vozAtiva:voz, modoExibicao:modo};
-        await this.saveDados(); this.mostrarAvisoLocal('Configuração do Mago salva!','success');
-    },
-    inserirVariavelMago(){
-        const input=document.getElementById('nwMago'); if(!input) return;
-        const s=input.selectionStart, e=input.selectionEnd, v='(citarAluno)';
-        input.value=input.value.substring(0,s)+v+input.value.substring(e); input.focus(); input.selectionStart=input.selectionEnd=s+v.length;
-    },
-    handleSalvarMago: async function(){
-        const input=document.getElementById('nwMago'); const text=input.value.trim();
-        if(!text) return this.mostrarAvisoLocal('Escreva a fala!','error');
-        if(this.state.editingMagoId){
-            const ph=this.state.magoPhrases.find(m=>m.id===this.state.editingMagoId);
-            if(ph) ph.text=text; this.state.editingMagoId=null;
-        }else{
-            this.state.magoPhrases.unshift({id:'mago_'+Date.now(), text});
-        }
-        input.value=''; const btn=document.getElementById('btn-salvar-mago'); if(btn) btn.innerText='Salvar';
-        await this.saveDados(); this.renderProfessorTab('mago'); this.mostrarAvisoLocal('Fala salva!','success');
-    },
-    editarMagoPhrase(id){
-        const ph=this.state.magoPhrases.find(m=>m.id===id); if(!ph) return;
-        const input=document.getElementById('nwMago'); input.value=ph.text; input.focus();
-        this.state.editingMagoId=id; const btn=document.getElementById('btn-salvar-mago'); if(btn){ btn.innerText='Atualizar Fala'; }
-    },
-    addWord: async function(){ const w=document.getElementById('nwWord').value.trim(), t=document.getElementById('nwTrans').value.trim(); if(!w) return this.mostrarAvisoLocal('Digite a palavra','error'); this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); await this.saveDados(); this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Adicionado!','success'); },
-    addPhrase: async function(){ const p=document.getElementById('nwPhrase').value.trim(); if(!p) return; this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); await this.saveDados(); this.renderProfessorTab('biblioteca'); },
-    addQuiz: async function(){
-        const q=document.getElementById('qQuestion')?.value.trim(); const o1=document.getElementById('qOpt1')?.value.trim(); const o2=document.getElementById('qOpt2')?.value.trim();
-        if(!q||!o1||!o2) return this.mostrarAvisoLocal('Preencha pergunta e opções','error');
-        this.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1,o2], correct:1, level:'B1'}); await this.saveDados(); this.renderProfessorTab('biblioteca');
-    },
-    addPic: async function(){ const w=document.getElementById('picWord')?.value.trim(); const tr=document.getElementById('picTrans')?.value.trim(); const em=document.getElementById('picEmoji')?.value.trim()||'🖼'; if(!w) return; this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:tr, emoji:em}); await this.saveDados(); this.renderProfessorTab('imagens'); },
-    addQuest: async function(){
-        const texto=document.getElementById('qTexto')?.value.trim(); const alvo=parseInt(document.getElementById('qAlvo')?.value||'3'); const xp=parseInt(document.getElementById('qXP')?.value||'100'); const icone=document.getElementById('qIcone')?.value.trim()||'🎯'; const tipo=document.getElementById('qTipo')?.value||'diaria';
-        if(!texto) return this.mostrarAvisoLocal('Digite o texto','error');
-        this.state.quests.push({id:'q_'+Date.now(), texto, alvo, recompensaXP:xp, icone, tipo}); await this.saveDados(); this.renderProfessorTab('quests'); this.mostrarAvisoLocal('Missão criada!','success');
-    },
-    remQuest: async function(id){ this.state.quests=this.state.quests.filter(q=>q.id!==id); await this.saveDados(); this.renderProfessorTab('quests'); },
-    addLoot: async function(rar){
-        const inputId = rar==='comum'? 'lootNomeComum' : rar==='epico'? 'lootNomeEpico' : 'lootNomeLendario';
-        const nome=document.getElementById(inputId)?.value.trim(); if(!nome) return;
-        if(!this.state.lootTables[rar]) this.state.lootTables[rar]=[];
-        this.state.lootTables[rar].push({id:'loot_'+Date.now(), nome, tipo:'cosmetico', chance: 50});
-        await this.saveDados(); this.renderProfessorTab('loja');
-    },
-    remLoot: async function(rar,id){ if(this.state.lootTables[rar]){ this.state.lootTables[rar]=this.state.lootTables[rar].filter(i=>i.id!==id); await this.saveDados(); this.renderProfessorTab('loja'); } },
-    salvarSeason: async function(){
-        const nome=document.getElementById('seasonNome')?.value.trim()||'Era dos Feitiços'; const mult=parseFloat(document.getElementById('seasonMult')?.value||'1');
-        this.state.season = {...this.state.season, nome, xpMultiplier:mult, id: this.state.season?.id||'S1'};
-        await this.saveDados(); this.mostrarAvisoLocal('Temporada salva!','success'); this.renderProfessorTab('season');
-    },
-    carregarRanking: async function(){
-        const listEl=document.getElementById('ig-ranking-list'); if(!listEl) return;
-        listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748B">A carregar Ranking...</div>';
-        try{
-            const escolaId=Workspace.usuario?.escolaId||'DEFAULT';
-            const res=await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
-            if(res && res.success && res.ranking?.length){
-                listEl.innerHTML = res.ranking.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border:1px solid #E2E8F0;border-radius:10px;margin-bottom:8px;"><div><b style="font-size:16px;margin-right:10px;">${i+1}º</b> <b>${Workspace.escapeHTML(r.nome)}</b></div><div style="background:#EEF2FF;color:#4F46E5;padding:4px 10px;border-radius:20px;font-weight:700;">${r.xp} XP</div></div>`).join('');
-            }else{ listEl.innerHTML='<div style="text-align:center;padding:20px;">Nenhum aluno com XP ainda.</div>'; }
-        }catch(e){ listEl.innerHTML='<div style="text-align:center;padding:20px;color:red;">Erro ao carregar ranking.</div>'; }
-    },
-    aprovarEnvio: async function(id){ 
-        const s=this.state.submissions.find(x=>x.id===id); if(!s) return; 
-        s.status='approved'; 
-        this.state.pool.unshift({id:'pool_'+Date.now(), type:s.game, text:s.text, word:s.text, origin:'student', student:s.student, timestamp:Date.now()}); 
-        await this.saveDados(); this.renderProfessorTab('envios'); this.mostrarAvisoLocal('Aprovado para a Piscina Global!','success'); 
-    },
-    remItem: async function(key,id){ 
-        this.state[key]=this.state[key].filter(i=>i.id!==id); 
-        await this.saveDados(); this.renderProfessorTab(document.querySelector('.side-item.active')?.dataset.tab || 'biblioteca'); 
-    },
-
     bindEvents(){
         const root = document.getElementById('ws-ingles-container');
         if(!root || root._bound) return; root._bound=true;
         
-        root.addEventListener('change', e=>{
-            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') this.atualizarConfigMago();
-        });
-
         root.addEventListener('click', async e=>{
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
@@ -636,7 +556,11 @@ Workspace.Ingles = {
                 document.getElementById('btnAluno').classList.remove('active');
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
-                this.renderProfessorTab('biblioteca');
+                
+                // 🚀 FIX: Força a base de dados a sincronizar ANTES de desenhar a aba Professor
+                this.loadDados().then(() => {
+                    this.renderProfessorTab('biblioteca');
+                });
             }
             if(a === 'toggle-aluno') {
                 document.getElementById('btnAluno').classList.add('active');
@@ -649,6 +573,7 @@ Workspace.Ingles = {
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
 
+            // Lógica de Respostas Internas
             const cur = this.desafioAtualObj;
             const input = document.getElementById('ig-input')?.value?.trim()||'';
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
@@ -732,10 +657,40 @@ Workspace.Ingles = {
             if(a === 'salvar-season') this.salvarSeason();
             if(a === 'atualizar-ranking') this.carregarRanking();
             if(a === 'aprovar-envio') this.aprovarEnvio(b.dataset.id);
-            if(a === 'rejeitar-envio') { this.remItem('submissions', b.dataset.id); this.renderProfessorTab('envios'); }
-            if(a === 'add-word') { const w=document.getElementById('nwWord').value; const t=document.getElementById('nwTrans').value; if(w){ this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
-            if(a === 'add-phrase') { const p=document.getElementById('nwPhrase').value; if(p){ this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
-            if(a === 'remover-item') { this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); this.saveDados(); this.renderProfessorTab(document.querySelector('.side-item.active')?.dataset.tab || 'biblioteca'); }
+            
+            // 🚀 FIX: Ações do Professor aguardam a gravação na Base de Dados antes de redesenhar a tela
+            if(a === 'rejeitar-envio') { 
+                this.state.submissions = this.state.submissions.filter(i=>i.id!==b.dataset.id); 
+                await this.saveDados(); 
+                this.renderProfessorTab('envios'); 
+            }
+            if(a === 'add-word') { 
+                const w=document.getElementById('nwWord').value; 
+                const t=document.getElementById('nwTrans').value; 
+                if(w){ 
+                    this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); 
+                    await this.saveDados(); 
+                    this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } 
+            }
+            if(a === 'add-phrase') { 
+                const p=document.getElementById('nwPhrase').value; 
+                if(p){ 
+                    this.state.phrases.unshift({id:'p'+Date.now(), phrase:p, level:'A2'}); 
+                    await this.saveDados(); 
+                    this.renderProfessorTab('biblioteca'); 
+                } 
+            }
+            if(a === 'remover-item') { 
+                this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); 
+                await this.saveDados(); 
+                this.renderProfessorTab(document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca'); 
+            }
+        });
+        
+        root.addEventListener('change', e=>{
+            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') this.atualizarConfigMago();
         });
     },
 
@@ -855,6 +810,7 @@ Workspace.Ingles = {
         this.renderDesafioAtual();
     },
 
+    // ========= TELAS DOS JOGOS =========
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
         const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
@@ -1088,10 +1044,10 @@ Workspace.Ingles = {
         this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; } };
     },
 
-    // ========= RECONSTRUÇÃO DA ÁREA DO PROFESSOR (COMPLETA E RESPONSIVA) =========
+    // ========= RECONSTRUÇÃO DA ÁREA DO PROFESSOR =========
     renderProfessorTab(tabId){
-        document.querySelectorAll('.side-item').forEach(b=>b.classList.remove('active'));
-        const activeBtn = document.querySelector(`.side-item[data-tab="${tabId}"]`);
+        document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
         if(activeBtn) activeBtn.classList.add('active');
         
         document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -1119,7 +1075,7 @@ Workspace.Ingles = {
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Frases e Expressões (${this.state.phrases.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
-                            <input id="nwPhrase" class="ig-input" placeholder="Frase em inglês">
+                            <input id="nwPhrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
                             <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
@@ -1131,8 +1087,8 @@ Workspace.Ingles = {
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
                             <input id="qQuestion" class="ig-input" placeholder="Pergunta">
                             <div style="display:flex; gap:8px;">
-                                <input id="qOpt1" class="ig-input" placeholder="Opção Errada">
-                                <input id="qOpt2" class="ig-input" placeholder="Opção Correta">
+                                <input id="qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
+                                <input id="qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
                                 <button data-action="add-quiz" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                             </div>
                         </div>
@@ -1263,14 +1219,6 @@ Workspace.Ingles = {
                 </div>
             `;
         }
-        else if (tabId === 'ranking'){
-            document.getElementById('tab-ranking').innerHTML=`
-                <h3 style="margin-top:0;">🏆 Ranking da Escola</h3>
-                <button data-action="atualizar-ranking" class="ws-btn" style="margin-bottom:16px; background:#0F172A; color:#FDE68A; border:none; padding:10px 16px; border-radius:8px;">🔄 Atualizar Ranking</button>
-                <div id="ig-ranking-list"></div>
-            `;
-            this.carregarRanking();
-        }
         else if (tabId === 'algoritmo'){
             const totalProf = this.state.words.length+this.state.phrases.length+this.state.quizzes.length+this.state.pictures.length;
             document.getElementById('tab-algoritmo').innerHTML=`
@@ -1280,6 +1228,13 @@ Workspace.Ingles = {
                     <div class="prof-card" style="text-align:center; border-color:#EF4444;"><div style="font-size:32px; font-weight:900; color:#EF4444;">${this.state.errosRetidos.length}</div><b>Erros Retidos</b></div>
                     <div class="prof-card" style="text-align:center; border-color:#F59E0B;"><div style="font-size:32px; font-weight:900; color:#F59E0B;">${this.state.pool.length}</div><b>Piscina Global (Envios)</b></div>
                 </div>
+            `;
+        }
+        else if (tabId === 'ranking'){
+            document.getElementById('tab-ranking').innerHTML=`
+                <h3 style="margin-top:0;">🏆 Ranking da Escola</h3>
+                <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Atenção: Como agora usamos BZ e o XP foi descontinuado, esta aba pode precisar de ser revista se pretender um ranking de Moedas.</p>
+                <div id="ig-ranking-list"><div style="text-align:center;padding:40px;color:#94a3b8;">Em manutenção para transição XP -> BZ.</div></div>
             `;
         }
     }
