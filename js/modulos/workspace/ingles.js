@@ -417,59 +417,41 @@ Workspace.Ingles = {
             .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
             
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
-            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 10px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px 14px; box-sizing: border-box; outline: none; transition: 0.2s; }
-            .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px; box-sizing: border-box; outline: none; transition: 0.2s; }
             .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; cursor: pointer;}
-            .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
-            
             .hidden { display: none !important; }
             
-            /* 🚀 Toast Otimizado e Blindado */
+            /* 🚀 Toast Otimizado e Blindado contra cortes */
             .toast { 
-                position: fixed; top: 85px; left: 50%; transform: translateX(-50%); 
-                background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; 
-                font-weight: 800; z-index: 2147483647; box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
-                transition: opacity 0.3s, transform 0.3s; width: max-content; max-width: 90%; 
-                text-align: center; word-wrap: break-word; 
+                position: fixed; 
+                top: 85px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                background: #F59E0B; 
+                color: #fff; 
+                padding: 12px 24px; 
+                border-radius: 30px; 
+                font-weight: 800; 
+                z-index: 2147483647; 
+                box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
+                transition: opacity 0.3s, transform 0.3s; 
+                
+                /* Garantia de ajuste automático da largura sem cortar */
+                width: auto; 
+                max-width: 85vw; /* Impede que o aviso seja maior que a tela */
+                box-sizing: border-box; 
+                text-align: center; 
+                word-wrap: break-word; 
             }
-            @media (max-width: 768px) { .toast { top: auto; bottom: 40px; } }
             
-            /* 🚀 CSS PREMIUM DO PAINEL DO PROFESSOR (Botoes e Layout) */
-            #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
-            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
-            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
-            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
-            .tab-panel { display: none; }
-            .tab-panel.active { display: block; }
-            
-            /* 🚀 Grelhas e Cartões */
-            .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-            .prof-card { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
-            .ig-prof-header { display: flex; align-items: center; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; font-weight: 800; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
-            .prof-list-scroll { max-height: 220px; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-            .prof-list-scroll::-webkit-scrollbar { width: 6px; }
-            .prof-list-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-            .prof-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; color: #1e293b; line-height: 1.4; transition: 0.2s; }
-            .prof-list-item:hover { border-color: #cbd5e1; background: #fff; }
-
-            /* 🚀 Botões Modernos do Professor */
-            .ws-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
-            .ws-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,0.4); }
-            .ws-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(239,68,68,0.2); transition: 0.2s; flex-shrink: 0; }
-            .ws-btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(239,68,68,0.3); }
-            .ws-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: 0.2s; }
-            .ws-btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.3); }
-
+            /* Ajustes Mobile Responsivos */
             @media (max-width: 768px) {
-                #professorView { flex-direction: column; gap: 12px; }
-                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-                .ig-sidebar::-webkit-scrollbar { display: none; } 
-                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
-                .bau-header { flex-direction: column; }
-                .bau-actions { width: 100%; justify-content: space-between; }
-                .content { padding: 16px; }
-                .grid-cards { grid-template-columns: 1fr; }
+                .toast { 
+                    top: 70px; /* Mantém no topo, com espaço seguro para a navegação do telemóvel */
+                    bottom: auto; /* Remove a regra anterior que empurrava para baixo */
+                    font-size: 13px; /* Reduz ligeiramente a fonte para caber melhor no ecrã */
+                    padding: 10px 20px;
+                }
             }
         `;
         document.head.appendChild(style);
