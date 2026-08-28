@@ -134,6 +134,57 @@ Object.assign(Workspace, {
         });
     },
 
+    // 🚀 NOVO: Reprodutor Multimédia Embutido para Vídeos, Áudios e Imagens
+    abrirVisualizadorMedia: (url, titulo = 'Visualização') => {
+        if (!url || url === '#' || url === 'null') {
+            Workspace.mostrarAviso("Nenhum ficheiro anexado a este envio.", "warning");
+            return;
+        }
+
+        const id = 'ws-media-viewer';
+        let viewer = document.getElementById(id);
+        if (viewer) viewer.remove();
+
+        viewer = document.createElement('div');
+        viewer.id = id;
+        viewer.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(5px);";
+
+        // Detetive de Extensões: Descobre a verdadeira natureza do ficheiro
+        const isVideo = url.match(/\.(mp4|webm|mov|mkv)$/i) || url.includes('/video/upload/');
+        const isAudio = url.match(/\.(mp3|wav|ogg|m4a)$/i) || (url.includes('/video/upload/') && url.includes('audio'));
+        const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes('/image/upload/');
+
+        let mediaElement = '';
+
+        if (isVideo) {
+            mediaElement = `<video src="${url}" controls autoplay playsinline style="max-width: 90vw; max-height: 80vh; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 8px; transform: scale(0.9); transition: transform 0.2s ease;" id="ws-viewer-media"></video>`;
+        } else if (isAudio) {
+            mediaElement = `<div style="background: white; padding: 30px; border-radius: 12px; transform: scale(0.9); transition: transform 0.2s ease; box-shadow: 0 5px 25px rgba(0,0,0,0.5);" id="ws-viewer-media"><h3 style="margin-top:0; color:#2c3e50; text-align:center;">Áudio Enviado</h3><audio src="${url}" controls autoplay style="width: 300px; outline: none;"></audio></div>`;
+        } else if (isImage) {
+            mediaElement = `<img src="${url}" style="max-width: 90vw; max-height: 80vh; object-fit: contain; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 4px; transform: scale(0.9); transition: transform 0.2s ease;" id="ws-viewer-media">`;
+        } else {
+            // Se for um PDF, Word ou Excel, atua como Via Verde para uma nova aba
+            window.open(url, '_blank');
+            return;
+        }
+
+        viewer.innerHTML = `
+            <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); box-sizing: border-box; z-index: 10;">
+                <span style="color: white; font-weight: 500; font-size: 16px; font-family: sans-serif;">${Workspace.escapeHTML(titulo)}</span>
+                <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200)" style="background: transparent; border: none; color: white; font-size: 35px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+            </div>
+            ${mediaElement}
+        `;
+
+        document.body.appendChild(viewer);
+        
+        requestAnimationFrame(() => {
+            viewer.style.opacity = '1';
+            const mediaObj = document.getElementById('ws-viewer-media');
+            if(mediaObj) mediaObj.style.transform = 'scale(1)';
+        });
+    },
+
     escapeHTML: (str) => {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
