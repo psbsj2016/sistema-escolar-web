@@ -8,6 +8,7 @@ import './modulos/workspace/sidebar.js';
 import './modulos/workspace/avaliacoes.js';
 import './modulos/workspace/materiais.js';
 import './modulos/workspace/ingles.js'; 
+import './modulos/workspace/inglesprofessor.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
