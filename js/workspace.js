@@ -328,9 +328,14 @@ Object.assign(Workspace, {
     // ============================================================================
     navegarPara: async (tela, registarNoHistorico = true) => {
         
-        // 🚀 O SILENCIADOR GLOBAL: Interrompe imediatamente qualquer voz (Mago ou Jogos) ao sair da tela!
+        // 🚀 O SILENCIADOR GLOBAL
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
+        }
+        
+        // 🚀 A VASSOURA DO INGLÊS: Impede que os timers do jogo corram noutro ecrã
+        if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
+            Workspace.Ingles.fecharJogo(); // Limpa as vozes, caixas abertas e timers da IA
         }
 
         const dropdown = document.getElementById('ws-main-menu-dropdown');
