@@ -7,27 +7,20 @@ Workspace.Sidebar = {
     chatStream: null, 
     tarefasCache: [],
     mensagensRenderizadas: new Set(), 
-    
-    // 🚀 NOVO: Cofre de textos para copiar e Calendário para organizar datas
     textosMensagens: {}, 
     ultimaDataRenderizada: null,
     
-   // ============================================================================
+    // ============================================================================
     // 🚀 MOTOR DE DETEÇÃO: PRESSÃO LONGA (MOBILE) E CLIQUE (PC) COM COORDENADAS
     // ============================================================================
     pressTimer: null,
     
     iniciarPressMensagem: (event, msgId) => {
         Workspace.Sidebar.cancelarPressMensagem(); 
-        
-        // Espia as coordenadas do dedo no ecrã do telemóvel
         const touch = event.touches ? event.touches[0] : event;
-        const x = touch.clientX;
-        const y = touch.clientY;
-
         Workspace.Sidebar.pressTimer = setTimeout(() => {
             if (Workspace.Sidebar.modoSelecaoAtivo) Workspace.Sidebar.toggleSelecaoMensagem(msgId);
-            else Workspace.Sidebar.mostrarOpcoesMensagem(msgId, x, y);
+            else Workspace.Sidebar.mostrarOpcoesMensagem(msgId, touch.clientX, touch.clientY);
         }, 500); 
     },
     
@@ -40,8 +33,6 @@ Workspace.Sidebar = {
             Workspace.Sidebar.toggleSelecaoMensagem(msgId);
             return;
         }
-        
-        // Espia as coordenadas do Rato no PC
         if (event.pointerType === "mouse" || window.innerWidth > 900 || event.type === 'contextmenu') {
             Workspace.Sidebar.mostrarOpcoesMensagem(msgId, event.clientX, event.clientY);
         }
@@ -49,36 +40,27 @@ Workspace.Sidebar = {
     
     mostrarOpcoesMensagem: (msgId, x, y) => {
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
-        
         const menu = document.getElementById(`opcoes-msg-${msgId}`);
         if (menu) {
             menu.style.display = 'flex';
-            
-            // 🚀 MATEMÁTICA INTELIGENTE: Impede que o menu fuja pela beira do ecrã!
             const larguraMenu = 150; 
             const alturaMenu = 100;
             let posX = x;
             let posY = y;
-            
             if (x + larguraMenu > window.innerWidth) posX = window.innerWidth - larguraMenu - 15;
             if (y + alturaMenu > window.innerHeight) posY = window.innerHeight - alturaMenu - 15;
-            
             menu.style.left = `${posX}px`;
             menu.style.top = `${posY}px`;
         }
-        
-        if (navigator.vibrate) navigator.vibrate(50); // Feedback tátil (vibração)
+        if (navigator.vibrate) navigator.vibrate(50); 
     }, 
     
     isTyping: false,
     typingTimer: null,
     typingUiTimer: null,
 
-  init: async () => {
+    init: async () => {
         console.log("📊 Motor do Menu Lateral com Chat Avançado iniciado.");
-        
-        // 🚀 VACINA DE AUTO-CURA DO CACHE DO ALUNO:
-        // Se a sessão estiver com lixo, puxa o aluno fresco da base de dados sem precisar de Logout!
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno' && Workspace.usuario.alunoRefId) {
             Workspace.api(`/alunos/${Workspace.usuario.alunoRefId}`, 'GET').then(alunoFresco => {
                 if (alunoFresco && !alunoFresco.error) {
@@ -89,7 +71,6 @@ Workspace.Sidebar = {
                 }
             });
         }
-
         Workspace.Sidebar.injetarCSSModais();
         Workspace.Sidebar.initExtraChatTriggers();
         await Workspace.Sidebar.carregarTurmas();
@@ -97,9 +78,6 @@ Workspace.Sidebar = {
         Workspace.Sidebar.iniciarHeartbeatOnline();
     },
 
-    // ============================================================================
-    // 📡 MOTOR DE PRESENÇA INTELIGENTE (HEARTBEAT + SAÍDA INSTANTÂNEA)
-    // ============================================================================
     iniciarHeartbeatOnline: () => {
         const enviarPing = async () => {
             try {
@@ -111,24 +89,15 @@ Workspace.Sidebar = {
                         body: JSON.stringify({ usuarioId: Workspace.usuario.id })
                     });
                 }
-            } catch (e) {
-                // Silencioso
-            }
+            } catch (e) {}
         };
-
-        // Envia o primeiro ping logo ao entrar e repete a cada 30 segundos
         enviarPing();
-        const intervaloPing = setInterval(enviarPing, 30000);
-
-        // 🚀 GATILHO DE SAÍDA INSTANTÂNEA: Se fechar a aba ou sair do site
+        setInterval(enviarPing, 30000);
         window.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
-                    navigator.sendBeacon('/api/workspace/monitoramento/offline', JSON.stringify({ usuarioId: Workspace.usuario.id }));
-                }
+            if (document.visibilityState === 'hidden' && window.Workspace && Workspace.usuario && Workspace.usuario.id) {
+                navigator.sendBeacon('/api/workspace/monitoramento/offline', JSON.stringify({ usuarioId: Workspace.usuario.id }));
             }
         });
-
         window.addEventListener('beforeunload', () => {
             if (window.Workspace && Workspace.usuario && Workspace.usuario.id) {
                 navigator.sendBeacon('/api/workspace/monitoramento/offline', JSON.stringify({ usuarioId: Workspace.usuario.id }));
@@ -141,66 +110,10 @@ Workspace.Sidebar = {
         const style = document.createElement('style');
         style.id = 'ws-modais-css';
         style.innerHTML = `
-            /* 🚀 BLINDAGEM DO MODAL DE DETALHES DO EXERCÍCIO */
-            #ws-tarefa-modal {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                background: rgba(0,0,0,0.85) !important; /* Fundo escuro confinado */
-                z-index: 999999 !important; /* Fica acima da barra superior do WorkSpace */
-                display: none; /* Mantém oculto por defeito */
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 20px !important;
-                box-sizing: border-box !important;
-                backdrop-filter: blur(4px) !important;
-            }
-            
-            /* 🚀 O Cartão Branco Interno (Tamanho Fixo e Rolagem Suave) */
-            #ws-tarefa-modal > div {
-                position: relative !important;
-                background: #ffffff !important;
-                width: 100% !important;
-                max-width: 650px !important;
-                max-height: 90vh !important; /* Limite crítico: 90% da tela */
-                overflow-y: auto !important; /* Rolagem interna inteligente */
-                border-radius: 16px !important;
-                box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important;
-                padding: 30px !important;
-                box-sizing: border-box !important;
-                margin: 0 auto !important;
-            }
-
-            /* 🚀 O Botão de Fechar (X) Protegido e Absoluto */
-            #ws-tarefa-modal button[onclick*="none"] {
-                position: absolute !important;
-                top: 15px !important;
-                right: 15px !important;
-                background: #f0f2f5 !important;
-                color: #555 !important;
-                border: none !important;
-                border-radius: 50% !important;
-                width: 32px !important;
-                height: 32px !important;
-                font-size: 16px !important;
-                font-weight: bold !important;
-                cursor: pointer !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: 1000000 !important;
-                transition: 0.2s !important;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            }
-            
-            #ws-tarefa-modal button[onclick*="none"]:hover {
-                background: #e74c3c !important;
-                color: white !important;
-            }
-            
-            /* Estilização suave da barra de rolagem do modal */
+            #ws-tarefa-modal { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 999999 !important; display: none; align-items: center !important; justify-content: center !important; padding: 20px !important; box-sizing: border-box !important; backdrop-filter: blur(4px) !important; }
+            #ws-tarefa-modal > div { position: relative !important; background: #ffffff !important; width: 100% !important; max-width: 650px !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 16px !important; box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important; padding: 30px !important; box-sizing: border-box !important; margin: 0 auto !important; }
+            #ws-tarefa-modal button[onclick*="none"] { position: absolute !important; top: 15px !important; right: 15px !important; background: #f0f2f5 !important; color: #555 !important; border: none !important; border-radius: 50% !important; width: 32px !important; height: 32px !important; font-size: 16px !important; font-weight: bold !important; cursor: pointer !important; display: flex !important; align-items: center !important; justify-content: center !important; z-index: 1000000 !important; transition: 0.2s !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+            #ws-tarefa-modal button[onclick*="none"]:hover { background: #e74c3c !important; color: white !important; }
             #ws-tarefa-modal > div::-webkit-scrollbar { width: 6px; }
             #ws-tarefa-modal > div::-webkit-scrollbar-track { background: transparent; }
             #ws-tarefa-modal > div::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -217,7 +130,6 @@ Workspace.Sidebar = {
         const lista = document.getElementById('ws-lista-turmas');
         const icone = document.getElementById('ws-icon-turmas');
         if (!lista) return;
-
         if (lista.style.display === 'none') {
             lista.style.display = 'block';
             if (icone) icone.innerText = '▲';
@@ -227,35 +139,24 @@ Workspace.Sidebar = {
         }
     },
 
-    // ============================================================================
-    // 📥 MOTOR DE DOWNLOAD SEGURO (Ignora bloqueios de nova aba do Cloudinary)
-    // ============================================================================
     forcarDownload: async (url, nomeArquivo) => {
         Workspace.mostrarAviso("Preparando a transferência segura... ⏳", "info", 2000);
         try {
-            // Vai buscar o ficheiro ao Cloudinary de forma invisível
             const resposta = await fetch(url);
             if (!resposta.ok) throw new Error("Falha na rede");
-            
-            // Transforma o ficheiro num objeto de memória local (Blob)
             const blob = await resposta.blob();
             const urlLocal = window.URL.createObjectURL(blob);
-            
-            // Cria um link fantasma, clica nele e destrói-o a seguir
             const linkFantasma = document.createElement('a');
             linkFantasma.style.display = 'none';
             linkFantasma.href = urlLocal;
             linkFantasma.download = nomeArquivo || 'documento_workspace';
             document.body.appendChild(linkFantasma);
             linkFantasma.click();
-            
-            // Limpa a memória
             window.URL.revokeObjectURL(urlLocal);
             document.body.removeChild(linkFantasma);
         } catch (erro) {
-            console.error("Erro no download:", erro);
             Workspace.mostrarAviso("O navegador bloqueou a transferência direta. A abrir separador...", "warning");
-            window.open(url, '_blank'); // Plano B de segurança
+            window.open(url, '_blank'); 
         }
     },
 
@@ -270,9 +171,7 @@ Workspace.Sidebar = {
                 container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Nenhuma turma encontrada.</div>';
                 return;
             }
-
             if (Workspace.usuario.tipo === 'Aluno') {
-                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI
                 let turmasExtras = [];
                 if (Workspace.Feed && Workspace.Feed.postsCache) {
                     Workspace.Feed.postsCache.forEach(post => {
@@ -282,7 +181,6 @@ Workspace.Sidebar = {
                         }
                     });
                 }
-
                 turmas = turmas.filter(t => {
                     const idGeral = String(t.id).toLowerCase().trim();
                     const nomeGeral = String(t.nome).toLowerCase().trim();
@@ -305,7 +203,6 @@ Workspace.Sidebar = {
                     const urlFinal = `${urlLimpa}?v=${cacheBuster}`;
                     avatarMenu = `<div style="width: 30px; height: 30px; min-width: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 1px solid #ddd; background: #ffffff; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0; margin: 0;"><img src="${urlFinal}" style="width:100% !important; height:100% !important; object-fit:cover !important; object-position:center !important; background-color:#ffffff !important; display:block !important; margin:0 !important; padding:0 !important; border:none !important; border-radius:50% !important;"></div>`;
                 }
-
                 html += `
                     <div style="padding: 12px; margin-bottom: 5px; border-radius: 8px; background: #fdfdfd; border: 1px solid #f0f2f5; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'; this.style.borderColor='#e2e6ea'" onmouseout="this.style.background='#fdfdfd'; this.style.borderColor='#f0f2f5'" onclick="const menu = document.getElementById('ws-main-menu-dropdown'); if(menu) menu.style.display='none'; Workspace.Sidebar.abrirChat('${t.id}', '${nomeTurma}')">
                         ${avatarMenu}
@@ -317,20 +214,15 @@ Workspace.Sidebar = {
         } catch (e) { container.innerHTML = '<div style="padding:10px; color:#e74c3c; font-size:12px; text-align:center;">Erro ao carregar fóruns.</div>'; }
     },
 
-  // ============================================================================
-    // 🎨 ATUALIZAÇÃO DO CABEÇALHO DO CHAT (BLINDAGEM: CORTE, ESMAGAMENTO E CACHE)
-    // ============================================================================
     atualizarCabecalhoChat: (info) => {
         const titulo = document.getElementById('ws-chat-titulo');
         const avatar = document.getElementById('ws-chat-avatar-container');
         
-        // 1. Atualiza o título do chat
         if(titulo) titulo.innerText = info.nome || 'Sala de Bate-Papo';
         
         if (avatar) {
-            // 🚀 ARMADURA CSS ABSOLUTA: Garante o círculo perfeito e previne achatamento
             avatar.style.flexShrink = '0';
-            avatar.style.width = '42px'; // Ligeiramente maior para compensar a borda
+            avatar.style.width = '42px'; 
             avatar.style.height = '42px';
             avatar.style.minWidth = '42px';
             avatar.style.minHeight = '42px';
@@ -345,18 +237,12 @@ Workspace.Sidebar = {
             avatar.style.background = '#ffffff';
             avatar.style.border = '2px solid #ffffff';
             
-            // 2. Verifica se a URL da foto existe e é válida
             if(info.foto && (info.foto.startsWith('http') || info.foto.startsWith('https'))) {
-                
-                // 🚀 O SEGREDO DO CACHE: Forçamos o navegador a buscar a foto nova, ignorando a antiga!
                 const cacheBuster = new Date().getTime();
-                const urlLimpa = info.foto.split('?')[0]; // Limpa qualquer código antigo
+                const urlLimpa = info.foto.split('?')[0];
                 const urlFinal = `${urlLimpa}?v=${cacheBuster}`;
-
-                // 🚀 O SEGREDO DO CENTRO: Usamos !important para garantir que nada na página empurra a foto para baixo
                 avatar.innerHTML = `<img src="${urlFinal}" style="width:100% !important; height:100% !important; object-fit:cover !important; object-position:center !important; background-color:#ffffff !important; display:block !important; margin:0 !important; padding:0 !important; border:none !important; border-radius:50% !important;" onerror="this.parentElement.innerHTML='👥'; this.parentElement.style.background='rgba(255,255,255,0.2)'; this.parentElement.style.border='1px solid rgba(255,255,255,0.3)';">`;
             } else {
-                // 3. Fallback (Sem foto): Desenha o ícone padrão
                 avatar.innerHTML = '👥';
                 avatar.style.background = 'rgba(255,255,255,0.2)';
                 avatar.style.border = '1px solid rgba(255,255,255,0.3)';
@@ -364,10 +250,9 @@ Workspace.Sidebar = {
         }
     },
 
-verFotoChat: () => {
+    verFotoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta;
         if(info && info.foto) {
-            // 🚀 Redireciona a visualização para a nossa nova janela interna elegante do chat!
             if(Workspace.Sidebar.abrirVisualizadorInterno) {
                 Workspace.Sidebar.abrirVisualizadorInterno(info.foto, 'imagem', info.nome);
             }
@@ -376,9 +261,6 @@ verFotoChat: () => {
         }
     },
 
-  // ============================================================================
-    // ✏️ ABRIR EDIÇÃO DO CHAT (Com Interface Gráfica Premium e Organizada)
-    // ============================================================================
     abrirEdicaoChat: () => {
         const info = Workspace.Sidebar.infoTurmaAberta || {};
         Workspace.Sidebar.fotoComprimida = null; 
@@ -395,19 +277,13 @@ verFotoChat: () => {
 
         const modal = document.createElement('div');
         modal.id = idModal;
-        // Fundo escuro confinado à janela do chat
         modal.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); opacity:0; transition:0.2s; border-radius:inherit; overflow:hidden;";
         
-        // 🚀 A ESTRUTURA COMPLETA: Cartão branco central com elementos perfeitamente alinhados
         modal.innerHTML = `
             <div style="width: 90%; max-width: 380px; max-height: 90%; overflow-y: auto; padding: 25px; transform: scale(0.9); transition: 0.2s; position: relative; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; scrollbar-width: none;">
-                
                 <button onclick="document.getElementById('${idModal}').style.opacity='0'; setTimeout(()=>document.getElementById('${idModal}').remove(), 200)" style="position:absolute; right:15px; top:15px; background:#f0f2f5; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; color:#555; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#ff7675'; this.style.color='white'" onmouseout="this.style.background='#f0f2f5'; this.style.color='#555'">✕</button>
-                
                 <h3 style="margin: 0 0 20px 0; color: #2c3e50; text-align: center; font-size: 18px; width: 100%;">Configurações do Grupo</h3>
-                
                 <div style="text-align: center; margin-bottom: 20px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-                    <!-- 🚀 A FOTO DO PERFIL BLINDADA E CENTRALIZADA -->
                     <div style="width: 90px; height: 90px; min-width: 90px; flex-shrink: 0; background: #ffffff; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; border: 3px solid #3498db; position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;" onclick="document.getElementById('ws-chat-nova-foto').click()">
                         <img id="ws-chat-foto-preview" src="${info.foto || ''}" style="width:100% !important; height:100% !important; object-fit:cover !important; object-position:center !important; display: ${info.foto ? 'block' : 'none'};">
                         <div id="ws-chat-icone-holder" style="display: ${info.foto ? 'none' : 'flex'}; align-items:center; justify-content:center; width:100%; height:100%; font-size:35px; color:#aaa;">👥</div>
@@ -417,29 +293,24 @@ verFotoChat: () => {
                     <div style="font-size: 11px; color: #7f8c8d; font-weight: bold;">Toque na foto para alterar</div>
                     <div id="ws-alerta-compressao" style="font-size: 10px; color: #27ae60; font-weight: bold; margin-top: 5px; display: none;">Imagem otimizada! 🚀</div>
                 </div>
-
                 <div style="width: 100%; text-align: left; margin-bottom: 20px;">
                     <label style="font-size: 12px; font-weight: bold; color: #555; margin-bottom: 5px; display: block;">Nome da Turma / Grupo</label>
                     <input type="text" id="ws-chat-novo-nome" value="${Workspace.Sidebar.escapeHTML(info.nome || '')}" placeholder="Ex: Turma Avançada A" style="width: 100%; padding: 12px; font-weight: bold; color: #333; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ddd'">
                 </div>
-
                 <button id="ws-btn-salvar-chat" style="background:#27ae60; color:white; border:none; width:100%; font-size: 14px; padding: 12px; border-radius:6px; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#219653'" onmouseout="this.style.background='#27ae60'" onclick="Workspace.Sidebar.salvarEdicaoChat()">Salvar Alterações</button>
             </div>
         `;
         
         chatBox.appendChild(modal);
-
         requestAnimationFrame(() => {
             modal.style.opacity = '1';
             modal.firstElementChild.style.transform = 'scale(1)';
         });
     },
 
-   // 📸 MOTOR DE AVATARES EM ALTA RESOLUÇÃO (Corte Inteligente e Anti-Pixelização)
     previewFotoChat: (e) => {
         const file = e.target.files[0];
         if(!file) return;
-
         if (file.size > 100 * 1024 * 1024) { 
             Workspace.mostrarAviso("A fotografia ultrapassou o limite máximo de 100MB.", "warning");
             e.target.value = ''; 
@@ -451,42 +322,30 @@ verFotoChat: () => {
 
         imgOriginal.onload = () => {
             const canvas = document.createElement('canvas');
-            
-            // 🚀 1. DOBRO DA RESOLUÇÃO: Aumentamos de 400 para 800 para ecrãs HD/Retina
             const MAX_SIZE = 800;
             canvas.width = MAX_SIZE;
             canvas.height = MAX_SIZE;
 
             const ctx = canvas.getContext('2d');
-            
-            // 🚀 2. ALTA DEFINIÇÃO: Ativa o suavizador gráfico do navegador
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-
-            // 🚀 3. FUNDO BRANCO OBRIGATÓRIO: Previne "espaços vagos" ou falhas pretas em PNGs transparentes
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
             
-            // 🚀 4. MATEMÁTICA DO CORTE CENTRAL PERFEITO (Smart Crop)
-            // Identifica se a foto é horizontal ou vertical e corta exatamente o centro quadrado
             const menorLado = Math.min(imgOriginal.width, imgOriginal.height);
             const sourceX = (imgOriginal.width - menorLado) / 2;
             const sourceY = (imgOriginal.height - menorLado) / 2;
 
             ctx.drawImage(imgOriginal, sourceX, sourceY, menorLado, menorLado, 0, 0, MAX_SIZE, MAX_SIZE);
 
-            // 🚀 5. COMPRESSÃO PREMIUM: Qualidade 0.92 (em vez de 0.85) para máxima nitidez
             canvas.toBlob((blob) => {
                 URL.revokeObjectURL(objectUrl); 
-
                 if (!blob || blob.size < 100) {
                     Workspace.mostrarAviso("Falha ao processar a imagem. Tente escolher uma foto diferente.", "error");
                     e.target.value = '';
                     return;
                 }
-
                 Workspace.Sidebar.fotoComprimida = blob;
-
                 const imgPreview = document.getElementById('ws-chat-foto-preview');
                 const icone = document.getElementById('ws-chat-icone-holder');
                 const avisoCompressao = document.getElementById('ws-alerta-compressao');
@@ -495,7 +354,6 @@ verFotoChat: () => {
                 imgPreview.style.display = 'block';
                 if(icone) icone.style.display = 'none';
                 if(avisoCompressao) avisoCompressao.style.display = 'block';
-
                 e.target.value = ''; 
             }, 'image/jpeg', 0.92); 
         };
@@ -522,7 +380,6 @@ verFotoChat: () => {
 
         try {
             let fotoUrl = Workspace.Sidebar.infoTurmaAberta?.foto || null;
-            
             if (Workspace.Sidebar.fotoComprimida) {
                 const formData = new FormData();
                 formData.append('anexos', Workspace.Sidebar.fotoComprimida, 'avatar_otimizado.jpg'); 
@@ -551,13 +408,11 @@ verFotoChat: () => {
 
             if(res && res.success) {
                 Workspace.mostrarAviso("Identidade do Grupo atualizada! ✨", "success");
-                
                 const modal = document.getElementById('ws-modal-edit-chat');
                 if(modal) {
                     modal.style.opacity = '0';
                     setTimeout(()=> modal.remove(), 200);
                 }
-                
                 Workspace.Sidebar.infoTurmaAberta = { nome: nome, foto: fotoUrl };
                 Workspace.Sidebar.atualizarCabecalhoChat(Workspace.Sidebar.infoTurmaAberta);
                 Workspace.Sidebar.carregarTurmas(); 
@@ -581,7 +436,6 @@ verFotoChat: () => {
         document.getElementById('ws-chat-avatar-container').style.background = 'rgba(255,255,255,0.2)';
         document.getElementById('ws-chat-aluno-nome').innerText = Workspace.usuario.nome || Workspace.usuario.login;
         
-        // 🚀 Oculta/Mostra os 3 pontinhos para Gestores/Professores
         const btnMenu = document.getElementById('ws-btn-opcoes-chat');
         if(btnMenu) {
             btnMenu.style.display = (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') ? 'inline-block' : 'none';
@@ -596,7 +450,6 @@ verFotoChat: () => {
             document.getElementById('ws-chat-titulo').innerText = turmaNome;
         });
 
-        // 🚀 Injeta a animação "piscarSuave" para não alterar o tamanho da caixa
         if (!document.getElementById('ws-chat-typing-indicator')) {
             const inputContainer = document.getElementById('ws-chat-input').closest('div[style*="padding: 10px"]');
             inputContainer.insertAdjacentHTML('beforebegin', `
@@ -638,7 +491,6 @@ verFotoChat: () => {
                 Workspace.Sidebar.ocultarDigitando();
             }
             
-            // 🚀 O VIGILANTE SILENCIOSO DO CHAT: Destruição imediata e fulminante
             if (data.type === 'MSG_APAGADA') {
                 const elMsg = document.getElementById(`msg-${data.mensagemId}`);
                 if (elMsg) {
@@ -647,7 +499,6 @@ verFotoChat: () => {
                 }
             }
 
-            // 🚀 O VIGILANTE: Destruição em massa no ecrã
             else if (data.type === 'MSG_APAGADA_MASSA') {
                 if (data.mensagensIds && Array.isArray(data.mensagensIds)) {
                     data.mensagensIds.forEach(idApagar => {
@@ -677,13 +528,12 @@ verFotoChat: () => {
         };
     },
 
-   fecharChat: () => {
+    fecharChat: () => {
         Workspace.Sidebar.cancelarSelecao();
         document.getElementById('ws-chat-modal').style.display = 'none';
         Workspace.Sidebar.turmaIdAberta = null;
         Workspace.Sidebar.infoTurmaAberta = null;
         
-        // 🚀 Limpeza de Memória Segura
         Workspace.Sidebar.textosMensagens = {};
         Workspace.Sidebar.ultimaDataRenderizada = null;
         
@@ -691,7 +541,6 @@ verFotoChat: () => {
             Workspace.Sidebar.chatStream.close();
             Workspace.Sidebar.chatStream = null;
         }
-        
         Workspace.Sidebar.ocultarDigitando();
     },
 
@@ -725,9 +574,6 @@ verFotoChat: () => {
         if (indicator) indicator.style.display = 'none';
     },
 
-    // ============================================================================
-    // 📋 FERRAMENTAS DO BATE-PAPO: COPIAR E DIVISORES DE DATA
-    // ============================================================================
     copiarTextoMensagem: (msgId) => {
         const texto = Workspace.Sidebar.textosMensagens[msgId];
         if (texto) {
@@ -737,7 +583,6 @@ verFotoChat: () => {
                 }
             }).catch(() => Workspace.mostrarAviso("Erro ao copiar.", "error"));
         }
-        // Esconde o menu após copiar
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
     },
 
@@ -764,9 +609,7 @@ verFotoChat: () => {
         `;
     },
 
-// 🚀 O MOTOR DE DESENHO DOS BALÕES E AVATARS
     gerarHTMLMensagem: (m, meuNome) => {
-        // 🚀 GUARDA O TEXTO PURO NO COFRE PARA A FUNÇÃO DE COPIAR
         if (m.texto) Workspace.Sidebar.textosMensagens[m.id] = m.texto;
 
         const ehMinha = m.autorNome === meuNome;
@@ -799,7 +642,6 @@ verFotoChat: () => {
         const textoFormatado = m.texto ? `<div style="margin-top: 2px;">${Workspace.Sidebar.escapeHTML(m.texto).replace(/\n/g, '<br>')}</div>` : '';
         const nomeHtml = !ehMinha ? `<div style="font-size: 11px; font-weight: bold; color: #3498db; margin-bottom: 3px;">${Workspace.Sidebar.escapeHTML(m.autorNome)}</div>` : '';
         
-        // 🚀 O MENU FLUTUANTE (Agora com a Opção COPIAR acima do Selecionar)
         const menuOpcoes = podeApagar ? `
             <div id="opcoes-msg-${m.id}" class="ws-msg-opcoes" style="display: none; position: fixed; background: white; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); padding: 4px; z-index: 100005; border: 1px solid #eee; flex-direction: column; gap: 2px; min-width: 140px;">
                 ${m.texto ? `<button onclick="event.stopPropagation(); Workspace.Sidebar.copiarTextoMensagem('${m.id}')" style="background: transparent; border: none; color: #2c3e50; font-size: 13px; font-weight: bold; cursor: pointer; padding: 10px 15px; white-space: nowrap; display: flex; align-items: center; gap: 8px; border-radius: 6px; text-align: left;" onmouseover="this.style.background='#f0f2f5'" onmouseout="this.style.background='transparent'"><span style="font-size:16px;">📋</span> Copiar</button>` : ''}
@@ -820,18 +662,13 @@ verFotoChat: () => {
         return `<div id="msg-${m.id}" style="display: flex; width: 100%; margin-bottom: 12px; justify-content: ${alinhamento}; animation: fadeIn 0.3s ease;">${layoutMsg}</div>`;
     },
 
-    // ============================================================================
-    // 📖 VISUALIZADOR IN-CHAT (ABRE PRESO DENTRO DO BATE-PAPO)
-    // ============================================================================
     abrirVisualizadorInterno: (url, tipo, nome = 'Anexo') => {
         const idModal = 'ws-chat-inner-viewer';
         const chatBox = document.getElementById('ws-chat-modal');
         if(!chatBox) return;
 
-        // Limpa o antigo se o utilizador clicar noutro documento rápido
         if(document.getElementById(idModal)) document.getElementById(idModal).remove();
 
-        // 🚀 O SEGREDO: Transforma a janela do chat numa "âncora" para o visualizador não escapar!
         if (window.getComputedStyle(chatBox).position === 'static') {
             chatBox.style.position = 'relative';
         }
@@ -840,10 +677,8 @@ verFotoChat: () => {
         let contentHtml = '';
 
         if (tipo === 'imagem') {
-            // Layout para Imagens
             contentHtml = `<div style="flex:1; display:flex; align-items:center; justify-content:center; padding:15px; overflow:hidden;"><img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); transform:scale(0.95); transition:0.3s;" id="ws-inner-img"></div>`;
         } else {
-            // Layout para Documentos (PDF, Word, Excel, etc.)
             const urlLower = url.toLowerCase();
             const ehOffice = urlLower.endsWith('.doc') || urlLower.endsWith('.docx') || urlLower.endsWith('.xls') || urlLower.endsWith('.xlsx') || urlLower.endsWith('.ppt') || urlLower.endsWith('.pptx');
             const ehPDF = urlLower.endsWith('.pdf');
@@ -866,7 +701,6 @@ verFotoChat: () => {
 
         const overlay = document.createElement('div');
         overlay.id = idModal;
-        // position: absolute fá-lo preencher APENAS a caixa do Bate-papo!
         overlay.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:100000; display:flex; flex-direction:column; border-radius:inherit; backdrop-filter:blur(5px); opacity:0; transition:0.3s ease-in-out; overflow:hidden;";
 
         overlay.innerHTML = `
@@ -882,7 +716,6 @@ verFotoChat: () => {
             ${contentHtml}
         `;
 
-        // Injentamos diretamente DENTRO da caixa de Bate-papo
         chatBox.appendChild(overlay);
 
         requestAnimationFrame(() => {
@@ -892,7 +725,6 @@ verFotoChat: () => {
         });
     },
 
-  // 🚀 RESTAURO: Injetar Nova Mensagem com Validador de Datas
     injetarNovaMensagem: (m) => {
         if (Workspace.Sidebar.mensagensRenderizadas.has(m.id)) return; 
         Workspace.Sidebar.mensagensRenderizadas.add(m.id);
@@ -904,7 +736,6 @@ verFotoChat: () => {
             container.innerHTML = '';
         }
 
-        // 🚀 VERIFICAÇÃO DO DIA (Para Inserir o Separador)
         const dataStr = new Date(m.data).toLocaleDateString('pt-BR');
         let divisorHtml = '';
         if (Workspace.Sidebar.ultimaDataRenderizada !== dataStr) {
@@ -916,7 +747,6 @@ verFotoChat: () => {
         container.scrollTop = container.scrollHeight;
     },
 
-    // 🚀 RESTAURO: Carregar as Mensagens organizando por dias
     carregarMensagensChat: async () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         const container = document.getElementById('ws-chat-mensagens');
@@ -932,21 +762,17 @@ verFotoChat: () => {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             let html = '';
             
-            // Limpa as memórias ao recarregar a sala
             Workspace.Sidebar.mensagensRenderizadas.clear();
             Workspace.Sidebar.textosMensagens = {};
             Workspace.Sidebar.ultimaDataRenderizada = null;
 
             mensagens.forEach(m => {
                 Workspace.Sidebar.mensagensRenderizadas.add(m.id);
-                
-                // 🚀 LÓGICA DO SEPARADOR DE DATA
                 const dataStr = new Date(m.data).toLocaleDateString('pt-BR');
                 if (Workspace.Sidebar.ultimaDataRenderizada !== dataStr) {
                     html += Workspace.Sidebar.gerarHTMLDataDivisor(m.data);
                     Workspace.Sidebar.ultimaDataRenderizada = dataStr;
                 }
-                
                 html += Workspace.Sidebar.gerarHTMLMensagem(m, meuNome);
             });
 
@@ -956,7 +782,6 @@ verFotoChat: () => {
         } catch (e) { console.error("Erro ao carregar chat", e); }
     },
 
-    // 🚀 RESTAURO: O envio de mensagens de texto que foi apagado acidentalmente
     enviarMensagemChat: async () => {
         const input = document.getElementById('ws-chat-input');
         const texto = input.value.trim();
@@ -965,7 +790,7 @@ verFotoChat: () => {
         if (!texto || !turmaId) return;
         
         input.value = ''; 
-        input.style.height = 'auto'; // Repõe o tamanho do input
+        input.style.height = 'auto';
         Workspace.Sidebar.isTyping = false;
         Workspace.Sidebar.enviarStatusDigitacao(false);
         clearTimeout(Workspace.Sidebar.typingTimer);
@@ -984,14 +809,12 @@ verFotoChat: () => {
         }
     },
 
-    // 🚀 LÓGICA DE ENVIO DE ANEXOS 📎 (ATUALIZADA COM O NOME REAL DO FICHEIRO)
     enviarAnexoChat: async (event) => {
         const file = event.target.files[0];
         if (!file) return;
 
         Workspace.mostrarAviso("Carregando anexo para a conversa... ⏳", "info", 5000);
         try {
-            // 🚀 USA A VIA VERDE DIRETA PARA A CLOUDFLARE
             const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
             const tipoRaw = dadosUpload.tipo.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
@@ -1007,15 +830,11 @@ verFotoChat: () => {
         finally { event.target.value = ''; }
     },
  
-    // ============================================================================
-    // 🚀 MOTOR DE SELEÇÃO EM MASSA
-    // ============================================================================
     modoSelecaoAtivo: false,
     mensagensSelecionadas: new Set(),
 
     ativarModoSelecao: (msgId) => {
         Workspace.Sidebar.modoSelecaoAtivo = true;
-        // Esconde os menuzinhos flutuantes
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
         Workspace.Sidebar.toggleSelecaoMensagem(msgId);
     },
@@ -1027,11 +846,9 @@ verFotoChat: () => {
         const balao = elMsg.querySelector('div[style*="max-width: 85%"]');
 
         if (Workspace.Sidebar.mensagensSelecionadas.has(msgId)) {
-            // Retira do cesto e remove o destaque
             Workspace.Sidebar.mensagensSelecionadas.delete(msgId);
             if (balao) balao.style.outline = 'none';
         } else {
-            // Põe no cesto e adiciona um destaque visual azul
             Workspace.Sidebar.mensagensSelecionadas.add(msgId);
             if (balao) balao.style.outline = '3px solid #3498db';
         }
@@ -1041,7 +858,6 @@ verFotoChat: () => {
 
     cancelarSelecao: () => {
         Workspace.Sidebar.modoSelecaoAtivo = false;
-        // Remove os destaques visuais de todos os balões
         Workspace.Sidebar.mensagensSelecionadas.forEach(msgId => {
             const elMsg = document.getElementById(`msg-${msgId}`);
             if (elMsg) {
@@ -1083,31 +899,24 @@ verFotoChat: () => {
         barra.style.display = 'flex';
     },
 
-    // ============================================================================
-    // 🚀 MOTORES DE DESTRUIÇÃO DE MENSAGENS (COM OTIMIZAÇÃO VISUAL FULMINANTE)
-    // ============================================================================
-    
     apagarMensagensEmMassa: () => {
         const ids = Array.from(Workspace.Sidebar.mensagensSelecionadas);
         if (ids.length === 0) return;
 
-        // 1. Destruição visual no ecrã de quem clica (fulminante)
         ids.forEach(msgId => {
             const elMsg = document.getElementById(`msg-${msgId}`);
             if (elMsg) elMsg.remove();
             Workspace.Sidebar.mensagensRenderizadas.delete(msgId);
         });
 
-        Workspace.Sidebar.cancelarSelecao(); // Fecha a barra superior
+        Workspace.Sidebar.cancelarSelecao(); 
 
-        // 🚀 LIMPEZA DOS DIVISORES DE DATA: Se a sala ficar vazia, apaga os dias (ex: "Hoje")
         const container = document.getElementById('ws-chat-mensagens');
         if (container && container.querySelectorAll('div[id^="msg-"]').length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px; animation: fadeIn 0.4s;">O histórico foi limpo.<br>Diga olá para a turma! 👋</div>';
             Workspace.Sidebar.ultimaDataRenderizada = null;
         }
 
-        // 2. Avisa a nuvem silenciosamente (SEM AWAIT para não bloquear a tela)
         try {
             Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagens/massa`, 'DELETE', { ids: ids });
         } catch(e) {
@@ -1115,17 +924,12 @@ verFotoChat: () => {
         }
     },
 
-    // 🚀 LÓGICA DE APAGAR MENSAGEM INDIVIDUAL DO CHAT (INSTANTÂNEO E SEM CONFIRMAÇÃO)
     apagarMensagemIndividual: (mensagemId) => {
-        // 1. Esconde imediatamente o menu flutuante (para não ficar preso no ecrã)
         document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
-
-        // 2. Apaga do próprio ecrã instantaneamente, sem perguntar!
         const elMsg = document.getElementById(`msg-${mensagemId}`);
         if (elMsg) elMsg.remove();
         Workspace.Sidebar.mensagensRenderizadas.delete(mensagemId);
 
-        // 3. Avisa a nuvem (background) de forma silenciosa e instantânea (Sem await)
         try {
             Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/mensagem/${mensagemId}`, 'DELETE');
         } catch(e) {
@@ -1133,27 +937,22 @@ verFotoChat: () => {
         }
     },
 
-    // 🚀 LÓGICA DOS 3 PONTINHOS ⋮ (APAGAR O CHAT DE FORMA FULMINANTE)
     apagarTodoOChat: () => {
         if (!Workspace.Sidebar.turmaIdAberta) return;
         
         Workspace.Sidebar.mostrarConfirmacao(
             "Apagar Todo o Chat?", 
             "Tem a certeza de que deseja eliminar DEFINITIVAMENTE todo o histórico de mensagens desta turma? Esta ação não tem retorno.", 
-            () => { // 🚀 Função Síncrona: Executa na velocidade da luz sem 'async'
-                
-                // 🚀 1. DESTRUIÇÃO VISUAL INSTANTÂNEA (Optimistic UI)
+            () => { 
                 const container = document.getElementById('ws-chat-mensagens');
                 if (container) {
                     container.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d; font-size:13px; animation: fadeIn 0.4s;">O histórico foi limpo.<br>Diga olá para a turma! 👋</div>';
                 }
                 
-                // 🚀 2. LIMPEZA TOTAL DA MEMÓRIA
                 Workspace.Sidebar.mensagensRenderizadas.clear();
                 Workspace.Sidebar.textosMensagens = {};
                 Workspace.Sidebar.ultimaDataRenderizada = null;
 
-                // 🚀 3. PEDIDO SILENCIOSO PARA A NUVEM (Em background, fire-and-forget)
                 Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}/limpar`, 'DELETE')
                     .then(res => {
                         if (res && res.success && window.Workspace && Workspace.mostrarAviso) {
@@ -1171,7 +970,6 @@ verFotoChat: () => {
 
     initExtraChatTriggers: () => {
         document.addEventListener('click', (e) => {
-            // 1. Fecha o menu superior dos 3 pontinhos (Opções da Sala)
             const menuDropdown = document.getElementById('ws-chat-opcoes-dropdown');
             const menuButton = document.getElementById('ws-btn-opcoes-chat');
             if (menuDropdown && menuDropdown.style.display === 'flex') {
@@ -1179,18 +977,13 @@ verFotoChat: () => {
                     menuDropdown.style.display = 'none';
                 }
             }
-            
-            // 2. 🚀 NOVA REGRA: Fecha os menus flutuantes das mensagens se o utilizador clicar/tocar noutro lado
             if (!e.target.closest('.ws-msg-opcoes') && !e.target.closest('div[id^="msg-"]')) {
                 document.querySelectorAll('.ws-msg-opcoes').forEach(el => el.style.display = 'none');
             }
         });
     },
 
-    // ==========================================
-    // 📅 TAREFAS: LÓGICA DO ALUNO E PROFESSOR
-    // ==========================================
-   carregarTarefas: async () => {
+    carregarTarefas: async () => {
         const container = document.getElementById('ws-lista-tarefas-grid');
         if (!container) return;
         container.innerHTML = '<div style="grid-column: 1 / -1; padding: 30px; color:#999; font-size:15px; text-align:center;">Atualizando Painel de Exercícios ⏳... </div>';
@@ -1205,7 +998,6 @@ verFotoChat: () => {
             let tarefas = eventos.filter(e => e.tipo === 'Tarefa' || e.tipo === 'Trabalho');
 
             if (Workspace.usuario.tipo === 'Aluno') {
-                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI TAMBÉM
                 tarefas = tarefas.filter(t => Workspace.verificarTurma(Workspace.usuario, t.turma, t.turmaNome));
             }
 
@@ -1326,19 +1118,17 @@ verFotoChat: () => {
                             const attrDownload = ehOffice ? `download="${ent.arquivoNome}"` : '';
                             const avatarAluno = window.Workspace.renderizarAvatar(ent.alunoNome, 28);
 
-                          // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (PROFESSOR)
-                            const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlCorrigida.includes('cloudinary');
+                            const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('cloudinary') || urlCorrigida.includes('/image/');
                             let acaoArquivo = `href="${urlCorrigida}" ${attrDownload} target="_blank"`;
 
-                            // 🚀 DETETOR DE MULTIMÉDIA: Gera o player nativo do navegador
-                            const ehVideoAluno = nomeMinusculo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video');
-                            const ehAudioAluno = nomeMinusculo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio');
+                            const ehVideoAluno = nomeMinusculo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video') || urlCorrigida.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/i) != null;
+                            const ehAudioAluno = nomeMinusculo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio') || urlCorrigida.match(/\.(mp3|wav|ogg|m4a|aac)$/i) != null;
                             
                             let mediaHtml = '';
                             if (ehVideoAluno) {
-                                mediaHtml = `<video controls src="${urlCorrigida}" style="width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
+                                mediaHtml = `<video controls playsinline src="${urlCorrigida}" style="display: block; width: 100%; max-height: 400px; border-radius: 8px; margin-top: 10px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
                             } else if (ehAudioAluno) {
-                                mediaHtml = `<audio controls src="${urlCorrigida}" style="width: 100%; margin-top: 10px; outline: none;"></audio>`;
+                                mediaHtml = `<audio controls src="${urlCorrigida}" style="display: block; width: 100%; margin-top: 10px; outline: none;"></audio>`;
                             }
 
                             if (ehImagemAnexo) {
@@ -1358,7 +1148,7 @@ verFotoChat: () => {
                                     </div>
                                     ${ent.observacao ? `<div style="font-size: 12px; color: #555; font-style: italic; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #eee;">💬 "${Workspace.Sidebar.escapeHTML(ent.observacao)}"</div>` : ''}
                                     
-                                    ${mediaHtml} <!-- 🚀 NOVO: PLAYER DE ÁUDIO OU VÍDEO INTEGRADO -->
+                                    ${mediaHtml}
                                     
                                     <div style="display: flex; gap: 8px; margin-top: 5px; width: 100%;">
                                         <a ${acaoArquivo} style="flex: 1; background: #3498db; color: white; padding: 8px 10px; border-radius: 6px; font-size: 11px; text-decoration: none; text-align: center; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;" onmouseover="this.style.background='#2980b9'">📥 Baixar Arquivo</a>
@@ -1372,7 +1162,6 @@ verFotoChat: () => {
                 } catch(e) { document.getElementById('ws-lista-entregas').innerHTML = '<p style="color: #e74c3c; font-size: 12px; text-align:center;">Erro ao buscar entregas.</p>'; }
             }
         } else {
-            // Lógica para o Aluno
             document.getElementById('ws-tarefa-arquivo').value = '';
             document.getElementById('ws-tarefa-obs').value = '';
 
@@ -1387,11 +1176,8 @@ verFotoChat: () => {
                     const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
                     document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
                     
-                    // 🚀 PASSO 3 AQUI: A Mágica Acontece!
-                    // Removemos todo o código confuso dos links e chamamos o nosso Motor de Prévia
                     Workspace.Sidebar.exibirPreviaDoAluno(res.detalhes);
 
-                    // Botão Ver Feedback do Aluno (Mantém-se igual)
                     let btnFb = document.getElementById('ws-btn-ver-feedback');
                     if(btnFb) btnFb.remove();
                     
@@ -1406,28 +1192,23 @@ verFotoChat: () => {
         }
     },
 
-
-   // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (Sincronizado 100% com o Professor)
     exibirPreviaDoAluno: (entrega) => {
         const areaEntregue = document.getElementById('ws-area-entregue');
         if (!areaEntregue) return;
 
-        // 1. Destrói o botão antigo se ele ainda estiver no HTML
         const btnAntigo = document.getElementById('ws-tarefa-link-entregue');
         if (btnAntigo) btnAntigo.remove();
 
-        // 2. Constrói a Tela de Cinema dinamicamente 
         let divPreview = document.getElementById('ws-preview-envio-aluno');
         if (!divPreview) {
             divPreview = document.createElement('div');
             divPreview.id = 'ws-preview-envio-aluno';
-            // 🚀 FIX CSS: Removido o Flexbox! Agora usa 'block' para o vídeo não ser esmagado
             divPreview.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: left; margin-top: 15px; width: 100%; box-sizing: border-box;';
             
             divPreview.innerHTML = `
                 <h5 style="margin: 0 0 10px 0; color: #1e293b; font-size: 14px; display: flex; align-items: center; gap: 8px;"><span>👀</span> O seu envio:</h5>
                 <div id="ws-preview-texto-aluno" style="font-size: 14px; color: #475569; margin-bottom: 15px; white-space: pre-wrap; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: none;"></div>
-                <div id="ws-preview-midia-aluno" style="display: block; width: 100%; border-radius: 8px; overflow: hidden; display: none;"></div>
+                <div id="ws-preview-midia-aluno" style="width: 100%; border-radius: 8px; overflow: hidden; display: none;"></div>
             `;
             
             const dataEntregue = document.getElementById('ws-tarefa-data-entregue');
@@ -1438,60 +1219,53 @@ verFotoChat: () => {
         const divTexto = document.getElementById('ws-preview-texto-aluno');
         const divMidia = document.getElementById('ws-preview-midia-aluno');
 
-        // 3. Captura os dados da Base de Dados
         const texto = entrega.texto || entrega.observacoes || entrega.obs || entrega.observacao;
         let urlCorrigida = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
         
-        // Limpeza do Ecrã
+        const nomeArquivo = String(entrega.arquivoNome || entrega.anexoNome || urlCorrigida || '').toLowerCase();
+
         divTexto.style.display = 'none'; 
         divTexto.innerHTML = '';
         divMidia.style.display = 'none'; 
         divMidia.innerHTML = '';
+        divMidia.style.background = 'transparent';
 
-        // 4. Injeta as Observações do Aluno
         if (texto) {
             divTexto.innerHTML = Workspace.Sidebar.escapeHTML(texto).replace(/\n/g, '<br>');
             divTexto.style.display = 'block';
         }
 
-        // 5. O DETETIVE DE EXTENSÕES (Cópia rigorosa do Painel do Professor)
         if (urlCorrigida) {
             if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
             
-            const nomeMinusculo = (entrega.arquivoNome || entrega.anexoNome || '').toLowerCase();
-            const ehOffice = nomeMinusculo.match(/\.(docx|doc|xlsx|xls)$/) != null;
-            const attrDownload = ehOffice ? `download="${Workspace.Sidebar.escapeHTML(entrega.arquivoNome || 'documento')}"` : '';
-            
-            const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('cloudinary') || urlCorrigida.includes('/image/');
-            const ehVideoAluno = nomeMinusculo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video') || urlCorrigida.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/i);
-            const ehAudioAluno = nomeMinusculo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio') || urlCorrigida.match(/\.(mp3|wav|ogg|m4a|aac)$/i);
+            const isVideo = nomeArquivo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('/video/upload/') || urlCorrigida.includes('video') || urlCorrigida.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/i) != null;
+            const isAudio = nomeArquivo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || (urlCorrigida.includes('/video/upload/') && urlCorrigida.includes('audio')) || urlCorrigida.includes('audio') || urlCorrigida.match(/\.(mp3|wav|ogg|m4a|aac)$/i) != null;
+            const isImage = nomeArquivo.match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('/image/upload/') || urlCorrigida.includes('cloudinary');
 
-            // 🚀 Injeção Nativa: Com 'display: block' o vídeo abrirá na sua altura real!
-            if (ehVideoAluno) {
-                divMidia.innerHTML = `<video controls src="${urlCorrigida}" style="width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: block;"></video>`;
+            if (isVideo && !isAudio) {
+                divMidia.innerHTML = `<video controls playsinline src="${urlCorrigida}" style="display: block; width: 100%; max-height: 400px; border-radius: 8px; outline: none; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
                 divMidia.style.display = 'block';
-            } else if (ehAudioAluno) {
-                divMidia.innerHTML = `<audio controls src="${urlCorrigida}" style="width: 100%; margin-top: 10px; outline: none; display: block;"></audio>`;
+                divMidia.style.background = '#0f172a';
+            } else if (isAudio) {
+                divMidia.innerHTML = `<audio controls src="${urlCorrigida}" style="display: block; width: 100%; margin: 15px 0; outline: none;"></audio>`;
                 divMidia.style.display = 'block';
-            } else if (ehImagemAnexo) {
-                divMidia.innerHTML = `<img src="${urlCorrigida}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer; display: block;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Meu Envio')">`;
+            } else if (isImage) {
+                divMidia.innerHTML = `<img src="${urlCorrigida}" style="display: block; width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px; cursor: pointer; border: 1px solid #e2e8f0;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Meu Envio')">`;
                 divMidia.style.display = 'block';
             } else {
-                divMidia.innerHTML = `<a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">📥 Baixar / Visualizar Documento</a>`;
+                const isOffice = nomeArquivo.match(/\.(docx|doc|xlsx|xls)$/) != null;
+                const attrDownload = isOffice ? `download="documento"` : '';
+                divMidia.innerHTML = `<a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 10px 0; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">📥 Baixar / Visualizar Ficheiro</a>`;
                 divMidia.style.display = 'block';
             }
         }
-    }, // <--- Vírgula obrigatória de fecho
+    },
 
-    // ========================================================================
-    // 💬 O MOTOR BIDIRECIONAL DE FEEDBACK
-    // ========================================================================
-    modalFeedbackAtivo: null, // Guarda o ID do modal para o Real-Time
+    modalFeedbackAtivo: null, 
 
     abrirModalFeedback: async (entregaId, eventoId) => {
         Workspace.Sidebar.modalFeedbackAtivo = entregaId;
 
-        // Puxa as informações da entrega na nuvem (para carregar os balões de fala)
         const res = await Workspace.api(`/workspace/entregas/${entregaId}`, 'GET');
         if(!res || !res.success) {
             Workspace.mostrarAviso("Não foi possível carregar a caixa de diálogo.", "error");
@@ -1503,7 +1277,6 @@ verFotoChat: () => {
         const modalId = 'ws-feedback-modal';
         if(document.getElementById(modalId)) document.getElementById(modalId).remove();
 
-        // 🚀 PREPARAR OS BALÕES DE FALA (Estilo WhatsApp)
         let htmlMensagens = '';
         if(entrega.feedbacks && entrega.feedbacks.length > 0) {
             entrega.feedbacks.forEach(fb => {
@@ -1546,7 +1319,6 @@ verFotoChat: () => {
             htmlMensagens = '<div style="text-align:center; padding:30px; color:#999; font-size:13px; display:flex; flex-direction:column; align-items:center;"><span style="font-size:40px; margin-bottom:10px;">📭</span> O professor ainda não enviou nenhum comentário para este exercício.</div>';
         }
 
-        // A caixa de envio só fica disponível para a Equipa Pedagógica
         let inputArea = '';
         if(isProf) {
             inputArea = `
@@ -1578,7 +1350,6 @@ verFotoChat: () => {
         `;
         document.body.appendChild(modal);
         
-        // Empurra o scroll do chat de feedback para baixo
         const listaContainer = document.getElementById('ws-feedback-lista');
         listaContainer.scrollTop = listaContainer.scrollHeight;
     },
@@ -1599,7 +1370,6 @@ verFotoChat: () => {
 
             if(res && res.success) {
                 input.value = '';
-                // 🚀 Recarrega o modal para exibir o balão novo instantaneamente!
                 Workspace.Sidebar.abrirModalFeedback(entregaId, eventoId); 
             }
         } catch(e) {
@@ -1609,7 +1379,7 @@ verFotoChat: () => {
         }
     },
 
-   enviarTarefa: async () => {
+    enviarTarefa: async () => {
         const eventoId = document.getElementById('ws-tarefa-id').value;
         const fileInput = document.getElementById('ws-tarefa-arquivo');
         const obs = document.getElementById('ws-tarefa-obs').value.trim();
@@ -1621,7 +1391,6 @@ verFotoChat: () => {
         const txtOriginal = btn.innerText; btn.innerText = "🔄 Enviando o exercício...⏳"; btn.disabled = true;
 
         try {
-            // 🚀 USA A VIA VERDE
             const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(file);
             btn.innerText = "📝 Registrando a entrega...";
 
@@ -1703,10 +1472,9 @@ verFotoChat: () => {
                 descricao: desc, 
                 anexoUrl: anexoUrl, 
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login,
-                escolaId: Workspace.usuario.escolaId // 🚀 GATILHO CORRIGIDO: Agora enviamos a Escola para o Servidor!
+                escolaId: Workspace.usuario.escolaId 
             };
 
-            // 🚀 ROTA CORRIGIDA: Aponta para a nova rota artilhada (/workspace/eventos)
             const res = await Workspace.api('/workspace/eventos', 'POST', payload);
             
             if(res && !res.error) {
@@ -1727,14 +1495,13 @@ verFotoChat: () => {
         }
     },
 
-   mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
+    mostrarConfirmacao: (titulo, mensagem, callbackSim) => {
         const id = 'ws-custom-confirm-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
 
         const overlay = document.createElement('div');
         overlay.id = id;
         
-        // 🚀 CORREÇÃO 1: z-index colocado no máximo absoluto (2147483647)
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2147483647; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); opacity:0; transition: opacity 0.2s;";
         
         overlay.innerHTML = `
@@ -1749,7 +1516,6 @@ verFotoChat: () => {
             </div>
         `;
 
-        // 🚀 CORREÇÃO 2: Removemos o confinamento. Agora anexa sempre no body!
         document.body.appendChild(overlay);
 
         requestAnimationFrame(() => {
@@ -1790,23 +1556,15 @@ verFotoChat: () => {
         );
     },
 
-    // ============================================================================
-    // 🚀 MOTOR DE EDIÇÃO GERAL (TAREFAS E FEEDBACKS)
-    // ============================================================================
-
-    // 1. EDIÇÃO COMPLETA DA TAREFA
     editarTarefaCompleta: async (eventoId) => {
         const evento = Workspace.Sidebar.tarefasCache.find(e => e.id === eventoId);
         if(!evento) return;
 
-        // Fecha os modais atuais
         document.getElementById('ws-tarefa-modal').style.display = 'none';
         document.getElementById('ws-prof-lista-recebidas').style.display = 'none';
         
-        // Abre o painel de "Criar Tarefa" para reaproveitarmos a interface
         await Workspace.Sidebar.abrirPainelNovaTarefa();
 
-        // 🚀 O PREENCHIMENTO AUTOMÁTICO
         document.getElementById('ws-nova-tarefa-titulo').value = evento.titulo || evento.nome;
         document.getElementById('ws-nova-tarefa-desc').value = evento.descricao || '';
         
@@ -1818,12 +1576,10 @@ verFotoChat: () => {
         const sel = document.getElementById('ws-nova-tarefa-turma');
         sel.value = evento.turma || 'global';
 
-        // 🚀 O CAMALEÃO: Transforma o botão "Criar" num botão "Guardar Alterações"
         const btnSalvar = document.getElementById('ws-btn-salvar-tarefa');
         btnSalvar.innerText = "💾 Guardar Alterações do Exercício";
-        btnSalvar.style.background = "#f39c12"; // Fica Laranja para alertar que é edição
+        btnSalvar.style.background = "#f39c12"; 
         
-        // Substitui o onclick nativo
         btnSalvar.onclick = () => Workspace.Sidebar.salvarEdicaoTarefaCompleta(eventoId, evento.anexoUrl);
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1845,9 +1601,8 @@ verFotoChat: () => {
         btn.innerText = "⏳ Guardando..."; btn.disabled = true;
 
         try {
-            let anexoFinalUrl = anexoAntigoUrl; // Assume o antigo por defeito
+            let anexoFinalUrl = anexoAntigoUrl; 
 
-            // Se o professor escolher um ficheiro NOVO, faz upload e substitui
             if(fileInput.files.length > 0) {
                 const dadosUpload = await Workspace.Upload.enviarFicheiroInteligente(fileInput.files[0]);
                 anexoFinalUrl = dadosUpload.url;
@@ -1859,7 +1614,6 @@ verFotoChat: () => {
             if(res && res.success) {
                 Workspace.mostrarAviso("Exercício atualizado com sucesso!", "success");
                 
-                // Restaura o botão e os campos
                 btn.style.background = "#27ae60"; 
                 btn.innerText = "🚀 Publicar Exercício para a Turma";
                 btn.onclick = Workspace.Sidebar.salvarNovaTarefa;
@@ -1869,7 +1623,7 @@ verFotoChat: () => {
                 document.getElementById('ws-nova-tarefa-desc').value = '';
                 fileInput.value = '';
                 
-                Workspace.Sidebar.carregarTarefas(); // Atualiza a lista na memória
+                Workspace.Sidebar.carregarTarefas(); 
                 Workspace.Sidebar.voltarMenuTarefasProf(); 
             } else {
                 throw new Error("Erro na Base de Dados.");
@@ -1880,13 +1634,11 @@ verFotoChat: () => {
         }
     },
 
-    // 2. EDIÇÃO E EXCLUSÃO IN-LINE DOS BALÕES DE FEEDBACK
     editarFeedbackInline: (entregaId, eventoId, feedbackId) => {
         const textoContainer = document.getElementById(`fb-texto-${feedbackId}`);
         const acoesContainer = document.getElementById(`fb-acoes-${feedbackId}`);
         if (!textoContainer) return;
         
-        // Guarda o texto original tirando as quebras de linha de HTML (<br>)
         const textoAtual = textoContainer.innerHTML.replace(/<br>/g, '\n');
         
         if(acoesContainer) acoesContainer.style.display = 'none';
@@ -1911,7 +1663,6 @@ verFotoChat: () => {
         try {
             const res = await Workspace.api(`/workspace/entregas/${entregaId}/feedback/${feedbackId}`, 'PUT', { texto: novoTexto });
             if(res && res.success) {
-                // O servidor emite um SSE (NOVO_FEEDBACK) que vai recarregar a tela automaticamente
             }
         } catch(e) { Workspace.mostrarAviso("Erro ao salvar comentário.", "error"); }
     },
@@ -1919,7 +1670,6 @@ verFotoChat: () => {
     apagarFeedback: (entregaId, eventoId, feedbackId) => {
         Workspace.Sidebar.mostrarConfirmacao("Apagar Comentário?", "Deseja remover este feedback?", async () => {
             try {
-                // Optimistic UI - Apaga do ecrã na hora
                 const balao = document.getElementById(`fb-container-${feedbackId}`);
                 if (balao) balao.remove();
                 
@@ -1928,8 +1678,7 @@ verFotoChat: () => {
         });
     },
 
-
-   abrirPainelTarefasRecebidas: async () => {
+    abrirPainelTarefasRecebidas: async () => {
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
@@ -1950,7 +1699,6 @@ verFotoChat: () => {
 
             let html = '';
             tarefas.forEach(t => {
-                // 🚀 CORREÇÃO CRÍTICA DO FUSO HORÁRIO NO PAINEL DO PROFESSOR
                 const dataLimpa = t.data ? t.data.split('T')[0] : '';
                 const partes = dataLimpa.split('-');
                 const dataF = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataLimpa;
