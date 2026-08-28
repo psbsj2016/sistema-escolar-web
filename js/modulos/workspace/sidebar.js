@@ -1407,14 +1407,19 @@ verFotoChat: () => {
     },
 
 
-    // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (SINTAXE CORRIGIDA)
+   // 🚀 Motor de Prévia Inteligente Embutida para o Aluno (SINTAXE CORRIGIDA E DETETOR DE VÍDEO ATUALIZADO)
     exibirPreviaDoAluno: (entrega) => {
         const divTexto = document.getElementById('ws-preview-texto-aluno');
         const divMidia = document.getElementById('ws-preview-midia-aluno');
         
+        if (!divTexto || !divMidia) return; // Proteção extra para garantir que a tela existe
+
         // Captura os dados vindos do seu Backend
-        const texto = entrega.texto || entrega.observacoes || entrega.obs;
+        const texto = entrega.texto || entrega.observacoes || entrega.obs || entrega.observacao;
         const url = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
+        
+        // 🚀 O SEGREDO: Capturar o nome do ficheiro para saber a verdadeira extensão!
+        const nomeArquivo = (entrega.arquivoNome || entrega.anexoNome || '').toLowerCase();
 
         // 1. Limpeza do ecrã (Reset para a próxima tarefa)
         divTexto.style.display = 'none'; 
@@ -1425,18 +1430,18 @@ verFotoChat: () => {
 
         // 2. Injeta as Observações do Aluno
         if (texto) {
-            divTexto.innerHTML = Workspace.Sidebar.escapeHTML(texto);
+            divTexto.innerHTML = Workspace.Sidebar.escapeHTML(texto).replace(/\n/g, '<br>');
             divTexto.style.display = 'block';
         }
 
-        // 3. Detetive de Extensões: Injeta o Reprodutor Nativo Correto
+        // 3. Detetive de Extensões: Analisa o NOME DO ARQUIVO em vez da URL da Nuvem
         if (url) {
-            const isVideo = url.match(/\.(mp4|webm|mov|mkv)$/i) || url.includes('/video/upload/');
-            const isAudio = url.match(/\.(mp3|wav|ogg|m4a)$/i) || (url.includes('/video/upload/') && url.includes('audio'));
-            const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes('/image/upload/');
+            const isVideo = nomeArquivo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || url.includes('/video/upload/');
+            const isAudio = nomeArquivo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || url.includes('audio');
+            const isImage = nomeArquivo.match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || url.includes('/image/upload/');
 
             if (isVideo) {
-                divMidia.innerHTML = `<video src="${url}" controls playsinline style="width: 100%; max-height: 350px; border-radius: 8px; outline: none;"></video>`;
+                divMidia.innerHTML = `<video src="${url}" controls playsinline style="width: 100%; max-height: 350px; border-radius: 8px; outline: none; background: #000;"></video>`;
                 divMidia.style.display = 'flex';
             } else if (isAudio) {
                 divMidia.innerHTML = `<audio src="${url}" controls style="width: 100%; margin: 20px 10px; outline: none;"></audio>`;
