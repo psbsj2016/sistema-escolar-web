@@ -1406,6 +1406,7 @@ verFotoChat: () => {
         }
     },
 
+
     // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (SINTAXE CORRIGIDA)
     exibirPreviaDoAluno: (entrega) => {
         const divTexto = document.getElementById('ws-preview-texto-aluno');
