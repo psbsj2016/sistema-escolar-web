@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V8 FINAL (Blindagem de CSS Global, Sync de DB Seguro e Loop Infinito)
+// js/modulos/workspace/ingles.js - V10 FINAL (Conexão Absoluta ao DB, Limpeza de Inputs e Loop Seguro)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -167,6 +167,11 @@ Workspace.Ingles = {
         }
     },
 
+    // 🚀 BLINDAGEM: Função exigida pelo workspace.js
+    renderizarVisualizacao: function() {
+        this.abrirBau();
+    },
+
     abrirBau(){ 
         this.loadDados().then(() => {
             this.renderAlunoGrid();
@@ -200,16 +205,34 @@ Workspace.Ingles = {
             
             if(res && res.success && res.dados){
                 const d = res.dados;
-                // Previne a sobreposição por defaults se a base de dados já tiver os itens corretos
-                this.state.words = (Array.isArray(d.words) && d.words.length > 0) ? d.words : [...this.defaults.words];
-                this.state.phrases = (Array.isArray(d.phrases) && d.phrases.length > 0) ? d.phrases : [...this.defaults.phrases];
-                this.state.quizzes = (Array.isArray(d.quizzes) && d.quizzes.length > 0) ? d.quizzes : [...this.defaults.quizzes];
-                this.state.pictures = (Array.isArray(d.pictures) && d.pictures.length > 0) ? d.pictures : [...this.defaults.pictures];
-                this.state.wordPickers = (Array.isArray(d.wordPickers) && d.wordPickers.length > 0) ? d.wordPickers : [...this.defaults.wordPickers];
-                this.state.minimalPairs = (Array.isArray(d.minimalPairs) && d.minimalPairs.length > 0) ? d.minimalPairs : [...this.defaults.minimalPairs];
-                this.state.debates = (Array.isArray(d.debates) && d.debates.length > 0) ? d.debates : [...this.defaults.debates];
-                this.state.roleplays = (Array.isArray(d.roleplays) && d.roleplays.length > 0) ? d.roleplays : [...this.defaults.roleplays];
-                this.state.questions = (Array.isArray(d.questions) && d.questions.length > 0) ? d.questions : [...this.defaults.questions];
+                
+                // 🚀 LÓGICA DE HIDRATAÇÃO INTELIGENTE DA BASE DE DADOS
+                // Se a base de dados já foi guardada pelo menos uma vez, respeitamos as listas dela (mesmo que vazias).
+                const dbJaFoiSalvo = !!d.ultimaAtualizacao;
+
+                if (dbJaFoiSalvo) {
+                    this.state.words = Array.isArray(d.words) ? d.words : [];
+                    this.state.phrases = Array.isArray(d.phrases) ? d.phrases : [];
+                    this.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
+                    this.state.pictures = Array.isArray(d.pictures) ? d.pictures : [];
+                    this.state.wordPickers = Array.isArray(d.wordPickers) ? d.wordPickers : [];
+                    this.state.minimalPairs = Array.isArray(d.minimalPairs) ? d.minimalPairs : [];
+                    this.state.debates = Array.isArray(d.debates) ? d.debates : [];
+                    this.state.roleplays = Array.isArray(d.roleplays) ? d.roleplays : [];
+                    this.state.questions = Array.isArray(d.questions) ? d.questions : [];
+                } else {
+                    // Banco Virgem: Fornece os itens padrão para o professor ter uma amostra inicial
+                    this.state.words = [...this.defaults.words];
+                    this.state.phrases = [...this.defaults.phrases];
+                    this.state.quizzes = [...this.defaults.quizzes];
+                    this.state.pictures = [...this.defaults.pictures];
+                    this.state.wordPickers = [...this.defaults.wordPickers];
+                    this.state.minimalPairs = [...this.defaults.minimalPairs];
+                    this.state.debates = [...this.defaults.debates];
+                    this.state.roleplays = [...this.defaults.roleplays];
+                    this.state.questions = [...this.defaults.questions];
+                }
+
                 this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
                 this.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 this.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
@@ -402,7 +425,7 @@ Workspace.Ingles = {
             /* Toast */
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-            /* 🚀 Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
+            /* Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
             #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
             .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
             .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
@@ -564,7 +587,6 @@ Workspace.Ingles = {
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
                 
-                // 🚀 FIX: Força a base de dados a sincronizar ANTES de desenhar a aba Professor
                 this.loadDados().then(() => {
                     this.renderProfessorTab('biblioteca');
                 });
@@ -580,7 +602,6 @@ Workspace.Ingles = {
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
 
-            // Lógica de Respostas Internas
             const cur = this.desafioAtualObj;
             const input = document.getElementById('ig-input')?.value?.trim()||'';
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
@@ -655,8 +676,6 @@ Workspace.Ingles = {
             if(a === 'inserir-variavel-mago') this.inserirVariavelMago();
             if(a === 'salvar-mago-phrase') this.handleSalvarMago();
             if(a === 'editar-mago-phrase') this.editarMagoPhrase(b.dataset.id);
-            if(a === 'add-quiz') this.addQuiz();
-            if(a === 'add-pic') this.addPic();
             if(a === 'add-quest') this.addQuest();
             if(a === 'rem-quest') this.remQuest(b.dataset.id);
             if(a === 'add-loot') this.addLoot(b.dataset.rar);
@@ -665,31 +684,68 @@ Workspace.Ingles = {
             if(a === 'atualizar-ranking') this.carregarRanking();
             if(a === 'aprovar-envio') this.aprovarEnvio(b.dataset.id);
             
-            // 🚀 FIX: Ações do Professor aguardam a gravação na Base de Dados antes de redesenhar a tela
             if(a === 'rejeitar-envio') { 
                 this.state.submissions = this.state.submissions.filter(i=>i.id!==b.dataset.id); 
                 await this.saveDados(); 
                 this.renderProfessorTab('envios'); 
             }
+            
+            // 🚀 UX MELHORADA: Os campos agora são esvaziados assim que a submissão for guardada
             if(a === 'add-word') { 
-                const w=document.getElementById('nwWord').value; 
-                const t=document.getElementById('nwTrans').value; 
+                const inputW = document.getElementById('ig-input-word');
+                const inputT = document.getElementById('ig-input-trans');
+                const w = inputW.value.trim(); 
+                const t = inputT.value.trim(); 
                 if(w){ 
                     this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); 
                     await this.saveDados(); 
+                    inputW.value = ''; inputT.value = ''; // Esvazia a caixa
                     this.renderProfessorTab('biblioteca'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
-                } 
+                } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
             }
             if(a === 'add-phrase') { 
-                const p=document.getElementById('nwPhrase').value; 
+                const inputP = document.getElementById('ig-input-phrase');
+                const p = inputP.value.trim(); 
                 if(p){ 
                     this.state.phrases.unshift({id:'p'+Date.now(), phrase:p, level:'A2'}); 
                     await this.saveDados(); 
+                    inputP.value = '';
                     this.renderProfessorTab('biblioteca'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
-                } 
+                } else { this.mostrarAvisoLocal('Digite a frase','error'); }
             }
+            if(a === 'add-quiz') { 
+                const inputQ = document.getElementById('ig-input-qQuestion');
+                const inputO1 = document.getElementById('ig-input-qOpt1');
+                const inputO2 = document.getElementById('ig-input-qOpt2');
+                const q = inputQ.value.trim(); 
+                const o1 = inputO1.value.trim(); 
+                const o2 = inputO2.value.trim(); 
+                if(q && o1 && o2){ 
+                    this.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1,o2], correct:1, level:'B1'}); 
+                    await this.saveDados(); 
+                    inputQ.value = ''; inputO1.value = ''; inputO2.value = '';
+                    this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Preencha os três campos','error'); }
+            }
+            if(a === 'add-pic') { 
+                const inputW = document.getElementById('ig-input-picWord');
+                const inputT = document.getElementById('ig-input-picTrans');
+                const inputE = document.getElementById('ig-input-picEmoji');
+                const w = inputW.value.trim(); 
+                const t = inputT.value.trim(); 
+                const e = inputE.value.trim()||'🖼';
+                if(w){ 
+                    this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:t, emoji:e, category:'Custom'}); 
+                    await this.saveDados(); 
+                    inputW.value = ''; inputT.value = ''; inputE.value = '';
+                    this.renderProfessorTab('imagens'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
+            }
+            
             if(a === 'remover-item') { 
                 this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); 
                 await this.saveDados(); 
@@ -819,7 +875,6 @@ Workspace.Ingles = {
         this.renderDesafioAtual();
     },
 
-    // ========= TELAS DOS JOGOS =========
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
         const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
@@ -1053,7 +1108,6 @@ Workspace.Ingles = {
         this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; } };
     },
 
-    // ========= RECONSTRUÇÃO DA ÁREA DO PROFESSOR =========
     renderProfessorTab(tabId){
         document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
         const activeBtn = document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
@@ -1073,8 +1127,8 @@ Workspace.Ingles = {
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Vocabulário (${this.state.words.length})</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-                            <input id="nwWord" class="ig-input" style="flex:1; min-width:100px;" placeholder="Palavra">
-                            <input id="nwTrans" class="ig-input" style="flex:1; min-width:100px;" placeholder="Tradução">
+                            <input id="ig-input-word" class="ig-input" style="flex:1; min-width:100px;" placeholder="Palavra">
+                            <input id="ig-input-trans" class="ig-input" style="flex:1; min-width:100px;" placeholder="Tradução">
                             <button data-action="add-word" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
@@ -1084,7 +1138,7 @@ Workspace.Ingles = {
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Frases e Expressões (${this.state.phrases.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
-                            <input id="nwPhrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
+                            <input id="ig-input-phrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
                             <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
@@ -1094,10 +1148,10 @@ Workspace.Ingles = {
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Quizzes (${this.state.quizzes.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-                            <input id="qQuestion" class="ig-input" placeholder="Pergunta">
+                            <input id="ig-input-qQuestion" class="ig-input" placeholder="Pergunta">
                             <div style="display:flex; gap:8px;">
-                                <input id="qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
-                                <input id="qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
+                                <input id="ig-input-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
+                                <input id="ig-input-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
                                 <button data-action="add-quiz" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                             </div>
                         </div>
@@ -1131,9 +1185,9 @@ Workspace.Ingles = {
                 <h3 style="margin-top:0;">🖼 Banco de Figuras (Visão do Alquimista)</h3>
                 <div class="prof-card" style="margin-bottom:20px;">
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        <input id="picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:120px;">
-                        <input id="picTrans" class="ig-input" placeholder="Tradução" style="flex:2; min-width:120px;">
-                        <input id="picEmoji" class="ig-input" placeholder="Emoji 🍎" style="flex:1; min-width:60px;">
+                        <input id="ig-input-picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:120px;">
+                        <input id="ig-input-picTrans" class="ig-input" placeholder="Tradução" style="flex:2; min-width:120px;">
+                        <input id="ig-input-picEmoji" class="ig-input" placeholder="Emoji 🍎" style="flex:1; min-width:60px;">
                         <button data-action="add-pic" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px 16px; border-radius:8px;">Adicionar</button>
                     </div>
                 </div>
