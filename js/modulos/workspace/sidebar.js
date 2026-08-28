@@ -1407,58 +1407,86 @@ verFotoChat: () => {
     },
 
 
-   // 🚀 Motor de Prévia Inteligente Embutida para o Aluno (SINTAXE CORRIGIDA E DETETOR DE VÍDEO ATUALIZADO)
+   // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (100% DINÂMICA E BLINDADA)
     exibirPreviaDoAluno: (entrega) => {
+        const areaEntregue = document.getElementById('ws-area-entregue');
+        if (!areaEntregue) return;
+
+        // 1. Destrói o botão antigo ("Visualizar o meu envio") se ele ainda estiver no HTML
+        const btnAntigo = document.getElementById('ws-tarefa-link-entregue');
+        if (btnAntigo) btnAntigo.remove();
+
+        // 2. Constrói a Tela de Cinema dinamicamente (se não existir)
+        let divPreview = document.getElementById('ws-preview-envio-aluno');
+        if (!divPreview) {
+            divPreview = document.createElement('div');
+            divPreview.id = 'ws-preview-envio-aluno';
+            divPreview.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: left; margin-top: 15px; width: 100%; box-sizing: border-box;';
+            
+            divPreview.innerHTML = `
+                <h5 style="margin: 0 0 10px 0; color: #1e293b; font-size: 14px; display: flex; align-items: center; gap: 8px;"><span>👀</span> O seu envio:</h5>
+                <div id="ws-preview-texto-aluno" style="font-size: 14px; color: #475569; margin-bottom: 15px; white-space: pre-wrap; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: none;"></div>
+                <div id="ws-preview-midia-aluno" style="display: flex; justify-content: center; background: #0f172a; border-radius: 8px; overflow: hidden; display: none; width: 100%;"></div>
+            `;
+            
+            const dataEntregue = document.getElementById('ws-tarefa-data-entregue');
+            if (dataEntregue) dataEntregue.after(divPreview);
+            else areaEntregue.appendChild(divPreview);
+        }
+
         const divTexto = document.getElementById('ws-preview-texto-aluno');
         const divMidia = document.getElementById('ws-preview-midia-aluno');
-        
-        if (!divTexto || !divMidia) return; // Proteção extra para garantir que a tela existe
 
-        // Captura os dados vindos do seu Backend
+        // 3. Captura os dados vindos do Backend (Base de Dados)
         const texto = entrega.texto || entrega.observacoes || entrega.obs || entrega.observacao;
         const url = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
         
-        // 🚀 O SEGREDO: Capturar o nome do ficheiro para saber a verdadeira extensão!
+        // 🚀 O SEGREDO: Usamos o nome do ficheiro para não sermos enganados pela URL do Cloudflare!
         const nomeArquivo = (entrega.arquivoNome || entrega.anexoNome || '').toLowerCase();
 
-        // 1. Limpeza do ecrã (Reset para a próxima tarefa)
+        // Limpeza do Ecrã
         divTexto.style.display = 'none'; 
         divTexto.innerHTML = '';
         divMidia.style.display = 'none'; 
         divMidia.innerHTML = '';
-        divMidia.style.background = '#0f172a'; // Fundo estilo cinema para vídeos
+        divMidia.style.background = '#0f172a';
 
-        // 2. Injeta as Observações do Aluno
+        // 4. Injeta as Observações do Aluno
         if (texto) {
             divTexto.innerHTML = Workspace.Sidebar.escapeHTML(texto).replace(/\n/g, '<br>');
             divTexto.style.display = 'block';
         }
 
-        // 3. Detetive de Extensões: Analisa o NOME DO ARQUIVO em vez da URL da Nuvem
+        // 5. O DETETIVE DE EXTENSÕES (Idêntico ao do Painel do Professor)
         if (url) {
-            const isVideo = nomeArquivo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || url.includes('/video/upload/');
-            const isAudio = nomeArquivo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || url.includes('audio');
-            const isImage = nomeArquivo.match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || url.includes('/image/upload/');
+            const urlCorrigida = url.startsWith('http') || url.startsWith('/') ? url : '/' + url;
+            
+            // 🚀 AQUI A MÁGICA: Lê o nomeArquivo garantindo que o MP4 será reproduzido como Vídeo
+            const isVideo = nomeArquivo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video');
+            const isAudio = nomeArquivo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio');
+            const isImage = nomeArquivo.match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('/image/upload/') || urlCorrigida.includes('cloudinary');
 
             if (isVideo) {
-                divMidia.innerHTML = `<video src="${url}" controls playsinline style="width: 100%; max-height: 350px; border-radius: 8px; outline: none; background: #000;"></video>`;
+                divMidia.innerHTML = `<video src="${urlCorrigida}" controls playsinline style="width: 100%; max-height: 300px; border-radius: 8px; outline: none; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
                 divMidia.style.display = 'flex';
             } else if (isAudio) {
-                divMidia.innerHTML = `<audio src="${url}" controls style="width: 100%; margin: 20px 10px; outline: none;"></audio>`;
+                divMidia.innerHTML = `<audio src="${urlCorrigida}" controls style="width: 100%; margin: 20px 10px; outline: none;"></audio>`;
                 divMidia.style.background = 'transparent';
                 divMidia.style.display = 'flex';
             } else if (isImage) {
-                divMidia.innerHTML = `<img src="${url}" style="width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px;">`;
+                divMidia.innerHTML = `<img src="${urlCorrigida}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Meu Envio')">`;
                 divMidia.style.background = 'transparent';
                 divMidia.style.display = 'flex';
             } else {
-                // Se for PDF ou Documento de texto, cria um botão elegante
-                divMidia.innerHTML = `<a href="${url}" target="_blank" style="background: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px; display: inline-block; transition: 0.2s;">📄 Visualizar Documento Original</a>`;
+                const isOffice = nomeArquivo.match(/\.(docx|doc|xlsx|xls)$/) != null;
+                const attrDownload = isOffice ? `download="${Workspace.Sidebar.escapeHTML(entrega.arquivoNome || 'documento')}"` : '';
+                
+                divMidia.innerHTML = `<a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">📥 Baixar / Visualizar Documento</a>`;
                 divMidia.style.background = 'transparent';
                 divMidia.style.display = 'flex';
             }
         }
-    }, 
+    }, // <--- Vírgula de segurança que separa as funções
 
     // ========================================================================
     // 💬 O MOTOR BIDIRECIONAL DE FEEDBACK
