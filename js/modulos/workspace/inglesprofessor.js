@@ -3,15 +3,14 @@ window.Workspace = window.Workspace || {};
 
 Workspace.InglesProfessor = {
     
-    // 🚀 ROTEADOR DE AÇÕES DO PROFESSOR
+    // 🚀 ROTEADOR DE AÇÕES DO PROFESSOR (Com Referências Absolutas)
     handleAction: async function(acao, b) {
         const Ingles = Workspace.Ingles;
         const state = Ingles.state;
-        const esc = Workspace.escapeHTML;
 
         switch(acao) {
             case 'render-tab':
-                this.renderProfessorTab(b.dataset.tab);
+                Workspace.InglesProfessor.renderProfessorTab(b.dataset.tab);
                 break;
             case 'testar-voz-mago':
                 const nomeCompleto = Workspace.usuario?.nome || 'Aventureiro';
@@ -19,7 +18,7 @@ Workspace.InglesProfessor = {
                 Ingles.falar(`Greetings, brave adventurer ${primeiroNome}, your quest begins now!`, 'en-US', 1, 0.95, true);
                 break;
             case 'inserir-variavel-mago':
-                const inputMago = document.getElementById('nwMago');
+                const inputMago = document.getElementById('ig-nwMago');
                 if(inputMago) {
                     const s = inputMago.selectionStart, e = inputMago.selectionEnd, v = '(citarAluno)';
                     inputMago.value = inputMago.value.substring(0, s) + v + inputMago.value.substring(e);
@@ -28,7 +27,7 @@ Workspace.InglesProfessor = {
                 }
                 break;
             case 'salvar-mago-phrase':
-                const inputPh = document.getElementById('nwMago'); 
+                const inputPh = document.getElementById('ig-nwMago'); 
                 const textPh = inputPh?.value.trim();
                 if(!textPh) return Ingles.mostrarAvisoLocal('Escreva a fala do Mago!', 'warning');
                 if(state.editingMagoId) {
@@ -42,13 +41,13 @@ Workspace.InglesProfessor = {
                 const btnMago = document.getElementById('btn-salvar-mago'); 
                 if(btnMago) btnMago.innerText = 'Salvar';
                 await Ingles.saveDados(); 
-                this.renderProfessorTab('mago'); 
+                Workspace.InglesProfessor.renderProfessorTab('mago'); 
                 Ingles.mostrarAvisoLocal('Fala ensinada ao Mago! 🧙', 'success');
                 break;
             case 'editar-mago-phrase':
                 const phToEdit = state.magoPhrases.find(m => m.id === b.dataset.id); 
                 if(!phToEdit) return;
-                const inputEdit = document.getElementById('nwMago'); 
+                const inputEdit = document.getElementById('ig-nwMago'); 
                 inputEdit.value = phToEdit.text; 
                 inputEdit.focus();
                 state.editingMagoId = b.dataset.id; 
@@ -60,7 +59,7 @@ Workspace.InglesProfessor = {
                 if(b.dataset.key === 'magoPhrases' && state.editingMagoId === b.dataset.id) state.editingMagoId = null;
                 await Ingles.saveDados();
                 const activeTab = document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca';
-                this.renderProfessorTab(activeTab);
+                Workspace.InglesProfessor.renderProfessorTab(activeTab);
                 Ingles.mostrarAvisoLocal('Removido!', 'success');
                 break;
             case 'add-word':
@@ -70,7 +69,7 @@ Workspace.InglesProfessor = {
                 state.words.unshift({id: 'w'+Date.now(), word: w, translation: t, level: 'B1'}); 
                 await Ingles.saveDados(); 
                 if(iW) iW.value = ''; if(iT) iT.value = ''; 
-                this.renderProfessorTab('biblioteca'); 
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Palavra adicionada!', 'success'); 
                 break;
             case 'add-phrase':
@@ -79,7 +78,7 @@ Workspace.InglesProfessor = {
                 state.phrases.unshift({id: 'p'+Date.now(), phrase: p, level: 'A2'}); 
                 await Ingles.saveDados(); 
                 if(iP) iP.value = '';
-                this.renderProfessorTab('biblioteca'); 
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Frase adicionada!', 'success'); 
                 break;
             case 'add-quiz':
@@ -89,7 +88,7 @@ Workspace.InglesProfessor = {
                 state.quizzes.unshift({id: 'q'+Date.now(), question: q, options: [o1, o2], correct: 1, level: 'B1'}); 
                 await Ingles.saveDados(); 
                 if(iQ) iQ.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value='';
-                this.renderProfessorTab('biblioteca'); 
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Quiz adicionado!', 'success'); 
                 break;
             case 'add-pic':
@@ -99,7 +98,7 @@ Workspace.InglesProfessor = {
                 state.pictures.unshift({id: 'pic'+Date.now(), word: picW, translation: picT, emoji: picE, category: 'Custom'}); 
                 await Ingles.saveDados(); 
                 if(iPicW) iPicW.value=''; if(iPicT) iPicT.value=''; if(iPicE) iPicE.value='';
-                this.renderProfessorTab('imagens'); 
+                Workspace.InglesProfessor.renderProfessorTab('imagens'); 
                 Ingles.mostrarAvisoLocal('Imagem adicionada!', 'success'); 
                 break;
             case 'add-wordPicker':
@@ -109,7 +108,8 @@ Workspace.InglesProfessor = {
                 state.wordPickers.unshift({id: 'wp'+Date.now(), text: wpText, options: [wpO1, wpO2], correct: 1});
                 await Ingles.saveDados();
                 if(iWpT) iWpT.value=''; if(iWpO1) iWpO1.value=''; if(iWpO2) iWpO2.value='';
-                this.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Poção adicionada!','success');
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Poção adicionada!','success');
                 break;
             case 'add-minimal':
                 const iMpA = document.getElementById('ig-mpA'), iMpB = document.getElementById('ig-mpB');
@@ -118,7 +118,8 @@ Workspace.InglesProfessor = {
                 state.minimalPairs.unshift({id: 'mp'+Date.now(), a: mpA, b: mpB});
                 await Ingles.saveDados();
                 if(iMpA) iMpA.value=''; if(iMpB) iMpB.value='';
-                this.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Sons adicionados!','success');
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Sons adicionados!','success');
                 break;
             case 'add-debate':
                 const iDbT = document.getElementById('ig-dbTopic'), iDbS = document.getElementById('ig-dbStarter');
@@ -127,7 +128,8 @@ Workspace.InglesProfessor = {
                 state.debates.unshift({id: 'd'+Date.now(), topic: dbTopic, starter: dbStarter});
                 await Ingles.saveDados();
                 if(iDbT) iDbT.value=''; if(iDbS) iDbS.value='';
-                this.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Debate adicionado!','success');
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Debate adicionado!','success');
                 break;
             case 'add-roleplay':
                 const iRpT = document.getElementById('ig-rpTitle'), iRpP = document.getElementById('ig-rpPrompt'), iRpTip = document.getElementById('ig-rpTip');
@@ -136,7 +138,8 @@ Workspace.InglesProfessor = {
                 state.roleplays.unshift({id: 'rp'+Date.now(), title: rpTitle, prompt: rpPrompt, tip: rpTip});
                 await Ingles.saveDados();
                 if(iRpT) iRpT.value=''; if(iRpP) iRpP.value=''; if(iRpTip) iRpTip.value='';
-                this.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Roleplay adicionado!','success');
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Roleplay adicionado!','success');
                 break;
             case 'add-question':
                 const iAqT = document.getElementById('ig-aqText'); const aqTxt = iAqT?.value.trim();
@@ -144,7 +147,8 @@ Workspace.InglesProfessor = {
                 state.questions.unshift({id: 'aq'+Date.now(), text: aqTxt});
                 await Ingles.saveDados();
                 if(iAqT) iAqT.value='';
-                this.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Pergunta adicionada!','success');
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Pergunta adicionada!','success');
                 break;
             case 'add-quest':
                 const iQT = document.getElementById('ig-qTexto'), iQA = document.getElementById('ig-qAlvo'), iQX = document.getElementById('ig-qXP'), iQI = document.getElementById('ig-qIcone'), iQTi = document.getElementById('ig-qTipo');
@@ -153,12 +157,13 @@ Workspace.InglesProfessor = {
                 state.quests.push({id: 'q_'+Date.now(), texto: qTexto, alvo: qAlvo, recompensaXP: qXP, icone: qIcone, tipo: qTipo});
                 await Ingles.saveDados(); 
                 if(iQT) iQT.value='';
-                this.renderProfessorTab('quests'); Ingles.mostrarAvisoLocal('Missão criada!', 'success');
+                Workspace.InglesProfessor.renderProfessorTab('quests'); 
+                Ingles.mostrarAvisoLocal('Missão criada!', 'success');
                 break;
             case 'rem-quest':
                 state.quests = state.quests.filter(q => q.id !== b.dataset.id);
                 await Ingles.saveDados(); 
-                this.renderProfessorTab('quests');
+                Workspace.InglesProfessor.renderProfessorTab('quests');
                 break;
             case 'add-loot':
                 const rar = b.dataset.rar;
@@ -170,14 +175,14 @@ Workspace.InglesProfessor = {
                 state.lootTables[rar].push({id: 'loot_'+Date.now(), nome: lootNome, tipo: 'cosmetico', chance: 50});
                 await Ingles.saveDados(); 
                 if(inpLoot) inpLoot.value = '';
-                this.renderProfessorTab('loja');
+                Workspace.InglesProfessor.renderProfessorTab('loja');
                 break;
             case 'rem-loot':
                 const rarl = b.dataset.rar;
                 if(state.lootTables[rarl]) { 
                     state.lootTables[rarl] = state.lootTables[rarl].filter(i => i.id !== b.dataset.id); 
                     await Ingles.saveDados(); 
-                    this.renderProfessorTab('loja'); 
+                    Workspace.InglesProfessor.renderProfessorTab('loja'); 
                 }
                 break;
             case 'salvar-season':
@@ -186,17 +191,17 @@ Workspace.InglesProfessor = {
                 state.season = {...state.season, nome: sNome, xpMultiplier: sMult, id: state.season.id || 'S1'};
                 await Ingles.saveDados(); 
                 Ingles.mostrarAvisoLocal('Temporada salva!', 'success'); 
-                this.renderProfessorTab('season');
+                Workspace.InglesProfessor.renderProfessorTab('season');
                 break;
             case 'reset-season':
                 if(!confirm('Resetar temporada? Isso zera XP semanal da escola e guarda histórico. Continuar?')) return;
                 try {
                     const res = await Workspace.api('/workspace/ingles/season/reset','POST',{escolaId: Workspace.usuario.escolaId || 'DEFAULT', novaSeason: {id: 'S'+Date.now(), nome: 'Nova Era', xpMultiplier: 1, ativa: true}});
-                    if(res?.success) { Ingles.mostrarAvisoLocal('Season resetada!', 'success'); await Ingles.loadDados(); this.renderProfessorTab('season'); }
+                    if(res?.success) { Ingles.mostrarAvisoLocal('Season resetada!', 'success'); await Ingles.loadDados(); Workspace.InglesProfessor.renderProfessorTab('season'); }
                 } catch(e) { Ingles.mostrarAvisoLocal('Erro ao resetar', 'error'); }
                 break;
             case 'atualizar-ranking':
-                this.carregarRanking();
+                Workspace.InglesProfessor.carregarRanking();
                 break;
             case 'aprovar-envio':
                 const sApp = state.submissions.find(x => x.id === b.dataset.id); 
@@ -204,13 +209,13 @@ Workspace.InglesProfessor = {
                 sApp.status = 'approved'; 
                 state.pool.unshift({id: 'pool_'+Date.now(), type: sApp.game, text: sApp.text, word: sApp.text, origin: 'student', student: sApp.student, timestamp: Date.now()}); 
                 await Ingles.saveDados(); 
-                this.renderProfessorTab('envios'); 
+                Workspace.InglesProfessor.renderProfessorTab('envios'); 
                 Ingles.mostrarAvisoLocal('Aprovado para Piscina Global!', 'success');
                 break;
             case 'rejeitar-envio':
                 state.submissions = state.submissions.filter(i => i.id !== b.dataset.id); 
                 await Ingles.saveDados(); 
-                this.renderProfessorTab('envios'); 
+                Workspace.InglesProfessor.renderProfessorTab('envios'); 
                 break;
         }
     },
@@ -221,7 +226,7 @@ Workspace.InglesProfessor = {
         if(voz === undefined || !modo) return;
         Workspace.Ingles.state.magoConfig = {vozAtiva: voz, modoExibicao: modo};
         await Workspace.Ingles.saveDados(); 
-        Workspace.Ingles.mostrarAvisoLocal('Configuração de comportamento atualizada!', 'success');
+        Workspace.Ingles.mostrarAvisoLocal('Configuração do Mago atualizada!', 'success');
     },
 
     carregarRanking: async function() {
@@ -266,6 +271,7 @@ Workspace.InglesProfessor = {
                 <h3 style="margin-top:0;">📚 Biblioteca de Conteúdo (Algoritmo SRS)</h3>
                 <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Tudo que você adicionar aqui alimenta os jogos dos alunos. O algoritmo controla a repetição e fixação automaticamente.</p>
                 <div class="grid-cards">
+                    <!-- Vocabulário -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Vocabulário (${state.words.length})</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
@@ -277,6 +283,8 @@ Workspace.InglesProfessor = {
                             ${state.words.map(w=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(w.word)}</b> - ${esc(w.translation)}</span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+                    
+                    <!-- Frases -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Frases e Expressões (${state.phrases.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -287,6 +295,8 @@ Workspace.InglesProfessor = {
                             ${state.phrases.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Quizzes -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Quizzes (${state.quizzes.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
@@ -301,6 +311,8 @@ Workspace.InglesProfessor = {
                             ${state.quizzes.map(q=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(q.question)}</b> | Correta: ${esc(q.options[q.correct])}</span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- WordPickers -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Poção Sintática (${state.wordPickers.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
@@ -315,6 +327,8 @@ Workspace.InglesProfessor = {
                             ${state.wordPickers.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(s.text)}</b> | Correta: ${esc(s.options[s.correct])}</span><button data-action="remover-item" data-key="wordPickers" data-id="${s.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Minimal Pairs -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Sussurros Gêmeos (${state.minimalPairs.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -326,6 +340,8 @@ Workspace.InglesProfessor = {
                             ${state.minimalPairs.map(m=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(m.a)} vs ${esc(m.b)}</span><button data-action="remover-item" data-key="minimalPairs" data-id="${m.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Debates -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Debates IA (${state.debates.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
@@ -339,6 +355,8 @@ Workspace.InglesProfessor = {
                             ${state.debates.map(d=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(d.topic)}</span><button data-action="remover-item" data-key="debates" data-id="${d.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Roleplays -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Roleplays (${state.roleplays.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
@@ -353,6 +371,8 @@ Workspace.InglesProfessor = {
                             ${state.roleplays.map(r=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(r.title)}</b></span><button data-action="remover-item" data-key="roleplays" data-id="${r.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Perguntas Abertas -->
                     <div class="prof-card">
                         <h4 style="margin-top:0;">Perguntas Abertas (${state.questions.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -418,7 +438,7 @@ Workspace.InglesProfessor = {
                 <div class="prof-card">
                     <h4 style="margin-top:0;">Nova Fala do Mago</h4>
                     <div style="display:flex; gap:10px; margin-bottom:10px;">
-                        <input id="nwMago" class="ig-input" placeholder="Ex: Bravo, (citarAluno)!" style="flex:1;">
+                        <input id="ig-nwMago" class="ig-input" placeholder="Ex: Bravo, (citarAluno)!" style="flex:1;">
                         <button data-action="inserir-variavel-mago" class="ws-btn" style="background:#8B5CF6; color:#fff; border:none; padding:10px; border-radius:8px;">+(citarAluno)</button>
                         <button data-action="salvar-mago-phrase" id="btn-salvar-mago" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px; border-radius:8px;">Salvar</button>
                     </div>
@@ -427,7 +447,6 @@ Workspace.InglesProfessor = {
                     </div>
                 </div>
             `;
-            // Drag and Drop (mantido do original)
             const lista = document.getElementById('ws-mago-lista-falas');
             if(lista){
                 lista.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', e.target.closest('[data-id]')?.dataset.id); e.target.style.opacity='0.5'; });
