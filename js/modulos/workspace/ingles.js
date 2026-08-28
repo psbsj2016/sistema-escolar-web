@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - Módulo Central (Aluno) - Interface Limpa
+// js/modulos/workspace/ingles.js - Módulo Central e Motor de Jogos (Aluno)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -269,7 +269,10 @@ Workspace.Ingles = {
         try{
             if(Workspace.usuario?.tipo==='Aluno'){
                 Workspace.api('/workspace/ingles/xp','POST', {
-                    userId: Workspace.usuario.id, escolaId: Workspace.usuario.escolaId, xp: this.state.xp
+                    userId: Workspace.usuario.id, 
+                    escolaId: Workspace.usuario.escolaId, 
+                    coins: this.state.coins,
+                    streak: this.state.streak
                 }).catch(()=>{});
             }
             
@@ -414,7 +417,7 @@ Workspace.Ingles = {
             .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
             
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
-            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px; box-sizing: border-box; outline: none; transition: 0.2s; }
+            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 10px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px 14px; box-sizing: border-box; outline: none; transition: 0.2s; }
             .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
             .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; cursor: pointer;}
             .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
@@ -423,30 +426,50 @@ Workspace.Ingles = {
             
             /* 🚀 Toast Otimizado e Blindado */
             .toast { 
-                position: fixed; 
-                top: 85px; 
-                left: 50%; 
-                transform: translateX(-50%); 
-                background: #F59E0B; 
-                color: #fff; 
-                padding: 12px 24px; 
-                border-radius: 30px; 
-                font-weight: 800; 
-                z-index: 2147483647; /* Valor máximo para furar qualquer camada superior */
-                box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
-                transition: opacity 0.3s, transform 0.3s; 
-                width: max-content; 
-                max-width: 90%; 
-                text-align: center; 
-                word-wrap: break-word; 
+                position: fixed; top: 85px; left: 50%; transform: translateX(-50%); 
+                background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; 
+                font-weight: 800; z-index: 2147483647; box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
+                transition: opacity 0.3s, transform 0.3s; width: max-content; max-width: 90%; 
+                text-align: center; word-wrap: break-word; 
             }
+            @media (max-width: 768px) { .toast { top: auto; bottom: 40px; } }
             
-            /* Ajustes Mobile Responsivos */
+            /* 🚀 CSS PREMIUM DO PAINEL DO PROFESSOR (Botoes e Layout) */
+            #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
+            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
+            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
+            .tab-panel { display: none; }
+            .tab-panel.active { display: block; }
+            
+            /* 🚀 Grelhas e Cartões */
+            .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+            .prof-card { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+            .ig-prof-header { display: flex; align-items: center; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; font-weight: 800; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+            .prof-list-scroll { max-height: 220px; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+            .prof-list-scroll::-webkit-scrollbar { width: 6px; }
+            .prof-list-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+            .prof-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; color: #1e293b; line-height: 1.4; transition: 0.2s; }
+            .prof-list-item:hover { border-color: #cbd5e1; background: #fff; }
+
+            /* 🚀 Botões Modernos do Professor */
+            .ws-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+            .ws-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,0.4); }
+            .ws-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(239,68,68,0.2); transition: 0.2s; flex-shrink: 0; }
+            .ws-btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(239,68,68,0.3); }
+            .ws-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: 0.2s; }
+            .ws-btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.3); }
+
             @media (max-width: 768px) {
-                .toast { 
-                    top: auto; 
-                    bottom: 40px; /* Desce para a zona inferior no telemóvel */
-                }
+                #professorView { flex-direction: column; gap: 12px; }
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+                .ig-sidebar::-webkit-scrollbar { display: none; } 
+                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                .bau-header { flex-direction: column; }
+                .bau-actions { width: 100%; justify-content: space-between; }
+                .content { padding: 16px; }
+                .grid-cards { grid-template-columns: 1fr; }
             }
         `;
         document.head.appendChild(style);
@@ -487,14 +510,16 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
+                        <!-- 🚀 RESTAURO: O ESQUELETO LIMPO DO PROFESSOR (Apenas o que é usado) -->
                         <div class="ig-sidebar">
                             <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount" style="background:#F59E0B; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
                         </div>
                         <div class="content">
+                            <!-- Apenas os 5 painéis necessários -->
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
@@ -571,6 +596,7 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
+            // 🚀 REDIRECIONA AÇÕES DO PROFESSOR PARA O NOVO FICHEIRO
             const profActions = ['render-tab', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking'];
             
             if (profActions.includes(a)) {
@@ -744,6 +770,7 @@ Workspace.Ingles = {
         }, 1500);
     },
 
+    // 🚀 LÓGICA DE ROTAS INTELIGENTE COM A ÂNCORA DO BANCO DE DADOS
     getColecaoDoJogoAtual(){
         const id = this.jogoAtual;
         const db = this.state._dbLoaded; 
@@ -805,7 +832,7 @@ Workspace.Ingles = {
                     <span style="font-weight:700; font-size:13px; color:#475569;">📦 ${totalItens} Desafios (SRS)</span>
                     <span style="font-weight:700; font-size:13px; color:#D97706;">🪙 Recompensa Contínua</span>
                 </div>
-                <button data-action="iniciar-jogo" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; border:none; padding:16px; border-radius:12px; font-size:16px; cursor:pointer;">Começar Treino Infinito ▶</button>
+                <button data-action="iniciar-jogo" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:16px; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.3);">Começar Treino Infinito ▶</button>
             </div>
         `;
     },
@@ -822,7 +849,7 @@ Workspace.Ingles = {
                 <p style="font-weight:700; color:#64748B;">Tradução: ${Workspace.escapeHTML(w.translation||'')}</p>
                 <p style="font-weight:600; margin-top:20px;">Crie uma frase usando esta palavra:</p>
                 <textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence here..." style="min-height:100px; margin-top:10px;"></textarea>
-                <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; border:none; padding:16px; border-radius:12px; margin-top:16px; cursor:pointer;">Lançar Feitiço ✨</button>
+                <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:16px; border-radius:12px; margin-top:16px; cursor:pointer;">Lançar Feitiço ✨</button>
             </div>`;
     },
 
@@ -838,7 +865,7 @@ Workspace.Ingles = {
             </div>
             <div style="background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0; text-align:center;">
                 <p style="font-weight:600; margin:0 0 10px 0;">Sua vez de ler:</p>
-                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:#10B981; color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar</button>
+                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar</button>
                 <div id="ig-speechResult" style="margin-top:15px; font-weight:600;"></div>
             </div>`;
     },
@@ -852,7 +879,7 @@ Workspace.Ingles = {
                 <div style="font-size:48px; margin-bottom:10px;">🦉</div>
                 <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 30px; border-radius:20px; border:none; cursor:pointer; margin-bottom:20px;">🔊 Tocar Áudio</button>
                 <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;">
-                <button data-action="verificar-listen" class="ws-btn" style="width:100%; background:#10B981; color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Desvendar Mistério</button>
+                <button data-action="verificar-listen" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Desvendar Mistério</button>
             </div>`;
     },
 
@@ -890,7 +917,7 @@ Workspace.Ingles = {
             <div style="text-align:center; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700;">${task}</span></div>
             <div class="ig-big-phrase">${Workspace.escapeHTML(phrase.phrase)}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua nova frase aqui..." style="min-height:80px;"></textarea>
-            <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter</button>`;
+            <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter</button>`;
     },
 
     renderGameAnswerQuest(){
@@ -900,7 +927,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${Workspace.escapeHTML(this.desafioAtualObj.text)}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..." style="min-height:100px;"></textarea>
-            <button data-action="verificar-envio" data-game="answerQuest" class="ws-btn" style="width:100%; margin-top:16px; background:#D97706; color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Enviar Resposta</button>`;
+            <button data-action="verificar-envio" data-game="answerQuest" class="ws-btn" style="width:100%; margin-top:16px; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Enviar Resposta</button>`;
     },
 
     renderGameQuestionMaker(){
@@ -912,7 +939,7 @@ Workspace.Ingles = {
             <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${Workspace.escapeHTML(this.desafioAtualObj.text)}"</div>
             <p style="text-align:center; font-weight:600; margin-top:20px;">Qual pergunta em inglês gerou essa resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
-            <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:#4F46E5; color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
+            <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
     },
 
     renderGameContextRole(){
@@ -927,7 +954,7 @@ Workspace.Ingles = {
             </div>
             <p style="font-size:13px; background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:700;">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="O que você responderia em inglês?..." style="min-height:80px;"></textarea>
-            <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; margin-top:16px; background:#10B981; color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Atuar e Enviar</button>`;
+            <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; margin-top:16px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Atuar e Enviar</button>`;
     },
 
     renderGameDebateAI(){
@@ -942,7 +969,7 @@ Workspace.Ingles = {
         
         const chatHtml = this.state._debateChat.map(m=>{
             if(m.role==='user'){
-                return `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;"><div style="background:#4F46E5; color:#fff; padding:12px 16px; border-radius:16px 16px 4px 16px; max-width:80%; font-size:14px;">${Workspace.escapeHTML(m.text)}</div></div>`;
+                return `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;"><div style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:12px 16px; border-radius:16px 16px 4px 16px; max-width:80%; font-size:14px; box-shadow:0 4px 10px rgba(79,70,229,0.2);">${Workspace.escapeHTML(m.text)}</div></div>`;
             }else{
                 return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px;">🤖 MAGO IA</div>${Workspace.escapeHTML(m.text)}</div></div>`;
             }
@@ -955,7 +982,7 @@ Workspace.Ingles = {
             <div id="ig-debate-chat" style="height:250px; overflow-y:auto; padding:10px; margin-bottom:16px; border:1px solid #E2E8F0; border-radius:12px;">${chatHtml}</div>
             <div style="display:flex; gap:10px;">
                 <textarea id="ig-input" class="ig-textarea" placeholder="Escreva seu argumento..." style="flex:1; min-height:50px; border-radius:12px;"></textarea>
-                <button data-action="verificar-debate" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:12px; padding:0 20px; font-size:20px; cursor:pointer;">➤</button>
+                <button data-action="verificar-debate" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; border-radius:12px; padding:0 20px; font-size:20px; cursor:pointer;">➤</button>
             </div>`;
         const div = document.getElementById('ig-debate-chat');
         if(div) div.scrollTop = div.scrollHeight;
@@ -973,7 +1000,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center; padding:20px 0;">
                 <div style="font-size:48px; margin-bottom:16px;">👄</div>
-                <button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:#4F46E5; color:#fff; padding:16px 40px; border-radius:30px; border:none; cursor:pointer; font-size:16px;">🎧 Ouvir Palavra</button>
+                <button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:16px 40px; border-radius:30px; border:none; cursor:pointer; font-size:16px; box-shadow:0 4px 12px rgba(79,70,229,0.3);">🎧 Ouvir Palavra</button>
                 <div style="display:flex; gap:16px; justify-content:center; margin-top:30px;">
                     <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.a}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${this.desafioAtualObj.a}</button>
                     <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.b}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${this.desafioAtualObj.b}</button>
@@ -991,7 +1018,7 @@ Workspace.Ingles = {
             <div style="text-align:center;">
                 <div style="width:160px; height:160px; border-radius:30px; background:#F8FAFC; border:4px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:80px; box-shadow:0 10px 20px rgba(0,0,0,0.05);">${pic.emoji}</div>
                 <div style="background:#fff; border:2px solid #E2E8F0; padding:24px; border-radius:20px;">
-                    <button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:#10B981; color:#fff; width:100%; border-radius:16px; padding:16px; border:none; font-size:16px; cursor:pointer;">🎤 Falar o Nome em Inglês</button>
+                    <button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; border-radius:16px; padding:16px; border:none; font-size:16px; cursor:pointer;">🎤 Falar o Nome em Inglês</button>
                     <div id="ig-speechResult" style="margin-top:16px; font-weight:700;"></div>
                     <div style="margin:20px 0; border-top:2px dashed #E2E8F0;"></div>
                     <input id="ig-input" class="ig-input" placeholder="Ou digite a palavra..." style="text-align:center;">
