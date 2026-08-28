@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V5 FINAL (Acesso Direto, Loop Infinito, Apenas Coins, HTML Limpo)
+// js/modulos/workspace/ingles.js - V10 FINAL (Conexão Absoluta ao DB, Limpeza de Inputs e Loop Seguro)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -66,7 +66,6 @@ const VoiceService = (() => {
             
             let vozSelecionada = femalePool[0]; 
             
-            // INTELIGÊNCIA: Locutora diferente por minijogo
             const currentJogo = window.Workspace?.Ingles?.jogoAtual;
             if(!isMago && currentJogo && femalePool.length > 0) {
                 let hash = 0;
@@ -96,7 +95,6 @@ const VoiceService = (() => {
     };
 })();
 
-// ===================== MOTOR SRS (ESPAÇAMENTO) =====================
 const SRSService = {
     calc(success, entry){
         const now=Date.now();
@@ -117,40 +115,20 @@ const SRSService = {
 Workspace.Ingles = {
     state: {
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
-        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null
+        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, magoPhrases:[], quests:[], lootTables:{comum:[], epico:[], lendario:[]}, season:{}, magoConfig:{vozAtiva:true, modoExibicao:'aleatorio'}, editingMagoId:null
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
 
     defaults: {
-        words:[
-            {id:'w1', word:'Although', translation:'Embora', level:'B2'},
-            {id:'w2', word:'Beneath', translation:'Abaixo de', level:'B1'}
-        ],
-        phrases:[
-            {id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2'},
-            {id:'p2', phrase:'If I had more time, I would travel the world.', translation:'Se eu tivesse mais tempo, viajaria o mundo.', level:'B2'}
-        ],
-        quizzes:[
-            {id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year'], correct:1, level:'B1'}
-        ],
-        pictures:[
-            {id:'pic1', word:'apple', translation:'maçã', emoji:'🍎', category:'Food'}
-        ],
-        minimalPairs:[
-            {id:'mp1', a:'ship', b:'sheep'}
-        ],
-        debates:[
-            {id:'d1', topic:'Social media does more harm than good', starter:'Social media connects us, but also increases anxiety. What is your opinion?'}
-        ],
-        wordPickers:[
-            {id:'wp1', text:'I have _____ my keys.', options:['lost','lose'], correct:0}
-        ],
-        questions:[
-            {id:'aq1', text:'What did you do last weekend?'}
-        ],
-        roleplays:[
-            {id:'rp1', title:'✈ No Aeroporto', prompt:'Attendant: Can I see your passport?', tip:'Use: Here you are'}
-        ],
+        words:[{id:'w1', word:'Although', translation:'Embora', level:'B2'}],
+        phrases:[{id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2'}],
+        quizzes:[{id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year'], correct:1, level:'B1'}],
+        pictures:[{id:'pic1', word:'apple', translation:'maçã', emoji:'🍎', category:'Food'}],
+        minimalPairs:[{id:'mp1', a:'ship', b:'sheep'}],
+        debates:[{id:'d1', topic:'Social media does more harm than good', starter:'Social media connects us, but also increases anxiety. What is your opinion?'}],
+        wordPickers:[{id:'wp1', text:'I have _____ my keys.', options:['lost','lose'], correct:0}],
+        questions:[{id:'aq1', text:'What did you do last weekend?'}],
+        roleplays:[{id:'rp1', title:'✈ No Aeroporto', prompt:'Attendant: Can I see your passport?', tip:'Use: Here you are'}],
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Crie uma frase com a palavra.', icon:'🪄', color:'#E0E7FF'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone.', icon:'🐉', color:'#D1FAE5'},
@@ -179,7 +157,7 @@ Workspace.Ingles = {
                 if(c) {
                     if(tela==='ingles') {
                         c.style.display='block';
-                        this.abrirBau(); // Carrega os dados instantaneamente ao abrir a tab
+                        this.abrirBau();
                     } else {
                         c.style.display='none';
                     }
@@ -189,21 +167,31 @@ Workspace.Ingles = {
         }
     },
 
+    // 🚀 BLINDAGEM: Função exigida pelo workspace.js
+    renderizarVisualizacao: function() {
+        this.abrirBau();
+    },
+
     abrirBau(){ 
         this.loadDados().then(() => {
             this.renderAlunoGrid();
             this.atualizarHUD();
             
             const isProfessor = Workspace.usuario?.tipo !== 'Aluno';
+            const btnProf = document.getElementById('btnProfessor');
+            const btnAluno = document.getElementById('btnAluno');
+            
             if(isProfessor) {
-                document.getElementById('btnProfessor').classList.add('active');
-                document.getElementById('btnAluno').classList.remove('active');
+                if(btnProf) { btnProf.style.display = 'inline-block'; btnProf.classList.add('active'); }
+                if(btnAluno) btnAluno.classList.remove('active');
+                
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
                 this.renderProfessorTab('biblioteca');
             } else {
-                document.getElementById('btnAluno').classList.add('active');
-                document.getElementById('btnProfessor').classList.remove('active');
+                if(btnProf) btnProf.style.display = 'none';
+                if(btnAluno) btnAluno.classList.add('active');
+                
                 document.getElementById('alunoView').classList.remove('hidden');
                 document.getElementById('professorView').classList.add('hidden');
             }
@@ -214,21 +202,45 @@ Workspace.Ingles = {
         try{
             const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
             const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
+            
             if(res && res.success && res.dados){
                 const d = res.dados;
-                this.state.words = Array.isArray(d.words) && d.words.length ? d.words : [...this.defaults.words];
-                this.state.phrases = Array.isArray(d.phrases) && d.phrases.length ? d.phrases : [...this.defaults.phrases];
-                this.state.quizzes = Array.isArray(d.quizzes) && d.quizzes.length ? d.quizzes : [...this.defaults.quizzes];
-                this.state.pictures = Array.isArray(d.pictures) && d.pictures.length ? d.pictures : [...this.defaults.pictures];
-                this.state.wordPickers = Array.isArray(d.wordPickers) && d.wordPickers.length ? d.wordPickers : [...this.defaults.wordPickers];
-                this.state.minimalPairs = Array.isArray(d.minimalPairs) && d.minimalPairs.length ? d.minimalPairs : [...this.defaults.minimalPairs];
-                this.state.debates = Array.isArray(d.debates) && d.debates.length ? d.debates : [...this.defaults.debates];
-                this.state.roleplays = Array.isArray(d.roleplays) && d.roleplays.length ? d.roleplays : [...this.defaults.roleplays];
-                this.state.questions = Array.isArray(d.questions) && d.questions.length ? d.questions : [...this.defaults.questions];
+                
+                // 🚀 LÓGICA DE HIDRATAÇÃO INTELIGENTE DA BASE DE DADOS
+                // Se a base de dados já foi guardada pelo menos uma vez, respeitamos as listas dela (mesmo que vazias).
+                const dbJaFoiSalvo = !!d.ultimaAtualizacao;
+
+                if (dbJaFoiSalvo) {
+                    this.state.words = Array.isArray(d.words) ? d.words : [];
+                    this.state.phrases = Array.isArray(d.phrases) ? d.phrases : [];
+                    this.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
+                    this.state.pictures = Array.isArray(d.pictures) ? d.pictures : [];
+                    this.state.wordPickers = Array.isArray(d.wordPickers) ? d.wordPickers : [];
+                    this.state.minimalPairs = Array.isArray(d.minimalPairs) ? d.minimalPairs : [];
+                    this.state.debates = Array.isArray(d.debates) ? d.debates : [];
+                    this.state.roleplays = Array.isArray(d.roleplays) ? d.roleplays : [];
+                    this.state.questions = Array.isArray(d.questions) ? d.questions : [];
+                } else {
+                    // Banco Virgem: Fornece os itens padrão para o professor ter uma amostra inicial
+                    this.state.words = [...this.defaults.words];
+                    this.state.phrases = [...this.defaults.phrases];
+                    this.state.quizzes = [...this.defaults.quizzes];
+                    this.state.pictures = [...this.defaults.pictures];
+                    this.state.wordPickers = [...this.defaults.wordPickers];
+                    this.state.minimalPairs = [...this.defaults.minimalPairs];
+                    this.state.debates = [...this.defaults.debates];
+                    this.state.roleplays = [...this.defaults.roleplays];
+                    this.state.questions = [...this.defaults.questions];
+                }
+
                 this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
                 this.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 this.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
                 this.state.srs = (d.srs && typeof d.srs==='object') ? d.srs : {};
+                this.state.magoPhrases = Array.isArray(d.magoPhrases) ? d.magoPhrases : [];
+                this.state.quests = Array.isArray(d.quests) ? d.quests : [];
+                this.state.lootTables = (d.lootTables && typeof d.lootTables === 'object') ? d.lootTables : {comum:[], epico:[], lendario:[]};
+                this.state.season = (d.season && typeof d.season === 'object') ? d.season : {id:'S1', nome:'Era Inicial', xpMultiplier:1};
             }else{
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
@@ -243,7 +255,9 @@ Workspace.Ingles = {
                 const localSRS = JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
             }catch{}
-        }catch(e){ console.error('loadDados erro',e); }
+        }catch(e){ 
+            console.error('Erro de conexão ao ler Banco de Dados:', e); 
+        }
     },
 
     async saveDados(){
@@ -256,13 +270,21 @@ Workspace.Ingles = {
         }catch{}
         
         try{
-            await Workspace.api('/workspace/ingles/dados','PUT',{
+            const res = await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId: Workspace.usuario?.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
-                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs
+                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs,
+                magoPhrases:this.state.magoPhrases, quests:this.state.quests, lootTables:this.state.lootTables, season:this.state.season
             });
-        }catch{}
+            if(!res || !res.success) {
+                console.error("Falha silenciosa ao guardar na Base de Dados.", res);
+                this.mostrarAvisoLocal("Falha ao salvar na nuvem.", "error");
+            }
+        }catch(e){
+            console.error("Erro CRÍTICO no SaveDados:", e);
+            this.mostrarAvisoLocal("Erro de conexão ao salvar.", "error");
+        }
     },
 
     getSRS(id){ return this.state.srs[id] || null; },
@@ -317,7 +339,7 @@ Workspace.Ingles = {
         
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // 🚀 LOOP INFINITO (Limpeza de Memória local)
+        // LOOP INFINITO
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
@@ -391,9 +413,9 @@ Workspace.Ingles = {
             .close-btn:hover { background: #EF4444; color: #fff; }
             .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
             
-            /* Game Inner Elements */
+            /* UI Aux */
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
-            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 16px; width: 100%; padding: 14px; box-sizing: border-box; outline: none; transition: 0.2s; }
+            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px; box-sizing: border-box; outline: none; transition: 0.2s; }
             .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
             .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; cursor: pointer;}
             .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
@@ -403,21 +425,24 @@ Workspace.Ingles = {
             /* Toast */
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-         /* Professor Sidebar & Layout Responsivo */
+            /* Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
             #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
-            .sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-            .side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
-            .side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
-            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; } /* min-width: 0 impede vazamento em telas pequenas */
+            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
+            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
+            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
+            
+            /* Grelhas da Área do Professor */
+            .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+            .prof-card { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 12px; }
 
             @media (max-width: 768px) {
                 #professorView { flex-direction: column; gap: 12px; }
-                /* 🚀 FIX: Menu mobile estilo abas com scroll horizontal escondendo a barra */
-                .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-                .sidebar::-webkit-scrollbar { display: none; } 
-                .side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+                .ig-sidebar::-webkit-scrollbar { display: none; } 
+                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
                 
                 .bau-header { flex-direction: column; }
                 .bau-actions { width: 100%; justify-content: space-between; }
@@ -462,15 +487,27 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <aside class="sidebar">
-                            <button class="side-item active" data-tab="biblioteca">📚 Biblioteca</button>
-                            <button class="side-item" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
-                            <button class="side-item" data-tab="imagens">🖼️ Figuras</button>
-                        </aside>
+                        <div class="ig-sidebar">
+                            <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="mago">🧙 Mago IA</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="quests">🎯 Missões</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="loja">🛍 Loja / Loot</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
+                        </div>
                         <div class="content">
                             <div id="tab-biblioteca" class="tab-panel active"></div>
-                            <div id="tab-envios" class="tab-panel"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
+                            <div id="tab-envios" class="tab-panel"></div>
+                            <div id="tab-mago" class="tab-panel"></div>
+                            <div id="tab-quests" class="tab-panel"></div>
+                            <div id="tab-loja" class="tab-panel"></div>
+                            <div id="tab-season" class="tab-panel"></div>
+                            <div id="tab-algoritmo" class="tab-panel"></div>
+                            <div id="tab-ranking" class="tab-panel"></div>
                         </div>
                     </section>
 
@@ -549,7 +586,10 @@ Workspace.Ingles = {
                 document.getElementById('btnAluno').classList.remove('active');
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
-                this.renderProfessorTab('biblioteca');
+                
+                this.loadDados().then(() => {
+                    this.renderProfessorTab('biblioteca');
+                });
             }
             if(a === 'toggle-aluno') {
                 document.getElementById('btnAluno').classList.add('active');
@@ -562,7 +602,6 @@ Workspace.Ingles = {
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
 
-            // Lógica de Respostas Internas
             const cur = this.desafioAtualObj;
             const input = document.getElementById('ig-input')?.value?.trim()||'';
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
@@ -631,10 +670,92 @@ Workspace.Ingles = {
                 }, 1500);
             }
             
+            // Handlers de Configuração e Painel Professor
             if(a === 'render-tab') this.renderProfessorTab(b.dataset.tab);
-            if(a === 'add-word') { const w=document.getElementById('nwWord').value; const t=document.getElementById('nwTrans').value; if(w){ this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
-            if(a === 'add-phrase') { const p=document.getElementById('nwPhrase').value; if(p){ this.state.phrases.unshift({id:'p'+Date.now(), phrase:p}); this.saveDados(); this.renderProfessorTab('biblioteca'); } }
-            if(a === 'remover-item') { this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); this.saveDados(); this.renderProfessorTab('biblioteca'); }
+            if(a === 'testar-voz-mago') VoiceService.falar('Greetings, brave adventurer!', {isMago:true});
+            if(a === 'inserir-variavel-mago') this.inserirVariavelMago();
+            if(a === 'salvar-mago-phrase') this.handleSalvarMago();
+            if(a === 'editar-mago-phrase') this.editarMagoPhrase(b.dataset.id);
+            if(a === 'add-quest') this.addQuest();
+            if(a === 'rem-quest') this.remQuest(b.dataset.id);
+            if(a === 'add-loot') this.addLoot(b.dataset.rar);
+            if(a === 'rem-loot') this.remLoot(b.dataset.rar, b.dataset.id);
+            if(a === 'salvar-season') this.salvarSeason();
+            if(a === 'atualizar-ranking') this.carregarRanking();
+            if(a === 'aprovar-envio') this.aprovarEnvio(b.dataset.id);
+            
+            if(a === 'rejeitar-envio') { 
+                this.state.submissions = this.state.submissions.filter(i=>i.id!==b.dataset.id); 
+                await this.saveDados(); 
+                this.renderProfessorTab('envios'); 
+            }
+            
+            // 🚀 UX MELHORADA: Os campos agora são esvaziados assim que a submissão for guardada
+            if(a === 'add-word') { 
+                const inputW = document.getElementById('ig-input-word');
+                const inputT = document.getElementById('ig-input-trans');
+                const w = inputW.value.trim(); 
+                const t = inputT.value.trim(); 
+                if(w){ 
+                    this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); 
+                    await this.saveDados(); 
+                    inputW.value = ''; inputT.value = ''; // Esvazia a caixa
+                    this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
+            }
+            if(a === 'add-phrase') { 
+                const inputP = document.getElementById('ig-input-phrase');
+                const p = inputP.value.trim(); 
+                if(p){ 
+                    this.state.phrases.unshift({id:'p'+Date.now(), phrase:p, level:'A2'}); 
+                    await this.saveDados(); 
+                    inputP.value = '';
+                    this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Digite a frase','error'); }
+            }
+            if(a === 'add-quiz') { 
+                const inputQ = document.getElementById('ig-input-qQuestion');
+                const inputO1 = document.getElementById('ig-input-qOpt1');
+                const inputO2 = document.getElementById('ig-input-qOpt2');
+                const q = inputQ.value.trim(); 
+                const o1 = inputO1.value.trim(); 
+                const o2 = inputO2.value.trim(); 
+                if(q && o1 && o2){ 
+                    this.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1,o2], correct:1, level:'B1'}); 
+                    await this.saveDados(); 
+                    inputQ.value = ''; inputO1.value = ''; inputO2.value = '';
+                    this.renderProfessorTab('biblioteca'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Preencha os três campos','error'); }
+            }
+            if(a === 'add-pic') { 
+                const inputW = document.getElementById('ig-input-picWord');
+                const inputT = document.getElementById('ig-input-picTrans');
+                const inputE = document.getElementById('ig-input-picEmoji');
+                const w = inputW.value.trim(); 
+                const t = inputT.value.trim(); 
+                const e = inputE.value.trim()||'🖼';
+                if(w){ 
+                    this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:t, emoji:e, category:'Custom'}); 
+                    await this.saveDados(); 
+                    inputW.value = ''; inputT.value = ''; inputE.value = '';
+                    this.renderProfessorTab('imagens'); 
+                    this.mostrarAvisoLocal('Adicionado!','success'); 
+                } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
+            }
+            
+            if(a === 'remover-item') { 
+                this.state[b.dataset.key] = this.state[b.dataset.key].filter(i=>i.id!==b.dataset.id); 
+                await this.saveDados(); 
+                this.renderProfessorTab(document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca'); 
+                this.mostrarAvisoLocal('Removido!','success'); 
+            }
+        });
+        
+        root.addEventListener('change', e=>{
+            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') this.atualizarConfigMago();
         });
     },
 
@@ -676,7 +797,6 @@ Workspace.Ingles = {
         this.renderAlunoGrid();
     },
 
-    // 🚀 LÓGICA DO LOOP INFINITO PURO
     sucessoGenerico: async function(bonusBase){
         if(this.desafioAtualObj?.id){ 
             this.marcarComoConcluido(this.desafioAtualObj.id); 
@@ -689,7 +809,6 @@ Workspace.Ingles = {
         const srs = this.state.srs[this.desafioAtualObj?.id];
         this.mostrarAvisoLocal(`🪙 +${bonusBase} Bronze! Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
 
-        // Avança de imediato SEM VALIDAÇÕES de tempo
         setTimeout(() => {
             const modal = document.getElementById('gameModal');
             if(modal && !modal.classList.contains('hidden')){
@@ -756,7 +875,6 @@ Workspace.Ingles = {
         this.renderDesafioAtual();
     },
 
-    // ========= TELAS DOS JOGOS =========
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
         const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
@@ -991,8 +1109,8 @@ Workspace.Ingles = {
     },
 
     renderProfessorTab(tabId){
-        document.querySelectorAll('.side-item').forEach(b=>b.classList.remove('active'));
-        const activeBtn = document.querySelector(`.side-item[data-tab="${tabId}"]`);
+        document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
         if(activeBtn) activeBtn.classList.add('active');
         
         document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -1005,32 +1123,43 @@ Workspace.Ingles = {
             document.getElementById('tab-biblioteca').innerHTML=`
                 <h3 style="margin-top:0;">📚 Biblioteca de Conteúdo (Algoritmo SRS)</h3>
                 <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Tudo que você adicionar aqui alimenta os jogos dos alunos. O algoritmo controla a repetição e fixação automaticamente.</p>
-                
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:16px; border-radius:12px;">
+                <div class="grid-cards">
+                    <div class="prof-card">
                         <h4 style="margin-top:0;">Vocabulário (${this.state.words.length})</h4>
-                        <div style="display:flex; gap:8px; margin-bottom:12px;">
-                            <input id="nwWord" class="ig-input" placeholder="Palavra">
-                            <input id="nwTrans" class="ig-input" placeholder="Tradução">
-                            <button data-action="add-word" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:0 16px;">+</button>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                            <input id="ig-input-word" class="ig-input" style="flex:1; min-width:100px;" placeholder="Palavra">
+                            <input id="ig-input-trans" class="ig-input" style="flex:1; min-width:100px;" placeholder="Tradução">
+                            <button data-action="add-word" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
                             ${this.state.words.map(w=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(w.word)}</b> - ${esc(w.translation)}</span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
-                    
-                    <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:16px; border-radius:12px;">
+                    <div class="prof-card">
                         <h4 style="margin-top:0;">Frases e Expressões (${this.state.phrases.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
-                            <input id="nwPhrase" class="ig-input" placeholder="Frase em inglês">
-                            <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:0 16px;">+</button>
+                            <input id="ig-input-phrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
+                            <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
                             ${this.state.phrases.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
-                </div>
-            `;
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Quizzes (${this.state.quizzes.length})</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                            <input id="ig-input-qQuestion" class="ig-input" placeholder="Pergunta">
+                            <div style="display:flex; gap:8px;">
+                                <input id="ig-input-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
+                                <input id="ig-input-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
+                                <button data-action="add-quiz" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                            </div>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${this.state.quizzes.map(q=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(q.question)}</b> | Correta: ${esc(q.options[q.correct])}</span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+                </div>`;
         }
         else if (tabId === 'envios'){
             const pendentes = this.state.submissions.filter(s=>s.status==='pending');
@@ -1043,7 +1172,7 @@ Workspace.Ingles = {
                     <div style="background:#fff; border:1px solid #E2E8F0; border-left:4px solid #F59E0B; padding:16px; border-radius:8px; margin-bottom:12px;">
                         <div style="font-size:12px; color:#64748B; margin-bottom:8px;"><b>${esc(s.student)}</b> • Jogo: ${esc(s.game)}</div>
                         <div style="font-size:15px; color:#0F172A; margin-bottom:12px;">${esc(s.text)}</div>
-                        <div style="display:flex; gap:10px;">
+                        <div style="display:flex; flex-wrap:wrap; gap:10px;">
                             <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn" style="background:#10B981; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">✅ Aprovar para a Piscina</button>
                             <button data-action="rejeitar-envio" data-id="${s.id}" class="ws-btn" style="background:#FEE2E2; color:#EF4444; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">🗑 Rejeitar</button>
                         </div>
@@ -1051,9 +1180,125 @@ Workspace.Ingles = {
                 `).join('')}
             `;
         }
-        else {
-            const panel = document.getElementById(`tab-${tabId}`);
-            if(panel) panel.innerHTML = `<div style="padding:40px;text-align:center;color:#64748B;">Seção ${tabId} em desenvolvimento...</div>`;
+        else if (tabId === 'imagens'){
+            document.getElementById('tab-imagens').innerHTML=`
+                <h3 style="margin-top:0;">🖼 Banco de Figuras (Visão do Alquimista)</h3>
+                <div class="prof-card" style="margin-bottom:20px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <input id="ig-input-picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:120px;">
+                        <input id="ig-input-picTrans" class="ig-input" placeholder="Tradução" style="flex:2; min-width:120px;">
+                        <input id="ig-input-picEmoji" class="ig-input" placeholder="Emoji 🍎" style="flex:1; min-width:60px;">
+                        <button data-action="add-pic" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px 16px; border-radius:8px;">Adicionar</button>
+                    </div>
+                </div>
+                <div class="grid-cards">
+                    ${this.state.pictures.map(p=>`
+                    <div style="background:#fff; border:1px solid #E2E8F0; text-align:center; padding:15px; border-radius:12px;">
+                        <div style="font-size:40px;">${p.emoji}</div>
+                        <b>${esc(p.word)}</b><br><small style="color:#64748B">${esc(p.translation||'')}</small><br>
+                        <button data-action="remover-item" data-key="pictures" data-id="${p.id}" class="ws-btn" style="margin-top:10px; background:#FEE2E2; color:#EF4444; border:none; width:100%; padding:6px; border-radius:6px;">Remover</button>
+                    </div>`).join('')}
+                </div>
+            `;
+        }
+        else if (tabId === 'mago'){
+            document.getElementById('tab-mago').innerHTML=`
+                <h3 style="margin-top:0;">🧙 Inteligência do Guardião</h3>
+                <div class="prof-card" style="margin-bottom:16px;">
+                    <label style="font-weight:700; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="mago-voz-toggle" ${this.state.magoConfig.vozAtiva?'checked':''}> Ativar Voz do Mago ao Entrar</label>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <select id="mago-modo-select" class="ig-input" style="flex:1;"><option value="aleatorio" ${this.state.magoConfig.modoExibicao==='aleatorio'?'selected':''}>Falas Aleatórias</option><option value="sequencial" ${this.state.magoConfig.modoExibicao==='sequencial'?'selected':''}>Em Sequência</option></select>
+                        <button data-action="testar-voz-mago" class="ws-btn" style="background:#1E293B; color:#FDE68A; border:none; border-radius:8px; padding:10px;">🔊 Testar Locutora do Mago</button>
+                    </div>
+                </div>
+                <div class="prof-card">
+                    <h4 style="margin-top:0;">Nova Fala do Mago</h4>
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <input id="nwMago" class="ig-input" placeholder="Ex: Bravo, (citarAluno)!" style="flex:1;">
+                        <button data-action="inserir-variavel-mago" class="ws-btn" style="background:#8B5CF6; color:#fff; border:none; padding:10px; border-radius:8px;">+(citarAluno)</button>
+                        <button data-action="salvar-mago-phrase" id="btn-salvar-mago" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px; border-radius:8px;">Salvar</button>
+                    </div>
+                    <div style="max-height:200px; overflow-y:auto; font-size:13px;">
+                        ${this.state.magoPhrases.map((m,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${i+1}. ${esc(m.text)}</span><div><button data-action="editar-mago-phrase" data-id="${m.id}" style="color:#D97706;border:none;background:none;cursor:pointer;margin-right:10px;">✏️</button><button data-action="remover-item" data-key="magoPhrases" data-id="${m.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        else if (tabId === 'quests'){
+            document.getElementById('tab-quests').innerHTML=`
+                <h3 style="margin-top:0;">🎯 Missões Diárias e Desafios</h3>
+                <div class="prof-card" style="margin-bottom:20px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                        <input id="qTexto" class="ig-input" placeholder="Texto (Ex: Acerte 5 Quizzes)" style="flex:2; min-width:150px;">
+                        <input id="qAlvo" type="number" class="ig-input" placeholder="Alvo (Qtd)" style="flex:1; min-width:80px;">
+                        <input id="qXP" type="number" class="ig-input" placeholder="BZ Bônus" style="flex:1; min-width:80px;">
+                        <input id="qIcone" class="ig-input" placeholder="Ícone 🎯" value="🎯" style="flex:1; min-width:60px;">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <select id="qTipo" class="ig-input" style="flex:1;"><option value="diaria">Diária</option><option value="semanal">Semanal</option></select>
+                        <button data-action="add-quest" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px 16px; border-radius:8px;">Adicionar Missão</button>
+                    </div>
+                </div>
+                <div class="grid-cards">
+                    ${this.state.quests.map(q=>`<div class="prof-card"><b>${q.icone} ${esc(q.texto)}</b><br><small>Alvo: ${q.alvo} | +${q.recompensaXP} BZ | ${q.tipo}</small><br><button data-action="rem-quest" data-id="${q.id}" class="ws-btn" style="margin-top:10px; background:#FEE2E2; color:#EF4444; border:none; width:100%; padding:6px; border-radius:6px;">Remover</button></div>`).join('')}
+                </div>
+            `;
+        }
+        else if (tabId === 'loja'){
+            const l = this.state.lootTables;
+            document.getElementById('tab-loja').innerHTML=`
+                <h3 style="margin-top:0;">🛍 Tabelas de Recompensa (Loot dos Baús)</h3>
+                <div class="grid-cards">
+                    <div class="prof-card">
+                        <h4>📦 Comum</h4>
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeComum" class="ig-input" placeholder="Item Comum"><button data-action="add-loot" data-rar="comum" class="ws-btn" style="background:#475569; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(l.comum||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                    </div>
+                    <div class="prof-card" style="border-color:#8B5CF6; background:#F5F3FF;">
+                        <h4 style="color:#6D28D9;">💎 Épico</h4>
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeEpico" class="ig-input" placeholder="Item Épico"><button data-action="add-loot" data-rar="epico" class="ws-btn" style="background:#8B5CF6; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(l.epico||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                    </div>
+                    <div class="prof-card" style="border-color:#F59E0B; background:#FFFBEB;">
+                        <h4 style="color:#B45309;">👑 Lendário</h4>
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeLendario" class="ig-input" placeholder="Item Lendário"><button data-action="add-loot" data-rar="lendario" class="ws-btn" style="background:#F59E0B; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(l.lendario||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        else if (tabId === 'season'){
+            const s = this.state.season;
+            document.getElementById('tab-season').innerHTML=`
+                <h3 style="margin-top:0;">⚙️ Configuração da Temporada</h3>
+                <div class="prof-card">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                        <div><label style="font-weight:700;font-size:12px;">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${esc(s.nome||'')}"></div>
+                        <div><label style="font-weight:700;font-size:12px;">Multiplicador de Moedas</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div>
+                    </div>
+                    <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:10px;">
+                        <button data-action="salvar-season" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:12px 20px; border-radius:8px;">Salvar Temporada</button>
+                    </div>
+                </div>
+            `;
+        }
+        else if (tabId === 'algoritmo'){
+            const totalProf = this.state.words.length+this.state.phrases.length+this.state.quizzes.length+this.state.pictures.length;
+            document.getElementById('tab-algoritmo').innerHTML=`
+                <h3 style="margin-top:0;">🧠 Estatísticas do SRS (Algoritmo)</h3>
+                <div class="grid-cards">
+                    <div class="prof-card" style="text-align:center; border-color:#4F46E5;"><div style="font-size:32px; font-weight:900; color:#4F46E5;">${totalProf}</div><b>Desafios Criados</b></div>
+                    <div class="prof-card" style="text-align:center; border-color:#EF4444;"><div style="font-size:32px; font-weight:900; color:#EF4444;">${this.state.errosRetidos.length}</div><b>Erros Retidos</b></div>
+                    <div class="prof-card" style="text-align:center; border-color:#F59E0B;"><div style="font-size:32px; font-weight:900; color:#F59E0B;">${this.state.pool.length}</div><b>Piscina Global (Envios)</b></div>
+                </div>
+            `;
+        }
+        else if (tabId === 'ranking'){
+            document.getElementById('tab-ranking').innerHTML=`
+                <h3 style="margin-top:0;">🏆 Ranking da Escola</h3>
+                <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Atenção: Como agora usamos BZ e o XP foi descontinuado, esta aba pode precisar de ser revista se pretender um ranking de Moedas.</p>
+                <div id="ig-ranking-list"><div style="text-align:center;padding:40px;color:#94a3b8;">Em manutenção para transição XP -> BZ.</div></div>
+            `;
         }
     }
 };
