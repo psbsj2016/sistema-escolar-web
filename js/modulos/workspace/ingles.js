@@ -114,7 +114,7 @@ const SRSService = {
 
 Workspace.Ingles = {
     state: {
-        _dbLoaded: false, // 🚀 A ÂNCORA MESTRA DA BASE DE DADOS
+        _dbLoaded: false, 
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, magoPhrases:[], quests:[], lootTables:{comum:[], epico:[], lendario:[]}, season:{}, magoConfig:{vozAtiva:true, modoExibicao:'aleatorio'}, editingMagoId:null
     },
@@ -187,7 +187,7 @@ Workspace.Ingles = {
                 
                 document.getElementById('professorView').classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
-                if (Workspace.InglesProfessor) Workspace.InglesProfessor.renderProfessorTab('biblioteca');
+                if (Workspace.InglesProfessor) Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: 'biblioteca' } });
             } else {
                 if(btnProf) btnProf.style.display = 'none';
                 if(btnAluno) btnAluno.classList.add('active');
@@ -272,6 +272,12 @@ Workspace.Ingles = {
         }catch{}
         
         try{
+            if(Workspace.usuario?.tipo==='Aluno'){
+                Workspace.api('/workspace/ingles/xp','POST', {
+                    userId: Workspace.usuario.id, escolaId: Workspace.usuario.escolaId, xp: this.state.xp
+                }).catch(()=>{});
+            }
+            
             const res = await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId: Workspace.usuario?.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
@@ -383,6 +389,7 @@ Workspace.Ingles = {
             .bau-title { display: flex; align-items: center; gap: 16px; }
             .bau-icon { font-size: 40px; background: #FEF3C7; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 2px solid #F59E0B; }
             .bau-title h2 { margin: 0; font-size: 22px; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+            .bau-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748B; font-weight: 500; }
             .bau-actions { display: flex; align-items: center; gap: 16px; }
             .xp-badge { display: flex; gap: 10px; background: #F1F5F9; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; color: #334155; }
             .xp-badge b { color: #0F172A; }
@@ -420,6 +427,28 @@ Workspace.Ingles = {
             
             .hidden { display: none !important; }
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
+            
+            /* Professor Sidebar */
+            #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
+            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
+            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
+            .tab-panel { display: none; }
+            .tab-panel.active { display: block; }
+            
+            .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+            .prof-card { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 12px; }
+
+            @media (max-width: 768px) {
+                #professorView { flex-direction: column; gap: 12px; }
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+                .ig-sidebar::-webkit-scrollbar { display: none; } 
+                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                .bau-header { flex-direction: column; }
+                .bau-actions { width: 100%; justify-content: space-between; }
+                .content { padding: 16px; }
+            }
         `;
         document.head.appendChild(style);
     },
@@ -459,7 +488,29 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <!-- O conteúdo do professor será injetado aqui pelo inglesprofessor.js -->
+                        <!-- 🚀 RESTAURO: O ESQUELETO DO PAINEL DO PROFESSOR -->
+                        <div class="ig-sidebar">
+                            <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="mago">🧙 Mago IA</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="quests">🎯 Missões</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="loja">🛍 Loja / Loot</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
+                        </div>
+                        <div class="content">
+                            <div id="tab-biblioteca" class="tab-panel active"></div>
+                            <div id="tab-imagens" class="tab-panel"></div>
+                            <div id="tab-envios" class="tab-panel"></div>
+                            <div id="tab-mago" class="tab-panel"></div>
+                            <div id="tab-quests" class="tab-panel"></div>
+                            <div id="tab-loja" class="tab-panel"></div>
+                            <div id="tab-season" class="tab-panel"></div>
+                            <div id="tab-algoritmo" class="tab-panel"></div>
+                            <div id="tab-ranking" class="tab-panel"></div>
+                        </div>
                     </section>
 
                     <section id="alunoView" class="view">
@@ -550,7 +601,7 @@ Workspace.Ingles = {
                 document.getElementById('alunoView').classList.add('hidden');
                 
                 this.loadDados().then(() => {
-                    if (Workspace.InglesProfessor) Workspace.InglesProfessor.renderProfessorTab('biblioteca');
+                    if (Workspace.InglesProfessor) Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: 'biblioteca' } });
                 });
             }
             if(a === 'toggle-aluno') {
@@ -713,7 +764,7 @@ Workspace.Ingles = {
     // 🚀 LÓGICA DE ROTAS INTELIGENTE COM A ÂNCORA DO BANCO DE DADOS
     getColecaoDoJogoAtual(){
         const id = this.jogoAtual;
-        const db = this.state._dbLoaded; // Impede leitura falsa se o prof apagou tudo
+        const db = this.state._dbLoaded; 
         
         if(id==='wordSpark') return db ? this.state.words : this.defaults.words;
         if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
