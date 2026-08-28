@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - V10 FINAL (Conexão Absoluta ao DB, Limpeza de Inputs e Loop Seguro)
+// js/modulos/workspace/ingles.js - V13 FINAL (Painel Professor Completo e Blindagem Anti-Defaults)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -114,6 +114,7 @@ const SRSService = {
 
 Workspace.Ingles = {
     state: {
+        _dbLoaded: false, // 🚀 A ÂNCORA MESTRA DA BASE DE DADOS
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, magoPhrases:[], quests:[], lootTables:{comum:[], epico:[], lendario:[]}, season:{}, magoConfig:{vozAtiva:true, modoExibicao:'aleatorio'}, editingMagoId:null
     },
@@ -167,7 +168,6 @@ Workspace.Ingles = {
         }
     },
 
-    // 🚀 BLINDAGEM: Função exigida pelo workspace.js
     renderizarVisualizacao: function() {
         this.abrirBau();
     },
@@ -206,11 +206,11 @@ Workspace.Ingles = {
             if(res && res.success && res.dados){
                 const d = res.dados;
                 
-                // 🚀 LÓGICA DE HIDRATAÇÃO INTELIGENTE DA BASE DE DADOS
-                // Se a base de dados já foi guardada pelo menos uma vez, respeitamos as listas dela (mesmo que vazias).
+                // 🚀 SE O BANCO FOI SALVO PELO MENOS UMA VEZ, DECRETA AUTORIDADE ABSOLUTA DA NUVEM
                 const dbJaFoiSalvo = !!d.ultimaAtualizacao;
 
                 if (dbJaFoiSalvo) {
+                    this.state._dbLoaded = true; // Impede que as listas vazias repuxem as defaults
                     this.state.words = Array.isArray(d.words) ? d.words : [];
                     this.state.phrases = Array.isArray(d.phrases) ? d.phrases : [];
                     this.state.quizzes = Array.isArray(d.quizzes) ? d.quizzes : [];
@@ -221,7 +221,7 @@ Workspace.Ingles = {
                     this.state.roleplays = Array.isArray(d.roleplays) ? d.roleplays : [];
                     this.state.questions = Array.isArray(d.questions) ? d.questions : [];
                 } else {
-                    // Banco Virgem: Fornece os itens padrão para o professor ter uma amostra inicial
+                    this.state._dbLoaded = false;
                     this.state.words = [...this.defaults.words];
                     this.state.phrases = [...this.defaults.phrases];
                     this.state.quizzes = [...this.defaults.quizzes];
@@ -242,8 +242,12 @@ Workspace.Ingles = {
                 this.state.lootTables = (d.lootTables && typeof d.lootTables === 'object') ? d.lootTables : {comum:[], epico:[], lendario:[]};
                 this.state.season = (d.season && typeof d.season === 'object') ? d.season : {id:'S1', nome:'Era Inicial', xpMultiplier:1};
             }else{
+                this.state._dbLoaded = false;
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
+                this.state.wordPickers=[...this.defaults.wordPickers]; this.state.minimalPairs=[...this.defaults.minimalPairs];
+                this.state.debates=[...this.defaults.debates]; this.state.roleplays=[...this.defaults.roleplays];
+                this.state.questions=[...this.defaults.questions];
                 this.state.srs={};
             }
             
@@ -277,7 +281,9 @@ Workspace.Ingles = {
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs,
                 magoPhrases:this.state.magoPhrases, quests:this.state.quests, lootTables:this.state.lootTables, season:this.state.season
             });
-            if(!res || !res.success) {
+            if(res && res.success) {
+                this.state._dbLoaded = true; // Assim que guardamos pela primeira vez, a Base de Dados dita as regras
+            } else {
                 console.error("Falha silenciosa ao guardar na Base de Dados.", res);
                 this.mostrarAvisoLocal("Falha ao salvar na nuvem.", "error");
             }
@@ -339,7 +345,6 @@ Workspace.Ingles = {
         
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
-        // LOOP INFINITO
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
@@ -425,7 +430,7 @@ Workspace.Ingles = {
             /* Toast */
             .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-            /* Professor Sidebar & Layout Responsivo OTIMIZADO - NAMESPACED! */
+            /* Professor Sidebar */
             #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
             .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
             .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; }
@@ -521,7 +526,6 @@ Workspace.Ingles = {
                 </main>
             </div>
 
-            <!-- GAME MODAL -->
             <div id="gameModal" class="modal hidden">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -690,60 +694,111 @@ Workspace.Ingles = {
                 this.renderProfessorTab('envios'); 
             }
             
-            // 🚀 UX MELHORADA: Os campos agora são esvaziados assim que a submissão for guardada
+            // 🚀 UX MELHORADA E BLINDADA COM LIMPEZA DE CAMPOS E LIGAÇÃO A TODOS OS JOGOS
             if(a === 'add-word') { 
-                const inputW = document.getElementById('ig-input-word');
-                const inputT = document.getElementById('ig-input-trans');
-                const w = inputW.value.trim(); 
-                const t = inputT.value.trim(); 
+                const inputW = document.getElementById('ig-nwWord');
+                const inputT = document.getElementById('ig-nwTrans');
+                const w = inputW?.value.trim(); 
+                const t = inputT?.value.trim(); 
                 if(w){ 
                     this.state.words.unshift({id:'w'+Date.now(), word:w, translation:t, level:'B1'}); 
                     await this.saveDados(); 
-                    inputW.value = ''; inputT.value = ''; // Esvazia a caixa
+                    if(inputW) inputW.value = ''; if(inputT) inputT.value = ''; 
                     this.renderProfessorTab('biblioteca'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
                 } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
             }
             if(a === 'add-phrase') { 
-                const inputP = document.getElementById('ig-input-phrase');
-                const p = inputP.value.trim(); 
+                const inputP = document.getElementById('ig-nwPhrase');
+                const p = inputP?.value.trim(); 
                 if(p){ 
                     this.state.phrases.unshift({id:'p'+Date.now(), phrase:p, level:'A2'}); 
                     await this.saveDados(); 
-                    inputP.value = '';
+                    if(inputP) inputP.value = '';
                     this.renderProfessorTab('biblioteca'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
                 } else { this.mostrarAvisoLocal('Digite a frase','error'); }
             }
             if(a === 'add-quiz') { 
-                const inputQ = document.getElementById('ig-input-qQuestion');
-                const inputO1 = document.getElementById('ig-input-qOpt1');
-                const inputO2 = document.getElementById('ig-input-qOpt2');
-                const q = inputQ.value.trim(); 
-                const o1 = inputO1.value.trim(); 
-                const o2 = inputO2.value.trim(); 
+                const inputQ = document.getElementById('ig-qQuestion');
+                const inputO1 = document.getElementById('ig-qOpt1');
+                const inputO2 = document.getElementById('ig-qOpt2');
+                const q = inputQ?.value.trim(); 
+                const o1 = inputO1?.value.trim(); 
+                const o2 = inputO2?.value.trim(); 
                 if(q && o1 && o2){ 
                     this.state.quizzes.unshift({id:'q'+Date.now(), question:q, options:[o1,o2], correct:1, level:'B1'}); 
                     await this.saveDados(); 
-                    inputQ.value = ''; inputO1.value = ''; inputO2.value = '';
+                    if(inputQ) inputQ.value = ''; if(inputO1) inputO1.value = ''; if(inputO2) inputO2.value = '';
                     this.renderProfessorTab('biblioteca'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
                 } else { this.mostrarAvisoLocal('Preencha os três campos','error'); }
             }
             if(a === 'add-pic') { 
-                const inputW = document.getElementById('ig-input-picWord');
-                const inputT = document.getElementById('ig-input-picTrans');
-                const inputE = document.getElementById('ig-input-picEmoji');
-                const w = inputW.value.trim(); 
-                const t = inputT.value.trim(); 
-                const e = inputE.value.trim()||'🖼';
+                const inputW = document.getElementById('ig-picWord');
+                const inputT = document.getElementById('ig-picTrans');
+                const inputE = document.getElementById('ig-picEmoji');
+                const w = inputW?.value.trim(); 
+                const t = inputT?.value.trim(); 
+                const e = inputE?.value.trim()||'🖼';
                 if(w){ 
                     this.state.pictures.unshift({id:'pic'+Date.now(), word:w, translation:t, emoji:e, category:'Custom'}); 
                     await this.saveDados(); 
-                    inputW.value = ''; inputT.value = ''; inputE.value = '';
+                    if(inputW) inputW.value = ''; if(inputT) inputT.value = ''; if(inputE) inputE.value = '';
                     this.renderProfessorTab('imagens'); 
                     this.mostrarAvisoLocal('Adicionado!','success'); 
                 } else { this.mostrarAvisoLocal('Digite a palavra','error'); }
+            }
+            if(a === 'add-wordPicker') {
+                const iT = document.getElementById('ig-wpText');
+                const iO1 = document.getElementById('ig-wpOpt1');
+                const iO2 = document.getElementById('ig-wpOpt2');
+                const text = iT?.value.trim(), o1 = iO1?.value.trim(), o2 = iO2?.value.trim();
+                if(!text || !o1 || !o2) return this.mostrarAvisoLocal('Preencha texto e opções', 'warning');
+                this.state.wordPickers.unshift({id:'wp'+Date.now(), text, options:[o1,o2], correct:1});
+                await this.saveDados();
+                if(iT) iT.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value='';
+                this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Poção adicionada!','success');
+            }
+            if(a === 'add-minimal') {
+                const iA = document.getElementById('ig-mpA');
+                const iB = document.getElementById('ig-mpB');
+                const x = iA?.value.trim(), y = iB?.value.trim();
+                if(!x || !y) return this.mostrarAvisoLocal('Preencha os dois sons', 'warning');
+                this.state.minimalPairs.unshift({id:'mp'+Date.now(), a:x, b:y});
+                await this.saveDados();
+                if(iA) iA.value=''; if(iB) iB.value='';
+                this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Sons adicionados!','success');
+            }
+            if(a === 'add-debate') {
+                const iT = document.getElementById('ig-dbTopic');
+                const iS = document.getElementById('ig-dbStarter');
+                const topic = iT?.value.trim(), starter = iS?.value.trim() || 'What is your opinion?';
+                if(!topic) return this.mostrarAvisoLocal('Preencha tópico', 'warning');
+                this.state.debates.unshift({id:'d'+Date.now(), topic, starter});
+                await this.saveDados();
+                if(iT) iT.value=''; if(iS) iS.value='';
+                this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Debate adicionado!','success');
+            }
+            if(a === 'add-roleplay') {
+                const iT = document.getElementById('ig-rpTitle');
+                const iP = document.getElementById('ig-rpPrompt');
+                const iTip = document.getElementById('ig-rpTip');
+                const title = iT?.value.trim(), prompt = iP?.value.trim(), tip = iTip?.value.trim() || 'Use inglês natural';
+                if(!title || !prompt) return this.mostrarAvisoLocal('Preencha título e fala', 'warning');
+                this.state.roleplays.unshift({id:'rp'+Date.now(), title, prompt, tip});
+                await this.saveDados();
+                if(iT) iT.value=''; if(iP) iP.value=''; if(iTip) iTip.value='';
+                this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Roleplay adicionado!','success');
+            }
+            if(a === 'add-question') {
+                const iT = document.getElementById('ig-aqText');
+                const txt = iT?.value.trim();
+                if(!txt) return this.mostrarAvisoLocal('Digite a pergunta', 'warning');
+                this.state.questions.unshift({id:'aq'+Date.now(), text:txt});
+                await this.saveDados();
+                if(iT) iT.value='';
+                this.renderProfessorTab('biblioteca'); this.mostrarAvisoLocal('Pergunta adicionada!','success');
             }
             
             if(a === 'remover-item') { 
@@ -829,17 +884,20 @@ Workspace.Ingles = {
         }, 1500);
     },
 
+    // 🚀 LÓGICA DE ROTAS INTELIGENTE COM A ÂNCORA DO BANCO DE DADOS
     getColecaoDoJogoAtual(){
-        const id=this.jogoAtual;
-        if(id==='wordSpark') return (this.state.words&&this.state.words.length)?this.state.words:this.defaults.words;
-        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return (this.state.phrases&&this.state.phrases.length)?this.state.phrases:this.defaults.phrases;
-        if(id==='quiz') return (this.state.quizzes&&this.state.quizzes.length)?this.state.quizzes:this.defaults.quizzes;
-        if(id==='wordPicker') return (this.state.wordPickers&&this.state.wordPickers.length)?this.state.wordPickers:this.defaults.wordPickers;
-        if(id==='minimalPairs') return (this.state.minimalPairs&&this.state.minimalPairs.length)?this.state.minimalPairs:this.defaults.minimalPairs;
-        if(id==='picturePop') return (this.state.pictures&&this.state.pictures.length)?this.state.pictures:this.defaults.pictures;
-        if(id==='answerQuest') return (this.state.questions&&this.state.questions.length)?this.state.questions:this.defaults.questions;
-        if(id==='contextRole') return (this.state.roleplays&&this.state.roleplays.length)?this.state.roleplays:this.defaults.roleplays;
-        if(id==='debateAI') return (this.state.debates&&this.state.debates.length)?this.state.debates:this.defaults.debates;
+        const id = this.jogoAtual;
+        const db = this.state._dbLoaded; // Impede leitura falsa se o prof apagou tudo
+        
+        if(id==='wordSpark') return db ? this.state.words : this.defaults.words;
+        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
+        if(id==='quiz') return db ? this.state.quizzes : this.defaults.quizzes;
+        if(id==='wordPicker') return db ? this.state.wordPickers : this.defaults.wordPickers;
+        if(id==='minimalPairs') return db ? this.state.minimalPairs : this.defaults.minimalPairs;
+        if(id==='picturePop') return db ? this.state.pictures : this.defaults.pictures;
+        if(id==='answerQuest') return db ? this.state.questions : this.defaults.questions;
+        if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
+        if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
         return null;
     },
@@ -877,7 +935,8 @@ Workspace.Ingles = {
 
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
-        const totalItens = (this.getColecaoDoJogoAtual()||[]).length;
+        const col = this.getColecaoDoJogoAtual();
+        const totalItens = (col||[]).length;
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center; padding:20px 0;">
                 <div style="font-size:60px; margin-bottom:16px;">${game.icon}</div>
@@ -893,7 +952,7 @@ Workspace.Ingles = {
     },
 
     renderGameWordSpark(){
-        const col = (this.state.words?.length) ? this.state.words : this.defaults.words;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'word'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const w = this.desafioAtualObj;
@@ -909,7 +968,8 @@ Workspace.Ingles = {
     },
 
     renderGameReadAloud(){
-        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const p = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
@@ -925,7 +985,8 @@ Workspace.Ingles = {
     },
 
     renderGameListenType(){
-        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center;">
@@ -937,7 +998,8 @@ Workspace.Ingles = {
     },
 
     renderGameQuiz(){
-        this.desafioAtualObj = this.obterItemInteligente(this.state.quizzes, 'quiz'); 
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'quiz'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
@@ -948,7 +1010,7 @@ Workspace.Ingles = {
     },
 
     renderGameWordPicker(){
-        const col = (this.state.wordPickers?.length) ? this.state.wordPickers : this.defaults.wordPickers;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'picker'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const s = this.desafioAtualObj;
@@ -960,7 +1022,8 @@ Workspace.Ingles = {
     },
 
     renderGameSentenceShuffle(){
-        this.desafioAtualObj = this.obterItemInteligente(this.state.phrases, 'phrase'); 
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const phrase = this.desafioAtualObj; 
         const task = ['Transforme em Pergunta','Transforme em Negativa'][Math.floor(Math.random()*2)];
@@ -972,7 +1035,7 @@ Workspace.Ingles = {
     },
 
     renderGameAnswerQuest(){
-        const col = (this.state.questions?.length) ? this.state.questions : this.defaults.questions;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'question'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
@@ -994,7 +1057,7 @@ Workspace.Ingles = {
     },
 
     renderGameContextRole(){
-        const col = (this.state.roleplays?.length) ? this.state.roleplays : this.defaults.roleplays;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'roleplay'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const c = this.desafioAtualObj;
@@ -1009,7 +1072,7 @@ Workspace.Ingles = {
     },
 
     renderGameDebateAI(){
-        const col = (this.state.debates?.length) ? this.state.debates : this.defaults.debates;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'debate');
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         
@@ -1040,7 +1103,7 @@ Workspace.Ingles = {
     },
 
     renderGameMinimalPairs(){
-        const col = (this.state.minimalPairs?.length) ? this.state.minimalPairs : this.defaults.minimalPairs;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'minimal'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         
@@ -1060,7 +1123,7 @@ Workspace.Ingles = {
     },
 
     renderGamePicturePop(){
-        const col = (this.state.pictures?.length) ? this.state.pictures : this.defaults.pictures;
+        const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'picture'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const pic = this.desafioAtualObj;
@@ -1118,47 +1181,126 @@ Workspace.Ingles = {
         if(panel) panel.classList.add('active');
 
         const esc = Workspace.escapeHTML;
+        const state = this.state; 
 
         if(tabId === 'biblioteca'){
             document.getElementById('tab-biblioteca').innerHTML=`
                 <h3 style="margin-top:0;">📚 Biblioteca de Conteúdo (Algoritmo SRS)</h3>
                 <p style="color:#64748B; font-size:14px; margin-bottom:20px;">Tudo que você adicionar aqui alimenta os jogos dos alunos. O algoritmo controla a repetição e fixação automaticamente.</p>
                 <div class="grid-cards">
+                    <!-- Vocabulário -->
                     <div class="prof-card">
-                        <h4 style="margin-top:0;">Vocabulário (${this.state.words.length})</h4>
+                        <h4 style="margin-top:0;">Vocabulário (${state.words.length})</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-                            <input id="ig-input-word" class="ig-input" style="flex:1; min-width:100px;" placeholder="Palavra">
-                            <input id="ig-input-trans" class="ig-input" style="flex:1; min-width:100px;" placeholder="Tradução">
+                            <input id="ig-nwWord" class="ig-input" style="flex:1; min-width:100px;" placeholder="Palavra">
+                            <input id="ig-nwTrans" class="ig-input" style="flex:1; min-width:100px;" placeholder="Tradução">
                             <button data-action="add-word" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
-                            ${this.state.words.map(w=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(w.word)}</b> - ${esc(w.translation)}</span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                            ${state.words.map(w=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(w.word)}</b> - ${esc(w.translation)}</span><button data-action="remover-item" data-key="words" data-id="${w.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+                    
+                    <!-- Frases -->
                     <div class="prof-card">
-                        <h4 style="margin-top:0;">Frases e Expressões (${this.state.phrases.length})</h4>
+                        <h4 style="margin-top:0;">Frases e Expressões (${state.phrases.length})</h4>
                         <div style="display:flex; gap:8px; margin-bottom:12px;">
-                            <input id="ig-input-phrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
+                            <input id="ig-nwPhrase" class="ig-input" placeholder="Frase em inglês" style="flex:1;">
                             <button data-action="add-phrase" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                         </div>
                         <div style="max-height:200px; overflow-y:auto; font-size:13px;">
-                            ${this.state.phrases.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                            ${state.phrases.map(p=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(p.phrase)}</span><button data-action="remover-item" data-key="phrases" data-id="${p.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- Quizzes -->
                     <div class="prof-card">
-                        <h4 style="margin-top:0;">Quizzes (${this.state.quizzes.length})</h4>
+                        <h4 style="margin-top:0;">Quizzes (${state.quizzes.length})</h4>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
-                            <input id="ig-input-qQuestion" class="ig-input" placeholder="Pergunta">
+                            <input id="ig-qQuestion" class="ig-input" placeholder="Pergunta">
                             <div style="display:flex; gap:8px;">
-                                <input id="ig-input-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
-                                <input id="ig-input-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
+                                <input id="ig-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
+                                <input id="ig-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
                                 <button data-action="add-quiz" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
                             </div>
                         </div>
                         <div style="max-height:150px; overflow-y:auto; font-size:13px;">
-                            ${this.state.quizzes.map(q=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(q.question)}</b> | Correta: ${esc(q.options[q.correct])}</span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                            ${state.quizzes.map(q=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(q.question)}</b> | Correta: ${esc(q.options[q.correct])}</span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                         </div>
                     </div>
+
+                    <!-- WordPickers -->
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Poção Sintática (${state.wordPickers.length})</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                            <input id="ig-wpText" class="ig-input" placeholder="I have ___ keys">
+                            <div style="display:flex; gap:8px;">
+                                <input id="ig-wpOpt1" class="ig-input" placeholder="Op1 (errada)" style="flex:1;">
+                                <input id="ig-wpOpt2" class="ig-input" placeholder="Op2 (correta)" style="flex:1;">
+                                <button data-action="add-wordPicker" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                            </div>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${state.wordPickers.map(s=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(s.text)}</b> | Correta: ${esc(s.options[s.correct])}</span><button data-action="remover-item" data-key="wordPickers" data-id="${s.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Minimal Pairs -->
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Sussurros Gêmeos (${state.minimalPairs.length})</h4>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
+                            <input id="ig-mpA" class="ig-input" placeholder="Som A (ex: ship)" style="flex:1;">
+                            <input id="ig-mpB" class="ig-input" placeholder="Som B (ex: sheep)" style="flex:1;">
+                            <button data-action="add-minimal" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${state.minimalPairs.map(m=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(m.a)} vs ${esc(m.b)}</span><button data-action="remover-item" data-key="minimalPairs" data-id="${m.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Debates -->
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Debates IA (${state.debates.length})</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                            <input id="ig-dbTopic" class="ig-input" placeholder="Tópico (ex: AI in schools)">
+                            <div style="display:flex; gap:8px;">
+                                <input id="ig-dbStarter" class="ig-input" placeholder="Fala da IA" style="flex:1;">
+                                <button data-action="add-debate" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                            </div>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${state.debates.map(d=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(d.topic)}</span><button data-action="remover-item" data-key="debates" data-id="${d.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Roleplays -->
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Roleplays (${state.roleplays.length})</h4>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+                            <input id="ig-rpTitle" class="ig-input" placeholder="Título (ex: No Restaurante)">
+                            <input id="ig-rpPrompt" class="ig-input" placeholder="Fala do NPC">
+                            <div style="display:flex; gap:8px;">
+                                <input id="ig-rpTip" class="ig-input" placeholder="Dica" style="flex:1;">
+                                <button data-action="add-roleplay" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                            </div>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${state.roleplays.map(r=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span><b>${esc(r.title)}</b></span><button data-action="remover-item" data-key="roleplays" data-id="${r.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Perguntas Abertas -->
+                    <div class="prof-card">
+                        <h4 style="margin-top:0;">Perguntas Abertas (${state.questions.length})</h4>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
+                            <input id="ig-aqText" class="ig-input" placeholder="Pergunta aberta..." style="flex:1;">
+                            <button data-action="add-question" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; border-radius:8px; padding:10px 16px;">+</button>
+                        </div>
+                        <div style="max-height:150px; overflow-y:auto; font-size:13px;">
+                            ${state.questions.map(q=>`<div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #E2E8F0;"><span>${esc(q.text)}</span><button data-action="remover-item" data-key="questions" data-id="${q.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        </div>
+                    </div>
+
                 </div>`;
         }
         else if (tabId === 'envios'){
@@ -1185,9 +1327,9 @@ Workspace.Ingles = {
                 <h3 style="margin-top:0;">🖼 Banco de Figuras (Visão do Alquimista)</h3>
                 <div class="prof-card" style="margin-bottom:20px;">
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        <input id="ig-input-picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:120px;">
-                        <input id="ig-input-picTrans" class="ig-input" placeholder="Tradução" style="flex:2; min-width:120px;">
-                        <input id="ig-input-picEmoji" class="ig-input" placeholder="Emoji 🍎" style="flex:1; min-width:60px;">
+                        <input id="ig-picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:120px;">
+                        <input id="ig-picTrans" class="ig-input" placeholder="Tradução" style="flex:2; min-width:120px;">
+                        <input id="ig-picEmoji" class="ig-input" placeholder="Emoji 🍎" style="flex:1; min-width:60px;">
                         <button data-action="add-pic" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px 16px; border-radius:8px;">Adicionar</button>
                     </div>
                 </div>
@@ -1229,13 +1371,13 @@ Workspace.Ingles = {
                 <h3 style="margin-top:0;">🎯 Missões Diárias e Desafios</h3>
                 <div class="prof-card" style="margin-bottom:20px;">
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                        <input id="qTexto" class="ig-input" placeholder="Texto (Ex: Acerte 5 Quizzes)" style="flex:2; min-width:150px;">
-                        <input id="qAlvo" type="number" class="ig-input" placeholder="Alvo (Qtd)" style="flex:1; min-width:80px;">
-                        <input id="qXP" type="number" class="ig-input" placeholder="BZ Bônus" style="flex:1; min-width:80px;">
-                        <input id="qIcone" class="ig-input" placeholder="Ícone 🎯" value="🎯" style="flex:1; min-width:60px;">
+                        <input id="ig-qTexto" class="ig-input" placeholder="Texto (Ex: Acerte 5 Quizzes)" style="flex:2; min-width:150px;">
+                        <input id="ig-qAlvo" type="number" class="ig-input" placeholder="Alvo (Qtd)" style="flex:1; min-width:80px;">
+                        <input id="ig-qXP" type="number" class="ig-input" placeholder="BZ Bônus" style="flex:1; min-width:80px;">
+                        <input id="ig-qIcone" class="ig-input" placeholder="Ícone 🎯" value="🎯" style="flex:1; min-width:60px;">
                     </div>
                     <div style="display:flex; gap:10px;">
-                        <select id="qTipo" class="ig-input" style="flex:1;"><option value="diaria">Diária</option><option value="semanal">Semanal</option></select>
+                        <select id="ig-qTipo" class="ig-input" style="flex:1;"><option value="diaria">Diária</option><option value="semanal">Semanal</option></select>
                         <button data-action="add-quest" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:10px 16px; border-radius:8px;">Adicionar Missão</button>
                     </div>
                 </div>
@@ -1245,24 +1387,25 @@ Workspace.Ingles = {
             `;
         }
         else if (tabId === 'loja'){
-            const l = this.state.lootTables;
+            const loot = this.state.lootTables || {};
+            const allItems = [...(loot.comum||[]), ...(loot.epico||[]), ...(loot.lendario||[])];
             document.getElementById('tab-loja').innerHTML=`
                 <h3 style="margin-top:0;">🛍 Tabelas de Recompensa (Loot dos Baús)</h3>
                 <div class="grid-cards">
                     <div class="prof-card">
                         <h4>📦 Comum</h4>
-                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeComum" class="ig-input" placeholder="Item Comum"><button data-action="add-loot" data-rar="comum" class="ws-btn" style="background:#475569; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
-                        ${(l.comum||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="ig-lootNomeComum" class="ig-input" placeholder="Item Comum"><button data-action="add-loot" data-rar="comum" class="ws-btn" style="background:#475569; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(loot.comum||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="comum" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                     </div>
                     <div class="prof-card" style="border-color:#8B5CF6; background:#F5F3FF;">
                         <h4 style="color:#6D28D9;">💎 Épico</h4>
-                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeEpico" class="ig-input" placeholder="Item Épico"><button data-action="add-loot" data-rar="epico" class="ws-btn" style="background:#8B5CF6; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
-                        ${(l.epico||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="ig-lootNomeEpico" class="ig-input" placeholder="Item Épico"><button data-action="add-loot" data-rar="epico" class="ws-btn" style="background:#8B5CF6; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(loot.epico||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="epico" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                     </div>
                     <div class="prof-card" style="border-color:#F59E0B; background:#FFFBEB;">
                         <h4 style="color:#B45309;">👑 Lendário</h4>
-                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="lootNomeLendario" class="ig-input" placeholder="Item Lendário"><button data-action="add-loot" data-rar="lendario" class="ws-btn" style="background:#F59E0B; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
-                        ${(l.lendario||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
+                        <div style="display:flex; gap:5px; margin-bottom:10px;"><input id="ig-lootNomeLendario" class="ig-input" placeholder="Item Lendário"><button data-action="add-loot" data-rar="lendario" class="ws-btn" style="background:#F59E0B; color:#fff; border:none; border-radius:6px; padding:0 12px;">+</button></div>
+                        ${(loot.lendario||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>${esc(i.nome)}</span><button data-action="rem-loot" data-rar="lendario" data-id="${i.id}" style="color:red;border:none;background:none;cursor:pointer;">✕</button></div>`).join('')}
                     </div>
                 </div>
             `;
@@ -1273,8 +1416,8 @@ Workspace.Ingles = {
                 <h3 style="margin-top:0;">⚙️ Configuração da Temporada</h3>
                 <div class="prof-card">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                        <div><label style="font-weight:700;font-size:12px;">Nome da Temporada</label><input id="seasonNome" class="ig-input" value="${esc(s.nome||'')}"></div>
-                        <div><label style="font-weight:700;font-size:12px;">Multiplicador de Moedas</label><input id="seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div>
+                        <div><label style="font-weight:700;font-size:12px;">Nome da Temporada</label><input id="ig-seasonNome" class="ig-input" value="${esc(s.nome||'')}"></div>
+                        <div><label style="font-weight:700;font-size:12px;">Multiplicador de Moedas</label><input id="ig-seasonMult" type="number" step="0.1" class="ig-input" value="${s.xpMultiplier||1}"></div>
                     </div>
                     <div style="margin-top:16px; display:flex; flex-wrap:wrap; gap:10px;">
                         <button data-action="salvar-season" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:12px 20px; border-radius:8px;">Salvar Temporada</button>
