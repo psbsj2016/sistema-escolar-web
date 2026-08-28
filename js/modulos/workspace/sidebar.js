@@ -1292,7 +1292,7 @@ verFotoChat: () => {
         const textoInstrucoes = evento.descricao ? Workspace.Sidebar.escapeHTML(evento.descricao).replace(/\n/g, '<br>') : 'Nenhuma instrução adicional foi fornecida pelo professor.';
         const ehAluno = Workspace.usuario.tipo === 'Aluno';
         
-       let htmlEditar = '';
+        let htmlEditar = '';
         if(!ehAluno) {
             htmlEditar = `<div style="display:flex; justify-content:flex-end; margin-bottom:10px;"><button onclick="Workspace.Sidebar.editarTarefaCompleta('${evento.id}')" style="background:#e8f4f8; color:#3498db; border:1px solid #bde0fe; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'">✏️ Editar Exercício</button></div>`;
         }
@@ -1372,6 +1372,7 @@ verFotoChat: () => {
                 } catch(e) { document.getElementById('ws-lista-entregas').innerHTML = '<p style="color: #e74c3c; font-size: 12px; text-align:center;">Erro ao buscar entregas.</p>'; }
             }
         } else {
+            // Lógica para o Aluno
             document.getElementById('ws-tarefa-arquivo').value = '';
             document.getElementById('ws-tarefa-obs').value = '';
 
@@ -1382,45 +1383,78 @@ verFotoChat: () => {
                 if (res && res.entregue && res.detalhes) {
                     const areaEntregue = document.getElementById('ws-area-entregue');
                     areaEntregue.style.display = 'block';
+                    
                     const dataEnt = new Date(res.detalhes.dataEntrega).toLocaleString('pt-BR');
                     document.getElementById('ws-tarefa-data-entregue').innerText = `Enviado em: ${dataEnt}`;
                     
-                    let urlCorrigida = res.detalhes.arquivoUrl;
-                    if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
-                    const nomeMinusculo = (res.detalhes.arquivoNome || '').toLowerCase();
-                    const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
+                    // 🚀 PASSO 3 AQUI: A Mágica Acontece!
+                    // Removemos todo o código confuso dos links e chamamos o nosso Motor de Prévia
+                    Workspace.Sidebar.exibirPreviaDoAluno(res.detalhes);
 
-                    // 🚀 BLINDAGEM DE VISUALIZAÇÃO INTERNA (ALUNO)
-                    const ehImagem2 = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/) != null || urlCorrigida.includes('cloudinary');
-                    const btnLink = document.getElementById('ws-tarefa-link-entregue');
-                    
-                    if (ehImagem2) {
-                        btnLink.href = "javascript:void(0)";
-                        btnLink.onclick = (e) => { e.preventDefault(); Workspace.abrirVisualizadorImagem(urlCorrigida, 'O Meu Trabalho'); };
-                        btnLink.removeAttribute('download');
-                    } else if (ehOffice && window.Workspace && Workspace.Materiais && Workspace.Materiais.abrirVisualizador) {
-                        btnLink.href = "javascript:void(0)";
-                        btnLink.onclick = (e) => { e.preventDefault(); Workspace.Materiais.abrirVisualizador(urlCorrigida, 'document', 'O Meu Trabalho'); };
-                        btnLink.removeAttribute('download');
-                    } else {
-                        btnLink.href = urlCorrigida;
-                        if(ehOffice) btnLink.setAttribute('download', res.detalhes.arquivoNome);
-                        else btnLink.removeAttribute('download');
-                        btnLink.onclick = null;
-                    }
-
-                    // Botão Ver Feedback do Aluno
+                    // Botão Ver Feedback do Aluno (Mantém-se igual)
                     let btnFb = document.getElementById('ws-btn-ver-feedback');
                     if(btnFb) btnFb.remove();
                     
                     areaEntregue.insertAdjacentHTML('beforeend', `<br><button id="ws-btn-ver-feedback" class="ws-btn" style="background:#f39c12; color:white; border:none; padding:12px 15px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; margin-top:15px; width:100%; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);" onclick="Workspace.Sidebar.abrirModalFeedback('${res.detalhes.id}', '${evento.id}')">💬 Ver Comentários do Professor</button>`);
 
-                } else { document.getElementById('ws-area-entrega').style.display = 'block'; }
-            } catch (e) { document.getElementById('ws-area-entrega').style.display = 'block'; }
+                } else { 
+                    document.getElementById('ws-area-entrega').style.display = 'block'; 
+                }
+            } catch (e) { 
+                document.getElementById('ws-area-entrega').style.display = 'block'; 
+            }
         }
     },
 
-// ========================================================================
+    // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (SINTAXE CORRIGIDA)
+    exibirPreviaDoAluno: (entrega) => {
+        const divTexto = document.getElementById('ws-preview-texto-aluno');
+        const divMidia = document.getElementById('ws-preview-midia-aluno');
+        
+        // Captura os dados vindos do seu Backend
+        const texto = entrega.texto || entrega.observacoes || entrega.obs;
+        const url = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
+
+        // 1. Limpeza do ecrã (Reset para a próxima tarefa)
+        divTexto.style.display = 'none'; 
+        divTexto.innerHTML = '';
+        divMidia.style.display = 'none'; 
+        divMidia.innerHTML = '';
+        divMidia.style.background = '#0f172a'; // Fundo estilo cinema para vídeos
+
+        // 2. Injeta as Observações do Aluno
+        if (texto) {
+            divTexto.innerHTML = Workspace.Sidebar.escapeHTML(texto);
+            divTexto.style.display = 'block';
+        }
+
+        // 3. Detetive de Extensões: Injeta o Reprodutor Nativo Correto
+        if (url) {
+            const isVideo = url.match(/\.(mp4|webm|mov|mkv)$/i) || url.includes('/video/upload/');
+            const isAudio = url.match(/\.(mp3|wav|ogg|m4a)$/i) || (url.includes('/video/upload/') && url.includes('audio'));
+            const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes('/image/upload/');
+
+            if (isVideo) {
+                divMidia.innerHTML = `<video src="${url}" controls playsinline style="width: 100%; max-height: 350px; border-radius: 8px; outline: none;"></video>`;
+                divMidia.style.display = 'flex';
+            } else if (isAudio) {
+                divMidia.innerHTML = `<audio src="${url}" controls style="width: 100%; margin: 20px 10px; outline: none;"></audio>`;
+                divMidia.style.background = 'transparent';
+                divMidia.style.display = 'flex';
+            } else if (isImage) {
+                divMidia.innerHTML = `<img src="${url}" style="width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px;">`;
+                divMidia.style.background = 'transparent';
+                divMidia.style.display = 'flex';
+            } else {
+                // Se for PDF ou Documento de texto, cria um botão elegante
+                divMidia.innerHTML = `<a href="${url}" target="_blank" style="background: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px; display: inline-block; transition: 0.2s;">📄 Visualizar Documento Original</a>`;
+                divMidia.style.background = 'transparent';
+                divMidia.style.display = 'flex';
+            }
+        }
+    }, 
+
+    // ========================================================================
     // 💬 O MOTOR BIDIRECIONAL DE FEEDBACK
     // ========================================================================
     modalFeedbackAtivo: null, // Guarda o ID do modal para o Real-Time
