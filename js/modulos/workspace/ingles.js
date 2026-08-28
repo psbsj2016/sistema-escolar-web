@@ -1,12 +1,11 @@
-// js/modulos/workspace/ingles.js - Módulo Central e Motor de Jogos (Aluno)
+// js/modulos/workspace/ingles.js - Módulo Central (Aluno) - Interface Limpa
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
 
-// ===================== VOICE SERVICE - VOZES NEURAIS & ÚNICAS =====================
 const VoiceService = (() => {
-    let cacheMago = null, resolver = null;
+    let cacheNormal = null, cacheMago = null, resolver = null;
     let femalePool = []; 
     const ready = new Promise(r => resolver = r);
 
@@ -116,7 +115,7 @@ Workspace.Ingles = {
     state: {
         _dbLoaded: false, 
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
-        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, magoPhrases:[], quests:[], lootTables:{comum:[], epico:[], lendario:[]}, season:{}, magoConfig:{vozAtiva:true, modoExibicao:'aleatorio'}, editingMagoId:null
+        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
 
@@ -235,10 +234,6 @@ Workspace.Ingles = {
                 this.state.pool = Array.isArray(d.pool) ? d.pool : [];
                 this.state.errosRetidos = Array.isArray(d.errosRetidos) ? d.errosRetidos : [];
                 this.state.srs = (d.srs && typeof d.srs==='object') ? d.srs : {};
-                this.state.magoPhrases = Array.isArray(d.magoPhrases) ? d.magoPhrases : [];
-                this.state.quests = Array.isArray(d.quests) ? d.quests : [];
-                this.state.lootTables = (d.lootTables && typeof d.lootTables === 'object') ? d.lootTables : {comum:[], epico:[], lendario:[]};
-                this.state.season = (d.season && typeof d.season === 'object') ? d.season : {id:'S1', nome:'Era Inicial', xpMultiplier:1};
             }else{
                 this.state._dbLoaded = false;
                 this.state.words=[...this.defaults.words]; this.state.phrases=[...this.defaults.phrases];
@@ -282,8 +277,7 @@ Workspace.Ingles = {
                 escolaId: Workspace.usuario?.escolaId||'DEFAULT',
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
                 wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
-                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs,
-                magoPhrases:this.state.magoPhrases, quests:this.state.quests, lootTables:this.state.lootTables, season:this.state.season
+                submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs
             });
             if(res && res.success) {
                 this.state._dbLoaded = true; 
@@ -426,28 +420,33 @@ Workspace.Ingles = {
             .ws-btn:hover { transform: translateY(-2px); opacity: 0.95; }
             
             .hidden { display: none !important; }
-            .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 100001; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s; }
             
-            /* Professor Sidebar */
-            #professorView { display: flex; gap: 20px; min-height: 60vh; align-items: flex-start; }
-            .ig-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; background: transparent; position: relative; z-index: 1; height: auto; }
-            .ig-side-item { background: #fff; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
-            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; } 
-            .tab-panel { display: none; }
-            .tab-panel.active { display: block; }
+            /* 🚀 Toast Otimizado e Blindado */
+            .toast { 
+                position: fixed; 
+                top: 85px; 
+                left: 50%; 
+                transform: translateX(-50%); 
+                background: #F59E0B; 
+                color: #fff; 
+                padding: 12px 24px; 
+                border-radius: 30px; 
+                font-weight: 800; 
+                z-index: 2147483647; /* Valor máximo para furar qualquer camada superior */
+                box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
+                transition: opacity 0.3s, transform 0.3s; 
+                width: max-content; 
+                max-width: 90%; 
+                text-align: center; 
+                word-wrap: break-word; 
+            }
             
-            .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-            .prof-card { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 12px; }
-
+            /* Ajustes Mobile Responsivos */
             @media (max-width: 768px) {
-                #professorView { flex-direction: column; gap: 12px; }
-                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-                .ig-sidebar::-webkit-scrollbar { display: none; } 
-                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
-                .bau-header { flex-direction: column; }
-                .bau-actions { width: 100%; justify-content: space-between; }
-                .content { padding: 16px; }
+                .toast { 
+                    top: auto; 
+                    bottom: 40px; /* Desce para a zona inferior no telemóvel */
+                }
             }
         `;
         document.head.appendChild(style);
@@ -488,15 +487,10 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <!-- 🚀 RESTAURO: O ESQUELETO DO PAINEL DO PROFESSOR -->
                         <div class="ig-sidebar">
                             <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount">0</span></button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="mago">🧙 Mago IA</button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="quests">🎯 Missões</button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="loja">🛍 Loja / Loot</button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="season">⚙️ Temporada</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
                         </div>
@@ -504,10 +498,6 @@ Workspace.Ingles = {
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
-                            <div id="tab-mago" class="tab-panel"></div>
-                            <div id="tab-quests" class="tab-panel"></div>
-                            <div id="tab-loja" class="tab-panel"></div>
-                            <div id="tab-season" class="tab-panel"></div>
                             <div id="tab-algoritmo" class="tab-panel"></div>
                             <div id="tab-ranking" class="tab-panel"></div>
                         </div>
@@ -581,8 +571,7 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-            // 🚀 REDIRECIONA AÇÕES DO PROFESSOR PARA O NOVO FICHEIRO
-            const profActions = ['render-tab', 'testar-voz-mago', 'inserir-variavel-mago', 'salvar-mago-phrase', 'editar-mago-phrase', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'add-quest', 'add-loot', 'aprovar-envio', 'rejeitar-envio', 'rem-quest', 'rem-loot', 'salvar-season', 'reset-season', 'atualizar-ranking'];
+            const profActions = ['render-tab', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking'];
             
             if (profActions.includes(a)) {
                 if (Workspace.InglesProfessor && typeof Workspace.InglesProfessor.handleAction === 'function') {
@@ -683,12 +672,6 @@ Workspace.Ingles = {
                 }, 1500);
             }
         });
-        
-        root.addEventListener('change', e=>{
-            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') {
-                if(Workspace.InglesProfessor && typeof Workspace.InglesProfessor.atualizarConfigMago === 'function') Workspace.InglesProfessor.atualizarConfigMago();
-            }
-        });
     },
 
     renderAlunoGrid(){
@@ -761,7 +744,6 @@ Workspace.Ingles = {
         }, 1500);
     },
 
-    // 🚀 LÓGICA DE ROTAS INTELIGENTE COM A ÂNCORA DO BANCO DE DADOS
     getColecaoDoJogoAtual(){
         const id = this.jogoAtual;
         const db = this.state._dbLoaded; 
