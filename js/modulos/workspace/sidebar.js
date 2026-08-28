@@ -1407,26 +1407,27 @@ verFotoChat: () => {
     },
 
 
-   // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (100% DINÂMICA E BLINDADA)
+   // 🚀 NOVA FUNÇÃO: Motor de Prévia Inteligente Embutida para o Aluno (Sincronizado 100% com o Professor)
     exibirPreviaDoAluno: (entrega) => {
         const areaEntregue = document.getElementById('ws-area-entregue');
         if (!areaEntregue) return;
 
-        // 1. Destrói o botão antigo ("Visualizar o meu envio") se ele ainda estiver no HTML
+        // 1. Destrói o botão antigo se ele ainda estiver no HTML
         const btnAntigo = document.getElementById('ws-tarefa-link-entregue');
         if (btnAntigo) btnAntigo.remove();
 
-        // 2. Constrói a Tela de Cinema dinamicamente (se não existir)
+        // 2. Constrói a Tela de Cinema dinamicamente 
         let divPreview = document.getElementById('ws-preview-envio-aluno');
         if (!divPreview) {
             divPreview = document.createElement('div');
             divPreview.id = 'ws-preview-envio-aluno';
+            // 🚀 FIX CSS: Removido o Flexbox! Agora usa 'block' para o vídeo não ser esmagado
             divPreview.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: left; margin-top: 15px; width: 100%; box-sizing: border-box;';
             
             divPreview.innerHTML = `
                 <h5 style="margin: 0 0 10px 0; color: #1e293b; font-size: 14px; display: flex; align-items: center; gap: 8px;"><span>👀</span> O seu envio:</h5>
                 <div id="ws-preview-texto-aluno" style="font-size: 14px; color: #475569; margin-bottom: 15px; white-space: pre-wrap; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: none;"></div>
-                <div id="ws-preview-midia-aluno" style="display: flex; justify-content: center; background: #0f172a; border-radius: 8px; overflow: hidden; display: none; width: 100%;"></div>
+                <div id="ws-preview-midia-aluno" style="display: block; width: 100%; border-radius: 8px; overflow: hidden; display: none;"></div>
             `;
             
             const dataEntregue = document.getElementById('ws-tarefa-data-entregue');
@@ -1437,19 +1438,15 @@ verFotoChat: () => {
         const divTexto = document.getElementById('ws-preview-texto-aluno');
         const divMidia = document.getElementById('ws-preview-midia-aluno');
 
-        // 3. Captura os dados vindos do Backend (Base de Dados)
+        // 3. Captura os dados da Base de Dados
         const texto = entrega.texto || entrega.observacoes || entrega.obs || entrega.observacao;
-        const url = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
+        let urlCorrigida = entrega.anexoUrl || entrega.arquivoUrl || entrega.url || (entrega.anexos && entrega.anexos[0]?.url);
         
-        // 🚀 O SEGREDO: Usamos o nome do ficheiro para não sermos enganados pela URL do Cloudflare!
-        const nomeArquivo = (entrega.arquivoNome || entrega.anexoNome || '').toLowerCase();
-
         // Limpeza do Ecrã
         divTexto.style.display = 'none'; 
         divTexto.innerHTML = '';
         divMidia.style.display = 'none'; 
         divMidia.innerHTML = '';
-        divMidia.style.background = '#0f172a';
 
         // 4. Injeta as Observações do Aluno
         if (texto) {
@@ -1457,36 +1454,34 @@ verFotoChat: () => {
             divTexto.style.display = 'block';
         }
 
-        // 5. O DETETIVE DE EXTENSÕES (Idêntico ao do Painel do Professor)
-        if (url) {
-            const urlCorrigida = url.startsWith('http') || url.startsWith('/') ? url : '/' + url;
+        // 5. O DETETIVE DE EXTENSÕES (Cópia rigorosa do Painel do Professor)
+        if (urlCorrigida) {
+            if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
             
-            // 🚀 AQUI A MÁGICA: Lê o nomeArquivo garantindo que o MP4 será reproduzido como Vídeo
-            const isVideo = nomeArquivo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video');
-            const isAudio = nomeArquivo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio');
-            const isImage = nomeArquivo.match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('/image/upload/') || urlCorrigida.includes('cloudinary');
+            const nomeMinusculo = (entrega.arquivoNome || entrega.anexoNome || '').toLowerCase();
+            const ehOffice = nomeMinusculo.match(/\.(docx|doc|xlsx|xls)$/) != null;
+            const attrDownload = ehOffice ? `download="${Workspace.Sidebar.escapeHTML(entrega.arquivoNome || 'documento')}"` : '';
+            
+            const ehImagemAnexo = urlCorrigida.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp|svg)$/) != null || urlCorrigida.includes('cloudinary') || urlCorrigida.includes('/image/');
+            const ehVideoAluno = nomeMinusculo.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/) != null || urlCorrigida.includes('video') || urlCorrigida.match(/\.(mp4|webm|mov|mkv|avi|m4v)$/i);
+            const ehAudioAluno = nomeMinusculo.match(/\.(mp3|wav|ogg|m4a|aac)$/) != null || urlCorrigida.includes('audio') || urlCorrigida.match(/\.(mp3|wav|ogg|m4a|aac)$/i);
 
-            if (isVideo) {
-                divMidia.innerHTML = `<video src="${urlCorrigida}" controls playsinline style="width: 100%; max-height: 300px; border-radius: 8px; outline: none; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"></video>`;
-                divMidia.style.display = 'flex';
-            } else if (isAudio) {
-                divMidia.innerHTML = `<audio src="${urlCorrigida}" controls style="width: 100%; margin: 20px 10px; outline: none;"></audio>`;
-                divMidia.style.background = 'transparent';
-                divMidia.style.display = 'flex';
-            } else if (isImage) {
-                divMidia.innerHTML = `<img src="${urlCorrigida}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Meu Envio')">`;
-                divMidia.style.background = 'transparent';
-                divMidia.style.display = 'flex';
+            // 🚀 Injeção Nativa: Com 'display: block' o vídeo abrirá na sua altura real!
+            if (ehVideoAluno) {
+                divMidia.innerHTML = `<video controls src="${urlCorrigida}" style="width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; background: #000; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: block;"></video>`;
+                divMidia.style.display = 'block';
+            } else if (ehAudioAluno) {
+                divMidia.innerHTML = `<audio controls src="${urlCorrigida}" style="width: 100%; margin-top: 10px; outline: none; display: block;"></audio>`;
+                divMidia.style.display = 'block';
+            } else if (ehImagemAnexo) {
+                divMidia.innerHTML = `<img src="${urlCorrigida}" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; cursor: pointer; display: block;" onclick="Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Meu Envio')">`;
+                divMidia.style.display = 'block';
             } else {
-                const isOffice = nomeArquivo.match(/\.(docx|doc|xlsx|xls)$/) != null;
-                const attrDownload = isOffice ? `download="${Workspace.Sidebar.escapeHTML(entrega.arquivoNome || 'documento')}"` : '';
-                
-                divMidia.innerHTML = `<a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">📥 Baixar / Visualizar Documento</a>`;
-                divMidia.style.background = 'transparent';
-                divMidia.style.display = 'flex';
+                divMidia.innerHTML = `<a href="${urlCorrigida}" ${attrDownload} target="_blank" style="background: #3498db; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">📥 Baixar / Visualizar Documento</a>`;
+                divMidia.style.display = 'block';
             }
         }
-    }, // <--- Vírgula de segurança que separa as funções
+    }, // <--- Vírgula obrigatória de fecho
 
     // ========================================================================
     // 💬 O MOTOR BIDIRECIONAL DE FEEDBACK
