@@ -785,21 +785,36 @@ Object.assign(Workspace, {
         calDataAtual: new Date(), 
         alarmeGiganteAtual: null,
 
-        // ======================= SISTEMA DE NAVEGAÇÃO =======================
+       // ======================= SISTEMA DE NAVEGAÇÃO =======================
         mudarAba: (aba) => {
-            localStorage.setItem('ws_bau_aba_ativa', aba); // 🚀 O SEGREDO: Grava se está no "Meu Baú" ou no "Baú dos Livros"
             const btnMeu = document.getElementById('tab-bau-meu');
             const btnInst = document.getElementById('tab-bau-inst');
-            if(aba === 'meu') {
-                btnMeu.style.background = '#2c3e50'; btnMeu.style.color = 'white';
-                btnInst.style.background = 'transparent'; btnInst.style.color = '#7f8c8d';
+            const btnIngles = document.getElementById('tab-bau-ingles');
+
+            // 1. Reseta todos os botões para o estado inativo (transparente e texto cinza)
+            if (btnMeu) { btnMeu.style.background = 'transparent'; btnMeu.style.color = '#7f8c8d'; }
+            if (btnInst) { btnInst.style.background = 'transparent'; btnInst.style.color = '#7f8c8d'; }
+            if (btnIngles) { btnIngles.style.background = 'transparent'; btnIngles.style.color = '#7f8c8d'; }
+
+            // 2. Ativa visualmente a aba selecionada e gere a exibição do conteúdo
+            if (aba === 'meu') {
+                localStorage.setItem('ws_bau_aba_ativa', 'meu'); // Salva a aba apenas para as memórias
+                if (btnMeu) { btnMeu.style.background = '#2c3e50'; btnMeu.style.color = 'white'; }
                 document.getElementById('ws-bau-meu-conteudo').style.display = 'block';
                 document.getElementById('ws-bau-inst-conteudo').style.display = 'none';
-            } else {
-                btnInst.style.background = '#2c3e50'; btnInst.style.color = 'white';
-                btnMeu.style.background = 'transparent'; btnMeu.style.color = '#7f8c8d';
+            } 
+            else if (aba === 'inst') {
+                localStorage.setItem('ws_bau_aba_ativa', 'inst');
+                if (btnInst) { btnInst.style.background = '#2c3e50'; btnInst.style.color = 'white'; }
                 document.getElementById('ws-bau-inst-conteudo').style.display = 'block';
                 document.getElementById('ws-bau-meu-conteudo').style.display = 'none';
+            }
+            else if (aba === 'ingles') {
+                // Efeito imediato: pinta o botão para o utilizador sentir a resposta tátil
+                if (btnIngles) { btnIngles.style.background = '#2c3e50'; btnIngles.style.color = 'white'; }
+                
+                // Em vez de alternar divs internas, invoca o Roteador Principal para mudar a tela toda!
+                Workspace.navegarPara('ingles');
             }
         },
 
