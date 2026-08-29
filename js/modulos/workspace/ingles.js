@@ -660,27 +660,59 @@ Workspace.Ingles = {
                 this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
             }
             if(a === 'verificar-debate'){
-                const texto = document.getElementById('ig-input')?.value?.trim()||'';
-                if(texto.length<3) return this.mostrarAvisoLocal('Escreva o seu argumento','error');
+                const inputEl = document.getElementById('ig-input');
+                const texto = inputEl?.value?.trim() || '';
                 
-                this.state._debateChat.push({role:'user', text:texto});
+                if(texto.length < 3) return this.mostrarAvisoLocal('Escreva o seu argumento para o debate!', 'error');
+                
+                // 1. O Aluno fala: Guardamos no histórico e atualizamos o ecrã
+                this.state._debateChat.push({ role: 'user', text: texto });
                 this.ganharCoins('bronze', 15);
                 this.renderGameDebateAI(); 
                 
-                setTimeout(() => {
-                    const poolTexts = this.state.pool.filter(p=>p.text).slice(0,3).map(p=>p.text.substring(0,60)).join(' | ');
-                    const respIAs = [
-                        `Interesting point. But what if we consider that "${texto.substring(0,30)}..." might have side effects?`,
-                        `I disagree. Other students mentioned: "${poolTexts}". How do you defend your stance against that?`,
-                        `Very well articulated. But tell me, how would you apply that in a real-world scenario?`
-                    ];
-                    this.state._debateChat.push({role:'ai', text: respIAs[Math.floor(Math.random()*respIAs.length)], inteligencia: 'Mago IA'});
-                    this.renderGameDebateAI();
-                    document.getElementById('ig-input').value = '';
-                }, 1500);
+                // Limpa a caixa de texto
+                inputEl.value = '';
+                
+                // 2. Indicador visual de que a IA está a pensar
+                const chatDiv = document.getElementById('ig-debate-chat');
+                const loadingId = 'loading-mago-' + Date.now();
+                chatDiv.insertAdjacentHTML('beforeend', `
+                    <div id="${loadingId}" style="display:flex; margin-bottom:12px; animation: fadeIn 0.3s;">
+                        <div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#64748B; padding:12px 16px; border-radius:4px 16px 16px 16px; font-size:13px; font-weight:600;">
+                            🤖 O Mago IA está a formular uma resposta... ⏳
+                        </div>
+                    </div>
+                `);
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+
+                // 3. O pedido inteligente ao nosso Backend
+                // Vamos enviar o histórico todo e o tópico atual para a IA ter contexto!
+                Workspace.api('/workspace/ingles/debate', 'POST', {
+                    topico: this.desafioAtualObj.topic,
+                    historico: this.state._debateChat
+                }).then(res => {
+                    // Remove o indicador de "a pensar..."
+                    const loadingEl = document.getElementById(loadingId);
+                    if(loadingEl) loadingEl.remove();
+
+                    if(res && res.success) {
+                        // 4. A IA responde: Injetamos a resposta real na conversa!
+                        this.state._debateChat.push({ role: 'ai', text: res.resposta });
+                        this.renderGameDebateAI();
+                        
+                        // Opcional: Fazer o Mago ler a resposta em voz alta!
+                        if (this.state.magoConfig?.vozAtiva) {
+                            VoiceService.falar(res.resposta, { isMago: true });
+                        }
+                    } else {
+                        this.mostrarAvisoLocal('A magia falhou. O Mago IA está sem energia agora.', 'error');
+                    }
+                }).catch(() => {
+                    const loadingEl = document.getElementById(loadingId);
+                    if(loadingEl) loadingEl.remove();
+                    this.mostrarAvisoLocal('Falha de conexão com o Mago IA.', 'error');
+                });
             }
-        });
-    },
 
     renderAlunoGrid(){
         const grid = document.getElementById('gamesGrid'); if(!grid) return;
