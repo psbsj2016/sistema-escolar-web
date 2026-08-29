@@ -102,6 +102,51 @@ Workspace.InglesProfessor = {
                 if(iAqT) iAqT.value='';
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); Ingles.mostrarAvisoLocal('Pergunta adicionada!','success');
                 break;
+            case 'ensinar-ia':
+                const inputFrase = document.getElementById('ig-ia-frase')?.value?.trim();
+                const inputCat = document.getElementById('ig-ia-categoria')?.value?.trim().toLowerCase();
+                
+                if(!inputFrase || !inputCat) return Ingles.mostrarAvisoLocal('Preencha a frase e a categoria!', 'warning');
+                
+                const btnEnsinar = b;
+                btnEnsinar.innerText = 'A ensinar...';
+                
+                Workspace.api('/workspace/ingles/ia-teste/ensinar', 'POST', { frase: inputFrase, categoria: inputCat })
+                    .then(res => {
+                        btnEnsinar.innerText = '🧠 Ensinar Frase';
+                        if(res && res.success) {
+                            Ingles.mostrarAvisoLocal('Ptt AI aprendeu com sucesso!', 'success');
+                            document.getElementById('ig-ia-frase').value = '';
+                        } else {
+                            Ingles.mostrarAvisoLocal('Falha ao ensinar.', 'error');
+                        }
+                    }).catch(() => { btnEnsinar.innerText = '🧠 Ensinar Frase'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
+                break;
+                
+            case 'falar-ia':
+                const inputFalar = document.getElementById('ig-ia-chat-input')?.value?.trim();
+                if(!inputFalar) return;
+                
+                const chatContainer = document.getElementById('ig-ia-chat-history');
+                // Mostra o que o professor escreveu
+                chatContainer.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#4F46E5; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block;">${Workspace.escapeHTML(inputFalar)}</span></div>`;
+                document.getElementById('ig-ia-chat-input').value = '';
+                
+                Workspace.api('/workspace/ingles/ia-teste/falar', 'POST', { mensagem: inputFalar })
+                    .then(res => {
+                        if(res && res.success) {
+                            // Mostra a resposta da IA e os bastidores (o que ela pensou)
+                            chatContainer.innerHTML += `
+                                <div style="text-align:left; margin-bottom:10px;">
+                                    <span style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block;">
+                                        🤖 <b>Ptt AI:</b> ${Workspace.escapeHTML(res.resposta)}
+                                        <div style="font-size:10px; color:#10B981; margin-top:4px; font-weight:bold;">${Workspace.escapeHTML(res.bastidores)}</div>
+                                    </span>
+                                </div>`;
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                        }
+                    });
+                break;
             case 'atualizar-ranking':
                 Workspace.InglesProfessor.carregarRanking();
                 break;
@@ -388,5 +433,43 @@ Workspace.InglesProfessor = {
             `;
             this.carregarRanking();
         }
+
+else if (tabId === 'laboratorio'){
+            document.getElementById('tab-laboratorio').innerHTML=`
+                <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Esta é uma sandbox isolada. Aqui, pode ensinar à máquina como classificar intenções e testar como o cérebro dela reage antes de implementá-la em jogos reais.</p>
+                
+                <div class="grid-cards" style="grid-template-columns: 1fr 1fr;">
+                    
+                    <!-- CENTRO DE TREINAMENTO -->
+                    <div class="prof-card" style="border-top:4px solid #10B981;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Diga à máquina que tipo de frase é esta (ex: Categoria: "discordar", "elogio", "duvida").</p>
+                        
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <input id="ig-ia-frase" class="ig-input" placeholder="Escreva a frase em Inglês...">
+                            <input id="ig-ia-categoria" class="ig-input" placeholder="Nome da Categoria (ex: concordar)">
+                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Frase</button>
+                        </div>
+                    </div>
+
+                    <!-- CHAT DE TESTE -->
+                    <div class="prof-card" style="border-top:4px solid #4F46E5; display:flex; flex-direction:column;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Chat de Teste</h3>
+                        
+                        <div id="ig-ia-chat-history" style="flex:1; min-height:150px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;">
+                            <div style="text-align:center; color:#94A3B8; font-size:12px;">Escreva algo para testar as respostas da Ptt AI...</div>
+                        </div>
+                        
+                        <div style="display:flex; gap:8px;">
+                            <input id="ig-ia-chat-input" class="ig-input" placeholder="Diga algo à Ptt AI..." style="flex:1;">
+                            <button data-action="falar-ia" class="ws-btn-primary">Enviar</button>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        }
     }
+
 };

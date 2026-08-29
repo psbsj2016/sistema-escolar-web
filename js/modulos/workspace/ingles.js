@@ -492,21 +492,23 @@ Workspace.Ingles = {
 
                 <main id="app">
                     <section id="professorView" class="view hidden">
-                        <!-- 🚀 RESTAURO: O ESQUELETO LIMPO DO PROFESSOR (Apenas o que é usado) -->
                         <div class="ig-sidebar">
                             <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount" style="background:#F59E0B; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
+                            <!-- 🚀 NOVO BOTÃO DO LABORATÓRIO DA IA -->
+                            <button class="ig-side-item" data-action="render-tab" data-tab="laboratorio" style="border-color:#10B981; color:#059669; background:#ECFDF5;">🧪 Laboratório IA</button>
                         </div>
                         <div class="content">
-                            <!-- Apenas os 5 painéis necessários -->
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
                             <div id="tab-algoritmo" class="tab-panel"></div>
                             <div id="tab-ranking" class="tab-panel"></div>
+                            <!-- 🚀 NOVO PAINEL DO LABORATÓRIO DA IA -->
+                            <div id="tab-laboratorio" class="tab-panel"></div>
                         </div>
                     </section>
 
@@ -578,8 +580,8 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-            // 🚀 REDIRECIONA AÇÕES DO PROFESSOR PARA O NOVO FICHEIRO
-            const profActions = ['render-tab', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking'];
+           // 🚀 REDIRECIONA AÇÕES DO PROFESSOR PARA O NOVO FICHEIRO (Agora com o Laboratório IA)
+            const profActions = ['render-tab', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking', 'ensinar-ia', 'falar-ia'];
             
             if (profActions.includes(a)) {
                 if (Workspace.InglesProfessor && typeof Workspace.InglesProfessor.handleAction === 'function') {
