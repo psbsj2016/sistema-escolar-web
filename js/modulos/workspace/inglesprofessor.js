@@ -433,7 +433,8 @@ Workspace.InglesProfessor = {
             `;
             this.carregarRanking();
         }
-        else if (tabId === 'laboratorio'){
+
+else if (tabId === 'laboratorio'){
             document.getElementById('tab-laboratorio').innerHTML=`
                 <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Esta é uma sandbox isolada. Aqui, pode ensinar à máquina como classificar intenções e testar como o cérebro dela reage antes de implementá-la em jogos reais.</p>
@@ -470,4 +471,5 @@ Workspace.InglesProfessor = {
             `;
         }
     }
+
 };
