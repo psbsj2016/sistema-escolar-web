@@ -109,19 +109,23 @@ Workspace.InglesProfessor = {
             case 'ensinar-ia':
                 const inputFrase = document.getElementById('ig-ia-frase')?.value?.trim();
                 const inputCat = document.getElementById('ig-ia-categoria')?.value?.trim().toLowerCase();
-                if(!inputFrase || !inputCat) return Ingles.mostrarAvisoLocal('Preencha frase e categoria!', 'warning');
+                const inputResp = document.getElementById('ig-ia-resposta')?.value?.trim(); // NOVO CAMPO
+                
+                if(!inputFrase || !inputCat) return Ingles.mostrarAvisoLocal('Preencha a frase e a categoria!', 'warning');
                 
                 b.innerText = 'A ensinar...';
-                Workspace.api('/workspace/ingles/ia-teste/ensinar', 'POST', { frase: inputFrase, categoria: inputCat })
+                // Enviamos a resposta desejada na mochila!
+                Workspace.api('/workspace/ingles/ia-teste/ensinar', 'POST', { frase: inputFrase, categoria: inputCat, resposta: inputResp })
                     .then(res => {
-                        b.innerText = '🧠 Ensinar Frase';
+                        b.innerText = '🧠 Ensinar Máquina';
                         if(res && res.success) {
-                            Ingles.mostrarAvisoLocal('Ptt AI aprendeu!', 'success');
+                            Ingles.mostrarAvisoLocal('Ptt AI aprendeu a nova regra!', 'success');
                             document.getElementById('ig-ia-frase').value = '';
+                            document.getElementById('ig-ia-resposta').value = ''; // Limpa a caixa
                         } else {
                             Ingles.mostrarAvisoLocal('Falha ao ensinar.', 'error');
                         }
-                    }).catch(() => { b.innerText = '🧠 Ensinar Frase'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
+                    }).catch(() => { b.innerText = '🧠 Ensinar Máquina'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
                 break;
             case 'falar-ia':
                 const inputFalar = document.getElementById('ig-ia-chat-input')?.value?.trim();
@@ -423,6 +427,18 @@ Workspace.InglesProfessor = {
                         <div style="display:flex; gap:8px;">
                             <input id="ig-ia-chat-input" class="ig-input" placeholder="Diga algo à Ptt AI..." style="flex:1;">
                             <button data-action="falar-ia" class="ws-btn-primary">Enviar</button>
+                        </div>
+                    </div>
+        <!-- CENTRO DE TREINAMENTO -->
+                    <div class="prof-card" style="border-top:4px solid #10B981;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Diga à máquina que tipo de frase é esta e o que ela deve responder quando ouvir algo semelhante.</p>
+                        
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love this)">
+                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: elogio)">
+                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="O que a IA deve responder? (Opcional se a categoria já existir)" style="min-height:70px;"></textarea>
+                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
                         </div>
                     </div>
                 </div>
