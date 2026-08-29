@@ -1,4 +1,4 @@
-// js/modulos/workspace/ingles.js - Módulo Central e Motor de Jogos (Aluno)
+// js/modulos/workspace/ingles.js - Módulo Central e Motor de Jogos (Aluno/Professor)
 window.Workspace = window.Workspace || {};
 if(!window.Workspace.escapeHTML){
     window.Workspace.escapeHTML = (s)=> String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
@@ -8,7 +8,6 @@ const VoiceService = (() => {
     let cacheNormal = null, cacheMago = null, resolver = null;
     let femalePool = []; 
     const ready = new Promise(r => resolver = r);
-
     const MALE_BLOCK = ['male','david','alex','daniel','arthur','oliver','mark','guy','james','thomas','fred','bot'];
     
     const SCORE_NORMAL = [
@@ -115,7 +114,7 @@ Workspace.Ingles = {
     state: {
         _dbLoaded: false, 
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
-        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null
+        errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
 
@@ -382,22 +381,26 @@ Workspace.Ingles = {
         style.textContent = `
             #ws-ingles-container { background: #f8fafc; min-height: 80vh; font-family: 'Inter', sans-serif; }
             #bau-do-ingles-module { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            
+            /* HEADER */
             .bau-header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
             .bau-title { display: flex; align-items: center; gap: 16px; }
             .bau-icon { font-size: 40px; background: #FEF3C7; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 2px solid #F59E0B; }
             .bau-title h2 { margin: 0; font-size: 22px; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
             .bau-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748B; font-weight: 500; }
             .bau-actions { display: flex; align-items: center; gap: 16px; }
+            
+            /* BADGES & BUTTONS */
             .xp-badge { display: flex; gap: 10px; background: #F1F5F9; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; color: #334155; }
             .xp-badge b { color: #0F172A; }
             .toggle-wrap { display: flex; background: #E2E8F0; padding: 4px; border-radius: 12px; }
             .toggle-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; color: #64748B; cursor: pointer; transition: 0.2s; font-size: 13px; }
             .toggle-btn.active { background: #fff; color: #0F172A; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
             
+            /* ALUNO VIEW */
             .welcome { text-align: center; margin-bottom: 30px; }
             .welcome h1 { font-family: 'Plus Jakarta Sans', sans-serif; color: #0F172A; margin: 0 0 8px 0; font-size: 28px; }
             .welcome p { color: #475569; max-width: 600px; margin: 0 auto; line-height: 1.5; font-size: 15px; }
-            
             .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
             .ig-game-card { background: #fff; border: 2px solid #E2E8F0; border-radius: 16px; padding: 20px; cursor: pointer; transition: 0.2s; }
             .ig-game-card:hover { border-color: #4F46E5; transform: translateY(-4px); box-shadow: 0 10px 25px rgba(79,70,229,0.1); }
@@ -406,6 +409,7 @@ Workspace.Ingles = {
             .ig-game-card h3 { margin: 0 0 6px 0; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
             .ig-game-card p { margin: 0; color: #64748B; font-size: 13px; line-height: 1.4; }
             
+            /* MODAL GERAL */
             .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); display: flex; align-items: center; justify-content: center; z-index: 100000; backdrop-filter: blur(5px); }
             .modal.hidden { display: none !important; }
             .modal-content { background: #fff; width: 95%; max-width: 650px; border-radius: 20px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #E2E8F0; }
@@ -416,42 +420,66 @@ Workspace.Ingles = {
             .close-btn:hover { background: #EF4444; color: #fff; }
             .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
             
+            /* INPUTS & TEXT */
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
-            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 12px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px; box-sizing: border-box; outline: none; transition: 0.2s; }
+            .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 10px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px 14px; box-sizing: border-box; outline: none; transition: 0.2s; font-family:'Inter', sans-serif;}
+            .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+            
             .ws-btn { font-weight: 700; font-family: 'Inter', sans-serif; transition: 0.2s; cursor: pointer;}
             .hidden { display: none !important; }
             
-            /* 🚀 Toast Otimizado e Blindado contra cortes */
-            .toast { 
-                position: fixed; 
-                top: 85px; 
-                left: 50%; 
-                transform: translateX(-50%); 
-                background: #F59E0B; 
-                color: #fff; 
-                padding: 12px 24px; 
-                border-radius: 30px; 
-                font-weight: 800; 
-                z-index: 2147483647; 
-                box-shadow: 0 6px 16px rgba(0,0,0,0.25); 
-                transition: opacity 0.3s, transform 0.3s; 
-                
-                /* Garantia de ajuste automático da largura sem cortar */
-                width: auto; 
-                max-width: 85vw; /* Impede que o aviso seja maior que a tela */
-                box-sizing: border-box; 
-                text-align: center; 
-                word-wrap: break-word; 
-            }
+            /* TOAST (MENSAGENS DE AVISO) */
+            .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 2147483647; box-shadow: 0 6px 16px rgba(0,0,0,0.25); transition: opacity 0.3s, transform 0.3s; width: auto; max-width: 85vw; box-sizing: border-box; text-align: center; word-wrap: break-word; }
             
-            /* Ajustes Mobile Responsivos */
+            /* 🚀 DASHBOARD DO PROFESSOR (NOVO E POLIDO) */
+            #professorView { display: flex; gap: 24px; min-height: 60vh; align-items: stretch; margin-top: 10px; }
+            
+            /* BARRA LATERAL */
+            .ig-sidebar { width: 240px; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+            .ig-side-item { background: transparent; border: 1px solid transparent; padding: 12px 16px; border-radius: 10px; text-align: left; font-weight: 600; color: #475569; cursor: pointer; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-family: 'Inter', sans-serif;}
+            .ig-side-item:hover { background: #F8FAFC; color: #0F172A; }
+            .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
+            
+            /* ÁREA DE CONTEÚDO */
+            .content { flex: 1; background: #fff; border-radius: 16px; border: 1px solid #E2E8F0; padding: 24px; min-width: 0; overflow-x: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); } 
+            .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+            .tab-panel.active { display: block; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+            
+            /* GRELHAS E CARTÕES INTERNOS */
+            .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; align-items: start; }
+            .prof-card { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: 0.2s; }
+            .prof-card:hover { border-color: #cbd5e1; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+            .ig-prof-header { display: flex; align-items: center; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; font-weight: 800; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+            
+            /* LISTAS DE ITENS */
+            .prof-list-scroll { max-height: 220px; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+            .prof-list-scroll::-webkit-scrollbar { width: 6px; }
+            .prof-list-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+            .prof-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; color: #1e293b; line-height: 1.4; transition: 0.2s; }
+            .prof-list-item:hover { border-color: #cbd5e1; background: #fff; }
+
+            /* BOTÕES PREMIUM */
+            .ws-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; font-size: 14px;}
+            .ws-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79,70,229,0.4); }
+            
+            .ws-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(239,68,68,0.2); transition: 0.2s; flex-shrink: 0; font-size: 13px;}
+            .ws-btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(239,68,68,0.3); }
+            
+            .ws-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: 0.2s; font-size: 14px;}
+            .ws-btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.3); }
+
+            /* RESPONSIVIDADE MOBILE */
             @media (max-width: 768px) {
-                .toast { 
-                    top: 70px; /* Mantém no topo, com espaço seguro para a navegação do telemóvel */
-                    bottom: auto; /* Remove a regra anterior que empurrava para baixo */
-                    font-size: 13px; /* Reduz ligeiramente a fonte para caber melhor no ecrã */
-                    padding: 10px 20px;
-                }
+                #professorView { flex-direction: column; gap: 16px; }
+                .ig-sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-radius: 12px;}
+                .ig-sidebar::-webkit-scrollbar { display: none; } 
+                .ig-side-item { flex-shrink: 0; padding: 10px 16px; font-size: 13px; }
+                .bau-header { flex-direction: column; }
+                .bau-actions { width: 100%; justify-content: space-between; }
+                .content { padding: 16px; }
+                .grid-cards { grid-template-columns: 1fr; }
+                .toast { top: 70px; font-size: 13px; padding: 10px 20px; }
             }
         `;
         document.head.appendChild(style);
@@ -498,16 +526,15 @@ Workspace.Ingles = {
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount" style="background:#F59E0B; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
-                            <!-- 🚀 NOVO BOTÃO DO LABORATÓRIO DA IA -->
-                            <button class="ig-side-item" data-action="render-tab" data-tab="laboratorio" style="border-color:#10B981; color:#059669; background:#ECFDF5;">🧪 Laboratório IA</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="laboratorio" style="border-color:#10B981; color:#059669; background:#ECFDF5; font-weight:800;">🧪 Laboratório IA</button>
                         </div>
                         <div class="content">
+                            <!-- Os painéis são renderizados via JS -->
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
                             <div id="tab-algoritmo" class="tab-panel"></div>
                             <div id="tab-ranking" class="tab-panel"></div>
-                            <!-- 🚀 NOVO PAINEL DO LABORATÓRIO DA IA -->
                             <div id="tab-laboratorio" class="tab-panel"></div>
                         </div>
                     </section>
@@ -580,8 +607,13 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-           // 🚀 REDIRECIONA AÇÕES DO PROFESSOR PARA O NOVO FICHEIRO (Agora com o Laboratório IA)
-            const profActions = ['render-tab', 'remover-item', 'add-word', 'add-phrase', 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking', 'ensinar-ia', 'falar-ia'];
+            // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
+            const profActions = [
+                'render-tab', 'remover-item', 'add-word', 'add-phrase', 
+                'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 
+                'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 
+                'rejeitar-envio', 'atualizar-ranking', 'ensinar-ia', 'falar-ia'
+            ];
             
             if (profActions.includes(a)) {
                 if (Workspace.InglesProfessor && typeof Workspace.InglesProfessor.handleAction === 'function') {
@@ -616,7 +648,6 @@ Workspace.Ingles = {
 
             const cur = this.desafioAtualObj;
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
-            // Pega no input se não for o debate
             const inputGenerico = document.getElementById('ig-input')?.value?.trim()||'';
             
             if(a === 'falar-frase'){
@@ -663,68 +694,59 @@ Workspace.Ingles = {
                 this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
             }
 
-            // 🧙‍♂️ LÓGICA DO MAGO IA - DUELO DE MENTES COM GOOGLE GEMINI
             if(a === 'verificar-debate'){
                 const inputEl = document.getElementById('ig-input');
                 const texto = inputEl?.value?.trim() || '';
                 
                 if(texto.length < 3) return this.mostrarAvisoLocal('Escreva o seu argumento para o debate!', 'error');
                 
-                // 1. O Aluno fala: Guardamos no histórico e atualizamos o ecrã
                 this.state._debateChat.push({ role: 'user', text: texto });
                 this.ganharCoins('bronze', 15);
                 this.renderGameDebateAI(); 
                 
-                // Limpa a caixa de texto
                 inputEl.value = '';
                 
-                // 2. Indicador visual de que a IA está a pensar
                 const chatDiv = document.getElementById('ig-debate-chat');
                 const loadingId = 'loading-mago-' + Date.now();
                 chatDiv.insertAdjacentHTML('beforeend', `
                     <div id="${loadingId}" style="display:flex; margin-bottom:12px; animation: fadeIn 0.3s;">
                         <div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#64748B; padding:12px 16px; border-radius:4px 16px 16px 16px; font-size:13px; font-weight:600;">
-                            🤖 O Mago IA está a formular uma resposta... ⏳
+                            🤖 A IA está a formular uma resposta... ⏳
                         </div>
                     </div>
                 `);
                 chatDiv.scrollTop = chatDiv.scrollHeight;
 
-                // 3. O pedido inteligente ao nosso Backend
                 Workspace.api('/workspace/ingles/debate', 'POST', {
                     topico: this.desafioAtualObj.topic,
                     historico: this.state._debateChat
                 }).then(res => {
-                    // Remove o indicador de "a pensar..."
                     const loadingEl = document.getElementById(loadingId);
                     if(loadingEl) loadingEl.remove();
 
                     if(res && res.success) {
-                        // 4. A IA responde: Injetamos a resposta real na conversa!
                         this.state._debateChat.push({ role: 'ai', text: res.resposta });
                         this.renderGameDebateAI();
-                        
-                        // Fazer o Mago ler a resposta em voz alta (se configurado)
                         if (this.state.magoConfig?.vozAtiva) {
                             VoiceService.falar(res.resposta, { isMago: true });
                         }
                     } else {
-                        this.mostrarAvisoLocal('A magia falhou. O Mago IA está sem energia agora.', 'error');
+                        this.mostrarAvisoLocal('A magia falhou.', 'error');
                     }
                 }).catch(() => {
                     const loadingEl = document.getElementById(loadingId);
                     if(loadingEl) loadingEl.remove();
-                    this.mostrarAvisoLocal('Falha de conexão com o Mago IA.', 'error');
+                    this.mostrarAvisoLocal('Falha de conexão com a IA.', 'error');
                 });
             }
-        }); // <-- Esta chaveta fecha o evento de CLIQUE
+        }); 
         
         root.addEventListener('change', e=>{
             if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') {
                 if(Workspace.InglesProfessor && typeof Workspace.InglesProfessor.atualizarConfigMago === 'function') Workspace.InglesProfessor.atualizarConfigMago();
             }
         });
-    }, // <-- ESTA É A VÍRGULA MÁGICA QUE RESOLVE O ERRO DE SINTAXE!
+    },
 
     renderAlunoGrid(){
         const grid = document.getElementById('gamesGrid'); if(!grid) return;
@@ -796,7 +818,6 @@ Workspace.Ingles = {
         }, 1500);
     },
 
-    // 🚀 LÓGICA DE ROTAS INTELIGENTE COM A ÂNCORA DO BANCO DE DADOS
     getColecaoDoJogoAtual(){
         const id = this.jogoAtual;
         const db = this.state._dbLoaded; 
