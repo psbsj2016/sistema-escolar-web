@@ -613,8 +613,9 @@ Workspace.Ingles = {
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
 
             const cur = this.desafioAtualObj;
-            const input = document.getElementById('ig-input')?.value?.trim()||'';
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
+            // Pega no input se não for o debate
+            const inputGenerico = document.getElementById('ig-input')?.value?.trim()||'';
             
             if(a === 'falar-frase'){
                 if(cur?.phrase) VoiceService.falar(cur.phrase, {isMago:false});
@@ -626,7 +627,7 @@ Workspace.Ingles = {
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
             }
             if(a === 'verificar-wordSpark'){
-                if(!input.toLowerCase().includes((cur.word||'').toLowerCase())){ this.registrarErro(cur,'word'); this.falhaGenerica(); }
+                if(!inputGenerico.toLowerCase().includes((cur.word||'').toLowerCase())){ this.registrarErro(cur,'word'); this.falhaGenerica(); }
                 else { this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
             }
             if(a === 'verificar-listen'){
@@ -649,16 +650,18 @@ Workspace.Ingles = {
                 else { this.registrarErro(cur,'picker'); this.falhaGenerica(); }
             }
             if(a === 'verificar-picture-text'){
-                const sim = this.similaridade(input, cur.word);
+                const sim = this.similaridade(inputGenerico, cur.word);
                 if(sim>=0.9){ this.updateSRS(cur.id,'picture',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
             if(a === 'verificar-envio'){
-                if(input.length<2) return this.mostrarAvisoLocal('Responda válido','error');
-                this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:b.dataset.game, text:input, status:'pending'});
+                if(inputGenerico.length<2) return this.mostrarAvisoLocal('Responda válido','error');
+                this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:b.dataset.game, text:inputGenerico, status:'pending'});
                 if(cur?.id) this.updateSRS(cur.id, b.dataset.game, true);
                 this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
             }
+
+            // 🧙‍♂️ LÓGICA DO MAGO IA - DUELO DE MENTES COM GOOGLE GEMINI
             if(a === 'verificar-debate'){
                 const inputEl = document.getElementById('ig-input');
                 const texto = inputEl?.value?.trim() || '';
@@ -686,7 +689,6 @@ Workspace.Ingles = {
                 chatDiv.scrollTop = chatDiv.scrollHeight;
 
                 // 3. O pedido inteligente ao nosso Backend
-                // Vamos enviar o histórico todo e o tópico atual para a IA ter contexto!
                 Workspace.api('/workspace/ingles/debate', 'POST', {
                     topico: this.desafioAtualObj.topic,
                     historico: this.state._debateChat
@@ -700,7 +702,7 @@ Workspace.Ingles = {
                         this.state._debateChat.push({ role: 'ai', text: res.resposta });
                         this.renderGameDebateAI();
                         
-                        // Opcional: Fazer o Mago ler a resposta em voz alta!
+                        // Fazer o Mago ler a resposta em voz alta (se configurado)
                         if (this.state.magoConfig?.vozAtiva) {
                             VoiceService.falar(res.resposta, { isMago: true });
                         }
@@ -713,6 +715,14 @@ Workspace.Ingles = {
                     this.mostrarAvisoLocal('Falha de conexão com o Mago IA.', 'error');
                 });
             }
+        }); // <-- Esta chaveta fecha o evento de CLIQUE
+        
+        root.addEventListener('change', e=>{
+            if(e.target.id==='mago-voz-toggle' || e.target.id==='mago-modo-select') {
+                if(Workspace.InglesProfessor && typeof Workspace.InglesProfessor.atualizarConfigMago === 'function') Workspace.InglesProfessor.atualizarConfigMago();
+            }
+        });
+    }, // <-- ESTA É A VÍRGULA MÁGICA QUE RESOLVE O ERRO DE SINTAXE!
 
     renderAlunoGrid(){
         const grid = document.getElementById('gamesGrid'); if(!grid) return;
