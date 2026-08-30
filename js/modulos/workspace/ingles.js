@@ -607,14 +607,13 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-            // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
-            // Adicionámos o 'ensinar-correcao' no final da lista!
+           // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
             const profActions = [
                 'render-tab', 'remover-item', 'add-word', 'add-phrase', 
                 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 
                 'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 
                 'rejeitar-envio', 'atualizar-ranking', 'ensinar-ia', 'falar-ia',
-                'ensinar-correcao' // <--- A NOVA AÇÃO AUTORIZADA AQUI
+                'ensinar-correcao', 'falar-groq' // <--- A NOVA AÇÃO ADICIONADA AQUI!
             ];
             
             if (profActions.includes(a)) {

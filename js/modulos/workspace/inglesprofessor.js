@@ -150,6 +150,36 @@ Workspace.InglesProfessor = {
                         }
                     });
                 break;
+            // 🚀 AÇÃO DO CHAT GERATIVO (GROQ)
+            case 'falar-groq':
+                const inputFalarGroq = document.getElementById('ig-groq-chat-input')?.value?.trim();
+                if(!inputFalarGroq) return;
+                
+                const chatContainerGroq = document.getElementById('ig-groq-chat-history');
+                chatContainerGroq.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block;">${Workspace.escapeHTML(inputFalarGroq)}</span></div>`;
+                document.getElementById('ig-groq-chat-input').value = '';
+                chatContainerGroq.scrollTop = chatContainerGroq.scrollHeight;
+                
+                // Mostra que está a carregar
+                const loadingId = 'load-groq-' + Date.now();
+                chatContainerGroq.innerHTML += `<div id="${loadingId}" style="text-align:left; margin-bottom:10px;"><span style="background:#F8FAFC; color:#64748B; padding:8px 12px; border-radius:12px; display:inline-block;">A processar na nuvem... ⚡</span></div>`;
+                
+                Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', { mensagem: inputFalarGroq })
+                    .then(res => {
+                        document.getElementById(loadingId)?.remove();
+                        if(res && res.success) {
+                            chatContainerGroq.innerHTML += `
+                                <div style="text-align:left; margin-bottom:10px;">
+                                    <span style="background:#EEF2FF; border:1px solid #C7D2FE; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block;">
+                                        ⚡ <b>Ptt AI (Groq):</b> ${Workspace.escapeHTML(res.resposta)}
+                                    </span>
+                                </div>`;
+                            chatContainerGroq.scrollTop = chatContainerGroq.scrollHeight;
+                        } else {
+                            Ingles.mostrarAvisoLocal('Erro no Groq. Configurou a API Key?', 'error');
+                        }
+                    }).catch(() => { document.getElementById(loadingId)?.remove(); Ingles.mostrarAvisoLocal('Falha de conexão.', 'error'); });
+                break;
             // 🚀 NOVA AÇÃO: O Professor clica em ensinar erro
             case 'ensinar-correcao':
                 const err = document.getElementById('ig-ia-erro')?.value?.trim();
@@ -430,42 +460,50 @@ Workspace.InglesProfessor = {
             document.getElementById('tab-laboratorio').innerHTML=`
                 <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI. Torne a conversa natural usando a inteligência de espelhamento.</p>
-                <<div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+               <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     
-                    <!-- CENTRO DE TREINAMENTO -->
+                    <!-- CENTRO DE TREINAMENTO (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #10B981;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
-                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Dica Mágica: Use a tag <b>[TEMA]</b> na sua resposta. A IA vai substituí-la automaticamente pelas palavras do aluno!</p>
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Treino Nativo</h3>
                         <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love running)">
-                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: paixao)">
-                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="Resposta (ex: Why do you like [TEMA] so much?)" style="min-height:70px;"></textarea>
-                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
+                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase Exemplo">
+                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria">
+                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="Resposta com [TEMA]" style="min-height:50px;"></textarea>
+                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar</button>
                         </div>
                     </div>
 
-                    <!-- 🚀 NOVO: OLHEIRO ORTOGRÁFICO -->
+                    <!-- OLHEIRO ORTOGRÁFICO (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #F59E0B;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">🔍 Olheiro Ortográfico</h3>
-                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Ensine a máquina a nunca aceitar um erro. Ela bloqueará o aluno e exigirá a reescrita perfeita.</p>
                         <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input id="ig-ia-erro" class="ig-input" placeholder="O erro do aluno (ex: teatcher)">
+                            <input id="ig-ia-erro" class="ig-input" placeholder="O erro (ex: teatcher)">
                             <input id="ig-ia-certo" class="ig-input" placeholder="A correção (ex: teacher)">
-                            <button data-action="ensinar-correcao" class="ws-btn" style="background:#F59E0B; color:#fff; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:14px;">🚫 Adicionar Regra</button>
+                            <button data-action="ensinar-correcao" class="ws-btn" style="background:#F59E0B; color:#fff; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">🚫 Adicionar Regra</button>
                         </div>
                     </div>
 
-                    <!-- CHAT DE TESTE -->
+                    <!-- CHAT DE TESTE (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #4F46E5; display:flex; flex-direction:column;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Chat de Teste</h3>
-                        <div id="ig-ia-chat-history" style="flex:1; min-height:150px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;">
-                            <div style="text-align:center; color:#94A3B8; font-size:12px;">Escreva algo para testar a Ptt AI...</div>
-                        </div>
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Teste Nativo</h3>
+                        <div id="ig-ia-chat-history" style="flex:1; min-height:100px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
                         <div style="display:flex; gap:8px;">
-                            <input id="ig-ia-chat-input" class="ig-input" placeholder="Diga algo à Ptt AI..." style="flex:1;">
+                            <input id="ig-ia-chat-input" class="ig-input" placeholder="Fale com a IA Nativa...">
                             <button data-action="falar-ia" class="ws-btn-primary">Enviar</button>
                         </div>
                     </div>
+
+                    <!-- 🚀 NOVO: CHAT PREMIUM (GROQ) -->
+                    <div class="prof-card" style="border-top:4px solid #0F172A; display:flex; flex-direction:column; grid-column: 1 / -1;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">⚡ Chat Gerativo Premium (Groq API)</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Este chat usa o Llama 3 com o System Prompt pedagógico. Para funcionar, precisa da <b>GROQ_API_KEY</b> no Render.</p>
+                        <div id="ig-groq-chat-history" style="height:200px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
+                        <div style="display:flex; gap:8px;">
+                            <input id="ig-groq-chat-input" class="ig-input" placeholder="Escreva algo com erros gramaticais ou fora de contexto para testar as regras...">
+                            <button data-action="falar-groq" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 18px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enviar para Nuvem</button>
+                        </div>
+                    </div>
+
                 </div>
             `;
         }
