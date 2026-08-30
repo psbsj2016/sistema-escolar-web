@@ -412,11 +412,13 @@ Workspace.InglesProfessor = {
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI.</p>
                 <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     <div class="prof-card" style="border-top:4px solid #10B981;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Treinamento</h3>
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Diga à máquina que tipo de frase é esta e o que ela deve responder quando ouvir algo semelhante.</p>
                         <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input id="ig-ia-frase" class="ig-input" placeholder="Escreva a frase em Inglês...">
-                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: concordar)">
-                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Frase</button>
+                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love this)">
+                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: elogio)">
+                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="O que a IA deve responder? (Opcional se a categoria já existir)" style="min-height:70px;"></textarea>
+                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
                         </div>
                     </div>
                     <div class="prof-card" style="border-top:4px solid #4F46E5; display:flex; flex-direction:column;">
@@ -427,18 +429,6 @@ Workspace.InglesProfessor = {
                         <div style="display:flex; gap:8px;">
                             <input id="ig-ia-chat-input" class="ig-input" placeholder="Diga algo à Ptt AI..." style="flex:1;">
                             <button data-action="falar-ia" class="ws-btn-primary">Enviar</button>
-                        </div>
-                    </div>
-        <!-- CENTRO DE TREINAMENTO -->
-                    <div class="prof-card" style="border-top:4px solid #10B981;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
-                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Diga à máquina que tipo de frase é esta e o que ela deve responder quando ouvir algo semelhante.</p>
-                        
-                        <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love this)">
-                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: elogio)">
-                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="O que a IA deve responder? (Opcional se a categoria já existir)" style="min-height:70px;"></textarea>
-                            <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
                         </div>
                     </div>
                 </div>
