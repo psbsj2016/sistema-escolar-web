@@ -150,6 +150,26 @@ Workspace.InglesProfessor = {
                         }
                     });
                 break;
+            // 🚀 NOVA AÇÃO: O Professor clica em ensinar erro
+            case 'ensinar-correcao':
+                const err = document.getElementById('ig-ia-erro')?.value?.trim();
+                const crt = document.getElementById('ig-ia-certo')?.value?.trim();
+                
+                if(!err || !crt) return Ingles.mostrarAvisoLocal('Preencha o erro e a correção!', 'warning');
+                
+                b.innerText = 'A guardar...';
+                Workspace.api('/workspace/ingles/ia-teste/ensinar-correcao', 'POST', { erro: err, certo: crt })
+                    .then(res => {
+                        b.innerText = '🚫 Adicionar Regra';
+                        if(res && res.success) {
+                            Ingles.mostrarAvisoLocal('Ptt AI não aceitará mais esse erro!', 'success');
+                            document.getElementById('ig-ia-erro').value = '';
+                            document.getElementById('ig-ia-certo').value = '';
+                        } else {
+                            Ingles.mostrarAvisoLocal('Erro ao guardar regra.', 'error');
+                        }
+                    }).catch(() => { b.innerText = '🚫 Adicionar Regra'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
+                break;
             case 'atualizar-ranking':
                 Workspace.InglesProfessor.carregarRanking();
                 break;
@@ -410,7 +430,9 @@ Workspace.InglesProfessor = {
             document.getElementById('tab-laboratorio').innerHTML=`
                 <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI. Torne a conversa natural usando a inteligência de espelhamento.</p>
-                <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <<div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    
+                    <!-- CENTRO DE TREINAMENTO -->
                     <div class="prof-card" style="border-top:4px solid #10B981;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
                         <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Dica Mágica: Use a tag <b>[TEMA]</b> na sua resposta. A IA vai substituí-la automaticamente pelas palavras do aluno!</p>
@@ -421,6 +443,19 @@ Workspace.InglesProfessor = {
                             <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
                         </div>
                     </div>
+
+                    <!-- 🚀 NOVO: OLHEIRO ORTOGRÁFICO -->
+                    <div class="prof-card" style="border-top:4px solid #F59E0B;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">🔍 Olheiro Ortográfico</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Ensine a máquina a nunca aceitar um erro. Ela bloqueará o aluno e exigirá a reescrita perfeita.</p>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <input id="ig-ia-erro" class="ig-input" placeholder="O erro do aluno (ex: teatcher)">
+                            <input id="ig-ia-certo" class="ig-input" placeholder="A correção (ex: teacher)">
+                            <button data-action="ensinar-correcao" class="ws-btn" style="background:#F59E0B; color:#fff; padding:12px; border:none; border-radius:10px; font-weight:bold; cursor:pointer; font-size:14px;">🚫 Adicionar Regra</button>
+                        </div>
+                    </div>
+
+                    <!-- CHAT DE TESTE -->
                     <div class="prof-card" style="border-top:4px solid #4F46E5; display:flex; flex-direction:column;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Chat de Teste</h3>
                         <div id="ig-ia-chat-history" style="flex:1; min-height:150px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;">
