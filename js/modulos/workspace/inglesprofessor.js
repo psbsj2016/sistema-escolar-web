@@ -409,15 +409,15 @@ Workspace.InglesProfessor = {
         else if (tabId === 'laboratorio'){
             document.getElementById('tab-laboratorio').innerHTML=`
                 <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI.</p>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI. Torne a conversa natural usando a inteligência de espelhamento.</p>
                 <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     <div class="prof-card" style="border-top:4px solid #10B981;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Centro de Treinamento</h3>
-                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Diga à máquina que tipo de frase é esta e o que ela deve responder quando ouvir algo semelhante.</p>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Dica Mágica: Use a tag <b>[TEMA]</b> na sua resposta. A IA vai substituí-la automaticamente pelas palavras do aluno!</p>
                         <div style="display:flex; flex-direction:column; gap:10px;">
-                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love this)">
-                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: elogio)">
-                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="O que a IA deve responder? (Opcional se a categoria já existir)" style="min-height:70px;"></textarea>
+                            <input id="ig-ia-frase" class="ig-input" placeholder="Frase de Exemplo (ex: I love running)">
+                            <input id="ig-ia-categoria" class="ig-input" placeholder="Categoria (ex: paixao)">
+                            <textarea id="ig-ia-resposta" class="ig-textarea" placeholder="Resposta (ex: Why do you like [TEMA] so much?)" style="min-height:70px;"></textarea>
                             <button data-action="ensinar-ia" class="ws-btn-success" style="width:100%;">🧠 Ensinar Máquina</button>
                         </div>
                     </div>
