@@ -2,7 +2,7 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.InglesProfessor = {
-    
+_groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium    
     handleAction: async function(acao, b) {
         const Ingles = Workspace.Ingles;
         const state = Ingles.state;
@@ -150,35 +150,62 @@ Workspace.InglesProfessor = {
                         }
                     });
                 break;
-            // 🚀 AÇÃO DO CHAT GERATIVO (GROQ)
+           // 🚀 CHAT PREMIUM (GROQ) - CORRIGIDO 2026
             case 'falar-groq':
-                const inputFalarGroq = document.getElementById('ig-groq-chat-input')?.value?.trim();
-                if(!inputFalarGroq) return;
+                const inputGroq = document.getElementById('ig-groq-chat-input');
+                const chatGroq = document.getElementById('ig-groq-chat-history');
+                const msgGroq = inputGroq?.value?.trim();
+                if(!msgGroq) return;
+
+                if(!Workspace.InglesProfessor._groqHistory) Workspace.InglesProfessor._groqHistory = [];
+
+                // Mostra usuário
+                chatGroq.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block; max-width:80%; word-break:break-word;">${Workspace.escapeHTML(msgGroq)}</span></div>`;
+                inputGroq.value = '';
+                const btnGroq = b;
+                const textoOriginalBtn = btnGroq.innerText;
+                btnGroq.disabled = true;
+                btnGroq.innerText = '⚡ Nuvem...';
+                chatGroq.scrollTop = chatGroq.scrollHeight;
                 
-                const chatContainerGroq = document.getElementById('ig-groq-chat-history');
-                chatContainerGroq.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block;">${Workspace.escapeHTML(inputFalarGroq)}</span></div>`;
-                document.getElementById('ig-groq-chat-input').value = '';
-                chatContainerGroq.scrollTop = chatContainerGroq.scrollHeight;
-                
-                // Mostra que está a carregar
                 const loadingId = 'load-groq-' + Date.now();
-                chatContainerGroq.innerHTML += `<div id="${loadingId}" style="text-align:left; margin-bottom:10px;"><span style="background:#F8FAFC; color:#64748B; padding:8px 12px; border-radius:12px; display:inline-block;">A processar na nuvem... ⚡</span></div>`;
-                
-                Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', { mensagem: inputFalarGroq })
-                    .then(res => {
-                        document.getElementById(loadingId)?.remove();
-                        if(res && res.success) {
-                            chatContainerGroq.innerHTML += `
-                                <div style="text-align:left; margin-bottom:10px;">
-                                    <span style="background:#EEF2FF; border:1px solid #C7D2FE; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block;">
-                                        ⚡ <b>Ptt AI (Groq):</b> ${Workspace.escapeHTML(res.resposta)}
-                                    </span>
-                                </div>`;
-                            chatContainerGroq.scrollTop = chatContainerGroq.scrollHeight;
-                        } else {
-                            Ingles.mostrarAvisoLocal('Erro no Groq. Configurou a API Key?', 'error');
+                chatGroq.innerHTML += `<div id="${loadingId}" style="text-align:left; margin-bottom:10px;"><span style="background:#F8FAFC; color:#64748B; padding:8px 12px; border-radius:12px; display:inline-block;">A processar na nuvem... ⚡</span></div>`;
+
+                try {
+                    const res = await Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', { 
+                        mensagem: msgGroq,
+                        historico: Workspace.InglesProfessor._groqHistory 
+                    });
+
+                    document.getElementById(loadingId)?.remove();
+
+                    if(res && res.success) {
+                        chatGroq.innerHTML += `
+                            <div style="text-align:left; margin-bottom:10px;">
+                                <span style="background:#EEF2FF; border:1px solid #C7D2FE; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block; max-width:80%; word-break:break-word;">
+                                    ⚡ <b>Ptt AI (Groq):</b> ${Workspace.escapeHTML(res.resposta)}
+                                </span>
+                            </div>`;
+                        
+                        // Salva memória para a próxima mensagem
+                        Workspace.InglesProfessor._groqHistory.push({ role: 'user', content: msgGroq });
+                        Workspace.InglesProfessor._groqHistory.push({ role: 'assistant', content: res.resposta });
+                        if(Workspace.InglesProfessor._groqHistory.length > 6) {
+                            Workspace.InglesProfessor._groqHistory = Workspace.InglesProfessor._groqHistory.slice(-6);
                         }
-                    }).catch(() => { document.getElementById(loadingId)?.remove(); Ingles.mostrarAvisoLocal('Falha de conexão.', 'error'); });
+                    } else {
+                        Ingles.mostrarAvisoLocal(res.error || 'Erro no Groq', 'error');
+                        chatGroq.innerHTML += `<div style="text-align:left; color:#EF4444; font-size:12px; margin-bottom:10px;">🚨 ${Workspace.escapeHTML(res.error || 'Erro desconhecido')}</div>`;
+                    }
+                } catch(err) {
+                    document.getElementById(loadingId)?.remove();
+                    Ingles.mostrarAvisoLocal('Falha de conexão com a nuvem.', 'error');
+                } finally {
+                    btnGroq.disabled = false;
+                    btnGroq.innerText = textoOriginalBtn;
+                    chatGroq.scrollTop = chatGroq.scrollHeight;
+                    inputGroq.focus();
+                }
                 break;
             // 🚀 NOVA AÇÃO: O Professor clica em ensinar erro
             case 'ensinar-correcao':
@@ -493,16 +520,16 @@ Workspace.InglesProfessor = {
                         </div>
                     </div>
 
-                    <!-- 🚀 NOVO: CHAT PREMIUM (GROQ) -->
-                    <div class="prof-card" style="border-top:4px solid #0F172A; display:flex; flex-direction:column; grid-column: 1 / -1;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">⚡ Chat Gerativo Premium (Groq API)</h3>
-                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Este chat usa o Llama 3 com o System Prompt pedagógico. Para funcionar, precisa da <b>GROQ_API_KEY</b> no Render.</p>
-                        <div id="ig-groq-chat-history" style="height:200px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
-                        <div style="display:flex; gap:8px;">
-                            <input id="ig-groq-chat-input" class="ig-input" placeholder="Escreva algo com erros gramaticais ou fora de contexto para testar as regras...">
-                            <button data-action="falar-groq" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 18px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enviar para Nuvem</button>
-                        </div>
-                    </div>
+                <!-- 🚀 CHAT PREMIUM (GROQ) - CORRIGIDO -->
+<div class="prof-card" style="border-top:4px solid #0F172A; display:flex; flex-direction:column; grid-column: 1 / -1;">
+    <h3 style="margin:0 0 15px 0; color:#0F172A;">⚡ Chat Gerativo Premium (Groq API)</h3>
+    <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Modelo atual: <b>openai/gpt-oss-20b</b> • Agora com memória de conversa.</p>
+    <div id="ig-groq-chat-history" style="height:280px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; overflow-y:auto; margin-bottom:10px; font-size:14px; display:flex; flex-direction:column; gap:8px;"></div>
+    <div style="display:flex; gap:8px;">
+        <input id="ig-groq-chat-input" class="ig-input" placeholder="Ex: I is very happy today..." onkeydown="if(event.key==='Enter') this.nextElementSibling.click()">
+        <button data-action="falar-groq" id="btn-groq" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 18px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enviar para Nuvem</button>
+    </div>
+</div>
 
                 </div>
             `;
