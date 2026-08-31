@@ -871,7 +871,7 @@
             <p style="margin:0; font-size:13px; color:#64748B;">Selecione a turma e ative a visão dos alunos instantaneamente.</p>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button onclick="window.open('/lousa.html?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold;">
+            <button onclick="window.open('/workspace.lousa.html?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold;">
                 1. Abrir o Meu Quadro
             </button>
             <button onclick="Workspace.Avaliacoes.abrirModalLousa('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold;">
@@ -1517,7 +1517,7 @@ Workspace.Avaliacoes.iniciarMonitorLousa = () => {
                     iframeDiv.style.display = 'block';
                     
                     // A URL muda em tempo real se o professor bloquear/desbloquear os recursos
-                    const urlMagica = `/lousa.html?role=aluno&locked=${!res.recursos}`;
+                    const urlMagica = `/workspace.lousa.html?role=aluno&locked=${!res.recursos}`;
                     if (iframe.getAttribute('src') !== urlMagica) {
                         iframe.setAttribute('src', urlMagica);
                     }
