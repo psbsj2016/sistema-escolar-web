@@ -113,6 +113,7 @@ const SRSService = {
 Workspace.Ingles = {
     state: {
         _dbLoaded: false, 
+        _roleplayChat: [],
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
@@ -661,9 +662,27 @@ Workspace.Ingles = {
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
             }
             if(a === 'verificar-wordSpark'){
-                if(!inputGenerico.toLowerCase().includes((cur.word||'').toLowerCase())){ this.registrarErro(cur,'word'); this.falhaGenerica(); }
-                else { this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
-            }
+    if(!inputGenerico.toLowerCase().includes((cur.word||'').toLowerCase())){
+        this.mostrarAvisoLocal(`Use a palavra "${cur.word}" na frase!`, 'warning');
+        return;
+    }
+    b.disabled = true; b.innerText = '🧙 Avaliando com IA...';
+    Workspace.api('/ingles/jogo/avaliar','POST',{
+        jogo: 'wordSpark',
+        palavra: cur.word,
+        fraseAluno: inputGenerico
+    }).then(r=>{
+        b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
+        if(r.success && r.correto){
+            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px;"><b>✅ ${r.feedback}</b><br>📝 ${Workspace.escapeHTML(r.correcao)}</div>`;
+            setTimeout(()=>{ this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(r.coins||50); }, 1500);
+        } else {
+            this.registrarErro(cur,'word');
+            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px;">❌ ${Workspace.escapeHTML(r.feedback || 'Tente melhorar')}<br>💡 Correto: ${Workspace.escapeHTML(r.correcao || '')}</div>`;
+            setTimeout(()=> this.falhaGenerica(), 2000);
+        }
+    });
+}
             if(a === 'verificar-listen'){
                 const sim = this.similaridade(listen, cur.phrase);
                 if(sim>=0.9){ this.updateSRS(cur.id,'phrase',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
@@ -688,12 +707,54 @@ Workspace.Ingles = {
                 if(sim>=0.9){ this.updateSRS(cur.id,'picture',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
-            if(a === 'verificar-envio'){
-                if(inputGenerico.length<2) return this.mostrarAvisoLocal('Responda válido','error');
-                this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:b.dataset.game, text:inputGenerico, status:'pending'});
-                if(cur?.id) this.updateSRS(cur.id, b.dataset.game, true);
-                this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
+          if(a === 'verificar-envio'){
+    if(inputGenerico.length<2) return this.mostrarAvisoLocal('Responda válido','error');
+    
+    const gameId = b.dataset.game;
+
+    // JOGOS COM IA
+    if(['contextRole','answerQuest','sentenceShuffle'].includes(gameId)){
+        b.disabled = true; b.innerText = '🤖 IA analisando...';
+        const payload = {
+            jogo: gameId === 'sentenceShuffle' ? 'answerQuest' : gameId,
+            pergunta: cur.text || cur.phrase || cur.title,
+            respostaAluno: inputGenerico,
+            cenario: cur,
+            historico: this.state._roleplayChat || []
+        };
+        
+        Workspace.api('/ingles/jogo/avaliar','POST', payload).then(r=>{
+            if(gameId === 'contextRole'){
+                if(!this.state._roleplayChat) this.state._roleplayChat = [];
+                this.state._roleplayChat.push({role:'user', content: inputGenerico});
+                this.state._roleplayChat.push({role:'assistant', content: r.npcResponse});
+                
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="background:#FEF3C7; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">${r.correcao ? `🔧 ${Workspace.escapeHTML(r.correcao)}` : `✅ ${Workspace.escapeHTML(r.feedback)}`}</div>
+                    <div class="ig-big-phrase" style="text-align:left; background:#EEF2FF;">${Workspace.escapeHTML(r.npcResponse)}</div>
+                    <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta..." style="min-height:80px; margin-top:12px;"></textarea>
+                    <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; background:#10B981; color:#fff; margin-top:12px; padding:14px; border-radius:12px; border:none;">Responder 🎭</button>
+                `;
+                this.ganharCoins('bronze', 20);
+            } else {
+                // answerQuest e sentenceShuffle
+                if(r.correto){
+                    this.sucessoGenerico(50);
+                } else {
+                    this.registrarErro(cur, gameId);
+                    this.mostrarAvisoLocal(`💡 ${r.feedback}`, 'error');
+                    setTimeout(()=> this.renderDesafioAtual(), 2500);
+                }
             }
+        });
+        return;
+    }
+
+    // JOGOS ANTIGOS SEM IA (mantém igual)
+    this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:gameId, text:inputGenerico, status:'pending'});
+    if(cur?.id) this.updateSRS(cur.id, gameId, true);
+    this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
+}
 
             if(a === 'verificar-debate'){
                 const inputEl = document.getElementById('ig-input');
@@ -773,6 +834,7 @@ Workspace.Ingles = {
         this.jogoAtual = id;
         const game = this.defaults.games.find(g=>g.id===id); if(!game) return;
         if(id !== 'debateAI') { this.state._debateChat=[]; }
+        if(id !== 'contextRole') { this.state._roleplayChat=[]; }
         
         document.getElementById('modalIcon').textContent = game.icon;
         document.getElementById('modalTitle').textContent = game.title;
