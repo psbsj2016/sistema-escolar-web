@@ -737,19 +737,33 @@
             
             <div style="margin-top: 15px;">
                 
-                <!-- 🚀 A LOUSA DIGITAL DO ALUNO (Vem trancada por padrão) -->
-                <div style="margin-bottom: 25px; border-bottom: 2px dashed #eee; padding-bottom: 20px;">
-                    <h4 style="color:#0F172A; margin: 0 0 10px 0; display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:20px;">🖍️</span> Quadro do Professor
-                    </h4>
-                    <!-- O Iframe isola o React. A URL diz ao script para esconder as ferramentas -->
-                    <div style="width:100%; height:450px; border-radius:16px; overflow:hidden; border:2px solid #E2E8F0; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-                        <iframe id="iframeLousaAluno" src="/workspace.html?role=aluno&locked=true" style="width:100%; height:100%; border:none;"></iframe>
-                    </div>
-                    <div style="text-align:right; margin-top:8px;">
-                        <span id="statusLousa" style="font-size:11px; background:#F1F5F9; color:#64748B; padding:4px 10px; border-radius:12px; font-weight:bold;">🔒 Modo Apenas Visualização</span>
-                    </div>
-                </div>
+               <!-- 🚀 A LOUSA DIGITAL DO ALUNO (COM PLACEHOLDER) -->
+<div style="margin-bottom: 25px; border-bottom: 2px dashed #eee; padding-bottom: 20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h4 style="color:#0F172A; margin: 0; display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">🖍️</span> Quadro do Professor
+        </h4>
+        <select id="ws-aluno-lousa-turma" onchange="Workspace.Avaliacoes.iniciarMonitorLousa()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; background: white; font-weight: bold; color: #475569;">
+            <option value="">Selecione sua Turma primeiro...</option>
+        </select>
+    </div>
+
+    <!-- 1. PLACEHOLDER: Mostrado quando a lousa está DESLIGADA -->
+    <div id="ws-lousa-aluno-placeholder" style="width:100%; height:450px; border-radius:16px; border:2px dashed #CBD5E1; background:#f8fafc; display:flex; align-items:center; justify-content:center; flex-direction:column; box-shadow:inset 0 4px 10px rgba(0,0,0,0.02); animation: fadeIn 0.5s;">
+        <div style="font-size: 50px; margin-bottom: 15px; filter: grayscale(100%) opacity(0.5);">🖍️</div>
+        <h4 style="color:#64748B; margin: 0; font-family:'Plus Jakarta Sans', sans-serif; font-size: 16px;">A lousa será ativada pelo professor durante a aula.</h4>
+        <p style="color:#94A3B8; font-size: 13px; margin-top: 5px;">Aguarde o início da sessão e preste atenção...</p>
+    </div>
+
+    <!-- 2. IFRAME REAL: Mostrado quando a lousa está LIGADA -->
+    <div id="ws-lousa-aluno-ativa" style="display:none; width:100%; height:450px; border-radius:16px; overflow:hidden; border:2px solid #14B8A6; box-shadow:0 4px 15px rgba(20, 184, 166, 0.15); animation: fadeIn 0.5s;">
+        <iframe id="iframeLousaAluno" src="" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+    
+    <div style="text-align:right; margin-top:8px;">
+        <span id="statusLousaText" style="font-size:11px; background:#F1F5F9; color:#64748B; padding:4px 10px; border-radius:12px; font-weight:bold;">💤 Aguardando Sincronização</span>
+    </div>
+</div>
 
                 <!-- 🚀 AS ABAS ORIGINAIS DE PRESENÇA E LINKS -->
                 <div style="display: flex; gap: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
@@ -851,27 +865,31 @@
 
             <div id="ws-prof-menu-encontros" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px;">
                 
-                <!-- 🚀 CARTÃO DA LOUSA (PROFESSOR) - Ocupa a linha toda -->
-                <div class="ws-card" style="border-left: 4px solid #14B8A6; grid-column: 1 / -1; padding: 20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
-                        <div>
-                            <h3 style="margin:0 0 5px 0; color:#0F172A; display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:24px;">🖍️</span> Lousa Digital
-                            </h3>
-                            <p style="margin:0; font-size:13px; color:#64748B;">Quadro interativo para explicações e desenhos.</p>
-                        </div>
-                        <div style="display:flex; gap:10px;">
-                            <!-- Botão do Professor (Abre o workspace.lousa.html numa nova aba com acesso total) -->
-                            <button onclick="window.open('/workspace.lousa.html?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold;">
-                                Abrir Quadro
-                            </button>
-                            <!-- Botão para Libertar Recursos ao Aluno -->
-                            <button id="btnLiberarLousa" onclick="liberarLousaAoAluno()" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:8px; font-weight:bold;">
-                                🔓 Liberar Recursos ao Aluno
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <!-- 🚀 CARTÃO DA LOUSA (PROFESSOR) COM COMANDOS EM TEMPO REAL -->
+<div class="ws-card" style="border-left: 4px solid #14B8A6; grid-column: 1 / -1; padding: 20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+        <div>
+            <h3 style="margin:0 0 5px 0; color:#0F172A; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:24px;">🖍️</span> Lousa Digital Avançada
+            </h3>
+            <p style="margin:0; font-size:13px; color:#64748B;">Selecione a turma e ative a visão dos alunos instantaneamente.</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="window.open('/lousa.html?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold;">
+                1. Abrir o Meu Quadro
+            </button>
+            <button onclick="Workspace.Avaliacoes.abrirModalLousa('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold;">
+                👁️ 2. Ativar Visualização
+            </button>
+            <button onclick="Workspace.Avaliacoes.abrirModalLousa('liberar')" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:8px; font-weight:bold;">
+                🔓 3. Liberar Recursos
+            </button>
+            <button onclick="Workspace.Avaliacoes.abrirModalLousa('desativar')" class="ws-btn" style="background:#e74c3c; color:#fff; border-radius:8px; font-weight:bold;">
+                🛑 Encerrar Lousa
+            </button>
+        </div>
+    </div>
+</div>
 
                 <script>
                 function liberarLousaAoAluno() {
@@ -1412,5 +1430,127 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
+    
+    <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL -->
+<script>
+window.Workspace = window.Workspace || {};
+Workspace.Avaliacoes = Workspace.Avaliacoes || {};
+Workspace.Avaliacoes.lousaInterval = null;
+
+// ==========================================
+// LÓGICA DO PROFESSOR (ENVIAR COMANDOS)
+// ==========================================
+Workspace.Avaliacoes.abrirModalLousa = async (tipo) => {
+    let titulo = tipo === 'ativar' ? '👁️ Ativar Visualização' : (tipo === 'liberar' ? '🔓 Liberar Recursos' : '🛑 Desativar Lousa');
+    let corBtn = tipo === 'ativar' ? '#3498db' : (tipo === 'liberar' ? '#F59E0B' : '#e74c3c');
+
+    const turmas = await Workspace.api('/turmas', 'GET');
+    let options = '<option value="global">🌍 Público Geral</option>';
+    if(turmas && turmas.length > 0) {
+        turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`);
+    }
+    
+    const modalId = 'ws-modal-comando-lousa';
+    if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+    
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); animation: fadeIn 0.2s;">
+        <div class="ws-card" style="width:90%; max-width:400px; padding:25px; text-align:center;">
+            <h3 style="margin:0 0 15px 0;">${titulo}</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:15px;">Selecione a turma para enviar a ordem em tempo real:</p>
+            <select id="ws-lousa-turma-select" class="ws-post-input" style="width:100%; padding:12px; margin-bottom:20px;">${options}</select>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="ws-btn" style="flex:1; background:#95a5a6;">Cancelar</button>
+                <button onclick="Workspace.Avaliacoes.enviarComandoLousa('${tipo}')" class="ws-btn" style="flex:1; background:${corBtn};">Executar Agora</button>
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+};
+
+Workspace.Avaliacoes.enviarComandoLousa = async (tipo) => {
+    const turmaId = document.getElementById('ws-lousa-turma-select').value;
+    document.getElementById('ws-modal-comando-lousa').remove();
+    
+    const payload = { turmaId };
+    if(tipo === 'ativar') { payload.ativa = true; payload.recursos = false; }
+    if(tipo === 'liberar') { payload.ativa = true; payload.recursos = true; }
+    if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
+    
+    if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
+    await Workspace.api('/sala/lousa/status', 'PUT', payload);
+    if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Ordem enviada! O ecrã dos alunos vai atualizar.', 'success');
+};
+
+// ==========================================
+// LÓGICA DO ALUNO (RECEBER EM TEMPO REAL)
+// ==========================================
+Workspace.Avaliacoes.carregarTurmasLousaAluno = async () => {
+    const sel = document.getElementById('ws-aluno-lousa-turma');
+    if(!sel) return;
+    const turmas = await Workspace.api('/turmas', 'GET');
+    sel.innerHTML = '<option value="">Selecione sua Turma...</option><option value="global">🌍 Público Geral</option>';
+    if(turmas && turmas.length > 0) {
+        turmas.forEach(t => {
+            // Mostra apenas as turmas a que o aluno pertence
+            if(Workspace.usuario.tipo === 'Professor' || (Workspace.verificarTurma && Workspace.verificarTurma(Workspace.usuario, t.id, t.nome))) {
+                sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`;
+            }
+        });
+    }
+};
+
+Workspace.Avaliacoes.iniciarMonitorLousa = () => {
+    if (Workspace.Avaliacoes.lousaInterval) clearInterval(Workspace.Avaliacoes.lousaInterval);
+    
+    const verificarStatus = async () => {
+        const turmaId = document.getElementById('ws-aluno-lousa-turma').value;
+        if(!turmaId) return;
+
+        try {
+            const res = await Workspace.api(`/sala/lousa/status/${turmaId}`, 'GET');
+            if (res && res.success) {
+                const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
+                const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
+                const iframe = document.getElementById('iframeLousaAluno');
+                const statusText = document.getElementById('statusLousaText');
+
+                if (res.ativa) {
+                    placeholder.style.display = 'none';
+                    iframeDiv.style.display = 'block';
+                    
+                    // A URL muda em tempo real se o professor bloquear/desbloquear os recursos
+                    const urlMagica = `/lousa.html?role=aluno&locked=${!res.recursos}`;
+                    if (iframe.getAttribute('src') !== urlMagica) {
+                        iframe.setAttribute('src', urlMagica);
+                    }
+
+                    if (res.recursos) {
+                        statusText.innerText = '🔓 Desenho Liberado (Pode interagir)';
+                        statusText.style.background = '#10B981'; statusText.style.color = '#fff';
+                    } else {
+                        statusText.innerText = '🔒 Apenas Visualização';
+                        statusText.style.background = '#F1F5F9'; statusText.style.color = '#64748B';
+                    }
+                } else {
+                    placeholder.style.display = 'flex';
+                    iframeDiv.style.display = 'none';
+                    iframe.setAttribute('src', '');
+                    statusText.innerText = '💤 Lousa Desativada';
+                    statusText.style.background = '#F1F5F9'; statusText.style.color = '#64748B';
+                }
+            }
+        } catch (e) {}
+    };
+
+    verificarStatus(); // Verifica imediatamente
+    Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000); // Bate na base de dados a cada 3 segundos
+};
+
+// Quando o hub abrir, carregamos a lista de turmas no combobox do aluno
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => { Workspace.Avaliacoes.carregarTurmasLousaAluno(); }, 1500);
+});
+</script>
 </body>
 </html>
