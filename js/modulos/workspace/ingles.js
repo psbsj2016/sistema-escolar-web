@@ -708,53 +708,77 @@ Workspace.Ingles = {
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
           if(a === 'verificar-envio'){
-    if(inputGenerico.length<2) return this.mostrarAvisoLocal('Responda válido','error');
-    
-    const gameId = b.dataset.game;
+            // Captura o input dinamicamente caso existam múltiplos
+            const caixaDeTexto = document.querySelector('#modalBody #ig-input') || document.getElementById('ig-input');
+            const respostaDoAluno = caixaDeTexto?.value?.trim() || '';
 
-    // JOGOS COM IA
-    if(['contextRole','answerQuest','sentenceShuffle'].includes(gameId)){
-        b.disabled = true; b.innerText = '🤖 IA analisando...';
-        const payload = {
-            jogo: gameId === 'sentenceShuffle' ? 'answerQuest' : gameId,
-            pergunta: cur.text || cur.phrase || cur.title,
-            respostaAluno: inputGenerico,
-            cenario: cur,
-            historico: this.state._roleplayChat || []
-        };
-        
-        Workspace.api('/ingles/jogo/avaliar','POST', payload).then(r=>{
-            if(gameId === 'contextRole'){
-                if(!this.state._roleplayChat) this.state._roleplayChat = [];
-                this.state._roleplayChat.push({role:'user', content: inputGenerico});
-                this.state._roleplayChat.push({role:'assistant', content: r.npcResponse});
+            if(respostaDoAluno.length < 2) return this.mostrarAvisoLocal('Responda com conteúdo válido', 'error');
+            
+            const gameId = b.dataset.game;
+
+            // JOGOS COM IA
+            if(['contextRole','answerQuest','sentenceShuffle'].includes(gameId)){
+                b.disabled = true; b.innerText = '🤖 A IA está a ler a sua resposta...';
                 
-                document.getElementById('modalBody').innerHTML = `
-                    <div style="background:#FEF3C7; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px;">${r.correcao ? `🔧 ${Workspace.escapeHTML(r.correcao)}` : `✅ ${Workspace.escapeHTML(r.feedback)}`}</div>
-                    <div class="ig-big-phrase" style="text-align:left; background:#EEF2FF;">${Workspace.escapeHTML(r.npcResponse)}</div>
-                    <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta..." style="min-height:80px; margin-top:12px;"></textarea>
-                    <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; background:#10B981; color:#fff; margin-top:12px; padding:14px; border-radius:12px; border:none;">Responder 🎭</button>
-                `;
-                this.ganharCoins('bronze', 20);
-            } else {
-                // answerQuest e sentenceShuffle
-                if(r.correto){
-                    this.sucessoGenerico(50);
-                } else {
-                    this.registrarErro(cur, gameId);
-                    this.mostrarAvisoLocal(`💡 ${r.feedback}`, 'error');
-                    setTimeout(()=> this.renderDesafioAtual(), 2500);
-                }
-            }
-        });
-        return;
-    }
+                const payload = {
+                    jogo: gameId === 'sentenceShuffle' ? 'answerQuest' : gameId,
+                    pergunta: cur.text || cur.phrase || cur.title,
+                    respostaAluno: respostaDoAluno,
+                    cenario: cur,
+                    historico: this.state._roleplayChat || []
+                };
+                
+                Workspace.api('/ingles/jogo/avaliar','POST', payload).then(r=>{
+                    b.disabled = false;
+                    b.innerText = 'Submeter Resposta';
+                    
+                    if(!r.success) {
+                        return this.mostrarAvisoLocal('Ocorreu um erro na IA. Tente de novo!', 'error');
+                    }
 
-    // JOGOS ANTIGOS SEM IA (mantém igual)
-    this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:gameId, text:inputGenerico, status:'pending'});
-    if(cur?.id) this.updateSRS(cur.id, gameId, true);
-    this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
-}
+                    if(gameId === 'contextRole'){
+                        if(!this.state._roleplayChat) this.state._roleplayChat = [];
+                        this.state._roleplayChat.push({role:'user', content: respostaDoAluno});
+                        this.state._roleplayChat.push({role:'assistant', content: r.npcResponse});
+                        
+                        // Recria a interface imersiva do Roleplay
+                        document.getElementById('modalBody').innerHTML = `
+                            <div style="background:#FEF3C7; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px; border-left:4px solid #D97706;">
+                                ${r.correcao && r.correcao !== 'null' ? `💡 <b>Dica:</b> ${Workspace.escapeHTML(r.correcao)}` : `✅ ${Workspace.escapeHTML(r.feedback || 'Muito bem!')}`}
+                            </div>
+                            <div class="ig-big-phrase" style="text-align:left; background:#EEF2FF; border-color:#818CF8; font-size:16px;">
+                                🎭 <b>Personagem:</b> <br><br> ${Workspace.escapeHTML(r.npcResponse)}
+                            </div>
+                            <textarea id="ig-input" class="ig-textarea" placeholder="O que responde agora?..." style="min-height:80px; margin-top:12px; border-color:#818CF8;"></textarea>
+                            <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:12px; padding:14px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">Continuar a Conversa 🎭</button>
+                        `;
+                        this.ganharCoins('bronze', 20); // Recompensa a cada troca de frase
+                    } else {
+                        // answerQuest e sentenceShuffle
+                        if(r.correto){
+                            // Se a IA diz que está correto, mostra feedback e encerra com sucesso!
+                            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${r.feedback}</b><br>✨ Sugestão: ${Workspace.escapeHTML(r.correcao)}</div>`;
+                            setTimeout(()=>{ this.sucessoGenerico(50); }, 2000);
+                        } else {
+                            // Se a IA diz que tem erro forte, manda tentar de novo.
+                            this.registrarErro(cur, gameId);
+                            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;">❌ ${Workspace.escapeHTML(r.feedback)}</div>`;
+                            setTimeout(()=> this.renderDesafioAtual(), 2500);
+                        }
+                    }
+                }).catch(() => {
+                    b.disabled = false;
+                    b.innerText = 'Submeter Resposta';
+                    this.mostrarAvisoLocal('Ligação interrompida.','error');
+                });
+                return;
+            }
+
+            // JOGOS ANTIGOS SEM IA (mantém a lógica original)
+            this.state.submissions.unshift({id:'sub_'+Date.now(), student:Workspace.usuario?.nome||'Aluno', game:gameId, text:respostaDoAluno, status:'pending'});
+            if(cur?.id) this.updateSRS(cur.id, gameId, true);
+            this.sucessoGenerico(parseInt(b.dataset.bonus||'50'));
+        }
 
             if(a === 'verificar-debate'){
                 const inputEl = document.getElementById('ig-input');
