@@ -654,7 +654,7 @@
                                 </select>
                             </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                                <button onclick="window.open('/workspace-lousa.html?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
+                                <button onclick="(()=>{const s=document.getElementById('ws-prof-turma-lousa');const tid=s?s.value:'global';window.open(`/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`,'_blank');})()" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                                     1. Abrir o Meu Quadro
                                 </button>
                                 <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
@@ -1086,7 +1086,135 @@
         });
     </script>
 
-    <!-- Lousa movida para avaliacoes.js - módulo corrigido -->
+    <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL E TELA CHEIA -->
+<script>
+window.Workspace = window.Workspace || {};
+Workspace.Avaliacoes = Workspace.Avaliacoes || {};
+Workspace.Avaliacoes.lousaInterval = null;
+
+Workspace.Avaliacoes.carregarTurmasLousaProf = async () => {
+    const sel = document.getElementById('ws-prof-turma-lousa');
+    if(!sel) return;
+    try {
+        const turmas = await Workspace.api('/turmas', 'GET');
+        sel.innerHTML = '<option value="global">🌍 Público Geral</option>';
+        if(turmas && turmas.length > 0) {
+            turmas.forEach(t => {
+                sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`;
+            });
+        }
+    } catch(e){}
+};
+
+Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
+    const sel = document.getElementById('ws-prof-turma-lousa');
+    if (!sel) return;
+    const turmaId = sel.value;
+    
+    const payload = { turmaId };
+    if(tipo === 'ativar') { payload.ativa = true; payload.recursos = false; }
+    if(tipo === 'liberar') { payload.ativa = true; payload.recursos = true; }
+    if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
+    
+    if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
+    
+    try {
+        await Workspace.api('/sala/workspace-lousa/status', 'PUT', payload);
+        if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Comando ativado! O ecrã dos alunos reagirá em instantes.', 'success');
+    } catch(e) {
+        if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Erro ao sincronizar.', 'error');
+    }
+};
+
+Workspace.Avaliacoes.abrirLousaFullscreen = async () => {
+    const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+    }
+    
+    Workspace.Avaliacoes.iniciarMonitorLousa(true);
+
+    if (Workspace.usuario && Workspace.usuario.id) {
+        try {
+            await Workspace.api('/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
+        } catch(e) {}
+    }
+};
+
+Workspace.Avaliacoes.fecharLousaFullscreen = () => {
+    const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = ''; 
+    }
+    Workspace.Avaliacoes.iniciarMonitorLousa(false);
+    const iframe = document.getElementById('iframeLousaAluno');
+    if (iframe) iframe.setAttribute('src', ''); 
+};
+
+Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
+    if (Workspace.Avaliacoes.lousaInterval) {
+        clearInterval(Workspace.Avaliacoes.lousaInterval);
+        Workspace.Avaliacoes.lousaInterval = null;
+    }
+    
+    if (!ligar) return; 
+
+    let turmaId = 'global';
+    if (Workspace.usuario) {
+        turmaId = Workspace.usuario.turma || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]) || 'global';
+    }
+
+    const verificarStatus = async () => {
+        try {
+            const res = await Workspace.api(`/sala/workspace-lousa/status/${turmaId}`, 'GET');
+            if (res && res.success) {
+                const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
+                const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
+                const iframe = document.getElementById('iframeLousaAluno');
+                const statusText = document.getElementById('statusLousaText');
+
+                if (res.ativa) {
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (iframeDiv) iframeDiv.style.display = 'block';
+                    
+                    // 🚀 BUG CORRIGIDO AQUI: A rota está sem a extensão .html
+                    const urlMagica = `/workspace-lousa?role=aluno&locked=${!res.recursos}`;
+                    
+                    if (iframe && iframe.getAttribute('src') !== urlMagica) {
+                        iframe.setAttribute('src', urlMagica);
+                    }
+
+                    if (statusText) {
+                        if (res.recursos) {
+                            statusText.innerHTML = '<span style="color:#10B981;">🟢</span> Desenho Liberado (Pode interagir)';
+                        } else {
+                            statusText.innerHTML = '<span style="color:#F59E0B;">🟡</span> Apenas Visualização';
+                        }
+                    }
+                } else {
+                    if (placeholder) placeholder.style.display = 'block';
+                    if (iframeDiv) iframeDiv.style.display = 'none';
+                    if (iframe) iframe.setAttribute('src', '');
+                    if (statusText) statusText.innerHTML = '💤 Aguardando o Professor...';
+                }
+            }
+        } catch (e) {}
+    };
+
+    verificarStatus(); 
+    Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000); 
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (Workspace.usuario && Workspace.usuario.tipo !== 'Aluno') {
+            if (Workspace.Avaliacoes.carregarTurmasLousaProf) Workspace.Avaliacoes.carregarTurmasLousaProf();
+        }
+    }, 1500);
+});
+</script>
 
 <!-- 🚀 MODAL TELA CHEIA DA LOUSA (ALUNO) -->
 <div id="ws-modal-lousa-aluno-fullscreen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #0f172a; z-index: 9999999; flex-direction: column; animation: fadeIn 0.3s ease;">
