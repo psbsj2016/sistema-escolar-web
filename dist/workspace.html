@@ -650,25 +650,25 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
                             <div style="flex: 1; min-width: 250px;">
                                 <h3 style="margin:0 0 5px 0; color:#0F172A; display:flex; align-items:center; gap:8px;">
-                                    <span style="font-size:24px;">🖍️</span> Painel da Lousa Digital
+                                    <span style="font-size:24px;">🖍</span> Painel da Lousa Digital
                                 </h3>
                                 <label style="font-size:12px; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Selecionar Turma</label>
                                 <select id="ws-prof-turma-lousa" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; background: #f8fafc; font-weight: bold; color: #475569; width: 100%; max-width: 300px; cursor: pointer;">
                                     <option value="global">🌍 Público Geral</option>
                                 </select>
+                                <div id="ws-lousa-prof-status" style="font-size:11px; color:#64748b; font-weight:600; margin-top:8px;">⚪ Aguardando ação</div>
                             </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
                                 <button onclick="(()=>{const s=document.getElementById('ws-prof-turma-lousa');const tid=s?s.value:'global';Workspace.Avaliacoes.abrirLousaProfessor(tid);})()" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                                     1. Abrir o Meu Quadro
                                 </button>
                                 <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
-                                    👁️ 2. Ativar Visualização
+                                    👁 2. Ativar Visualização
                                 </button>
                                 <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('liberar')" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                                     🔓 3. Liberar Recursos
                                 </button>
-                                <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('desativar')" class="ws-btn" style="background:#64748b;"
-                                ><div id="ws-lousa-prof-status" style="font-size:11px; color:#64748b; font-weight:600; margin-top:8px; width:100%;">⚪ Aguardando ação</div><button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('desativar')" class="ws-btn" style="background:#e74c3c; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
+                                <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('desativar')" class="ws-btn" style="background:#e74c3c; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                                     🛑 Encerrar Lousa
                                 </button>
                             </div>
@@ -1091,6 +1091,7 @@
     </script>
 
     <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL E TELA CHEIA -->
+
 <script>
 window.Workspace = window.Workspace || {};
 Workspace.Avaliacoes = Workspace.Avaliacoes || {};
@@ -1107,11 +1108,12 @@ Workspace.Avaliacoes.carregarTurmasLousaProf = async () => {
                 sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`;
             });
         }
-    } catch(e){}
+    } catch(e){ console.warn('Erro carregar turmas lousa', e); }
 };
 
 Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
     const sel = document.getElementById('ws-prof-turma-lousa');
+    const statusEl = document.getElementById('ws-lousa-prof-status');
     if (!sel) return;
     const turmaId = sel.value;
     
@@ -1120,14 +1122,45 @@ Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
     if(tipo === 'liberar') { payload.ativa = true; payload.recursos = true; }
     if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
     
+    if(statusEl) statusEl.textContent = '⏳ Sincronizando...';
     if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
     
     try {
         await Workspace.api('/sala/workspace-lousa/status', 'PUT', payload);
-        if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Comando ativado! O ecrã dos alunos reagirá em instantes.', 'success');
+        if(statusEl){
+            if(tipo==='ativar') statusEl.textContent = '🟡 Visualização ativa';
+            if(tipo==='liberar') statusEl.textContent = '🟢 Recursos liberados';
+            if(tipo==='desativar') statusEl.textContent = '⚪ Lousa encerrada';
+        }
+        if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Comando ativado! Alunos verão em instantes.', 'success');
     } catch(e) {
+        if(statusEl) statusEl.textContent = '❌ Erro ao sincronizar';
         if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Erro ao sincronizar.', 'error');
     }
+};
+
+Workspace.Avaliacoes.abrirLousaProfessor = (turmaId) => {
+    const tid = String(turmaId || 'global').trim();
+    console.log('[LOUSA] Professor abrindo embutido:', tid);
+    const modal = document.getElementById('ws-modal-lousa-prof');
+    const iframe = document.getElementById('iframeLousaProf');
+    const label = document.getElementById('ws-prof-lousa-turma-label');
+    if(label) label.textContent = tid === 'global' ? 'Público Geral' : tid;
+    if(iframe){
+        iframe.src = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`;
+    }
+    if(modal){
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+Workspace.Avaliacoes.fecharLousaProfessor = () => {
+    const modal = document.getElementById('ws-modal-lousa-prof');
+    const iframe = document.getElementById('iframeLousaProf');
+    if(modal) modal.style.display = 'none';
+    if(iframe) iframe.src = '';
+    document.body.style.overflow = '';
 };
 
 Workspace.Avaliacoes.abrirLousaFullscreen = async () => {
@@ -1136,13 +1169,9 @@ Workspace.Avaliacoes.abrirLousaFullscreen = async () => {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
     }
-    
     Workspace.Avaliacoes.iniciarMonitorLousa(true);
-
     if (Workspace.usuario && Workspace.usuario.id) {
-        try {
-            await Workspace.api('/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
-        } catch(e) {}
+        try { await Workspace.api('/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e) {}
     }
 };
 
@@ -1154,26 +1183,49 @@ Workspace.Avaliacoes.fecharLousaFullscreen = () => {
     }
     Workspace.Avaliacoes.iniciarMonitorLousa(false);
     const iframe = document.getElementById('iframeLousaAluno');
-    if (iframe) iframe.setAttribute('src', ''); 
+    if (iframe) iframe.src = ''; 
 };
 
-Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
+Workspace.Avaliacoes.iniciarMonitorLousa = async (ligar) => {
     if (Workspace.Avaliacoes.lousaInterval) {
         clearInterval(Workspace.Avaliacoes.lousaInterval);
         Workspace.Avaliacoes.lousaInterval = null;
     }
-    
     if (!ligar) return; 
 
     let turmaId = 'global';
-    if (Workspace.usuario) {
-        turmaId = Workspace.usuario.turma || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]) || 'global';
-    }
+    let turmaIdNome = null;
+    try {
+        if (Workspace.usuario) {
+            let t = Workspace.usuario.turma || Workspace.usuario.turmaId || Workspace.usuario.turmas?.[0] || 'global';
+            if(Array.isArray(t)) t = t[0];
+            if(typeof t === 'object' && t !== null){
+                turmaId = String(t.id || t._id || '').trim() || 'global';
+                turmaIdNome = String(t.nome || t.name || '').trim() || null;
+                if(turmaId === 'global' && turmaIdNome) turmaId = turmaIdNome;
+            } else {
+                turmaId = String(t).trim() || 'global';
+            }
+        }
+        try {
+            const turmas = await Workspace.api('/turmas', 'GET');
+            if(turmas && Array.isArray(turmas)){
+                const match = turmas.find(x => String(x.id) === turmaId || String(x.nome) === turmaId || String(x.nome) === turmaIdNome);
+                if(match){ turmaIdNome = match.nome; turmaId = String(match.id); }
+            }
+        } catch(e){}
+    } catch(e){ turmaId = 'global'; }
+    
+    console.log('[LOUSA] Monitor aluno turma:', turmaId, 'nome:', turmaIdNome);
 
     const verificarStatus = async () => {
         try {
-            const res = await Workspace.api(`/sala/workspace-lousa/status/${turmaId}`, 'GET');
-            if (res && res.success) {
+            let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+            if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
+                const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
+                if(resNome?.ativa) res = resNome;
+            }
+            if (res?.success) {
                 const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
                 const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
                 const iframe = document.getElementById('iframeLousaAluno');
@@ -1182,29 +1234,23 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
                 if (res.ativa) {
                     if (placeholder) placeholder.style.display = 'none';
                     if (iframeDiv) iframeDiv.style.display = 'block';
-                    
-                    // 🚀 BUG CORRIGIDO AQUI: A rota está sem a extensão .html
-                    const urlMagica = `/workspace-lousa?role=aluno&locked=${!res.recursos}`;
-                    
+                    // CORRIGIDO: .html + room
+                    const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${!res.recursos}`;
                     if (iframe && iframe.getAttribute('src') !== urlMagica) {
+                        console.log('[LOUSA] Aluno carregando:', urlMagica);
                         iframe.setAttribute('src', urlMagica);
                     }
-
                     if (statusText) {
-                        if (res.recursos) {
-                            statusText.innerHTML = '<span style="color:#10B981;">🟢</span> Desenho Liberado (Pode interagir)';
-                        } else {
-                            statusText.innerHTML = '<span style="color:#F59E0B;">🟡</span> Apenas Visualização';
-                        }
+                        statusText.innerHTML = res.recursos ? '<span style="color:#10B981;">🟢</span> Desenho Liberado' : '<span style="color:#F59E0B;">🟡</span> Apenas Visualização';
                     }
                 } else {
-                    if (placeholder) placeholder.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'flex';
                     if (iframeDiv) iframeDiv.style.display = 'none';
                     if (iframe) iframe.setAttribute('src', '');
                     if (statusText) statusText.innerHTML = '💤 Aguardando o Professor...';
                 }
             }
-        } catch (e) {}
+        } catch (e) { console.warn('[LOUSA] erro', e); }
     };
 
     verificarStatus(); 
@@ -1219,38 +1265,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1500);
 });
 </script>
-
-<!-- 🚀 MODAL TELA CHEIA DA LOUSA (ALUNO) -->
-<div id="ws-modal-lousa-aluno-fullscreen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #0f172a; z-index: 9999999; flex-direction: column; animation: fadeIn 0.3s ease;">
-    
-    <div style="background: #1e293b; color: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 10;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 24px;">🖍️</span>
-            <div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: white;">Lousa Interativa</h3>
-                <div id="statusLousaText" style="font-size: 11px; color: #94A3B8; font-weight: 600; margin-top: 2px;">Conectando à sala...</div>
-            </div>
-        </div>
-        <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='#e74c3c'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Sair da Lousa">✖</button>
-    </div>
-    
-    <div style="flex: 1; position: relative; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
-        
-        <div id="ws-lousa-aluno-placeholder" style="text-align: center; padding: 40px; animation: fadeIn 0.5s;">
-            <!-- 🚀 BUG CORRIGIDO AQUI: A classe Tailwind animate-pulse aplicada -->
-            <div class="animate-pulse" style="font-size: 70px; margin-bottom: 20px; filter: grayscale(100%) opacity(0.2);">⏳</div>
-            <h2 style="color: #1e293b; margin: 0 0 10px 0; font-size: 24px; font-family:'Plus Jakarta Sans', sans-serif;">A lousa surgirá em instantes, aguarde aqui.</h2>
-            <div style="margin-top: 20px; display: inline-block; background: #EEF2FF; color: #4F46E5; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                🔄 Conectado com o servidor
-            </div>
-        </div>
-        
-        <div id="ws-lousa-aluno-ativa" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; animation: fadeIn 0.5s;">
-            <iframe id="iframeLousaAluno" src="" style="width: 100%; height: 100%; border: none;"></iframe>
-        </div>
-    </div>
-</div>
-
 
 <!-- 🎨 MODAL LOUSA PROFESSOR EMBUTIDA v10 - sem nova aba -->
 <div id="ws-modal-lousa-prof" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.92); backdrop-filter:blur(8px); padding:0; box-sizing:border-box;">
