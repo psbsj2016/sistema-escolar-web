@@ -871,7 +871,7 @@
         </div>
         
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <button onclick="window.open('/worksapce.lousa?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
+            <button onclick="window.open('/workspace.lousa?role=professor', '_blank')" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                 1. Abrir o Meu Quadro
             </button>
             <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
@@ -1457,7 +1457,7 @@ Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
     if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
     
     if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Enviando comando... ⏳', 'info');
-    await Workspace.api('/sala/worksapce.lousa/status', 'PUT', payload);
+    await Workspace.api('/sala/workspace.lousa/status', 'PUT', payload);
     if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Comando executado em tempo real!', 'success');
 };
 
@@ -1476,7 +1476,7 @@ Workspace.Avaliacoes.abrirLousaFullscreen = async () => {
 
     // 🚀 O GATILHO MÁGICO: Avisa o professor instantaneamente!
     try {
-        await Workspace.api('/sala/worksapce.lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
+        await Workspace.api('/sala/workspace.lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
     } catch(e) {}
 };
 
@@ -1505,7 +1505,7 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
 
     const verificarStatus = async () => {
         try {
-            const res = await Workspace.api(`/sala/worksapce.lousa/status/${turmaId}`, 'GET');
+            const res = await Workspace.api(`/sala/workspace.lousa/status/${turmaId}`, 'GET');
             if (res && res.success) {
                 const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
                 const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
@@ -1516,7 +1516,7 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
                     if (placeholder) placeholder.style.display = 'none';
                     if (iframeDiv) iframeDiv.style.display = 'block';
                     
-                    const urlMagica = `/worksapce.lousa?role=aluno&locked=${!res.recursos}`;
+                    const urlMagica = `/workspace.lousa?role=aluno&locked=${!res.recursos}`;
                     if (iframe && iframe.getAttribute('src') !== urlMagica) iframe.setAttribute('src', urlMagica);
 
                     if (statusText) statusText.innerHTML = res.recursos ? '<span style="color:#10B981;">🟢</span> Desenho Liberado' : '<span style="color:#F59E0B;">🟡</span> Apenas Visualização';
