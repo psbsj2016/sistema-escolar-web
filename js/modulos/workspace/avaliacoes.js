@@ -375,20 +375,11 @@ Workspace.Avaliacoes = {
         } catch (e) { console.error(e); }
     },
 
-    mudarAbaEscrita: (aba, restauro = false) => { 
-        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_escrita', aba);
-        Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); 
-    },
-    mudarAbaOral: (aba, restauro = false) => { 
-        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_oral', aba);
-        Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); 
-    },
-    mudarAbaOnline: (aba, restauro = false) => { 
-        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_online', aba);
-        Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); 
-    },
+    mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+    mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+    mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
 
-    registrarPresencaOnline: async (event, id, link) => {
+ registrarPresencaOnline: async (event, id, link) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
