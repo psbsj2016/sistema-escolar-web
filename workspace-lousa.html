@@ -7,15 +7,17 @@
   <style>
     *{box-sizing:border-box} 
     html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;overflow:hidden}
-    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
+    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
+    #waiting-overlay.hidden{display:none !important}
     .tl-container{flex:1; min-height:0; position:relative}
   </style>
 </head>
 <body>
   <div id="waiting-overlay">
     <div style="font-size:60px;">💤</div>
-    <h2 style="font-size:18px;margin:0;">Aguardando professor ativar</h2>
-    <p id="waiting-room" style="color:#94a3b8;font-size:13px;"></p>
+    <h2 style="font-size:18px;margin:0;">Aguardando professor ativar a lousa</h2>
+    <p id="waiting-room" style="color:#94a3b8;font-size:13px;">Turma <span id="waiting-turma"></span> - aguardando liberação</p>
+    <div style="background:#1e293b;padding:8px 16px;border-radius:20px;font-size:11px;">🔄 Verificando...</div>
   </div>
   <div id="root"></div>
   <script type="module">
@@ -29,23 +31,40 @@
     const turmaId = params.get('room') || 'global';
     const locked = params.get('locked') === 'true';
 
-    console.log('[LOUSA v11] role=', role, 'turma=', turmaId, 'locked=', locked);
+    console.log('[LOUSA v12] role=', role, 'turma=', turmaId, 'locked=', locked);
 
-    // Guard
     const overlay = document.getElementById('waiting-overlay');
+    const waitingTurma = document.getElementById('waiting-turma');
+    if(waitingTurma) waitingTurma.textContent = turmaId;
+
+    // Guard - verifica se professor ativou
+    let isAllowed = role !== 'aluno'; // professor sempre permitido
     async function checkAccess(){
-      if(role !== 'aluno'){ if(overlay) overlay.style.display='none'; return true; }
+      if(role !== 'aluno'){
+        if(overlay) overlay.classList.add('hidden');
+        return true;
+      }
       try{
         const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, {credentials:'include'});
         const data = await res.json();
+        console.log('[GUARD v12]', data);
         if(!data?.success || !data.ativa){
-          if(overlay) overlay.style.display='flex';
-          setTimeout(checkAccess, 3000); return false;
+          isAllowed = false;
+          if(overlay) overlay.classList.remove('hidden');
+          // Se não está ativa, limpa a lousa local (não mostra dados antigos)
+          return false;
         }
-        if(overlay) overlay.style.display='none'; return true;
-      }catch{ if(overlay) overlay.style.display='none'; return true; }
+        isAllowed = true;
+        if(overlay) overlay.classList.add('hidden');
+        return true;
+      }catch(e){
+        console.warn('guard erro', e);
+        if(overlay) overlay.classList.add('hidden');
+        return true;
+      }
     }
     checkAccess();
+    setInterval(checkAccess, 3000);
 
     function useLousaSync(roomId){
       const [store] = useState(() => createTLStore({ shapeUtils: defaultShapeUtils, bindingUtils: defaultBindingUtils }));
@@ -53,104 +72,108 @@
       const [peers, setPeers] = useState(1);
       const lastSavedRef = useRef(0);
       const isRemoteUpdateRef = useRef(false);
+      const lastRecordCountRef = useRef(0);
 
-      // Carrega dados iniciais da API
+      // Função para filtrar apenas shapes (não salva câmera, instância, etc)
+      const getShapesOnly = () => {
+        const all = store.allRecords();
+        const shapes = [];
+        for(const r of all){
+          // Só salva shapes e bindings, ignora instância, página, câmera, etc
+          if(r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset'){
+            shapes.push(r);
+          }
+        }
+        return shapes;
+      };
+
+      // Carrega dados iniciais - SÓ se permitido
       useEffect(()=>{
+        if(role === 'aluno' && !isAllowed) return;
         let cancelled = false;
         async function load(){
           try{
             const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
             const data = await res.json();
             if(data?.success && data.records && data.records.length > 0 && !cancelled){
-              console.log('[LOUSA v11] Carregando', data.records.length, 'records da API');
-              isRemoteUpdateRef.current = true;
-              store.mergeRemoteChanges(()=>{
-                try{ store.put(data.records); }catch(e){ console.warn('put inicial', e); }
-              });
-              isRemoteUpdateRef.current = false;
-              setConnected(true);
+              // Filtra para não sobrescrever instância
+              const shapesOnly = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
+              if(shapesOnly.length > 0){
+                console.log('[LOUSA v12] Carregando', shapesOnly.length, 'shapes da API');
+                isRemoteUpdateRef.current = true;
+                store.mergeRemoteChanges(()=>{
+                  try{ 
+                    store.put(shapesOnly); 
+                    lastRecordCountRef.current = shapesOnly.length;
+                  }catch(e){ console.warn('put inicial', e); }
+                });
+                isRemoteUpdateRef.current = false;
+              }
             }
-          }catch(e){ console.warn('load inicial', e); }
+            setConnected(true);
+          }catch(e){ console.warn('load', e); setConnected(true); }
         }
         load();
         return ()=>{ cancelled = true; };
       }, [roomId, store]);
 
-      // Salva mudanças locais na API (debounced)
+      // Salva mudanças - SÓ professor ou aluno com recursos liberados
       useEffect(()=>{
+        if(role === 'aluno' && locked) return; // aluno em visualização não salva
+
         const unsub = store.listen((entry)=>{
           if(entry.source !== 'user') return;
           if(isRemoteUpdateRef.current) return;
           
           const now = Date.now();
-          if(now - lastSavedRef.current < 800) return; // debounce 800ms
+          if(now - lastSavedRef.current < 1000) return; // debounce 1s
           lastSavedRef.current = now;
 
-          const allRecords = store.allRecords();
-          const recordsArray = Array.from(allRecords.values());
+          const shapes = getShapesOnly();
+          // Só salva se mudou a quantidade ou se tem shapes
+          if(shapes.length === lastRecordCountRef.current && shapes.length < 2) return;
+          lastRecordCountRef.current = shapes.length;
 
-          // Salva na API
+          console.log('[LOUSA v12] Salvando', shapes.length, 'shapes');
           fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
             method:'PUT',
             credentials:'include',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ records: recordsArray })
-          }).then(()=> console.log('[LOUSA v11] Salvou', recordsArray.length, 'records')).catch(()=>{});
+            body: JSON.stringify({ records: shapes })
+          }).catch(()=>{});
 
         }, {scope:'document', source:'user'});
         return ()=> unsub();
       }, [roomId, store]);
 
-      // Polling: busca atualizações a cada 2s (para aluno)
+      // Polling aluno - SÓ se permitido e ativo
       useEffect(()=>{
+        if(role !== 'aluno') return;
         let interval = null;
-        if(role === 'aluno'){
-          interval = setInterval(async ()=>{
-            try{
-              const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
-              const data = await res.json();
-              if(data?.success && data.records && data.records.length > 0){
+        interval = setInterval(async ()=>{
+          if(!isAllowed) return;
+          try{
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
+            const data = await res.json();
+            if(data?.success && data.records){
+              const shapesOnly = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
+              // Só atualiza se tem mais shapes que local ou se local está vazio
+              const localCount = getShapesOnly().length;
+              if(shapesOnly.length > localCount || (localCount === 0 && shapesOnly.length > 0)){
+                console.log('[LOUSA v12] Polling recebeu', shapesOnly.length, 'shapes');
                 isRemoteUpdateRef.current = true;
                 store.mergeRemoteChanges(()=>{
-                  try{ store.put(data.records); }catch{}
+                  try{ store.put(shapesOnly); }catch{}
                 });
                 isRemoteUpdateRef.current = false;
-                setConnected(true);
-                setPeers(2); // simula 2 peers
               }
-            }catch{}
-          }, 2000);
-        }
+            }
+          }catch{}
+        }, 1500);
         return ()=>{ if(interval) clearInterval(interval); };
       }, [roomId, store]);
 
-      // Listener para eventos realtime via SSE (se seu workspaceStream emitir)
-      useEffect(()=>{
-        const handler = (e) => {
-          try{
-            const data = JSON.parse(e.data);
-            if(data.type === 'LOUSA_DADOS_CHANGED' && data.turmaId === roomId){
-              console.log('[LOUSA v11] Evento realtime dados mudaram');
-              fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'})
-                .then(r=>r.json()).then(d=>{
-                  if(d?.success && d.records){
-                    isRemoteUpdateRef.current = true;
-                    store.mergeRemoteChanges(()=>{ try{ store.put(d.records); }catch{} });
-                    isRemoteUpdateRef.current = false;
-                  }
-                });
-            }
-          }catch{}
-        };
-        // Tenta conectar no SSE se existir
-        try{
-          const es = new EventSource('/api/workspace/stream', {withCredentials:true});
-          es.addEventListener('evento_realtime', handler);
-          return ()=> es.close();
-        }catch{ return ()=>{}; }
-      }, [roomId, store]);
-
-      useEffect(()=>{ setTimeout(()=> setConnected(true), 1000); }, []);
+      useEffect(()=>{ setTimeout(()=> setConnected(true), 800); }, []);
 
       return { store, connected, peers };
     }
@@ -160,13 +183,9 @@
       const [editor, setEditor] = useState(null);
 
       const onMount = useCallback((ed)=>{
-        console.log('[TL v11] editor mounted');
+        console.log('[TL v12] editor mounted, locked=', locked);
         setEditor(ed);
-        if(role==='aluno' && locked){
-          ed.updateInstanceState({ isReadonly: true });
-        } else {
-          ed.updateInstanceState({ isReadonly: false });
-        }
+        ed.updateInstanceState({ isReadonly: role==='aluno' && locked });
         try{ ed.zoomToFit(); }catch{}
       }, []);
 
@@ -178,20 +197,15 @@
       const isLocked = role==='aluno' && locked;
 
       return React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column', background:'#fff'}},
-        React.createElement('div', {style:{height:56, background:'#1e293b', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px', flexShrink:0}},
-          React.createElement('div', {style:{display:'flex', alignItems:'center', gap:12}},
-            React.createElement('div', {style:{width:32,height:32,borderRadius:8,background:'#14B8A6',display:'grid',placeItems:'center'}}, '✏️'),
-            React.createElement('div', null,
-              React.createElement('div', {style:{fontWeight:700, fontSize:14}}, `Lousa ${turmaId} ${isLocked?'🔒':''}`),
-              React.createElement('div', {style:{fontSize:11, opacity:0.7, display:'flex', alignItems:'center', gap:6}},
-                React.createElement('span', {style:{width:8,height:8,borderRadius:'50%', background: connected ? '#22c55e' : '#f59e0b', display:'inline-block'}}),
-                `${connected ? 'Ao vivo' : 'Sincronizando...'} • ${peers}`
-              )
-            )
+        React.createElement('div', {style:{height:48, background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', flexShrink:0}},
+          React.createElement('div', {style:{display:'flex', alignItems:'center', gap:10}},
+            React.createElement('div', {style:{width:28,height:28,borderRadius:8,background:'#14B8A6',display:'grid',placeItems:'center'}}, '🖍️'),
+            React.createElement('div', {style:{fontWeight:600, fontSize:13}}, `Lousa ${turmaId} ${isLocked?'🔒 Visualização':''}`),
+            React.createElement('div', {style:{fontSize:10, background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:12}}, `${connected ? 'Ao vivo' : 'Conectando'} • ${peers}`)
           ),
-          React.createElement('div', {style:{fontSize:10, opacity:0.5}}, `${role} • v11 API`)
+          React.createElement('div', {style:{fontSize:9, opacity:0.4}}, `v12 ${role}`)
         ),
-        React.createElement('div', {className:'tl-container', style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
+        React.createElement('div', {style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
           React.createElement(Tldraw, { store, onMount, autoFocus:true })
         )
       );
