@@ -2506,22 +2506,45 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes._ultimoEstadoLousa = { ativa: false, recursos: false, turmaId: null };
     },
 
-    iniciarMonitorLousa: (ligar) => {
+    iniciarMonitorLousa: async (ligar) => {
         if (Workspace.Avaliacoes.lousaInterval) { clearInterval(Workspace.Avaliacoes.lousaInterval); Workspace.Avaliacoes.lousaInterval = null; }
         if (Workspace.Avaliacoes._lousaSSE) { try { Workspace.Avaliacoes._lousaSSE.close(); } catch(e){} Workspace.Avaliacoes._lousaSSE = null; }
         if (!ligar) return; 
 
         let turmaId = 'global';
+        let turmaIdNome = null;
         try {
             if (Workspace.usuario) {
                 let t = Workspace.usuario.turma || Workspace.usuario.turmaId || Workspace.usuario.turmas?.[0] || 'global';
                 if(Array.isArray(t)) t = t[0];
-                if(typeof t === 'object' && t !== null) t = t.id || t._id || t.nome || 'global';
-                turmaId = String(t).trim() || 'global';
+                if(typeof t === 'object' && t !== null){
+                    turmaId = String(t.id || t._id || '').trim() || 'global';
+                    turmaIdNome = String(t.nome || t.name || '').trim() || null;
+                    if(turmaId === 'global' && turmaIdNome) turmaId = turmaIdNome;
+                } else {
+                    turmaId = String(t).trim() || 'global';
+                }
             }
+            // Tenta resolver via /turmas para pegar ID canônico
+            try {
+                const turmas = await Workspace.api('/turmas', 'GET');
+                if(turmas && Array.isArray(turmas)){
+                    const match = turmas.find(x => 
+                        String(x.id) === turmaId || 
+                        String(x.nome) === turmaId || 
+                        String(x.nome) === turmaIdNome ||
+                        String(x.id) === turmaIdNome
+                    );
+                    if(match){
+                        console.log('[LOUSA] Turma resolvida via /turmas:', match);
+                        turmaIdNome = match.nome;
+                        turmaId = String(match.id);
+                    }
+                }
+            } catch(e){ console.warn('[LOUSA] não conseguiu resolver turma via /turmas', e); }
         } catch(e){ turmaId = 'global'; }
         
-        console.log('[LOUSA] Iniciando monitor para turma:', turmaId);
+        console.log('[LOUSA] Iniciando monitor para turma:', turmaId, 'nome:', turmaIdNome);
 
         const aplicarEstadoNaTela = (ativa, recursos) => {
             const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
@@ -2559,15 +2582,30 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         const verificarStatus = async () => {
             try {
-                const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-                console.log('[LOUSA] GET status', turmaId, '=>', res);
-                if (res?.success) {
+                // Tenta pelo ID
+                let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+                console.log('[LOUSA] GET status ID', turmaId, '=>', res, 'debug:', res?.debug);
+                
+                // Se não achou ativa, tenta pelo nome
+                if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
+                    const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
+                    console.log('[LOUSA] GET status NOME', turmaIdNome, '=>', resNome);
+                    if(resNome?.ativa) res = resNome;
+                }
+                
+                if (res?.success && res.ativa) {
                     aplicarEstadoNaTela(res.ativa, res.recursos);
                 } else if(turmaId !== 'global'){
                     const rg = await Workspace.api(`/workspace/sala/workspace-lousa/status/global`, 'GET');
-                    if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
-                    else aplicarEstadoNaTela(false, false);
-                } else aplicarEstadoNaTela(false, false);
+                    if(rg?.success && rg.ativa){
+                        console.log('[LOUSA] Usando fallback GLOBAL');
+                        aplicarEstadoNaTela(rg.ativa, rg.recursos);
+                    } else {
+                        aplicarEstadoNaTela(false, false);
+                    }
+                } else {
+                    aplicarEstadoNaTela(false, false);
+                }
             } catch(e){ console.warn('[LOUSA] erro GET', e); aplicarEstadoNaTela(false, false); }
         };
 
