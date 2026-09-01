@@ -2471,7 +2471,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
         
         try {
-            const res = await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', payload);
+            const res = await Workspace.api('/workspace/sala/workspace-lousa.html/status', 'PUT', payload);
             console.log('[LOUSA] PUT', payload, '=>', res);
             const statusEl = document.getElementById('ws-lousa-prof-status');
             if(statusEl){
@@ -2493,7 +2493,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
         Workspace.Avaliacoes.iniciarMonitorLousa(true);
         if (Workspace.usuario?.id) {
-            try { await Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
+            try { await Workspace.api('/workspace/sala/workspace-lousa.html/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
         }
     },
 
@@ -2602,15 +2602,15 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         const verificarStatus = async () => {
             try {
-                let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+                let res = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaId)}`, 'GET');
                 if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
-                    const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
+                    const resNome = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
                     if(resNome?.ativa) res = resNome;
                 }
                 if (res?.success && res.ativa) {
                     aplicarEstadoNaTela(res.ativa, res.recursos);
                 } else if(turmaId !== 'global'){
-                    const rg = await Workspace.api(`/workspace/sala/workspace-lousa/status/global`, 'GET');
+                    const rg = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/global`, 'GET');
                     if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
                     else aplicarEstadoNaTela(false, false);
                 } else {
@@ -2677,7 +2677,7 @@ Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
     if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
     
     try {
-        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', payload);
+        await Workspace.api('/workspace/sala/workspace-lousa.html/status', 'PUT', payload);
         if(statusEl){
             if(tipo === 'ativar') statusEl.innerHTML = '🟡 Visualização ativa - Alunos vendo a sua lousa';
             if(tipo === 'liberar') statusEl.innerHTML = '🟢 Liberada - Alunos podem desenhar';
@@ -2700,7 +2700,7 @@ Workspace.Avaliacoes.abrirLousaProfessor = (turmaId) => {
     if(status) status.textContent = 'Ao vivo';
     if(iframe){
         // 🚀 ROTA LIMPA SEM .HTML
-        iframe.setAttribute('src', `/workspace-lousa?role=professor&room=${encodeURIComponent(tid)}`);
+        iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`);
     }
     if(modal){
         modal.style.display = 'flex';
@@ -2724,7 +2724,7 @@ Workspace.Avaliacoes.abrirLousaFullscreen = async () => {
     }
     Workspace.Avaliacoes.iniciarMonitorLousa(true);
     if (Workspace.usuario?.id) {
-        try { await Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
+        try { await Workspace.api('/workspace/sala/workspace-lousa.html/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
     }
 };
 
@@ -2783,7 +2783,7 @@ Workspace.Avaliacoes.iniciarMonitorLousa = async (ligar) => {
             if (iframeDiv) iframeDiv.style.display = 'block';
             const locked = !recursos;
             // 🚀 ROTA LIMPA SEM .HTML
-            const urlMagica = `/workspace-lousa?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${locked}`;
+            const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${locked}`;
             if (iframe) {
                 const cur = iframe.getAttribute('src') || '';
                 if(!cur.includes(`room=${encodeURIComponent(turmaId)}`) || !cur.includes(`locked=${locked}`) || !cur){
@@ -2803,15 +2803,15 @@ Workspace.Avaliacoes.iniciarMonitorLousa = async (ligar) => {
 
     const verificarStatus = async () => {
         try {
-            let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+            let res = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaId)}`, 'GET');
             if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
-                const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
+                const resNome = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
                 if(resNome?.ativa) res = resNome;
             }
             if (res?.success && res.ativa) {
                 aplicarEstadoNaTela(res.ativa, res.recursos);
             } else if(turmaId !== 'global'){
-                const rg = await Workspace.api(`/workspace/sala/workspace-lousa/status/global`, 'GET');
+                const rg = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/global`, 'GET');
                 if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
                 else aplicarEstadoNaTela(false, false);
             } else {
