@@ -1431,14 +1431,59 @@
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
     
-    <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL -->
+   <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL (VERSÃO LIMPA E AUTOMÁTICA) -->
 <script>
 window.Workspace = window.Workspace || {};
 Workspace.Avaliacoes = Workspace.Avaliacoes || {};
 Workspace.Avaliacoes.lousaInterval = null;
 
 // ==========================================
-// 🚀 LÓGICA DO ALUNO (TELA CHEIA E AUTOMAÇÃO)
+// 👨‍🏫 LÓGICA DO PROFESSOR (ENVIAR COMANDOS)
+// ==========================================
+Workspace.Avaliacoes.abrirModalLousa = async (tipo) => {
+    let titulo = tipo === 'ativar' ? '👁️ Ativar Visualização' : (tipo === 'liberar' ? '🔓 Liberar Recursos' : '🛑 Desativar Lousa');
+    let corBtn = tipo === 'ativar' ? '#3498db' : (tipo === 'liberar' ? '#F59E0B' : '#e74c3c');
+
+    const turmas = await Workspace.api('/turmas', 'GET');
+    let options = '<option value="global">🌍 Público Geral</option>';
+    if(turmas && turmas.length > 0) {
+        turmas.forEach(t => options += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`);
+    }
+    
+    const modalId = 'ws-modal-comando-lousa';
+    if(document.getElementById(modalId)) document.getElementById(modalId).remove();
+    
+    const html = `
+    <div id="${modalId}" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); animation: fadeIn 0.2s;">
+        <div class="ws-card" style="width:90%; max-width:400px; padding:25px; text-align:center;">
+            <h3 style="margin:0 0 15px 0;">${titulo}</h3>
+            <p style="font-size:13px; color:#666; margin-bottom:15px;">Selecione a turma para enviar a ordem em tempo real:</p>
+            <select id="ws-lousa-turma-select" class="ws-post-input" style="width:100%; padding:12px; margin-bottom:20px;">${options}</select>
+            <div style="display:flex; gap:10px;">
+                <button onclick="document.getElementById('${modalId}').remove()" class="ws-btn" style="flex:1; background:#95a5a6;">Cancelar</button>
+                <button onclick="Workspace.Avaliacoes.enviarComandoLousa('${tipo}')" class="ws-btn" style="flex:1; background:${corBtn};">Executar Agora</button>
+            </div>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+};
+
+Workspace.Avaliacoes.enviarComandoLousa = async (tipo) => {
+    const turmaId = document.getElementById('ws-lousa-turma-select').value;
+    document.getElementById('ws-modal-comando-lousa').remove();
+    
+    const payload = { turmaId };
+    if(tipo === 'ativar') { payload.ativa = true; payload.recursos = false; }
+    if(tipo === 'liberar') { payload.ativa = true; payload.recursos = true; }
+    if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
+    
+    if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
+    await Workspace.api('/sala/lousa/status', 'PUT', payload);
+    if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Ordem enviada! O ecrã dos alunos vai atualizar.', 'success');
+};
+
+// ==========================================
+// 🎓 LÓGICA DO ALUNO (TELA CHEIA E AUTOMAÇÃO)
 // ==========================================
 
 // Abre a tela cheia e COMEÇA a procurar a lousa
@@ -1455,7 +1500,7 @@ Workspace.Avaliacoes.fecharLousaFullscreen = () => {
     
     Workspace.Avaliacoes.iniciarMonitorLousa(false);
     const iframe = document.getElementById('iframeLousaAluno');
-    if (iframe) iframe.setAttribute('src', ''); // Descarrega a Lousa para não gastar dados do telemóvel
+    if (iframe) iframe.setAttribute('src', ''); // Descarrega a Lousa para não gastar dados
 };
 
 Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
@@ -1467,9 +1512,11 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
     
     if (!ligar) return; // Se a ordem foi desligar, ficamos por aqui
 
-    // 2. Descobre a Turma do Aluno automaticamente (sem caixas de seleção!)
-    // O sistema tenta ler a turma principal, ou a primeira da lista, ou 'global' em último recurso
-    let turmaId = Workspace.usuario.turma || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]) || 'global';
+    // 2. Descobre a Turma do Aluno magicamente de forma invisível
+    let turmaId = 'global';
+    if (Workspace.usuario) {
+        turmaId = Workspace.usuario.turma || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]) || 'global';
+    }
 
     const verificarStatus = async () => {
         try {
@@ -1485,7 +1532,7 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
                     if (iframeDiv) iframeDiv.style.display = 'block';
                     
                     // Constrói a URL mágica que bloqueia ou desbloqueia as canetas
-                    const urlMagica = `/lousa.html?role=aluno&locked=${!res.recursos}`;
+                    const urlMagica = `/lousa?role=aluno&locked=${!res.recursos}`;
                     
                     // Só recarrega o Iframe se a ordem (Bloqueado/Livre) tiver mudado!
                     if (iframe && iframe.getAttribute('src') !== urlMagica) {
@@ -1517,9 +1564,10 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
     // E depois de 3 em 3 segundos
     Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000); 
 };
+</script>
 
 // Quando o hub abrir, carregamos a lista de turmas no combobox do aluno
-document.addEventListener('DOMContentLoaded', () => {
+<script>document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { Workspace.Avaliacoes.carregarTurmasLousaAluno(); }, 1500);
 });
 </script>
