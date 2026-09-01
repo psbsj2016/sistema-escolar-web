@@ -2508,7 +2508,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if(label) label.textContent = tid === 'global' ? 'Público Geral' : tid;
         if(status) status.textContent = 'Ao vivo';
         if(iframe){
-            const url = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`;
+            // Procure a linha que define a constante 'url' e remova o .html
+            const url = `/workspace-lousa?role=professor&room=${encodeURIComponent(tid)}`;
             console.log('[LOUSA] iframe professor URL:', url);
             iframe.setAttribute('src', url);
         }
@@ -2590,7 +2591,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 if (placeholder) placeholder.style.display = 'none';
                 if (iframeDiv) iframeDiv.style.display = 'block';
                 const locked = !recursos;
-                const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${locked}`;
+                // Procure a constante 'urlMagica' e remova o .html
+                const urlMagica = `/workspace-lousa?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${!res.recursos}`;
                 if (iframe) {
                     const cur = iframe.getAttribute('src') || '';
                     if(!cur.includes(`room=${encodeURIComponent(turmaId)}`) || !cur.includes(`locked=${locked}`) || !cur){
@@ -2658,3 +2660,4 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     }
 
 });
+abrirLousaProfessor
