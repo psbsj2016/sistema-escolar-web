@@ -398,7 +398,7 @@ Object.assign(Workspace, {
 
         if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
 
-        // 🚀 PASSO 2: PUXA OS DADOS EM SEGUNDO PLANO
+        // 🚀 PASSO 2: PUXA OS DADOS E RESTAURA AS SUB-TELAS (Fim da Amnésia)
         if (tela === 'ingles' && Workspace.Ingles) {
             Workspace.Ingles.loadDados().then(() => Workspace.Ingles.renderizarVisualizacao());
         } 
@@ -413,9 +413,38 @@ Object.assign(Workspace, {
             const abaBauAtiva = localStorage.getItem('ws_bau_aba_ativa') || 'meu';
             if (Workspace.Bau.mudarAba) Workspace.Bau.mudarAba(abaBauAtiva);
         }
-
-        if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
-        if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
+        
+        // 🚀 RESTAURO: TAREFAS DO ALUNO E PROFESSOR
+        else if (tela === 'tarefas_aluno' && Workspace.Sidebar) {
+            Workspace.Sidebar.carregarTarefas();
+        }
+        else if (tela === 'tarefas_prof' && Workspace.Sidebar) {
+            const subTelaTarefas = localStorage.getItem('ws_tarefas_prof_subtela') || 'menu';
+            if (subTelaTarefas === 'nova' && Workspace.Sidebar.abrirPainelNovaTarefa) Workspace.Sidebar.abrirPainelNovaTarefa(true);
+            else if (subTelaTarefas === 'recebidas' && Workspace.Sidebar.abrirPainelTarefasRecebidas) Workspace.Sidebar.abrirPainelTarefasRecebidas(true);
+            else if (Workspace.Sidebar.voltarMenuTarefasProf) Workspace.Sidebar.voltarMenuTarefasProf(true);
+        }
+        
+        // 🚀 RESTAURO: ABAS DE AVALIAÇÕES DO ALUNO
+        else if (tela === 'avaliacoes_online' || tela === 'avaliacoes_escrita' || tela === 'avaliacoes_oral') {
+            if (Workspace.Avaliacoes) {
+                const abaAtiva = localStorage.getItem(`ws_aba_${tela}`) || (tela === 'avaliacoes_online' ? 'abertas' : 'pendentes');
+                if (tela === 'avaliacoes_online' && Workspace.Avaliacoes.mudarAbaOnline) Workspace.Avaliacoes.mudarAbaOnline(abaAtiva, true);
+                if (tela === 'avaliacoes_escrita' && Workspace.Avaliacoes.mudarAbaEscrita) Workspace.Avaliacoes.mudarAbaEscrita(abaAtiva, true);
+                if (tela === 'avaliacoes_oral' && Workspace.Avaliacoes.mudarAbaOral) Workspace.Avaliacoes.mudarAbaOral(abaAtiva, true);
+            }
+        }
+        
+        // 🚀 RESTAURO: PAINEL DE AVALIAÇÕES E SESSÕES DO PROFESSOR
+        else if (tela === 'avaliacoes_prof' && Workspace.Avaliacoes) {
+            const subTelaAv = localStorage.getItem('ws_avaliacoes_prof_subtela') || 'menu';
+            if (subTelaAv === 'nova_escrita' && Workspace.Avaliacoes.abrirNovaEscrita) Workspace.Avaliacoes.abrirNovaEscrita(true);
+            else if (subTelaAv === 'nova_oral' && Workspace.Avaliacoes.abrirNovaOral) Workspace.Avaliacoes.abrirNovaOral(true);
+            else if (subTelaAv === 'nova_online' && Workspace.Avaliacoes.abrirNovaOnline) Workspace.Avaliacoes.abrirNovaOnline(true);
+            else if (subTelaAv === 'gerir' && Workspace.Avaliacoes.abrirGerenciador) Workspace.Avaliacoes.abrirGerenciador(true);
+            else if (subTelaAv === 'recebidas' && Workspace.Avaliacoes.abrirRecebidas) Workspace.Avaliacoes.abrirRecebidas(true);
+            else if (Workspace.Avaliacoes.voltarSubmenus) Workspace.Avaliacoes.voltarSubmenus(true);
+        }
     },
 
     fazerLogin: async () => {
