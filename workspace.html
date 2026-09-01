@@ -1089,45 +1089,45 @@
 
     
 
-<!-- 🎨 MODAL LOUSA PROFESSOR EMBUTIDA v10 - sem nova aba -->
-<div id="ws-modal-lousa-prof" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.92); backdrop-filter:blur(8px); padding:0; box-sizing:border-box;">
-  <div style="width:100%; height:100vh; background:#fff; display:flex; flex-direction:column;">
-    <!-- Header -->
-    <div style="height:56px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 16px; flex-shrink:0;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:32px; height:32px; border-radius:10px; background:#14B8A6; display:grid; place-items:center;">🖍️</div>
-        <div>
-          <div style="font-weight:700; font-size:14px;">Minha Lousa - <span id="ws-prof-lousa-turma-label">Turma</span></div>
-          <div style="font-size:11px; opacity:0.7;">Os alunos veem em tempo real • <span id="ws-prof-lousa-status">Ao vivo</span></div>
-        </div>
+<!-- 🎨 MODAL LOUSA PROFESSOR EMBUTIDA -->
+<div id="ws-modal-lousa-prof" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
+  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:26px;">🖍️</div>
+      <div>
+        <div style="font-weight:700; font-size:16px;">A Minha Lousa - <span id="ws-prof-lousa-turma-label" style="color:#3498db;">Turma</span></div>
+        <div style="font-size:12px; color:#94a3b8;"><span id="ws-prof-lousa-status">Ao vivo</span></div>
       </div>
-      <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); border:0; color:#fff; font-size:20px; cursor:pointer;">✕</button>
     </div>
-    <div style="flex:1; position:relative;">
-      <iframe id="iframeLousaProf" src="" style="width:100%; height:100%; border:0; display:block; background:#fff;"></iframe>
-    </div>
+    <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="width:45px; height:45px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:24px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'">✕</button>
+  </div>
+  <div style="flex:1; position:relative; background:#fff;">
+    <iframe id="iframeLousaProf" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
 
-<!-- MODAL LOUSA ALUNO (já existe, mas garanta este estilo) -->
-<div id="ws-modal-lousa-aluno-fullscreen" style="display:none; position:fixed; inset:0; z-index:99999; background:#0f172a; flex-direction:column;">
-  <div style="height:56px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 16px; flex-shrink:0;">
-    <div style="display:flex; align-items:center; gap:10px;">
-      <span style="font-weight:700;">Lousa Interativa</span>
-      <span id="statusLousaText" style="font-size:11px; opacity:0.7;">💤 Aguardando...</span>
+<!-- 🎨 MODAL LOUSA ALUNO -->
+<div id="ws-modal-lousa-aluno-fullscreen" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
+  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:26px;">🖍️</div>
+      <div>
+        <div style="font-weight:700; font-size:16px;">Lousa Interativa</div>
+        <div id="statusLousaText" style="font-size:12px; color:#94a3b8;">💤 Aguardando conexão...</div>
+      </div>
     </div>
-    <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); border:0; color:#fff; font-size:20px; cursor:pointer;">✕</button>
+    <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="width:45px; height:45px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:24px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'">✕</button>
   </div>
   <div id="ws-lousa-aluno-placeholder" style="flex:1; display:flex; align-items:center; justify-content:center; color:#94a3b8; text-align:center; padding:20px;">
     <div>
-      <div style="font-size:48px;">💤</div>
-      <div style="margin-top:12px;">Aguardando o professor ativar a lousa...</div>
+      <div style="font-size:70px; margin-bottom:15px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
+      <h2 style="color:white; font-size:22px; margin:0 0 10px 0; font-family:'Poppins', sans-serif;">A lousa surgirá em instantes</h2>
+      <div style="font-size:13px; background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; display:inline-block; font-weight:bold;">🔄 Conectado com o servidor</div>
     </div>
   </div>
-  <div id="ws-lousa-aluno-ativa" style="flex:1; display:none; position:relative;">
-    <iframe id="iframeLousaAluno" src="" style="width:100%; height:100%; border:0; background:#fff;"></iframe>
+  <div id="ws-lousa-aluno-ativa" style="flex:1; display:none; position:relative; background:#fff;">
+    <iframe id="iframeLousaAluno" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
-
 </body>
 </html>

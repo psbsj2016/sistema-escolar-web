@@ -29,13 +29,12 @@
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
     const roomId = params.get('room') || 'global';
-    const locked = params.get('locked') === 'true';
+    const initialLocked = params.get('locked') === 'true';
 
     const overlay = document.getElementById('waiting-overlay');
     const waitingTurma = document.getElementById('waiting-turma');
-    if(waitingTurma) waitingTurma.textContent = roomId;
+    if(waitingTurma) waitingTurma.textContent = roomId === 'global' ? 'Geral' : roomId;
 
-    // Guard - Proteção de Acesso
     let isAllowed = role !== 'aluno'; 
     async function checkAccess(){
       if(role !== 'aluno'){
@@ -54,19 +53,17 @@
         if(overlay) overlay.classList.add('hidden');
         return true;
       }catch(e){
-        if(overlay) overlay.classList.add('hidden');
-        return true;
+        return true; // Se der erro de rede, assume que está permitido para não expulsar
       }
     }
     checkAccess();
     setInterval(checkAccess, 3000);
 
-    // Motor de Sincronização
     function useLousaSync(roomId){
       const [store] = useState(() => createTLStore({ shapeUtils: defaultShapeUtils, bindingUtils: defaultBindingUtils }));
       const [connected, setConnected] = useState(false);
       const isRemoteUpdateRef = useRef(false);
-      const lastSavedRef = useRef(0); // 🚀 O DEBOUNCE MÁGICO
+      const lastSavedRef = useRef(0);
 
       const getShapesOnly = () => {
         return store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
@@ -87,19 +84,15 @@
         } catch(e) {}
       }, [roomId, store]);
 
-      // Carregamento Inicial
       useEffect(()=>{
         if(role === 'aluno' && !isAllowed) return;
         loadFromApi().then(() => setConnected(true));
       }, [loadFromApi]);
 
-      // 🚀 LIGAÇÃO EM TEMPO REAL (SSE) PARA TODOS
+      // ALUNO: Ouve o SSE para atualizar o desenho ao vivo
       useEffect(() => {
-          if(role === 'aluno' && !isAllowed) return;
-
-          const escolaId = localStorage.getItem('ws_usuario_logado') ? JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId : 'DEFAULT';
-          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-          
+          if(role !== 'aluno') return;
+          const es = new EventSource(`/api/workspace/stream?escolaId=DEFAULT`);
           es.onmessage = (event) => {
               try {
                   const data = JSON.parse(event.data);
@@ -108,22 +101,16 @@
                   }
               } catch(e){}
           };
-          
-          // Polling lento de segurança caso a rede do SSE caia
-          const interval = setInterval(loadFromApi, 5000);
-
+          const interval = setInterval(loadFromApi, 3000);
           return () => { es.close(); clearInterval(interval); };
       }, [roomId, loadFromApi]);
 
-      // 🚀 SALVA MUDANÇAS E AVISA A NUVEM
+      // SALVA AS MUDANÇAS
       useEffect(()=>{
-        if(role === 'aluno' && locked) return; 
-
         const unsub = store.listen((entry)=>{
           if(entry.source !== 'user') return;
           if(isRemoteUpdateRef.current) return;
           
-          // ⏱️ DEBOUNCE: Só envia dados a cada 600ms para não travar a internet
           const now = Date.now();
           if(now - lastSavedRef.current < 600) return; 
           lastSavedRef.current = now;
@@ -131,8 +118,7 @@
           const shapes = getShapesOnly();
           
           fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-            method:'PUT',
-            credentials:'include',
+            method:'PUT', credentials:'include',
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ records: shapes })
           }).catch(()=>{});
@@ -140,7 +126,7 @@
         }, {scope:'document', source:'user'});
         
         return ()=> unsub();
-      }, [roomId, store, locked]);
+      }, [roomId, store]);
 
       return { store, connected };
     }
@@ -148,29 +134,32 @@
     function App(){
       const { store, connected } = useLousaSync(roomId);
       const [editor, setEditor] = useState(null);
+      const [dynamicLocked, setDynamicLocked] = useState(initialLocked); // 🚀 O ESTADO DINÂMICO
+
+      // 🚀 Ouve os comandos silenciosos enviados do avaliacoes.js
+      useEffect(() => {
+          const handleMessage = (event) => {
+              if (event.data && event.data.type === 'LOCK_STATE') {
+                  setDynamicLocked(event.data.locked);
+              }
+          };
+          window.addEventListener('message', handleMessage);
+          return () => window.removeEventListener('message', handleMessage);
+      }, []);
 
       const onMount = useCallback((ed)=>{
         setEditor(ed);
-        ed.updateInstanceState({ isReadonly: role==='aluno' && locked });
+        ed.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
         try{ ed.zoomToFit(); }catch{}
-      }, []);
+      }, [dynamicLocked]);
 
       useEffect(()=>{
         if(!editor) return;
-        // 🔒 O BOTÃO "LIBERAR/DESATIVAR" ATUA AQUI!
-        editor.updateInstanceState({ isReadonly: role==='aluno' && locked });
-      }, [editor, locked]);
-
-      const isLocked = role==='aluno' && locked;
+        // Atualiza a permissão de desenho ao vivo!
+        editor.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
+      }, [editor, dynamicLocked]);
 
       return React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column', background:'#fff'}},
-        React.createElement('div', {style:{height:48, background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', flexShrink:0}},
-          React.createElement('div', {style:{display:'flex', alignItems:'center', gap:10}},
-            React.createElement('div', {style:{width:28,height:28,borderRadius:8,background:'#14B8A6',display:'grid',placeItems:'center'}}, '🖍️'),
-            React.createElement('div', {style:{fontWeight:600, fontSize:13}}, `Lousa Interativa ${isLocked?'🔒 Somente Visualização':''}`),
-            React.createElement('div', {style:{fontSize:10, background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:12}}, `${connected ? 'Ao vivo' : 'Conectando'}`)
-          )
-        ),
         React.createElement('div', {style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
           React.createElement(Tldraw, { store, onMount, autoFocus:true })
         )
