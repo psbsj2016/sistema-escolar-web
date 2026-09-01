@@ -33,7 +33,7 @@ export default defineConfig({
           /matricula-online\.html/,
           /workspace\.html/,
           /admin\.html/,
-          /workspace\.lousa\.html/ // 🚀 AQUI: Adicionamos a Lousa ao escudo do PWA!
+          /workspace-lousa\.html/ // 🚀 AQUI: Adicionamos a Lousa ao escudo do PWA!
         ] 
       }
     })
@@ -63,7 +63,7 @@ export default defineConfig({
         hub: resolve(__dirname, 'hub-matriculas.html'),
         online: resolve(__dirname, 'matricula-online.html'),
         workspace: resolve(__dirname, 'workspace.html'),
-        lousa: resolve(__dirname, 'workspace.lousa.html') // 🚀 AQUI: Colocamos a Lousa na lista VIP do Vite!
+        lousa: resolve(__dirname, 'workspace-lousa.html') // 🚀 AQUI: Colocamos a Lousa na lista VIP do Vite!
       }
     }
   }
