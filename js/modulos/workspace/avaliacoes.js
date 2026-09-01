@@ -2677,7 +2677,9 @@ Workspace.Avaliacoes.enviarComandoLousaDireto = async (tipo) => {
     if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
     
     try {
-        await Workspace.api('/workspace/sala/workspace-lousa.html/status', 'PUT', payload);
+        // 🚀 CORREÇÃO: Rota da API limpa, sem o .html
+        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', payload);
+        
         if(statusEl){
             if(tipo === 'ativar') statusEl.innerHTML = '🟡 Visualização ativa - Alunos vendo a sua lousa';
             if(tipo === 'liberar') statusEl.innerHTML = '🟢 Liberada - Alunos podem desenhar';
@@ -2801,24 +2803,29 @@ Workspace.Avaliacoes.iniciarMonitorLousa = async (ligar) => {
         }
     };
 
-    const verificarStatus = async () => {
-        try {
-            let res = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaId)}`, 'GET');
-            if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
-                const resNome = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
-                if(resNome?.ativa) res = resNome;
-            }
-            if (res?.success && res.ativa) {
-                aplicarEstadoNaTela(res.ativa, res.recursos);
-            } else if(turmaId !== 'global'){
-                const rg = await Workspace.api(`/workspace/sala/workspace-lousa.html/status/global`, 'GET');
-                if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
-                else aplicarEstadoNaTela(false, false);
-            } else {
-                aplicarEstadoNaTela(false, false);
-            }
-        } catch(e){ aplicarEstadoNaTela(false, false); }
-    };
+   const verificarStatus = async () => {
+            try {
+                // 🚀 CORREÇÃO: Rota da API limpa, sem o .html
+                let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+                
+                if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
+                    // 🚀 CORREÇÃO: Rota da API limpa, sem o .html
+                    const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
+                    if(resNome?.ativa) res = resNome;
+                }
+                
+                if (res?.success && res.ativa) {
+                    aplicarEstadoNaTela(res.ativa, res.recursos);
+                } else if(turmaId !== 'global'){
+                    // 🚀 CORREÇÃO: Rota da API limpa, sem o .html
+                    const rg = await Workspace.api(`/workspace/sala/workspace-lousa/status/global`, 'GET');
+                    if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
+                    else aplicarEstadoNaTela(false, false);
+                } else {
+                    aplicarEstadoNaTela(false, false);
+                }
+            } catch(e){ aplicarEstadoNaTela(false, false); }
+        };
 
     verificarStatus(); 
     Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000);
