@@ -2469,7 +2469,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         
         if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
         try {
-            const res = await Workspace.api('/sala/workspace-lousa/status', 'PUT', payload);
+            const res = await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', payload);
             const statusEl = document.getElementById('ws-lousa-prof-status');
             if(statusEl){
                 if(tipo === 'ativar') statusEl.innerHTML = '🟡 Visualização ativa';
@@ -2492,7 +2492,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.iniciarMonitorLousa(true);
         if (Workspace.usuario && Workspace.usuario.id) {
             try {
-                await Workspace.api('/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
+                await Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id });
             } catch(e) {}
         }
     },
@@ -2561,7 +2561,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         };
         const verificarStatus = async () => {
             try {
-                const res = await Workspace.api(`/sala/workspace-lousa/status/${turmaId}`, 'GET');
+                const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${turmaId}`, 'GET');
                 if (res && res.success) {
                     aplicarEstadoNaTela(res.ativa, res.recursos);
                 }
@@ -2571,7 +2571,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000);
         try {
             const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-            const es = new EventSource(`/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+            const es = new EventSource(`/api/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
             Workspace.Avaliacoes._lousaSSE = es;
             es.onmessage = (event) => {
                 try {
