@@ -9,7 +9,8 @@
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-EeOZK34R.js">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
-<!-- 🔒 GUARD DA LOUSA - Bloqueia acesso direto sem ativação do professor -->
+
+<!-- 🔒 GUARD v2 - Overlay (não apaga o app) -->
 <script>
 (function(){
   const params = new URLSearchParams(window.location.search);
@@ -17,47 +18,85 @@
   const room = params.get('room') || 'global';
   const lockedParam = params.get('locked');
   
-  // Se for aluno, verifica se professor ativou antes de liberar desenho
-  if(role === 'aluno'){
-    // Tenta verificar status via API
-    async function verificarAcesso(){
-      try {
-        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(room)}`, { credentials: 'include' });
-        const data = await res.json();
-        console.log('[LOUSA GUARD] status:', data);
-        if(!data || !data.success || !data.ativa){
-          // Professor não ativou - bloqueia e mostra mensagem
-          document.body.innerHTML = `
-            <div style="height:100vh; display:flex; align-items:center; justify-content:center; background:#0f172a; color:white; flex-direction:column; gap:20px; font-family:sans-serif; text-align:center; padding:20px;">
-              <div style="font-size:60px;">💤</div>
-              <h2 style="font-size:22px; margin:0;">Aguardando o professor ativar a lousa</h2>
-              <p style="color:#94a3b8; font-size:14px;">A lousa da turma ${room} ainda não foi liberada.<br>Esta página será liberada automaticamente quando o professor clicar em "Ativar Visualização".</p>
-              <div style="background:#1e293b; padding:10px 20px; border-radius:20px; font-size:12px;">🔄 Verificando a cada 3s...</div>
-            </div>
-          `;
-          // Tenta novamente em 3s
-          setTimeout(verificarAcesso, 3000);
-          return false;
+  if(role !== 'aluno') return; // professor libera direto
+
+  let overlay = null;
+  let verificadoOK = false;
+
+  function mostrarOverlay(roomId){
+    if(document.getElementById('lousa-waiting-overlay')) return;
+    const div = document.createElement('div');
+    div.id = 'lousa-waiting-overlay';
+    div.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#0f172a;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;font-family:Inter,sans-serif;text-align:center;padding:20px;';
+    div.innerHTML = `
+      <div style="font-size:60px;">💤</div>
+      <h2 style="font-size:22px; margin:0;">Aguardando o professor ativar a lousa</h2>
+      <p style="color:#94a3b8; font-size:14px; max-width:400px;">A lousa da turma <b>${roomId}</b> ainda não foi liberada.<br>Você verá automaticamente quando o professor clicar em "Ativar Visualização".</p>
+      <div style="background:#1e293b; padding:10px 20px; border-radius:20px; font-size:12px;">🔄 Verificando a cada 3s...</div>
+    `;
+    document.body.appendChild(div);
+    overlay = div;
+  }
+  
+  function esconderOverlay(){
+    const el = document.getElementById('lousa-waiting-overlay');
+    if(el) el.remove();
+  }
+
+  async function verificarAcesso(){
+    try {
+      const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(room)}`, { credentials: 'include' });
+      const data = await res.json();
+      console.log('[LOUSA GUARD v2] status:', data);
+      
+      if(!data || !data.success || !data.ativa){
+        // Não ativou ainda - mostra overlay por cima do app (app continua carregado por baixo)
+        if(!document.getElementById('lousa-waiting-overlay')){
+          // Espera body existir
+          if(document.body) mostrarOverlay(room);
+          else document.addEventListener('DOMContentLoaded', () => mostrarOverlay(room));
         }
-        // Se chegou aqui, professor ativou - libera, mas respeita locked
-        if(data.recursos === false && lockedParam === 'false'){
-          // Professor só liberou visualização, mas aluno tentou acessar com locked=false via URL direta
-          // Força locked=true
-          const url = new URL(window.location.href);
-          url.searchParams.set('locked', 'true');
-          window.location.href = url.toString();
-          return false;
-        }
-        return true;
-      } catch(e){
-        console.warn('[LOUSA GUARD] erro ao verificar', e);
-        return true; // em caso de erro de rede, deixa passar para não travar
+        verificadoOK = false;
+        setTimeout(verificarAcesso, 3000);
+        return false;
       }
+      
+      // Professor ativou!
+      esconderOverlay();
+      verificadoOK = true;
+
+      // Se professor só liberou visualização (recursos=false) mas aluno tentou forçar locked=false via URL
+      if(data.recursos === false && lockedParam === 'false'){
+        const url = new URL(window.location.href);
+        url.searchParams.set('locked', 'true');
+        console.log('[LOUSA GUARD] Forçando locked=true pois professor só liberou visualização');
+        window.location.href = url.toString();
+        return false;
+      }
+      
+      return true;
+    } catch(e){
+      console.warn('[LOUSA GUARD v2] erro ao verificar', e);
+      // Em caso de erro de rede, não bloqueia, deixa passar
+      esconderOverlay();
+      return true;
     }
+  }
+  
+  // Inicia verificação assim que possível
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', verificarAcesso);
+  } else {
     verificarAcesso();
   }
+  
+  // Continua verificando mesmo após liberar, para detectar quando professor encerrar
+  setInterval(() => {
+    if(verificadoOK) verificarAcesso();
+  }, 5000);
 })();
 </script>
+
   <div id="root"></div>
   
   <script>(function(){function m(a){var h=a.getAttribute("href");if(!h)return;try{var u=new URL(h,document.baseURI);if((u.protocol==="http:"||u.protocol==="https:")&&u.host!==location.host){a.target="_blank";a.rel="noopener noreferrer";}}catch(e){}}function s(){document.querySelectorAll("a[href]").forEach(m);}if(document.readyState!=="loading"){s();}else{document.addEventListener("DOMContentLoaded",s);}document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a){m(a);}},true);})();</script>
