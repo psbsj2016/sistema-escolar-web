@@ -669,6 +669,29 @@ atualizarInterface: () => {
                  if (window.Workspace && Workspace.abrirPaginaMateriais) Workspace.abrirPaginaMateriais();
             }, 300);
         }
+        // 🚀 O ROTEIRO DA LOUSA DIGITAL: Leva o professor ao painel de controlo!
+        else if (origem === 'lousa_espera') {
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('sala_aula');
+            
+            setTimeout(() => {
+                const painelLousa = document.getElementById('ws-cartao-lousa-prof');
+                if (painelLousa) {
+                    // Rola a tela até ao painel
+                    painelLousa.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Efeito de brilho mágico
+                    painelLousa.classList.remove('ws-highlight-magic');
+                    void painelLousa.offsetWidth; 
+                    painelLousa.classList.add('ws-highlight-magic');
+                    
+                    // 🚀 BÓNUS: Seleciona automaticamente a turma do aluno que chamou!
+                    const seletorTurma = document.getElementById('ws-prof-turma-lousa');
+                    if (seletorTurma && origemId && origemId !== 'global') {
+                        seletorTurma.value = origemId;
+                    }
+                }
+            }, 600);
+        }
         else if (origem === 'avaliacao_escrita') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_escrita');
         }
