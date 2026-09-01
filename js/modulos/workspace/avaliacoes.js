@@ -2508,13 +2508,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if(label) label.textContent = tid === 'global' ? 'Público Geral' : tid;
         if(status) status.textContent = 'Ao vivo';
         if(iframe){
-            // Procure a linha que define a constante 'url' e remova o .html
-            const url = `/workspace-lousa?role=professor&room=${encodeURIComponent(tid)}`;
+            // 🚀 CORREÇÃO: Restauramos o .html para o servidor entregar o ficheiro físico!
+            const url = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`;
             console.log('[LOUSA] iframe professor URL:', url);
             iframe.setAttribute('src', url);
         }
         if(modal){
-            modal.style.display = 'block';
+            modal.style.display = 'flex'; // Mantém o flex para não quebrar o layout
             document.body.style.overflow = 'hidden';
         }
     },
@@ -2536,7 +2536,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes._ultimoEstadoLousa = { ativa: false, recursos: false, turmaId: null };
     },
 
-    iniciarMonitorLousa: async (ligar) => {
+   iniciarMonitorLousa: async (ligar) => {
         if (Workspace.Avaliacoes.lousaInterval) { clearInterval(Workspace.Avaliacoes.lousaInterval); Workspace.Avaliacoes.lousaInterval = null; }
         if (Workspace.Avaliacoes._lousaSSE) { try { Workspace.Avaliacoes._lousaSSE.close(); } catch(e){} Workspace.Avaliacoes._lousaSSE = null; }
         if (!ligar) return; 
@@ -2555,35 +2555,25 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     turmaId = String(t).trim() || 'global';
                 }
             }
-            // Tenta resolver via /turmas para pegar ID canônico
             try {
                 const turmas = await Workspace.api('/turmas', 'GET');
                 if(turmas && Array.isArray(turmas)){
-                    const match = turmas.find(x => 
-                        String(x.id) === turmaId || 
-                        String(x.nome) === turmaId || 
-                        String(x.nome) === turmaIdNome ||
-                        String(x.id) === turmaIdNome
-                    );
-                    if(match){
-                        console.log('[LOUSA] Turma resolvida via /turmas:', match);
-                        turmaIdNome = match.nome;
-                        turmaId = String(match.id);
-                    }
+                    const match = turmas.find(x => String(x.id) === turmaId || String(x.nome) === turmaId || String(x.nome) === turmaIdNome || String(x.id) === turmaIdNome);
+                    if(match){ turmaIdNome = match.nome; turmaId = String(match.id); }
                 }
-            } catch(e){ console.warn('[LOUSA] não conseguiu resolver turma via /turmas', e); }
+            } catch(e){}
         } catch(e){ turmaId = 'global'; }
-        
-        console.log('[LOUSA] Iniciando monitor para turma:', turmaId, 'nome:', turmaIdNome);
 
         const aplicarEstadoNaTela = (ativa, recursos) => {
             const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
             const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
             const iframe = document.getElementById('iframeLousaAluno');
             const statusText = document.getElementById('statusLousaText');
+            
             const key = `${turmaId}-${ativa}-${recursos}`;
             const last = Workspace.Avaliacoes._ultimoEstadoLousa;
             const lastKey = `${last.turmaId}-${last.ativa}-${last.recursos}`;
+            
             if(key === lastKey && iframe?.getAttribute('src')) return;
             Workspace.Avaliacoes._ultimoEstadoLousa = { ativa, recursos, turmaId };
 
@@ -2591,12 +2581,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 if (placeholder) placeholder.style.display = 'none';
                 if (iframeDiv) iframeDiv.style.display = 'block';
                 const locked = !recursos;
-                // Procure a constante 'urlMagica' e remova o .html
-                const urlMagica = `/workspace-lousa?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${!res.recursos}`;
+                // 🚀 CORREÇÃO: Restauramos o .html para o servidor entregar o ficheiro físico!
+                const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${locked}`;
                 if (iframe) {
                     const cur = iframe.getAttribute('src') || '';
                     if(!cur.includes(`room=${encodeURIComponent(turmaId)}`) || !cur.includes(`locked=${locked}`) || !cur){
-                        console.log('[LOUSA] Carregando iframe:', urlMagica);
                         iframe.setAttribute('src', urlMagica);
                     }
                 }
@@ -2604,7 +2593,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     statusText.innerHTML = recursos ? '<span style="color:#10B981;">🟢</span> Liberada - Pode desenhar' : '<span style="color:#F59E0B;">🟡</span> Visualização ao vivo - Lousa do professor';
                 }
             } else {
-                if (placeholder) placeholder.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'flex';
                 if (iframeDiv) iframeDiv.style.display = 'none';
                 if (iframe) iframe.setAttribute('src', '');
                 if (statusText) statusText.innerHTML = '💤 Aguardando o Professor ativar...';
@@ -2613,31 +2602,21 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         const verificarStatus = async () => {
             try {
-                // Tenta pelo ID
                 let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-                console.log('[LOUSA] GET status ID', turmaId, '=>', res, 'debug:', res?.debug);
-                
-                // Se não achou ativa, tenta pelo nome
                 if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
                     const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
-                    console.log('[LOUSA] GET status NOME', turmaIdNome, '=>', resNome);
                     if(resNome?.ativa) res = resNome;
                 }
-                
                 if (res?.success && res.ativa) {
                     aplicarEstadoNaTela(res.ativa, res.recursos);
                 } else if(turmaId !== 'global'){
                     const rg = await Workspace.api(`/workspace/sala/workspace-lousa/status/global`, 'GET');
-                    if(rg?.success && rg.ativa){
-                        console.log('[LOUSA] Usando fallback GLOBAL');
-                        aplicarEstadoNaTela(rg.ativa, rg.recursos);
-                    } else {
-                        aplicarEstadoNaTela(false, false);
-                    }
+                    if(rg?.success && rg.ativa) aplicarEstadoNaTela(rg.ativa, rg.recursos);
+                    else aplicarEstadoNaTela(false, false);
                 } else {
                     aplicarEstadoNaTela(false, false);
                 }
-            } catch(e){ console.warn('[LOUSA] erro GET', e); aplicarEstadoNaTela(false, false); }
+            } catch(e){ aplicarEstadoNaTela(false, false); }
         };
 
         verificarStatus(); 
@@ -2651,7 +2630,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 try {
                     const data = JSON.parse(ev.data);
                     if(data.type === 'LOUSA_STATUS_CHANGED' && (data.turmaId === turmaId || data.turmaId === 'global' || turmaId === 'global')){
-                        console.log('[LOUSA] SSE', data);
                         aplicarEstadoNaTela(data.ativa, data.recursos);
                     }
                 } catch(e){}
