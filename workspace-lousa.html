@@ -28,13 +28,14 @@
 
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
-    const turmaId = params.get('room') || 'global';
+    const roomId = params.get('room') || 'global';
     const locked = params.get('locked') === 'true';
 
     const overlay = document.getElementById('waiting-overlay');
     const waitingTurma = document.getElementById('waiting-turma');
-    if(waitingTurma) waitingTurma.textContent = turmaId;
+    if(waitingTurma) waitingTurma.textContent = roomId;
 
+    // Guard - Proteção de Acesso
     let isAllowed = role !== 'aluno'; 
     async function checkAccess(){
       if(role !== 'aluno'){
@@ -42,7 +43,7 @@
         return true;
       }
       try{
-        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, {credentials:'include'});
+        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`, {credentials:'include'});
         const data = await res.json();
         if(!data?.success || !data.ativa){
           isAllowed = false;
@@ -60,10 +61,12 @@
     checkAccess();
     setInterval(checkAccess, 3000);
 
+    // Motor de Sincronização
     function useLousaSync(roomId){
       const [store] = useState(() => createTLStore({ shapeUtils: defaultShapeUtils, bindingUtils: defaultBindingUtils }));
       const [connected, setConnected] = useState(false);
       const isRemoteUpdateRef = useRef(false);
+      const lastSavedRef = useRef(0); // 🚀 O DEBOUNCE MÁGICO
 
       const getShapesOnly = () => {
         return store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
@@ -73,7 +76,7 @@
         try {
             const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
             const data = await res.json();
-            if(data?.success && data.records && data.records.length > 0){
+            if(data?.success && data.records){
                 const shapesOnly = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
                 isRemoteUpdateRef.current = true;
                 store.mergeRemoteChanges(() => {
@@ -90,35 +93,40 @@
         loadFromApi().then(() => setConnected(true));
       }, [loadFromApi]);
 
-      // 🚀 ALUNO: LIGAÇÃO EM TEMPO REAL (SSE)
+      // 🚀 LIGAÇÃO EM TEMPO REAL (SSE) PARA TODOS
       useEffect(() => {
-          if (role !== 'aluno') return;
+          if(role === 'aluno' && !isAllowed) return;
+
+          const escolaId = localStorage.getItem('ws_usuario_logado') ? JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId : 'DEFAULT';
+          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
           
-          // Conecta ao túnel de eventos do servidor
-          const es = new EventSource(`/api/workspace/stream?escolaId=DEFAULT`);
           es.onmessage = (event) => {
               try {
                   const data = JSON.parse(event.data);
-                  // Se o professor desenhar, puxa o novo traço imediatamente!
                   if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
                       loadFromApi();
                   }
               } catch(e){}
           };
           
-          // Mantém um polling lento de segurança caso a internet do aluno caia
-          const interval = setInterval(loadFromApi, 4000);
+          // Polling lento de segurança caso a rede do SSE caia
+          const interval = setInterval(loadFromApi, 5000);
 
           return () => { es.close(); clearInterval(interval); };
       }, [roomId, loadFromApi]);
 
-      // 🚀 PROFESSOR: SALVA MUDANÇAS E AVISA A NUVEM
+      // 🚀 SALVA MUDANÇAS E AVISA A NUVEM
       useEffect(()=>{
-        if(role === 'aluno' && locked) return; // Se for aluno bloqueado, não salva nada
+        if(role === 'aluno' && locked) return; 
 
         const unsub = store.listen((entry)=>{
           if(entry.source !== 'user') return;
           if(isRemoteUpdateRef.current) return;
+          
+          // ⏱️ DEBOUNCE: Só envia dados a cada 600ms para não travar a internet
+          const now = Date.now();
+          if(now - lastSavedRef.current < 600) return; 
+          lastSavedRef.current = now;
           
           const shapes = getShapesOnly();
           
@@ -138,7 +146,7 @@
     }
 
     function App(){
-      const { store, connected } = useLousaSync(turmaId);
+      const { store, connected } = useLousaSync(roomId);
       const [editor, setEditor] = useState(null);
 
       const onMount = useCallback((ed)=>{
@@ -149,7 +157,7 @@
 
       useEffect(()=>{
         if(!editor) return;
-        // 🔒 BLOQUEIO ABSOLUTO DA CANETA: O botão de bloqueio atua aqui!
+        // 🔒 O BOTÃO "LIBERAR/DESATIVAR" ATUA AQUI!
         editor.updateInstanceState({ isReadonly: role==='aluno' && locked });
       }, [editor, locked]);
 
