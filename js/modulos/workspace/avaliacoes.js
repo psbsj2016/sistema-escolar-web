@@ -2497,6 +2497,35 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
+
+    abrirLousaProfessor: (turmaId) => {
+        const tid = String(turmaId || 'global').trim();
+        console.log('[LOUSA] Professor abrindo lousa embutida turma:', tid);
+        const modal = document.getElementById('ws-modal-lousa-prof');
+        const iframe = document.getElementById('iframeLousaProf');
+        const label = document.getElementById('ws-prof-lousa-turma-label');
+        const status = document.getElementById('ws-prof-lousa-status');
+        if(label) label.textContent = tid === 'global' ? 'Público Geral' : tid;
+        if(status) status.textContent = 'Ao vivo';
+        if(iframe){
+            const url = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`;
+            console.log('[LOUSA] iframe professor URL:', url);
+            iframe.setAttribute('src', url);
+        }
+        if(modal){
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    },
+
+    fecharLousaProfessor: () => {
+        const modal = document.getElementById('ws-modal-lousa-prof');
+        const iframe = document.getElementById('iframeLousaProf');
+        if(modal) modal.style.display = 'none';
+        if(iframe) iframe.setAttribute('src', '');
+        document.body.style.overflow = '';
+    },
+
     fecharLousaFullscreen: () => {
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
         if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }

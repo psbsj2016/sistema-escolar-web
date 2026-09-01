@@ -654,7 +654,7 @@
                                 </select>
                             </div>
                             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                                <button onclick="(()=>{const s=document.getElementById('ws-prof-turma-lousa');const tid=s?s.value:'global';window.open(`/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`,'_blank');})()" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
+                                <button onclick="(()=>{const s=document.getElementById('ws-prof-turma-lousa');const tid=s?s.value:'global';Workspace.Avaliacoes.abrirLousaProfessor(tid);})()" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
                                     1. Abrir o Meu Quadro
                                 </button>
                                 <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
@@ -1246,6 +1246,28 @@ document.addEventListener('DOMContentLoaded', () => {
             <iframe id="iframeLousaAluno" src="" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
     </div>
+</div>
+
+
+<!-- 🎨 MODAL LOUSA PROFESSOR EMBUTIDA (sem nova aba) -->
+<div id="ws-modal-lousa-prof" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.92); backdrop-filter:blur(8px); padding:20px; box-sizing:border-box;">
+  <div style="width:100%; max-width:1400px; height:92vh; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+    <div style="height:56px; background:#0F172A; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 16px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:32px; height:32px; border-radius:10px; background:#14B8A6; display:grid; place-items:center;">🖍️</div>
+        <div>
+          <div style="font-weight:700; font-size:14px;">Minha Lousa - <span id="ws-prof-lousa-turma-label">Turma</span></div>
+          <div style="font-size:11px; opacity:0.7;">Os alunos veem em tempo real • <span id="ws-prof-lousa-status">Conectando...</span></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600;">✕ Fechar</button>
+      </div>
+    </div>
+    <div style="flex:1; position:relative; background:#f8fafc;">
+      <iframe id="iframeLousaProf" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
+    </div>
+  </div>
 </div>
 
 </body>
