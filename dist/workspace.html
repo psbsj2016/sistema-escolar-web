@@ -1431,14 +1431,14 @@
 
     <!-- 🚀 Importação limpa do JS (O Vite tratará do cache) -->
     
-   <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL (VERSÃO LIMPA E AUTOMÁTICA) -->
+    <!-- 🚀 MOTOR DA LOUSA EM TEMPO REAL -->
 <script>
 window.Workspace = window.Workspace || {};
 Workspace.Avaliacoes = Workspace.Avaliacoes || {};
 Workspace.Avaliacoes.lousaInterval = null;
 
 // ==========================================
-// 👨‍🏫 LÓGICA DO PROFESSOR (ENVIAR COMANDOS)
+// LÓGICA DO PROFESSOR (ENVIAR COMANDOS)
 // ==========================================
 Workspace.Avaliacoes.abrirModalLousa = async (tipo) => {
     let titulo = tipo === 'ativar' ? '👁️ Ativar Visualização' : (tipo === 'liberar' ? '🔓 Liberar Recursos' : '🛑 Desativar Lousa');
@@ -1483,42 +1483,30 @@ Workspace.Avaliacoes.enviarComandoLousa = async (tipo) => {
 };
 
 // ==========================================
-// 🎓 LÓGICA DO ALUNO (TELA CHEIA E AUTOMAÇÃO)
+// LÓGICA DO ALUNO (RECEBER EM TEMPO REAL)
 // ==========================================
-
-// Abre a tela cheia e COMEÇA a procurar a lousa
-Workspace.Avaliacoes.abrirLousaFullscreen = () => {
-    const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
-    if (modal) modal.style.display = 'flex';
-    Workspace.Avaliacoes.iniciarMonitorLousa(true);
+Workspace.Avaliacoes.carregarTurmasLousaAluno = async () => {
+    const sel = document.getElementById('ws-aluno-lousa-turma');
+    if(!sel) return;
+    const turmas = await Workspace.api('/turmas', 'GET');
+    sel.innerHTML = '<option value="">Selecione sua Turma...</option><option value="global">🌍 Público Geral</option>';
+    if(turmas && turmas.length > 0) {
+        turmas.forEach(t => {
+            // Mostra apenas as turmas a que o aluno pertence
+            if(Workspace.usuario.tipo === 'Professor' || (Workspace.verificarTurma && Workspace.verificarTurma(Workspace.usuario, t.id, t.nome))) {
+                sel.innerHTML += `<option value="${t.id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome) : t.nome}</option>`;
+            }
+        });
+    }
 };
 
-// Fecha a tela cheia, DESLIGA a procura e limpa a memória
-Workspace.Avaliacoes.fecharLousaFullscreen = () => {
-    const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
-    if (modal) modal.style.display = 'none';
+Workspace.Avaliacoes.iniciarMonitorLousa = () => {
+    if (Workspace.Avaliacoes.lousaInterval) clearInterval(Workspace.Avaliacoes.lousaInterval);
     
-    Workspace.Avaliacoes.iniciarMonitorLousa(false);
-    const iframe = document.getElementById('iframeLousaAluno');
-    if (iframe) iframe.setAttribute('src', ''); // Descarrega a Lousa para não gastar dados
-};
-
-Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
-    // 1. Limpa qualquer motor antigo a correr
-    if (Workspace.Avaliacoes.lousaInterval) {
-        clearInterval(Workspace.Avaliacoes.lousaInterval);
-        Workspace.Avaliacoes.lousaInterval = null;
-    }
-    
-    if (!ligar) return; // Se a ordem foi desligar, ficamos por aqui
-
-    // 2. Descobre a Turma do Aluno magicamente de forma invisível
-    let turmaId = 'global';
-    if (Workspace.usuario) {
-        turmaId = Workspace.usuario.turma || (Workspace.usuario.turmas && Workspace.usuario.turmas[0]) || 'global';
-    }
-
     const verificarStatus = async () => {
+        const turmaId = document.getElementById('ws-aluno-lousa-turma').value;
+        if(!turmaId) return;
+
         try {
             const res = await Workspace.api(`/sala/lousa/status/${turmaId}`, 'GET');
             if (res && res.success) {
@@ -1528,46 +1516,39 @@ Workspace.Avaliacoes.iniciarMonitorLousa = (ligar) => {
                 const statusText = document.getElementById('statusLousaText');
 
                 if (res.ativa) {
-                    if (placeholder) placeholder.style.display = 'none';
-                    if (iframeDiv) iframeDiv.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    iframeDiv.style.display = 'block';
                     
-                    // Constrói a URL mágica que bloqueia ou desbloqueia as canetas
-                    const urlMagica = `/lousa?role=aluno&locked=${!res.recursos}`;
-                    
-                    // Só recarrega o Iframe se a ordem (Bloqueado/Livre) tiver mudado!
-                    if (iframe && iframe.getAttribute('src') !== urlMagica) {
+                    // A URL muda em tempo real se o professor bloquear/desbloquear os recursos
+                    const urlMagica = `/workspace.lousa.html?role=aluno&locked=${!res.recursos}`;
+                    if (iframe.getAttribute('src') !== urlMagica) {
                         iframe.setAttribute('src', urlMagica);
                     }
 
-                    if (statusText) {
-                        if (res.recursos) {
-                            statusText.innerHTML = '<span style="color:#10B981;">🟢</span> Desenho Liberado (Pode interagir)';
-                        } else {
-                            statusText.innerHTML = '<span style="color:#F59E0B;">🟡</span> Apenas Visualização';
-                        }
+                    if (res.recursos) {
+                        statusText.innerText = '🔓 Desenho Liberado (Pode interagir)';
+                        statusText.style.background = '#10B981'; statusText.style.color = '#fff';
+                    } else {
+                        statusText.innerText = '🔒 Apenas Visualização';
+                        statusText.style.background = '#F1F5F9'; statusText.style.color = '#64748B';
                     }
                 } else {
-                    // Lousa Desligada: Mostra o Aviso Central
-                    if (placeholder) placeholder.style.display = 'block';
-                    if (iframeDiv) iframeDiv.style.display = 'none';
-                    if (iframe) iframe.setAttribute('src', '');
-                    if (statusText) statusText.innerHTML = '💤 Aguardando o Professor...';
+                    placeholder.style.display = 'flex';
+                    iframeDiv.style.display = 'none';
+                    iframe.setAttribute('src', '');
+                    statusText.innerText = '💤 Lousa Desativada';
+                    statusText.style.background = '#F1F5F9'; statusText.style.color = '#64748B';
                 }
             }
-        } catch (e) {
-            console.warn("Monitor de lousa falhou nesta tentativa.");
-        }
+        } catch (e) {}
     };
 
-    // Faz a primeira verificação imediatamente ao abrir a tela
-    verificarStatus(); 
-    // E depois de 3 em 3 segundos
-    Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000); 
+    verificarStatus(); // Verifica imediatamente
+    Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000); // Bate na base de dados a cada 3 segundos
 };
-</script>
 
 // Quando o hub abrir, carregamos a lista de turmas no combobox do aluno
-<script>document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { Workspace.Avaliacoes.carregarTurmasLousaAluno(); }, 1500);
 });
 </script>
