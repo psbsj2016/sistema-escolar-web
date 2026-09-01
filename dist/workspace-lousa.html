@@ -2,16 +2,27 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lousa Colaborativa</title>
-  <style>*{box-sizing:border-box}html,body,#root{height:100%;margin:0;font-family:Inter,system-ui}#waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}</style>
-  <script type="module" crossorigin src="/assets/lousa-4v5GGWCX.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Lousa Interativa</title>
+  <style>
+    *{box-sizing:border-box} 
+    html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
+    /* Garante que o tldraw ocupe espaço */
+    .tl-container{flex:1; min-height:0; position:relative}
+    .tldraw__editor{height:100% !important}
+  </style>
+  <script type="module" crossorigin src="/assets/lousa-Bcy-GZvc.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/chunk-DjFn0ufh.js">
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="stylesheet" crossorigin href="/assets/lousa-C9iOKnfK.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
-  <div id="waiting-overlay"><div style="font-size:60px;">💤</div><h2>Aguardando professor ativar</h2><p id="waiting-room" style="color:#94a3b8"></p></div>
+  <div id="waiting-overlay">
+    <div style="font-size:60px;">💤</div>
+    <h2 style="font-size:18px;margin:0;">Aguardando professor ativar</h2>
+    <p id="waiting-room" style="color:#94a3b8;font-size:13px;"></p>
+  </div>
   <div id="root"></div>
 </body>
 </html>
