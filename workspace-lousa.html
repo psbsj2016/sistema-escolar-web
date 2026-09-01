@@ -6,7 +6,7 @@
   <title>Lousa Interativa</title>
   <style>
     *{box-sizing:border-box} 
-    html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;overflow:hidden}
+    html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#fff;}
     #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
     #waiting-overlay.hidden{display:none !important}
     .tl-container{flex:1; min-height:0; position:relative}
@@ -20,11 +20,30 @@
     <div style="background:#1e293b;padding:8px 16px;border-radius:20px;font-size:11px;">🔄 Verificando...</div>
   </div>
   <div id="root"></div>
- <script type="module">
+
+  <script type="module">
     import React, { useEffect, useState, useCallback, useRef } from 'react';
     import ReactDOM from 'react-dom/client';
-    import { Tldraw, createTLStore, defaultShapeUtils, defaultBindingUtils } from '@tldraw/tldraw';
+    // 🚀 Simplificámos as importações para ser à prova de falhas de versão
+    import { Tldraw, createTLStore, defaultShapeUtils } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
+
+    // 🛡️ ESCUDO DE ERROS DO REACT (Mostra o erro em vez de ecrã branco)
+    class ErrorBoundary extends React.Component {
+        constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+        static getDerivedStateFromError(error) { return { hasError: true, error }; }
+        componentDidCatch(error, errorInfo) { console.error("🚨 Crash na Lousa:", error, errorInfo); }
+        render() {
+            if (this.state.hasError) {
+                return React.createElement('div', {style:{padding:'30px', color:'#c0392b', background:'#fdf2f2', height:'100vh', fontFamily:'sans-serif', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center'}}, 
+                    React.createElement('div', {style:{fontSize:'50px', marginBottom:'15px'}}, '🚨'),
+                    React.createElement('h2', {style:{margin:'0 0 10px 0'}}, 'A Lousa encontrou um obstáculo'),
+                    React.createElement('p', null, this.state.error.toString())
+                );
+            }
+            return this.props.children;
+        }
+    }
 
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
@@ -53,21 +72,18 @@
         if(overlay) overlay.classList.add('hidden');
         return true;
       }catch(e){
-        return true; // Se der erro de rede, assume que está permitido para não expulsar
+        return true; // Se a net piscar, assume permitido para não expulsar
       }
     }
     checkAccess();
     setInterval(checkAccess, 3000);
 
     function useLousaSync(roomId){
-      const [store] = useState(() => createTLStore({ shapeUtils: defaultShapeUtils, bindingUtils: defaultBindingUtils }));
+      // 🚀 Inicialização blindada da Store
+      const [store] = useState(() => createTLStore({ shapeUtils: defaultShapeUtils }));
       const [connected, setConnected] = useState(false);
       const isRemoteUpdateRef = useRef(false);
       const lastSavedRef = useRef(0);
-
-      const getShapesOnly = () => {
-        return store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
-      };
 
       const loadFromApi = useCallback(async () => {
         try {
@@ -89,10 +105,12 @@
         loadFromApi().then(() => setConnected(true));
       }, [loadFromApi]);
 
-      // ALUNO: Ouve o SSE para atualizar o desenho ao vivo
+      // 📡 ALUNO: Ouve o SSE para atualizar o desenho ao vivo
       useEffect(() => {
           if(role !== 'aluno') return;
-          const es = new EventSource(`/api/workspace/stream?escolaId=DEFAULT`);
+          const escolaId = localStorage.getItem('ws_usuario_logado') ? JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId : 'DEFAULT';
+          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+          
           es.onmessage = (event) => {
               try {
                   const data = JSON.parse(event.data);
@@ -105,21 +123,20 @@
           return () => { es.close(); clearInterval(interval); };
       }, [roomId, loadFromApi]);
 
-      // SALVA AS MUDANÇAS
+      // 💾 PROFESSOR/ALUNO ATIVO: Salva as mudanças na nuvem
       useEffect(()=>{
         const unsub = store.listen((entry)=>{
           if(entry.source !== 'user') return;
           if(isRemoteUpdateRef.current) return;
           
           const now = Date.now();
-          if(now - lastSavedRef.current < 600) return; 
+          if(now - lastSavedRef.current < 600) return; // Limita disparos à nuvem
           lastSavedRef.current = now;
           
-          const shapes = getShapesOnly();
+          const shapes = store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
           
           fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-            method:'PUT', credentials:'include',
-            headers:{'Content-Type':'application/json'},
+            method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ records: shapes })
           }).catch(()=>{});
 
@@ -134,9 +151,9 @@
     function App(){
       const { store, connected } = useLousaSync(roomId);
       const [editor, setEditor] = useState(null);
-      const [dynamicLocked, setDynamicLocked] = useState(initialLocked); // 🚀 O ESTADO DINÂMICO
+      const [dynamicLocked, setDynamicLocked] = useState(initialLocked);
 
-      // 🚀 Ouve os comandos silenciosos enviados do avaliacoes.js
+      // Ouve os comandos silenciosos para destrancar a caneta do aluno
       useEffect(() => {
           const handleMessage = (event) => {
               if (event.data && event.data.type === 'LOCK_STATE') {
@@ -149,20 +166,30 @@
 
       const onMount = useCallback((ed)=>{
         setEditor(ed);
-        ed.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
+        ed.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
         try{ ed.zoomToFit(); }catch{}
       }, [dynamicLocked]);
 
       useEffect(()=>{
         if(!editor) return;
-        // Atualiza a permissão de desenho ao vivo!
-        editor.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
+        editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
       }, [editor, dynamicLocked]);
 
-      return React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column', background:'#fff'}},
-        React.createElement('div', {style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
-          React.createElement(Tldraw, { store, onMount, autoFocus:true })
-        )
+      const isLocked = role === 'aluno' && dynamicLocked;
+
+      return React.createElement(ErrorBoundary, null,
+          React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column', background:'#fff'}},
+            React.createElement('div', {style:{height:48, background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', flexShrink:0}},
+              React.createElement('div', {style:{display:'flex', alignItems:'center', gap:10}},
+                React.createElement('div', {style:{width:28,height:28,borderRadius:8,background:'#14B8A6',display:'grid',placeItems:'center'}}, '🖍️'),
+                React.createElement('div', {style:{fontWeight:600, fontSize:13}}, `Lousa Interativa ${isLocked?'🔒 Somente Visualização':''}`),
+                React.createElement('div', {style:{fontSize:10, background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:12}}, `${connected ? 'Ao vivo' : 'Conectando'}`)
+              )
+            ),
+            React.createElement('div', {style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
+              React.createElement(Tldraw, { store, onMount, autoFocus:true })
+            )
+          )
       );
     }
 
