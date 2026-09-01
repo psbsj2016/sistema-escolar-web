@@ -340,6 +340,9 @@ Object.assign(Workspace, {
 
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
+        document.body.classList.remove('menu-left-open','menu-right-open');
+        const overlayFix = document.getElementById('ws-overlay');
+        if (overlayFix) { overlayFix.style.opacity = '0'; overlayFix.style.pointerEvents = 'none'; }
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
 
@@ -532,7 +535,32 @@ Object.assign(Workspace, {
 
     toggleMenuPrincipal: () => {
         const dropdown = document.getElementById('ws-main-menu-dropdown');
-        if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        const overlay = document.getElementById('ws-overlay');
+        const isOpen = document.body.classList.contains('menu-left-open');
+        if (isOpen) {
+            document.body.classList.remove('menu-left-open');
+            if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+        } else {
+            document.body.classList.add('menu-left-open');
+            document.body.classList.remove('menu-right-open');
+            if (dropdown) dropdown.style.display = 'flex';
+            if (overlay) { overlay.style.opacity = '1'; overlay.style.pointerEvents = 'auto'; }
+        }
+    },
+
+    toggleMenuNotificacoes: () => {
+        const dropdown = document.getElementById('ws-noti-dropdown');
+        const overlay = document.getElementById('ws-overlay');
+        const isOpen = document.body.classList.contains('menu-right-open');
+        if (isOpen) {
+            document.body.classList.remove('menu-right-open');
+            if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+        } else {
+            document.body.classList.add('menu-right-open');
+            document.body.classList.remove('menu-left-open');
+            if (dropdown) dropdown.style.display = 'flex';
+            if (overlay) { overlay.style.opacity = '1'; overlay.style.pointerEvents = 'auto'; }
+        }
     },
 
     toggleMenuChat: () => {
