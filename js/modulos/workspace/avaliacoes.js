@@ -375,11 +375,20 @@ Workspace.Avaliacoes = {
         } catch (e) { console.error(e); }
     },
 
-    mudarAbaEscrita: (aba) => { Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); },
-    mudarAbaOral: (aba) => { Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); },
-    mudarAbaOnline: (aba) => { Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); },
+    mudarAbaEscrita: (aba, restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_escrita', aba);
+        Workspace.Avaliacoes.abaEscrita = aba; Workspace.Avaliacoes.renderizarLobbies(); 
+    },
+    mudarAbaOral: (aba, restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_oral', aba);
+        Workspace.Avaliacoes.abaOral = aba; Workspace.Avaliacoes.renderizarLobbies(); 
+    },
+    mudarAbaOnline: (aba, restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_aba_avaliacoes_online', aba);
+        Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); 
+    },
 
- registrarPresencaOnline: async (event, id, link) => {
+    registrarPresencaOnline: async (event, id, link) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -948,10 +957,20 @@ Workspace.Avaliacoes = {
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'grid';
         }
     },
-    mostrarSubmenuCriar: () => { document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-criar').style.display = 'grid'; },
-    mostrarSubmenuGestao: () => { document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'grid'; },
-    voltarSubmenus: () => { document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid'; },
-    voltarMenuProf: () => {
+    mostrarSubmenuCriar: (restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'submenu_criar');
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-criar').style.display = 'grid'; 
+    },
+    mostrarSubmenuGestao: (restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'submenu_gestao');
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'grid'; 
+    },
+    voltarSubmenus: (restauro = false) => { 
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'menu');
+        document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-avaliacoes').style.display = 'grid'; 
+    },
+    voltarMenuProf: (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'menu');
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container'];
         ocultar.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
         Workspace.Avaliacoes.setContextoProf(Workspace.Avaliacoes.contextoAtual);
@@ -969,27 +988,30 @@ Workspace.Avaliacoes = {
             Workspace.Avaliacoes.turmasCarregadas = true;
         } catch(e) {}
     },
-    abrirNovaEscrita: () => {
+    abrirNovaEscrita: (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'nova_escrita');
         Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Exame";
         document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-nova-escrita').style.display = 'block';
         document.getElementById('ws-nova-prova-titulo').value = ''; document.getElementById('ws-nova-prova-tempo').value = 60; document.getElementById('ws-nova-prova-tentativas').value = 1; document.getElementById('ws-nova-prova-destino').value = 'global'; document.getElementById('ws-builder-questoes').innerHTML = ''; 
     },
-    abrirNovaOral: () => {
+    abrirNovaOral: (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'nova_oral');
         Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Teste Oral";
         document.getElementById('ws-prof-submenu-criar').style.display = 'none'; document.getElementById('ws-prof-nova-oral').style.display = 'block';
         document.getElementById('ws-nova-oral-titulo').value = ''; document.getElementById('ws-nova-oral-instrucoes').value = ''; document.getElementById('ws-nova-oral-tentativas').value = 1; document.getElementById('ws-nova-oral-destino').value = 'global';
     },
-    abrirNovaOnline: () => {
+    abrirNovaOnline: (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'nova_online');
         Workspace.Avaliacoes.carregarTurmasProf(); Workspace.Avaliacoes.avaliacaoEmEdicao = null; document.getElementById('ws-btn-salvar-online').innerText = "🖥️ Agendar Sessão Ao Vivo";
         document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-nova-online').style.display = 'block';
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-   abrirGerenciador: async () => {
+   abrirGerenciador: async (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'gerir');
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel Inteligente... ⏳</div>';
         try {
-            // 🚀 HIGIENE DE CACHE: O Workspace procura SEMPRE os alunos frescos da base de dados!
             const resAlunos = await Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
             if (resAlunos && !resAlunos.error) {
                 Workspace.Avaliacoes.todosAlunosCache = resAlunos;
@@ -1206,7 +1228,8 @@ Workspace.Avaliacoes = {
    // ========================================================================
     // 🚀 AS FUNÇÕES QUE FALTAVAM: NAVEGAÇÃO E ARQUIVAMENTO
     // ========================================================================
-    mudarAbaEncontros: (aba) => {
+    mudarAbaEncontros: (aba, restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_aba_encontros_arquivo', aba);
         Workspace.Avaliacoes.abaEncontrosArquivo = aba;
         Workspace.Avaliacoes.renderizarListaGerenciador();
     },
@@ -2062,7 +2085,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-   abrirRecebidas: async () => {
+   abrirRecebidas: async (restauro = false) => {
+        if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'recebidas');
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
@@ -2072,7 +2096,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando provas recebidas... ⏳</div>';
 
         try {
-            // Usamos destruidores de cache para os dados virem sempre frescos
             const resProvas = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
             const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
 
@@ -2083,7 +2106,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas;
                 Workspace.Avaliacoes.provasEmCache = provasMap;
 
-                // Passamos o controlo visual para a nova função de renderização!
                 Workspace.Avaliacoes.renderizarListaRecebidas();
             } else {
                 throw new Error("Dados incompletos");

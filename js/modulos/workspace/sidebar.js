@@ -1412,13 +1412,15 @@ Workspace.Sidebar = {
         finally { btn.innerText = txtOriginal; btn.disabled = false; }
     },
 
-    voltarMenuTarefasProf: () => {
+    voltarMenuTarefasProf: (restauro = false) => {
+        if (!restauro) localStorage.setItem('ws_tarefas_prof_subtela', 'menu');
         document.getElementById('ws-prof-menu-tarefas').style.display = 'grid';
         document.getElementById('ws-prof-nova-tarefa').style.display = 'none';
         document.getElementById('ws-prof-lista-recebidas').style.display = 'none';
     },
 
-    abrirPainelNovaTarefa: async () => {
+    abrirPainelNovaTarefa: async (restauro = false) => {
+        if (!restauro) localStorage.setItem('ws_tarefas_prof_subtela', 'nova');
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
         document.getElementById('ws-prof-nova-tarefa').style.display = 'block';
 
@@ -1678,7 +1680,8 @@ Workspace.Sidebar = {
         });
     },
 
-    abrirPainelTarefasRecebidas: async () => {
+    abrirPainelTarefasRecebidas: async (restauro = false) => {
+        if (!restauro) localStorage.setItem('ws_tarefas_prof_subtela', 'recebidas');
         document.getElementById('ws-prof-menu-tarefas').style.display = 'none';
         document.getElementById('ws-prof-lista-recebidas').style.display = 'block';
         
