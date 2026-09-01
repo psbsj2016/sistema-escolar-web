@@ -33,7 +33,7 @@ export default defineConfig({
           /matricula-online\.html/,
           /workspace\.html/,
           /admin\.html/,
-          /workspace.lousa\.html/ // 🚀 AQUI: Adicionamos a Lousa ao escudo do PWA!
+          /workspace\.lousa\.html/ // 🚀 AQUI: Adicionamos a Lousa ao escudo do PWA!
         ] 
       }
     })
