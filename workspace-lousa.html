@@ -1,48 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Lousa Interativa</title>
-  <style>
-    *{box-sizing:border-box} 
-    html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#fff;}
-    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
-    #waiting-overlay.hidden{display:none !important}
-    .tl-container{flex:1; min-height:0; position:relative}
-  </style>
-</head>
-<body>
-  <div id="waiting-overlay">
-    <div style="font-size:60px;">💤</div>
-    <h2 style="font-size:18px;margin:0;">Aguardando professor ativar a lousa</h2>
-    <p id="waiting-room" style="color:#94a3b8;font-size:13px;">Turma <span id="waiting-turma"></span> - aguardando liberação</p>
-    <div style="background:#1e293b;padding:8px 16px;border-radius:20px;font-size:11px;">🔄 Verificando...</div>
-  </div>
-  <div id="root"></div>
-
-  <script type="module">
-    import React, { useEffect, useState, useCallback, useRef } from 'react';
+<script type="module">
+    import React, { useEffect, useState, useCallback } from 'react';
     import ReactDOM from 'react-dom/client';
     import { Tldraw } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
-
-    // 🛡️ ESCUDO DE ERROS DO REACT (Mostra o erro em vez de ecrã branco)
-    class ErrorBoundary extends React.Component {
-        constructor(props) { super(props); this.state = { hasError: false, error: null }; }
-        static getDerivedStateFromError(error) { return { hasError: true, error }; }
-        componentDidCatch(error, errorInfo) { console.error("🚨 Crash na Lousa:", error, errorInfo); }
-        render() {
-            if (this.state.hasError) {
-                return React.createElement('div', {style:{padding:'30px', color:'#c0392b', background:'#fdf2f2', height:'100vh', fontFamily:'sans-serif', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center'}}, 
-                    React.createElement('div', {style:{fontSize:'50px', marginBottom:'15px'}}, '🚨'),
-                    React.createElement('h2', {style:{margin:'0 0 10px 0'}}, 'A Lousa encontrou um obstáculo'),
-                    React.createElement('p', null, this.state.error.toString())
-                );
-            }
-            return this.props.children;
-        }
-    }
 
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
@@ -51,155 +11,125 @@
 
     const overlay = document.getElementById('waiting-overlay');
     const waitingTurma = document.getElementById('waiting-turma');
-    if(waitingTurma) waitingTurma.textContent = roomId === 'global' ? 'Geral' : roomId;
+    if (waitingTurma) waitingTurma.textContent = roomId === 'global' ? 'Geral' : roomId;
 
-    // Guard - Proteção de Acesso
-    let isAllowed = role !== 'aluno'; 
-    async function checkAccess(){
-      if(role !== 'aluno'){
-        if(overlay) overlay.classList.add('hidden');
-        return true;
-      }
-      try{
-        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`, {credentials:'include'});
-        const data = await res.json();
-        if(!data?.success || !data.ativa){
-          isAllowed = false;
-          if(overlay) overlay.classList.remove('hidden');
-          return false;
-        }
-        isAllowed = true;
-        if(overlay) overlay.classList.add('hidden');
-        return true;
-      }catch(e){
-        return true; // Se a rede falhar, assume permitido para não expulsar
-      }
+    // 🚀 Escudo Invisível: Gere a tela preta de espera apenas para os alunos
+    if (role === 'aluno') {
+      const checkAccess = async () => {
+        try {
+          const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
+          const data = await res.json();
+          if (data?.success && data.ativa) {
+            if (overlay) overlay.style.display = 'none';
+          } else {
+            if (overlay) overlay.style.display = 'flex';
+          }
+        } catch(e) {}
+      };
+      checkAccess();
+      setInterval(checkAccess, 3000);
+    } else {
+      if (overlay) overlay.style.display = 'none'; // Professor tem entrada livre
     }
-    checkAccess();
-    setInterval(checkAccess, 3000);
 
-    function App(){
+    // 🚀 Cérebro React (A Lousa em Si)
+    function App() {
       const [editor, setEditor] = useState(null);
       const [connected, setConnected] = useState(false);
       const [dynamicLocked, setDynamicLocked] = useState(initialLocked);
-      const isRemoteUpdateRef = useRef(false);
-      const lastSavedRef = useRef(0);
 
-      // 1. Ouve os comandos silenciosos (Cadeado do aluno)
+      // 1. Ouve as ordens do Professor (Trancar/Destrancar Caneta sem piscar a tela)
       useEffect(() => {
-          const handleMessage = (event) => {
-              if (event.data && event.data.type === 'LOCK_STATE') {
-                  setDynamicLocked(event.data.locked);
-              }
+          const handleMsg = (e) => { 
+              if (e.data?.type === 'LOCK_STATE') setDynamicLocked(e.data.locked); 
           };
-          window.addEventListener('message', handleMessage);
-          return () => window.removeEventListener('message', handleMessage);
+          window.addEventListener('message', handleMsg);
+          return () => window.removeEventListener('message', handleMsg);
       }, []);
 
-      // 2. Quando o tldraw arranca (Inicialização Nativa)
+      // 2. Aplica o Cadeado Dinâmico ao Lápis
+      useEffect(() => {
+          if (editor) {
+              editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
+          }
+      }, [editor, dynamicLocked]);
+
+      // 3. O Despertar da Lousa (Quando a tela carrega com sucesso)
       const onMount = useCallback((ed) => {
           setEditor(ed);
-          
-          // Liberta ou tranca o lápis
-          ed.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
-          
-          // Função para buscar desenhos na nuvem
-          const carregarNuvem = async () => {
+
+          // Função que busca os traços guardados no banco de dados
+          const carregarDaNuvem = async () => {
               try {
-                  const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
+                  const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
                   const data = await res.json();
-                  if(data?.success && data.records && data.records.length > 0){
-                      const shapesOnly = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
-                      isRemoteUpdateRef.current = true;
+                  if (data?.records && data.records.length > 0) {
                       ed.store.mergeRemoteChanges(() => {
-                          try { ed.store.put(shapesOnly); } catch(e){}
+                          try { ed.store.put(data.records); } catch(e){}
                       });
-                      isRemoteUpdateRef.current = false;
                   }
-              } catch(e) {} finally {
-                  setConnected(true); // O estado muda para "Ao vivo" garantidamente
-              }
+                  setConnected(true);
+              } catch(e) {}
           };
 
-          if(role !== 'aluno' || isAllowed) {
-              carregarNuvem();
-          }
+          carregarDaNuvem();
+          window._carregarNuvemLocal = carregarDaNuvem; // Expõe para a Atualização Ao Vivo
 
-          // Salva os traços novos na nuvem (Debounce de 1 segundo)
+          // 4. Gravação Otimizada: Só envia os traços a cada 400ms para não afogar a internet
+          let timeout;
           ed.store.listen((entry) => {
-              if (role === 'aluno' && dynamicLocked) return; // Não salva se estiver trancado
-              if (entry.source !== 'user') return;
-              if (isRemoteUpdateRef.current) return;
+              if (entry.source !== 'user') return; // Ignora o que o servidor mandou
+              if (role === 'aluno' && dynamicLocked) return; // Aluno bloqueado não envia dados
 
-              const now = Date.now();
-              if (now - lastSavedRef.current < 1000) return; 
-              lastSavedRef.current = now;
-
-              const shapes = ed.store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
-              
-              fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-                  method: 'PUT', credentials: 'include', headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ records: shapes })
-              }).catch(()=>{});
-
+              clearTimeout(timeout);
+              timeout = setTimeout(() => {
+                  const records = ed.store.allRecords();
+                  fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+                      method: 'PUT', headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({ records })
+                  }).catch(()=>{});
+              }, 400); 
           }, { scope: 'document', source: 'user' });
-
-          // Expõe a função para o SSE usar depois
-          window._carregarNuvemLocal = carregarNuvem;
 
       }, [dynamicLocked]);
 
-      // 3. Ouve o Tempo Real (SSE - Aluno)
+      // 5. O Túnel de Tempo Real (SSE) -> Ambos ouvem as atualizações
       useEffect(() => {
-          if(role !== 'aluno') return;
-          
           let escolaId = 'DEFAULT';
           try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
-
-          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
           
+          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
           es.onmessage = (event) => {
               try {
                   const data = JSON.parse(event.data);
+                  // Puxa o traço novo assim que a nuvem avisa que alguém desenhou
                   if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
                       if (window._carregarNuvemLocal) window._carregarNuvemLocal();
                   }
               } catch(e){}
           };
           
-          // Radar de segurança a cada 4 segundos
-          const interval = setInterval(() => {
-              if (window._carregarNuvemLocal) window._carregarNuvemLocal();
-          }, 4000);
-          
-          return () => { es.close(); clearInterval(interval); };
-      }, [roomId]);
-
-      // 4. Aplica bloqueio dinâmico
-      useEffect(()=>{
-        if(!editor) return;
-        editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
-      }, [editor, dynamicLocked]);
+          // Rede de segurança silenciosa a cada 5 segundos
+          const inv = setInterval(() => { if (window._carregarNuvemLocal) window._carregarNuvemLocal(); }, 5000);
+          return () => { es.close(); clearInterval(inv); };
+      }, []);
 
       const isLocked = role === 'aluno' && dynamicLocked;
 
-      return React.createElement(ErrorBoundary, null,
-          React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column', background:'#fff'}},
-            React.createElement('div', {style:{height:48, background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 12px', flexShrink:0}},
-              React.createElement('div', {style:{display:'flex', alignItems:'center', gap:10}},
-                React.createElement('div', {style:{width:28,height:28,borderRadius:8,background:'#14B8A6',display:'grid',placeItems:'center'}}, '🖍️'),
-                React.createElement('div', {style:{fontWeight:600, fontSize:13}}, `Lousa Interativa ${isLocked?'🔒 Somente Visualização':''}`),
-                React.createElement('div', {style:{fontSize:10, background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:12}}, `${connected ? 'Ao vivo' : 'Conectando...'}`)
-              )
-            ),
-            React.createElement('div', {style:{flex:1, minHeight:0, position:'relative', background:'#fff'}},
-              React.createElement(Tldraw, { onMount: onMount }) // 🚀 MÁGICA AQUI: Removido o 'store' das props!
-            )
+      // 🎨 A Interface limpa
+      return React.createElement('div', {style:{height:'100vh', width:'100vw', display:'flex', flexDirection:'column'}},
+        React.createElement('div', {style:{height:45, background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 15px', flexShrink:0}},
+          React.createElement('div', {style:{display:'flex', alignItems:'center', gap:10}},
+            React.createElement('span', {style:{fontSize:'18px'}}, '🖍️'),
+            React.createElement('span', {style:{fontWeight:600, fontSize:'14px'}}, isLocked ? 'Lousa (Modo Leitura)' : 'Lousa Interativa'),
+            React.createElement('span', {style:{fontSize:'10px', background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:12}}, connected ? 'Ao vivo' : 'Conectando...')
           )
+        ),
+        React.createElement('div', {style:{flex:1, position:'relative', background:'#fff'}},
+          React.createElement(Tldraw, { onMount: onMount }) // 🚀 Inicialização puramente Nativa
+        )
       );
     }
 
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
   </script>
-</body>
-</html>
