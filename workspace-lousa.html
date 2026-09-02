@@ -3,243 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Lousa Interativa v13</title>
+  <title>Lousa Interativa</title>
   <style>
-    *,*::before,*::after{box-sizing:border-box}
-    html,body,#root{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#fff}
-    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
-    #waiting-overlay.hidden{display:none !important}
-    .badge{font-size:10px;padding:3px 8px;border-radius:12px}
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #fff; font-family: Inter, system-ui, sans-serif; }
+    /* 🚀 Cimentamos as paredes para as ferramentas não sumirem */
+    .tldraw-wrapper { position: absolute; top: 45px; left: 0; right: 0; bottom: 0; }
   </style>
 </head>
 <body>
-  <div id="waiting-overlay">
-    <div style="font-size:60px;">💤</div>
-    <h2 style="font-size:18px;margin:0;">Aguardando professor ativar a lousa</h2>
-    <p style="color:#94a3b8;font-size:13px;">Turma <span id="waiting-turma"></span></p>
-    <div style="background:#1e293b;padding:8px 16px;border-radius:20px;font-size:11px;">🔄 Verificando a cada 3s...</div>
-  </div>
-  <div id="root" style="width:100%;height:100%"></div>
+  <div id="root"></div>
+
   <script type="module">
     import React, { useEffect, useState, useCallback, useRef } from 'react';
     import ReactDOM from 'react-dom/client';
     import { Tldraw } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
 
-    class ErrorBoundary extends React.Component {
-      constructor(p){ super(p); this.state={hasError:false, error:null}; }
-      static getDerivedStateFromError(e){ return {hasError:true, error:e}; }
-      componentDidCatch(e,info){ console.error("🚨 Lousa crash:", e, info); }
-      render(){ 
-        if(this.state.hasError){
-          return React.createElement('div',{style:{padding:30,color:'#c0392b',background:'#fdf2f2',height:'100vh',display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',textAlign:'center'}},
-            React.createElement('div',{style:{fontSize:50}},'🚨'),
-            React.createElement('h2',null,'Lousa com erro'),
-            React.createElement('pre',{style:{fontSize:12,background:'#fff',padding:10,borderRadius:8, maxWidth:'90%', overflow:'auto'}}, this.state.error?.toString()),
-            React.createElement('button',{onClick:()=>location.reload(), style:{marginTop:15, padding:'8px 16px', borderRadius:8, border:0, background:'#0F172A', color:'#fff'}},'Recarregar')
-          );
-        }
-        return this.props.children;
-      }
-    }
-
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
     const roomId = params.get('room') || 'global';
     const initialLocked = params.get('locked') === 'true';
 
-    const overlay = document.getElementById('waiting-overlay');
-    const waitingTurma = document.getElementById('waiting-turma');
-    if(waitingTurma) waitingTurma.textContent = roomId;
-
-    let isAllowed = role !== 'aluno';
-    async function checkAccess(){
-      if(role !== 'aluno'){ if(overlay) overlay.classList.add('hidden'); return true; }
-      try{
-        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`, {credentials:'include'});
-        const data = await res.json();
-        console.log('[LOUSA v13 GUARD]', data);
-        if(data?.success && data.ativa){ 
-          isAllowed = true; 
-          if(overlay) overlay.classList.add('hidden'); 
-          return { allowed:true, recursos: !!data.recursos };
-        } else {
-          isAllowed = false;
-          if(overlay) overlay.classList.remove('hidden');
-          return { allowed:false, recursos:false };
-        }
-      }catch(e){ 
-        console.warn('guard erro', e);
-        if(overlay) overlay.classList.add('hidden');
-        return { allowed:true, recursos:true };
-      }
-    }
-
-    function App(){
+    function App() {
       const [editor, setEditor] = useState(null);
-      const [connected, setConnected] = useState(false);
+      
+      // 🚀 1. GESTÃO DE ACESSO BLINDADA NO REACT
+      const [isAllowed, setIsAllowed] = useState(role !== 'aluno');
       const [dynamicLocked, setDynamicLocked] = useState(initialLocked);
+      const [connected, setConnected] = useState(false);
+      
       const isRemoteUpdateRef = useRef(false);
       const lastSavedRef = useRef(0);
-      const lastCountRef = useRef(0);
 
-      // Lock via postMessage do pai
-      useEffect(()=>{
-        const onMsg = (e)=>{
-          if(e.data?.type === 'LOCK_STATE'){
-            console.log('[LOUSA v13] LOCK_STATE recebido:', e.data.locked);
-            setDynamicLocked(!!e.data.locked);
-          }
-          if(e.data?.type === 'RELOAD_DADOS'){
-            console.log('[LOUSA v13] RELOAD_DADOS recebido');
-            if(window._loadCloud) window._loadCloud();
-          }
-        };
-        window.addEventListener('message', onMsg);
-        return ()=> window.removeEventListener('message', onMsg);
-      },[]);
-
-      // Atualiza readonly quando lock muda
-      useEffect(()=>{
-        if(editor){
-          editor.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
-          console.log('[LOUSA v13] readonly =', role==='aluno' && dynamicLocked);
-        }
-      },[editor, dynamicLocked]);
-
-      const onMount = useCallback((ed)=>{
-        console.log('[LOUSA v13] editor mounted, role=', role, 'initialLocked=', initialLocked);
-        setEditor(ed);
-        ed.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
-
-        const loadCloud = async () => {
-          try{
-            // Só carrega se permitido
-            const access = await checkAccess();
-            if(role==='aluno' && !access.allowed){
-              console.log('[LOUSA v13] Não permitido, não carrega dados');
-              setConnected(true);
-              return;
-            }
-            if(access && typeof access.recursos !== 'undefined'){
-              setDynamicLocked(!access.recursos);
-            }
-
-            const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
+      useEffect(() => {
+        if (role !== 'aluno') return;
+        const checkAccess = async () => {
+          try {
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
             const data = await res.json();
-            if(data?.success && data.records && data.records.length>0){
-              const shapesOnly = data.records.filter(r => r.typeName==='shape' || r.typeName==='binding' || r.typeName==='asset');
-              if(shapesOnly.length>0){
-                console.log('[LOUSA v13] Carregando', shapesOnly.length, 'shapes');
-                isRemoteUpdateRef.current = true;
-                ed.store.mergeRemoteChanges(()=>{
-                  try{ ed.store.put(shapesOnly); lastCountRef.current = shapesOnly.length; }catch(e){ console.warn('put', e); }
-                });
-                isRemoteUpdateRef.current = false;
-              }
+            if (data?.success && data.ativa) {
+              setIsAllowed(true);
+              if (typeof data.recursos !== 'undefined') setDynamicLocked(!data.recursos);
+            } else {
+              setIsAllowed(false);
             }
-          }catch(e){ console.warn('loadCloud', e); } finally { setConnected(true); }
+          } catch (e) {
+            // Em caso de falha de rede leve, não mudamos o estado para não causar interrupções
+          }
         };
+        checkAccess();
+        const inv = setInterval(checkAccess, 3000);
+        return () => clearInterval(inv);
+      }, [roomId]);
 
-        window._loadCloud = loadCloud;
-        loadCloud();
-
-        // Salva só shapes, debounce 700ms
-        ed.store.listen((entry)=>{
-          if(entry.source!=='user') return;
-          if(isRemoteUpdateRef.current) return;
-          if(role==='aluno' && dynamicLocked) return;
-
-          const now = Date.now();
-          if(now - lastSavedRef.current < 700) return;
-          lastSavedRef.current = now;
-
-          const all = ed.store.allRecords();
-          const shapes = [];
-          for(const r of all){
-            if(r.typeName==='shape' || r.typeName==='binding' || r.typeName==='asset') shapes.push(r);
-          }
-          if(shapes.length===lastCountRef.current && shapes.length<1) return;
-          lastCountRef.current = shapes.length;
-
-          console.log('[LOUSA v13] Salvando', shapes.length, 'shapes');
-          fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-            method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ records: shapes })
-          }).catch(()=>{});
-        }, {scope:'document', source:'user'});
-
-      }, [dynamicLocked]);
-
-      // Polling + SSE para aluno
-      useEffect(()=>{
-        if(role!=='aluno') return;
-
-        const poll = setInterval(async()=>{
-          if(!isAllowed) {
-            const acc = await checkAccess();
-            if(!acc.allowed) return;
-            if(typeof acc.recursos !== 'undefined') setDynamicLocked(!acc.recursos);
-          }
-          if(window._loadCloud) window._loadCloud();
-        }, 2000);
-
-        let es = null;
-        try{
-          let escolaId='DEFAULT';
-          try{ escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')||'{}').escolaId || 'DEFAULT'; }catch{}
-          es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-          es.onmessage = (ev)=>{
-            try{
-              const data = JSON.parse(ev.data);
-              if(data.type==='LOUSA_STATUS_CHANGED' && (data.turmaId===roomId || data.turmaNome===roomId || data.turmaId==='global')){
-                console.log('[LOUSA v13 SSE] status', data);
-                if(!data.ativa){
-                  isAllowed=false;
-                  if(overlay) overlay.classList.remove('hidden');
-                } else {
-                  isAllowed=true;
-                  if(overlay) overlay.classList.add('hidden');
-                  setDynamicLocked(!data.recursos);
-                }
-              }
-              if(data.type==='LOUSA_DADOS_CHANGED' && (data.turmaId===roomId)){
-                if(window._loadCloud) window._loadCloud();
-              }
-            }catch{}
+      // 🚀 2. COMANDOS SILENCIOSOS (Cadeado do Professor)
+      useEffect(() => {
+          const handleMsg = (e) => { 
+              if (e.data?.type === 'LOCK_STATE') setDynamicLocked(e.data.locked); 
           };
-        }catch(e){}
+          window.addEventListener('message', handleMsg);
+          return () => window.removeEventListener('message', handleMsg);
+      }, []);
 
-        return ()=>{ clearInterval(poll); if(es) try{ es.close(); }catch{} };
-      },[roomId]);
-
-      // Guarda inicial para professor
-      useEffect(()=>{ 
-        const t = setInterval(checkAccess, 3000);
-        checkAccess().then(acc=>{
-          if(acc && typeof acc.recursos !== 'undefined' && role==='aluno'){
-            setDynamicLocked(!acc.recursos);
+      // 🚀 3. ATUALIZA A CANETA (Lápis Trancado/Destrancado)
+      useEffect(() => {
+          if (editor) {
+              editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
           }
-        });
-        return ()=> clearInterval(t);
-      },[]);
+      }, [editor, dynamicLocked]);
 
-      const isLocked = role==='aluno' && dynamicLocked;
+      // 🚀 4. INICIALIZAÇÃO E SINCRONIZAÇÃO
+      const onMount = useCallback((ed) => {
+          setEditor(ed);
+          ed.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
 
-      return React.createElement(ErrorBoundary,null,
-        React.createElement('div',{style:{width:'100vw',height:'100vh',display:'flex',flexDirection:'column',background:'#fff'}},
-          React.createElement('div',{style:{height:44,background:'#0F172A',color:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 12px',flexShrink:0}},
-            React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
-              React.createElement('span',null,'🖍️'),
-              React.createElement('span',{style:{fontWeight:600,fontSize:12}}, isLocked ? 'Lousa (Somente Leitura)' : 'Lousa Interativa'),
-              React.createElement('span',{style:{fontSize:9,background:connected?'rgba(34,197,94,0.2)':'rgba(251,191,36,0.2)',color:connected?'#86efac':'#fde68a',padding:'2px 6px',borderRadius:10}}, connected?'Ao vivo':'Conectando')
-            ),
-            React.createElement('div',{style:{fontSize:9,opacity:0.4}}, `v13 ${role} ${isLocked?'🔒':''}`)
+          const carregarNuvem = async () => {
+              try {
+                  const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
+                  const data = await res.json();
+                  if (data?.records && data.records.length > 0) {
+                      const shapesOnly = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
+                      isRemoteUpdateRef.current = true;
+                      ed.store.mergeRemoteChanges(() => {
+                          try { ed.store.put(shapesOnly); } catch(e){}
+                      });
+                      isRemoteUpdateRef.current = false;
+                  }
+                  setConnected(true);
+              } catch(e) {}
+          };
+
+          // Carrega inicialmente para todos
+          carregarNuvem();
+          window._carregarNuvemLocal = carregarNuvem;
+
+          // ⚠️ Professor grava! Aluno trancado NÃO grava.
+          ed.store.listen((entry) => {
+              if (entry.source !== 'user') return;
+              if (isRemoteUpdateRef.current) return;
+              if (role === 'aluno' && dynamicLocked) return; 
+
+              const now = Date.now();
+              if (now - lastSavedRef.current < 600) return; // Debounce otimizado
+              lastSavedRef.current = now;
+
+              const records = ed.store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
+              
+              fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+                  method: 'PUT', headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ records })
+              }).catch(()=>{});
+
+          }, { scope: 'document', source: 'user' });
+
+      }, [dynamicLocked, roomId]);
+
+      // 🚀 5. TÚNEL SSE - APENAS O ALUNO ESCUTA (Para não crashar o Professor)
+      useEffect(() => {
+          let escolaId = 'DEFAULT';
+          try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
+          
+          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+          es.onmessage = (event) => {
+              try {
+                  const data = JSON.parse(event.data);
+                  if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
+                      if (role === 'aluno' && window._carregarNuvemLocal) {
+                          window._carregarNuvemLocal();
+                      }
+                  }
+              } catch(e){}
+          };
+          
+          // Polling de segurança (Apenas para o aluno)
+          let interval;
+          if (role === 'aluno') {
+             interval = setInterval(() => { if (window._carregarNuvemLocal) window._carregarNuvemLocal(); }, 4000);
+          }
+
+          return () => { es.close(); if(interval) clearInterval(interval); };
+      }, [roomId]);
+
+      // =======================================================
+      // 🎨 RENDERIZAÇÃO INTELIGENTE
+      // =======================================================
+      
+      // TELA DE BLOQUEIO ABSOLUTO (O ALUNO NÃO VÊ A LOUSA)
+      if (!isAllowed) {
+          return React.createElement('div', {style:{position:'fixed',inset:0,background:'#0f172a',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:'20px',textAlign:'center',padding:'20px', zIndex:999999}},
+              React.createElement('div', {style:{fontSize:'60px', filter:'grayscale(100%) opacity(0.5)', animation:'pulse 2s infinite'}}, '⏳'),
+              React.createElement('h2', {style:{fontSize:'22px', margin:'0 0 10px 0'}}, 'A lousa surgirá em instantes'),
+              React.createElement('p', {style:{color:'#94a3b8', fontSize:'14px'}}, 'Aguardando o professor ativar a sala.'),
+              React.createElement('div', {style:{background:'rgba(255,255,255,0.1)', padding:'8px 16px', borderRadius:'20px', fontSize:'12px', fontWeight:'bold'}}, '🔄 Conectado ao servidor')
+          );
+      }
+
+      // LOUSA DIGITAL
+      const isLocked = role === 'aluno' && dynamicLocked;
+
+      return React.createElement('div', {style:{width:'100%', height:'100%', display:'flex', flexDirection:'column'}},
+          React.createElement('div', {style:{height:'45px', background:'#0F172A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 15px', flexShrink:0}},
+              React.createElement('div', {style:{display:'flex', alignItems:'center', gap:'10px'}},
+                  React.createElement('span', {style:{fontSize:'18px'}}, '🖍️'),
+                  React.createElement('span', {style:{fontWeight:600, fontSize:'14px'}}, isLocked ? 'Lousa (Modo Leitura)' : 'Lousa Interativa'),
+                  React.createElement('span', {style:{fontSize:'10px', background: connected ? 'rgba(34,197,94,0.2)' : 'rgba(251,191,36,0.2)', color: connected ? '#86efac' : '#fde68a', padding:'3px 8px', borderRadius:'12px'}}, connected ? 'Ao vivo' : 'Conectando...')
+              )
           ),
-          React.createElement('div',{style:{flex:1,position:'relative',minHeight:0}},
-            React.createElement(Tldraw,{onMount:onMount})
+          React.createElement('div', {className:'tldraw-wrapper'},
+              React.createElement(Tldraw, { onMount: onMount })
           )
-        )
       );
     }
 
