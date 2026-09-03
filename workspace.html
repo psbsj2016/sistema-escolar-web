@@ -643,32 +643,18 @@
                 <div id="ws-prof-menu-encontros" style="display: none; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px;">
                     
                     <div id="ws-cartao-lousa-prof" class="ws-card" style="border-left: 4px solid #14B8A6; grid-column: 1 / -1; padding: 20px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
-                            <div style="flex: 1; min-width: 250px;">
-                                <h3 style="margin:0 0 5px 0; color:#0F172A; display:flex; align-items:center; gap:8px;">
-                                    <span style="font-size:24px;">🖍</span> Painel da Lousa Digital
-                                </h3>
-                                <label style="font-size:12px; font-weight:bold; color:#555; display:block; margin-bottom:5px;">Selecionar Turma</label>
-                                <select id="ws-prof-turma-lousa" style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; background: #f8fafc; font-weight: bold; color: #475569; width: 100%; max-width: 300px; cursor: pointer;">
-                                    <option value="global">🌍 Público Geral</option>
-                                </select>
-                                <div id="ws-lousa-prof-status" style="font-size:11px; color:#64748b; font-weight:600; margin-top:8px;">⚪ Aguardando ação</div>
-                            </div>
-                            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-                                <button onclick="(()=>{const s=document.getElementById('ws-prof-turma-lousa');const tid=s?s.value:'global';Workspace.Avaliacoes.abrirLousaProfessor(tid);})()" class="ws-btn" style="background:#0F172A; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
-                                    1. Abrir o Meu Quadro
-                                </button>
-                                <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('ativar')" class="ws-btn" style="background:#3498db; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
-                                    👁 2. Ativar Visualização
-                                </button>
-                                <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('liberar')" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
-                                    🔓 3. Liberar Recursos
-                                </button>
-                                <button onclick="Workspace.Avaliacoes.enviarComandoLousaDireto('desativar')" class="ws-btn" style="background:#e74c3c; color:#fff; border-radius:8px; font-weight:bold; font-size:12px;">
-                                    🛑 Encerrar Lousa
-                                </button>
-                            </div>
-                        </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+        <div style="flex: 1; min-width: 250px;">
+            <h3 style="margin:0 0 5px 0; color:#0F172A; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:24px;">🖍</span> Painel da Lousa Digital
+            </h3>
+            <p style="font-size:13px; color:#64748b; margin:0;">Acesse a sua lousa e controle a projeção e as ferramentas da turma diretamente na barra superior.</p>
+        </div>
+        <button onclick="Workspace.Avaliacoes.abrirLousaProfessor('global')" class="ws-btn" style="background:#14B8A6; color:#fff; border-radius:8px; font-weight:bold; font-size:14px; padding: 12px 25px;">
+            Acessar Lousa e Recursos
+        </button>
+    </div>
+</div>
                     </div>
 
                     <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #fafafa;" onclick="Workspace.Avaliacoes.abrirNovaOnline()">
@@ -1087,47 +1073,49 @@
         });
     </script>
 
-    
-
-<!-- 🎨 MODAL LOUSA PROFESSOR EMBUTIDA -->
+<!-- 🎨 MODAL LOUSA PROFESSOR (CENTRAL DE COMANDOS) -->
 <div id="ws-modal-lousa-prof" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
-  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10;">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <div style="font-size:26px;">🖍️</div>
-      <div>
-        <div style="font-weight:700; font-size:16px;">A Minha Lousa - <span id="ws-prof-lousa-turma-label" style="color:#3498db;">Turma</span></div>
-        <div style="font-size:12px; color:#94a3b8;"><span id="ws-prof-lousa-status">Ao vivo</span></div>
+  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10; overflow-x: auto;">
+    <div style="display:flex; align-items:center; gap:20px; white-space: nowrap;">
+      <div style="display:flex; align-items:center; gap:10px;">
+         <div style="font-size:26px;">🖍️</div>
+         <div style="font-weight:700; font-size:16px;">A Minha Lousa</div>
+      </div>
+      <!-- Barra de Controle Mestre -->
+      <div style="display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px;">
+          <select id="ws-prof-turma-lousa-modal" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; color: #333;" onchange="Workspace.Avaliacoes.mudarTurmaLousaIframe(this.value)">
+              <option value="global">🌍 Público Geral</option>
+          </select>
+          <button id="btn-toggle-view" onclick="Workspace.Avaliacoes.toggleVisualizacao()" class="ws-btn" style="background:#3498db; color:#fff; border-radius:6px; font-weight:bold; font-size:12px; padding: 6px 12px;">👁 Ativar Visualização</button>
+          <button id="btn-toggle-resources" onclick="Workspace.Avaliacoes.toggleRecursos()" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:6px; font-weight:bold; font-size:12px; padding: 6px 12px; display: none;">🔓 Liberar Recursos</button>
+          <span id="ws-prof-lousa-status-modal" style="font-size:12px; color:#94a3b8; font-weight:bold; margin-left: 5px;">⚪ Inativa</span>
       </div>
     </div>
-    <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="width:45px; height:45px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:24px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'">✕</button>
+    <!-- Encerrar Sessão Geral e Voltar -->
+    <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="width:40px; height:40px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:20px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center; flex-shrink: 0;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'" title="Encerrar Projeção e Fechar">✕</button>
   </div>
   <div style="flex:1; position:relative; background:#fff;">
     <iframe id="iframeLousaProf" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
 
-<!-- 🎨 MODAL LOUSA ALUNO -->
+<!-- 🎨 MODAL LOUSA ALUNO (REDUZIDO A UMA BARRA) -->
 <div id="ws-modal-lousa-aluno-fullscreen" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
   <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10;">
     <div style="display:flex; align-items:center; gap:12px;">
       <div style="font-size:26px;">🖍️</div>
       <div>
         <div style="font-weight:700; font-size:16px;">Lousa Interativa</div>
-        <div id="statusLousaText" style="font-size:12px; color:#94a3b8;">💤 Aguardando conexão...</div>
+        <div id="statusLousaText" style="font-size:12px; color:#10B981; font-weight:bold;">Ao vivo</div>
       </div>
     </div>
-    <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="width:45px; height:45px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:24px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'">✕</button>
+    <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="width:40px; height:40px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:20px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'">✕</button>
   </div>
-  <div id="ws-lousa-aluno-placeholder" style="flex:1; display:flex; align-items:center; justify-content:center; color:#94a3b8; text-align:center; padding:20px;">
-    <div>
-      <div style="font-size:70px; margin-bottom:15px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
-      <h2 style="color:white; font-size:22px; margin:0 0 10px 0; font-family:'Poppins', sans-serif;">A lousa surgirá em instantes</h2>
-      <div style="font-size:13px; background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; display:inline-block; font-weight:bold;">🔄 Conectado com o servidor</div>
-    </div>
-  </div>
-  <div id="ws-lousa-aluno-ativa" style="flex:1; display:none; position:relative; background:#fff;">
+  <!-- O React App interno tratará de mostrar o fundo preto até ser liberado -->
+  <div style="flex:1; position:relative; background:#fff;">
     <iframe id="iframeLousaAluno" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
+
 </body>
 </html>

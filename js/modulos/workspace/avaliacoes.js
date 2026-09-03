@@ -2442,102 +2442,118 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     
 // ========================================================================
-// 🖍 LOUSA DIGITAL - MOTOR V13 - TEMPO REAL + INTERATIVO (CORRIGIDO)
-// ========================================================================
+    // 🖍 LOUSA DIGITAL - MOTOR DE COMANDOS CENTRALIZADO
+    // ========================================================================
     lousaInterval: null,
     _lousaSSE: null,
-    _ultimoEstadoLousa: { ativa: false, recursos: false, turmaId: null },
-    falhasConexaoLousa: 0,
+    _lousaProfState: { ativa: false, recursos: false, turmaId: 'global' },
 
     carregarTurmasLousaProf: async () => {
-        const sel = document.getElementById('ws-prof-turma-lousa');
-        if(!sel) return;
+        const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
-            sel.innerHTML = '<option value="global">🌍 Público Geral</option>';
-            if(turmas && turmas.length > 0) {
-                turmas.forEach(t => {
-                    const id = t.id || t._id || '';
-                    const nome = t.nome || t.name || id;
-                    if(id) sel.innerHTML += `<option value="${id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(nome) : nome}</option>`;
-                });
-            }
-        } catch(e){ console.warn('Erro carregar turmas lousa', e); }
+            const optionsHtml = '<option value="global">🌍 Público Geral</option>' + 
+                (turmas || []).map(t => `<option value="${t.id || t._id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
+            if(selModal) selModal.innerHTML = optionsHtml;
+        } catch(e) {}
     },
 
-    enviarComandoLousaDireto: async (tipo) => {
-        const sel = document.getElementById('ws-prof-turma-lousa');
-        const statusEl = document.getElementById('ws-lousa-prof-status');
-        if (!sel) return alert('Selecione a turma');
-        const turmaId = String(sel.value || 'global').trim();
+    abrirLousaProfessor: async (turmaId = 'global') => {
+        const tid = String(turmaId).trim();
+        Workspace.Avaliacoes._lousaProfState.turmaId = tid;
         
-        const payload = { turmaId, escolaId: Workspace.usuario?.escolaId || 'DEFAULT' };
-        if(tipo === 'ativar') { payload.ativa = true; payload.recursos = false; }
-        if(tipo === 'liberar') { payload.ativa = true; payload.recursos = true; }
-        if(tipo === 'desativar') { payload.ativa = false; payload.recursos = false; }
-        
-        if(statusEl) statusEl.textContent = '⏳ Sincronizando...';
-        if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Sincronizando com a turma... ⏳', 'info');
-        
-        try {
-            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', payload);
-            
-            // ✅ NOVO: Avisa o iframe do professor também
-            const iframeProf = document.getElementById('iframeLousaProf');
-            if(iframeProf && iframeProf.contentWindow){
-                try{
-                    iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: !payload.recursos }, '*');
-                }catch{}
-            }
-
-            if(statusEl){
-                if(tipo === 'ativar') statusEl.innerHTML = '🟡 Visualização ativa - Alunos vendo';
-                if(tipo === 'liberar') statusEl.innerHTML = '🟢 Liberada - Alunos podem desenhar';
-                if(tipo === 'desativar') statusEl.innerHTML = '⚪ Encerrada';
-            }
-            if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('✅ Comando ativado!', 'success');
-        } catch(e) {
-            if(statusEl) statusEl.textContent = '❌ Erro ao sincronizar';
-            if(window.Workspace.mostrarAvisoLocal) Workspace.mostrarAvisoLocal('Erro ao sincronizar.', 'error');
-        }
-    },
-
-    abrirLousaProfessor: (turmaId) => {
-        const tid = String(turmaId || 'global').trim();
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
-        const label = document.getElementById('ws-prof-lousa-turma-label');
-        const status = document.getElementById('ws-prof-lousa-status');
+        const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         
-        // 🚀 O AJUSTE: Pegar o nome real da turma no seletor!
-        const sel = document.getElementById('ws-prof-turma-lousa');
-        let nomeVisual = tid === 'global' ? 'Público Geral' : tid;
-        if (sel && sel.selectedIndex >= 0) {
-            // Limpa os emojis do nome para ficar elegante
-            nomeVisual = sel.options[sel.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '');
-        }
+        if (selModal) selModal.value = tid;
+        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`);
         
-        if(label) label.textContent = nomeVisual;
-        if(status) status.textContent = 'Ao vivo';
-        
-        if(iframe){
-            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`);
-        }
-        if(modal){
+        if (modal) {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
+        await Workspace.Avaliacoes.atualizarBotoesLousaProf(tid);
     },
 
-    fecharLousaProfessor: () => {
+    mudarTurmaLousaIframe: async (turmaId) => {
+        Workspace.Avaliacoes._lousaProfState.turmaId = turmaId;
+        const iframe = document.getElementById('iframeLousaProf');
+        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(turmaId)}`);
+        await Workspace.Avaliacoes.atualizarBotoesLousaProf(turmaId);
+    },
+
+    atualizarBotoesLousaProf: async (turmaId) => {
+        try {
+            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+            Workspace.Avaliacoes._lousaProfState.ativa = res?.success && res?.ativa;
+            Workspace.Avaliacoes._lousaProfState.recursos = res?.success && res?.recursos;
+            Workspace.Avaliacoes.renderizarBotoesLousaProf();
+        } catch(e) {}
+    },
+
+    renderizarBotoesLousaProf: () => {
+        const btnView = document.getElementById('btn-toggle-view');
+        const btnRecursos = document.getElementById('btn-toggle-resources');
+        const statusText = document.getElementById('ws-prof-lousa-status-modal');
+        const { ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
+
+        if (btnView) {
+            btnView.innerHTML = ativa ? '🚫 Desativar Visualização' : '👁 Ativar Visualização';
+            btnView.style.background = ativa ? '#e74c3c' : '#3498db';
+        }
+        if (btnRecursos) {
+            btnRecursos.innerHTML = recursos ? '🔒 Bloquear Ferramentas' : '🔓 Liberar Ferramentas';
+            btnRecursos.style.background = recursos ? '#e74c3c' : '#F59E0B';
+            btnRecursos.style.display = ativa ? 'inline-block' : 'none'; 
+        }
+        if (statusText) {
+            statusText.innerHTML = ativa ? (recursos ? '🟢 Online e Liberada' : '🟡 Apenas Leitura') : '⚪ Inativa';
+            statusText.style.color = ativa ? (recursos ? '#10B981' : '#F59E0B') : '#94a3b8';
+        }
+    },
+
+    toggleVisualizacao: async () => {
+        const { turmaId, ativa } = Workspace.Avaliacoes._lousaProfState;
+        const novoEstado = !ativa;
+        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstado, false);
+    },
+
+    toggleRecursos: async () => {
+        const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
+        if (!ativa) return; 
+        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, ativa, !recursos);
+    },
+
+    enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
+        const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+        try {
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
+            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
+            Workspace.Avaliacoes.renderizarBotoesLousaProf();
+            
+            // Avisa a lousa do professor internamente
+            const iframeProf = document.getElementById('iframeLousaProf');
+            if(iframeProf && iframeProf.contentWindow){
+                try{ iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: !recursos }, '*'); }catch{}
+            }
+        } catch(e) { Workspace.mostrarAviso('Erro ao comunicar com a Lousa.', 'error'); }
+    },
+
+    fecharLousaProfessor: async () => {
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
+        
+        // Encerra a projeção atual da turma ativada como segurança
+        const { turmaId } = Workspace.Avaliacoes._lousaProfState;
+        if (turmaId) await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, false, false);
+
         if(modal) modal.style.display = 'none';
         if(iframe) iframe.setAttribute('src', '');
         document.body.style.overflow = '';
     },
 
-    abrirLousaFullscreen: async () => {
+    abrirLousaFullscreen: () => {
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
         if (modal) {
             modal.style.display = 'flex';
@@ -2545,7 +2561,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
         Workspace.Avaliacoes.iniciarMonitorLousa(true);
         if (Workspace.usuario?.id) {
-            try { await Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
+            try { Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
         }
     },
 
@@ -2555,116 +2571,42 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.iniciarMonitorLousa(false);
         const iframe = document.getElementById('iframeLousaAluno');
         if (iframe) iframe.setAttribute('src', ''); 
-        Workspace.Avaliacoes._ultimoEstadoLousa = { ativa: false, recursos: false, turmaId: null };
     },
 
     iniciarMonitorLousa: async (ligar) => {
         if (Workspace.Avaliacoes.lousaInterval) { clearInterval(Workspace.Avaliacoes.lousaInterval); Workspace.Avaliacoes.lousaInterval = null; }
-        if (Workspace.Avaliacoes._lousaSSE) { try { Workspace.Avaliacoes._lousaSSE.close(); } catch(e){} Workspace.Avaliacoes._lousaSSE = null; }
         if (!ligar) return; 
 
-        Workspace.Avaliacoes.falhasConexaoLousa = 0; // Memória de falhas
         let turmaId = 'global';
-        let turmaIdNome = null;
         try {
             if (Workspace.usuario) {
                 let t = Workspace.usuario.turma || Workspace.usuario.turmaId || Workspace.usuario.turmas?.[0] || 'global';
-                if(Array.isArray(t)) t = t[0];
-                if(typeof t === 'object' && t !== null){
-                    turmaId = String(t.id || t._id || '').trim() || 'global';
-                    turmaIdNome = String(t.nome || t.name || '').trim() || null;
-                    if(turmaId === 'global' && turmaIdNome) turmaId = turmaIdNome;
-                } else {
-                    turmaId = String(t).trim() || 'global';
-                }
+                turmaId = String(t.id || t._id || t).trim();
             }
+        } catch(e) {}
+
+        const iframe = document.getElementById('iframeLousaAluno');
+        const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}`;
+        if (iframe && iframe.getAttribute('src') !== urlMagica) {
+            iframe.setAttribute('src', urlMagica);
+        }
+
+        const verificarBadge = async () => {
             try {
-                const turmas = await Workspace.api('/turmas', 'GET');
-                if(turmas && Array.isArray(turmas)){
-                    const match = turmas.find(x => String(x.id) === turmaId || String(x.nome) === turmaId || String(x.nome) === turmaIdNome || String(x.id) === turmaIdNome);
-                    if(match){ turmaIdNome = match.nome; turmaId = String(match.id); }
-                }
-            } catch(e){}
-        } catch(e){ turmaId = 'global'; }
-
-        const aplicarEstadoNaTela = (ativa, recursos) => {
-            const placeholder = document.getElementById('ws-lousa-aluno-placeholder');
-            const iframeDiv = document.getElementById('ws-lousa-aluno-ativa');
-            const iframe = document.getElementById('iframeLousaAluno');
-            const statusText = document.getElementById('statusLousaText');
-            
-            const locked = !recursos;
-
-            if (ativa) {
-                if (placeholder) placeholder.style.display = 'none';
-                if (iframeDiv) iframeDiv.style.display = 'block';
-                
-                const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&locked=${locked}`;
-                
-                if (iframe) {
-                    const cur = iframe.getAttribute('src') || '';
-                    if(!cur.includes(`room=${encodeURIComponent(turmaId)}`)) {
-                        iframe.setAttribute('src', urlMagica);
-                    } else {
-                        iframe.contentWindow.postMessage({ type: 'LOCK_STATE', locked: locked }, '*');
-                    }
-                }
+                const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+                const statusText = document.getElementById('statusLousaText');
                 if (statusText) {
-                    statusText.innerHTML = recursos ? '<span style="color:#10B981; font-weight:bold;">🟢 Desenho Liberado</span>' : '<span style="color:#F59E0B; font-weight:bold;">🟡 Visualização ao vivo (Somente Leitura)</span>';
-                }
-            } else {
-                if (placeholder) placeholder.style.display = 'flex';
-                if (iframeDiv) iframeDiv.style.display = 'none';
-                if (iframe) iframe.setAttribute('src', '');
-                if (statusText) statusText.innerHTML = '💤 Aguardando o Professor ativar...';
-            }
-        };
-
-        const verificarStatus = async () => {
-            try {
-                let res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-                if((!res?.ativa) && turmaIdNome && turmaIdNome !== turmaId){
-                    const resNome = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaIdNome)}`, 'GET');
-                    if(resNome?.ativa) res = resNome;
-                }
-                
-                if (res?.success) {
-                    Workspace.Avaliacoes.falhasConexaoLousa = 0; 
-                    if (res.ativa) {
-                        aplicarEstadoNaTela(res.ativa, res.recursos);
+                    if (res?.success && res.ativa) {
+                        statusText.innerHTML = res.recursos ? '<span style="color:#10B981;">🟢 Desenho Liberado</span>' : '<span style="color:#F59E0B;">🟡 Modo Leitura</span>';
                     } else {
-                        // 🚀 A CORREÇÃO: Removemos a pesquisa da turma Global! Se a turma do aluno não está ativa, bloqueia.
-                        aplicarEstadoNaTela(false, false);
+                        statusText.innerHTML = '<span style="color:#94a3b8;">⚪ Aguardando Liberação</span>';
                     }
-                } else {
-                    throw new Error("Falha na API");
                 }
-            } catch(e) { 
-                Workspace.Avaliacoes.falhasConexaoLousa++;
-                if (Workspace.Avaliacoes.falhasConexaoLousa >= 3) {
-                    aplicarEstadoNaTela(false, false); 
-                }
-            }
+            } catch(e) {}
         };
-
-        verificarStatus(); 
-        Workspace.Avaliacoes.lousaInterval = setInterval(verificarStatus, 3000);
-
-        try {
-            const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-            const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-            Workspace.Avaliacoes._lousaSSE = es;
-            es.onmessage = (ev) => {
-                try {
-                    const data = JSON.parse(ev.data);
-                    if(data.type === 'LOUSA_STATUS_CHANGED' && (data.turmaId === turmaId || data.turmaId === 'global' || turmaId === 'global')){
-                        aplicarEstadoNaTela(data.ativa, data.recursos);
-                    }
-                } catch(e){}
-            };
-        } catch(e){}
+        verificarBadge();
+        Workspace.Avaliacoes.lousaInterval = setInterval(verificarBadge, 3000);
     }
-
 }); // <--- 🚀 ESTA LINHA FECHA O Object.assign E É MUITO IMPORTANTE!
 
 document.addEventListener('DOMContentLoaded', () => {
