@@ -1018,7 +1018,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-    renderGameQuiz(){
+  renderGameQuiz(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'quiz'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1026,7 +1026,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="font-size:22px;">${Workspace.escapeHTML(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
-                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px;">${Workspace.escapeHTML(o)}</button>`).join('')}
+                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
             </div>`;
     },
 
@@ -1038,7 +1038,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="color:#4F46E5;">${Workspace.escapeHTML(s.text)}</div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
-                ${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px;">${Workspace.escapeHTML(o)}</button>`).join('')}
+                ${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
             </div>`;
     },
 
@@ -1127,7 +1127,7 @@ Workspace.Ingles = {
         if(div) div.scrollTop = div.scrollHeight;
     },
 
-    renderGameMinimalPairs(){
+   renderGameMinimalPairs(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'minimal'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1141,8 +1141,8 @@ Workspace.Ingles = {
                 <div style="font-size:48px; margin-bottom:16px;">👄</div>
                 <button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:16px 40px; border-radius:30px; border:none; cursor:pointer; font-size:16px; box-shadow:0 4px 12px rgba(79,70,229,0.3);">🎧 Ouvir Palavra</button>
                 <div style="display:flex; gap:16px; justify-content:center; margin-top:30px;">
-                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.a}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${this.desafioAtualObj.a}</button>
-                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.b}" class="ws-btn" style="flex:1; background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800;">${this.desafioAtualObj.b}</button>
+                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.a}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${this.desafioAtualObj.a}</button>
+                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.b}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${this.desafioAtualObj.b}</button>
                 </div>
             </div>`;
     },
