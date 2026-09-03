@@ -662,27 +662,33 @@ Workspace.Ingles = {
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
             }
             if(a === 'verificar-wordSpark'){
-    if(!inputGenerico.toLowerCase().includes((cur.word||'').toLowerCase())){
-        this.mostrarAvisoLocal(`Use a palavra "${cur.word}" na frase!`, 'warning');
-        return;
-    }
-    b.disabled = true; b.innerText = '🧙 Avaliando com IA...';
-    Workspace.api('/ingles/jogo/avaliar','POST',{
-        jogo: 'wordSpark',
-        palavra: cur.word,
-        fraseAluno: inputGenerico
-    }).then(r=>{
-        b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
-        if(r.success && r.correto){
-            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px;"><b>✅ ${r.feedback}</b><br>📝 ${Workspace.escapeHTML(r.correcao)}</div>`;
-            setTimeout(()=>{ this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(r.coins||50); }, 1500);
-        } else {
-            this.registrarErro(cur,'word');
-            document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px;">❌ ${Workspace.escapeHTML(r.feedback || 'Tente melhorar')}<br>💡 Correto: ${Workspace.escapeHTML(r.correcao || '')}</div>`;
-            setTimeout(()=> this.falhaGenerica(), 2000);
-        }
-    });
-}
+                // 🚀 Removemos o bloqueio rígido do '.includes()'. A IA é que vai julgar se a palavra (ou conjugação) foi usada!
+                if(inputGenerico.length < 2){
+                    this.mostrarAvisoLocal(`Escreva uma frase válida!`, 'warning');
+                    return;
+                }
+                b.disabled = true; b.innerText = '🧙 Avaliando com IA...';
+                
+                // Nota: O prefixo /workspace é necessário na rota dependendo da configuração do servidor
+                Workspace.api('/workspace/ingles/jogo/avaliar','POST',{
+                    jogo: 'wordSpark',
+                    palavra: cur.word,
+                    fraseAluno: inputGenerico
+                }).then(r=>{
+                    b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
+                    if(r.success && r.correto){
+                        document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${r.feedback}</b><br>📝 ${Workspace.escapeHTML(r.correcao)}</div>`;
+                        setTimeout(()=>{ this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(r.coins||50); }, 2000);
+                    } else {
+                        this.registrarErro(cur,'word');
+                        document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;">❌ ${Workspace.escapeHTML(r.feedback || 'Tente melhorar')}<br>💡 Sugestão: ${Workspace.escapeHTML(r.correcao || '')}</div>`;
+                        setTimeout(()=> this.falhaGenerica(), 3000);
+                    }
+                }).catch(()=>{
+                    b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
+                    this.mostrarAvisoLocal('Erro de ligação.', 'error');
+                });
+            }
             if(a === 'verificar-listen'){
                 const sim = this.similaridade(listen, cur.phrase);
                 if(sim>=0.9){ this.updateSRS(cur.id,'phrase',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
