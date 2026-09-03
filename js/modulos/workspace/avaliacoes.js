@@ -2442,7 +2442,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     
 // ========================================================================
-    // 🖍 LOUSA DIGITAL - MOTOR DE COMANDOS CENTRALIZADO
+    // 🖍 LOUSA DIGITAL - MOTOR PREMIUM V14 - (CONTROLO CENTRAL)
     // ========================================================================
     lousaInterval: null,
     _lousaSSE: null,
@@ -2460,7 +2460,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     abrirLousaProfessor: async (turmaId = 'global') => {
         const tid = String(turmaId).trim();
-        Workspace.Avaliacoes._lousaProfState.turmaId = tid;
+        
+        // 🚀 O SEGREDO 1: Força o encerramento da Lousa na Base de Dados ao entrar
+        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { 
+            turmaId: tid, ativa: false, recursos: false, escolaId: Workspace.usuario?.escolaId || 'DEFAULT' 
+        });
+        
+        Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
         
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
@@ -2473,23 +2479,20 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
-        await Workspace.Avaliacoes.atualizarBotoesLousaProf(tid);
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
     mudarTurmaLousaIframe: async (turmaId) => {
-        Workspace.Avaliacoes._lousaProfState.turmaId = turmaId;
+        // 🚀 O SEGREDO 2: Força o encerramento quando o professor muda de turma!
+        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { 
+            turmaId: turmaId, ativa: false, recursos: false, escolaId: Workspace.usuario?.escolaId || 'DEFAULT' 
+        });
+
+        Workspace.Avaliacoes._lousaProfState = { turmaId: turmaId, ativa: false, recursos: false };
+        
         const iframe = document.getElementById('iframeLousaProf');
         if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(turmaId)}`);
-        await Workspace.Avaliacoes.atualizarBotoesLousaProf(turmaId);
-    },
-
-    atualizarBotoesLousaProf: async (turmaId) => {
-        try {
-            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-            Workspace.Avaliacoes._lousaProfState.ativa = res?.success && res?.ativa;
-            Workspace.Avaliacoes._lousaProfState.recursos = res?.success && res?.recursos;
-            Workspace.Avaliacoes.renderizarBotoesLousaProf();
-        } catch(e) {}
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
     renderizarBotoesLousaProf: () => {
@@ -2532,7 +2535,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
             Workspace.Avaliacoes.renderizarBotoesLousaProf();
             
-            // Avisa a lousa do professor internamente
+            // Avisa o iframe do professor para trancar/destrancar as suas próprias ferramentas
             const iframeProf = document.getElementById('iframeLousaProf');
             if(iframeProf && iframeProf.contentWindow){
                 try{ iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: !recursos }, '*'); }catch{}
@@ -2544,7 +2547,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
         
-        // Encerra a projeção atual da turma ativada como segurança
+        // Encerra a projeção atual como medida de segurança!
         const { turmaId } = Workspace.Avaliacoes._lousaProfState;
         if (turmaId) await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, false, false);
 
@@ -2560,9 +2563,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             document.body.style.overflow = 'hidden'; 
         }
         Workspace.Avaliacoes.iniciarMonitorLousa(true);
-        if (Workspace.usuario?.id) {
-            try { Workspace.api('/workspace/sala/workspace-lousa/aguardando', 'POST', { usuarioId: Workspace.usuario.id }); } catch(e){}
-        }
     },
 
     fecharLousaFullscreen: () => {
@@ -2574,7 +2574,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     },
 
     iniciarMonitorLousa: async (ligar) => {
-        if (Workspace.Avaliacoes.lousaInterval) { clearInterval(Workspace.Avaliacoes.lousaInterval); Workspace.Avaliacoes.lousaInterval = null; }
         if (!ligar) return; 
 
         let turmaId = 'global';
@@ -2585,27 +2584,12 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             }
         } catch(e) {}
 
+        // Injeta a Lousa. A tela preta de espera agora é renderizada 100% pelo React!
         const iframe = document.getElementById('iframeLousaAluno');
         const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}`;
         if (iframe && iframe.getAttribute('src') !== urlMagica) {
             iframe.setAttribute('src', urlMagica);
         }
-
-        const verificarBadge = async () => {
-            try {
-                const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-                const statusText = document.getElementById('statusLousaText');
-                if (statusText) {
-                    if (res?.success && res.ativa) {
-                        statusText.innerHTML = res.recursos ? '<span style="color:#10B981;">🟢 Desenho Liberado</span>' : '<span style="color:#F59E0B;">🟡 Modo Leitura</span>';
-                    } else {
-                        statusText.innerHTML = '<span style="color:#94a3b8;">⚪ Aguardando Liberação</span>';
-                    }
-                }
-            } catch(e) {}
-        };
-        verificarBadge();
-        Workspace.Avaliacoes.lousaInterval = setInterval(verificarBadge, 3000);
     }
 }); // <--- 🚀 ESTA LINHA FECHA O Object.assign E É MUITO IMPORTANTE!
 
