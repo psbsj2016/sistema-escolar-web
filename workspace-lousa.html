@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Lousa Interativa Premium</title>
+  <title>Lousa Interativa Tldraw</title>
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body,#root{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#fff;}
-    /* Ecrã Negro do Aluno */
+    html,body,#root{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#f8fafc;}
+    /* 🚀 A Tela Preta Estilizada (Prisão do Aluno) */
     .tela-preta { position:fixed; inset:0; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; text-align:center; padding:20px; z-index: 999999; }
   </style>
 </head>
@@ -26,14 +26,15 @@
 
     function App() {
         const [editor, setEditor] = useState(null);
-        // O Aluno nasce Bloqueado e sem Ver a tela!
+        // O Aluno nasce Bloqueado (false), o Professor nasce Livre (true)
         const [isAllowed, setIsAllowed] = useState(role !== 'aluno');
         const [dynamicLocked, setDynamicLocked] = useState(true);
         const isRemoteUpdateRef = useRef(false);
         const saveTimeoutRef = useRef(null);
 
-        // 1. Radar de Segurança Contínuo (Polling)
+        // 1. Polling de Segurança para o Aluno
         useEffect(() => {
+            if (role !== 'aluno') return;
             const check = async () => {
                 try {
                     const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
@@ -44,14 +45,14 @@
                     } else {
                         setIsAllowed(false);
                     }
-                } catch(e) { }
+                } catch(e) {}
             };
             check();
-            const inv = setInterval(check, 2500); // Verifica a cada 2.5 seg
+            const inv = setInterval(check, 2500);
             return () => clearInterval(inv);
         }, [roomId]);
 
-        // 2. Ouve Comandos em Tempo Real (SSE -> PostMessage)
+        // 2. Ouve Comandos em Tempo Real (Painel do Professor)
         useEffect(() => {
             const onMsg = (e) => {
                 if (e.data?.type === 'LOCK_STATE') setDynamicLocked(!!e.data.locked);
@@ -61,36 +62,33 @@
             return () => window.removeEventListener('message', onMsg);
         }, []);
 
-        // 3. Aplica o Cadeado às Ferramentas 
+        // 3. Aplica o Cadeado às Ferramentas
         useEffect(() => {
             if (editor) editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
         }, [editor, dynamicLocked]);
 
-        // 4. Arranque da Lousa e Carregamento da Nuvem
+        // 4. Arranque da Tldraw e Sincronização Perfeita
         const onMount = useCallback((ed) => {
             setEditor(ed);
             ed.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
 
             const loadCloud = async () => {
-                if (role === 'aluno' && !isAllowed) return; 
+                if(role === 'aluno' && !isAllowed) return; 
                 try {
                     const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
                     const data = await res.json();
                     if (data?.success && data.records?.length > 0) {
-                        const shapes = data.records.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
-                        if (shapes.length > 0) {
-                            isRemoteUpdateRef.current = true;
-                            ed.store.mergeRemoteChanges(() => { try { ed.store.put(shapes); } catch(e){} });
-                            isRemoteUpdateRef.current = false;
-                        }
+                        isRemoteUpdateRef.current = true;
+                        ed.store.mergeRemoteChanges(() => { try { ed.store.put(data.records); } catch(e){} });
+                        isRemoteUpdateRef.current = false;
                     }
                 } catch(e) {}
             };
 
             window._loadCloud = loadCloud;
-            loadCloud(); // Carrega assim que a tela abre
+            loadCloud();
 
-            // 5. Motor de Gravação Otimizado
+            // Gravação Otimizada para o Servidor
             ed.store.listen((entry) => {
                 if (entry.source !== 'user') return;
                 if (isRemoteUpdateRef.current) return;
@@ -98,19 +96,17 @@
 
                 clearTimeout(saveTimeoutRef.current);
                 saveTimeoutRef.current = setTimeout(() => {
-                    const all = ed.store.allRecords();
-                    const shapes = all.filter(r => r.typeName === 'shape' || r.typeName === 'binding' || r.typeName === 'asset');
-                    
+                    const records = ed.store.allRecords();
                     fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
                         method: 'PUT', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ records: shapes })
+                        body: JSON.stringify({ records })
                     }).catch(()=>{});
-                }, 300); // Envia o desenho 300ms após a mão parar
+                }, 350); 
             }, { scope: 'document', source: 'user' });
             
         }, [dynamicLocked, isAllowed, roomId]);
 
-        // 6. O Túnel SSE - Avisa quando a nuvem foi atualizada
+        // 5. Escutador SSE (Para o aluno ver o risco em tempo real)
         useEffect(() => {
             let escolaId = 'DEFAULT';
             try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
@@ -126,22 +122,21 @@
             return () => es.close();
         }, [roomId]);
 
-        // =====================================================================
-        // 🎨 O ECRÃ (TELA PRETA PARA ALUNO, TLDRAW PARA PROFESSOR E ALUNO LIBERADO)
-        // =====================================================================
+        // ===============================================
+        // 🎨 INTERFACES VISUAIS (TELA PRETA VS TLDRAW)
+        // ===============================================
         if (!isAllowed) {
-            // 🚀 ESTE É O BLOQUEIO ABSOLUTO! Se 'isAllowed' for false, o tldraw NEM EXISTE!
             return React.createElement('div', { className: 'tela-preta' },
                 React.createElement('div', {style:{fontSize:'60px', filter:'grayscale(100%) opacity(0.5)', animation:'pulse 2s infinite'}}, '⏳'),
                 React.createElement('h2', {style:{fontSize:'22px', margin:'0 0 10px 0'}}, 'Aguardando Liberação...'),
-                React.createElement('p', {style:{color:'#94a3b8', fontSize:'14px', maxWidth:'350px'}}, 'A lousa encontra-se fechada. Ela será exibida aqui assim que o professor ativar a sala.'),
-                React.createElement('div', {style:{background:'rgba(255,255,255,0.1)', padding:'8px 16px', borderRadius:'20px', fontSize:'12px', fontWeight:'bold'}}, '🔄 Sincronizando com o servidor')
+                React.createElement('p', {style:{color:'#94a3b8', fontSize:'14px', maxWidth:'350px'}}, 'O professor está a preparar a lousa. Ela será exibida aqui assim que for ativada no painel de controlo.'),
+                React.createElement('div', {style:{background:'rgba(255,255,255,0.1)', padding:'8px 16px', borderRadius:'20px', fontSize:'12px', fontWeight:'bold'}}, '🔄 Conectado de forma segura')
             );
         }
 
-        // TLDRAW COMPLETO (100% DA TELA) - Todas as ferramentas nativas prontas a usar!
-        return React.createElement('div', {style:{width:'100vw', height:'100vh', position:'relative'}},
-            React.createElement(Tldraw, { onMount: onMount })
+        // TLDRAW COMPLETO E LIMPO (Ocupa 100% do iframe, as ferramentas ficam na base)
+        return React.createElement('div', {style:{position: 'absolute', inset: 0}},
+            React.createElement(Tldraw, { onMount: onMount, inferDarkMode: false })
         );
     }
 

@@ -2495,20 +2495,20 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
-    renderizarBotoesLousaProf: () => {
+ renderizarBotoesLousaProf: () => {
         const btnView = document.getElementById('btn-toggle-view');
         const btnRecursos = document.getElementById('btn-toggle-resources');
         const statusText = document.getElementById('ws-prof-lousa-status-modal');
         const { ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
 
         if (btnView) {
-            btnView.innerHTML = ativa ? '🚫 Desativar Visualização' : '👁 Ativar Visualização';
-            btnView.style.background = ativa ? '#e74c3c' : '#3498db';
+            btnView.innerHTML = ativa ? '🚫 Desativar Visualização' : '👁️ Ativar Visualização';
+            btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
         }
         if (btnRecursos) {
-            btnRecursos.innerHTML = recursos ? '🔒 Bloquear Ferramentas' : '🔓 Liberar Ferramentas';
-            btnRecursos.style.background = recursos ? '#e74c3c' : '#F59E0B';
-            btnRecursos.style.display = ativa ? 'inline-block' : 'none'; 
+            btnRecursos.innerHTML = recursos ? '🔒 Bloquear Recursos' : '🔓 Liberar Recursos';
+            btnRecursos.style.background = recursos ? '#e74c3c' : '#f59e0b';
+            btnRecursos.style.display = ativa ? 'inline-flex' : 'none'; 
         }
         if (statusText) {
             statusText.innerHTML = ativa ? (recursos ? '🟢 Online e Liberada' : '🟡 Apenas Leitura') : '⚪ Inativa';

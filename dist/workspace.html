@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-OkqpFqY_.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-Dmf3kpbc.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -1077,36 +1077,48 @@
 
 <!-- 🎨 MODAL LOUSA PROFESSOR (CENTRAL DE COMANDOS PREMIUM) -->
 <div id="ws-modal-lousa-prof" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
-  <div style="height:60px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 15px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10; overflow-x: auto;">
+  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index:10; overflow-x: auto;">
+    
     <div style="display:flex; align-items:center; gap:20px; white-space: nowrap;">
-      <div style="display:flex; align-items:center; gap:8px;">
-         <div style="font-size:22px;">🖍️</div>
-         <div style="font-weight:700; font-size:15px; letter-spacing: 0.5px;">A Minha Lousa</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+         <div style="font-size:24px; background: rgba(255,255,255,0.1); padding: 6px; border-radius: 10px;">🖍️</div>
+         <div style="font-weight:800; font-size:16px; letter-spacing: 0.5px;">A Minha Lousa</div>
       </div>
-      <!-- Barra de Controle Mestre -->
-      <div style="display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 8px;">
-          <select id="ws-prof-turma-lousa-modal" style="padding: 6px 10px; border-radius: 6px; border: none; font-size: 13px; font-weight: bold; cursor: pointer; outline: none; color: #1e293b;" onchange="Workspace.Avaliacoes.mudarTurmaLousaIframe(this.value)">
+      
+      <!-- 🚀 BARRA DE CONTROLE MESTRE -->
+      <div style="display:flex; align-items:center; gap:12px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 10px; border: 1px solid #334155;">
+          <select id="ws-prof-turma-lousa-modal" style="padding: 8px 15px; border-radius: 8px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; outline: none; background: #0f172a; color: white;" onchange="Workspace.Avaliacoes.mudarTurmaLousaIframe(this.value)">
               <option value="global">🌍 Público Geral</option>
           </select>
-          <button id="btn-toggle-view" onclick="Workspace.Avaliacoes.toggleVisualizacao()" class="ws-btn" style="background:#3498db; color:#fff; border-radius:6px; font-weight:bold; font-size:12px; padding: 6px 12px;">👁 Ativar Visualização</button>
-          <button id="btn-toggle-resources" onclick="Workspace.Avaliacoes.toggleRecursos()" class="ws-btn" style="background:#F59E0B; color:#fff; border-radius:6px; font-weight:bold; font-size:12px; padding: 6px 12px; display: none;">🔓 Liberar Recursos</button>
-          <span id="ws-prof-lousa-status-modal" style="font-size:12px; color:#94a3b8; font-weight:bold; margin-left: 5px;">⚪ Inativa</span>
+          <button id="btn-toggle-view" onclick="Workspace.Avaliacoes.toggleVisualizacao()" style="background:#3b82f6; color:#fff; border:none; border-radius:8px; font-weight:700; font-size:13px; padding: 10px 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;">👁️ Ativar Visualização</button>
+          <button id="btn-toggle-resources" onclick="Workspace.Avaliacoes.toggleRecursos()" style="background:#f59e0b; color:#fff; border:none; border-radius:8px; font-weight:700; font-size:13px; padding: 10px 16px; cursor: pointer; transition: 0.2s; display: none; align-items: center; gap: 6px;">🔓 Liberar Recursos</button>
+          <span id="ws-prof-lousa-status-modal" style="font-size:11px; color:#94a3b8; font-weight:700; margin-left: 5px; text-transform: uppercase;">⚪ Inativa</span>
       </div>
     </div>
-    <!-- Encerrar Sessão Geral e Voltar -->
-    <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="width:36px; height:36px; border-radius:50%; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:18px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center; flex-shrink: 0;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" onmouseout="this.style.background='rgba(231, 76, 60, 0.15)'; this.style.color='#e74c3c'" title="Encerrar Projeção e Voltar">✕</button>
+    
+    <button onclick="Workspace.Avaliacoes.fecharLousaProfessor()" style="background:#e74c3c; border:none; color:white; font-size:18px; cursor:pointer; font-weight:bold; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; transition:0.2s; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);" title="Encerrar Projeção">✕</button>
   </div>
-  <!-- O iframe da Lousa do Professor -->
-  <div style="flex:1; position:relative; background:#fff;">
-    <iframe id="iframeLousaProf" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
+  
+  <div style="flex:1; position:relative; background:#f8fafc;">
+    <!-- 🚀 O iframe Absoluto garante que o Tldraw nunca encolhe as ferramentas -->
+    <iframe id="iframeLousaProf" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
 
-<!-- 🎨 MODAL LOUSA ALUNO (O ECRÃ PRETO INICIAL É AQUI!) -->
+<!-- 🎨 MODAL LOUSA ALUNO -->
 <div id="ws-modal-lousa-aluno-fullscreen" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column;">
-  <!-- O Aluno não tem barra! Apenas o ecrã do React onde a Mágica acontece -->
-  <div style="flex:1; position:relative; background:#fff;">
-    <iframe id="iframeLousaAluno" src="" style="width:100%; height:100%; border:0; display:block;"></iframe>
+  <div style="height:65px; background:#1e293b; color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 20px; flex-shrink:0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index:10;">
+    <div style="display:flex; align-items:center; gap:15px;">
+      <div style="font-size:24px; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 8px;">🖍️</div>
+      <div>
+        <div style="font-weight:800; font-size:16px;">Lousa Interativa</div>
+        <div id="statusLousaText" style="font-size:12px; color:#10B981; font-weight:bold;">🟢 Ao vivo</div>
+      </div>
+    </div>
+    <button onclick="Workspace.Avaliacoes.fecharLousaFullscreen()" style="width:40px; height:40px; border-radius:12px; background:rgba(231, 76, 60, 0.15); border:none; color:#e74c3c; font-size:20px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);" title="Sair da Lousa">✕</button>
+  </div>
+  <div style="flex:1; position:relative; background:#f8fafc;">
+    <iframe id="iframeLousaAluno" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0; display:block;"></iframe>
   </div>
 </div>
 
