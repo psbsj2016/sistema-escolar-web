@@ -721,7 +721,8 @@ Workspace.Ingles = {
                 
                 const gameId = b.dataset.game;
 
-                if(['contextRole','answerQuest','sentenceShuffle'].includes(gameId)){
+                // 🚀 ADICIONADO: 'questionMaker' entra no clube da IA!
+                if(['contextRole', 'answerQuest', 'sentenceShuffle', 'questionMaker'].includes(gameId)){
                     b.disabled = true; b.innerText = '🤖 A IA está a avaliar a sua resposta...';
                     
                     const payload = {
