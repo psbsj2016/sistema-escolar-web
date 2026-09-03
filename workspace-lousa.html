@@ -3,378 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Lousa Interativa Nativa</title>
+  <title>Lousa Interativa v14</title>
   <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background: #f8fafc; touch-action: none; }
-    
-    /* 🚀 1. O BLOQUEIO ABSOLUTO (O aluno nasce no escuro) */
-    #waiting-overlay { position: fixed; inset: 0; z-index: 999999; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
-    #waiting-overlay.hidden { display: none !important; }
-
-    /* 🚀 2. ESTRUTURA PRINCIPAL DA LOUSA */
-    #lousa-container { display: none; width: 100%; height: 100%; flex-direction: column; background: #fff; }
-    
-    #lousa-header { height: 50px; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 10; }
-    #status-badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; background: rgba(251,191,36,0.2); color: #fde68a; font-weight: bold; }
-    #status-badge.conectado { background: rgba(34,197,94,0.2); color: #86efac; }
-    
-    #canvas-wrapper { flex: 1; position: relative; width: 100%; height: 100%; background: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; }
-    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
-
-    /* 🚀 3. PAINEL DE FERRAMENTAS PREMIUM (Estilo iPad no rodapé) */
-    #tools-panel { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 25px; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; gap: 20px; align-items: center; z-index: 20; border: 1px solid #e2e8f0; }
-    #tools-panel.hidden { display: none !important; }
-    
-    .tool-group { display: flex; gap: 10px; align-items: center; border-right: 2px solid #f1f5f9; padding-right: 20px; }
-    .tool-group:last-child { border-right: none; padding-right: 0; }
-
-    /* Botões de Ação (Caneta/Borracha) */
-    .icon-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 12px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-    .icon-btn:hover { background: #f0f2f5; }
-    .icon-btn.active { background: #e0f2fe; color: #2563eb; transform: scale(1.1); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
-
-    /* Cores */
-    .color-btn { width: 28px; height: 28px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .color-btn.active { border-color: #cbd5e1; transform: scale(1.2); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    
-    /* Espessura */
-    .size-slider { width: 100px; cursor: pointer; accent-color: #3498db; }
-
-    .action-btn { background: #fee2e2; color: #e74c3c; border: none; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-    .action-btn:hover { background: #fecaca; transform: translateY(-2px); }
-
-    @media (max-width: 768px) {
-        #tools-panel { bottom: 15px; padding: 10px 15px; gap: 10px; width: 95%; max-width: 400px; justify-content: space-between; overflow-x: auto; border-radius: 20px; }
-        .tool-group { padding-right: 10px; gap: 8px; }
-        .size-slider { width: 60px; }
-        .action-btn span { display: none; }
-    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body,#root{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#fff}
+    #waiting-overlay{position:fixed;inset:0;z-index:999999;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;text-align:center;padding:20px}
+    #waiting-overlay.hidden{display:none !important}
   </style>
 </head>
 <body>
-
-  <!-- 1. TELA DE ESPERA -->
+  <!-- TELA DE BLOQUEIO ABSOLUTO -->
   <div id="waiting-overlay">
-    <div style="font-size: 70px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
-    <h2 style="font-size: 24px; margin: 0 0 10px 0;">A lousa surgirá em instantes</h2>
-    <p style="color: #94a3b8; font-size: 15px;">Aguardando o professor ativar a sala: <strong id="waiting-turma" style="color: #3498db;"></strong></p>
-    <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 10px;">🔄 Sincronizando...</div>
+    <div style="font-size:60px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
+    <h2 style="font-size:22px;margin:0;">Lousa inativa no momento</h2>
+    <p style="color:#94a3b8;font-size:14px; max-width: 350px;">A lousa encontra-se fechada. Ela será exibida aqui assim que for ativada no painel de controlo.</p>
+    <div style="background:#1e293b;padding:8px 16px;border-radius:20px;font-size:12px; font-weight: bold;">🔄 Sincronizando com o servidor...</div>
   </div>
+  
+  <div id="root" style="width:100%; height:100%;"></div>
 
-  <!-- 2. A LOUSA DIGITAL -->
-  <div id="lousa-container">
-    <div id="lousa-header">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 22px;">🖍️</span>
-        <span id="lousa-title" style="font-weight: 700; font-size: 15px;">Lousa Interativa</span>
-      </div>
-      <span id="status-badge">Aguardando Conexão...</span>
-    </div>
-    
-    <div id="canvas-wrapper">
-      
-      <!-- 3. BARRA DE FERRAMENTAS INFERIOR -->
-      <div id="tools-panel" class="hidden">
-        
-        <!-- Lápis e Borracha -->
-        <div class="tool-group">
-          <button class="icon-btn active" id="btn-pen" title="Caneta">✏️</button>
-          <button class="icon-btn" id="btn-eraser" title="Borracha">🧽</button>
-        </div>
+  <script type="module">
+    import React, { useEffect, useState, useCallback, useRef } from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { Tldraw } from '@tldraw/tldraw';
+    import '@tldraw/tldraw/tldraw.css';
 
-        <!-- Paleta de Cores -->
-        <div class="tool-group" id="color-picker">
-          <div class="color-btn active" style="background: #0f172a;" data-color="#0f172a"></div>
-          <div class="color-btn" style="background: #e74c3c;" data-color="#e74c3c"></div>
-          <div class="color-btn" style="background: #3b82f6;" data-color="#3b82f6"></div>
-          <div class="color-btn" style="background: #10b981;" data-color="#10b981"></div>
-          <div class="color-btn" style="background: #f59e0b;" data-color="#f59e0b"></div>
-        </div>
+    class ErrorBoundary extends React.Component {
+      constructor(p){ super(p); this.state={hasError:false, error:null}; }
+      static getDerivedStateFromError(e){ return {hasError:true, error:e}; }
+      componentDidCatch(e,info){ console.error("🚨 Lousa crash:", e, info); }
+      render(){ 
+        if(this.state.hasError){
+          return React.createElement('div',{style:{padding:30,color:'#c0392b',background:'#fdf2f2',height:'100vh',display:'flex',flexDirection:'column',justifyContent:'center',alignItems:'center',textAlign:'center'}},
+            React.createElement('div',{style:{fontSize:50, marginBottom: 15}},'🚨'),
+            React.createElement('h2',{style:{margin:'0 0 10px 0'}},'Lousa com erro'),
+            React.createElement('pre',{style:{fontSize:12,background:'#fff',padding:10,borderRadius:8, maxWidth:'90%', overflow:'auto'}}, this.state.error?.toString()),
+            React.createElement('button',{onClick:()=>location.reload(), style:{marginTop:15, padding:'8px 16px', borderRadius:8, border:0, background:'#0F172A', color:'#fff', cursor:'pointer'}},'Recarregar')
+          );
+        }
+        return this.props.children;
+      }
+    }
 
-        <!-- Espessura e Desfazer -->
-        <div class="tool-group">
-          <input type="range" id="size-slider" class="size-slider" min="1" max="25" value="4" title="Espessura do Lápis">
-          <button class="icon-btn" id="btn-undo" title="Desfazer">↩️</button>
-        </div>
-
-        <!-- Limpar -->
-        <div class="tool-group" style="border: none;">
-          <button class="action-btn" onclick="limparQuadro()">🗑️ <span>Limpar</span></button>
-        </div>
-
-      </div>
-      
-      <!-- O Quadro Negro (Canvas) -->
-      <canvas id="board"></canvas>
-    </div>
-  </div>
-
-  <script>
-    // =========================================================================
-    // 1. VARIÁVEIS DE ESTADO E SEGURANÇA
-    // =========================================================================
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
     const roomId = params.get('room') || 'global';
-    let isLocked = params.get('locked') === 'true'; 
-    
-    document.getElementById('waiting-turma').innerText = roomId === 'global' ? 'Geral' : roomId;
+    const initialLocked = params.get('locked') === 'true';
 
     const overlay = document.getElementById('waiting-overlay');
-    const lousaContainer = document.getElementById('lousa-container');
-    const toolsPanel = document.getElementById('tools-panel');
-    const titleEl = document.getElementById('lousa-title');
-    const badgeEl = document.getElementById('status-badge');
-    
-    const canvas = document.getElementById('board');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    
-    let desenhando = false;
-    let modoAtual = 'pen'; // 'pen' ou 'eraser'
-    let corAtual = '#0f172a';
-    let espessuraAtual = 4;
-    
-    let records = []; // A nossa "nuvem" de traços
-    let tracoAtual = null;
 
-    // Se o professor entra, o ecrã preto SOME logo no arranque!
-    if (role !== 'aluno') {
-        overlay.classList.add('hidden');
-        lousaContainer.style.display = 'flex';
-        toolsPanel.classList.remove('hidden');
-    }
-
-    // =========================================================================
-    // 2. MOTOR DE RENDERIZAÇÃO E PINTURA (ALTA PERFORMANCE)
-    // =========================================================================
-    function redimensionarCanvas() {
-        // Redimensiona o canvas baseando-se no tamanho da tela do dispositivo
-        canvas.width = canvas.parentElement.clientWidth;
-        canvas.height = canvas.parentElement.clientHeight;
-        desenharTodosOsTracos();
-    }
-    window.addEventListener('resize', redimensionarCanvas);
-
-    function obterCoordenadas(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-
-    function iniciarDesenho(e) {
-        if (role === 'aluno' && isLocked) return;
-        desenhando = true;
-        const { x, y } = obterCoordenadas(e);
-
-        const corFinal = modoAtual === 'eraser' ? '#ffffff' : corAtual;
-        const espessuraFinal = modoAtual === 'eraser' ? espessuraAtual * 3 : espessuraAtual;
-
-        tracoAtual = { cor: corFinal, tamanho: espessuraFinal, pontos: [{x, y}] };
-        
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = corFinal;
-        ctx.lineWidth = espessuraFinal;
-    }
-
-    function desenhar(e) {
-        if (!desenhando || !tracoAtual) return;
-        e.preventDefault(); // Impede o scroll na tela do telemóvel ao riscar
-        
-        const { x, y } = obterCoordenadas(e);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        tracoAtual.pontos.push({x, y});
-    }
-
-    function pararDesenho() {
-        if (!desenhando) return;
-        desenhando = false;
-        
-        if (tracoAtual && tracoAtual.pontos.length > 0) {
-            records.push(tracoAtual);
-            salvarNaNuvem(); 
+    // 🚀 BLOQUEIO ABSOLUTO PARA TODOS (Professor e Aluno)
+    async function checkAccess(){
+      try{
+        const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`, {credentials:'include'});
+        const data = await res.json();
+        if(data?.success && data.ativa){ 
+          if(overlay) overlay.classList.add('hidden'); 
+          return { allowed:true, recursos: !!data.recursos };
+        } else {
+          if(overlay) overlay.classList.remove('hidden');
+          return { allowed:false, recursos:false };
         }
-        tracoAtual = null;
+      }catch(e){ 
+        return { allowed:false, recursos:false }; // Segurança máxima em caso de falha
+      }
     }
 
-    canvas.addEventListener('mousedown', iniciarDesenho);
-    canvas.addEventListener('mousemove', desenhar);
-    canvas.addEventListener('mouseup', pararDesenho);
-    canvas.addEventListener('mouseout', pararDesenho);
+    function App(){
+      const [editor, setEditor] = useState(null);
+      const [dynamicLocked, setDynamicLocked] = useState(initialLocked);
+      const isRemoteUpdateRef = useRef(false);
+      const saveTimeoutRef = useRef(null);
 
-    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
-    canvas.addEventListener('touchmove', desenhar, {passive: false});
-    canvas.addEventListener('touchend', pararDesenho);
+      // Ouve comandos do painel (Trancar/Destrancar Caneta)
+      useEffect(()=>{
+        const onMsg = (e)=>{
+          if(e.data?.type === 'LOCK_STATE') setDynamicLocked(!!e.data.locked);
+          if(e.data?.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud();
+        };
+        window.addEventListener('message', onMsg);
+        return ()=> window.removeEventListener('message', onMsg);
+      },[]);
 
-    function desenharTodosOsTracos() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        if (!records || records.length === 0) return;
-        
-        records.forEach(traco => {
-            if(!traco.pontos || traco.pontos.length === 0) return;
-            ctx.beginPath();
-            ctx.moveTo(traco.pontos[0].x, traco.pontos[0].y);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = traco.cor;
-            ctx.lineWidth = traco.tamanho;
-            
-            for(let i = 1; i < traco.pontos.length; i++) {
-                ctx.lineTo(traco.pontos[i].x, traco.pontos[i].y);
+      // Polling de segurança (A cada 2 segundos verifica se a lousa foi desligada)
+      useEffect(() => {
+        const poll = setInterval(async () => {
+            const acc = await checkAccess();
+            if (acc.allowed && typeof acc.recursos !== 'undefined' && role === 'aluno') {
+                setDynamicLocked(!acc.recursos);
             }
-            ctx.stroke();
-        });
-    }
+        }, 2000);
+        return () => clearInterval(poll);
+      }, []);
 
-    // =========================================================================
-    // 3. LÓGICA DA BARRA DE FERRAMENTAS PREMIUM
-    // =========================================================================
-    document.getElementById('btn-pen').addEventListener('click', function() {
-        modoAtual = 'pen';
-        this.classList.add('active');
-        document.getElementById('btn-eraser').classList.remove('active');
-    });
+      // Atualiza o bloqueio no ecrã
+      useEffect(()=>{
+        if(editor) editor.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
+      },[editor, dynamicLocked]);
 
-    document.getElementById('btn-eraser').addEventListener('click', function() {
-        modoAtual = 'eraser';
-        this.classList.add('active');
-        document.getElementById('btn-pen').classList.remove('active');
-    });
+      const onMount = useCallback((ed)=>{
+        setEditor(ed);
+        ed.updateInstanceState({ isReadonly: role==='aluno' && dynamicLocked });
 
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            if (modoAtual === 'eraser') document.getElementById('btn-pen').click(); // Volta p/ caneta
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            corAtual = btn.getAttribute('data-color');
-        });
-    });
+        const loadCloud = async () => {
+          try{
+            const access = await checkAccess();
+            if(!access.allowed) return; 
 
-    document.getElementById('size-slider').addEventListener('input', (e) => {
-        espessuraAtual = parseInt(e.target.value);
-    });
-
-    document.getElementById('btn-undo').addEventListener('click', () => {
-        if (records.length > 0) {
-            records.pop(); // Apaga o último traço
-            desenharTodosOsTracos();
-            salvarNaNuvem();
-        }
-    });
-
-    window.limparQuadro = function() {
-        records = [];
-        desenharTodosOsTracos();
-        salvarNaNuvem();
-    }
-
-    // =========================================================================
-    // 4. COMUNICAÇÃO COM O SERVIDOR (API & SSE TEMPO REAL)
-    // =========================================================================
-    function atualizarInterfaceLock() {
-        if (role === 'aluno' && isLocked) {
-            toolsPanel.classList.add('hidden');
-            titleEl.innerText = 'Lousa (Modo Leitura)';
-        } else if (role === 'aluno' && !isLocked) {
-            toolsPanel.classList.remove('hidden');
-            titleEl.innerText = 'Lousa Liberada ✍️';
-        }
-    }
-
-    // Apanha o clique do Professor no botão do Painel e Tranca/Destranca a Lousa!
-    window.addEventListener('message', (e) => {
-        if (e.data && e.data.type === 'LOCK_STATE') {
-            isLocked = e.data.locked;
-            atualizarInterfaceLock();
-        }
-    });
-
-    async function carregarDaNuvem() {
-        try {
-            const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {credentials:'include'});
             const data = await res.json();
-            if (data?.success && Array.isArray(data.records)) {
-                // Atualiza se houver alteração real (evita piscar o ecrã à toa)
-                if (JSON.stringify(records) !== JSON.stringify(data.records)) {
-                    records = data.records;
-                    desenharTodosOsTracos();
-                }
+            if(data?.success && data.records && data.records.length>0){
+              const shapesOnly = data.records.filter(r => r.typeName==='shape' || r.typeName==='binding' || r.typeName==='asset');
+              if(shapesOnly.length>0){
+                isRemoteUpdateRef.current = true;
+                ed.store.mergeRemoteChanges(()=>{
+                  try{ ed.store.put(shapesOnly); }catch(e){}
+                });
+                isRemoteUpdateRef.current = false;
+              }
             }
-            badgeEl.innerText = '🟢 Ao Vivo';
-            badgeEl.classList.add('conectado');
-        } catch(e) {}
+          }catch(e){ }
+        };
+
+        window._loadCloud = loadCloud;
+        loadCloud();
+
+        // 🚀 SALVAMENTO PERFEITO COM DEBOUNCE (Resolve o atraso nos traços)
+        ed.store.listen((entry)=>{
+          if(entry.source!=='user') return;
+          if(isRemoteUpdateRef.current) return;
+          if(role==='aluno' && dynamicLocked) return;
+
+          clearTimeout(saveTimeoutRef.current);
+          saveTimeoutRef.current = setTimeout(() => {
+              const all = ed.store.allRecords();
+              const shapes = all.filter(r => r.typeName==='shape' || r.typeName==='binding' || r.typeName==='asset');
+              
+              fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+                method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ records: shapes })
+              }).catch(()=>{});
+          }, 400); // Aguarda 400ms após o aluno/professor parar de mover o rato
+        }, {scope:'document', source:'user'});
+
+      }, [dynamicLocked]);
+
+      // 🚀 TÚNEL SSE DIRETO NO IFRAME (Garante a sincronização em tempo real para ambos)
+      useEffect(() => {
+          let escolaId = 'DEFAULT';
+          try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
+          
+          const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+          es.onmessage = (event) => {
+              try {
+                  const data = JSON.parse(event.data);
+                  if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
+                      if (window._loadCloud) window._loadCloud();
+                  }
+              } catch(e){}
+          };
+          return () => es.close();
+      }, []);
+
+      return React.createElement(ErrorBoundary, null,
+        // Barra interior duplicada foi removida. O Tldraw ocupa agora os 100% da tela.
+        React.createElement('div',{style:{flex:1, position:'relative', width:'100%', height:'100%'}},
+          React.createElement(Tldraw,{onMount:onMount})
+        )
+      );
     }
 
-    let timerEnvio = null;
-    function salvarNaNuvem() {
-        if (role === 'aluno' && isLocked) return;
-        
-        clearTimeout(timerEnvio);
-        timerEnvio = setTimeout(() => {
-            fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-                method: 'PUT', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ records: records })
-            }).catch(()=>{});
-        }, 300); // 🚀 O Debounce Perfeito
-    }
-
-    // =========================================================================
-    // 5. GESTÃO DE ACESSO DO ALUNO (O PORTEIRO DO OVERLAY PRETO)
-    // =========================================================================
-    async function checkAccess() {
-        if (role !== 'aluno') return; // Professor salta esta etapa
-        
-        try {
-            const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
-            const data = await res.json();
-            
-            if (data?.success && data.ativa) {
-                if (typeof data.recursos !== 'undefined') isLocked = !data.recursos;
-                
-                // Abre as cortinas
-                overlay.classList.add('hidden');
-                lousaContainer.style.display = 'flex';
-                
-                atualizarInterfaceLock();
-                // 🚀 MUITO IMPORTANTE: Redimensiona o canvas quando ele fica visível pela 1ª vez!
-                setTimeout(redimensionarCanvas, 100); 
-            } else {
-                // O Professor fechou a lousa. Desce a cortina preta!
-                overlay.classList.remove('hidden');
-                lousaContainer.style.display = 'none';
-            }
-        } catch(e) {}
-    }
-
-    // Arranque Principal
-    window.onload = () => {
-        redimensionarCanvas();
-        checkAccess();
-        setInterval(checkAccess, 4000); 
-        
-        carregarDaNuvem();
-
-        // 🚀 O TUNEL DE TEMPO REAL DO ALUNO!
-        if (role === 'aluno') {
-            let escolaId = 'DEFAULT';
-            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
-            
-            const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-            es.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
-                        carregarDaNuvem(); 
-                    }
-                } catch(e){}
-            };
-        }
-    };
+    // Arranca a aplicação só depois de verificar
+    checkAccess().then(() => {
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+    });
   </script>
 </body>
 </html>
