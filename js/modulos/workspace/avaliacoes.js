@@ -941,17 +941,23 @@ Object.assign(Workspace.Avaliacoes, {
         });
     },
 
-    setContextoProf: (contexto) => {
+   setContextoProf: (contexto) => {
         Workspace.Avaliacoes.contextoAtual = contexto;
         const ocultar = ['ws-prof-nova-escrita', 'ws-prof-nova-oral', 'ws-prof-nova-online', 'ws-prof-recebidas', 'ws-prof-gerir-lista-container', 'ws-prof-submenu-criar', 'ws-prof-submenu-gestao'];
         ocultar.forEach(id => { const el = document.getElementById(id); if(el) el.style.display = 'none'; });
         const titulo = document.getElementById('ws-titulo-painel-prof');
         const menuAvaliacoes = document.getElementById('ws-prof-menu-avaliacoes');
         const menuEncontros = document.getElementById('ws-prof-menu-encontros');
+        
         if (contexto === 'encontros') {
             if(titulo) titulo.innerHTML = '<span>🖥️ Painel do Professor: Sala de Acessos</span>';
             if(menuAvaliacoes) menuAvaliacoes.style.display = 'none';
             if(menuEncontros) menuEncontros.style.display = 'grid';
+            
+            // 🚀 CORREÇÃO: Obriga a lista de turmas da Lousa a carregar imediatamente!
+            if (Workspace.Avaliacoes.carregarTurmasLousaProf) {
+                Workspace.Avaliacoes.carregarTurmasLousaProf();
+            }
         } else {
             if(titulo) titulo.innerHTML = '<span>🎓 Painel do Professor: Avaliações</span>';
             if(menuEncontros) menuEncontros.style.display = 'none';

@@ -6,74 +6,103 @@
   <title>Lousa Interativa Nativa</title>
   <style>
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background: #ffffff; touch-action: none; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background: #f8fafc; touch-action: none; }
     
-    /* 1. TELA DE ESPERA DO ALUNO */
+    /* 🚀 1. O BLOQUEIO ABSOLUTO (O aluno nasce no escuro) */
     #waiting-overlay { position: fixed; inset: 0; z-index: 999999; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
     #waiting-overlay.hidden { display: none !important; }
 
-    /* 2. ESTRUTURA PRINCIPAL DA LOUSA */
-    #lousa-container { display: none; width: 100%; height: 100%; flex-direction: column; }
+    /* 🚀 2. ESTRUTURA PRINCIPAL DA LOUSA */
+    #lousa-container { display: none; width: 100%; height: 100%; flex-direction: column; background: #fff; }
     
-    /* Cabeçalho */
-    #lousa-header { height: 45px; background: #0F172A; color: #fff; display: flex; alignItems: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 10; }
-    #status-badge { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: rgba(251,191,36,0.2); color: #fde68a; }
+    #lousa-header { height: 50px; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 10; }
+    #status-badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; background: rgba(251,191,36,0.2); color: #fde68a; font-weight: bold; }
     #status-badge.conectado { background: rgba(34,197,94,0.2); color: #86efac; }
     
-    /* Área de Desenho e Ferramentas */
-    #canvas-wrapper { flex: 1; position: relative; width: 100%; height: 100%; background: #fff; }
+    #canvas-wrapper { flex: 1; position: relative; width: 100%; height: 100%; background: #ffffff; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 
-    /* 3. PAINEL DE FERRAMENTAS */
-    #tools-panel { position: absolute; top: 15px; left: 15px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 10px; z-index: 20; border: 1px solid #e2e8f0; }
+    /* 🚀 3. PAINEL DE FERRAMENTAS PREMIUM (Estilo iPad no rodapé) */
+    #tools-panel { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); background: white; padding: 12px 25px; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; gap: 20px; align-items: center; z-index: 20; border: 1px solid #e2e8f0; }
     #tools-panel.hidden { display: none !important; }
     
-    .tool-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
-    .color-btn { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
-    .color-btn.active { border-color: #333; transform: scale(1.1); }
-    
-    .size-btn { background: #f0f2f5; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: #475569; }
-    .size-btn.active { background: #3498db; color: white; }
+    .tool-group { display: flex; gap: 10px; align-items: center; border-right: 2px solid #f1f5f9; padding-right: 20px; }
+    .tool-group:last-child { border-right: none; padding-right: 0; }
 
-    .action-btn { background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    /* Botões de Ação (Caneta/Borracha) */
+    .icon-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 8px; border-radius: 12px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { background: #f0f2f5; }
+    .icon-btn.active { background: #e0f2fe; color: #2563eb; transform: scale(1.1); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); }
+
+    /* Cores */
+    .color-btn { width: 28px; height: 28px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .color-btn.active { border-color: #cbd5e1; transform: scale(1.2); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    
+    /* Espessura */
+    .size-slider { width: 100px; cursor: pointer; accent-color: #3498db; }
+
+    .action-btn { background: #fee2e2; color: #e74c3c; border: none; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
+    .action-btn:hover { background: #fecaca; transform: translateY(-2px); }
+
+    @media (max-width: 768px) {
+        #tools-panel { bottom: 15px; padding: 10px 15px; gap: 10px; width: 95%; max-width: 400px; justify-content: space-between; overflow-x: auto; border-radius: 20px; }
+        .tool-group { padding-right: 10px; gap: 8px; }
+        .size-slider { width: 60px; }
+        .action-btn span { display: none; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- TELA DE ESPERA PARA ALUNOS -->
+  <!-- 1. TELA DE ESPERA -->
   <div id="waiting-overlay">
-    <div style="font-size: 60px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
-    <h2 style="font-size: 22px; margin: 0 0 10px 0;">A lousa surgirá em instantes</h2>
-    <p style="color: #94a3b8; font-size: 14px;">Aguardando o professor ativar a sala: <span id="waiting-turma"></span></p>
-    <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold;">🔄 Conectado ao servidor</div>
+    <div style="font-size: 70px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
+    <h2 style="font-size: 24px; margin: 0 0 10px 0;">A lousa surgirá em instantes</h2>
+    <p style="color: #94a3b8; font-size: 15px;">Aguardando o professor ativar a sala: <strong id="waiting-turma" style="color: #3498db;"></strong></p>
+    <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-top: 10px;">🔄 Sincronizando...</div>
   </div>
 
-  <!-- LOUSA DIGITAL NATIVA -->
+  <!-- 2. A LOUSA DIGITAL -->
   <div id="lousa-container">
     <div id="lousa-header">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 18px;">🖍️</span>
-        <span id="lousa-title" style="font-weight: 600; font-size: 14px;">Lousa Interativa</span>
-        <span id="status-badge">Aguardando...</span>
+        <span style="font-size: 22px;">🖍️</span>
+        <span id="lousa-title" style="font-weight: 700; font-size: 15px;">Lousa Interativa</span>
       </div>
+      <span id="status-badge">Aguardando Conexão...</span>
     </div>
     
     <div id="canvas-wrapper">
-      <!-- Painel Flutuante de Ferramentas -->
+      
+      <!-- 3. BARRA DE FERRAMENTAS INFERIOR -->
       <div id="tools-panel" class="hidden">
-        <div class="tool-row" id="color-picker">
-          <div class="color-btn active" style="background: #2c3e50;" data-color="#2c3e50"></div>
+        
+        <!-- Lápis e Borracha -->
+        <div class="tool-group">
+          <button class="icon-btn active" id="btn-pen" title="Caneta">✏️</button>
+          <button class="icon-btn" id="btn-eraser" title="Borracha">🧽</button>
+        </div>
+
+        <!-- Paleta de Cores -->
+        <div class="tool-group" id="color-picker">
+          <div class="color-btn active" style="background: #0f172a;" data-color="#0f172a"></div>
           <div class="color-btn" style="background: #e74c3c;" data-color="#e74c3c"></div>
-          <div class="color-btn" style="background: #3498db;" data-color="#3498db"></div>
-          <div class="color-btn" style="background: #27ae60;" data-color="#27ae60"></div>
-          <div class="color-btn" style="background: #ffffff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px;" data-color="#ffffff" title="Borracha">🧹</div>
+          <div class="color-btn" style="background: #3b82f6;" data-color="#3b82f6"></div>
+          <div class="color-btn" style="background: #10b981;" data-color="#10b981"></div>
+          <div class="color-btn" style="background: #f59e0b;" data-color="#f59e0b"></div>
         </div>
-        <div class="tool-row" id="size-picker">
-          <button class="size-btn active" data-size="3">Fino</button>
-          <button class="size-btn" data-size="8">Médio</button>
-          <button class="size-btn" data-size="15">Grosso</button>
+
+        <!-- Espessura e Desfazer -->
+        <div class="tool-group">
+          <input type="range" id="size-slider" class="size-slider" min="1" max="25" value="4" title="Espessura do Lápis">
+          <button class="icon-btn" id="btn-undo" title="Desfazer">↩️</button>
         </div>
-        <button class="action-btn" onclick="limparQuadro()"><span style="font-size: 16px;">🗑️</span> Limpar Tudo</button>
+
+        <!-- Limpar -->
+        <div class="tool-group" style="border: none;">
+          <button class="action-btn" onclick="limparQuadro()">🗑️ <span>Limpar</span></button>
+        </div>
+
       </div>
       
       <!-- O Quadro Negro (Canvas) -->
@@ -83,12 +112,12 @@
 
   <script>
     // =========================================================================
-    // 1. CONFIGURAÇÕES INICIAIS E VARIÁVEIS DE ESTADO
+    // 1. VARIÁVEIS DE ESTADO E SEGURANÇA
     // =========================================================================
     const params = new URLSearchParams(window.location.search);
     const role = params.get('role') || 'professor';
     const roomId = params.get('room') || 'global';
-    let isLocked = params.get('locked') === 'true'; // Se for 'true', o aluno não desenha
+    let isLocked = params.get('locked') === 'true'; 
     
     document.getElementById('waiting-turma').innerText = roomId === 'global' ? 'Geral' : roomId;
 
@@ -98,73 +127,74 @@
     const titleEl = document.getElementById('lousa-title');
     const badgeEl = document.getElementById('status-badge');
     
-    // Variáveis do Canvas
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
     let desenhando = false;
-    let corAtual = '#2c3e50';
-    let espessuraAtual = 3;
+    let modoAtual = 'pen'; // 'pen' ou 'eraser'
+    let corAtual = '#0f172a';
+    let espessuraAtual = 4;
     
-    // Memória da Lousa (A lista de traços que viaja para o servidor)
-    let records = []; 
+    let records = []; // A nossa "nuvem" de traços
     let tracoAtual = null;
 
-    let isAllowed = role !== 'aluno'; // Professor tem livre trânsito sempre
-    let lastSavedTime = 0;
+    // Se o professor entra, o ecrã preto SOME logo no arranque!
+    if (role !== 'aluno') {
+        overlay.classList.add('hidden');
+        lousaContainer.style.display = 'flex';
+        toolsPanel.classList.remove('hidden');
+    }
 
     // =========================================================================
-    // 2. MOTOR DO CANVAS (PINTURA E REDIMENSIONAMENTO)
+    // 2. MOTOR DE RENDERIZAÇÃO E PINTURA (ALTA PERFORMANCE)
     // =========================================================================
     function redimensionarCanvas() {
-        // Garantir que a lousa não apaga ao girar o telemóvel
-        const dataSalva = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        // Redimensiona o canvas baseando-se no tamanho da tela do dispositivo
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
-        ctx.putImageData(dataSalva, 0, 0);
-        desenharTodosOsTracos(); // Repinta tudo de forma limpa
+        desenharTodosOsTracos();
     }
     window.addEventListener('resize', redimensionarCanvas);
 
-    function iniciarDesenho(e) {
-        if (role === 'aluno' && isLocked) return; // Se bloqueado, não faz nada
-        desenhando = true;
-        
-        // Trata posição do rato ou toque (telemóvel)
+    function obterCoordenadas(e) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
 
-        // Inicia um novo "traço" na nossa memória
-        tracoAtual = { cor: corAtual, tamanho: espessuraAtual, pontos: [{x, y}] };
+    function iniciarDesenho(e) {
+        if (role === 'aluno' && isLocked) return;
+        desenhando = true;
+        const { x, y } = obterCoordenadas(e);
+
+        const corFinal = modoAtual === 'eraser' ? '#ffffff' : corAtual;
+        const espessuraFinal = modoAtual === 'eraser' ? espessuraAtual * 3 : espessuraAtual;
+
+        tracoAtual = { cor: corFinal, tamanho: espessuraFinal, pontos: [{x, y}] };
         
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = corAtual;
-        ctx.lineWidth = espessuraAtual;
+        ctx.strokeStyle = corFinal;
+        ctx.lineWidth = espessuraFinal;
     }
 
     function desenhar(e) {
         if (!desenhando || !tracoAtual) return;
-        e.preventDefault(); // Impede o ecrã de rolar no telemóvel
+        e.preventDefault(); // Impede o scroll na tela do telemóvel ao riscar
         
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-
+        const { x, y } = obterCoordenadas(e);
         ctx.lineTo(x, y);
         ctx.stroke();
-        
-        tracoAtual.pontos.push({x, y}); // Guarda o ponto
+        tracoAtual.pontos.push({x, y});
     }
 
     function pararDesenho() {
         if (!desenhando) return;
         desenhando = false;
         
-        // O traço terminou, vamos guardá-lo na memória principal e enviar para a nuvem
         if (tracoAtual && tracoAtual.pontos.length > 0) {
             records.push(tracoAtual);
             salvarNaNuvem(); 
@@ -172,46 +202,19 @@
         tracoAtual = null;
     }
 
-    // Eventos do Rato
     canvas.addEventListener('mousedown', iniciarDesenho);
     canvas.addEventListener('mousemove', desenhar);
     canvas.addEventListener('mouseup', pararDesenho);
     canvas.addEventListener('mouseout', pararDesenho);
-    // Eventos de Toque (Smartphones e Tablets)
+
     canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
     canvas.addEventListener('touchmove', desenhar, {passive: false});
     canvas.addEventListener('touchend', pararDesenho);
 
-    // =========================================================================
-    // 3. MOTOR DE FERRAMENTAS
-    // =========================================================================
-    document.querySelectorAll('.color-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            corAtual = btn.getAttribute('data-color');
-        });
-    });
-
-    document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            espessuraAtual = parseInt(btn.getAttribute('data-size'));
-        });
-    });
-
-    window.limparQuadro = function() {
-        records = []; // Esvazia a memória
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        salvarNaNuvem(); // Informa a nuvem que o quadro foi limpo
-    }
-
     function desenharTodosOsTracos() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa
-        if (!records) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        if (!records || records.length === 0) return;
         
-        // Repinta todos os traços guardados na memória
         records.forEach(traco => {
             if(!traco.pontos || traco.pontos.length === 0) return;
             ctx.beginPath();
@@ -229,25 +232,61 @@
     }
 
     // =========================================================================
-    // 4. COMUNICAÇÃO COM O SERVIDOR (API & TEMPO REAL)
+    // 3. LÓGICA DA BARRA DE FERRAMENTAS PREMIUM
     // =========================================================================
-    function setConectado(status) {
-        badgeEl.innerText = status ? 'Ao Vivo' : 'Conectando...';
-        if (status) badgeEl.classList.add('conectado');
-        else badgeEl.classList.remove('conectado');
+    document.getElementById('btn-pen').addEventListener('click', function() {
+        modoAtual = 'pen';
+        this.classList.add('active');
+        document.getElementById('btn-eraser').classList.remove('active');
+    });
+
+    document.getElementById('btn-eraser').addEventListener('click', function() {
+        modoAtual = 'eraser';
+        this.classList.add('active');
+        document.getElementById('btn-pen').classList.remove('active');
+    });
+
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if (modoAtual === 'eraser') document.getElementById('btn-pen').click(); // Volta p/ caneta
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            corAtual = btn.getAttribute('data-color');
+        });
+    });
+
+    document.getElementById('size-slider').addEventListener('input', (e) => {
+        espessuraAtual = parseInt(e.target.value);
+    });
+
+    document.getElementById('btn-undo').addEventListener('click', () => {
+        if (records.length > 0) {
+            records.pop(); // Apaga o último traço
+            desenharTodosOsTracos();
+            salvarNaNuvem();
+        }
+    });
+
+    window.limparQuadro = function() {
+        records = [];
+        desenharTodosOsTracos();
+        salvarNaNuvem();
     }
 
+    // =========================================================================
+    // 4. COMUNICAÇÃO COM O SERVIDOR (API & SSE TEMPO REAL)
+    // =========================================================================
     function atualizarInterfaceLock() {
         if (role === 'aluno' && isLocked) {
             toolsPanel.classList.add('hidden');
             titleEl.innerText = 'Lousa (Modo Leitura)';
-        } else {
+        } else if (role === 'aluno' && !isLocked) {
             toolsPanel.classList.remove('hidden');
-            titleEl.innerText = 'Lousa Interativa';
+            titleEl.innerText = 'Lousa Liberada ✍️';
         }
     }
 
-    // 🚀 Apanha os comandos silenciosos (Professor tranca/destranca caneta)
+    // Apanha o clique do Professor no botão do Painel e Tranca/Destranca a Lousa!
     window.addEventListener('message', (e) => {
         if (e.data && e.data.type === 'LOCK_STATE') {
             isLocked = e.data.locked;
@@ -255,60 +294,57 @@
         }
     });
 
-    // 🚀 Carregar Dados da Nuvem
     async function carregarDaNuvem() {
         try {
             const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
             const data = await res.json();
             if (data?.success && Array.isArray(data.records)) {
-                records = data.records; // Atualiza a memória
-                desenharTodosOsTracos(); // Repinta
+                // Atualiza se houver alteração real (evita piscar o ecrã à toa)
+                if (JSON.stringify(records) !== JSON.stringify(data.records)) {
+                    records = data.records;
+                    desenharTodosOsTracos();
+                }
             }
-            setConectado(true);
-        } catch(e) {
-            console.error("Falha ao puxar lousa", e);
-        }
+            badgeEl.innerText = '🟢 Ao Vivo';
+            badgeEl.classList.add('conectado');
+        } catch(e) {}
     }
 
-    // 🚀 Enviar Dados para a Nuvem (Com Debounce de 400ms para evitar sobrecarga)
+    let timerEnvio = null;
     function salvarNaNuvem() {
         if (role === 'aluno' && isLocked) return;
         
-        const agora = Date.now();
-        if (agora - lastSavedTime < 400) return;
-        lastSavedTime = agora;
-
-        fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
-            method: 'PUT', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ records: records })
-        }).catch(()=>{});
+        clearTimeout(timerEnvio);
+        timerEnvio = setTimeout(() => {
+            fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ records: records })
+            }).catch(()=>{});
+        }, 300); // 🚀 O Debounce Perfeito
     }
 
     // =========================================================================
-    // 5. GESTÃO DE ACESSO E ARRANQUE
+    // 5. GESTÃO DE ACESSO DO ALUNO (O PORTEIRO DO OVERLAY PRETO)
     // =========================================================================
     async function checkAccess() {
-        if (role !== 'aluno') {
-            overlay.classList.add('hidden');
-            lousaContainer.style.display = 'flex';
-            atualizarInterfaceLock();
-            return;
-        }
-
+        if (role !== 'aluno') return; // Professor salta esta etapa
+        
         try {
             const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
             const data = await res.json();
             
             if (data?.success && data.ativa) {
-                isAllowed = true;
                 if (typeof data.recursos !== 'undefined') isLocked = !data.recursos;
                 
+                // Abre as cortinas
                 overlay.classList.add('hidden');
                 lousaContainer.style.display = 'flex';
+                
                 atualizarInterfaceLock();
-                redimensionarCanvas();
+                // 🚀 MUITO IMPORTANTE: Redimensiona o canvas quando ele fica visível pela 1ª vez!
+                setTimeout(redimensionarCanvas, 100); 
             } else {
-                isAllowed = false;
+                // O Professor fechou a lousa. Desce a cortina preta!
                 overlay.classList.remove('hidden');
                 lousaContainer.style.display = 'none';
             }
@@ -319,13 +355,11 @@
     window.onload = () => {
         redimensionarCanvas();
         checkAccess();
-        setInterval(checkAccess, 3000); // Polling de verificação de permissão
+        setInterval(checkAccess, 4000); 
         
-        if (role !== 'aluno' || isAllowed) {
-            carregarDaNuvem();
-        }
+        carregarDaNuvem();
 
-        // 🚀 O TUNEL SSE DO ALUNO: Ouvi a nuvem instantaneamente!
+        // 🚀 O TUNEL DE TEMPO REAL DO ALUNO!
         if (role === 'aluno') {
             let escolaId = 'DEFAULT';
             try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
@@ -335,13 +369,10 @@
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
-                        carregarDaNuvem(); // Se alguém desenhou, repinta imediatamente!
+                        carregarDaNuvem(); 
                     }
                 } catch(e){}
             };
-            
-            // Backup (caso o SSE caia, procura dados a cada 4 segs)
-            setInterval(carregarDaNuvem, 4000);
         }
     };
   </script>
