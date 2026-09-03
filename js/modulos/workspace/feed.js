@@ -684,10 +684,17 @@ Workspace.Feed = {
             }
         }
         
-        if (videos.length > 0) {
+      if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
-                htmlFinal += `<video controls class="ws-feed-video" style="width:100%; max-height:400px; border-radius:8px; border:1px solid #eee; margin-top:10px; background:#000;"><source src="${url}" type="${video.tipo}">O seu navegador não suporta vídeos.</video>`;
+                // 🚀 UPGRADE: Wrapper Premium para Vídeos Nativos (Igual ao YouTube/Instagram)
+                htmlFinal += `
+                <div style="margin-top: 15px; width: 100%; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                    <video controls playsinline preload="metadata" class="ws-feed-video" style="width:100%; max-height:450px; outline:none; border:none; background:#000;">
+                        <source src="${url}" type="${video.tipo}">
+                        O seu navegador não suporta vídeos.
+                    </video>
+                </div>`;
             });
         }
         
