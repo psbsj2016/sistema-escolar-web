@@ -9,9 +9,10 @@ Workspace.Feed = {
     observer: null,
     videoObserver: null,
     listenerFechamentoConfigurado: false,
+    listenerAnimacaoConfigurado: false,
     filtroAtivo: 'todos', 
 
-  init: async () => {
+    init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
@@ -19,7 +20,6 @@ Workspace.Feed = {
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
         
-        // 🚀 NOVA LINHA: Liga os ouvidos do Feed ao túnel SSE do servidor
         Workspace.Feed.conectarTempoReal();
         
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
@@ -30,29 +30,20 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 O VIGILANTE EM TEMPO REAL (SSE): Ouve os alertas do servidor
     conectarTempoReal: () => {
         const escolaId = Workspace.usuario ? Workspace.usuario.escolaId : 'DEFAULT';
-        
-        // Abre um recetor para ouvir o túnel de tempo real
         const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
         
         evtSource.onmessage = (event) => {
             try {
                 const dados = JSON.parse(event.data);
-                
                 if (dados.type === 'POST_APAGADO') {
-                    // 💀 ALERTA RECEBIDO: Destruir o post no ecrã imediatamente!
                     const idDoPost = String(dados.postId);
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
-                    
-                    // Se o post estiver no ecrã deste utilizador, some de forma abrupta!
                     if (elementoHTML) {
                         elementoHTML.remove(); 
                         console.log(`🚀 Post ${idDoPost} evaporado em tempo real!`);
                     }
-                    
-                    // Limpa da memória local para garantir que não regressa
                     Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== idDoPost);
                     Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== idDoPost);
                 }
@@ -66,9 +57,7 @@ Workspace.Feed = {
         setInterval(() => {
             document.querySelectorAll('.ws-time-ago').forEach(el => {
                 const dataTime = el.getAttribute('data-time');
-                if (dataTime) {
-                    el.innerText = Workspace.Feed.calcularTempoRelativo(dataTime);
-                }
+                if (dataTime) el.innerText = Workspace.Feed.calcularTempoRelativo(dataTime);
             });
         }, 60000); 
     },
@@ -77,7 +66,6 @@ Workspace.Feed = {
         try {
             const postAtualizado = await Workspace.api(`/workspace/posts/${postId}`, 'GET');
             if (postAtualizado && !postAtualizado.error) {
-                // 🚀 Correção de Segurança: Uso do String() para garantir a sincronia
                 const indexCache = Workspace.Feed.postsCache.findIndex(p => String(p.id) === String(postId));
                 if(indexCache !== -1) Workspace.Feed.postsCache[indexCache] = postAtualizado;
 
@@ -125,15 +113,10 @@ Workspace.Feed = {
         } catch(e) { console.error("Erro no sync silencioso", e); }
     },
 
-   gerarHTMLComentario: (c, postId) => {
+    gerarHTMLComentario: (c, postId) => {
         const tempoComentario = c.dataCriacao ? Workspace.Feed.calcularTempoRelativo(c.dataCriacao) : 'Agora mesmo';
         const tempoAttr = c.dataCriacao ? `data-time="${c.dataCriacao}"` : '';
-        const ehDonoComentario = (
-            c.autorNome === Workspace.usuario.nome || 
-            Workspace.usuario.login === c.autorNome || 
-            Workspace.usuario.tipo === 'Gestor' || 
-            Workspace.usuario.tipo === 'Professor'
-        );
+        const ehDonoComentario = (Workspace.usuario.nome === c.autorNome || Workspace.usuario.login === c.autorNome || Workspace.usuario.tipo === 'Gestor' || Workspace.usuario.tipo === 'Professor');
         const avatarComentario = window.Workspace.renderizarAvatar(c.autorNome, 30);
         
         const meuId = Workspace.usuario ? Workspace.usuario.id : 'anonimo';
@@ -256,10 +239,13 @@ Workspace.Feed = {
             document.head.appendChild(style);
         }
         
-        document.addEventListener('touchstart', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) btn.classList.add('btn-tapped'); }, { passive: true });
-        document.addEventListener('touchend', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) setTimeout(() => btn.classList.remove('btn-tapped'), 150); }, { passive: true });
-        document.addEventListener('touchcancel', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) btn.classList.remove('btn-tapped'); }, { passive: true });
-    },
+        if (!Workspace.Feed.listenerAnimacaoConfigurado) {
+            document.addEventListener('touchstart', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) btn.classList.add('btn-tapped'); }, { passive: true });
+            document.addEventListener('touchend', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) setTimeout(() => btn.classList.remove('btn-tapped'), 150); }, { passive: true });
+            document.addEventListener('touchcancel', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) btn.classList.remove('btn-tapped'); }, { passive: true });
+            Workspace.Feed.listenerAnimacaoConfigurado = true;
+        }
+    }, // 🚀 A VÍRGULA E A CHAVETA RESTAURADAS AQUI!
 
     toggleTextoPost: (btn, postId) => {
         const wrap = document.getElementById(`text-wrap-${postId}`);
@@ -295,50 +281,41 @@ Workspace.Feed = {
         let texto = Workspace.Feed.limparTexto(textoOriginal).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
         const embeds = [];
         
-        // 1. 🚀 YOUTUBE (NORMAIS + SHORTS)
-        // Adicionada a palavra 'shorts/' à regra para capturar os vídeos curtos do YouTube
         texto = texto.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
             return ''; 
         });
 
-        // 2. 🚀 TIKTOK
         texto = texto.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
             return '';
         });
 
-        // 3. 🚀 INSTAGRAM (POSTS + REELS) - Mágica Anti-Lixo!
-        // O `(?:\S+)?` no final "engole" parâmetros como `?utm_source=ig_web_copy_link`, para que não fiquem sujos na tela.
         texto = texto.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.instagram.com/p/${id}/embed" width="400" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></iframe></div>`);
             return '';
         });
 
-        // 4. 🚀 NOVO: FACEBOOK VIDEOS
         texto = texto.replace(/https?:\/\/(?:www\.)?facebook\.com\/(?:watch\/\?v=|video\.php\?v=|.*\/videos\/)(\d+)(?:\S+)?/ig, (match, id) => {
             embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(match.split('?')[0])}&show_text=false" width="500" height="280" style="border:none; overflow:hidden; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe></div>`);
             return '';
         });
 
-        // 5. 🚀 SPOTIFY
         texto = texto.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
             embeds.push(`<div style="margin-top: 15px; width: 100%;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
             return '';
         });
 
-        // 6. Links Normais (Apenas converte o que sobrar)
         texto = texto.replace(/(https?:\/\/[^\s<]+)/g, `<a href="$1" target="_blank" style="color:#3498db; text-decoration:none; font-weight:600; word-break: break-all;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">$1 ↗</a>`);
         
         if (embeds.length > 0) texto += embeds.join('');
         return texto;
     },
 
- carregarPosts: async () => {
+    carregarPosts: async () => {
         const container = document.getElementById('ws-posts-area');
         if (!container) return;
 
-        // Se a lista estiver vazia (primeiro load), mostramos os skeletons
         if(Workspace.Feed.todosOsPosts.length === 0) {
             container.innerHTML = Array(3).fill(`
                 <div class="ws-card" style="margin-bottom: 20px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid #eee;">
@@ -369,13 +346,10 @@ Workspace.Feed = {
         } catch (error) {
             console.warn("A ligação falhou ao acordar o dispositivo. Tentando reconectar em 3s...");
             
-            // 🚀 O SEGREDO DA EXPERIÊNCIA DO UTILIZADOR: Em vez de destruir a tela com um erro vermelho,
-            // mostramos um aviso de sincronização se o ecrã estiver vazio.
             if (Workspace.Feed.todosOsPosts.length === 0) {
                  container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Sincronizando as publicações... ⏳ A aguardar a estabilização da rede.</div>';
             }
             
-            // 🚀 O DESFIBRILADOR (Auto-Retry): Dá 3 segundos para a antena do aparelho ligar ao Wi-Fi/4G e tenta de novo!
             setTimeout(() => {
                 if (Workspace.Feed && Workspace.Feed.carregarPosts) {
                     Workspace.Feed.carregarPosts();
@@ -384,17 +358,15 @@ Workspace.Feed = {
         }
     },
 
-   filtrarFeed: (tipoFiltro) => {
+    filtrarFeed: (tipoFiltro) => {
         Workspace.Feed.filtroAtivo = tipoFiltro;
         Workspace.Feed.paginaAtual = 1;
         Workspace.Feed.postsCache = [];
         
-        // 🚀 O LADO VISUAL: Tira o azul de todos e coloca apenas no que foi clicado usando o ID!
         document.querySelectorAll('.ws-filtro-btn').forEach(btn => btn.classList.remove('ativo'));
         const btnAtivo = document.getElementById(`filtro-${tipoFiltro}`);
         if(btnAtivo) btnAtivo.classList.add('ativo');
 
-        // 🚀 O LADO LÓGICO: Filtra os posts em memória muito rapidamente
         let listaFiltrada = Workspace.Feed.todosOsPosts;
         
         if (tipoFiltro === 'imagem') {
@@ -417,9 +389,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-       
-
-        // 🚀 A CURA VISUAL: Removemos a instrução vermelha do programador e deixamos um aviso profissional
+        
         sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#249; font-size:13px; animation: pulse 2.5s infinite ease-in-out;"><strong><h3>🚨 Se você está lendo esta mensagem é porque ficou muito tempo sem acessar o WorkSpace! Por favor, saia do WorkSpace e entre novamente para que tudo seja atualizado e este aviso deixe de aparecer.</h3></strong></div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
@@ -523,15 +493,12 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
-// 📖 VISUALIZADOR DE DOCUMENTOS PRO (ALTA RESOLUÇÃO + MOTOR DE PINÇA E ARRASTO)
-    // 📖 VISUALIZADOR DE DOCUMENTOS PRO (100% Responsivo e Blindado para Telemóvel)
     abrirDocumento: (url, nome, ehOffice) => {
         const id = 'ws-doc-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
         const overlay = document.createElement('div');
         overlay.id = id;
-        // Usa height: 100dvh para respeitar exatamente a altura real da tela do telemóvel
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:2147483647; opacity:0; transition: opacity 0.3s; display:flex; flex-direction:column; background:rgba(0,0,0,0.92); backdrop-filter:blur(5px);";
         
         const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
@@ -548,7 +515,6 @@ Workspace.Feed = {
         const cmdZoomIn = "let w = document.getElementById('ws-iframe-wrapper'); let z = parseFloat(w.dataset.zoom || 100) + 25; if(z > 400) z = 400; w.style.width = z + '%'; w.style.height = z + '%'; w.dataset.zoom = z;";
 
         overlay.innerHTML = `
-            <!-- CABEÇALHO SEGURO E FLEXÍVEL (Nunca corta botões) -->
             <div style="width: 100%; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; flex-shrink: 0; z-index: 10;">
                 <div style="display: flex; flex-direction: column; max-width: 55%; overflow: hidden;">
                     <span style="color:white; font-weight:bold; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📄 ${nomeSeguro}</span>
@@ -565,7 +531,6 @@ Workspace.Feed = {
                 </div>
             </div>
 
-            <!-- ÁREA DE VISUALIZAÇÃO ADAPTADA AO ESPAÇO RESTANTE -->
             <div id="ws-doc-scroll-container" style="flex: 1; width: 100%; overflow: auto; position: relative; display: flex; justify-content: center; align-items: center; padding: 10px; box-sizing: border-box;">
                 <div id="ws-iframe-wrapper" data-zoom="100" style="width:100%; height:100%; background:white; position:relative; border-radius:8px; overflow:hidden; transition: width 0.15s ease-out, height 0.15s ease-out;">
                     ${isMobile ? '<div id="ws-touch-glass" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; background:transparent;"></div>' : ''}
@@ -577,7 +542,6 @@ Workspace.Feed = {
         
         document.body.appendChild(overlay);
 
-        // O CLIQUE DE FUGA NO FUNDO (Fecha se o utilizador tocar fora do documento, caso precise de sair)
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.style.opacity = '0';
@@ -585,7 +549,6 @@ Workspace.Feed = {
             }
         });
 
-        // Motor tátil para telemóveis
         if (isMobile) {
             const glass = document.getElementById('ws-touch-glass');
             const scrollContainer = document.getElementById('ws-doc-scroll-container');
@@ -684,10 +647,9 @@ Workspace.Feed = {
             }
         }
         
-      if (videos.length > 0) {
+        if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
-                // 🚀 UPGRADE: Wrapper Premium para Vídeos Nativos (Igual ao YouTube/Instagram)
                 htmlFinal += `
                 <div style="margin-top: 15px; width: 100%; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center;">
                     <video controls playsinline preload="metadata" class="ws-feed-video" style="width:100%; max-height:450px; outline:none; border:none; background:#000;">
@@ -706,7 +668,6 @@ Workspace.Feed = {
                 const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
                 let icone = anexo.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
                 
-                // 🚀 A VACINA: Substitui aspas simples!
                 const nomeSeguro = (anexo.nome || 'Documento').replace(/'/g, "\\'"); 
                 
                 htmlFinal += `<div onclick="Workspace.Feed.abrirDocumento('${urlCorrigida}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:#f4f6f7; padding:10px 15px; border-radius:8px; color:#2c3e50; border:1px solid #ddd; flex: 1; min-width:200px; max-width:300px; transition:0.2s;" onmouseover="this.style.background='#e5e8e8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f4f6f7'; this.style.transform='translateY(0)'"><span style="font-size:24px; flex-shrink: 0;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${anexo.nome}</span><span style="color:#3498db; font-size:12px; font-weight:bold; flex-shrink: 0;">Ler Documento ↗</span></div>`;
@@ -717,9 +678,11 @@ Workspace.Feed = {
         return htmlFinal;
     },
 
-    limparTexto: (txt) => { if(!txt) return ''; return txt.replace(/</g, "&lt;").replace(/>/g, "&gt;"); },
+    limparTexto: (txt) => { 
+        if(!txt) return ''; 
+        return String(txt).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); 
+    },
 
-    // 🚀 ATUALIZAÇÃO OTIMISTA NAS CURTIDAS DOS POSTS (Com correção de Remoção)
     reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
@@ -730,13 +693,13 @@ Workspace.Feed = {
         let euCurti = likesArr.includes(meuId);
         let euNaoCurti = dislikesArr.includes(meuId);
 
-        let tipoParaEnviar = tipo; // 🚀 A MÁGICA: Variável que avisa o Servidor da nossa verdadeira intenção
+        let tipoParaEnviar = tipo; 
 
         if (tipo === 'like') {
             if (euCurti) { 
                 post.likes = likesArr.filter(id => id !== meuId); 
                 euCurti = false; 
-                tipoParaEnviar = 'remove'; // Como já tinha curtido, a intenção é remover!
+                tipoParaEnviar = 'remove'; 
             }
             else { 
                 post.likes.push(meuId); 
@@ -747,7 +710,7 @@ Workspace.Feed = {
             if (euNaoCurti) { 
                 post.dislikes = dislikesArr.filter(id => id !== meuId); 
                 euNaoCurti = false; 
-                tipoParaEnviar = 'remove'; // Como já tinha não-curtido, a intenção é remover!
+                tipoParaEnviar = 'remove'; 
             }
             else { 
                 post.dislikes.push(meuId); 
@@ -756,7 +719,6 @@ Workspace.Feed = {
             }
         }
 
-        // Atualização visual na tela
         const btnLike = document.getElementById(`btn-like-${postId}`);
         const countLike = document.getElementById(`count-like-${postId}`);
         if (countLike) countLike.innerText = post.likes.length;
@@ -776,10 +738,8 @@ Workspace.Feed = {
             btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
         }
 
-        // Envio para o Servidor em background
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            // 🚀 Enviamos o tipoParaEnviar (que pode ser 'like', 'dislike' ou 'remove')
             await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch (e) { console.error("Erro ao reagir em background", e); }
     },
@@ -797,10 +757,14 @@ Workspace.Feed = {
     enviarComentario: async (postId) => {
         const input = document.getElementById(`input-comentario-${postId}`);
         if (!input) return;
+        const btn = input.nextElementSibling;
+        
         const texto = input.value.trim();
         if (!texto) return;
 
         input.value = '';
+        if (btn) { btn.innerText = "⏳"; btn.disabled = true; } 
+
         try {
             const res = await Workspace.api(`/workspace/posts/${postId}/comentarios`, 'POST', {
                 texto, autorNome: Workspace.usuario.nome || Workspace.usuario.login
@@ -811,7 +775,11 @@ Workspace.Feed = {
                 const lista = document.getElementById(`lista-comentarios-${postId}`);
                 if (lista) lista.scrollTop = lista.scrollHeight;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error("Erro ao enviar comentário:", e); 
+        } finally {
+            if (btn) { btn.innerText = "Enviar"; btn.disabled = false; }
+        }
     },
 
     apagarPost: (postId) => {
@@ -944,7 +912,6 @@ Workspace.Feed = {
         }).catch(err => {});
     },
 
-    // 🚀 GERAÇÃO DOS POSTS COM AVATARES CLICÁVEIS
     gerarHTMLPosts: (posts) => {
         const meuId = Workspace.usuario.id;
         
@@ -954,7 +921,6 @@ Workspace.Feed = {
             const avatarPost = `<div onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Ver Perfil">${window.Workspace.renderizarAvatar(p.autorNome, 45)}</div>`;
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(p.texto);
 
-            // 🚀 PODER ABSOLUTO: O botão apagar/editar aparece se for o dono, se for Gestor OU se for Professor!
             const ehDonoOuGestor = (
                 Workspace.usuario.nome === p.autorNome || 
                 Workspace.usuario.login === p.autorNome || 
@@ -1047,44 +1013,30 @@ Workspace.Feed = {
         }).join('');
     },
 
-    // 🚀 O RASTREADOR DE LINKS (Deep Linking Inteligente com Bypass de Paginação)
     focarPost: (postId) => {
-        // 1. Procura o post na memória profunda (onde todos os dados já foram entregues pela API)
         const indexDoPost = Workspace.Feed.todosOsPosts.findIndex(p => String(p.id) === String(postId));
         
         if (indexDoPost !== -1) {
-            // 2. O post existe! Vamos descobrir em que "lote/página" ele está (são 5 por página)
             const paginaAlvo = Math.ceil((indexDoPost + 1) / 5);
-            
-            // 3. Força o motor do Feed a renderizar os lotes instantaneamente até alcançar o post escondido
             while (Workspace.Feed.paginaAtual <= paginaAlvo) {
                 Workspace.Feed.carregarLoteFiltrado(Workspace.Feed.todosOsPosts);
             }
         } else {
-            // Se o post foi apagado ou o utilizador não tem acesso a essa turma, avisamos
             if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Esta publicação já não se encontra disponível.", "warning");
         }
 
-        // 4. Agora que temos a certeza de que o HTML do post foi injetado na tela, focamos nele!
         const checkExist = setInterval(() => {
             const postElement = document.getElementById(`post-${postId}`);
             if (postElement) {
                 clearInterval(checkExist);
-                
-                // Limpa a âncora da URL para não prender o utilizador neste post num futuro refresh da página
                 history.replaceState(null, null, ' ');
 
-                // Dá 600ms para as imagens pesadas do feed respirarem e o layout estabilizar
                 setTimeout(() => {
-                    // Desliza a tela suavemente até bater no post
                     postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Piscar Mágico de Destaque (Remove e injeta a classe para forçar o reinício da animação CSS)
                     postElement.classList.remove('ws-highlight-magic');
                     void postElement.offsetWidth; 
                     postElement.classList.add('ws-highlight-magic');
                     
-                    // Se o professor escreveu um texto gigante, o assistente expande-o automaticamente
                     const wrap = document.getElementById(`text-wrap-${postId}`);
                     if (wrap && wrap.classList.contains('ws-text-collapsed')) {
                         const btnLerMais = postElement.querySelector('span[onclick*="toggleTextoPost"]');
@@ -1094,7 +1046,6 @@ Workspace.Feed = {
             }
         }, 300);
         
-        // Desiste ao fim de 5 segundos para proteger a memória do navegador
         setTimeout(() => clearInterval(checkExist), 5000);
     },
 
@@ -1104,14 +1055,12 @@ Workspace.Feed = {
         return template.content.firstChild;
     },
 
-   configurarEventosCriacao: async () => {
+    configurarEventosCriacao: async () => {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (!boxCriarPost) return;
 
-        // 🚀 O MOTOR INTELIGENTE DE DESTINOS
         const selDestino = document.getElementById('ws-post-destino');
         
-        // Só carrega as turmas se a lista só tiver 1 elemento (o "Geral" padrão)
         if (selDestino && selDestino.options.length === 1) { 
             try {
                 const turmas = await Workspace.api('/turmas', 'GET');
@@ -1123,7 +1072,6 @@ Workspace.Feed = {
                             selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
                         });
                     } else {
-                        // 🚀 O FILTRO ABSOLUTO PARA OS ALUNOS NÃO VEREM O QUE NÃO DEVEM
                         turmas.forEach(t => {
                             if (Workspace.verificarTurma(Workspace.usuario, t.id, t.nome)) {
                                 selDestino.innerHTML += `<option value="${t.id}">📚 ${Workspace.Feed.limparTexto(t.nome)}</option>`;
@@ -1137,7 +1085,7 @@ Workspace.Feed = {
         const btnPublicar = boxCriarPost.querySelector('#ws-btn-publicar');
         const inputTexto = boxCriarPost.querySelector('textarea');
 
-               if (btnPublicar && inputTexto) {
+        if (btnPublicar && inputTexto) {
             const rascunhoGuardado = localStorage.getItem('ws_draft_post');
             if (rascunhoGuardado) inputTexto.value = rascunhoGuardado;
 
@@ -1162,11 +1110,10 @@ Workspace.Feed = {
                 novoBtn.innerText = "Publicando... ⏳";
                 novoBtn.disabled = true;
 
-               try {
+                try {
                     let urlsFinais = [];
 
                     if (anexosLocais.length > 0) {
-                        // 🚀 USA O NOVO MOTOR DE PROCESSAMENTO MÚLTIPLO! (Magia Pura)
                         urlsFinais = await Workspace.Upload.enviarMultiplosFicheiros(anexosLocais);
                     }
 
@@ -1195,7 +1142,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVA FUNÇÃO: Abre a Foto e Nome do Autor do Post
     abrirPerfilUsuario: (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
@@ -1219,7 +1165,6 @@ Workspace.Feed = {
         overlay.addEventListener('click', (e) => { if(e.target === overlay) { overlay.style.opacity = '0'; setTimeout(()=> overlay.remove(), 200); } });
     },
 
-   // 🚀 NOVA FUNÇÃO: Reagir a Comentários (Com a mesma correção de Remoção)
     reagirComentario: async (postId, comentarioId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
@@ -1257,5 +1202,4 @@ Workspace.Feed = {
             await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch(e) {}
     }
-
 };
