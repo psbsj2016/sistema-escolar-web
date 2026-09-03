@@ -16,6 +16,7 @@ Workspace.Feed = {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
+        Workspace.Feed.injetarBotaoImersao(); // 🚀 NOVO: Injeta o botão da Imersão Específica
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
@@ -30,6 +31,23 @@ Workspace.Feed = {
         }
     },
 
+    // 🚀 NOVO: Motor que injeta o botão mágico no topo do Feed
+    injetarBotaoImersao: () => {
+        setTimeout(() => {
+            const filterBar = document.getElementById('ws-feed-filter-bar');
+            if (filterBar && !document.getElementById('btn-imersao-especifica')) {
+                const btn = document.createElement('button');
+                btn.id = 'btn-imersao-especifica';
+                btn.className = 'ws-filter-chip';
+                // Design de Alto Destaque (Gradiente Premium)
+                btn.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 8px 16px !important; order: -1; margin-right: 10px;';
+                btn.innerHTML = '🌌 Imersão Específica';
+                btn.onclick = () => Workspace.Feed.abrirImersao();
+                filterBar.insertBefore(btn, filterBar.firstChild);
+            }
+        }, 500); // Aguarda o DOM renderizar a barra de filtros
+    },
+
     conectarTempoReal: () => {
         const escolaId = Workspace.usuario ? Workspace.usuario.escolaId : 'DEFAULT';
         const evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
@@ -42,14 +60,11 @@ Workspace.Feed = {
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
                     if (elementoHTML) {
                         elementoHTML.remove(); 
-                        console.log(`🚀 Post ${idDoPost} evaporado em tempo real!`);
                     }
                     Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== idDoPost);
                     Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== idDoPost);
                 }
-            } catch (err) {
-                console.error("Erro ao processar evento de tempo real no Feed", err);
-            }
+            } catch (err) {}
         };
     },
 
@@ -110,7 +125,7 @@ Workspace.Feed = {
                     }
                 }
             }
-        } catch(e) { console.error("Erro no sync silencioso", e); }
+        } catch(e) { }
     },
 
     gerarHTMLComentario: (c, postId) => {
@@ -170,7 +185,36 @@ Workspace.Feed = {
                     </div>
                 </div>
             `;
-            document.body.insertAdjacentHTML('beforeend', modaisHTML);
+            
+            // 🚀 O NOVO PALCO DA IMERSÃO ESPECÍFICA!
+            const modalImersao = `
+                <div id="ws-imersao-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 100030; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow-y: auto;">
+                    <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); border-bottom: 1px solid #1e293b;">
+                        <h2 style="color: #fff; margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">🌌 Imersão Específica</h2>
+                        <button onclick="Workspace.Feed.fecharImersao()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Sair da Imersão">✖</button>
+                    </div>
+                    
+                    <div style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+                        
+                        <!-- Barra de Pesquisa Poderosa -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
+                            <input type="text" id="ws-imersao-busca" placeholder="O que deseja estudar agora? (Ex: Phrasal Verbs, Viagem...)" style="flex: 1; min-width: 250px; padding: 16px; border-radius: 12px; border: 1px solid #334155; font-size: 16px; outline: none; background: #1e293b; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onkeypress="if(event.key === 'Enter') Workspace.Feed.gerarImersao()">
+                            <button onclick="Workspace.Feed.gerarImersao()" id="ws-btn-gerar-imersao" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 16px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">Gerar Aula da IA 🪄</button>
+                        </div>
+                        
+                        <!-- A Área onde a IA desenha os resultados -->
+                        <div id="ws-imersao-conteudo" style="color: #cbd5e1; font-size: 16px; line-height: 1.6;">
+                            <div style="text-align: center; padding: 50px 20px; color: #64748b;">
+                                <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🤖</div>
+                                <h3 style="color: #94a3b8; font-size: 22px;">O seu Professor Particular IA</h3>
+                                <p style="max-width: 500px; margin: 0 auto;">Pesquise um tema específico ou clique diretamente em "Gerar". A Inteligência Artificial vai vasculhar o Feed da sua turma, criar uma aula resumo imersiva e fabricar um Quiz de Evolução para si.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modaisHTML + modalImersao);
         }
     },
 
@@ -235,6 +279,7 @@ Workspace.Feed = {
                 .ws-text-collapsed { max-height: 110px; overflow: hidden; position: relative; transition: max-height 0.3s ease-out; }
                 .ws-text-expanded { max-height: 2000px; transition: max-height 0.5s ease-in; }
                 .ws-text-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; background: linear-gradient(transparent, #ffffff); pointer-events: none; }
+                @keyframes ws-float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
             `;
             document.head.appendChild(style);
         }
@@ -245,7 +290,7 @@ Workspace.Feed = {
             document.addEventListener('touchcancel', function(e) { const btn = e.target.closest('.ws-btn, .ws-btn-gamified, #ws-btn-anexar'); if (btn) btn.classList.remove('btn-tapped'); }, { passive: true });
             Workspace.Feed.listenerAnimacaoConfigurado = true;
         }
-    }, // 🚀 A VÍRGULA E A CHAVETA RESTAURADAS AQUI!
+    },
 
     toggleTextoPost: (btn, postId) => {
         const wrap = document.getElementById(`text-wrap-${postId}`);
@@ -344,16 +389,11 @@ Workspace.Feed = {
             Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo); 
 
         } catch (error) {
-            console.warn("A ligação falhou ao acordar o dispositivo. Tentando reconectar em 3s...");
-            
             if (Workspace.Feed.todosOsPosts.length === 0) {
                  container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Sincronizando as publicações... ⏳ A aguardar a estabilização da rede.</div>';
             }
-            
             setTimeout(() => {
-                if (Workspace.Feed && Workspace.Feed.carregarPosts) {
-                    Workspace.Feed.carregarPosts();
-                }
+                if (Workspace.Feed && Workspace.Feed.carregarPosts) Workspace.Feed.carregarPosts();
             }, 3000);
         }
     },
@@ -741,7 +781,7 @@ Workspace.Feed = {
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
-        } catch (e) { console.error("Erro ao reagir em background", e); }
+        } catch (e) {}
     },
 
     toggleComentarios: (postId) => {
@@ -776,7 +816,6 @@ Workspace.Feed = {
                 if (lista) lista.scrollTop = lista.scrollHeight;
             }
         } catch (e) { 
-            console.error("Erro ao enviar comentário:", e); 
         } finally {
             if (btn) { btn.innerText = "Enviar"; btn.disabled = false; }
         }
@@ -1079,7 +1118,7 @@ Workspace.Feed = {
                         });
                     }
                 }
-            } catch(e) { console.error("Erro ao carregar turmas no feed", e); }
+            } catch(e) {}
         }
 
         const btnPublicar = boxCriarPost.querySelector('#ws-btn-publicar');
@@ -1201,5 +1240,152 @@ Workspace.Feed = {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch(e) {}
+    },
+
+    // ------------------------------------------------------------------------
+    // 🌌 MÓDULO: IMERSÃO ESPECÍFICA (O CÉREBRO DE CURADORIA NO FRONTEND)
+    // ------------------------------------------------------------------------
+    abrirImersao: () => {
+        const modal = document.getElementById('ws-imersao-modal');
+        if (modal) {
+            document.body.style.overflow = 'hidden'; // Impede rolagem no fundo para foco total
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => modal.style.opacity = '1');
+        }
+    },
+
+    fecharImersao: () => {
+        const modal = document.getElementById('ws-imersao-modal');
+        if (modal) {
+            document.body.style.overflow = '';
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    },
+
+    gerarImersao: async () => {
+        const input = document.getElementById('ws-imersao-busca');
+        const btn = document.getElementById('ws-btn-gerar-imersao');
+        const conteudo = document.getElementById('ws-imersao-conteudo');
+        
+        const termoBusca = input ? input.value.trim() : '';
+        
+        if (btn) {
+            btn.innerText = 'Lendo o Feed... ⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+        
+        conteudo.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🧠</div>
+                <h3 style="color: #fff; margin-top: 20px;">A processar milhares de dados...</h3>
+                <p style="color: #94a3b8;">A Inteligência Artificial está a curar os conteúdos da sua turma.</p>
+            </div>
+        `;
+        
+        try {
+            const refId = Workspace.usuario.alunoRefId || '';
+            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+            
+            const res = await Workspace.api('/workspace/posts/imersao', 'POST', {
+                termoBusca, alunoRefId: refId, escolaId
+            });
+            
+            if (res && res.success && res.imersao) {
+                Workspace.Feed.renderizarImersao(res.imersao);
+            } else {
+                throw new Error(res?.error || 'A IA não encontrou conteúdo suficiente sobre este tema.');
+            }
+        } catch (error) {
+            conteudo.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <h3 style="color: #f87171;">Ocorreu um erro ❌</h3>
+                    <p style="color: #fca5a5;">${error.message || 'Houve uma falha na ligação. Tente pesquisar outro termo.'}</p>
+                </div>
+            `;
+        } finally {
+            if (btn) {
+                btn.innerHTML = 'Gerar Aula da IA 🪄';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    },
+
+    renderizarImersao: (dados) => {
+        const conteudo = document.getElementById('ws-imersao-conteudo');
+        Workspace.Feed._quizImersaoCache = dados.quiz || []; // Guarda o quiz na memória global da página
+        
+        let htmlQuiz = '';
+        if (dados.quiz && dados.quiz.length > 0) {
+            htmlQuiz = `<h3 style="color: #38bdf8; margin-top: 40px; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 22px;">🎯 Quiz de Evolução</h3>`;
+            dados.quiz.forEach((q, index) => {
+                htmlQuiz += `
+                    <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${Workspace.Feed.limparTexto(q.pergunta)}</p>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                            ${q.opcoes.map((opcao, optIndex) => `
+                                <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${Workspace.Feed.limparTexto(opcao)}</button>
+                            `).join('')}
+                        </div>
+                        <div id="quiz-exp-${index}" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; line-height: 1.5;"></div>
+                    </div>
+                `;
+            });
+        }
+        
+        // Limpa potenciais blocos de código Markdown gerados pela IA
+        let resumoSeguro = dados.resumo.replace(/```html/g, '').replace(/```/g, '');
+
+        conteudo.innerHTML = `
+            <div style="animation: fadeIn 0.5s ease;">
+                <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.limparTexto(dados.titulo)}</h1>
+                <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 30px; border-left: 4px solid #3b82f6; font-size: 17px;">
+                    ${resumoSeguro}
+                </div>
+                ${htmlQuiz}
+            </div>
+        `;
+    },
+
+    verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
+        const quizCache = Workspace.Feed._quizImersaoCache;
+        if (!quizCache || !quizCache[perguntaIndex]) return;
+        
+        const pergunta = quizCache[perguntaIndex];
+        const correta = pergunta.respostaCorreta;
+        
+        // Bloqueia as opções após a primeira escolha
+        pergunta.opcoes.forEach((_, optIndex) => {
+            const btn = document.getElementById(`quiz-opt-${perguntaIndex}-${optIndex}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.style.cursor = 'default';
+                btn.onmouseover = null;
+                btn.onmouseout = null;
+                
+                if (optIndex === correta) {
+                    btn.style.background = 'rgba(16, 185, 129, 0.2)'; // Verde Sucesso
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = '#fff';
+                    btn.style.fontWeight = 'bold';
+                } else if (optIndex === opcaoClicada && optIndex !== correta) {
+                    btn.style.background = 'rgba(239, 68, 68, 0.2)'; // Vermelho Erro
+                    btn.style.borderColor = '#ef4444';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.opacity = '0.5';
+                }
+            }
+        });
+        
+        // Revela a explicação didática
+        const exp = document.getElementById(`quiz-exp-${perguntaIndex}`);
+        if (exp) {
+            exp.style.display = 'block';
+            exp.innerHTML = `💡 <strong>Explicação:</strong> ${Workspace.Feed.limparTexto(pergunta.explicacao)}`;
+            exp.style.animation = 'fadeIn 0.3s ease';
+        }
     }
 };
