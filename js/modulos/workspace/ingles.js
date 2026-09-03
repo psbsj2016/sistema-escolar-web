@@ -721,13 +721,14 @@ Workspace.Ingles = {
                 
                 const gameId = b.dataset.game;
 
-                // 🚀 ADICIONADO: 'questionMaker' entra no clube da IA!
-                if(['contextRole', 'answerQuest', 'sentenceShuffle', 'questionMaker'].includes(gameId)){
+                // 🚀 ADICIONADO: 'picturePop' na lista e captura da palavra alvo!
+                if(['contextRole','answerQuest','sentenceShuffle','questionMaker','picturePop'].includes(gameId)){
                     b.disabled = true; b.innerText = '🤖 A IA está a avaliar a sua resposta...';
                     
                     const payload = {
                         jogo: gameId === 'sentenceShuffle' ? 'answerQuest' : gameId,
                         pergunta: cur.text || cur.phrase || cur.title,
+                        palavra: cur.word || '', // 🚀 Enviamos a palavra que o emoji representa!
                         tarefaEspecifica: cur.taskType || '',
                         respostaAluno: respostaDoAluno,
                         cenario: cur,
@@ -1148,7 +1149,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-    renderGamePicturePop(){
+   renderGamePicturePop(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'picture'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1158,11 +1159,9 @@ Workspace.Ingles = {
             <div style="text-align:center;">
                 <div style="width:160px; height:160px; border-radius:30px; background:#F8FAFC; border:4px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:80px; box-shadow:0 10px 20px rgba(0,0,0,0.05);">${pic.emoji}</div>
                 <div style="background:#fff; border:2px solid #E2E8F0; padding:24px; border-radius:20px;">
-                    <button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; border-radius:16px; padding:16px; border:none; font-size:16px; cursor:pointer;">🎤 Falar o Nome em Inglês</button>
-                    <div id="ig-speechResult" style="margin-top:16px; font-weight:700;"></div>
-                    <div style="margin:20px 0; border-top:2px dashed #E2E8F0;"></div>
-                    <input id="ig-input" class="ig-input" placeholder="Ou digite a palavra..." style="text-align:center;">
-                    <button data-action="verificar-picture-text" class="ws-btn" style="width:100%; background:#F1F5F9; color:#0F172A; margin-top:12px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Verificar</button>
+                    <p style="font-weight:800; color:#4F46E5; margin-bottom:15px;">O Alquimista pede: Crie uma frase sobre esta figura!</p>
+                    <textarea id="ig-input" class="ig-textarea" placeholder="Ex: This is a delicious apple..." style="min-height:80px; text-align:center;"></textarea>
+                    <button data-action="verificar-envio" data-game="picturePop" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer; font-weight:bold;">Submeter Visão 👁️‍🗨️</button>
                 </div>
             </div>`;
     },
@@ -1170,31 +1169,45 @@ Workspace.Ingles = {
     iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo){
         const btn = document.getElementById('modalBody').querySelector('[data-action="iniciar-voz"]');
         const resEl = document.getElementById('ig-speechResult');
-        if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ this.mostrarAvisoLocal('Navegador não suporta voz','error'); return; }
+        if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ this.mostrarAvisoLocal('O seu navegador não suporta voz','error'); return; }
         
         const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
         this.recognition = new SR(); this.recognition.lang='en-US'; this.recognition.interimResults=false; this.recognition.maxAlternatives=1;
         
-        if(btn){ btn.innerText='🎧 Escutando...'; btn.style.background='#F59E0B'; }
+        if(btn){ btn.innerText='🎧 Escutando... Fale agora!'; btn.style.background='#F59E0B'; }
         this.recognition.start();
         
         this.recognition.onresult=(e)=>{
             const falado = e.results[0][0].transcript;
-            if(btn){ btn.style.background='#10B981'; btn.innerText=`Lido: "${falado}"`; }
+            if(btn){ btn.style.background='#10B981'; btn.innerText=`Avaliando a pronúncia... 🤖`; btn.disabled = true; }
             
-            const sim = this.similaridade(falado, esperado);
-            if(sim>=0.75){ 
-                if(resEl) resEl.innerHTML=`<span style="color:#059669;">✅ Excelente!</span>`; 
-                if(itemObj) this.updateSRS(itemObj.id, tipoConteudo, true); 
-                this.superarErro(itemObj?.id); 
-                this.sucessoGenerico(75); 
-            } else { 
-                if(resEl) resEl.innerHTML=`<span style="color:#DC2626;">❌ Ouvi: "${falado}"</span>`; 
-                if(itemObj) this.registrarErro(itemObj, tipoConteudo); 
-                this.falhaGenerica(); 
-            }
+            // 🚀 A MÁGICA AQUI: Identifica se é o Sopro do Dragão ou a Visão do Alquimista por Voz
+            const gameId = tipoConteudo === 'phrase' ? 'readAloud' : 'picturePopSpeech';
+
+            Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
+                jogo: gameId,
+                pergunta: esperado, // A frase ou palavra que ele devia ler
+                respostaAluno: falado // O que o microfone ouviu
+            }).then(r => {
+                if(btn){ btn.innerText=`🎤 Tentar novamente`; btn.disabled = false; }
+                
+                if (r.success && r.correto) {
+                    if(resEl) resEl.innerHTML=`<div style="background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s; color:#064E3B; margin-top:10px;"><b>✅ ${r.feedback}</b><br>🎙️ O microfone ouviu: <i>"${falado}"</i></div>`;
+                    if(itemObj) this.updateSRS(itemObj.id, tipoConteudo, true);
+                    this.superarErro(itemObj?.id);
+                    this.sucessoGenerico(tipoConteudo === 'picture' ? 75 : 50);
+                } else {
+                    if(resEl) resEl.innerHTML=`<div style="background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s; color:#7F1D1D; margin-top:10px;">❌ ${r.feedback}<br>🎙️ O microfone ouviu: <i>"${falado}"</i><br>💡 Dica de Pronúncia: ${r.correcao}</div>`;
+                    if(itemObj) this.registrarErro(itemObj, tipoConteudo);
+                    this.falhaGenerica();
+                }
+            }).catch(() => {
+                if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; btn.disabled = false; }
+                this.mostrarAvisoLocal('Erro de ligação com o servidor de IA.', 'error');
+            });
         };
-        this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente'; } };
+        
+        this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente (Erro no Microfone)'; btn.disabled = false; } };
     }
 };
 
