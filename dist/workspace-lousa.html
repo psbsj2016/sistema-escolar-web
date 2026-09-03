@@ -3,20 +3,347 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Lousa Interativa</title>
+  <title>Lousa Interativa Nativa</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #fff; font-family: Inter, system-ui, sans-serif; }
-    /* 🚀 Cimentamos as paredes para as ferramentas não sumirem */
-    .tldraw-wrapper { position: absolute; top: 45px; left: 0; right: 0; bottom: 0; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; overflow: hidden; background: #ffffff; touch-action: none; }
+    
+    /* 1. TELA DE ESPERA DO ALUNO */
+    #waiting-overlay { position: fixed; inset: 0; z-index: 999999; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 20px; }
+    #waiting-overlay.hidden { display: none !important; }
+
+    /* 2. ESTRUTURA PRINCIPAL DA LOUSA */
+    #lousa-container { display: none; width: 100%; height: 100%; flex-direction: column; }
+    
+    /* Cabeçalho */
+    #lousa-header { height: 45px; background: #0F172A; color: #fff; display: flex; alignItems: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 10; }
+    #status-badge { font-size: 10px; padding: 3px 8px; border-radius: 12px; background: rgba(251,191,36,0.2); color: #fde68a; }
+    #status-badge.conectado { background: rgba(34,197,94,0.2); color: #86efac; }
+    
+    /* Área de Desenho e Ferramentas */
+    #canvas-wrapper { flex: 1; position: relative; width: 100%; height: 100%; background: #fff; }
+    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+    /* 3. PAINEL DE FERRAMENTAS */
+    #tools-panel { position: absolute; top: 15px; left: 15px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 10px; z-index: 20; border: 1px solid #e2e8f0; }
+    #tools-panel.hidden { display: none !important; }
+    
+    .tool-row { display: flex; gap: 8px; align-items: center; justify-content: center; }
+    .color-btn { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+    .color-btn.active { border-color: #333; transform: scale(1.1); }
+    
+    .size-btn { background: #f0f2f5; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; color: #475569; }
+    .size-btn.active { background: #3498db; color: white; }
+
+    .action-btn { background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; }
   </style>
-  <script type="module" crossorigin src="/assets/lousa-Cnry_rd1.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/chunk-bqFK08oC.js">
-  <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
-  <link rel="stylesheet" crossorigin href="/assets/lousa-C9iOKnfK.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
-  <div id="root"></div>
-
+
+  <!-- TELA DE ESPERA PARA ALUNOS -->
+  <div id="waiting-overlay">
+    <div style="font-size: 60px; filter: grayscale(100%) opacity(0.5); animation: pulse 2s infinite;">⏳</div>
+    <h2 style="font-size: 22px; margin: 0 0 10px 0;">A lousa surgirá em instantes</h2>
+    <p style="color: #94a3b8; font-size: 14px;">Aguardando o professor ativar a sala: <span id="waiting-turma"></span></p>
+    <div style="background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold;">🔄 Conectado ao servidor</div>
+  </div>
+
+  <!-- LOUSA DIGITAL NATIVA -->
+  <div id="lousa-container">
+    <div id="lousa-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 18px;">🖍️</span>
+        <span id="lousa-title" style="font-weight: 600; font-size: 14px;">Lousa Interativa</span>
+        <span id="status-badge">Aguardando...</span>
+      </div>
+    </div>
+    
+    <div id="canvas-wrapper">
+      <!-- Painel Flutuante de Ferramentas -->
+      <div id="tools-panel" class="hidden">
+        <div class="tool-row" id="color-picker">
+          <div class="color-btn active" style="background: #2c3e50;" data-color="#2c3e50"></div>
+          <div class="color-btn" style="background: #e74c3c;" data-color="#e74c3c"></div>
+          <div class="color-btn" style="background: #3498db;" data-color="#3498db"></div>
+          <div class="color-btn" style="background: #27ae60;" data-color="#27ae60"></div>
+          <div class="color-btn" style="background: #ffffff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px;" data-color="#ffffff" title="Borracha">🧹</div>
+        </div>
+        <div class="tool-row" id="size-picker">
+          <button class="size-btn active" data-size="3">Fino</button>
+          <button class="size-btn" data-size="8">Médio</button>
+          <button class="size-btn" data-size="15">Grosso</button>
+        </div>
+        <button class="action-btn" onclick="limparQuadro()"><span style="font-size: 16px;">🗑️</span> Limpar Tudo</button>
+      </div>
+      
+      <!-- O Quadro Negro (Canvas) -->
+      <canvas id="board"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CONFIGURAÇÕES INICIAIS E VARIÁVEIS DE ESTADO
+    // =========================================================================
+    const params = new URLSearchParams(window.location.search);
+    const role = params.get('role') || 'professor';
+    const roomId = params.get('room') || 'global';
+    let isLocked = params.get('locked') === 'true'; // Se for 'true', o aluno não desenha
+    
+    document.getElementById('waiting-turma').innerText = roomId === 'global' ? 'Geral' : roomId;
+
+    const overlay = document.getElementById('waiting-overlay');
+    const lousaContainer = document.getElementById('lousa-container');
+    const toolsPanel = document.getElementById('tools-panel');
+    const titleEl = document.getElementById('lousa-title');
+    const badgeEl = document.getElementById('status-badge');
+    
+    // Variáveis do Canvas
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    
+    let desenhando = false;
+    let corAtual = '#2c3e50';
+    let espessuraAtual = 3;
+    
+    // Memória da Lousa (A lista de traços que viaja para o servidor)
+    let records = []; 
+    let tracoAtual = null;
+
+    let isAllowed = role !== 'aluno'; // Professor tem livre trânsito sempre
+    let lastSavedTime = 0;
+
+    // =========================================================================
+    // 2. MOTOR DO CANVAS (PINTURA E REDIMENSIONAMENTO)
+    // =========================================================================
+    function redimensionarCanvas() {
+        // Garantir que a lousa não apaga ao girar o telemóvel
+        const dataSalva = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        ctx.putImageData(dataSalva, 0, 0);
+        desenharTodosOsTracos(); // Repinta tudo de forma limpa
+    }
+    window.addEventListener('resize', redimensionarCanvas);
+
+    function iniciarDesenho(e) {
+        if (role === 'aluno' && isLocked) return; // Se bloqueado, não faz nada
+        desenhando = true;
+        
+        // Trata posição do rato ou toque (telemóvel)
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+        // Inicia um novo "traço" na nossa memória
+        tracoAtual = { cor: corAtual, tamanho: espessuraAtual, pontos: [{x, y}] };
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = corAtual;
+        ctx.lineWidth = espessuraAtual;
+    }
+
+    function desenhar(e) {
+        if (!desenhando || !tracoAtual) return;
+        e.preventDefault(); // Impede o ecrã de rolar no telemóvel
+        
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        
+        tracoAtual.pontos.push({x, y}); // Guarda o ponto
+    }
+
+    function pararDesenho() {
+        if (!desenhando) return;
+        desenhando = false;
+        
+        // O traço terminou, vamos guardá-lo na memória principal e enviar para a nuvem
+        if (tracoAtual && tracoAtual.pontos.length > 0) {
+            records.push(tracoAtual);
+            salvarNaNuvem(); 
+        }
+        tracoAtual = null;
+    }
+
+    // Eventos do Rato
+    canvas.addEventListener('mousedown', iniciarDesenho);
+    canvas.addEventListener('mousemove', desenhar);
+    canvas.addEventListener('mouseup', pararDesenho);
+    canvas.addEventListener('mouseout', pararDesenho);
+    // Eventos de Toque (Smartphones e Tablets)
+    canvas.addEventListener('touchstart', iniciarDesenho, {passive: false});
+    canvas.addEventListener('touchmove', desenhar, {passive: false});
+    canvas.addEventListener('touchend', pararDesenho);
+
+    // =========================================================================
+    // 3. MOTOR DE FERRAMENTAS
+    // =========================================================================
+    document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            corAtual = btn.getAttribute('data-color');
+        });
+    });
+
+    document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            espessuraAtual = parseInt(btn.getAttribute('data-size'));
+        });
+    });
+
+    window.limparQuadro = function() {
+        records = []; // Esvazia a memória
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        salvarNaNuvem(); // Informa a nuvem que o quadro foi limpo
+    }
+
+    function desenharTodosOsTracos() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpa
+        if (!records) return;
+        
+        // Repinta todos os traços guardados na memória
+        records.forEach(traco => {
+            if(!traco.pontos || traco.pontos.length === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(traco.pontos[0].x, traco.pontos[0].y);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = traco.cor;
+            ctx.lineWidth = traco.tamanho;
+            
+            for(let i = 1; i < traco.pontos.length; i++) {
+                ctx.lineTo(traco.pontos[i].x, traco.pontos[i].y);
+            }
+            ctx.stroke();
+        });
+    }
+
+    // =========================================================================
+    // 4. COMUNICAÇÃO COM O SERVIDOR (API & TEMPO REAL)
+    // =========================================================================
+    function setConectado(status) {
+        badgeEl.innerText = status ? 'Ao Vivo' : 'Conectando...';
+        if (status) badgeEl.classList.add('conectado');
+        else badgeEl.classList.remove('conectado');
+    }
+
+    function atualizarInterfaceLock() {
+        if (role === 'aluno' && isLocked) {
+            toolsPanel.classList.add('hidden');
+            titleEl.innerText = 'Lousa (Modo Leitura)';
+        } else {
+            toolsPanel.classList.remove('hidden');
+            titleEl.innerText = 'Lousa Interativa';
+        }
+    }
+
+    // 🚀 Apanha os comandos silenciosos (Professor tranca/destranca caneta)
+    window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'LOCK_STATE') {
+            isLocked = e.data.locked;
+            atualizarInterfaceLock();
+        }
+    });
+
+    // 🚀 Carregar Dados da Nuvem
+    async function carregarDaNuvem() {
+        try {
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
+            const data = await res.json();
+            if (data?.success && Array.isArray(data.records)) {
+                records = data.records; // Atualiza a memória
+                desenharTodosOsTracos(); // Repinta
+            }
+            setConectado(true);
+        } catch(e) {
+            console.error("Falha ao puxar lousa", e);
+        }
+    }
+
+    // 🚀 Enviar Dados para a Nuvem (Com Debounce de 400ms para evitar sobrecarga)
+    function salvarNaNuvem() {
+        if (role === 'aluno' && isLocked) return;
+        
+        const agora = Date.now();
+        if (agora - lastSavedTime < 400) return;
+        lastSavedTime = agora;
+
+        fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+            method: 'PUT', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ records: records })
+        }).catch(()=>{});
+    }
+
+    // =========================================================================
+    // 5. GESTÃO DE ACESSO E ARRANQUE
+    // =========================================================================
+    async function checkAccess() {
+        if (role !== 'aluno') {
+            overlay.classList.add('hidden');
+            lousaContainer.style.display = 'flex';
+            atualizarInterfaceLock();
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
+            const data = await res.json();
+            
+            if (data?.success && data.ativa) {
+                isAllowed = true;
+                if (typeof data.recursos !== 'undefined') isLocked = !data.recursos;
+                
+                overlay.classList.add('hidden');
+                lousaContainer.style.display = 'flex';
+                atualizarInterfaceLock();
+                redimensionarCanvas();
+            } else {
+                isAllowed = false;
+                overlay.classList.remove('hidden');
+                lousaContainer.style.display = 'none';
+            }
+        } catch(e) {}
+    }
+
+    // Arranque Principal
+    window.onload = () => {
+        redimensionarCanvas();
+        checkAccess();
+        setInterval(checkAccess, 3000); // Polling de verificação de permissão
+        
+        if (role !== 'aluno' || isAllowed) {
+            carregarDaNuvem();
+        }
+
+        // 🚀 O TUNEL SSE DO ALUNO: Ouvi a nuvem instantaneamente!
+        if (role === 'aluno') {
+            let escolaId = 'DEFAULT';
+            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
+            
+            const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+            es.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
+                        carregarDaNuvem(); // Se alguém desenhou, repinta imediatamente!
+                    }
+                } catch(e){}
+            };
+            
+            // Backup (caso o SSE caia, procura dados a cada 4 segs)
+            setInterval(carregarDaNuvem, 4000);
+        }
+    };
+  </script>
 </body>
 </html>
