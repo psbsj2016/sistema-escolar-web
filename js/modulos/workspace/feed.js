@@ -363,33 +363,33 @@ Workspace.Feed = {
         return dataPost.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
     },
 
-    processarTextoComEmbeds: (textoOriginal) => {
+   processarTextoComEmbeds: (textoOriginal) => {
         if (!textoOriginal) return '';
         let texto = Workspace.Feed.limparTexto(textoOriginal).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
         const embeds = [];
         
         texto = texto.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
+            embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; break-inside: avoid; column-span: all;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
             return ''; 
         });
 
         texto = texto.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
+            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%; break-inside: avoid; column-span: all;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 605px;min-width: 325px; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
             return '';
         });
 
         texto = texto.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.instagram.com/p/${id}/embed" width="400" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></iframe></div>`);
+            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%; break-inside: avoid; column-span: all;"><iframe src="https://www.instagram.com/p/${id}/embed" width="400" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></iframe></div>`);
             return '';
         });
 
         texto = texto.replace(/https?:\/\/(?:www\.)?facebook\.com\/(?:watch\/\?v=|video\.php\?v=|.*\/videos\/)(\d+)(?:\S+)?/ig, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%;"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(match.split('?')[0])}&show_text=false" width="500" height="280" style="border:none; overflow:hidden; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe></div>`);
+            embeds.push(`<div style="margin-top: 15px; display: flex; justify-content: center; width: 100%; break-inside: avoid; column-span: all;"><iframe src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(match.split('?')[0])}&show_text=false" width="500" height="280" style="border:none; overflow:hidden; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen="true"></iframe></div>`);
             return '';
         });
 
         texto = texto.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
-            embeds.push(`<div style="margin-top: 15px; width: 100%;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
+            embeds.push(`<div style="margin-top: 15px; width: 100%; break-inside: avoid; column-span: all;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
             return '';
         });
 
@@ -897,13 +897,20 @@ Workspace.Feed = {
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(!containerText) return;
 
+        // 🚀 REMOVE AS AMARRAS DE ALTURA DURANTE A EDIÇÃO!
+        containerText.classList.remove('ws-text-collapsed');
+        
+        // Esconde o botão Ler Mais temporariamente
+        const btnLerMais = document.getElementById(`btn-ler-mais-${postId}`);
+        if(btnLerMais) btnLerMais.style.display = 'none';
+
         const textAtual = post.texto || '';
         containerText.innerHTML = `
-            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s;" onclick="event.stopPropagation()">
-                <textarea id="edit-input-${postId}" rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
+            <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s; column-span: all; break-inside: avoid;" onclick="event.stopPropagation()">
+                <textarea id="edit-input-${postId}" rows="6" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button class="ws-btn ws-btn-gamified" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
-                    <button class="ws-btn ws-btn-gamified" style="background:#95a5a6; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">Cancelar</button>
+                    <button class="ws-btn ws-btn-gamified" style="background:#e74c3c; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.cancelarEdicaoPost('${postId}')">✖ Cancelar</button>
                 </div>
             </div>
         `;
@@ -914,9 +921,21 @@ Workspace.Feed = {
         if(!post) return;
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(containerText) {
-            const ehTextoLongo = (post.texto && post.texto.length > 350);
+            const numLinhas = (post.texto ? (post.texto.match(/\n/g) || []).length : 0);
+            const ehTextoLongo = (post.texto && post.texto.length > 350) || numLinhas > 8;
+            
             containerText.innerHTML = Workspace.Feed.processarTextoComEmbeds(post.texto) + (ehTextoLongo ? '<div class="ws-text-fade"></div>' : '');
-            if(ehTextoLongo) containerText.classList.add('ws-text-collapsed');
+            
+            if(ehTextoLongo) {
+                containerText.classList.add('ws-text-collapsed');
+            }
+            
+            const btnLerMais = document.getElementById(`btn-ler-mais-${postId}`);
+            if(btnLerMais) {
+                btnLerMais.style.display = ehTextoLongo ? 'block' : 'none';
+                const spanLerMais = btnLerMais.querySelector('span');
+                if(spanLerMais) spanLerMais.innerText = "Ler mais ⬇️";
+            }
         }
     },
 
@@ -932,7 +951,10 @@ Workspace.Feed = {
             if(res && res.success) {
                 const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
                 if(post) post.texto = novoTexto;
+                
+                // 🚀 CHAMA O CANCELAR PARA RECONSTRUIR A CAIXA E AVALIAR O TAMANHO DO TEXTO NOVO
                 Workspace.Feed.cancelarEdicaoPost(postId);
+                
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
             } else throw new Error();
         } catch(e) {
@@ -1020,8 +1042,16 @@ Workspace.Feed = {
             
             const displayComentarios = Workspace.Feed.comentariosAbertos.has(p.id) ? 'block' : 'none';
 
-            const ehTextoLongo = (p.texto && p.texto.length > 350);
-            const btnVerMais = ehTextoLongo ? `<div style="margin-top: 8px;"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer;">Ler mais ⬇️</span></div>` : '';
+            // 🚀 O NOVO CÁLCULO INTELIGENTE (Letras de Músicas)
+            const numLinhas = (p.texto ? (p.texto.match(/\n/g) || []).length : 0);
+            const ehTextoLongo = (p.texto && p.texto.length > 350) || numLinhas > 8;
+            const ehMusica = numLinhas >= 10; 
+            
+            // Se for música/poema, aplica colunas elegantes (cria 2 colunas e divide o texto para não ficar muito longo pra baixo)
+            const estiloColunas = ehMusica ? 'column-width: 250px; column-gap: 30px; widows: 3; orphans: 3;' : '';
+
+            // 🚀 O BOTÃO LER MAIS AGORA TEM UM ID EXCLUSIVO PARA O PODERMOS CONTROLAR!
+            const btnVerMais = `<div id="btn-ler-mais-${p.id}" style="margin-top: 8px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(52,152,219,0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(52,152,219,0.2)'" onmouseout="this.style.background='rgba(52,152,219,0.1)'">Ler mais ⬇️</span></div>`;
 
             return `
                 <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
@@ -1057,7 +1087,7 @@ Workspace.Feed = {
                         </div>
                     </div>
                     
-                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
+                    <div id="text-wrap-${p.id}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="font-size:14px; color:#333; line-height:1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; ${estiloColunas}">
                         ${textoSeguro}
                         ${ehTextoLongo ? '<div class="ws-text-fade"></div>' : ''}
                     </div>
