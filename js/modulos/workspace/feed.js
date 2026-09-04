@@ -1502,10 +1502,54 @@ Workspace.Feed = {
         `;
     },
 
+// 🚀 O NOVO FILTRO DOURADO: Integrado globalmente para uso no Resumo, Quiz e Anotações
+    formatarIA: (txt) => {
+        if (!txt) return '';
+        
+        let textoProcessado = String(txt)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/```(.*?)```/gs, '<code>$1</code>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+            
+        const descodificador = document.createElement('textarea');
+        descodificador.innerHTML = textoProcessado;
+        let textoReal = descodificador.value;
+        
+        textoReal = Workspace.Feed.limparTexto(textoReal);
+        
+        const tags = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
+        tags.forEach(tag => {
+            const rOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
+            const rClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
+            const rSelf = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
+            textoReal = textoReal.replace(rOpen, `<${tag}>`).replace(rClose, `</${tag}>`).replace(rSelf, `<${tag}>`);
+        });
+
+        textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
+                             .replace(/&lt;\/code&gt;/gi, '</code>');
+        return textoReal;
+    },
+
+    gerarHTMLPerguntaQuiz: (q, index) => {
+        return `
+            <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${Workspace.Feed.formatarIA(q.pergunta)}</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                    ${q.opcoes.map((opcao, optIndex) => `
+                        <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px; font-family: inherit;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${Workspace.Feed.formatarIA(opcao)}</button>
+                    `).join('')}
+                </div>
+                <div id="quiz-exp-${index}" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; line-height: 1.5;"></div>
+            </div>
+        `;
+    },
+
     renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
-        Workspace.Feed._dadosImersaoAtual = dados; // Guarda os dados para usar ao pedir Mais Quiz!
+        Workspace.Feed._dadosImersaoAtual = dados; 
+        Workspace.Feed._notaImersaoAtual = { titulo: dados.tituloNota, conteudo: dados.conteudoParaNota };
         
         let htmlQuiz = '';
         if (dados.quiz && dados.quiz.length > 0) {
@@ -1526,7 +1570,18 @@ Workspace.Feed = {
             `;
         }
         
-        // Remove os blocos sujos Markdown iniciais
+        let htmlNota = '';
+        if (dados.tituloNota && dados.conteudoParaNota) {
+            htmlNota = `
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 25px; border-radius: 16px; margin: 30px 0; text-align: center; animation: fadeIn 0.8s ease;">
+                    <div style="font-size: 35px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🧰</div>
+                    <h3 style="color: #34d399; margin: 0 0 10px 0; font-size: 19px;">Guardar Resumo no Baú das Memórias?</h3>
+                    <p style="color: #94a3b8; font-size: 15px; margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">A Inteligência Artificial preparou um material focado nas suas necessidades. Clique abaixo para guardá-lo permanentemente nas suas Anotações!</p>
+                    <button id="ws-btn-salvar-nota-ia" onclick="Workspace.Feed.salvarNotaImersao()" style="background: #10b981; color: white; border: none; padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">📝 Guardar nas Anotações</button>
+                </div>
+            `;
+        }
+
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados, dados.materiaisExtras);
 
@@ -1536,6 +1591,7 @@ Workspace.Feed = {
                 <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px; color: #e2e8f0; line-height: 1.6;">
                     ${Workspace.Feed.formatarIA(resumoSeguro)}
                 </div>
+                ${htmlNota}
                 ${htmlRecursos}
                 ${htmlQuiz}
             </div>
@@ -1580,6 +1636,50 @@ Workspace.Feed = {
         }
     },
 
+    // 🚀 NOVA FUNÇÃO: Gravar Nota Diretamente no Banco de Dados
+    salvarNotaImersao: async () => {
+        const nota = Workspace.Feed._notaImersaoAtual;
+        if (!nota || !nota.titulo || !nota.conteudo || !Workspace.usuario) return;
+        
+        const btn = document.getElementById('ws-btn-salvar-nota-ia');
+        if (btn) {
+            btn.innerHTML = '⏳ A guardar...';
+            btn.disabled = true;
+        }
+
+        try {
+            const res = await Workspace.api('/workspace/bau/notas', 'POST', {
+                usuarioId: Workspace.usuario.id,
+                titulo: nota.titulo,
+                texto: Workspace.Feed.formatarIA(nota.conteudo) // Guarda com formatação limpa e elegante!
+            });
+
+            if (res && res.success) {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("Anotação guardada no Baú das Memórias! 🧰✨", "success", 4000);
+                }
+                if (btn) {
+                    btn.innerHTML = '✅ Guardado nas Anotações';
+                    btn.style.background = '#059669';
+                    btn.style.boxShadow = 'none';
+                }
+                
+                // Atualiza o Baú silenciosamente se a aba estiver aberta no fundo
+                if (Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
+                    Workspace.Bau.carregarDadosDaNuvem();
+                }
+            } else {
+                throw new Error('Falha no servidor');
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao guardar. Tente novamente.", "error");
+            if (btn) {
+                btn.innerHTML = '📝 Guardar nas Anotações';
+                btn.disabled = false;
+            }
+        }
+    },
+
     // 🚀 NOVA FUNÇÃO: O Motor do Quiz Infinito
     gerarMaisQuizImersao: async () => {
         const btn = document.getElementById('ws-btn-mais-quiz');
@@ -1601,12 +1701,12 @@ Workspace.Feed = {
             if (res && res.success && res.novasPerguntas) {
                 const quizInicioIndex = Workspace.Feed._quizImersaoCache.length;
                 
-                // Grava as novas perguntas na memória cache para a validação continuar a funcionar
+                // Grava as novas perguntas na memória cache
                 res.novasPerguntas.forEach(novaPergunta => {
                     Workspace.Feed._quizImersaoCache.push(novaPergunta);
                 });
 
-                // Desenha as perguntas fresquinhas abaixo das antigas
+                // Desenha as perguntas fresquinhas
                 let novasHtml = '';
                 res.novasPerguntas.forEach((q, i) => {
                     novasHtml += Workspace.Feed.gerarHTMLPerguntaQuiz(q, quizInicioIndex + i);
