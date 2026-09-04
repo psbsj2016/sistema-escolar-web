@@ -31,21 +31,40 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVO: Motor que injeta o botão mágico no topo do Feed
+   // 🚀 NOVO: Radar Persistente para Injetar o Botão Mágico
     injetarBotaoImersao: () => {
-        setTimeout(() => {
+        // Tenta injetar o botão a cada 500ms até ter sucesso
+        const tentarInjetar = setInterval(() => {
             const filterBar = document.getElementById('ws-feed-filter-bar');
-            if (filterBar && !document.getElementById('btn-imersao-especifica')) {
+            const areaDePosts = document.getElementById('ws-posts-area');
+            
+            // O local alvo será a barra de filtros. Se ela não existir, usamos a área superior aos posts (Plano B)
+            const localAlvo = filterBar || (areaDePosts ? areaDePosts.parentNode : null);
+
+            if (localAlvo && !document.getElementById('btn-imersao-especifica')) {
                 const btn = document.createElement('button');
                 btn.id = 'btn-imersao-especifica';
                 btn.className = 'ws-filter-chip';
                 // Design de Alto Destaque (Gradiente Premium)
-                btn.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 8px 16px !important; order: -1; margin-right: 10px;';
+                btn.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; margin: 0 10px 10px 0 !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
                 btn.innerHTML = '🌌 Imersão Específica';
                 btn.onclick = () => Workspace.Feed.abrirImersao();
-                filterBar.insertBefore(btn, filterBar.firstChild);
+                
+                if (filterBar) {
+                    // Coloca em primeiro lugar na barra de filtros
+                    filterBar.insertBefore(btn, filterBar.firstChild);
+                } else if (areaDePosts) {
+                    // Plano B: Coloca logo acima da área de posts
+                    localAlvo.insertBefore(btn, areaDePosts);
+                }
+
+                console.log("🌌 Botão da Imersão Específica injetado com sucesso!");
+                clearInterval(tentarInjetar); // Para o relógio assim que o botão for injetado!
             }
-        }, 500); // Aguarda o DOM renderizar a barra de filtros
+        }, 500);
+
+        // Segurança: Se após 10 segundos o ecrã não carregar, desiste para não gastar memória
+        setTimeout(() => clearInterval(tentarInjetar), 10000);
     },
 
     conectarTempoReal: () => {
