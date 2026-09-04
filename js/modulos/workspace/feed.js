@@ -1450,16 +1450,27 @@ Workspace.Feed = {
         return painelCompleto;
     },
 
- renderizarImersao: (dados) => {
+renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
         
-        const formatarIA = (txt) => Workspace.Feed.limparTexto(txt)
-            .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>')
-            .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
-            .replace(/&lt;b&gt;/gi, '<b>').replace(/&lt;\/b&gt;/gi, '</b>')
-            .replace(/&lt;i&gt;/gi, '<i>').replace(/&lt;\/i&gt;/gi, '</i>')
-            .replace(/&lt;br&gt;/gi, '<br>');
+        // 🚀 O NOVO FILTRO DOURADO: Descodifica os acentos (&eacute; -> é) antes de aplicar a segurança!
+        const formatarIA = (txt) => {
+            if (!txt) return '';
+            
+            // 1. Tradutor Mágico: Converte códigos HTML de volta para acentos reais
+            const descodificador = document.createElement('textarea');
+            descodificador.innerHTML = txt;
+            const textoReal = descodificador.value;
+            
+            // 2. Proteção e Restauração de Estilos
+            return Workspace.Feed.limparTexto(textoReal)
+                .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>')
+                .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
+                .replace(/&lt;b&gt;/gi, '<b>').replace(/&lt;\/b&gt;/gi, '</b>')
+                .replace(/&lt;i&gt;/gi, '<i>').replace(/&lt;\/i&gt;/gi, '</i>')
+                .replace(/&lt;br&gt;/gi, '<br>');
+        };
         
         let htmlQuiz = '';
         if (dados.quiz && dados.quiz.length > 0) {
