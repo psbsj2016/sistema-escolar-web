@@ -1749,7 +1749,7 @@ Workspace.Feed = {
         }
     },
 
-    renderizarImersaoMusical: (plano, postOriginal) => {
+   renderizarImersaoMusical: (plano, postOriginal) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
         let htmlVideo = '';
@@ -1767,17 +1767,33 @@ Workspace.Feed = {
         }
 
         let htmlDias = '';
-        // 🚀 Lemos a nova estrutura genérica para suportar 14 dias sem quebrar
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
+                // 🚀 GERAÇÃO DO MINIJOGO: Cria o input dinamicamente onde está o "____"
+                const idInput = `input-musica-dia-${dia.dia}`;
+                const idFeedback = `feedback-musica-dia-${dia.dia}`;
+                const palavraCerta = Workspace.Feed.limparTexto(dia.palavraEscondida).toLowerCase().trim();
+                
+                // Substitui os sublinhados por um campo de input elegante
+                const fraseInterativa = Workspace.Feed.formatarIA(dia.fraseOculta).replace('____', `<input type="text" id="${idInput}" placeholder="???" style="background: rgba(0,0,0,0.3); border: 1px solid #ec4899; color: #fdf2f8; font-weight: bold; font-size: 18px; width: 120px; text-align: center; border-radius: 6px; outline: none; padding: 2px 5px; font-family: inherit; transition: 0.2s;" autocomplete="off" onkeypress="if(event.key === 'Enter') Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')">`);
+
                 htmlDias += `
                     <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
-                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Frase Diária</span>
+                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Fill in the Blanks ✍️</span>
                         </div>
-                        <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 5px; font-style: italic;">"${Workspace.Feed.formatarIA(dia.fraseOriginal)}"</div>
-                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px;">Trad: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                        
+                        <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 15px; font-style: italic; line-height: 1.5;">
+                            ${fraseInterativa}
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px;">
+                            <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">Verificar Letra</button>
+                            <span id="${idFeedback}" style="font-size: 14px; font-weight: bold;"></span>
+                        </div>
+
+                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Trad: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
                         
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
@@ -1796,11 +1812,54 @@ Workspace.Feed = {
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
-                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu plano intenso de 14 dias de fluência focado nesta música.</p>
+                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco prestando atenção à música!</p>
                 ${htmlVideo}
                 ${htmlDias}
             </div>
         `;
+    },
+
+    // 🚀 LÓGICA DE VALIDAÇÃO: Avalia a resposta na hora!
+    verificarBlankMusical: (idInput, palavraCerta, idFeedback) => {
+        const input = document.getElementById(idInput);
+        const feedback = document.getElementById(idFeedback);
+        if (!input || !feedback) return;
+        
+        // Remove pontuações finais para não dar erro se o aluno escrever "train!" em vez de "train"
+        const tentativa = input.value.trim().toLowerCase().replace(/[.,!?;:]/g, '');
+        const alvo = palavraCerta.replace(/[.,!?;:]/g, '');
+
+        if (tentativa === alvo) {
+            input.style.borderColor = '#10b981';
+            input.style.background = 'rgba(16, 185, 129, 0.2)';
+            input.style.color = '#10b981';
+            input.disabled = true; // Tranca o input após acertar
+            feedback.style.color = '#10b981';
+            feedback.innerHTML = '✅ Correto! Excelente ouvido.';
+            
+            // Lança confetes ou efeito visual de sucesso
+            input.style.transform = 'scale(1.1)';
+            setTimeout(() => input.style.transform = 'scale(1)', 200);
+        } else {
+            input.style.borderColor = '#ef4444';
+            input.style.color = '#ef4444';
+            feedback.style.color = '#ef4444';
+            feedback.innerHTML = '❌ Não é bem isso. Tente novamente!';
+            
+            // Efeito de tremer (shake) no erro
+            input.style.transform = 'translateX(-5px)';
+            setTimeout(() => input.style.transform = 'translateX(5px)', 50);
+            setTimeout(() => input.style.transform = 'translateX(0)', 100);
+
+            // Reseta a cor após 2 segundos para nova tentativa
+            setTimeout(() => {
+                if(!input.disabled) {
+                    input.style.borderColor = '#ec4899';
+                    input.style.color = '#fdf2f8';
+                    feedback.innerHTML = '';
+                }
+            }, 2000);
+        }
     }
 
 };
