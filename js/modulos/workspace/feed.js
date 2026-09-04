@@ -32,38 +32,38 @@ Workspace.Feed = {
     },
 
    // 🚀 NOVO: Radar Persistente para Injetar o Botão Mágico
-    injetarBotaoImersao: () => {
-        // Tenta injetar o botão a cada 500ms até ter sucesso
+   injetarBotaoImersao: () => {
         const tentarInjetar = setInterval(() => {
             const filterBar = document.getElementById('ws-feed-filter-bar');
             const areaDePosts = document.getElementById('ws-posts-area');
-            
-            // O local alvo será a barra de filtros. Se ela não existir, usamos a área superior aos posts (Plano B)
             const localAlvo = filterBar || (areaDePosts ? areaDePosts.parentNode : null);
 
-            if (localAlvo && !document.getElementById('btn-imersao-especifica')) {
-                const btn = document.createElement('button');
-                btn.id = 'btn-imersao-especifica';
-                btn.className = 'ws-filter-chip';
-                // Design de Alto Destaque (Gradiente Premium)
-                btn.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; margin: 0 10px 10px 0 !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
-                btn.innerHTML = '🌌 Imersão Específica';
-                btn.onclick = () => Workspace.Feed.abrirImersao();
-                
-                if (filterBar) {
-                    // Coloca em primeiro lugar na barra de filtros
-                    filterBar.insertBefore(btn, filterBar.firstChild);
-                } else if (areaDePosts) {
-                    // Plano B: Coloca logo acima da área de posts
-                    localAlvo.insertBefore(btn, areaDePosts);
-                }
+            if (localAlvo && !document.getElementById('ws-grupo-botoes-imersao')) {
+                const wrapper = document.createElement('div');
+                wrapper.id = 'ws-grupo-botoes-imersao';
+                wrapper.style.cssText = 'display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; width: 100%;';
 
-                console.log("🌌 Botão da Imersão Específica injetado com sucesso!");
-                clearInterval(tentarInjetar); // Para o relógio assim que o botão for injetado!
+                const btnImersao = document.createElement('button');
+                btnImersao.className = 'ws-filter-chip';
+                btnImersao.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
+                btnImersao.innerHTML = '🌌 Imersão Específica';
+                btnImersao.onclick = () => Workspace.Feed.abrirImersao();
+
+                const btnMusica = document.createElement('button');
+                btnMusica.className = 'ws-filter-chip';
+                btnMusica.style.cssText = 'background: linear-gradient(135deg, #ec4899, #f43f5e) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
+                btnMusica.innerHTML = '🎶 Inglês com Música';
+                btnMusica.onclick = () => Workspace.Feed.abrirImersaoMusical();
+
+                wrapper.appendChild(btnImersao);
+                wrapper.appendChild(btnMusica);
+                
+                if (filterBar) filterBar.insertBefore(wrapper, filterBar.firstChild);
+                else if (areaDePosts) localAlvo.insertBefore(wrapper, areaDePosts);
+
+                clearInterval(tentarInjetar); 
             }
         }, 500);
-
-        // Segurança: Se após 10 segundos o ecrã não carregar, desiste para não gastar memória
         setTimeout(() => clearInterval(tentarInjetar), 10000);
     },
 
@@ -233,7 +233,30 @@ Workspace.Feed = {
                 </div>
             `;
             
-            document.body.insertAdjacentHTML('beforeend', modaisHTML + modalImersao);
+
+        const modalMusica = `
+                <div id="ws-imersao-musical-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #18181b; z-index: 100030; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow-y: auto;">
+                    <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(24, 24, 27, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); border-bottom: 1px solid #3f3f46;">
+                        <h2 style="color: #fff; margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">🎶 Inglês com Música</h2>
+                        <button onclick="Workspace.Feed.fecharImersaoMusical()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Sair">✖</button>
+                    </div>
+                    <div style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 30px; justify-content: center;">
+                            <button onclick="Workspace.Feed.gerarImersaoMusical()" id="ws-btn-gerar-musica" style="background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4); width: 100%;">Analisar Feed e Criar Plano Musical 🎧</button>
+                        </div>
+                        <div id="ws-imersao-musical-conteudo" style="color: #e4e4e7; font-size: 16px; line-height: 1.6;">
+                            <div style="text-align: center; padding: 50px 20px; color: #a1a1aa;">
+                                <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🎸</div>
+                                <h3 style="color: #d4d4d8; font-size: 22px;">O Poder da Repetição Espaçada</h3>
+                                <p style="max-width: 500px; margin: 0 auto;">A Inteligência Artificial vai vasculhar a turma por vídeos musicais partilhados e desenhar um plano de 7 dias com as frases e gírias mais importantes para si.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modaisHTML + modalImersao + modalMusica);
+       
         }
     },
 
@@ -1586,7 +1609,7 @@ Workspace.Feed = {
         }
     },
 
-    gerarMaisQuizImersao: async () => {
+ gerarMaisQuizImersao: async () => {
         const btn = document.getElementById('ws-btn-mais-quiz');
         const listaPerguntas = document.getElementById('ws-imersao-lista-perguntas');
         const dadosBase = Workspace.Feed._dadosImersaoAtual;
@@ -1626,5 +1649,126 @@ Workspace.Feed = {
             btn.disabled = false;
             btn.style.opacity = '1';
         }
+    }, // 🚀 A VÍRGULA MÁGICA ADICIONADA AQUI!
+
+    // ------------------------------------------------------------------------
+    // 🎶 MÓDULO: IMERSÃO MUSICAL (7 DIAS DE TREINO)
+    // ------------------------------------------------------------------------
+    abrirImersaoMusical: () => {
+        const modal = document.getElementById('ws-imersao-musical-modal');
+        if (modal) {
+            document.body.style.overflow = 'hidden'; 
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => modal.style.opacity = '1');
+        }
+    },
+
+    fecharImersaoMusical: () => {
+        const modal = document.getElementById('ws-imersao-musical-modal');
+        if (modal) {
+            document.body.style.overflow = '';
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    },
+
+    gerarImersaoMusical: async () => {
+        const btn = document.getElementById('ws-btn-gerar-musica');
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        
+        if (btn) {
+            btn.innerText = 'Procurando Músicas no Feed... ⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+        
+        conteudo.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🎧</div>
+                <h3 style="color: #fff; margin-top: 20px;">A afinar os instrumentos...</h3>
+                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano de 7 dias.</p>
+            </div>
+        `;
+        
+        try {
+            const refId = Workspace.usuario.alunoRefId || '';
+            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+            
+            const res = await Workspace.api('/workspace/posts/imersao-musical', 'POST', {
+                alunoRefId: refId, escolaId
+            });
+            
+            if (res && res.success && res.plano) {
+                Workspace.Feed.renderizarImersaoMusical(res.plano, res.postOriginal);
+            } else {
+                throw new Error(res?.error || 'A IA não conseguiu gerar o plano.');
+            }
+        } catch (error) {
+            conteudo.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <h3 style="color: #f87171;">Faltam Músicas ❌</h3>
+                    <p style="color: #fca5a5;">${error.message || 'Certifique-se de que partilha publicações com vídeos do Youtube/Spotify contendo as palavras "música" ou "letra".'}</p>
+                </div>
+            `;
+        } finally {
+            if (btn) {
+                btn.innerHTML = 'Analisar Feed e Criar Plano Musical 🎧';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    },
+
+    renderizarImersaoMusical: (plano, postOriginal) => {
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        
+        let htmlVideo = '';
+        if (postOriginal) {
+            const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
+            const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
+            
+            htmlVideo = `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px;">
+                    <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Vídeo Fonte da Imersão</div>
+                    <div style="color: #d4d4d8; font-size: 14px; margin-bottom: 15px;">${textoSeguro}</div>
+                    ${anexos}
+                </div>
+            `;
+        }
+
+        let htmlDias = '';
+        if (plano.plano7Dias && plano.plano7Dias.length > 0) {
+            plano.plano7Dias.forEach(dia => {
+                htmlDias += `
+                    <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
+                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Frase Diária</span>
+                        </div>
+                        <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 5px; font-style: italic;">"${Workspace.Feed.formatarIA(dia.fraseOriginal)}"</div>
+                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px;">Trad: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
+                            <div style="color: #d4d4d8; font-size: 15px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.explicacao)}</div>
+                        </div>
+                        
+                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #3f3f46;">
+                            <strong style="color: #fb7185; font-size: 14px;">🔥 O Seu Desafio:</strong>
+                            <div style="color: #e4e4e7; font-size: 14px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.desafio)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        conteudo.innerHTML = `
+            <div style="animation: fadeIn 0.5s ease;">
+                <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
+                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu plano de 7 dias de fluência focado nesta música.</p>
+                ${htmlVideo}
+                ${htmlDias}
+            </div>
+        `;
     }
 };
