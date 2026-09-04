@@ -1470,7 +1470,8 @@ Workspace.Feed = {
         textoReal = Workspace.Feed.limparTexto(textoReal);
         
         // 4. Restaura TUDO o que é visualmente útil sem quebrar a segurança
-        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'li'];
+        // 🚀 ADICIONADO: 'u' (sublinhado), listas e cabeçalhos para os textos longos!
+        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
         tagsPermitidas.forEach(tag => {
             const regexOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
             const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
