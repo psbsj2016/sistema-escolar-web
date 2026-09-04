@@ -1332,60 +1332,71 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVO: A MÁGICA DE RECOLHER VÍDEOS E DOCUMENTOS ACONTECE AQUI!
-    gerarHTMLRecursosImersao: (idsRelacionados) => {
-        if (!idsRelacionados || !Array.isArray(idsRelacionados) || idsRelacionados.length === 0) return '';
-
+   // 🚀 NOVA FUNÇÃO: Filtra e desenha a Galeria com Posts do Feed E Materiais do Professor
+    gerarHTMLRecursosImersao: (idsRelacionados, materiaisExtras) => {
         let htmlVideos = '';
         let htmlDocs = '';
         let htmlImagens = '';
 
-        idsRelacionados.forEach(id => {
-            const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
-            if (post) {
-                // 1. Procurar Anexos Nativos (PDFs, PPTs, Vídeos MP4, Imagens)
-                if (post.anexos && post.anexos.length > 0) {
-                    post.anexos.forEach(a => {
-                        let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
-                        
-                        if (a.tipo.includes('video')) {
-                            htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
-                        } else if (a.tipo.includes('image')) {
-                            htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
-                        } else {
-                            const nomeMinusculo = (a.nome || '').toLowerCase();
-                            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
-                            let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
-                            const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
-                            htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div>`;
+        // 1. Processa os Posts do Feed escolhidos pela IA
+        if (idsRelacionados && Array.isArray(idsRelacionados)) {
+            idsRelacionados.forEach(id => {
+                const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
+                if (post) {
+                    if (post.anexos && post.anexos.length > 0) {
+                        post.anexos.forEach(a => {
+                            let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
+                            if (a.tipo.includes('video')) {
+                                htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><div style="background:#1e293b; padding:4px 10px; font-size:11px; color:#94a3b8; font-weight:bold;">💬 Do Feed</div><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
+                            } else if (a.tipo.includes('image')) {
+                                htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                            } else {
+                                const nomeMinusculo = (a.nome || '').toLowerCase();
+                                const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.ppt');
+                                let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
+                                const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
+                                htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; flex-direction:column; gap:8px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><div style="font-size:10px; color:#60a5fa; font-weight:bold;">💬 Partilhado no Feed</div><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div></div>`;
+                            }
+                        });
+                    }
+                    if (post.texto) {
+                        const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
+                        let match;
+                        while ((match = regexYouTube.exec(post.texto)) !== null) {
+                            htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
                         }
-                    });
-                }
-
-                // 2. Procurar Vídeos Embutidos no Texto (YouTube) usando regex
-                if (post.texto) {
-                    const textoLimpo = post.texto;
-                    const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
-                    let match;
-                    while ((match = regexYouTube.exec(textoLimpo)) !== null) {
-                        htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
                     }
                 }
-            }
-        });
+            });
+        }
+
+        // 2. Processa os Materiais da Biblioteca do Professor escolhidos pela IA
+        if (materiaisExtras && Array.isArray(materiaisExtras)) {
+            materiaisExtras.forEach(m => {
+                let url = m.url.startsWith('http') || m.url.startsWith('/') ? m.url : '/' + m.url;
+                const tipoStr = (m.tipoFicheiro || m.url || '').toLowerCase();
+                const tituloSeguro = (m.titulo || 'Material da Aula').replace(/'/g, "\\'");
+                
+                if (tipoStr.includes('video') || tipoStr.endsWith('.mp4')) {
+                    htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #a78bfa;"><div style="background:#4c1d95; padding:4px 10px; font-size:11px; color:#ddd6fe; font-weight:bold;">📚 Acervo do Professor</div><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}"></video><div style="padding:8px; font-size:12px; color:#fff; background:#1e1b4b;">${tituloSeguro}</div></div>`;
+                } else if (tipoStr.includes('image') || tipoStr.endsWith('.jpg') || tipoStr.endsWith('.png')) {
+                    htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #a78bfa;"><div style="background:#4c1d95; padding:4px; font-size:10px; color:#ddd6fe; font-weight:bold; text-align:center;">📚 Acervo</div><img src="${url}" loading="lazy" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                } else {
+                    const ehOffice = tipoStr.endsWith('.docx') || tipoStr.endsWith('.doc') || tipoStr.endsWith('.xlsx') || tipoStr.endsWith('.xls') || tipoStr.endsWith('.ppt');
+                    let icone = tipoStr.includes('pdf') || tipoStr.endsWith('.pdf') ? '📕' : '📑';
+                    htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${tituloSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; flex-direction:column; gap:8px; background:rgba(167, 139, 250, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(167, 139, 250, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(167, 139, 250, 0.2)'" onmouseout="this.style.background='rgba(167, 139, 250, 0.1)'"><div style="font-size:10px; color:#c4b5fd; font-weight:bold;">📚 Acervo do Professor</div><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${m.titulo}</span></div></div>`;
+                }
+            });
+        }
 
         let painelCompleto = '';
         if (htmlVideos || htmlDocs || htmlImagens) {
-            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;">
-                                <h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Recursos da Escola sobre o Tema</h3>`;
-            
-            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Relacionados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
-            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
+            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;"><h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Foco de Estudo: Materiais Relevantes</h3>`;
+            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Analisados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
+            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios de Aprofundamento</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
             if (htmlImagens) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">🖼️ Imagens</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlImagens}</div>`;
-            
             painelCompleto += `</div>`;
         }
-
         return painelCompleto;
     },
 
@@ -1439,11 +1450,10 @@ Workspace.Feed = {
         return painelCompleto;
     },
 
-  renderizarImersao: (dados) => {
+ renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
         
-        // 🚀 O FILTRO DOURADO: Limpa o texto por segurança, mas permite tags de beleza visual!
         const formatarIA = (txt) => Workspace.Feed.limparTexto(txt)
             .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>')
             .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
@@ -1471,13 +1481,14 @@ Workspace.Feed = {
         
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         
-        let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados);
+        // 🚀 O FRONTEND AGORA PASSA OS MATERIAIS EXTRAS QUE RECEBEU DA IA!
+        let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados, dados.materiaisExtras);
 
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${formatarIA(dados.titulo || 'Aula Imersiva')}</h1>
                 <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px;">
-                    ${resumoSeguro}
+                    ${formatarIA(resumoSeguro)}
                 </div>
                 ${htmlRecursos}
                 ${htmlQuiz}
