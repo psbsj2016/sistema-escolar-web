@@ -1389,6 +1389,56 @@ Workspace.Feed = {
         return painelCompleto;
     },
 
+// 🚀 NOVA FUNÇÃO: Filtra e desenha a Galeria de Vídeos e PDFs
+    gerarHTMLRecursosImersao: (idsRelacionados) => {
+        if (!idsRelacionados || !Array.isArray(idsRelacionados) || idsRelacionados.length === 0) return '';
+
+        let htmlVideos = '';
+        let htmlDocs = '';
+        let htmlImagens = '';
+
+        idsRelacionados.forEach(id => {
+            const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
+            if (post) {
+                // 1. Procurar Anexos Nativos (PDFs, PPTs, Vídeos MP4)
+                if (post.anexos && post.anexos.length > 0) {
+                    post.anexos.forEach(a => {
+                        let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
+                        if (a.tipo.includes('video')) {
+                            htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
+                        } else if (a.tipo.includes('image')) {
+                            htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                        } else {
+                            const nomeMinusculo = (a.nome || '').toLowerCase();
+                            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.ppt');
+                            let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
+                            const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
+                            htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div>`;
+                        }
+                    });
+                }
+                // 2. Procurar Vídeos Embutidos no Texto (YouTube)
+                if (post.texto) {
+                    const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
+                    let match;
+                    while ((match = regexYouTube.exec(post.texto)) !== null) {
+                        htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
+                    }
+                }
+            }
+        });
+
+        let painelCompleto = '';
+        if (htmlVideos || htmlDocs || htmlImagens) {
+            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;"><h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Recursos da Escola</h3>`;
+            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Relacionados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
+            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
+            if (htmlImagens) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">🖼️ Imagens</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlImagens}</div>`;
+            painelCompleto += `</div>`;
+        }
+        return painelCompleto;
+    },
+
     renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
@@ -1413,7 +1463,7 @@ Workspace.Feed = {
         
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         
-        // 🚀 INJEÇÃO DA GALERIA MÁGICA
+        // 🚀 INJEÇÃO DA GALERIA MÁGICA AQUI
         let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados);
 
         conteudo.innerHTML = `
