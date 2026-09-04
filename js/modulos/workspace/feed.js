@@ -1261,7 +1261,7 @@ Workspace.Feed = {
         } catch(e) {}
     },
 
-    // ------------------------------------------------------------------------
+  // ------------------------------------------------------------------------
     // 🌌 MÓDULO: IMERSÃO ESPECÍFICA (O CÉREBRO DE CURADORIA NO FRONTEND)
     // ------------------------------------------------------------------------
     abrirImersao: () => {
@@ -1290,7 +1290,7 @@ Workspace.Feed = {
         const termoBusca = input ? input.value.trim() : '';
         
         if (btn) {
-            btn.innerText = 'Lendo o Feed... ⏳';
+            btn.innerText = 'Lendo o Feed e a Biblioteca... ⏳';
             btn.disabled = true;
             btn.style.opacity = '0.7';
         }
@@ -1299,7 +1299,7 @@ Workspace.Feed = {
             <div style="text-align: center; padding: 60px 20px;">
                 <div style="font-size: 50px; animation: pulse 1.5s infinite;">🧠</div>
                 <h3 style="color: #fff; margin-top: 20px;">A processar milhares de dados...</h3>
-                <p style="color: #94a3b8;">A Inteligência Artificial está a curar os conteúdos da sua turma.</p>
+                <p style="color: #94a3b8;">A Inteligência Artificial está a focar-se no seu pedido com exatidão.</p>
             </div>
         `;
         
@@ -1312,7 +1312,6 @@ Workspace.Feed = {
             });
             
             if (res && res.success && res.imersao) {
-                // Junta os materiais da Biblioteca para a Galeria funcionar!
                 res.imersao.materiaisExtras = res.materiaisExtras || [];
                 Workspace.Feed.renderizarImersao(res.imersao);
             } else {
@@ -1334,7 +1333,7 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 O NOVO FILTRO DOURADO BLINDADO 2.0: Apaga atributos inúteis da IA e injeta CSS Premium!
+    // 🚀 O FILTRO DOURADO BLINDADO 2.0 (Apaga estilos da IA e formata Tabela)
     formatarIA: (txt) => {
         if (!txt) return '';
         
@@ -1350,7 +1349,6 @@ Workspace.Feed = {
         
         textoReal = Workspace.Feed.limparTexto(textoReal);
         
-        // A MÁGICA: Esta expressão (?:.*?) captura e DESTRÓI qualquer "style=" ou "border=" que a IA tenha inventado!
         const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'span'];
         
         tagsPermitidas.forEach(tag => {
@@ -1358,20 +1356,17 @@ Workspace.Feed = {
             const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
             const regexSelfClose = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
             
-            // Tratamento VIP para Tabelas (Injetamos o NOSSO design bonito)
             if (tag === 'table') {
-                textoReal = textoReal.replace(regexOpen, `<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; display: table;">`).replace(regexClose, `</table>`).replace(regexSelfClose, `<table>`);
+                textoReal = textoReal.replace(regexOpen, `<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; border: 1px solid #334155;">`).replace(regexClose, `</table></div>`).replace(regexSelfClose, `<table>`);
             } else if (tag === 'th' || tag === 'td') {
-                textoReal = textoReal.replace(regexOpen, `<${tag} style="border: 1px solid #334155; padding: 10px 15px; text-align: left;">`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
+                textoReal = textoReal.replace(regexOpen, `<${tag} style="border: 1px solid #334155; padding: 10px 15px; text-align: left; color: #e2e8f0;">`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
             } else if (tag === 'span') {
-                // Se ela usar span, nós limpamos os estilos e mantemos como tag inofensiva
                 textoReal = textoReal.replace(regexOpen, `<span>`).replace(regexClose, `</span>`).replace(regexSelfClose, `<span>`);
             } else {
                 textoReal = textoReal.replace(regexOpen, `<${tag}>`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
             }
         });
 
-        // Estilo Premium para Blocos de Código
         textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
                              .replace(/&lt;\/code&gt;/gi, '</code>');
 
@@ -1393,7 +1388,7 @@ Workspace.Feed = {
                             if (a.tipo.includes('video')) {
                                 htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><div style="background:#1e293b; padding:4px 10px; font-size:11px; color:#94a3b8; font-weight:bold;">💬 Do Feed</div><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
                             } else if (a.tipo.includes('image')) {
-                                htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                                htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><div style="background:#1e293b; padding:4px; font-size:10px; color:#94a3b8; font-weight:bold; text-align:center;">💬 Do Feed</div><img src="${url}" loading="lazy" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
                             } else {
                                 const nomeMinusculo = (a.nome || '').toLowerCase();
                                 const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.ppt');
@@ -1414,6 +1409,7 @@ Workspace.Feed = {
             });
         }
 
+        // NOVO: Adiciona os materiais extraídos da estante de Material Didático
         if (materiaisExtras && Array.isArray(materiaisExtras)) {
             materiaisExtras.forEach(m => {
                 let url = m.url.startsWith('http') || m.url.startsWith('/') ? m.url : '/' + m.url;
