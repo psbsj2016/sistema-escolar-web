@@ -1267,7 +1267,7 @@ Workspace.Feed = {
     abrirImersao: () => {
         const modal = document.getElementById('ws-imersao-modal');
         if (modal) {
-            document.body.style.overflow = 'hidden'; // Impede rolagem no fundo para foco total
+            document.body.style.overflow = 'hidden'; 
             modal.style.display = 'flex';
             requestAnimationFrame(() => modal.style.opacity = '1');
         }
@@ -1312,6 +1312,8 @@ Workspace.Feed = {
             });
             
             if (res && res.success && res.imersao) {
+                // Junta os materiais da Biblioteca para a Galeria funcionar!
+                res.imersao.materiaisExtras = res.materiaisExtras || [];
                 Workspace.Feed.renderizarImersao(res.imersao);
             } else {
                 throw new Error(res?.error || 'A IA não encontrou conteúdo suficiente sobre este tema.');
@@ -1332,13 +1334,42 @@ Workspace.Feed = {
         }
     },
 
-   // 🚀 NOVA FUNÇÃO: Filtra e desenha a Galeria com Posts do Feed E Materiais do Professor
+    formatarIA: (txt) => {
+        if (!txt) return '';
+        
+        let textoProcessado = String(txt)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/```(.*?)```/gs, '<code>$1</code>') 
+            .replace(/`(.*?)`/g, '<code>$1</code>');      
+            
+        const descodificador = document.createElement('textarea');
+        descodificador.innerHTML = textoProcessado;
+        let textoReal = descodificador.value;
+        
+        textoReal = Workspace.Feed.limparTexto(textoReal);
+        
+        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
+        tagsPermitidas.forEach(tag => {
+            const regexOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
+            const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
+            const regexSelfClose = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
+            textoReal = textoReal.replace(regexOpen, `<${tag}>`)
+                                 .replace(regexClose, `</${tag}>`)
+                                 .replace(regexSelfClose, `<${tag}>`);
+        });
+
+        textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
+                             .replace(/&lt;\/code&gt;/gi, '</code>');
+
+        return textoReal;
+    },
+
     gerarHTMLRecursosImersao: (idsRelacionados, materiaisExtras) => {
         let htmlVideos = '';
         let htmlDocs = '';
         let htmlImagens = '';
 
-        // 1. Processa os Posts do Feed escolhidos pela IA
         if (idsRelacionados && Array.isArray(idsRelacionados)) {
             idsRelacionados.forEach(id => {
                 const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
@@ -1370,7 +1401,6 @@ Workspace.Feed = {
             });
         }
 
-        // 2. Processa os Materiais da Biblioteca do Professor escolhidos pela IA
         if (materiaisExtras && Array.isArray(materiaisExtras)) {
             materiaisExtras.forEach(m => {
                 let url = m.url.startsWith('http') || m.url.startsWith('/') ? m.url : '/' + m.url;
@@ -1398,137 +1428,6 @@ Workspace.Feed = {
             painelCompleto += `</div>`;
         }
         return painelCompleto;
-    },
-
-// 🚀 NOVA FUNÇÃO: Filtra e desenha a Galeria de Vídeos e PDFs
-    gerarHTMLRecursosImersao: (idsRelacionados) => {
-        if (!idsRelacionados || !Array.isArray(idsRelacionados) || idsRelacionados.length === 0) return '';
-
-        let htmlVideos = '';
-        let htmlDocs = '';
-        let htmlImagens = '';
-
-        idsRelacionados.forEach(id => {
-            const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
-            if (post) {
-                // 1. Procurar Anexos Nativos (PDFs, PPTs, Vídeos MP4)
-                if (post.anexos && post.anexos.length > 0) {
-                    post.anexos.forEach(a => {
-                        let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
-                        if (a.tipo.includes('video')) {
-                            htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
-                        } else if (a.tipo.includes('image')) {
-                            htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" loading="lazy" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
-                        } else {
-                            const nomeMinusculo = (a.nome || '').toLowerCase();
-                            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.ppt');
-                            let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
-                            const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
-                            htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div>`;
-                        }
-                    });
-                }
-                // 2. Procurar Vídeos Embutidos no Texto (YouTube)
-                if (post.texto) {
-                    const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
-                    let match;
-                    while ((match = regexYouTube.exec(post.texto)) !== null) {
-                        htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
-                    }
-                }
-            }
-        });
-
-        let painelCompleto = '';
-        if (htmlVideos || htmlDocs || htmlImagens) {
-            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;"><h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Recursos da Escola</h3>`;
-            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Relacionados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
-            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
-            if (htmlImagens) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">🖼️ Imagens</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlImagens}</div>`;
-            painelCompleto += `</div>`;
-        }
-        return painelCompleto;
-    },
-
-// 🚀 O NOVO FILTRO DOURADO: Converte Markdown, aplica segurança e injeta estilo Premium!
-    formatarIA: (txt) => {
-        if (!txt) return '';
-        
-        // 1. Converte marcações Markdown comuns para tags seguras antes da limpeza
-        let textoProcessado = String(txt)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/```(.*?)```/gs, '<code>$1</code>') // Captura blocos de código
-            .replace(/`(.*?)`/g, '<code>$1</code>');      // Captura código simples (inline)
-            
-        // 2. Descodifica acentos e caracteres HTML (ex: &eacute; -> é)
-        const descodificador = document.createElement('textarea');
-        descodificador.innerHTML = textoProcessado;
-        let textoReal = descodificador.value;
-        
-        // 3. Limpeza Blindada de Segurança (XSS)
-        textoReal = Workspace.Feed.limparTexto(textoReal);
-        
-        // 4. Restaura TUDO o que é visualmente útil sem quebrar a segurança
-        // 🚀 ADICIONADO: 'u' (sublinhado), listas e cabeçalhos para os textos longos!
-        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
-        tagsPermitidas.forEach(tag => {
-            const regexOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
-            const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
-            const regexSelfClose = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
-            textoReal = textoReal.replace(regexOpen, `<${tag}>`)
-                                 .replace(regexClose, `</${tag}>`)
-                                 .replace(regexSelfClose, `<${tag}>`);
-        });
-
-        // 🚀 A CURA DO BUG DO CÓDIGO: Substituímos o código escapado por um estilo elegante!
-        textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
-                             .replace(/&lt;\/code&gt;/gi, '</code>');
-
-        return textoReal;
-    },
-
-    gerarHTMLPerguntaQuiz: (q, index) => {
-        return `
-            <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
-                <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${Workspace.Feed.formatarIA(q.pergunta)}</p>
-                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                    ${q.opcoes.map((opcao, optIndex) => `
-                        <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px; font-family: inherit;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${Workspace.Feed.formatarIA(opcao)}</button>
-                    `).join('')}
-                </div>
-                <div id="quiz-exp-${index}" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; line-height: 1.5;"></div>
-            </div>
-        `;
-    },
-
-// 🚀 O NOVO FILTRO DOURADO: Integrado globalmente para uso no Resumo, Quiz e Anotações
-    formatarIA: (txt) => {
-        if (!txt) return '';
-        
-        let textoProcessado = String(txt)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/```(.*?)```/gs, '<code>$1</code>')
-            .replace(/`(.*?)`/g, '<code>$1</code>');
-            
-        const descodificador = document.createElement('textarea');
-        descodificador.innerHTML = textoProcessado;
-        let textoReal = descodificador.value;
-        
-        textoReal = Workspace.Feed.limparTexto(textoReal);
-        
-        const tags = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
-        tags.forEach(tag => {
-            const rOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
-            const rClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
-            const rSelf = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
-            textoReal = textoReal.replace(rOpen, `<${tag}>`).replace(rClose, `</${tag}>`).replace(rSelf, `<${tag}>`);
-        });
-
-        textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
-                             .replace(/&lt;\/code&gt;/gi, '</code>');
-        return textoReal;
     },
 
     gerarHTMLPerguntaQuiz: (q, index) => {
@@ -1636,7 +1535,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVA FUNÇÃO: Gravar Nota Diretamente no Banco de Dados
     salvarNotaImersao: async () => {
         const nota = Workspace.Feed._notaImersaoAtual;
         if (!nota || !nota.titulo || !nota.conteudo || !Workspace.usuario) return;
@@ -1651,7 +1549,7 @@ Workspace.Feed = {
             const res = await Workspace.api('/workspace/bau/notas', 'POST', {
                 usuarioId: Workspace.usuario.id,
                 titulo: nota.titulo,
-                texto: Workspace.Feed.formatarIA(nota.conteudo) // Guarda com formatação limpa e elegante!
+                texto: Workspace.Feed.formatarIA(nota.conteudo) 
             });
 
             if (res && res.success) {
@@ -1664,7 +1562,6 @@ Workspace.Feed = {
                     btn.style.boxShadow = 'none';
                 }
                 
-                // Atualiza o Baú silenciosamente se a aba estiver aberta no fundo
                 if (Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
                     Workspace.Bau.carregarDadosDaNuvem();
                 }
@@ -1680,7 +1577,6 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 NOVA FUNÇÃO: O Motor do Quiz Infinito
     gerarMaisQuizImersao: async () => {
         const btn = document.getElementById('ws-btn-mais-quiz');
         const listaPerguntas = document.getElementById('ws-imersao-lista-perguntas');
@@ -1701,12 +1597,10 @@ Workspace.Feed = {
             if (res && res.success && res.novasPerguntas) {
                 const quizInicioIndex = Workspace.Feed._quizImersaoCache.length;
                 
-                // Grava as novas perguntas na memória cache
                 res.novasPerguntas.forEach(novaPergunta => {
                     Workspace.Feed._quizImersaoCache.push(novaPergunta);
                 });
 
-                // Desenha as perguntas fresquinhas
                 let novasHtml = '';
                 res.novasPerguntas.forEach((q, i) => {
                     novasHtml += Workspace.Feed.gerarHTMLPerguntaQuiz(q, quizInicioIndex + i);
