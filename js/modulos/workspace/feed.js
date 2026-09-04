@@ -1439,9 +1439,17 @@ Workspace.Feed = {
         return painelCompleto;
     },
 
-    renderizarImersao: (dados) => {
+  renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
+        
+        // 🚀 O FILTRO DOURADO: Limpa o texto por segurança, mas permite tags de beleza visual!
+        const formatarIA = (txt) => Workspace.Feed.limparTexto(txt)
+            .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>')
+            .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
+            .replace(/&lt;b&gt;/gi, '<b>').replace(/&lt;\/b&gt;/gi, '</b>')
+            .replace(/&lt;i&gt;/gi, '<i>').replace(/&lt;\/i&gt;/gi, '</i>')
+            .replace(/&lt;br&gt;/gi, '<br>');
         
         let htmlQuiz = '';
         if (dados.quiz && dados.quiz.length > 0) {
@@ -1449,10 +1457,10 @@ Workspace.Feed = {
             dados.quiz.forEach((q, index) => {
                 htmlQuiz += `
                     <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
-                        <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${Workspace.Feed.limparTexto(q.pergunta)}</p>
+                        <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${formatarIA(q.pergunta)}</p>
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                             ${q.opcoes.map((opcao, optIndex) => `
-                                <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${Workspace.Feed.limparTexto(opcao)}</button>
+                                <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${formatarIA(opcao)}</button>
                             `).join('')}
                         </div>
                         <div id="quiz-exp-${index}" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; line-height: 1.5;"></div>
@@ -1463,12 +1471,11 @@ Workspace.Feed = {
         
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         
-        // 🚀 INJEÇÃO DA GALERIA MÁGICA AQUI
         let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados);
 
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
-                <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.limparTexto(dados.titulo || 'Aula Imersiva')}</h1>
+                <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${formatarIA(dados.titulo || 'Aula Imersiva')}</h1>
                 <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px;">
                     ${resumoSeguro}
                 </div>
@@ -1482,6 +1489,14 @@ Workspace.Feed = {
         const quizCache = Workspace.Feed._quizImersaoCache;
         if (!quizCache || !quizCache[perguntaIndex]) return;
         
+        // 🚀 Filtro Dourado aplicado à explicação também
+        const formatarIA = (txt) => Workspace.Feed.limparTexto(txt)
+            .replace(/&lt;em&gt;/gi, '<em>').replace(/&lt;\/em&gt;/gi, '</em>')
+            .replace(/&lt;strong&gt;/gi, '<strong>').replace(/&lt;\/strong&gt;/gi, '</strong>')
+            .replace(/&lt;b&gt;/gi, '<b>').replace(/&lt;\/b&gt;/gi, '</b>')
+            .replace(/&lt;i&gt;/gi, '<i>').replace(/&lt;\/i&gt;/gi, '</i>')
+            .replace(/&lt;br&gt;/gi, '<br>');
+            
         const pergunta = quizCache[perguntaIndex];
         const correta = pergunta.respostaCorreta;
         
@@ -1511,7 +1526,7 @@ Workspace.Feed = {
         const exp = document.getElementById(`quiz-exp-${perguntaIndex}`);
         if (exp) {
             exp.style.display = 'block';
-            exp.innerHTML = `💡 <strong>Explicação:</strong> ${Workspace.Feed.limparTexto(pergunta.explicacao)}`;
+            exp.innerHTML = `💡 <strong>Explicação:</strong> ${formatarIA(pergunta.explicacao)}`;
             exp.style.animation = 'fadeIn 0.3s ease';
         }
     }
