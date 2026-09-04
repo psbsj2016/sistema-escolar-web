@@ -1702,7 +1702,7 @@ Workspace.Feed = {
         }
     },
 
-    gerarImersaoMusical: async () => {
+  gerarImersaoMusical: async () => {
         const btn = document.getElementById('ws-btn-gerar-musica');
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
@@ -1716,7 +1716,7 @@ Workspace.Feed = {
             <div style="text-align: center; padding: 60px 20px;">
                 <div style="font-size: 50px; animation: pulse 1.5s infinite;">🎧</div>
                 <h3 style="color: #fff; margin-top: 20px;">A afinar os instrumentos...</h3>
-                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano de 7 dias.</p>
+                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano intensivo de 14 dias.</p>
             </div>
         `;
         
@@ -1767,8 +1767,9 @@ Workspace.Feed = {
         }
 
         let htmlDias = '';
-        if (plano.plano7Dias && plano.plano7Dias.length > 0) {
-            plano.plano7Dias.forEach(dia => {
+        // 🚀 Lemos a nova estrutura genérica para suportar 14 dias sem quebrar
+        if (plano.planoEstudos && plano.planoEstudos.length > 0) {
+            plano.planoEstudos.forEach(dia => {
                 htmlDias += `
                     <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -1795,10 +1796,11 @@ Workspace.Feed = {
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
-                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu plano de 7 dias de fluência focado nesta música.</p>
+                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu plano intenso de 14 dias de fluência focado nesta música.</p>
                 ${htmlVideo}
                 ${htmlDias}
             </div>
         `;
     }
+
 };
