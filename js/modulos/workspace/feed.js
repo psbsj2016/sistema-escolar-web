@@ -1334,14 +1334,15 @@ Workspace.Feed = {
         }
     },
 
+    // 🚀 O NOVO FILTRO DOURADO BLINDADO 2.0: Apaga atributos inúteis da IA e injeta CSS Premium!
     formatarIA: (txt) => {
         if (!txt) return '';
         
         let textoProcessado = String(txt)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/```(.*?)```/gs, '<code>$1</code>') 
-            .replace(/`(.*?)`/g, '<code>$1</code>');      
+            .replace(/```(.*?)```/gs, '<code>$1</code>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
             
         const descodificador = document.createElement('textarea');
         descodificador.innerHTML = textoProcessado;
@@ -1349,16 +1350,28 @@ Workspace.Feed = {
         
         textoReal = Workspace.Feed.limparTexto(textoReal);
         
-        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4'];
+        // A MÁGICA: Esta expressão (?:.*?) captura e DESTRÓI qualquer "style=" ou "border=" que a IA tenha inventado!
+        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'span'];
+        
         tagsPermitidas.forEach(tag => {
-            const regexOpen = new RegExp(`&lt;${tag}&gt;`, 'gi');
+            const regexOpen = new RegExp(`&lt;${tag}(?:.*?)&gt;`, 'gi');
             const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
             const regexSelfClose = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
-            textoReal = textoReal.replace(regexOpen, `<${tag}>`)
-                                 .replace(regexClose, `</${tag}>`)
-                                 .replace(regexSelfClose, `<${tag}>`);
+            
+            // Tratamento VIP para Tabelas (Injetamos o NOSSO design bonito)
+            if (tag === 'table') {
+                textoReal = textoReal.replace(regexOpen, `<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; background: rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; display: table;">`).replace(regexClose, `</table>`).replace(regexSelfClose, `<table>`);
+            } else if (tag === 'th' || tag === 'td') {
+                textoReal = textoReal.replace(regexOpen, `<${tag} style="border: 1px solid #334155; padding: 10px 15px; text-align: left;">`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
+            } else if (tag === 'span') {
+                // Se ela usar span, nós limpamos os estilos e mantemos como tag inofensiva
+                textoReal = textoReal.replace(regexOpen, `<span>`).replace(regexClose, `</span>`).replace(regexSelfClose, `<span>`);
+            } else {
+                textoReal = textoReal.replace(regexOpen, `<${tag}>`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
+            }
         });
 
+        // Estilo Premium para Blocos de Código
         textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
                              .replace(/&lt;\/code&gt;/gi, '</code>');
 
