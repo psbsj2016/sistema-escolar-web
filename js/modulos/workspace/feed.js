@@ -16,7 +16,7 @@ Workspace.Feed = {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
-        Workspace.Feed.injetarBotaoImersao(); 
+        Workspace.Feed.injetarBotaoImersao(); // 🚀 NOVO: Injeta o botão da Imersão Específica
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
@@ -31,26 +31,39 @@ Workspace.Feed = {
         }
     },
 
+   // 🚀 NOVO: Radar Persistente para Injetar o Botão Mágico
     injetarBotaoImersao: () => {
+        // Tenta injetar o botão a cada 500ms até ter sucesso
         const tentarInjetar = setInterval(() => {
             const filterBar = document.getElementById('ws-feed-filter-bar');
             const areaDePosts = document.getElementById('ws-posts-area');
+            
+            // O local alvo será a barra de filtros. Se ela não existir, usamos a área superior aos posts (Plano B)
             const localAlvo = filterBar || (areaDePosts ? areaDePosts.parentNode : null);
 
             if (localAlvo && !document.getElementById('btn-imersao-especifica')) {
                 const btn = document.createElement('button');
                 btn.id = 'btn-imersao-especifica';
                 btn.className = 'ws-filter-chip';
+                // Design de Alto Destaque (Gradiente Premium)
                 btn.style.cssText = 'background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; margin: 0 10px 10px 0 !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
                 btn.innerHTML = '🌌 Imersão Específica';
                 btn.onclick = () => Workspace.Feed.abrirImersao();
                 
-                if (filterBar) filterBar.insertBefore(btn, filterBar.firstChild);
-                else if (areaDePosts) localAlvo.insertBefore(btn, areaDePosts);
+                if (filterBar) {
+                    // Coloca em primeiro lugar na barra de filtros
+                    filterBar.insertBefore(btn, filterBar.firstChild);
+                } else if (areaDePosts) {
+                    // Plano B: Coloca logo acima da área de posts
+                    localAlvo.insertBefore(btn, areaDePosts);
+                }
 
-                clearInterval(tentarInjetar);
+                console.log("🌌 Botão da Imersão Específica injetado com sucesso!");
+                clearInterval(tentarInjetar); // Para o relógio assim que o botão for injetado!
             }
         }, 500);
+
+        // Segurança: Se após 10 segundos o ecrã não carregar, desiste para não gastar memória
         setTimeout(() => clearInterval(tentarInjetar), 10000);
     },
 
@@ -64,7 +77,9 @@ Workspace.Feed = {
                 if (dados.type === 'POST_APAGADO') {
                     const idDoPost = String(dados.postId);
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
-                    if (elementoHTML) elementoHTML.remove(); 
+                    if (elementoHTML) {
+                        elementoHTML.remove(); 
+                    }
                     Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== idDoPost);
                     Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== idDoPost);
                 }
@@ -92,11 +107,12 @@ Workspace.Feed = {
                 if(indexTodos !== -1) Workspace.Feed.todosOsPosts[indexTodos] = postAtualizado;
 
                 const meuId = Workspace.usuario.id;
-                const likesArr = Array.isArray(postAtualizado.likes) ? postAtualizado.likes : [];
-                const euCurti = likesArr.includes(meuId);
+
                 const btnLike = document.getElementById(`btn-like-${postId}`);
                 const countLike = document.getElementById(`count-like-${postId}`);
-                
+                const likesArr = Array.isArray(postAtualizado.likes) ? postAtualizado.likes : [];
+                const euCurti = likesArr.includes(meuId);
+
                 if(countLike) countLike.innerText = likesArr.length;
                 if(btnLike) {
                     btnLike.style.background = euCurti ? '#eafaf1' : '#f0f2f5';
@@ -104,10 +120,10 @@ Workspace.Feed = {
                     btnLike.style.borderColor = euCurti ? '#27ae60' : 'transparent';
                 }
 
-                const dislikesArr = Array.isArray(postAtualizado.dislikes) ? postAtualizado.dislikes : [];
-                const euNaoCurti = dislikesArr.includes(meuId);
                 const btnDislike = document.getElementById(`btn-dislike-${postId}`);
                 const countDislike = document.getElementById(`count-dislike-${postId}`);
+                const dislikesArr = Array.isArray(postAtualizado.dislikes) ? postAtualizado.dislikes : [];
+                const euNaoCurti = dislikesArr.includes(meuId);
 
                 if(countDislike) countDislike.innerText = dislikesArr.length;
                 if(btnDislike) {
@@ -189,6 +205,7 @@ Workspace.Feed = {
                 </div>
             `;
             
+            // 🚀 O NOVO PALCO DA IMERSÃO ESPECÍFICA!
             const modalImersao = `
                 <div id="ws-imersao-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 100030; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow-y: auto;">
                     <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); border-bottom: 1px solid #1e293b;">
@@ -197,21 +214,25 @@ Workspace.Feed = {
                     </div>
                     
                     <div style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+                        
+                        <!-- Barra de Pesquisa Poderosa -->
                         <div style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
                             <input type="text" id="ws-imersao-busca" placeholder="O que deseja estudar agora? (Ex: Phrasal Verbs, Viagem...)" style="flex: 1; min-width: 250px; padding: 16px; border-radius: 12px; border: 1px solid #334155; font-size: 16px; outline: none; background: #1e293b; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onkeypress="if(event.key === 'Enter') Workspace.Feed.gerarImersao()">
                             <button onclick="Workspace.Feed.gerarImersao()" id="ws-btn-gerar-imersao" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 16px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">Gerar Aula da IA 🪄</button>
                         </div>
                         
+                        <!-- A Área onde a IA desenha os resultados -->
                         <div id="ws-imersao-conteudo" style="color: #cbd5e1; font-size: 16px; line-height: 1.6;">
                             <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                                 <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🤖</div>
                                 <h3 style="color: #94a3b8; font-size: 22px;">O seu Professor Particular IA</h3>
-                                <p style="max-width: 500px; margin: 0 auto;">Pesquise um tema específico ou clique diretamente em "Gerar". A IA vai vasculhar o Feed, organizar os melhores vídeos e PDFs num só local, criar o seu resumo de estudo e um Quiz final.</p>
+                                <p style="max-width: 500px; margin: 0 auto;">Pesquise um tema específico ou clique diretamente em "Gerar". A Inteligência Artificial vai vasculhar o Feed da sua turma, criar uma aula resumo imersiva e fabricar um Quiz de Evolução para si.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+            
             document.body.insertAdjacentHTML('beforeend', modaisHTML + modalImersao);
         }
     },
@@ -1241,12 +1262,12 @@ Workspace.Feed = {
     },
 
     // ------------------------------------------------------------------------
-    // 🌌 MÓDULO: IMERSÃO ESPECÍFICA COM GALERIA DE RECURSOS
+    // 🌌 MÓDULO: IMERSÃO ESPECÍFICA (O CÉREBRO DE CURADORIA NO FRONTEND)
     // ------------------------------------------------------------------------
     abrirImersao: () => {
         const modal = document.getElementById('ws-imersao-modal');
         if (modal) {
-            document.body.style.overflow = 'hidden'; 
+            document.body.style.overflow = 'hidden'; // Impede rolagem no fundo para foco total
             modal.style.display = 'flex';
             requestAnimationFrame(() => modal.style.opacity = '1');
         }
@@ -1278,7 +1299,7 @@ Workspace.Feed = {
             <div style="text-align: center; padding: 60px 20px;">
                 <div style="font-size: 50px; animation: pulse 1.5s infinite;">🧠</div>
                 <h3 style="color: #fff; margin-top: 20px;">A processar milhares de dados...</h3>
-                <p style="color: #94a3b8;">A Inteligência Artificial está a organizar vídeos e documentos para si.</p>
+                <p style="color: #94a3b8;">A Inteligência Artificial está a curar os conteúdos da sua turma.</p>
             </div>
         `;
         
@@ -1311,67 +1332,9 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 A MÁGICA DE RECOLHER VÍDEOS E DOCUMENTOS ACONTECE AQUI!
-    gerarHTMLRecursosImersao: (idsRelacionados) => {
-        if (!idsRelacionados || idsRelacionados.length === 0) return '';
-
-        let htmlVideos = '';
-        let htmlDocs = '';
-        let htmlImagens = '';
-
-        idsRelacionados.forEach(id => {
-            const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
-            if (post) {
-                // 1. Procurar Anexos Nativos (PDFs, PPTs, Vídeos MP4)
-                if (post.anexos && post.anexos.length > 0) {
-                    post.anexos.forEach(a => {
-                        let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
-                        
-                        if (a.tipo.includes('video')) {
-                            htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
-                        } else if (a.tipo.includes('image')) {
-                            htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><img src="${url}" style="width: 100%; height: 120px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
-                        } else {
-                            const nomeMinusculo = (a.nome || '').toLowerCase();
-                            const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.pptx') || nomeMinusculo.endsWith('.ppt');
-                            let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
-                            const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
-                            htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; align-items:center; gap:10px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div>`;
-                        }
-                    });
-                }
-
-                // 2. Procurar Vídeos Embutidos no Texto (YouTube, TikTok) usando regex
-                if (post.texto) {
-                    const textoLimpo = post.texto;
-                    // Procura links de YouTube e TikTok que o professor escreveu no texto
-                    const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
-                    let match;
-                    while ((match = regexYouTube.exec(textoLimpo)) !== null) {
-                        htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
-                    }
-                }
-            }
-        });
-
-        let painelCompleto = '';
-        if (htmlVideos || htmlDocs || htmlImagens) {
-            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;">
-                                <h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Recursos da Escola sobre o Tema</h3>`;
-            
-            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Relacionados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
-            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
-            if (htmlImagens) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">🖼️ Imagens</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlImagens}</div>`;
-            
-            painelCompleto += `</div>`;
-        }
-
-        return painelCompleto;
-    },
-
     renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
-        Workspace.Feed._quizImersaoCache = dados.quiz || []; 
+        Workspace.Feed._quizImersaoCache = dados.quiz || []; // Guarda o quiz na memória global da página
         
         let htmlQuiz = '';
         if (dados.quiz && dados.quiz.length > 0) {
@@ -1391,18 +1354,15 @@ Workspace.Feed = {
             });
         }
         
+        // Limpa potenciais blocos de código Markdown gerados pela IA
         let resumoSeguro = dados.resumo.replace(/```html/g, '').replace(/```/g, '');
-        
-        // 🚀 GERA A GALERIA MÁGICA COM OS ARQUIVOS DA ESCOLA
-        let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados);
 
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.limparTexto(dados.titulo)}</h1>
-                <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px;">
+                <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 30px; border-left: 4px solid #3b82f6; font-size: 17px;">
                     ${resumoSeguro}
                 </div>
-                ${htmlRecursos}
                 ${htmlQuiz}
             </div>
         `;
@@ -1415,6 +1375,7 @@ Workspace.Feed = {
         const pergunta = quizCache[perguntaIndex];
         const correta = pergunta.respostaCorreta;
         
+        // Bloqueia as opções após a primeira escolha
         pergunta.opcoes.forEach((_, optIndex) => {
             const btn = document.getElementById(`quiz-opt-${perguntaIndex}-${optIndex}`);
             if (btn) {
@@ -1424,12 +1385,12 @@ Workspace.Feed = {
                 btn.onmouseout = null;
                 
                 if (optIndex === correta) {
-                    btn.style.background = 'rgba(16, 185, 129, 0.2)'; 
+                    btn.style.background = 'rgba(16, 185, 129, 0.2)'; // Verde Sucesso
                     btn.style.borderColor = '#10b981';
                     btn.style.color = '#fff';
                     btn.style.fontWeight = 'bold';
                 } else if (optIndex === opcaoClicada && optIndex !== correta) {
-                    btn.style.background = 'rgba(239, 68, 68, 0.2)'; 
+                    btn.style.background = 'rgba(239, 68, 68, 0.2)'; // Vermelho Erro
                     btn.style.borderColor = '#ef4444';
                     btn.style.color = '#fff';
                 } else {
@@ -1438,6 +1399,7 @@ Workspace.Feed = {
             }
         });
         
+        // Revela a explicação didática
         const exp = document.getElementById(`quiz-exp-${perguntaIndex}`);
         if (exp) {
             exp.style.display = 'block';
